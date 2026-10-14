@@ -252,7 +252,10 @@ class LabArea implements Area3D
       propLights.update(game, opts.playerCol, opts.playerRow, opts.dtMs);
       LabDoors.tick(doors, opts);
       LabVats.tick(vats, opts);
-      LabLamps.tick(lamps, opts, mission != null && mission.leadTriggerDone, dead());
+      var alarmed = (mission != null && mission.leadTriggerDone);
+      var dead = dead();
+      LabLamps.tick(lamps, opts, alarmed, dead);
+      LabInterior.dim(furniture, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       for (f in furniture)
         render.Models.cull(f, opts.camera, LabStyle.PIECE_CULL_R);
       LabLift.tick(lift, opts, game.ui.state != UISTATE_DEFAULT);

@@ -166,6 +166,8 @@ class LabStyle
   public static inline var DEAD_MULT = 4.0;
   public static inline var DEAD_DIM = 0.4;
   public static inline var DEAD_PHASE = 3.1;
+  // and how much of the machines' screen and window glow goes with it (render.lab.LabInterior.dim)
+  public static inline var DEAD_EMISSIVE = 0.85;
 
   // ---- the rig. no moon and no sky: the bedrock is the ceiling, so the background and the fog are
   // one near-black (render.world.VisionMask fades unseen cells TO this, so they must match)

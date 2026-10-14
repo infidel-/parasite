@@ -2317,9 +2317,11 @@
         0.6,
         1
       ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 0 col 2; models-src/lab/screenwall-src.png): a tall steel cabinet whose whole front is a grid of twelve small green monitoring screens showing waveforms. Generated AT the budget (decimation_target 6000, 5756 tris). 13 components, largest 56.0%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. baseColor 0.60 takes the atlas luma 100 to ~78.",
-      "last_converted": "2026-10-13T21:17:48Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.6,0.6,0.6,1"
+      "emissiveSrc": "lab/screenwall-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 0 col 2; models-src/lab/screenwall-src.png): a tall steel cabinet whose whole front is a grid of twelve small green monitoring screens showing waveforms. Generated AT the budget (decimation_target 6000, 5756 tris). 13 components, largest 56.0%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. baseColor 0.60 takes the atlas luma 100 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py screenwall g 0.3 0.25): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:04Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/screenwall-emissive.png@2/noMR/bc0.6,0.6,0.6,1"
     },
     "lab/hatchbox": {
       "src": "lab/hatchbox.glb",
@@ -2493,9 +2495,11 @@
         0.68,
         1
       ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 4 col 2; models-src/lab/holo-src.png): a holographic specimen display: a steel pod with a glowing green screen showing a green organism, cyan trim lights. Generated AT the budget (decimation_target 6000, 5712 tris). 3 components, largest 99.8%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.68 takes the atlas luma 94 to ~78.",
-      "last_converted": "2026-10-13T21:20:14Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.68,0.68,0.68,1"
+      "emissiveSrc": "lab/holo-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 4 col 2; models-src/lab/holo-src.png): a holographic specimen display: a steel pod with a glowing green screen showing a green organism, cyan trim lights. Generated AT the budget (decimation_target 6000, 5712 tris). 3 components, largest 99.8%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.68 takes the atlas luma 94 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py holo g,c 0.35 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:02Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/holo-emissive.png@2/noMR/bc0.68,0.68,0.68,1"
     },
     "lab/tubeconsole": {
       "src": "lab/tubeconsole.glb",
@@ -2595,9 +2599,11 @@
       "error": 0.005,
       "dropMR": true,
       "lift": 0.96,
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 8 col 0; models-src/lab/bioscreen-src.png): a boxy steel bio-screen unit with a round glass window showing swirling green organic fluid, a keypad beside it, cyan trim. Generated AT the budget (decimation_target 6000, 5646 tris). 8 components, largest 66.6%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. lift 0.96 takes the atlas luma 74 to ~78.",
-      "last_converted": "2026-10-13T21:18:46Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/lf0.96"
+      "emissiveSrc": "lab/bioscreen-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 8 col 0; models-src/lab/bioscreen-src.png): a boxy steel bio-screen unit with a round glass window showing swirling green organic fluid, a keypad beside it, cyan trim. Generated AT the budget (decimation_target 6000, 5646 tris). 8 components, largest 66.6%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. lift 0.96 takes the atlas luma 74 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py bioscreen g 0.35 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:03Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/bioscreen-emissive.png@2/noMR/lf0.96"
     },
     "lab/cryopod": {
       "src": "lab/cryopod.glb",
@@ -2638,9 +2644,11 @@
       "error": 0.005,
       "dropMR": true,
       "lift": 0.84,
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 4 col 4; models-src/lab/stasis-src.png): an upright stasis pod: a tall rounded steel capsule with a glowing pale blue glass window showing a human silhouette. Generated AT the budget (decimation_target 6000, 5830 tris). 18 components, largest 52.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. lift 0.84 takes the atlas luma 62 to ~78.",
-      "last_converted": "2026-10-13T21:19:21Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/lf0.84"
+      "emissiveSrc": "lab/stasis-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 4 col 4; models-src/lab/stasis-src.png): an upright stasis pod: a tall rounded steel capsule with a glowing pale blue glass window showing a human silhouette. Generated AT the budget (decimation_target 6000, 5830 tris). 18 components, largest 52.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. lift 0.84 takes the atlas luma 62 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py stasis c,b 0.3 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:09Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/stasis-emissive.png@2/noMR/lf0.84"
     },
     "lab/capsule": {
       "src": "lab/capsule.glb",
@@ -2723,9 +2731,11 @@
         0.87,
         1
       ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 7 col 0; models-src/lab/incinerator-src.png): a squat steel incinerator box with a glowing red-hot chamber window full of charred bones and a biohazard-marked side hatch. Generated AT the budget (decimation_target 6000, 5564 tris). 15 components, largest 70.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.87 takes the atlas luma 83 to ~78.",
-      "last_converted": "2026-10-13T21:23:52Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.87,0.87,0.87,1"
+      "emissiveSrc": "lab/incinerator-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 7 col 0; models-src/lab/incinerator-src.png): a squat steel incinerator box with a glowing red-hot chamber window full of charred bones and a biohazard-marked side hatch. Generated AT the budget (decimation_target 6000, 5564 tris). 15 components, largest 70.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.87 takes the atlas luma 83 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py incinerator r 0.35 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:08Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/incinerator-emissive.png@2/noMR/bc0.87,0.87,0.87,1"
     },
     "lab/analysis": {
       "src": "lab/analysis.glb",
@@ -2739,9 +2749,11 @@
         0.81,
         1
       ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 7 col 2; models-src/lab/analysis-src.png): a floor analysis station: a low square steel platform with a tiled white work surface, a small robotic arm, a green-lit sample holder and a control box. Generated AT the budget (decimation_target 6000, 5951 tris). 22 components, largest 77.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.81 takes the atlas luma 87 to ~78.",
-      "last_converted": "2026-10-13T21:21:31Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.81,0.81,0.81,1"
+      "emissiveSrc": "lab/analysis-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 7 col 2; models-src/lab/analysis-src.png): a floor analysis station: a low square steel platform with a tiled white work surface, a small robotic arm, a green-lit sample holder and a control box. Generated AT the budget (decimation_target 6000, 5951 tris). 22 components, largest 77.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.81 takes the atlas luma 87 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py analysis g 0.3 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:24Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/analysis-emissive.png@2/noMR/bc0.81,0.81,0.81,1"
     },
     "lab/bioprinter": {
       "src": "lab/bioprinter.glb",
@@ -2907,9 +2919,11 @@
       "tex": 512,
       "error": 0.005,
       "dropMR": true,
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj1 row 8 col 6; models-src/lab/canisters-src.png): a steel biohazard canister bank: four dark chambers in a 2x2 grid each with a round window showing a glowing yellow-green biohazard trefoil. Generated AT the budget (decimation_target 6000, 5745 tris). 3 components, largest 36.4%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. the atlas already sits at luma 76.",
-      "last_converted": "2026-10-13T21:26:10Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR"
+      "emissiveSrc": "lab/canisters-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj1 row 8 col 6; models-src/lab/canisters-src.png): a steel biohazard canister bank: four dark chambers in a 2x2 grid each with a round window showing a glowing yellow-green biohazard trefoil. Generated AT the budget (decimation_target 6000, 5745 tris). 3 components, largest 36.4%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. the atlas already sits at luma 76. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py canisters g,y 0.3 0.25): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:12Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/canisters-emissive.png@2/noMR"
     },
     "lab/generator": {
       "src": "lab/generator.glb",
@@ -2966,9 +2980,11 @@
         0.6,
         1
       ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (near-top row 4 col 7; models-src/lab/kiosk-src.png): an upright info kiosk terminal: a steel pedestal with a tall pale screen full of text and a small keyboard ledge. Generated AT the budget (decimation_target 6000, 5550 tris). 1 components, largest 100.0%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. baseColor 0.60 takes the atlas luma 100 to ~78.",
-      "last_converted": "2026-10-13T21:26:27Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.6,0.6,0.6,1"
+      "emissiveSrc": "lab/kiosk-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (near-top row 4 col 7; models-src/lab/kiosk-src.png): an upright info kiosk terminal: a steel pedestal with a tall pale screen full of text and a small keyboard ledge. Generated AT the budget (decimation_target 6000, 5550 tris). 1 components, largest 100.0%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. baseColor 0.60 takes the atlas luma 100 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py kiosk c,b 0.2 0.4): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
+      "last_converted": "2026-10-14T01:13:15Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/kiosk-emissive.png@2/noMR/bc0.6,0.6,0.6,1"
     },
     "lab/cagecase": {
       "src": "lab/cagecase.glb",

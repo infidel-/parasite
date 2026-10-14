@@ -273,6 +273,26 @@ class LabInterior
       return [for (a in all) a.path];
     }
 
+// the machines' screens and windows as the lab's power goes: every glowing batch's emissive scaled
+// by `f`, 1 lit to 0 dark, off the strength its glb carries (taken once, on the shared template —
+// only the lab draws these paths)
+  public static function dim(batches:Array<Models.InstancedProp>, f:Float):Void
+    {
+      for (b in batches)
+        {
+          if (b.mesh == null)
+            continue;
+          // Dynamic: the loaded glb's material, which the three extern types as Dynamic on Object3D —
+          // it is Models.toLambert's MeshLambertMaterial
+          var mat:Dynamic = b.mesh.material;
+          if (mat.emissiveMap == null)
+            continue;
+          if (mat.userData.labEmi == null)
+            mat.userData.labEmi = mat.emissiveIntensity;
+          mat.emissiveIntensity = mat.userData.labEmi * f;
+        }
+    }
+
 // one batch
   static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>, h:Float):Models.InstancedProp
     {
