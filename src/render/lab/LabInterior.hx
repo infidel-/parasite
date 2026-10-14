@@ -298,7 +298,8 @@ class LabInterior
     {
       var A = art();
       var all = [for (a in A.furniture) a].concat([A.shelfRow, A.drum, A.crate])
-        .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits).concat(A.tops[0]).concat(A.tops[1]);
+        .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits)
+        .concat(A.tops[0]).concat(A.tops[1]);
       for (a in all)
         batch(scene, a.path, [{
           x: 0.0,
@@ -509,7 +510,8 @@ class LabInterior
     }
 
 // a hazmat rack's suits: up to SUIT_N on its rail at hashed gaps, one hook in SUIT_TORN holding the
-// torn and bloodied one, and now and then one dropped in a heap in front of it. The rail is SUIT_RAIL out from the rack's centre and the suit's hook is its top
+// torn and bloodied one, and now and then one dropped in a heap in front of it. The rail is SUIT_RAIL
+// out from the rack's centre and the suit's hook is its top
   static function suits(p:LabInteriorPlan, x:Float, z:Float, d:Int, col:Int, row:Int):Void
     {
       var S = art().suits;
