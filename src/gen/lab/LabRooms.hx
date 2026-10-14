@@ -54,8 +54,9 @@ class LabRooms
   static var RESEARCH_FLOOR = [ 'autopsy', 'holo', 'analysis', 'bioprinter', 'centrifuge',
     'gestation', 'capsule', 'cryopod', 'restraint', 'robochair', 'scanner', 'probe', 'stasis',
     'clamp' ];
-  static var LOBBY_FLOOR = [ 'cagecase', 'sheetcage', 'gurney', 'tarpcrate', 'incbin', 'gurneys',
-    'palletcrate', 'scanframe' ];
+  // the incinerator bin and the scanner frame are out until their 3D art is generated: dealt with
+  // no glb, a machine draws nothing and still blocks its cells
+  static var LOBBY_FLOOR = [ 'cagecase', 'sheetcage', 'gurney', 'tarpcrate', 'gurneys', 'palletcrate' ];
 
 // fill one zone. A zone that stood nothing is tagged, so the stats can say which kind keeps coming
 // out bare
