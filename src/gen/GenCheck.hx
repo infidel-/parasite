@@ -1149,6 +1149,18 @@ class GenCheck
         ok(!gen.lab.LabZones.tagged(n, gen.lab.LabZones.TAG_UNMET),
           n.kind + ' at ' + n.x1 + ',' + n.y1 + ' fell short of its quota'));
 
+      // a standing prop backs onto masonry: render.lab.LabInterior stands one only against a wall, so
+      // one out on the floor draws nothing and still blocks its cell
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          if (c[x][y] == Const.TILE_LAB_PLANT ||
+              c[x][y] == Const.TILE_LAB_BIN)
+            ok(c[x - 1][y] == Const.TILE_LAB_WALL ||
+              c[x + 1][y] == Const.TILE_LAB_WALL ||
+              c[x][y - 1] == Const.TILE_LAB_WALL ||
+              c[x][y + 1] == Const.TILE_LAB_WALL,
+              'lab prop at ' + x + ',' + y + ' backs onto no wall');
+
       // the lift: four parts on a 2x2 of lift floor, part = row * 2 + column
       var lift = [for (s in ctx.spawns) if (s.type == 'labLift') s];
       ok(lift.length == 4, 'lab lift has ' + lift.length + ' parts, want 4');

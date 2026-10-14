@@ -54,9 +54,8 @@ class LabRooms
   static var RESEARCH_FLOOR = [ 'autopsy', 'holo', 'analysis', 'bioprinter', 'centrifuge',
     'gestation', 'capsule', 'cryopod', 'restraint', 'robochair', 'scanner', 'probe', 'stasis',
     'clamp' ];
-  // the incinerator bin and the scanner frame are out until their 3D art is generated: dealt with
-  // no glb, a machine draws nothing and still blocks its cells
-  static var LOBBY_FLOOR = [ 'cagecase', 'sheetcage', 'gurney', 'tarpcrate', 'gurneys', 'palletcrate' ];
+  static var LOBBY_FLOOR = [ 'cagecase', 'sheetcage', 'gurney', 'tarpcrate', 'incbin', 'gurneys',
+    'palletcrate', 'scanframe' ];
 
 // fill one zone. A zone that stood nothing is tagged, so the stats can say which kind keeps coming
 // out bare
@@ -138,6 +137,54 @@ class LabRooms
             }
         }
       return 1;
+    }
+
+// once every zone has filled: each standing prop the room still lacks on a free wall cell picked by
+// the rng. The quota zones take nearly every bay, so the leftover-bay slot came up about once a
+// level, always in the lobby, and the bins and drums its other rooms list were never stood
+  public static function props(state: _LabState, room: _Room)
+    {
+      var floor = LabBlocks.floorOf(room.role);
+      for (tile in propsOf(room.role))
+        {
+          if (tilesIn(state, room, tile) > 0)
+            continue;
+          // backed by a wall (walled() also passes a cell out in the room, and the renderer stands a
+          // prop only against masonry), and never beside a machine: a wall unit (`stand`) leaves its
+          // cell walkable, and sealsOff does not count it, so a prop beside one can box it in unseen
+          var spots = [for (x in room.x1...room.x2 + 1) for (y in room.y1...room.y2 + 1)
+            if (walled(state, room, x, y) &&
+                around(state, x, y, Const.TILE_LAB_WALL) &&
+                !besideMachine(state, x, y)) { x: x, y: y }];
+          while (spots.length > 0)
+            {
+              var c = spots.splice(state.area.random(spots.length), 1)[0];
+              stand(state, c.x, c.y, tile);
+              if (!sealsOff(state, room))
+                break;
+              stand(state, c.x, c.y, floor);
+            }
+        }
+    }
+
+// has (x, y) a machine cell on any side?
+  static function besideMachine(state: _LabState, x: Int, y: Int): Bool
+    {
+      var cells = state.area.getCells();
+      for (i in 0...Const.dir4x.length)
+        if (LabKinds.isMachine(cells[x + Const.dir4x[i]][y + Const.dir4y[i]]))
+          return true;
+      return false;
+    }
+
+// has (x, y) a `tile` cell on any side?
+  static function around(state: _LabState, x: Int, y: Int, tile: Int): Bool
+    {
+      var cells = state.area.getCells();
+      for (i in 0...Const.dir4x.length)
+        if (cells[x + Const.dir4x[i]][y + Const.dir4y[i]] == tile)
+          return true;
+      return false;
     }
 
 // `tile` on every free cell of a bay that has a bare cell to face, until the room holds `max`

@@ -106,6 +106,8 @@ class LabStyle
   public static inline var SUIT_RAIL = 0.47;
   public static inline var SUIT_N = 3;
   public static inline var SUIT_GAP = 1.22;
+  // one hung suit in this many is the torn one
+  public static inline var SUIT_TORN = 5;
 
   // ---- the flat cut-outs (render.lab.LabDecals): the four pack sheets; a floor cell's odds, in
   // thousandths, of a grime decal and of a painted mark; their sizes (base + up to VAR); the height

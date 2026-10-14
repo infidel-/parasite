@@ -43,6 +43,8 @@ class LabGen
           cells[x][y] = Const.TILE_LAB_ROCK;
       GenTree.add(ctx.root, LabBlocks.PLATE, 1, 1, ctx.width - 2, ctx.height - 2);
       GenTree.build(ctx.root, function(n) fill(state, n));
+      for (r in state.rooms)
+        LabRooms.props(state, r);
       return state;
     }
 

@@ -644,8 +644,14 @@ area                       bedrock (TILE_LAB_ROCK), generated at exactly 56x32
   seeded roll breaking ties), so a level shows ~32 of the 66 kinds.
 - **A wall zone with no fit of its own avoids the south wall** (the camera sees its pieces' backs).
 - **A kind with no 3D art is not dealt.** A machine footprint with no glb draws nothing and still
-  blocks its cells, so `LabRooms.LOBBY_FLOOR` leaves out `incbin` and `scanframe` until their glbs
-  exist (their indexes stay in `LabKinds`: append only). Put them back in the list when they ship.
+  blocks its cells. `incbin` and `scanframe` were out of `LabRooms.LOBBY_FLOOR` until their glbs
+  shipped (their indexes stayed in `LabKinds`: append only).
+- **Each room's standing props go in AFTER its zones, not in a leftover bay.** The quota zones take
+  nearly every bay: the leftover-bay `lab-slot` came up 1.0 a level, always the lobby's, so the waste
+  bins and drums the other rooms list were stood in 0 of 300 levels. `LabRooms.props` now puts each
+  one the room lacks on a seeded free wall cell, never beside a machine: a wall unit (`stand`) leaves
+  its cell walkable and `sealsOff` does not count it, and the first cut boxed one in on 52 of 3000
+  seeds. Now 2-4 bins a level.
 
 3000 seeds: 34.7 machines and 31.7 kinds a level, rooms used entrance 17 / research 24 / storage 31 /
 vat 29 (of 224, the pads' kept ring being most of it) / workshop 21 cells.

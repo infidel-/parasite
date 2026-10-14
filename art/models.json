@@ -3162,6 +3162,104 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (near-top row 6 col 2; models-src/lab/suitfloor-src.png): an empty orange hazmat suit with its hood and visor lying crumpled in a heap on the floor. Generated AT the budget (decimation_target 6000, 5624 tris). 4 components, largest 97.6%: the leaves or folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.44 takes the atlas luma 140 to ~95: the orange is the read and stays above the steel round it.",
       "last_converted": "2026-10-13T21:31:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.44,0.44,0.44,1"
+    },
+    "lab/incbin": {
+      "src": "lab/incbin.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/incbin-src.png): a squat steel incinerator bin with a mesh basket of ash, a glowing orange flame window and a hand crank. Generated AT the budget (decimation_target 6000, 5507 tris). 11 components, largest 53.6%: an assembly of panels, read by eye at four sides and whole. Its front is at +z. baseColor 1.0: the atlas luma (Ylin 0.071) is already under the indoor ~78, nothing to take down. The first roll fed the raw sprite to TRELLIS and came back a flat card; the edit_image step is what made it an object.",
+      "last_converted": "2026-10-14T10:32:41Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/scanframe": {
+      "src": "lab/scanframe.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.54,
+        0.54,
+        0.54,
+        1
+      ],
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/scanframe-src.png): a floor scanner frame, a low steel arch over a square bed of murky green gel. Generated AT the budget (decimation_target 6000, 5756 tris). 14 components, largest 47.7%: the arch's posts and the bed come back as their own pieces, read by eye at four sides and whole. Its front is at +z. baseColor 0.54 takes the atlas luma (Ylin 0.140) to ~78.",
+      "last_converted": "2026-10-14T10:33:11Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.54,0.54,0.54,1"
+    },
+    "lab/bin": {
+      "src": "lab/bin.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.96,
+        0.96,
+        0.96,
+        1
+      ],
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/bin-src.png): a biohazard waste bin, a dark steel box with a glowing orange slot on top and a yellow biohazard trefoil on its front. Generated AT the budget (decimation_target 6000, 5736 tris). 11 components, largest 44.6%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. baseColor 0.96 takes the atlas luma (Ylin 0.079) to ~78.",
+      "last_converted": "2026-10-14T10:33:55Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.96,0.96,0.96,1"
+    },
+    "lab/plant1": {
+      "src": "lab/plant1.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.65,
+        0.65,
+        0.65,
+        1
+      ],
+      "emissiveSrc": "lab/plant1-emissive.png",
+      "emissiveStrength": 2,
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/plant1-src.png): a laboratory potted plant, a round clump of glowing cyan-leafed stalks in a square steel tech planter with a green light strip. Generated AT the budget (decimation_target 6000). 15 components, largest 83.6%. THE FIRST ROLL'S LEAVES WERE ONE FLAT CARD in the image plane (the side views showed bare stalks), invisible from the gameplay camera looking down; the re-roll's prompt asks for leaves spreading toward and away from the viewer. baseColor 0.65 takes the atlas luma (Ylin 0.117) to ~78. Glows by an emissive map keyed off its own leaves (models-src/lab/_emikey.py plant1 c,g 0.5 0.55 25, 2.6% lit); the incinerator bin and the waste bin got none, their flame window and slot did not survive the bake.",
+      "last_converted": "2026-10-14T10:40:11Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/plant1-emissive.png@2/noMR/bc0.65,0.65,0.65,1"
+    },
+    "lab/plant4": {
+      "src": "lab/plant4.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.52,
+        0.52,
+        0.52,
+        1
+      ],
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/plant4-src.png): a low laboratory potted plant, broad dark teal leaves in a round steel planter. Generated AT the budget (decimation_target 6000, 5846 tris). 7 components, largest 64.7%: the leaves come back as their own pieces, read by eye at four sides and whole. baseColor 0.52 takes the atlas luma (Ylin 0.147) to ~78.",
+      "last_converted": "2026-10-14T10:35:00Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.52,0.52,0.52,1"
+    },
+    "lab/suittorn": {
+      "src": "lab/suittorn.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/suittorn-src.png): one hazmat suit hanging empty from a hook, torn open across the chest and soaked with dark blood. Generated AT the budget (decimation_target 6000, 5716 tris). 10 components, largest 46.7%: the folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z. Reads yellow rather than orange, like lab/suit. baseColor 0.55 takes the atlas luma (Ylin 0.207) to ~95, the suits' level.",
+      "last_converted": "2026-10-14T10:35:18Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.55,0.55,0.55,1"
     }
   }
 }

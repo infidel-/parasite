@@ -128,3 +128,28 @@ death (`LabInterior.dim`).
   those ship with no map.
 
 **Verdict:** landed. The fixture glbs and the LOCKDOWN wall screens wait on texture credits.
+
+## Lab's last six machines generated; the room props finally dealt
+
+**Changed:** incbin, scanframe, bin, plant1, plant4 and suittorn went through the same pipeline as the
+other sixty (sprite → `edit_image` gpt-image-25 sunburst `style_prop` → TRELLIS 6000, `dropMR`,
+baseColor = linear 78 / atlas Ylin). incbin and scanframe are back in `LabRooms.LOBBY_FLOOR`; the bin
+stands on `TILE_LAB_BIN`; the plants join the hashed pot list; one hung suit in `SUIT_TORN` 5 is the
+torn one. plant1 glows off its leaves (`_emikey.py plant1 c,g 0.5 0.55 25`).
+
+**Measured:** 5507-5990 tris each, real depth on all six (bbox depth 0.18-0.85, against 0.002 for the
+raw-sprite cards). Seed 9 live: incbin 1, scanframe 1, bin 4 of 4, plants 2 of 2; 85 programs, entry
+diff 0.
+
+**The traps:**
+- plant1's first roll put every leaf in ONE PLANE facing the reference camera: four-side renders showed
+  bare stalks from the flanks, and from the gameplay camera, looking down, a vertical card is nothing.
+  A prompt asking for leaves spreading toward and away from the viewer fixed it in one re-roll.
+- The bin's orange slot and the incinerator bin's flame window did not survive the bake; the colour key
+  lit the trefoil instead. Both ship with no glow.
+- `TILE_LAB_BIN` was dealt in 0 of 300 levels: only a LEFTOVER bay stood props, and the quota zones
+  leave one a level. `LabRooms.props` now runs per room after its zones. Its first cut used `walled()`,
+  which also passes a cell out on the floor, so 3 of 4 bins stood mid-room and drew nothing; the
+  oracle now fails any plant or bin with no wall beside it.
+
+**Verdict:** landed.

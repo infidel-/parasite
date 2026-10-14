@@ -96,6 +96,7 @@ class LabInterior
           Const.TILE_LAB_HAZMAT => row(M.labHazmat, 4.2, 1.1),
           Const.TILE_LAB_SEAT => row(M.labSeat, 2.1, 1.195),
           Const.TILE_LAB_FRIDGE => row(M.labFridge, 4.4, 2.0),
+          Const.TILE_LAB_BIN => gen('bin', 2.6, 1.59, 2.06, -HALF_PI),
         ],
         machines: [
           'sr203' => row(M.labBoxSr203, 3.0, 2.84),
@@ -164,6 +165,8 @@ class LabInterior
           'tarpcrate' => gen('tarpcrate', 3.0, 2.29, 3.13),
           'gurneys' => gen('gurneys', 3.0, 1.72, 3.22),
           'palletcrate' => gen('palletcrate', 1.85, 3.61, 3.52),
+          'incbin' => gen('incbin', 3.4, 2.22, 3.39),
+          'scanframe' => gen('scanframe', 2.8, 3.55, 5.31),
         ],
         shelfRow: row(M.labShelfRow, 4.6, 2.4),
         drum: row(M.labDrum, 1.84, 1.26),
@@ -182,11 +185,14 @@ class LabInterior
           gen('plant3', 3.2, 1.69, 1.73),
           gen('plant5', 3.2, 1.58, 1.5),
           gen('plant6', 2.6, 1.97, 2.14),
+          gen('plant1', 3.0, 2.59, 2.47),
+          gen('plant4', 2.4, 2.78, 2.9),
         ],
         // what hangs on a hazmat rack's rail, and the one left in a heap under it
         suits: [
           gen('suit', LabStyle.SUIT_H, 0.63, 1.25),
           gen('suitfloor', 1.0, 1.86, 2.24),
+          gen('suittorn', LabStyle.SUIT_H, 0.61, 1.27),
         ],
       };
       return tables;
@@ -441,8 +447,8 @@ class LabInterior
       put(p, w[1], x + sx * 1.35 - ox * 0.2, z + sz * 1.35 - oz * 0.2, away(d), top);
     }
 
-// a hazmat rack's suits: up to SUIT_N on its rail at hashed gaps, and now and then one dropped in a
-// heap in front of it. The rail is SUIT_RAIL out from the rack's centre and the suit's hook is its top
+// a hazmat rack's suits: up to SUIT_N on its rail at hashed gaps, one hook in SUIT_TORN holding the
+// torn and bloodied one, and now and then one dropped in a heap in front of it. The rail is SUIT_RAIL out from the rack's centre and the suit's hook is its top
   static function suits(p:LabInteriorPlan, x:Float, z:Float, d:Int, col:Int, row:Int):Void
     {
       var S = art().suits;
@@ -458,7 +464,8 @@ class LabInterior
             continue;
           var s = (i - (LabStyle.SUIT_N - 1) / 2) * LabStyle.SUIT_GAP;
           var yaw = away(d) + (((h >>> (i * 3 + 12)) % 7) - 3) * 0.05;
-          put(p, S[0], x + ox * out + sx * s, z + oz * out + sz * s, yaw, y);
+          var torn = ((h >>> (i * 3 + 20)) % LabStyle.SUIT_TORN == 0);
+          put(p, S[torn ? 2 : 0], x + ox * out + sx * s, z + oz * out + sz * s, yaw, y);
         }
       if ((h >>> 24) % 3 == 0)
         put(p, S[1], x + ox * (out + 1.4), z + oz * (out + 1.4), away(d) + ((h >>> 26) % 4) * 0.7);
