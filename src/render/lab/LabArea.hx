@@ -45,6 +45,7 @@ class LabArea implements Area3D
   var decals:{ grime:Int, marks:Int, tops:Int };
   var elec:render.facility.FacilityCable.ElecCounts;
   var lamps:LabLamps.LabLampSet;
+  var wall:LabWall.LabWallSet;
   // the mission, taken at build: the area hands back null once it is completed, and the alarm it
   // raised keeps sounding past that (LabLamps)
   var mission:cult.missions.CombatUndergroundLabPurge;
@@ -120,6 +121,7 @@ class LabArea implements Area3D
       // the compound's sockets, leads and floor units, the one family the lab borrows: LabModel marks
       // every furniture and machine cell taken, so nothing lands behind or under a piece
       elec = render.facility.FacilityCable.build(scene, model, render.world.MeshBuf.MeshBufTools.make());
+      wall = LabWall.build(scene, model, tile);
       // a blocker is masonry or rock: anything that is not floor. `carries` is what slab() insets
       // against, so the reveal pulls back off exactly the floor the masonry left open
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
@@ -130,7 +132,7 @@ class LabArea implements Area3D
 
 // console debug helper (permanent) — what this lab actually built.
 //   __lab() -> { structures, rooms, surfs, doors, lift, vats, furniture, rock, decals, lamps, elec,
-//     objProps, shadows }
+//     wall, objProps, shadows }
 //
 // the same reasoning as __corp(): the door leaves and the object props are instanced batches with
 // no userData.cls, parasiteHx is statics-only so the Facility record is unreachable from JS, and
@@ -198,6 +200,13 @@ class LabArea implements Area3D
               units: elec.units,
               scatter: elec.scatter,
             },
+            wall: {
+              signs: wall.signs,
+              fittings: wall.fittings,
+              screens: wall.screens,
+              lamps: wall.lamps,
+              alarm: (wall.alarm != null && wall.alarm.visible),
+            },
             objProps: [for (b in props) {
               path: b.model.path,
               count: b.solid.matrices.length,
@@ -256,6 +265,7 @@ class LabArea implements Area3D
       var dead = dead();
       LabLamps.tick(lamps, opts, alarmed, dead);
       LabInterior.dim(furniture, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
+      LabWall.tick(wall, alarmed, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       for (f in furniture)
         render.Models.cull(f, opts.camera, LabStyle.PIECE_CULL_R);
       LabLift.tick(lift, opts, game.ui.state != UISTATE_DEFAULT);

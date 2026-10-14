@@ -171,6 +171,35 @@ class LabStyle
   // and how much of the machines' screen and window glow goes with it (render.lab.LabInterior.dim)
   public static inline var DEAD_EMISSIVE = 0.85;
 
+  // ---- the walls' signs, fittings, screens and lamps (render.lab.LabWall)
+  public static inline var WALL_SIGNS_TEX = 'textures/lab/wall-signs.png';
+  public static inline var WALL_FITTINGS_TEX = 'textures/lab/wall-fittings.png';
+  public static inline var WALL_SCREENS_TEX = 'textures/lab/wall-screens.png';
+  // the shortest stretch of plain masonry that takes anything, and one sign per this many cells of it
+  public static inline var WALL_RUN_MIN = 2;
+  public static inline var WALL_SIGN_SPACING = 6;
+  // the sign plate's side and its centre's height: clear of the 4.4-5.4 machines only where nothing
+  // stands in front, which LabWall checks, and under the 6.0 wall head
+  public static inline var WALL_SIGN_W = 1.5;
+  public static inline var WALL_SIGN_Y = 4.6;
+  // a fitting's cell side (the sheet is cut at one scale, so a keypad stays smaller than a board), its
+  // height, over the borrowed electrical's 1.7 m panels, and the share of runs that take one
+  public static inline var WALL_FIT_W = 1.4;
+  public static inline var WALL_FIT_Y = 2.9;
+  public static inline var WALL_FIT_PCT = 70;
+  // a monitor's longest edge, its centre's height, and the share of vat and research runs with one
+  public static inline var WALL_SCREEN_W = 1.5;
+  public static inline var WALL_SCREEN_Y = 3.4;
+  public static inline var WALL_SCREEN_PCT = 60;
+  // a strip lamp's length, a caged lamp's side, their height and the share of runs with one
+  public static inline var WALL_LAMP_W = 2.0;
+  public static inline var WALL_CAGE_W = 0.8;
+  public static inline var WALL_LAMP_Y = 5.4;
+  public static inline var WALL_LAMP_PCT = 45;
+  // off the slab's face, and the screens' and lamps' glow over their own map (dimmed by the death)
+  public static inline var WALL_PROUD = 0.1;
+  public static inline var WALL_GLOW = 1.4;
+
   // ---- the rig. no moon and no sky: the bedrock is the ceiling, so the background and the fog are
   // one near-black (render.world.VisionMask fades unseen cells TO this, so they must match)
   public static inline var DARK = 0x040608;

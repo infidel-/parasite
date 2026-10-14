@@ -153,3 +153,26 @@ diff 0.
   oracle now fails any plant or bin with no wall beside it.
 
 **Verdict:** landed.
+
+## Lab walls dressed: signs, fittings, monitors with alarm twins, wall lamps off three pack16 sheets
+
+**Changed:** `render.lab.LabWall` hangs quads on every stretch of plain masonry (CorpSigns' run walk and
+its carries-both-ways rule) off `lab/wall-signs` (16 square plates, `pack16 --fill`), `lab/wall-fittings`
+(16 cut-outs at one scale, alphaTest) and `lab/wall-screens` (8 monitors, 4 lamps, 4 alarm screens,
+`--fill`, aspects in code, emissive off its own map). Per run: a sign per 6 cells off the room role's
+list, then 70% a fitting, 60% a monitor in the vat chamber and research rooms, 45% a lamp. Every
+monitor has a twin on the same quad wearing an alarm cell (LOCKDOWN, CONTAINMENT BREACH, ALERT,
+SEALED) in a second mesh; `tick` swaps the two on `leadTriggerDone` and dims every glow with the death.
+
+**Measured:** seed 9: 25 signs, 14 fittings, 3 monitors, 6 lamps; 85 → 87 programs (an alphaTest
+Lambert and an emissive-mapped one), both warmed, entry diff 0. Alarm live: the DNA monitor turned
+SEALED and the north wall's ALERT, programs unchanged.
+
+**The traps:**
+- Only the north, east and west walls take anything: a south wall's face looks away from the gameplay
+  camera, which sees its back (the generator's wall zones avoid it for the same reason).
+- A wall cell with a piece standing in front of it is skipped: a 4.4-5.4 machine backed onto the wall
+  hides a sign hung at 4.6 completely from the gameplay camera.
+- Fittings hang at 2.9, over the borrowed electrical's 1.7 m panels on the same walls.
+
+**Verdict:** landed.
