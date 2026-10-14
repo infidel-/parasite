@@ -12,8 +12,8 @@ import render.world.VisionMask;
 
 // one furniture top the lab's flat clutter may lie on, recorded by render.lab.LabInterior as it stands
 // the piece: the lid's centre and turn, its extents in its own frame (w along local x, d along local
-// z), its height, which sheet it deals from, and a circle in its frame nothing may land in (the
-// workbench's vice)
+// z), its height, which sheet it deals from, and the circles in its frame nothing may land in (the
+// workbench's vice, the standing kit render.lab.LabInterior puts on it)
 typedef LabLid = {
   x:Float,
   z:Float,
@@ -22,7 +22,7 @@ typedef LabLid = {
   d:Float,
   y:Float,
   workshop:Bool,
-  ?keep:{ x:Float, z:Float, r:Float },
+  keeps:Array<{ x:Float, z:Float, r:Float }>,
 };
 
 // the FLAT things of the underground lab, every one a cut-out off a pack sheet laid as a quad: the
@@ -129,15 +129,13 @@ class LabDecals
     }
 
 // one lid's worth: 2-4 cut-outs rejection-sampled in the lid's own frame clear of each other and of
-// its keep-out, then turned into the world. An item that finds no room in DECAL_TRIES is dropped
+// its keep-outs, then turned into the world. An item that finds no room in DECAL_TRIES is dropped
   static function lid(b:MeshBuf, l:LabLid):Int
     {
       var h = FacilityModel.mix(Std.int(l.x * 131) ^ (Std.int(l.z * 977) << 8));
       var want = 2 + (h >>> 3) % 3;
       var cs = Math.cos(l.yaw), sn = Math.sin(l.yaw);
-      var placed:Array<{ x:Float, z:Float, r:Float }> = [];
-      if (l.keep != null)
-        placed.push(l.keep);
+      var placed = l.keeps.copy();
       var n = 0, k = 0;
       while (n < want &&
           k < want * LabStyle.DECAL_TRIES)

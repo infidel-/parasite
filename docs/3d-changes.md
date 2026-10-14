@@ -176,3 +176,27 @@ SEALED and the north wall's ALERT, programs unchanged.
 - Fittings hang at 2.9, over the borrowed electrical's 1.7 m panels on the same walls.
 
 **Verdict:** landed.
+
+## Lab bench tops: standing kit at the lid's back ends, the flat clutter kept round it
+
+**Changed:** `LabInterior.kit` stands one piece off `art().tops` (research list or workshop list, by
+the lid's room) at a hashed end of every bench lid's back edge, and a second at the other end on 45
+in a hundred. Each piece's circle (half its larger footprint side) goes into the lid's `keeps`, which
+replaced `LabLid.keep`: `LabDecals.lid` starts its rejection sampling from those circles, so the
+2D cut-outs lie round the glbs instead of under them. 19 TRELLIS glbs (`models-src/lab/top-*.glb`, refs
+on flat black, decimation 5000) as the first set; `baseColor` per glb to the indoor ~78.
+
+**Measured:** seed 9: 18 pieces on 11 lids (6 benches, 5 workbenches), 32 cut-outs still dealt round
+them. Programs 87 → 87 (every glb a plain Lambert the lab already compiles), warmed, entry diff 0.
+At the gameplay camera a 0.95 microscope reads as a white upright on the epoxy; a 0.4 mortar is a
+dot.
+
+**The traps:**
+- All 19 are `propstat` REJECTs on components (largest 12-84%): a bottle cluster or a pipette stand is
+  many pieces by nature. Judged by eye off `_preview.py` sheets, as the machines were.
+- TRELLIS keeps the reference's yaw, so a piece's front is wherever it came back; the hashed ±0.32 rad
+  turn is all the placement does about it.
+- ~4,800 tris each at the 5000 floor, for objects 0.4-1.5 tall: this route costs ten times what a
+  hand-modelled tabletop piece does.
+
+**Verdict:** landed.

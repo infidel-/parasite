@@ -128,6 +128,11 @@ class LabStyle
   public static inline var TOP_SZ_VAR = 0.3;
   public static inline var TOP_LIFT = 0.008;
   public static inline var DECAL_TRIES = 8;
+  // a bench lid's standing kit (LabInterior.kit): how far in from the lid's back and end, the chance
+  // in a hundred of a second piece, and the turn step its hashed -4..4 jitter takes
+  public static inline var TOP_MARGIN = 0.15;
+  public static inline var TOP_PAIR = 45;
+  public static inline var TOP_JITTER = 0.08;
   public static inline var DECAL_CUT = 0.5;
   // the slurry a drained vat leaves (render.lab.LabVats, lab/floor-marks cell 8): how wide it has
   // spread once the vat is empty, how far in front of the footprint's centre it pools — out past the

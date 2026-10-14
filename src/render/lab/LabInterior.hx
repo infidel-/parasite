@@ -66,6 +66,7 @@ class LabInterior
     work:Array<LabPieceArt>,
     plants:Array<LabPieceArt>,
     suits:Array<LabPieceArt>,
+    tops:Array<Array<LabPieceArt>>,
   } = null;
 
 // the art tables: the furniture by Const row-23 tile (a PLANT is one of the generated pots by hash),
@@ -80,6 +81,7 @@ class LabInterior
     work:Array<LabPieceArt>,
     plants:Array<LabPieceArt>,
     suits:Array<LabPieceArt>,
+    tops:Array<Array<LabPieceArt>>,
   }
     {
       if (tables != null)
@@ -194,6 +196,33 @@ class LabInterior
           gen('suitfloor', 1.0, 1.86, 2.24),
           gen('suittorn', LabStyle.SUIT_H, 0.61, 1.27),
         ],
+        // what stands on a bench top, by the lid's sheet: [0] every room's but the workshop's, [1] the
+        // workshop's. Each row's d and w are its glb's own footprint at that height
+        tops: [
+          [
+            gen('top-microscope', 0.95, 0.33, 0.47),
+            gen('top-bunsen', 0.85, 0.40, 0.70),
+            gen('top-mortar', 0.42, 0.39, 0.43),
+            gen('top-tuberack', 0.38, 0.15, 0.56),
+            gen('top-desklamp', 1.20, 0.93, 0.39),
+            gen('top-aidcase', 0.36, 0.76, 0.93),
+            gen('top-radio', 0.75, 0.64, 0.36),
+            gen('top-bottles', 0.62, 0.72, 0.75),
+            gen('top-labelprinter', 0.42, 0.51, 0.67),
+            gen('top-specbox', 0.62, 0.35, 0.50),
+            gen('top-embryojar', 0.78, 0.37, 0.37),
+            gen('top-minifuge', 0.48, 0.53, 0.48),
+            gen('top-pipette', 0.62, 0.36, 0.34),
+          ],
+          [
+            gen('top-welder', 0.85, 0.79, 0.69),
+            gen('top-drillpress', 1.50, 0.70, 0.53),
+            gen('top-armkit', 0.95, 0.48, 0.82),
+            gen('top-cleaner', 0.50, 0.51, 0.61),
+            gen('top-grinder', 0.50, 0.49, 0.86),
+            gen('top-toolbox', 0.60, 0.77, 0.53),
+          ],
+        ],
       };
       return tables;
     }
@@ -269,7 +298,7 @@ class LabInterior
     {
       var A = art();
       var all = [for (a in A.furniture) a].concat([A.shelfRow, A.drum, A.crate])
-        .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits);
+        .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits).concat(A.tops[0]).concat(A.tops[1]);
       for (a in all)
         batch(scene, a.path, [{
           x: 0.0,
@@ -417,7 +446,7 @@ class LabInterior
     {
       var yaw = away(d);
       var off = (heavy ? 0.1 : 0.0);
-      p.lids.push({
+      var l:LabDecals.LabLid = {
         x: x + Math.sin(yaw) * off,
         z: z + Math.cos(yaw) * off,
         yaw: yaw,
@@ -425,12 +454,44 @@ class LabInterior
         d: (heavy ? 2.1 : 2.2),
         y: (heavy ? 2.0 : 1.96),
         workshop: (m.surf[row][col] == Surf.LAB_WORKSHOP),
-        keep: (heavy ? {
+        keeps: (heavy ? [{
           x: 1.45,
           z: 0.95,
           r: 0.45,
-        } : null),
-      });
+        }] : []),
+      };
+      p.lids.push(l);
+      kit(p, l, col, row);
+    }
+
+// a lid's standing kit off art().tops: one piece at a hashed end of its back edge, a second at the
+// other end on TOP_PAIR in a hundred, each kept out of the lid for the flat clutter. The pick, the
+// end and a small turn are hashed off the cell
+  static function kit(p:LabInteriorPlan, l:LabDecals.LabLid, col:Int, row:Int):Void
+    {
+      var list = art().tops[l.workshop ? 1 : 0];
+      var h = FacilityModel.mix((col * 19349663) ^ (row * 83492791));
+      var k = [(h >>> 8) % list.length];
+      if (h % 100 < LabStyle.TOP_PAIR)
+        k.push((k[0] + 1 + (h >>> 16) % (list.length - 1)) % list.length);
+      var side = (((h >>> 4) & 1) == 0 ? -1.0 : 1.0);
+      var cs = Math.cos(l.yaw), sn = Math.sin(l.yaw);
+      for (i in 0...k.length)
+        {
+          var a = list[k[i]];
+          var r = Math.max(a.w, a.d) / 2;
+          var lx = side * (l.w / 2 - r - LabStyle.TOP_MARGIN);
+          var lz = -l.d / 2 + r + LabStyle.TOP_MARGIN;
+          l.keeps.push({
+            x: lx,
+            z: lz,
+            r: r,
+          });
+          // the lid's frame into the world as LabDecals.lid turns it
+          put(p, a, l.x + lx * cs + lz * sn, l.z - lx * sn + lz * cs,
+            l.yaw + ((h >>> (20 + i * 4)) % 9 - 4) * LabStyle.TOP_JITTER, l.y);
+          side = -side;
+        }
     }
 
 // a desk's workstation on its top: the screen at the back, the keyboard before it, the tower at the

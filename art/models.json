@@ -3260,6 +3260,310 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/suittorn-src.png): one hazmat suit hanging empty from a hook, torn open across the chest and soaked with dark blood. Generated AT the budget (decimation_target 6000, 5716 tris). 10 components, largest 46.7%: the folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z. Reads yellow rather than orange, like lab/suit. baseColor 0.55 takes the atlas luma (Ylin 0.207) to ~95, the suits' level.",
       "last_converted": "2026-10-14T10:35:18Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.55,0.55,0.55,1"
+    },
+    "lab/top-aidcase": {
+      "src": "lab/top-aidcase.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.69,
+        0.69,
+        0.69,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-aidcase-src.png): a red hard-shell first-aid case with a white cross, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.69 takes the atlas luma (Ylin 0.110) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:38:28Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.69,0.69,0.69,1"
+    },
+    "lab/top-armkit": {
+      "src": "lab/top-armkit.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.97,
+        0.97,
+        0.97,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-armkit-src.png): a yellow robot-arm kit on a black and yellow base, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.97 takes the atlas luma (Ylin 0.078) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:46:01Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.97,0.97,0.97,1"
+    },
+    "lab/top-bottles": {
+      "src": "lab/top-bottles.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.38,
+        0.38,
+        0.38,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-bottles-src.png): a cluster of five reagent bottles, amber, white and blue, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.38 takes the atlas luma (Ylin 0.202) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:40:05Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.38,0.38,0.38,1"
+    },
+    "lab/top-bunsen": {
+      "src": "lab/top-bunsen.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.42,
+        0.42,
+        0.42,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-bunsen-src.png): a Bunsen burner on its round foot with a blue flame and an orange gas hose, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.42 takes the atlas luma (Ylin 0.182) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:36:20Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.42,0.42,0.42,1"
+    },
+    "lab/top-cleaner": {
+      "src": "lab/top-cleaner.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.43,
+        0.43,
+        0.43,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-cleaner-src.png): a white ultrasonic cleaner with a steel tank, a wire basket and a blue display, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.43 takes the atlas luma (Ylin 0.179) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:47:07Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.43,0.43,0.43,1"
+    },
+    "lab/top-desklamp": {
+      "src": "lab/top-desklamp.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.93,
+        0.93,
+        0.93,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-desklamp-src.png): a small green articulated desk lamp, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.93 takes the atlas luma (Ylin 0.082) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:37:55Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.93,0.93,0.93,1"
+    },
+    "lab/top-drillpress": {
+      "src": "lab/top-drillpress.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-drillpress-src.png): a red bench drill press, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 1.0 takes the atlas luma (Ylin 0.067) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:45:30Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/top-embryojar": {
+      "src": "lab/top-embryojar.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.34,
+        0.34,
+        0.34,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-embryojar-src.png): a capped pale-green specimen jar, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.34 takes the atlas luma (Ylin 0.221) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:42:23Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.34,0.34,0.34,1"
+    },
+    "lab/top-grinder": {
+      "src": "lab/top-grinder.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-grinder-src.png): a dark green bench grinder with two stone wheels under guards, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 1.0 takes the atlas luma (Ylin 0.033) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:47:42Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/top-labelprinter": {
+      "src": "lab/top-labelprinter.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-labelprinter-src.png): a dark grey label printer, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 1.0 takes the atlas luma (Ylin 0.051) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:40:49Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/top-microscope": {
+      "src": "lab/top-microscope.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.4,
+        0.4,
+        0.4,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-microscope-src.png): a white student microscope on a horseshoe foot, black stage and eyepiece, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.4 takes the atlas luma (Ylin 0.189) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:35:52Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.4,0.4,0.4,1"
+    },
+    "lab/top-minifuge": {
+      "src": "lab/top-minifuge.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.26,
+        0.26,
+        0.26,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-minifuge-src.png): a white benchtop micro-centrifuge with a clear lid and a green display, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.26 takes the atlas luma (Ylin 0.296) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:43:29Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.26,0.26,0.26,1"
+    },
+    "lab/top-mortar": {
+      "src": "lab/top-mortar.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.2,
+        0.2,
+        0.2,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-mortar-src.png): a white porcelain mortar with green ground matter in the bowl, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.2 takes the atlas luma (Ylin 0.376) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:37:04Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.2,0.2,0.2,1"
+    },
+    "lab/top-pipette": {
+      "src": "lab/top-pipette.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.19,
+        0.19,
+        0.19,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-pipette-src.png): a pipette stand holding four blue-and-white pipettes, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.19 takes the atlas luma (Ylin 0.400) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:44:00Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.19,0.19,0.19,1"
+    },
+    "lab/top-radio": {
+      "src": "lab/top-radio.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-radio-src.png): an olive field radio with a carry handle and a whip antenna, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 1.0 takes the atlas luma (Ylin 0.042) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:39:13Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/top-specbox": {
+      "src": "lab/top-specbox.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-specbox-src.png): a glass specimen box in a black steel frame with a lid handle, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 1.0 takes the atlas luma (Ylin 0.050) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:41:36Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/top-toolbox": {
+      "src": "lab/top-toolbox.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.64,
+        0.64,
+        0.64,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-toolbox-src.png): an orange steel toolbox, lid open, tools inside, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.64 takes the atlas luma (Ylin 0.120) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:48:38Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.64,0.64,0.64,1"
+    },
+    "lab/top-tuberack": {
+      "src": "lab/top-tuberack.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.23,
+        0.23,
+        0.23,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-tuberack-src.png): a white rack of six capped test tubes, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 0.23 takes the atlas luma (Ylin 0.337) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:37:34Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.23,0.23,0.23,1"
+    },
+    "lab/top-welder": {
+      "src": "lab/top-welder.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "TRELLIS off a gpt-image-2.5 reference on flat black (models-src/lab/top-welder-src.png): an orange inverter welder with dials and a cable reel on its side, stood on a lab bench lid by render.lab.LabInterior.kit. Generated AT the budget (decimation_target 5000). baseColor 1.0 takes the atlas luma (Ylin 0.067) to the indoor ~78.",
+      "last_converted": "2026-10-14T11:44:48Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     }
   }
 }
