@@ -135,6 +135,38 @@ class LabStyle
   public static inline var SPILL_OUT = 7.0;
   public static inline var SPILL_Y = 0.03;
 
+  // ---- the lamps (render.lab.LabLamps): a room fixture's lattice pitch and the corridor's spacing, in
+  // cells; the bulb height (just under the 6.0 wall head); its strength on the pooled spotlight; the
+  // odds, in percent of fixtures, of a dead bulb and of a sputtering one; and the 2D lab's room tints
+  public static inline var LAMP_SPACING = 5;
+  public static inline var LAMP_Y = 5.6;
+  public static inline var LAMP_MUL = 1.1;
+  // how far a fixture may sit off its cell centre, and how much weaker than LAMP_MUL it may burn, by
+  // the cell hash: a lattice of identical pools read as polka dots
+  public static inline var LAMP_JITTER = 1.4;
+  public static inline var LAMP_MUL_VAR = 0.35;
+  public static inline var LAMP_DEAD_PCT = 8;
+  public static inline var LAMP_SPUTTER_PCT = 10;
+  public static inline var LAMP_ENTRANCE = 0x5fd8ee;
+  public static inline var LAMP_VAT = 0x6dff8c;
+  public static inline var LAMP_WORKSHOP = 0xffb054;
+  public static inline var LAMP_STORAGE = 0xff5e4a;
+  public static inline var LAMP_RESEARCH = 0x6f8cff;
+  public static inline var LAMP_CORRIDOR = 0xd4e2ff;
+  // the light down the lift shaft: its tint, its height (over the shaft's 9.87 head frame) and strength
+  public static inline var LAMP_SHAFT = 0xb8d0ff;
+  public static inline var SHAFT_Y = 14.0;
+  public static inline var SHAFT_MUL = 1.4;
+  // the alarm: its red, its period in BASE_MS, and how low the strobe swells down to
+  public static inline var LAMP_ALARM = 0xff2a1a;
+  public static inline var ALARM_MULT = 2.0;
+  public static inline var ALARM_LO = 0.25;
+  // the lab's death: how long it takes in BASE_MS, what the rooms outside the vat chamber dim to, and
+  // the sputter phase every bulb takes while it goes (offset per post so they do not stutter as one)
+  public static inline var DEAD_MULT = 4.0;
+  public static inline var DEAD_DIM = 0.4;
+  public static inline var DEAD_PHASE = 3.1;
+
   // ---- the rig. no moon and no sky: the bedrock is the ceiling, so the background and the fog are
   // one near-black (render.world.VisionMask fades unseen cells TO this, so they must match)
   public static inline var DARK = 0x040608;
@@ -142,12 +174,14 @@ class LabStyle
   // room the player stands in is never fogged and the far end of the corridor is
   public static inline var FOG_NEAR = 64.0;
   public static inline var FOG_FAR = 150.0;
-  // the fill. cold and low — the lamps are what light this place
+  // the fill. cold and low — the lamps are what light this place. The tunnels' colours; at 2.4
+  // a room was black between its pools at the gameplay camera (swept live 2.4 / 3.6 / 5.5 / 9, and 9
+  // flattened the pools into the fill)
   public static inline var AMBIENT = 0x3a4657;
-  public static inline var AMBIENT_I = 2.4;
+  public static inline var AMBIENT_I = 5.5;
   public static inline var HEMI_SKY = 0x46536e;
   public static inline var HEMI_GROUND = 0x141a22;
-  public static inline var HEMI_I = 1.4;
+  public static inline var HEMI_I = 1.8;
 
 // the lab's ShellOpts: how render.lab.LabModel reads the saved grid, and what the shell is dressed in
   public static function shell():ShellOpts

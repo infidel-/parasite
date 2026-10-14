@@ -44,6 +44,10 @@ class LabArea implements Area3D
   var furniture:Array<render.Models.InstancedProp>;
   var decals:{ grime:Int, marks:Int, tops:Int };
   var elec:render.facility.FacilityCable.ElecCounts;
+  var lamps:LabLamps.LabLampSet;
+  // the mission, taken at build: the area hands back null once it is completed, and the alarm it
+  // raised keeps sounding past that (LabLamps)
+  var mission:cult.missions.CombatUndergroundLabPurge;
   // each vat's eased drain, keyed on its root object. the AREA's and not the batch's, so a rebuild of
   // the batches (refreshObjects) carries a drain on from where it was (LabVats)
   var drain = new Map<Int,Float>();
@@ -105,9 +109,11 @@ class LabArea implements Area3D
       chunks.build(scene, pre);
       // the vats and the lift AFTER the chunks: an instanced batch sits at the origin, and a glb
       // already cached would be bucketed into the chunk there and culled with it
-      posts = [];
-      vats = LabVats.build(scene, game, drain, posts);
       lift = LabLift.build(scene, model);
+      lamps = LabLamps.build(model, lift);
+      posts = lamps.all.copy();
+      vats = LabVats.build(scene, game, drain, posts);
+      mission = Std.downcast(game.area.getAreaMission(), cult.missions.CombatUndergroundLabPurge);
       furniture = LabInterior.build(scene, interior);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
       decals = LabDecals.build(scene, model, tile, interior.lids);
@@ -123,7 +129,7 @@ class LabArea implements Area3D
     }
 
 // console debug helper (permanent) — what this lab actually built.
-//   __lab() -> { structures, rooms, surfs, doors, lift, vats, furniture, rock, decals, elec,
+//   __lab() -> { structures, rooms, surfs, doors, lift, vats, furniture, rock, decals, lamps, elec,
 //     objProps, shadows }
 //
 // the same reasoning as __corp(): the door leaves and the object props are instanced batches with
@@ -179,6 +185,13 @@ class LabArea implements Area3D
             }],
             rock: rock,
             decals: decals,
+            lamps: {
+              rooms: lamps.rooms.length,
+              corridor: lamps.corridor.length,
+              shaft: (lamps.shaft != null),
+              alarm: lamps.alarm,
+              dead: lamps.dead,
+            },
             elec: {
               mounts: elec.mounts.length,
               runs: elec.runs,
@@ -239,6 +252,7 @@ class LabArea implements Area3D
       propLights.update(game, opts.playerCol, opts.playerRow, opts.dtMs);
       LabDoors.tick(doors, opts);
       LabVats.tick(vats, opts);
+      LabLamps.tick(lamps, opts, mission != null && mission.leadTriggerDone, dead());
       for (f in furniture)
         render.Models.cull(f, opts.camera, LabStyle.PIECE_CULL_R);
       LabLift.tick(lift, opts, game.ui.state != UISTATE_DEFAULT);
@@ -302,6 +316,17 @@ class LabArea implements Area3D
     }
 
 // does this area draw this object as real geometry, so the actor layer must not also lay its 2D
+// is every vat purged? the lab's power went with them. false before the mission has stood any
+  function dead():Bool
+    {
+      if (vats.roots.length == 0)
+        return false;
+      for (v in vats.roots)
+        if (!v.isFlushed)
+          return false;
+      return true;
+    }
+
 // icon? the lab's door leaves (LabDoors), its lift (LabLift) and the mission's vats (LabVats)
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
