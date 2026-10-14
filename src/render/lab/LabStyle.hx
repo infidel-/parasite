@@ -191,6 +191,10 @@ class LabStyle
           // indexed by nothing — five so the array is the length the emitter expects
           door: [DOOR_BLAST, DOOR_SERVICE, DOOR_SERVICE, DOOR_RESEARCH, DOOR_VAT],
           circ: Surf.LINO,
+          // the compound's electrical kit and cable, the one family the lab borrows whole
+          // (render.facility.FacilityCable)
+          cable: FacilityStyle.CABLE_TEX,
+          elec: FacilityStyle.ELEC_TEX,
           hood: COPING,
         },
         surfOf: LabModel.surfOf,

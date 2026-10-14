@@ -151,6 +151,7 @@ class FacilityPlacard
         return false;
       var s = m.surf[row][col];
       if (s != Surf.TILE &&
+          !FacilityModel.isLabRoom(s) &&
           !(office == true &&
             (s == Surf.OFFICE ||
              s == Surf.BARRACKS ||

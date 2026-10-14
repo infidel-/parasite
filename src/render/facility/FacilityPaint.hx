@@ -845,7 +845,8 @@ class FacilityPaint
       return FacilityModel.inside(m, col, row) &&
         (m.surf[row][col] == Surf.TILE ||
          m.surf[row][col] == Surf.GRATE ||
-         m.surf[row][col] == Surf.LINO) &&
+         m.surf[row][col] == Surf.LINO ||
+         FacilityModel.isLabRoom(m.surf[row][col])) &&
         !m.drain[row][col] &&
         !FacilityModel.isWall(m, col, row) &&
         !FacilityModel.isDoor(m, col, row) &&

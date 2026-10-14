@@ -32,6 +32,8 @@ class LabWarm
       // its own program, and the glass and the medium are transparent, which is a key of its own on top
       var paths = LabVats.warm(sc).concat(LabLift.warm(sc)).concat(LabInterior.warm(sc));
       LabDecals.warm(sc);
+      // the borrowed electrical over the demo's rooms, which its walls give sockets to hang on
+      render.facility.FacilityCable.build(sc, model, render.world.MeshBuf.MeshBufTools.make());
       // the actor layer under the lab's moonless light set (Warmup.actorLayer)
       var fx = new Group();
       sc.add(fx);

@@ -1028,6 +1028,17 @@ class FacilityModel
       return inside(m, col, row) && m.table[row][col];
     }
 
+// is this one of the underground lab's room floors (render.lab.LabModel.roleSurf)? the gate the
+// families the lab borrows from the compound take to treat it as a ROOM, the way they take Surf.TILE
+  public static inline function isLabRoom(s:Surf):Bool
+    {
+      return s == Surf.LAB_ENTRANCE ||
+        s == Surf.LAB_VAT ||
+        s == Surf.LAB_WORKSHOP ||
+        s == Surf.LAB_STORAGE ||
+        s == Surf.LAB_RESEARCH;
+    }
+
 // does this cell stand a piece of 3D furniture? the gate render.facility.FacilityKit takes to keep a
 // gas rack out of a shelving unit — one fitting to a tile
   public static inline function isFitting(m:Facility, col:Int, row:Int):Bool

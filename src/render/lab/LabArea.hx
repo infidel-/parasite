@@ -43,6 +43,7 @@ class LabArea implements Area3D
   var lift:LabLift.LabLiftSet;
   var furniture:Array<render.Models.InstancedProp>;
   var decals:{ grime:Int, marks:Int, tops:Int };
+  var elec:render.facility.FacilityCable.ElecCounts;
   // each vat's eased drain, keyed on its root object. the AREA's and not the batch's, so a rebuild of
   // the batches (refreshObjects) carries a drain on from where it was (LabVats)
   var drain = new Map<Int,Float>();
@@ -110,6 +111,9 @@ class LabArea implements Area3D
       furniture = LabInterior.build(scene, interior);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
       decals = LabDecals.build(scene, model, tile, interior.lids);
+      // the compound's sockets, leads and floor units, the one family the lab borrows: LabModel marks
+      // every furniture and machine cell taken, so nothing lands behind or under a piece
+      elec = render.facility.FacilityCable.build(scene, model, render.world.MeshBuf.MeshBufTools.make());
       // a blocker is masonry or rock: anything that is not floor. `carries` is what slab() insets
       // against, so the reveal pulls back off exactly the floor the masonry left open
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
@@ -119,8 +123,8 @@ class LabArea implements Area3D
     }
 
 // console debug helper (permanent) — what this lab actually built.
-//   __lab() -> { structures, rooms, surfs, doors, lift, vats, furniture, rock, decals, objProps,
-//     shadows }
+//   __lab() -> { structures, rooms, surfs, doors, lift, vats, furniture, rock, decals, elec,
+//     objProps, shadows }
 //
 // the same reasoning as __corp(): the door leaves and the object props are instanced batches with
 // no userData.cls, parasiteHx is statics-only so the Facility record is unreachable from JS, and
@@ -175,6 +179,12 @@ class LabArea implements Area3D
             }],
             rock: rock,
             decals: decals,
+            elec: {
+              mounts: elec.mounts.length,
+              runs: elec.runs,
+              units: elec.units,
+              scatter: elec.scatter,
+            },
             objProps: [for (b in props) {
               path: b.model.path,
               count: b.solid.matrices.length,

@@ -28,7 +28,11 @@ class LabModel
             for (col in r.x1...r.x2 + 1)
               if (FacilityModel.inside(m, col, row) &&
                   area.getCellType(col, row) >= Const.OFFSET_ROW23)
-                m.surf[row][col] = s;
+                {
+                  m.surf[row][col] = s;
+                  // taken, for the electrical render.facility.FacilityCable lays in the rooms
+                  m.deco[row][col] = _FittingKind.FIT_LAB + 1;
+                }
         }
       return m;
     }

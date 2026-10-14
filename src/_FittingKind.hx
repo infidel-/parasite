@@ -69,4 +69,8 @@ enum abstract _FittingKind(Int) from Int to Int
   // with no wall behind it by design. gen.blocks.HangarBlock carves two or three per shed and
   // render.facility.FacilityHangar cables the corner server racks to them
   var FIT_GENERATOR = 20;
+  // a piece of the UNDERGROUND LAB's — any furniture or machine cell, drawn by render.lab and never by
+  // a facility emitter. It exists so the families the lab borrows (render.facility.FacilityCable's
+  // sockets, leads and floor units) see the cell as taken: no handler here draws it or feeds it
+  var FIT_LAB = 21;
 }
