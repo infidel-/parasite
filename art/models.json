@@ -2382,54 +2382,6 @@
       "last_converted": "2026-10-13T21:18:47Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.43,0.43,0.43,1"
     },
-    "lab/tubeempty": {
-      "src": "lab/tubeempty.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.56,
-        0.56,
-        0.56,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 2 col 3; models-src/lab/tubeempty-src.png): a tall glass specimen tube with steel top and base caps, filled only with glowing pale cyan fluid, empty. Generated AT the budget (decimation_target 6000, 5913 tris). 7 components, largest 40.0%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.56 takes the atlas luma 103 to ~78.",
-      "last_converted": "2026-10-13T21:16:54Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.56,0.56,0.56,1"
-    },
-    "lab/trolley": {
-      "src": "lab/trolley.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.92,
-        0.92,
-        0.92,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 2 col 4; models-src/lab/trolley-src.png): a small steel instrument trolley cart on four castors with a lid and a drawer. Generated AT the budget (decimation_target 6000, 5900 tris). 32 components, largest 29.8%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.92 takes the atlas luma 81 to ~78.",
-      "last_converted": "2026-10-13T21:16:43Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.92,0.92,0.92,1"
-    },
-    "lab/instconsole": {
-      "src": "lab/instconsole.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.61,
-        0.61,
-        0.61,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 2 col 5; models-src/lab/instconsole-src.png): a long low steel instrument console with keypads, small screens and a hazard-marked panel, on castors. Generated AT the budget (decimation_target 6000, 5939 tris). 19 components, largest 47.4%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.61 takes the atlas luma 99 to ~78.",
-      "last_converted": "2026-10-13T21:16:36Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.61,0.61,0.61,1"
-    },
     "lab/restraint": {
       "src": "lab/restraint.glb",
       "tris": -1,
@@ -2455,22 +2407,6 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 3 col 4; models-src/lab/switchrack-src.png): a tall steel equipment rack whose front is covered in rows of small green, orange and red indicator panels and readouts. Generated AT the budget (decimation_target 6000, 5947 tris). 1 components, largest 100.0%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. the atlas already sits at luma 77.",
       "last_converted": "2026-10-13T21:17:22Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR"
-    },
-    "lab/scanner": {
-      "src": "lab/scanner.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.9,
-        0.9,
-        0.9,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 3 col 6; models-src/lab/scanner-src.png): a medical scanner: a dark dome-shaped scanning head studded with green lamps on an articulated steel arm rising from a square base. Generated AT the budget (decimation_target 6000, 5924 tris). 32 components, largest 64.5%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.90 takes the atlas luma 82 to ~78.",
-      "last_converted": "2026-10-13T21:17:11Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.9,0.9,0.9,1"
     },
     "lab/terminal": {
       "src": "lab/terminal.glb",
@@ -2500,33 +2436,6 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 4 col 2; models-src/lab/holo-src.png): a holographic specimen display: a steel pod with a glowing green screen showing a green organism, cyan trim lights. Generated AT the budget (decimation_target 6000, 5712 tris). 3 components, largest 99.8%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.68 takes the atlas luma 94 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py holo g,c 0.35 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
       "last_converted": "2026-10-14T01:13:02Z",
       "last_sig": "n1/-1/512/0.005/-/lab/holo-emissive.png@2/noMR/bc0.68,0.68,0.68,1"
-    },
-    "lab/tubeconsole": {
-      "src": "lab/tubeconsole.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.73,
-        0.73,
-        0.73,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 4 col 7; models-src/lab/tubeconsole-src.png): a small teal steel control console on a pedestal with little glowing vials and knobs on its top. Generated AT the budget (decimation_target 6000, 5746 tris). 18 components, largest 48.2%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.73 takes the atlas luma 91 to ~78.",
-      "last_converted": "2026-10-13T21:18:04Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.73,0.73,0.73,1"
-    },
-    "lab/joystick": {
-      "src": "lab/joystick.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "lift": 0.9,
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 5 col 0; models-src/lab/joystick-src.png): a low steel control desk with a joystick and a tangle of cables on its top. Generated AT the budget (decimation_target 6000, 5798 tris). 9 components, largest 88.8%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. lift 0.90 takes the atlas luma 68 to ~78.",
-      "last_converted": "2026-10-13T21:17:40Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/lf0.9"
     },
     "lab/monitorstack": {
       "src": "lab/monitorstack.glb",
@@ -2559,22 +2468,6 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 5 col 6; models-src/lab/pipecapsule-src.png): a long horizontal pale steel capsule tank with a small window and pipes and cables coming off its top. Generated AT the budget (decimation_target 6000, 5779 tris). 22 components, largest 43.6%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.53 takes the atlas luma 106 to ~78.",
       "last_converted": "2026-10-13T21:21:00Z",
       "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc0.53,0.53,0.53,1"
-    },
-    "lab/clamp": {
-      "src": "lab/clamp.glb",
-      "tris": -1,
-      "tex": 1024,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.85,
-        0.85,
-        0.85,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 6 col 2; models-src/lab/clamp-src.png): a robotic clamp platform: an octagonal steel plinth with a glowing green core and two robotic grabber arms reaching over it. Generated AT the budget (decimation_target 6000, 5950 tris). 48 components, largest 50.7%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.85 takes the atlas luma 85 to ~78.",
-      "last_converted": "2026-10-13T21:19:02Z",
-      "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc0.85,0.85,0.85,1"
     },
     "lab/tentacle": {
       "src": "lab/tentacle.glb",
@@ -2621,22 +2514,6 @@
       "last_converted": "2026-10-13T21:21:58Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.67,0.67,0.67,1"
     },
-    "lab/probe": {
-      "src": "lab/probe.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.85,
-        0.85,
-        0.85,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj3 row 8 col 6; models-src/lab/probe-src.png): a tripod-legged steel probe with a round glowing green sensor head on top. Generated AT the budget (decimation_target 6000, 5864 tris). 36 components, largest 88.5%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.85 takes the atlas luma 85 to ~78.",
-      "last_converted": "2026-10-13T21:19:49Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.85,0.85,0.85,1"
-    },
     "lab/stasis": {
       "src": "lab/stasis.glb",
       "tris": -1,
@@ -2649,48 +2526,6 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 4 col 4; models-src/lab/stasis-src.png): an upright stasis pod: a tall rounded steel capsule with a glowing pale blue glass window showing a human silhouette. Generated AT the budget (decimation_target 6000, 5830 tris). 18 components, largest 52.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +x, so render.lab.LabInterior turns it round. lift 0.84 takes the atlas luma 62 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py stasis c,b 0.3 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
       "last_converted": "2026-10-14T01:13:09Z",
       "last_sig": "n1/-1/512/0.005/-/lab/stasis-emissive.png@2/noMR/lf0.84"
-    },
-    "lab/capsule": {
-      "src": "lab/capsule.glb",
-      "tris": -1,
-      "tex": 1024,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.62,
-        0.62,
-        0.62,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 4 col 5; models-src/lab/capsule-src.png): a horizontal body capsule: a long rounded steel pod with a glass lid showing a pale human body lying inside. Generated AT the budget (decimation_target 6000, 5767 tris). 15 components, largest 68.1%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.62 takes the atlas luma 99 to ~78.",
-      "last_converted": "2026-10-13T21:19:15Z",
-      "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc0.62,0.62,0.62,1"
-    },
-    "lab/robochair": {
-      "src": "lab/robochair.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.79,
-        0.79,
-        0.79,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 4 col 7; models-src/lab/robochair-src.png): a robotic examination chair: a dark steel high-backed chair on an articulated mechanical base. Generated AT the budget (decimation_target 6000, 5620 tris). 38 components, largest 70.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.79 takes the atlas luma 87 to ~78.",
-      "last_converted": "2026-10-13T21:22:54Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.79,0.79,0.79,1"
-    },
-    "lab/winconsole": {
-      "src": "lab/winconsole.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 5 col 0; models-src/lab/winconsole-src.png): a steel glovebox console: a boxy cabinet with a sloped glass window and two round black glove ports in its front, bolted round feet. Generated AT the budget (decimation_target 6000, 5713 tris). 19 components, largest 45.1%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. the atlas already sits at luma 79.",
-      "last_converted": "2026-10-13T21:20:32Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR"
     },
     "lab/upw": {
       "src": "lab/upw.glb",
@@ -2707,17 +2542,6 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 5 col 2; models-src/lab/upw-src.png): an ultrapure-water unit: a steel cabinet with two round tanks on its top, a glass panel, a hose arm and a label reading UPW UNIT. Generated AT the budget (decimation_target 6000, 5814 tris). 29 components, largest 45.8%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.67 takes the atlas luma 95 to ~78.",
       "last_converted": "2026-10-13T21:20:50Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.67,0.67,0.67,1"
-    },
-    "lab/booth": {
-      "src": "lab/booth.glb",
-      "tris": -1,
-      "tex": 1024,
-      "error": 0.005,
-      "dropMR": true,
-      "lift": 0.95,
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 5 col 5; models-src/lab/booth-src.png): a contamination testing booth: a tall boxy steel booth with a screen reading CONTAMINATION TESTING BOOTH and two round dials below. Generated AT the budget (decimation_target 6000, 5897 tris). 5 components, largest 97.5%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. lift 0.95 takes the atlas luma 73 to ~78.",
-      "last_converted": "2026-10-13T21:19:49Z",
-      "last_sig": "n1/-1/1024/0.005/-/-/noMR/lf0.95"
     },
     "lab/incinerator": {
       "src": "lab/incinerator.glb",
@@ -2736,24 +2560,6 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 7 col 0; models-src/lab/incinerator-src.png): a squat steel incinerator box with a glowing red-hot chamber window full of charred bones and a biohazard-marked side hatch. Generated AT the budget (decimation_target 6000, 5564 tris). 15 components, largest 70.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.87 takes the atlas luma 83 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py incinerator r 0.35 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
       "last_converted": "2026-10-14T01:13:08Z",
       "last_sig": "n1/-1/512/0.005/-/lab/incinerator-emissive.png@2/noMR/bc0.87,0.87,0.87,1"
-    },
-    "lab/analysis": {
-      "src": "lab/analysis.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        0.81,
-        0.81,
-        0.81,
-        1
-      ],
-      "emissiveSrc": "lab/analysis-emissive.png",
-      "emissiveStrength": 2,
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (underground-lab-deco-obj2 row 7 col 2; models-src/lab/analysis-src.png): a floor analysis station: a low square steel platform with a tiled white work surface, a small robotic arm, a green-lit sample holder and a control box. Generated AT the budget (decimation_target 6000, 5951 tris). 22 components, largest 77.3%: an assembly of panels, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.81 takes the atlas luma 87 to ~78. Glows by an emissive map keyed off its own albedo (models-src/lab/_emikey.py analysis g 0.3 0.3): the brightest texels of its screen or window hue, which a centroid box (tools/emissive.py) could not have picked out of a mosaic atlas without a box per chart. Eight kinds key cleanly this way; on the tubes, racks and consoles the key also lit their cyan steel and they carry no map.",
-      "last_converted": "2026-10-14T01:13:24Z",
-      "last_sig": "n1/-1/512/0.005/-/lab/analysis-emissive.png@2/noMR/bc0.81,0.81,0.81,1"
     },
     "lab/bioprinter": {
       "src": "lab/bioprinter.glb",
@@ -3162,22 +2968,6 @@
       "note": "TRELLIS off an edit_image of the 2D lab sprite (near-top row 6 col 2; models-src/lab/suitfloor-src.png): an empty orange hazmat suit with its hood and visor lying crumpled in a heap on the floor. Generated AT the budget (decimation_target 6000, 5624 tris). 4 components, largest 97.6%: the leaves or folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.44 takes the atlas luma 140 to ~95: the orange is the read and stays above the steel round it.",
       "last_converted": "2026-10-13T21:31:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.44,0.44,0.44,1"
-    },
-    "lab/incbin": {
-      "src": "lab/incbin.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
-      "dropMR": true,
-      "baseColor": [
-        1,
-        1,
-        1,
-        1
-      ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/incbin-src.png): a squat steel incinerator bin with a mesh basket of ash, a glowing orange flame window and a hand crank. Generated AT the budget (decimation_target 6000, 5507 tris). 11 components, largest 53.6%: an assembly of panels, read by eye at four sides and whole. Its front is at +z. baseColor 1.0: the atlas luma (Ylin 0.071) is already under the indoor ~78, nothing to take down. The first roll fed the raw sprite to TRELLIS and came back a flat card; the edit_image step is what made it an object.",
-      "last_converted": "2026-10-14T10:32:41Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     },
     "lab/scanframe": {
       "src": "lab/scanframe.glb",

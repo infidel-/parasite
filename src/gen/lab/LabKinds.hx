@@ -6,7 +6,10 @@
 //
 // APPEND ONLY. A kind's index is the saved tile id of its origin cell (Const.TILE_LAB_MACHINE0 +
 // index), so reordering this list turns every saved incubator into something else. A kind that goes
-// out of use stays in the table and stops being dealt.
+// out of use stays in the table and stops being dealt: its rooms list is empty. Fourteen went out
+// 2026-10-15 when the machines were rebuilt by hand: half the research bay's kinds (a second empty
+// tube, the trolley, four consoles of one look, the scanner, the clamp, the probe, the capsule, the
+// robot chair, the booth, the analysis station) and the lobby's incinerator bin.
 
 package gen.lab;
 
@@ -22,33 +25,33 @@ class LabKinds
     m('dialtank', 1, 1, false, false, [ ROLE_VAT, ROLE_WORKSHOP ]),
     m('autopsy', 2, 1, false, false, [ ROLE_RESEARCH ]),
     m('tube', 1, 1, false, false, [ ROLE_VAT, ROLE_RESEARCH ]),
-    m('tubeempty', 1, 1, false, false, [ ROLE_VAT, ROLE_RESEARCH ]),
-    m('trolley', 1, 1, false, false, [ ROLE_RESEARCH, ROLE_VAT, ROLE_WORKSHOP ]),
-    m('instconsole', 2, 1, true, false, [ ROLE_RESEARCH, ROLE_VAT ]),
+    m('tubeempty', 1, 1, false, false, []),
+    m('trolley', 1, 1, false, false, []),
+    m('instconsole', 2, 1, true, false, []),
     m('restraint', 1, 1, false, false, [ ROLE_RESEARCH ]),
     m('switchrack', 2, 1, true, false, [ ROLE_VAT, ROLE_WORKSHOP ]),
-    m('scanner', 1, 1, false, false, [ ROLE_RESEARCH ]),
+    m('scanner', 1, 1, false, false, []),
     m('terminal', 2, 1, true, false, [ ROLE_RESEARCH, ROLE_VAT ]),
     m('holo', 2, 1, false, false, [ ROLE_RESEARCH ]),
-    m('tubeconsole', 1, 1, true, true, [ ROLE_VAT ]),
-    m('joystick', 2, 1, true, false, [ ROLE_VAT ]),
+    m('tubeconsole', 1, 1, true, true, []),
+    m('joystick', 2, 1, true, false, []),
     m('monitorstack', 2, 1, true, false, [ ROLE_RESEARCH, ROLE_VAT ]),
     m('pipecapsule', 2, 1, true, false, [ ROLE_VAT ]),
     m('powerbox', 2, 1, true, false, [ ROLE_WORKSHOP, ROLE_VAT ]),
-    m('clamp', 2, 2, false, false, [ ROLE_WORKSHOP, ROLE_RESEARCH ]),
+    m('clamp', 2, 2, false, false, []),
     m('leverbox', 1, 1, true, true, [ ROLE_WORKSHOP ]),
     m('tentacle', 2, 1, false, false, [ ROLE_VAT ]),
     m('bioscreen', 2, 1, true, false, [ ROLE_RESEARCH, ROLE_VAT ]),
     m('cryopod', 2, 1, false, false, [ ROLE_RESEARCH, ROLE_VAT ]),
-    m('probe', 1, 1, false, false, [ ROLE_RESEARCH ]),
+    m('probe', 1, 1, false, false, []),
     m('stasis', 1, 1, false, false, [ ROLE_RESEARCH, ROLE_VAT ]),
-    m('capsule', 2, 1, false, false, [ ROLE_RESEARCH ]),
-    m('robochair', 1, 1, false, false, [ ROLE_RESEARCH ]),
-    m('winconsole', 2, 1, true, false, [ ROLE_RESEARCH, ROLE_VAT ]),
+    m('capsule', 2, 1, false, false, []),
+    m('robochair', 1, 1, false, false, []),
+    m('winconsole', 2, 1, true, false, []),
     m('upw', 2, 1, true, false, [ ROLE_VAT, ROLE_WORKSHOP ]),
-    m('booth', 2, 2, true, false, [ ROLE_RESEARCH ]),
+    m('booth', 2, 2, true, false, []),
     m('incinerator', 2, 1, true, false, [ ROLE_RESEARCH, ROLE_VAT ]),
-    m('analysis', 2, 2, false, false, [ ROLE_RESEARCH ]),
+    m('analysis', 2, 2, false, false, []),
     m('bioprinter', 2, 2, false, false, [ ROLE_RESEARCH ]),
     // the store's cold chain and cabinets
     m('vault', 2, 2, false, false, [ ROLE_STORAGE ]),
@@ -79,7 +82,7 @@ class LabKinds
     m('sheetcage', 2, 1, false, false, [ ROLE_ENTRANCE ]),
     m('gurney', 2, 1, false, false, [ ROLE_ENTRANCE ]),
     m('tarpcrate', 2, 1, false, false, [ ROLE_ENTRANCE, ROLE_STORAGE ]),
-    m('incbin', 1, 1, false, false, [ ROLE_ENTRANCE ]),
+    m('incbin', 1, 1, false, false, []),
     m('gurneys', 2, 1, false, false, [ ROLE_ENTRANCE ]),
     m('palletcrate', 2, 1, false, false, [ ROLE_ENTRANCE, ROLE_STORAGE ]),
     m('scanframe', 2, 1, false, false, [ ROLE_ENTRANCE ]),

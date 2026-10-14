@@ -134,31 +134,18 @@ class LabInterior
           'dialtank' => gen('dialtank', 3.6, 3.36, 3.35),
           'autopsy' => gen('autopsy', 3.4, 2.82, 2.48),
           'tube' => gen('tube', 4.6, 2.08, 2.76),
-          'tubeempty' => gen('tubeempty', 4.6, 2.46, 2.5),
-          'trolley' => gen('trolley', 2.4, 1.38, 2.4),
-          'instconsole' => gen('instconsole', 3.2, 1.48, 4.86),
           'restraint' => gen('restraint', 3.4, 2.27, 2.32),
           'switchrack' => gen('switchrack', 4.6, 1.79, 2.98, -HALF_PI),
-          'scanner' => gen('scanner', 4.0, 1.99, 2.39),
           'terminal' => gen('terminal', 3.4, 2.3, 3.26),
           'holo' => gen('holo', 3.6, 2.25, 4.02),
-          'tubeconsole' => gen('tubeconsole', 3.0, 1.12, 2.4),
-          'joystick' => gen('joystick', 2.6, 2.68, 4.94, -HALF_PI),
           'monitorstack' => gen('monitorstack', 4.4, 1.44, 2.32, -HALF_PI),
           'pipecapsule' => gen('pipecapsule', 2.8, 1.54, 5.47),
-          'clamp' => gen('clamp', 3.6, 6.87, 6.87),
           'tentacle' => gen('tentacle', 4.4, 3.5, 3.95),
           'bioscreen' => gen('bioscreen', 4.0, 2.89, 4.29, -HALF_PI),
           'cryopod' => gen('cryopod', 2.65, 3.63, 3.4),
-          'probe' => gen('probe', 2.75, 3.41, 3.63),
           'stasis' => gen('stasis', 5.0, 1.8, 2.63, -HALF_PI),
-          'capsule' => gen('capsule', 2.3, 3.58, 7.3),
-          'robochair' => gen('robochair', 3.4, 2.79, 1.8),
-          'winconsole' => gen('winconsole', 3.0, 2.67, 4.18),
           'upw' => gen('upw', 4.6, 1.95, 3.97),
-          'booth' => gen('booth', 5.2, 2.93, 3.62),
           'incinerator' => gen('incinerator', 4.0, 3.26, 4.66),
-          'analysis' => gen('analysis', 3.0, 4.21, 4.23),
           'bioprinter' => gen('bioprinter', 4.8, 2.16, 3.28),
           'specimencase' => gen('specimencase', 4.0, 1.96, 5.23),
           'ambertanks' => gen('ambertanks', 4.8, 2.81, 4.74),
@@ -182,7 +169,6 @@ class LabInterior
           'tarpcrate' => gen('tarpcrate', 3.0, 2.29, 3.13),
           'gurneys' => gen('gurneys', 3.0, 1.72, 3.22),
           'palletcrate' => gen('palletcrate', 1.85, 3.61, 3.52),
-          'incbin' => gen('incbin', 3.4, 2.22, 3.39),
           'scanframe' => gen('scanframe', 2.8, 3.55, 5.31),
         ],
         shelfRow: row(M.labShelfRow, 4.6, 2.4),
@@ -453,6 +439,34 @@ class LabInterior
       return prop;
     }
 
+// a piece and what goes with it: its glass shell at the same place, its burner's flame and its status
+// lights turned into the world with it. `phase` is the flame's flicker phase
+  static function dress(p:LabInteriorPlan, a:LabPieceArt, x:Float, z:Float, yaw:Float, y:Float,
+      phase:Float):Void
+    {
+      put(p, a, x, z, yaw, y);
+      if (a.glass != null)
+        put(p, a.glass, x, z, yaw, y);
+      // the anchors are in the piece's own frame, so they turn with the yaw it is drawn at
+      var t = yaw + (a.turn != null ? a.turn : 0.0);
+      var c = Math.cos(t), sy = Math.sin(t);
+      if (a.flame != null)
+        p.flames.push({
+          x: x + a.flame.x * c + a.flame.z * sy,
+          y: y + a.flame.y,
+          z: z - a.flame.x * sy + a.flame.z * c,
+          phase: phase,
+        });
+      if (a.leds != null)
+        for (e in a.leds)
+          p.leds.push({
+            x: x + e.x * c + e.z * sy,
+            y: y + e.y,
+            z: z - e.x * sy + e.z * c,
+            yaw: t,
+          });
+    }
+
 // one placement onto its path's list
   static function put(p:LabInteriorPlan, a:LabPieceArt, x:Float, z:Float, yaw:Float, ?y:Float):Void
     {
@@ -603,25 +617,7 @@ class LabInterior
           // the lid's frame into the world as LabDecals.lid turns it
           var x = l.x + lx * cs + lz * sn, z = l.z - lx * sn + lz * cs;
           var yaw = l.yaw + ((h >>> (20 + i * 4)) % 9 - 4) * LabStyle.TOP_JITTER;
-          put(p, a, x, z, yaw, l.y);
-          if (a.glass != null)
-            put(p, a.glass, x, z, yaw, l.y);
-          var c = Math.cos(yaw), sy = Math.sin(yaw);
-          if (a.flame != null)
-            p.flames.push({
-              x: x + a.flame.x * c + a.flame.z * sy,
-              y: l.y + a.flame.y,
-              z: z - a.flame.x * sy + a.flame.z * c,
-              phase: (h % 628) / 100,
-            });
-          if (a.leds != null)
-            for (e in a.leds)
-              p.leds.push({
-                x: x + e.x * c + e.z * sy,
-                y: l.y + e.y,
-                z: z - e.x * sy + e.z * c,
-                yaw: yaw,
-              });
+          dress(p, a, x, z, yaw, l.y, (h % 628) / 100);
           side = -side;
         }
     }
@@ -782,7 +778,7 @@ class LabInterior
           var hh = FacilityModel.mix((col * 40503151) ^ (row * 57885161));
           yaw = (alongX ? 0.0 : Math.PI / 2) + ((hh >>> 4) % 2) * Math.PI;
         }
-      put(p, a, x, z, yaw);
+      dress(p, a, x, z, yaw, 0.0, (FacilityModel.mix(col * 7919 + row) % 628) / 100);
       // the footprint's own shadow; a wall box hung off the floor throws none on it
       if (a.y != null)
         return;

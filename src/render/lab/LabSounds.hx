@@ -41,9 +41,9 @@ class LabSounds
   static var SPIN = [ 'centrifuge' ];
   static var INCUBATOR = [ 'incubator', 'embryonic', 'rack8', 'rack6', 'ambertanks', 'canisters',
     'specimencase', 'bioprinter', 'gestation' ];
-  static var CONSOLE = [ 'terminal', 'screenwall', 'monitorstack', 'instconsole', 'joystick',
-    'tubeconsole', 'winconsole', 'holo', 'bioscreen', 'brainscan', 'booth', 'analysis' ];
-  static var CAGED = [ 'hatchbox', 'tentacle', 'sheetcage', 'cagecase', 'capsule' ];
+  static var CONSOLE = [ 'terminal', 'screenwall', 'monitorstack', 'holo', 'bioscreen',
+    'brainscan' ];
+  static var CAGED = [ 'hatchbox', 'tentacle', 'sheetcage', 'cagecase' ];
 
   var game:Game;
   // the area this was built for, never game.area: a restart swaps that for the new game's start area

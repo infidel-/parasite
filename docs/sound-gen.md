@@ -273,7 +273,7 @@ for, and `LabArea` hands it the rebuilt vat set (`setVats`) so the vat cells ref
 | `lab/klaxon` | every door, gated on the lead's alarm (`leadTriggerDone`) | loop | 8 |
 | `lab/drip` | the vat cells | event, 2 variants, gap 14 s | 3 |
 | `lab/knock`, `lab/hiss` | the pump machines (reactor, piped capsule, UPW, dial tank, switch rack); hiss also the cryo set | event, gaps 30 / 25 s | 5 / 4 |
-| `lab/thump` | the caged units (hatch box, tentacle console, sheeted cage, cage case, capsule) | event, gap 40 s | 4 |
+| `lab/thump` | the caged units (hatch box, tentacle console, sheeted cage, cage case) | event, gap 40 s | 4 |
 | `lab/shaft` | the lift | event, 2 variants, gap 35 s | 6 |
 
 - **Beds**, one-hot over 4 x `BASE_MS` off `generatorInfo.getRoomAt`: `lab/lobby`, `lab/vat`,
