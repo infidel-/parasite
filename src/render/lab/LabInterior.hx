@@ -960,6 +960,11 @@ class LabInterior
           x += DC[d] * back;
           z += DR[d] * back;
           yaw = away(d);
+          // the container's door end is its +x, and on a side wall away(d) can aim it up the wall
+          // away from the camera; its two long sides are alike, so turn it end for end instead
+          if (k.name == 'container' &&
+              Math.sin(yaw) > 0.5)
+            yaw += Math.PI;
         }
       else
         {

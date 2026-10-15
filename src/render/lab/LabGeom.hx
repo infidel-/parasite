@@ -69,6 +69,25 @@ class LabGeom
               FacilityGeom.cap(b, x0, s.x0, s.z0, s.z1, y, t);
             if (rock(m, col + 1, row))
               FacilityGeom.cap(b, s.x1, x0 + CELL, s.z0, s.z1, y, t);
+            // the outer corner of an L whose two arms are walls and whose diagonal is rock:
+            // FacilityGeom.capTop notches the head there and fills the notch only over indoor floor,
+            // so over rock it was a square hole down to the fog. It spans from this cell's corner to
+            // where the two arm cells' own slabs stop short of the rock
+            for (dz in [-1, 1])
+              for (dx in [-1, 1])
+                {
+                  if (!FacilityModel.isWall(m, col + dx, row) ||
+                      !FacilityModel.isWall(m, col, row + dz) ||
+                      !rock(m, col + dx, row + dz))
+                    continue;
+                  var sv = FacilityGeom.slab(m, col, row + dz);
+                  var sh = FacilityGeom.slab(m, col + dx, row);
+                  var xa = (dx < 0 ? x0 : sv.x1), xb = (dx < 0 ? sv.x0 : x0 + CELL);
+                  var za = (dz < 0 ? z0 : sh.z1), zb = (dz < 0 ? sh.z0 : z0 + CELL);
+                  if (xb > xa &&
+                      zb > za)
+                    FacilityGeom.cap(b, xa, xb, za, zb, y, t);
+                }
           }
       if (b.idx.length == 0)
         return 0;

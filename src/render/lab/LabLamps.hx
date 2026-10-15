@@ -53,18 +53,31 @@ class LabLamps
           var surf = LabModel.roleSurf(r.role);
           var nx = Std.int(Math.max(1, Math.round(r.w / LabStyle.LAMP_SPACING)));
           var ny = Std.int(Math.max(1, Math.round(r.h / LabStyle.LAMP_SPACING)));
+          var lit = 0, first = null;
           for (i in 0...nx)
             for (j in 0...ny)
               {
-                var col = r.x1 + Std.int((i + 0.5) * r.w / nx);
-                var row = r.y1 + Std.int((j + 0.5) * r.h / ny);
-                var p = post(col, row, tint(surf));
+                var c = free(m, r, r.x1 + Std.int((i + 0.5) * r.w / nx),
+                  r.y1 + Std.int((j + 0.5) * r.h / ny));
+                if (first == null)
+                  first = c;
+                var p = post(c.col, c.row, tint(surf), false);
                 if (p == null)
                   continue;
+                lit++;
                 rooms.push(p);
                 if (surf == Surf.LAB_VAT)
                   vat.push(p);
               }
+          // a small room is two or three posts, and the hash killed both of a 10x6 bay's: the dead
+          // ones are the room's mood, never the whole of it
+          if (lit == 0)
+            {
+              var p = post(first.col, first.row, tint(surf), true);
+              rooms.push(p);
+              if (surf == Surf.LAB_VAT)
+                vat.push(p);
+            }
         }
       // the corridor: row-major greedy, a strip light on the first lino cell far enough from every
       // one already hung — the shape FacilityLamps.corridors takes for the same reason (a corridor is
@@ -88,7 +101,7 @@ class LabLamps
               col: col,
               row: row,
             });
-            var p = post(col, row, LabStyle.LAMP_CORRIDOR);
+            var p = post(col, row, LabStyle.LAMP_CORRIDOR, false);
             if (p != null)
               corridor.push(p);
           }
@@ -129,12 +142,42 @@ class LabLamps
       };
     }
 
-// one fixture over a cell, or null for a dead one: the cell hash says steady, sputtering or dead
-  static function post(col:Int, row:Int, color:Int):LampPost
+// the room cell nearest a lattice point that nothing stands on (LabModel.fromArea marks every
+// furniture, shelf-row and machine cell in `deco`), so a pool lights the aisle and not a shelf top;
+// the lattice point itself when the room has no free cell
+  static function free(m:Facility, r:_Room, col:Int, row:Int):{ col:Int, row:Int }
+    {
+      for (d in 0...Std.int(Math.max(r.w, r.h)))
+        for (dy in -d...d + 1)
+          for (dx in -d...d + 1)
+            {
+              if (Std.int(Math.max(Math.abs(dx), Math.abs(dy))) != d)
+                continue;
+              var c = col + dx, w = row + dy;
+              if (c >= r.x1 &&
+                  c <= r.x2 &&
+                  w >= r.y1 &&
+                  w <= r.y2 &&
+                  m.deco[w][c] == 0)
+                return {
+                  col: c,
+                  row: w,
+                };
+            }
+      return {
+        col: col,
+        row: row,
+      };
+    }
+
+// one fixture over a cell, or null for a dead one: the cell hash says steady, sputtering or dead;
+// `live` keeps a dead roll as a sputtering one (a room's last post)
+  static function post(col:Int, row:Int, color:Int, live:Bool):LampPost
     {
       var h = FacilityModel.mix((col * 49979687) ^ (row * 86028121));
       var roll = (h >>> 3) % 100;
-      if (roll < LabStyle.LAMP_DEAD_PCT)
+      if (roll < LabStyle.LAMP_DEAD_PCT &&
+          !live)
         return null;
       // off the cell centre and off its neighbours' strength by the hash, so a lattice of pools does
       // not read as a grid of identical discs
