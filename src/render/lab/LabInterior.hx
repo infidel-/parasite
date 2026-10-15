@@ -1120,6 +1120,7 @@ class LabInterior
         d: (heavy ? 2.1 : 2.2),
         y: (heavy ? 2.0 : 1.96),
         workshop: (m.surf[row][col] == Surf.LAB_WORKSHOP),
+        count: LabStyle.TOP_COUNT,
         keeps: (heavy ? [{
           x: 1.45,
           z: 0.95,
@@ -1128,6 +1129,44 @@ class LabInterior
       };
       p.lids.push(l);
       kit(p, l, col, row);
+      if (heavy)
+        under(p, l, col, row);
+    }
+
+// a workbench's lower shelf (models-src/lab/labkit_build.py workbench: a board at UNDER_Y, clear
+// between the legs): fewer flat things than the top, and on UNDER_KIT in a hundred one piece of the
+// workshop kit short enough to clear the top board, at a hashed end
+  static function under(p:LabInteriorPlan, top:LabDecals.LabLid, col:Int, row:Int):Void
+    {
+      // the shelf is centred on the piece, the top's lid nudged 0.1 forward of it
+      var l:LabDecals.LabLid = {
+        x: top.x - Math.sin(top.yaw) * 0.1,
+        z: top.z - Math.cos(top.yaw) * 0.1,
+        yaw: top.yaw,
+        w: LabStyle.UNDER_W,
+        d: LabStyle.UNDER_D,
+        y: LabStyle.UNDER_Y,
+        workshop: true,
+        count: LabStyle.UNDER_COUNT,
+        keeps: [],
+      };
+      p.lids.push(l);
+      var h = FacilityModel.mix((col * 73856093) ^ (row * 19349663));
+      if (h % 100 >= LabStyle.UNDER_KIT)
+        return;
+      var list = [for (a in art().tops[1]) if (a.h < LabStyle.UNDER_HEAD) a];
+      var a = list[(h >>> 8) % list.length];
+      var r = Math.max(a.w, a.d) / 2;
+      var lx = (((h >>> 4) & 1) == 0 ? -1.0 : 1.0) * (l.w / 2 - r - LabStyle.TOP_MARGIN);
+      var lz = -l.d / 2 + r + LabStyle.TOP_MARGIN;
+      l.keeps.push({
+        x: lx,
+        z: lz,
+        r: r,
+      });
+      var cs = Math.cos(l.yaw), sn = Math.sin(l.yaw);
+      dress(p, a, l.x + lx * cs + lz * sn, l.z - lx * sn + lz * cs,
+        l.yaw + ((h >>> 20) % 9 - 4) * LabStyle.TOP_JITTER, l.y, (h % 628) / 100);
     }
 
 // a lid's standing kit off art().tops: one piece at a hashed end of its back edge, a second at the

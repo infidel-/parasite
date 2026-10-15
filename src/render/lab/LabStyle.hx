@@ -132,6 +132,16 @@ class LabStyle
   // in a hundred of a second piece, and the turn step its hashed -4..4 jitter takes
   public static inline var TOP_MARGIN = 0.15;
   public static inline var TOP_PAIR = 45;
+  // the most flat things a bench top carries (render.lab.LabDecals deals that or up to two fewer)
+  public static inline var TOP_COUNT = 4;
+  // a workbench's lower shelf: its board's top, the clear lid between the legs, the most flat things
+  // it carries, the chance in a hundred of a standing piece, and the headroom that piece must clear
+  public static inline var UNDER_Y = 0.53;
+  public static inline var UNDER_W = 3.4;
+  public static inline var UNDER_D = 2.0;
+  public static inline var UNDER_COUNT = 2;
+  public static inline var UNDER_KIT = 40;
+  public static inline var UNDER_HEAD = 1.1;
   public static inline var TOP_JITTER = 0.08;
   // a bench-top glass shell's look (LabInterior.glass): a faint tint that writes no depth, the vat
   // glass's own recipe at a stronger opacity, since a jar is far smaller than a vat

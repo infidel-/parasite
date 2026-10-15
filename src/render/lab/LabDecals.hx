@@ -12,8 +12,9 @@ import render.world.VisionMask;
 
 // one furniture top the lab's flat clutter may lie on, recorded by render.lab.LabInterior as it stands
 // the piece: the lid's centre and turn, its extents in its own frame (w along local x, d along local
-// z), its height, which sheet it deals from, and the circles in its frame nothing may land in (the
-// workbench's vice, the standing kit render.lab.LabInterior puts on it)
+// z), its height, which sheet it deals from, the most it may carry (it deals that or up to two fewer,
+// never none), and the circles in its frame nothing may land in (the workbench's vice, the standing
+// kit render.lab.LabInterior puts on it)
 typedef LabLid = {
   x:Float,
   z:Float,
@@ -22,6 +23,7 @@ typedef LabLid = {
   d:Float,
   y:Float,
   workshop:Bool,
+  count:Int,
   keeps:Array<{ x:Float, z:Float, r:Float }>,
 };
 
@@ -132,8 +134,10 @@ class LabDecals
 // its keep-outs, then turned into the world. An item that finds no room in DECAL_TRIES is dropped
   static function lid(b:MeshBuf, l:LabLid):Int
     {
-      var h = FacilityModel.mix(Std.int(l.x * 131) ^ (Std.int(l.z * 977) << 8));
-      var want = 2 + (h >>> 3) % 3;
+      // the height in the hash too: a workbench's lower shelf stands right under its top
+      var h = FacilityModel.mix(Std.int(l.x * 131) ^ (Std.int(l.z * 977) << 8) ^
+        (Std.int(l.y * 37) << 20));
+      var want = Std.int(Math.max(1, l.count - (h >>> 3) % 3));
       var cs = Math.cos(l.yaw), sn = Math.sin(l.yaw);
       var placed = l.keeps.copy();
       var n = 0, k = 0;
