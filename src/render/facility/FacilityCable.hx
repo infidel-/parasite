@@ -624,7 +624,7 @@ class FacilityCable
     {
       var s = span(m, p);
       var e = FacilityStyle.MOUNT_PROUD;
-      var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W);
+      var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W) * scale(m);
       var h = w / 2;
       var c = at(p);
       var y = (p.fit ? FacilityStyle.FIT_Y : FacilityStyle.SOCK_Y);
@@ -639,6 +639,12 @@ class FacilityCable
         }
       var x = (dir == 2 ? s.x0 - e : s.x1 + e);
       pane(b, x, x, Math.max(c.z - h, s.z0), Math.min(c.z + h, s.z1), dir, y - h, y + h, p.cell);
+    }
+
+// the kind's size for the wall kit against the compound's own (ShellTex.elecScale)
+  static inline function scale(m:Facility):Float
+    {
+      return (m.tex.elecScale != null ? m.tex.elecScale : 1.0);
     }
 
 // a mount's centre on its floor cell, slid `off` along its wall
@@ -880,7 +886,7 @@ class FacilityCable
       // proud of the ribbon it covers, which is itself proud of the plate — three parallel surfaces,
       // and the standing note says separate them with a gap and never with a polygonOffset
       var e = FacilityStyle.CABLE_EPS;
-      var h = FacilityStyle.PLUG_W / 2;
+      var h = FacilityStyle.PLUG_W * scale(m) / 2;
       var t = FacilityStyle.ELEC_COLS;
       var cc = FacilityStyle.ELEC_PLUG % t, cr = Std.int(FacilityStyle.ELEC_PLUG / t);
       var u0 = cc / t, u1 = (cc + 1) / t;
@@ -935,14 +941,25 @@ class FacilityCable
     {
       var sl = FacilityGeom.slab(m, p.col + DC[p.dir], p.row + DR[p.dir]);
       var c = at(p);
-      var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W);
+      var w = (p.fit ? FacilityStyle.FIT_W : FacilityStyle.SOCK_W) * scale(m);
       var h = (p.fit ? w * FacilityStyle.SOCK_LEAD : 0.0);
       var y = (p.fit ? FacilityStyle.FIT_Y : FacilityStyle.SOCK_Y);
       var dir = p.dir ^ 1;
       var e = FacilityStyle.MOUNT_PROUD + FacilityStyle.CABLE_EPS;
+      // a socket's lead and plug go to its OUTLET, off the plate's centre: across the art by `plug`'s
+      // own right (UP cross the face's normal, FacilityGeom.ends' handedness) and up it. The table is
+      // the compound's sheet's; the military's own pack keeps the centre
+      var a = 0.0;
+      if (!p.fit &&
+          m.tex.elec == FacilityStyle.ELEC_TEX)
+        {
+          var o = FacilityStyle.SOCK_OUTLET[p.cell - FacilityStyle.ELEC_SOCKET];
+          a = (o[0] - 0.5) * w;
+          y += (0.5 - o[1]) * w;
+        }
       if (dir < 2)
-        return [c.x + s * h, y, (dir == 0 ? sl.z0 - e : sl.z1 + e)];
-      return [(dir == 2 ? sl.x0 - e : sl.x1 + e), y, c.z + s * h];
+        return [c.x + s * h + NZ[dir] * a, y, (dir == 0 ? sl.z0 - e : sl.z1 + e)];
+      return [(dir == 2 ? sl.x0 - e : sl.x1 + e), y, c.z + s * h - NX[dir] * a];
     }
 
 // the floor units, and the cable that leads to each: a drum, a welding set, a distribution board

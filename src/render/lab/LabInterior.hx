@@ -60,7 +60,7 @@ typedef LabInteriorPlan = {
   heights:Map<String, Float>,
   lids:Array<LabDecals.LabLid>,     // the bench tops render.lab.LabDecals lays clutter on
   frosts:Array<LabDecals.LabFrost>, // the cold machines render.lab.LabDecals frosts round
-  glows:Array<LampPost>,            // the lamps lit fluid casts on the floor (the amber tanks)
+  glows:Array<LampPost>,            // the lamps lit fluid casts on the floor (LabStyle.TANK_GLOW)
   flames:Array<LabFlames.LabFlame>, // the burners' flames render.lab.LabFlames draws
   leds:Array<LabLed>,               // the status lights, in the world
 };
@@ -127,7 +127,7 @@ class LabInterior
           Const.TILE_LAB_CONSOLE => row(M.labDesk, 1.55, 2.4),
           Const.TILE_LAB_SHELF => row(M.labShelf, 4.6, 1.6),
           Const.TILE_LAB_SHELF_LOW => row(M.labShelfLow, 2.6, 1.44),
-          Const.TILE_LAB_LOCKER => row(M.labLocker, 4.4, 1.68),
+          Const.TILE_LAB_LOCKER => row(M.labLocker, 3.4, 1.68),
           Const.TILE_LAB_HAZMAT => row(M.labHazmat, 4.2, 1.1),
           Const.TILE_LAB_SEAT => row(M.labSeat, 2.1, 1.195),
           Const.TILE_LAB_FRIDGE => row(M.labFridge, 4.4, 2.0),
@@ -649,6 +649,10 @@ class LabInterior
       if (t == Const.TILE_LAB_BENCH ||
           t == Const.TILE_LAB_WORKBENCH)
         top(p, m, c.x + DC[d] * back, c.z + DR[d] * back, d, col, row, t == Const.TILE_LAB_WORKBENCH);
+      // a locker bank's top is a shelf nobody dusts (models-src/lab/labkit_build.py locker: a 4.0 x
+      // 1.68 crown)
+      if (t == Const.TILE_LAB_LOCKER)
+        board(p, c.x + DC[d] * back, c.z + DR[d] * back, away(d), 3.8, a.d - 0.2, a.h, col, row);
       // a run's shadow once, from its first cell (lowest col/row) along the wall
       var alongX = (d < 2);
       if (tile(col - (alongX ? 1 : 0), row - (alongX ? 0 : 1)) == t &&
@@ -877,14 +881,25 @@ class LabInterior
                   lx += q.w + LabStyle.STOCK_SPACE;
                 }
             }
-      // the top board: flat clutter, and now and then one piece standing at a hashed end
+      board(p, x, z, yaw, LabStyle.SHELF_BAY * 2 - 0.2, d - 0.2,
+        (low ? LabStyle.LOW_TOP : LabStyle.SHELF_TOP), col, row);
+    }
+
+// a unit's top board, `w` x `d` at height `y` in its frame: flat clutter, and on STOCK_TOP in a hundred
+// one piece of the shelf stock standing at a hashed end
+  static function board(p:LabInteriorPlan, x:Float, z:Float, yaw:Float, w:Float, d:Float, y:Float, col:Int,
+      row:Int):Void
+    {
+      var list = art().stock;
+      var cs = Math.cos(yaw), sn = Math.sin(yaw);
+      var h = FacilityModel.mix((col * 19349663) ^ (row * 83492791) ^ 0x570c);
       var l:LabDecals.LabLid = {
         x: x,
         z: z,
         yaw: yaw,
-        w: LabStyle.SHELF_BAY * 2 - 0.2,
-        d: d - 0.2,
-        y: (low ? LabStyle.LOW_TOP : LabStyle.SHELF_TOP),
+        w: w,
+        d: d,
+        y: y,
         workshop: false,
         count: LabStyle.STOCK_LID_COUNT,
         keeps: [],
@@ -1016,8 +1031,9 @@ class LabInterior
             }
         }
       dress(p, a, x, z, yaw, 0.0, (FacilityModel.mix(col * 7919 + row) % 628) / 100);
-      // the amber tanks' lit fluid throws its colour on the floor before them
-      if (k.name == 'ambertanks')
+      // a lit fluid throws its colour on the floor before its machine
+      var glow = LabStyle.TANK_GLOW.get(k.name);
+      if (glow != null)
         {
           var o = a.d / 2 + LabStyle.TANK_LAMP_OUT, aim = a.d / 2 + LabStyle.TANK_LAMP_AIM;
           p.glows.push({
@@ -1026,12 +1042,12 @@ class LabInterior
             y: LabStyle.TANK_LAMP_Y,
             tx: x + Math.sin(yaw) * aim,
             tz: z + Math.cos(yaw) * aim,
-            color: LabStyle.TANK_LAMP_COLOR,
+            color: glow.color,
             col: col,
             row: row,
             phase: 0.0,
             flick: 1.0,
-            mul: LabStyle.TANK_LAMP_MUL,
+            mul: glow.mul,
             noCast: true,
           });
         }

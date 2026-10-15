@@ -4,6 +4,12 @@ import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
 import render.facility.ShellOpts;
 
+// one lit-fluid machine's glow on the floor before it (LabInterior.machine): its colour and strength
+typedef LabTankGlow = {
+  color:Int,
+  mul:Float,
+};
+
 // the underground lab's art set and its tuning constants: the shell's ShellTex, the scene rig and
 // the numbers the lab's own passes are written against.
 //
@@ -15,6 +21,10 @@ class LabStyle
   // ---- the shell: floors, one per Surf the lab paints
   public static inline var FLOOR_ENTRANCE = 'textures/lab/floor-entrance.png';
   public static inline var FLOOR_VAT = 'textures/lab/floor-vat.png';
+  // the world size the grid floors (vat hall, store) tile at: two 4-unit cells
+  public static inline var FLOOR_GRID_SZ = 8.0;
+  // the borrowed electrical kit's size against the compound's (ShellTex.elecScale)
+  public static inline var ELEC_SCALE = 0.8;
   public static inline var FLOOR_CORRIDOR = 'textures/lab/floor-corridor.png';
   public static inline var FLOOR_WORKSHOP = 'textures/lab/floor-workshop.png';
   public static inline var FLOOR_STORAGE = 'textures/lab/floor-storage.png';
@@ -78,9 +88,13 @@ class LabStyle
   public static inline var CLONE_SLUMP_AT = 0.35;
   // a purged vat drains over this many BASE_MS
   public static inline var VAT_DRAIN_MULT = 20.0;
-  // each vat's own green lamp, inside the glass, faded out with its level
-  public static inline var VAT_LAMP_Y = 5.0;
-  public static inline var VAT_LAMP_COLOR = 0x52ff6e;
+  // each vat's own green lamp, faded out with its level: out in front of the glass, off the axis by
+  // VAT_LAMP_OUT and aimed VAT_LAMP_AIM out, so it lays the medium's colour on the floor past the
+  // console the way the amber tanks do (inside the glass it lit the glass and little else)
+  public static inline var VAT_LAMP_Y = 3.6;
+  public static inline var VAT_LAMP_OUT = 3.85;
+  public static inline var VAT_LAMP_AIM = 9.0;
+  public static inline var VAT_LAMP_COLOR = 0x7cff9a;
   public static inline var VAT_LAMP_MUL = 1.6;
   // a vat's cull radius about its placement: the frame is 7.8 x 11.8 and 10.3 tall
   public static inline var VAT_CULL_R = 12.0;
@@ -139,8 +153,30 @@ class LabStyle
   public static inline var TANK_LAMP_OUT = 0.6;
   public static inline var TANK_LAMP_Y = 2.4;
   public static inline var TANK_LAMP_AIM = 3.0;
-  public static inline var TANK_LAMP_COLOR = 0xffa040;
-  public static inline var TANK_LAMP_MUL = 0.9;
+  // and which machines' fluid does it, by gen.lab.LabKinds name: the amber tanks, the blue tube and
+  // stasis pod, the green specimen case and embryonic bank
+  public static var TANK_GLOW:Map<String, LabTankGlow> = [
+    'ambertanks' => {
+      color: 0xffa040,
+      mul: 0.9,
+    },
+    'tube' => {
+      color: 0x5ad2ff,
+      mul: 0.9,
+    },
+    'stasis' => {
+      color: 0x8ae0ff,
+      mul: 0.8,
+    },
+    'specimencase' => {
+      color: 0x8aff6a,
+      mul: 0.8,
+    },
+    'embryonic' => {
+      color: 0x5cffc0,
+      mul: 0.8,
+    },
+  ];
   // frost round the cold machines (render.lab.LabDecals.frost, lab/frost): the sheet, the kinds that
   // shed it, the floor patches' spacing round the footprint and how far out of it they sit, their
   // size and its spread, the wall crust's size and how far proud of the masonry it stands, which
@@ -155,7 +191,9 @@ class LabStyle
   public static inline var FROST_WALL_SZ = 2.2;
   public static inline var FROST_PROUD = 0.03;
   public static var FROST_PATCH_CELLS = [0, 2, 3, 4, 5, 6, 7];
-  public static var FROST_FLOOR_CELLS = [10, 11, 15];
+  // not 15: that cell is an L-shaped corner crust, which stood in the open beside a box as a corner
+  // of nothing
+  public static var FROST_FLOOR_CELLS = [10, 11];
   public static var FROST_FRINGE_CELLS = [9, 12];
   // the frost's own faint cold light off its map, so it reads in a dark room the way rime catches
   // whatever light there is
@@ -275,9 +313,12 @@ class LabStyle
   // stands in front, which LabWall checks, and under the 6.0 wall head
   public static inline var WALL_SIGN_W = 1.5;
   public static inline var WALL_SIGN_Y = 4.6;
-  // a fitting's cell side (the sheet is cut at one scale, so a keypad stays smaller than a board), its
-  // height, over the borrowed electrical's 1.7 m panels, and the share of runs that take one
-  public static inline var WALL_FIT_W = 1.4;
+  // a fitting's drawn HEIGHT, by sheet cell (LabWall.FIT_BOX crops each to its own art, so its width
+  // follows the art's aspect): one cell side for all of them drew a keypad as big as a notice board and
+  // everything small and squashed into its square. Its centre's height, over the borrowed
+  // electrical's 1.7 m panels, and the share of runs that take one
+  public static var WALL_FIT_H = [1.6, 1.5, 1.3, 1.2, 1.4, 1.4, 1.3, 1.9, 1.6, 1.6, 1.4, 1.9, 1.8, 1.3,
+    2.4, 2.8];
   public static inline var WALL_FIT_Y = 2.9;
   public static inline var WALL_FIT_PCT = 70;
   // a monitor's longest edge, its centre's height, and the share of vat and research runs with one
@@ -320,6 +361,11 @@ class LabStyle
       floor[Surf.LAB_STORAGE] = FLOOR_STORAGE;
       floor[Surf.LAB_RESEARCH] = FLOOR_RESEARCH;
       floor[Surf.LAB_PAD] = FLOOR_PAD;
+      // the vat hall's drain channels and the store's painted squares are a grid: two cells a tile,
+      // so their lines land on the cell edges (the shell's x and z are -200 + 4k)
+      var tile = [for (_ in 0...FacilityStyle.SURF_SLOTS) (null : Float)];
+      tile[Surf.LAB_VAT] = FLOOR_GRID_SZ;
+      tile[Surf.LAB_STORAGE] = FLOOR_GRID_SZ;
       var into = [for (_ in 0...FacilityStyle.SURF_SLOTS) WALL_CORRIDOR];
       into[Surf.LAB_ENTRANCE] = WALL_ENTRANCE;
       into[Surf.LIFT] = WALL_ENTRANCE;
@@ -355,6 +401,8 @@ class LabStyle
           // (render.facility.FacilityCable)
           cable: FacilityStyle.CABLE_TEX,
           elec: FacilityStyle.ELEC_TEX,
+          elecScale: ELEC_SCALE,
+          floorTile: tile,
           hood: COPING,
         },
         surfOf: LabModel.surfOf,

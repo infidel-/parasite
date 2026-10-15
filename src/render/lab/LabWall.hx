@@ -91,6 +91,14 @@ class LabWall
   // signs' are all within 3% of square and the fittings are cut at one scale, so neither needs one
   static var SCREEN_ASPECT = [1.0216, 1.0161, 1.0215, 1.0162, 1.0272, 1.0272, 1.0272, 1.0217,
     2.3140, 2.6835, 1.0068, 0.9658, 1.0107, 1.0053, 1.0053, 1.0];
+  // each fitting's art inside its 256 px cell, x0 y0 x1 y1 from the cell's top left, measured off the
+  // built sheet's alpha (> 16) and padded 4 px
+  static var FIT_BOX = [
+    [40, 29, 216, 227], [34, 39, 221, 216], [53, 31, 203, 225], [45, 38, 210, 217],
+    [52, 33, 203, 222], [48, 34, 207, 222], [15, 56, 241, 200], [29, 28, 226, 228],
+    [41, 34, 215, 222], [34, 35, 222, 220], [55, 21, 200, 234], [22, 28, 234, 227],
+    [34, 15, 222, 240], [24, 52, 231, 204], [38, 22, 218, 233], [23, 4, 232, 252],
+  ];
 
   // per room role (corridor, entrance, vat, workshop, storage, research): the signs, the fittings
   // and the lamp each deals from
@@ -181,8 +189,11 @@ class LabWall
                   {
                     var at = rest.shift();
                     var l = FITTINGS[role];
+                    var f = l[(h >>> 12) % l.length];
+                    var bx = FIT_BOX[f];
+                    var fh = LabStyle.WALL_FIT_H[f];
                     put(fits, m, col + sc * at, row + sr * at, dir, LabStyle.WALL_FIT_Y,
-                      LabStyle.WALL_FIT_W, LabStyle.WALL_FIT_W, l[(h >>> 12) % l.length], 4);
+                      fh * (bx[2] - bx[0]) / (bx[3] - bx[1]), fh, f, 4, [for (v in bx) v / 256]);
                     n[1]++;
                   }
                 if (rest.length > 0 &&
@@ -307,9 +318,10 @@ class LabWall
     }
 
 // one quad `w` wide and `h` tall centred `y` up the masonry beside (col, row), WALL_PROUD off the
-// slab's face, wearing cell `cell` of a cols x cols sheet
+// slab's face, wearing cell `cell` of a cols x cols sheet, or only `box` of it (x0 y0 x1 y1 as
+// fractions of the cell from its top left)
   static function put(b:MeshBuf, m:Facility, col:Int, row:Int, dir:Int, y:Float, w:Float, h:Float,
-      cell:Int, cols:Int):Void
+      cell:Int, cols:Int, ?box:Array<Float>):Void
     {
       var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
       var c = CityConfig.cellToWorld(col, row);
@@ -319,22 +331,25 @@ class LabWall
       if (d < 2)
         {
           var z = (d == 0 ? s.z0 - e : s.z1 + e);
-          pane(b, c.x - w / 2, c.x + w / 2, z, z, d, y - h / 2, y + h / 2, cell, cols);
+          pane(b, c.x - w / 2, c.x + w / 2, z, z, d, y - h / 2, y + h / 2, cell, cols, box);
           return;
         }
       var x = (d == 2 ? s.x0 - e : s.x1 + e);
-      pane(b, x, x, c.z - w / 2, c.z + w / 2, d, y - h / 2, y + h / 2, cell, cols);
+      pane(b, x, x, c.z - w / 2, c.z + w / 2, d, y - h / 2, y + h / 2, cell, cols, box);
     }
 
-// one upright quad wearing one cell of a cols x cols sheet, v flipped to reading order
+// one upright quad wearing one cell of a cols x cols sheet (or `box` of it), v flipped to reading order
   static function pane(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, dir:Int, y0:Float, y1:Float,
-      cell:Int, cols:Int):Void
+      cell:Int, cols:Int, ?box:Array<Float>):Void
     {
       var e = FacilityGeom.ends(x0, x1, z0, z1, dir);
-      var u0 = (cell % cols) / cols;
-      var v0 = 1 - (Std.int(cell / cols) + 1) / cols;
-      var u1 = u0 + 1 / cols;
-      var v1 = v0 + 1 / cols;
+      var k = (box != null ? box : [0.0, 0.0, 1.0, 1.0]);
+      var cu = (cell % cols) / cols;
+      var cv = 1 - Std.int(cell / cols) / cols;
+      var u0 = cu + k[0] / cols;
+      var u1 = cu + k[2] / cols;
+      var v0 = cv - k[3] / cols;
+      var v1 = cv - k[1] / cols;
       MeshBufTools.quad(b,
         [e[0], y0, e[1]], [e[2], y0, e[3]], [e[2], y1, e[3]], [e[0], y1, e[1]],
         [u0, v0, u1, v0, u1, v1, u0, v1]);

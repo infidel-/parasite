@@ -2120,7 +2120,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the lab table, one cell wide, front to +z: epoxy top on four legs, a drawer pedestal, a low shelf. 84 tris, 4.0 x 2.4 x 1.96. bench-sheet.png packs the BUILT lab/kit-epoxy, -carcass, -drawers, -butcher, so no baseColor/lift/sat.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:17Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-workbench": {
@@ -2129,7 +2129,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the heavy workbench: butcher-block top, stout legs, a full lower shelf, a back upstand and a vice. 96 tris, 4.0 x 2.6 x 3.3, bench-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:17Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-desk": {
@@ -2138,7 +2138,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the computer desk render.lab.LabInterior stands the facility workstation on: epoxy top on two side panels, modesty panel, drawer pedestal on the right. 60 tris, 4.0 x 2.4 x 1.55, bench-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:17Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-shelf": {
@@ -2147,7 +2147,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): bare shelving, corner uprights (or side panels) and perforated plates; its stock is the lab/stock-* kit render.lab.LabInterior deals per bay. shelf-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-shelf-low": {
@@ -2156,7 +2156,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): bare shelving, corner uprights (or side panels) and perforated plates; its stock is the lab/stock-* kit render.lab.LabInterior deals per bay. shelf-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-shelf-row": {
@@ -2165,7 +2165,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): bare shelving, corner uprights (or side panels) and perforated plates; its stock is the lab/stock-* kit render.lab.LabInterior deals per bay. shelf-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-crate": {
@@ -2174,7 +2174,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): one stencilled crate, lab/kit-crate whole on every face; LabInterior stacks two or three a cell. 12 tris, 2.0 x 2.0 x 1.8, shelf-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-locker": {
@@ -2182,8 +2182,8 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): a bank of four lockers on a recessed plinth under a crown band, lab/kit-lockers whole across its front, lab/body-locker round it. 36 tris, 4.0 x 1.68 x 4.4, lockerbank-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): a bank of four lockers on a recessed plinth under a crown band, lab/kit-lockers whole across its front, lab/body-locker round it. 36 tris, 4.0 x 1.68 x 3.4: the front takes the TOP 3.05 / 3.92 of the lockers cell at the art's own scale (at 3.9 tall the doors read stretched), under a 0.1 crown, lockerbank-sheet.png.",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-seat": {
@@ -2192,7 +2192,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): two waiting-room seats on a beam and two pedestals, teal vinyl. 84 tris, 3.9 x 1.2 x 2.1, locker-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-hazmat": {
@@ -2201,7 +2201,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the hazmat-suit rack: pegboard on the wall, hanger rail out on two arms, boot plate. 60 tris, 3.9 x 1.1 x 4.2, locker-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-fridge": {
@@ -2210,7 +2210,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the specimen refrigerator, lab/kit-fridge whole on its door, lab/body-fridge round it. 24 tris, 3.2 x 2.0 x 4.4, fridge-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-drum": {
@@ -2219,7 +2219,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): one chemical drum, lab/kit-drum twice round its side, a lid rim, lab/drum-lid on its lids. 152 tris, 1.26 x 1.26 x 1.84, fridge-sheet.png.",
-      "last_converted": "2026-10-15T18:43:05Z",
+      "last_converted": "2026-10-15T19:55:18Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-box-sr203": {
@@ -3084,9 +3084,11 @@
         0.57,
         1
       ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (near-top row 4 col 2; models-src/lab/plant5-src.png): an alien laboratory potted plant: curling purple and teal tentacle-like flower stalks in a round steel planter. Generated AT the budget (decimation_target 6000, 5832 tris). 24 components, largest 40.4%: the leaves or folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.57 takes the atlas luma 102 to ~78.",
-      "last_converted": "2026-10-13T21:26:28Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.57,0.57,0.57,1"
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (near-top row 4 col 2; models-src/lab/plant5-src.png): an alien laboratory potted plant: curling purple and teal tentacle-like flower stalks in a round steel planter. Generated AT the budget (decimation_target 6000, 5832 tris). 24 components, largest 40.4%: the leaves or folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z, where render.lab.LabInterior expects it. baseColor 0.57 takes the atlas luma 102 to ~78. Its purple stalks GLOW: models-src/lab/plant5-emissive.png is cut off the bake by hue (255-335 deg, sat > 0.25, value > 0.15, feathered 3 px) at the pixel's own colour normalised to 0.9, so nothing else on it lights.",
+      "last_converted": "2026-10-15T19:56:16Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/plant5-emissive.png@1.2/noMR/bc0.57,0.57,0.57,1",
+      "emissiveSrc": "lab/plant5-emissive.png",
+      "emissiveStrength": 1.2
     },
     "lab/plant6": {
       "src": "lab/lab-mach-plant6.glb",

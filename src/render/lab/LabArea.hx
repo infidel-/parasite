@@ -47,7 +47,8 @@ class LabArea implements Area3D
   var lamps:LabLamps.LabLampSet;
   var wall:LabWall.LabWallSet;
   var flames:LabFlames.LabFlameSet;
-  var tanks:Array<LampPost> = [];            // the amber tanks' floor lamps, dimmed as the lab dies
+  var tanks:Array<LampPost> = [];            // the lit tanks' floor lamps, dimmed as the lab dies
+  var tankMul:Array<Float> = [];             // and each one's own strength (LabStyle.TANK_GLOW)
   // the mission, taken at build: the area hands back null once it is completed, and the alarm it
   // raised keeps sounding past that (LabLamps)
   var mission:cult.missions.CombatUndergroundLabPurge;
@@ -118,6 +119,7 @@ class LabArea implements Area3D
       posts = lamps.all.copy();
       vats = LabVats.build(scene, game, drain, posts);
       tanks = interior.glows;
+      tankMul = [for (t in tanks) t.mul];
       for (t in tanks)
         posts.push(t);
       mission = Std.downcast(game.area.getAreaMission(), cult.missions.CombatUndergroundLabPurge);
@@ -277,8 +279,8 @@ class LabArea implements Area3D
       LabFlames.tick(flames, opts.dtMs);
       LabWater.tick(opts.dtMs, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       LabBlink.tick(opts.dtMs);
-      for (t in tanks)
-        t.mul = LabStyle.TANK_LAMP_MUL * (1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
+      for (i in 0...tanks.length)
+        tanks[i].mul = tankMul[i] * (1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       // the kit's status lights blink on the compound's LED clock (LabInterior.leds)
       render.facility.FacilityDeco.tick(opts.dtMs);
       sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs, lift, alarmed, dead);

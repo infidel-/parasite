@@ -32,7 +32,7 @@ typedef LabVatSet = {
   slumped:Models.InstancedProp,
   fluid:Models.InstancedProp,
   glass:Models.InstancedProp,
-  posts:Array<LampPost>,                 // one green lamp inside each vat, faded by its drain
+  posts:Array<LampPost>,                 // one green lamp before each vat's glass, faded by its drain
   drain:Map<Int,Float>,                  // root object ID -> eased drain, 0 full to 1 empty
   base:Array<Array<Matrix4>>,            // [clone, slumped, fluid] untouched placement matrices,
                                          // taken once each glb lands; null until then
@@ -90,10 +90,10 @@ class LabVats
           });
           posts.push({
             x: x,
-            z: c.z - LabStyle.VAT_AXIS,
+            z: c.z - LabStyle.VAT_AXIS + LabStyle.VAT_LAMP_OUT,
             y: LabStyle.VAT_LAMP_Y,
             tx: x,
-            tz: c.z - LabStyle.VAT_AXIS,
+            tz: c.z - LabStyle.VAT_AXIS + LabStyle.VAT_LAMP_AIM,
             color: LabStyle.VAT_LAMP_COLOR,
             col: v.x,
             row: v.y,

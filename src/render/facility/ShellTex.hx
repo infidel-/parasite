@@ -82,6 +82,14 @@ typedef ShellTex = {
   @:optional var grime: String;
   @:optional var cable: String;
   @:optional var elec: String;
+  // how far the electrical kit is drawn at against the compound's own size: a lab socket box at the
+  // compound's 1.4 read too big on the lab's lower walls. null is 1
+  @:optional var elecScale: Float;
+  // the world size a floor's art tiles at, by surface, where it is not FacilityStyle.FLOOR_TILE_SZ: a
+  // floor whose art draws a grid (the lab's vat-hall drain channels, the store's painted squares) has
+  // to tile at a multiple of the 4-unit cell or its lines walk off the walls. null entries take the
+  // default
+  @:optional var floorTile: Array<Float>;
   // the corridor exit signage, the fire point / electrical panel sheet and the roofs' flat litter
   // atlas, each in the facility's own cell layout
   @:optional var exitSign: String;

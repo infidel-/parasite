@@ -1929,6 +1929,15 @@ class FacilityStyle
   // SOCKET gets one: a lead leaving a corridor junction box leaves through a GLAND, which is what
   // those cells already draw
   public static inline var PLUG_W = 0.75;
+  // WHERE ON ITS PLATE each socket cell's outlet is, x then y as fractions of the cell from its top
+  // left, read off the art at 2x. A plug on the plate's CENTRE landed between the two outlets of a
+  // double socket, or over the switch beside a single one — reported from the lab as a plug "not
+  // aligned to socket". A double takes its left outlet; the three SOCK_SKIP cells are never dealt
+  public static var SOCK_OUTLET:Array<Array<Float>> = [
+    [0.36, 0.51], [0.5, 0.5], [0.31, 0.56], [0.5, 0.52], [0.5, 0.5], [0.5, 0.48], [0.5, 0.5], [0.5, 0.5],
+    [0.5, 0.52], [0.36, 0.52], [0.49, 0.53], [0.5, 0.48], [0.5, 0.52], [0.38, 0.52], [0.34, 0.51],
+    [0.5, 0.5],
+  ];
   // how far a floor decal floats over the surface it lies on. THE STACK IS THREE DEEP AND THE ORDER
   // IS THE WHOLE OF IT: render.RenderConfig.PAINT_Y 0.03 is the aisle marking, CABLE_FLOOR_Y 0.05 the
   // lead lying over it, and this the loose kit lying over that. The first cut put the cable at 0.02

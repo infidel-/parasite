@@ -534,7 +534,7 @@ class FacilityGeom
                 for (sp in floorStrips(m, col, row))
                   if (FacilityModel.isIndoor(m, sp.col, sp.row))
                     cap(floorBuf(m, sp.col, sp.row, floors),
-                      sp.x0, sp.x1, sp.z0, sp.z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
+                      sp.x0, sp.x1, sp.z0, sp.z1, 0.0, floorTile(m, sp.col, sp.row));
                 // a corner square is floor and ceiling like any other strip — the loop above has
                 // just laid both — and the two runs it sits in the angle of stand at its edges. one
                 // face each, looking the way that run's line carries, into the room the square is a
@@ -719,7 +719,7 @@ class FacilityGeom
             // a stairwell's cell takes no floor: its model is the hole (FacilityModel.FIT_HOLE)
             if (m.fit[row][col] != FacilityModel.FIT_HOLE)
               cap(floorBuf(m, col, row, floors),
-                x0, x1, z0, z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
+                x0, x1, z0, z1, 0.0, floorTile(m, col, row));
           }
 
       // one pane per RUN and not per cell, so the art's three panes span the whole opening exactly
@@ -892,6 +892,16 @@ class FacilityGeom
       if (m.tex.floor[s] == null)
         s = (m.tex.floor[Surf.TILE] != null ? Surf.TILE : m.tex.circ);
       return floors[s];
+    }
+
+// the world size a cell's floor art tiles at: its surface's own where the kind names one
+  static function floorTile(m:Facility, col:Int, row:Int):Float
+    {
+      var t = m.tex.floorTile;
+      if (t == null)
+        return FacilityStyle.FLOOR_TILE_SZ;
+      var v = t[surfUnder(m, col, row)];
+      return (v != null ? v : FacilityStyle.FLOOR_TILE_SZ);
     }
 
 // the surface a cell's floor is drawn in — its own, except that a DRAIN inherits its neighbours'.
