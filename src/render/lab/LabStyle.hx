@@ -139,6 +139,9 @@ class LabStyle
   // a bench-top status light (LabInterior.leds): its world size, and how far proud of its face
   public static inline var TOP_LED_SZ = 0.035;
   public static inline var TOP_LED_EPS = 0.004;
+  // a status light's size per unit of its piece's height, over TOP_LED_SZ: ~0.13 on a 4.5 machine
+  // (a soft dot, so its core reads at half that)
+  public static inline var LED_PER_H = 0.03;
   // a bunsen burner's gas flame (LabFlames): its rest height and width, the glow under it, their
   // peak additive opacities, and the two blues — the outer layer's and the hot inner cone's
   public static inline var FLAME_H = 0.34;
