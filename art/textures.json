@@ -7443,21 +7443,15 @@
       "built_srgb": 58.8
     },
     "lab/wall-storage": {
-      "src": "lab/walls-b.png",
+      "src": "lab/wall-storage.png",
       "class": "tile",
       "needs_alpha": false,
-      "prompt": "[quadrant of lab/walls-b.png, PACK4, gpt-image-2.5-sunburst high] TOP-LEFT: storage wall, corrugated steel sheeting, vertical corrugations, dull dark red-brown primer. [append textures.json style]",
+      "prompt": "[SOLO, gpt-image-2.5-sunburst high] one storey of an UNDERGROUND storage room wall: bare poured concrete, dark cold grey, formwork panel seams two across, form-tie holes, board marks, hairline cracks, damp stains seeping from the top, a worn dull grey-green painted dado band along the bottom 18 percent; tiles left to right [append textures.json style]",
       "prompt_exact": false,
-      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). Seams measured at x 512 / y 511.",
-      "crop": [
-        2,
-        2,
-        506,
-        506
-      ],
-      "last_converted": "2026-10-14T00:12:27",
-      "built_linear": 0.0301,
-      "built_srgb": 48.3
+      "note": "render.lab shell wall face, one tile per storey (WALL_TILE = WALL_H). Replaced walls-b's TOP-LEFT corrugated red sheeting (still in that sheet, unused), reported as 'weird for an UNDERGROUND storage room'. The drop drew its middle formwork seam at x 512 but none at the wrap, so two panels merged across every repeat: tools/seamfix.py grout copied the seam onto the edges (raw drop parked at textures-src/unused/lab/wall-storage-raw.png).",
+      "last_converted": "2026-10-15T23:47:24",
+      "built_linear": 0.0447,
+      "built_srgb": 58.7
     },
     "lab/wall-research": {
       "src": "lab/walls-b.png",
@@ -7747,6 +7741,152 @@
       "last_converted": "2026-10-14T01:42:30",
       "built_linear": 0.0513,
       "built_srgb": 64.7
+    },
+    "lab/body-sr203": {
+      "src": "lab/body-sr203.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-a.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] TOP-LEFT: the plain body sheet metal of the SR-203 sample cube, dark navy-charcoal painted steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-sr203, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-a.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:04",
+      "built_linear": 0.0209,
+      "built_srgb": 39.8
+    },
+    "lab/body-vault": {
+      "src": "lab/body-vault.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-a.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] TOP-RIGHT: the plain body sheet metal of the vault, dark gunmetal heavy steel plate, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-vault, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-a.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:04",
+      "built_linear": 0.0346,
+      "built_srgb": 51.1
+    },
+    "lab/body-drawercab": {
+      "src": "lab/body-drawercab.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-a.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] BOTTOM-LEFT: the plain body sheet metal of the drawer cabinet, dull dark olive painted steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-drawercab, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-a.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:04",
+      "built_linear": 0.0428,
+      "built_srgb": 54.1
+    },
+    "lab/body-radlocker": {
+      "src": "lab/body-radlocker.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-a.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] BOTTOM-RIGHT: the plain body sheet metal of the radiation locker, worn mustard-yellow painted steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-radlocker, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-a.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:04",
+      "built_linear": 0.1717,
+      "built_srgb": 94.3
+    },
+    "lab/body-coldbank": {
+      "src": "lab/body-coldbank.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-b.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] TOP-LEFT: the plain body sheet metal of the cold storage bank, pale cold grey steel with frost patches, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-coldbank, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-b.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:05",
+      "built_linear": 0.1461,
+      "built_srgb": 105.6
+    },
+    "lab/body-powerbox": {
+      "src": "lab/body-powerbox.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-b.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] TOP-RIGHT: the plain body sheet metal of the power distribution box, dark charcoal painted steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-powerbox, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-b.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:05",
+      "built_linear": 0.0359,
+      "built_srgb": 52.7
+    },
+    "lab/body-leverbox": {
+      "src": "lab/body-leverbox.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-b.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] BOTTOM-LEFT: the plain body sheet metal of the lever box, light grey painted steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-leverbox, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-b.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x). lift 1.32: the drop's paint mode sat at 102 against the front's 76.",
+      "last_converted": "2026-10-15T23:39:05",
+      "built_linear": 0.0744,
+      "built_srgb": 76.3,
+      "lift": 1.32,
+      "last_lift": 1.32
+    },
+    "lab/body-controlbox": {
+      "src": "lab/body-controlbox.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-b.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] BOTTOM-RIGHT: the plain body sheet metal of the control box, dark slate painted steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-box-controlbox, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-b.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:06",
+      "built_linear": 0.0285,
+      "built_srgb": 47.1
+    },
+    "lab/body-locker": {
+      "src": "lab/body-locker.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-c.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] TOP-LEFT: the plain body sheet metal of the locker bank, dull dark olive-green painted steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-locker, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-c.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:06",
+      "built_linear": 0.0447,
+      "built_srgb": 56.2
+    },
+    "lab/body-fridge": {
+      "src": "lab/body-fridge.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-c.png, PACK4, gpt-image-2.5-sunburst high, edit_image off the four pieces' BUILT fronts] TOP-RIGHT: the plain body sheet metal of the specimen fridge, off-white enamel steel, same paint, value and wear as its front, no features, tiles seamlessly [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the body (sides, top) of lab-fridge, packed beside its front by tools/modelsheet.py: it replaced lab/kit-carcass, the one blue-grey every lab box wore round its front, reported as 'top too different from front'. Quadrant [x,y,504,504] of textures-src/lab/bodies-c.png with its wrap closed by tools/seamfix.py tone (the packed crop's wrap ran 2-3x its interior, after ~1x).",
+      "last_converted": "2026-10-15T23:39:06",
+      "built_linear": 0.2912,
+      "built_srgb": 144.2
+    },
+    "lab/drum-lid": {
+      "src": "lab/bodies-c.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-c.png, PACK4, gpt-image-2.5-sunburst high, edit_image off lab/kit-drum] BOTTOM-LEFT: the chemical drum's lid from directly above, yellow, rolled rim, pressed rings, a bung [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the drum's lid disc in models-src/lab/labkit_build.py drum(), on the drum's own fridge-sheet: it wore kit-carcass blue, reported 'expected barrel top to be yellow'. Mapped as a disc, not tiled.",
+      "crop": [
+        2,
+        518,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-15T23:38:31",
+      "built_linear": 0.0932,
+      "built_srgb": 69.8
+    },
+    "lab/container-casting": {
+      "src": "lab/bodies-c.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "[quadrant of lab/bodies-c.png, PACK4, gpt-image-2.5-sunburst high, edit_image off lab/kit-corrugated] BOTTOM-RIGHT: the container's cast steel corner casting face, rusty red-brown, one oblong hole [append textures.json style]",
+      "prompt_exact": false,
+      "note": "every face of the container's corner castings (models-src/lab/boxkit_build.py container()), which wore the corrugated side and read 'too large and texture meh'. Whole on each face.",
+      "crop": [
+        518,
+        518,
+        504,
+        504
+      ],
+      "last_converted": "2026-10-15T23:38:31",
+      "built_linear": 0.029,
+      "built_srgb": 43.9
     },
     "lab/kit-drawers": {
       "src": "lab/kit-steel.png",

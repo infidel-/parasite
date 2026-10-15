@@ -431,3 +431,36 @@ LIFT_DECK_GLB_H 2.74 -> 2.95 (their heights); LIFT_DECK_H 0.25 unchanged. 3 imag
 
 **Verdict:** landed.
 
+
+## Lab round 2: every box wears its own body, the container clears its wall, a seamless lift tread
+
+**Changed:** every lab box machine (sr203, vault, drawer cabinet and chest, rad locker, cold bank,
+power, lever and control boxes), the locker bank and the fridge wore `lab/kit-carcass`, one blue-grey,
+on every face but the front. Each now wears its own `lab/body-<name>`, from three PACK4 edit_image gens
+whose inputs are the four pieces' BUILT fronts; their wraps were closed with `seamfix.py tone`. The
+locker moved to its own two-cell `lockerbank-sheet`, shows all four painted doors (three had been
+stretched 1.34x) and gained a crown band, since its doors ran off the top. The drum lid wears a
+drawn `lab/drum-lid`. The container's castings are 0.36 (were 0.56) and wear `lab/container-casting`.
+Its corrugated BIO panel is now a flat placard, because the panel's ribs ran at another pitch than
+the side's. The rad locker is 3.6 high, so its door is square. The lift car's tread is a solo regular
+lug grid cropped to whole periods, and the call box's sides map whole at the front's density. The
+storage wall is solo poured concrete. Frost blends at 0.5 without depth writes.
+`LabInterior.machine` reads the wall face off the footprint's EDGE cell. A floor kind takes the turn
+with an open front and, failing that, a walled back.
+
+**Measured:** wraps after seamfix 3.0-9.1 (packed crops 7-43). Paint mode front vs body is within
+~10 sRGB except the lever box, 102 vs 76, which got lift 1.32. Tread wrap 20.4 -> 5.7/4.5 at a
+measured lug period of 99.25 x 96.65 px (10 periods, 993 x 966 -> 512). Live on seed 768512642: the
+east container went from x -59.56..-53 (2 units into the masonry) to -61.56..-55 at the face; the
+SR-203 faces the room with its back to the north wall; entry diff 0. 5 gens, ~$0.38 (edits with
+four inputs cost $0.088).
+
+**The traps:**
+- `faceOff(col, row)` off a footprint's ORIGIN finds the footprint's own floor cell for an east or
+  south wall wider than one cell: it read -1, not thick/2, and pushed the piece two units further.
+- An opaque alphaTest decal set overlapping on one plane z-fights itself. The fix is blending without
+  depth writes, and alphaTest then compares AFTER opacity, so the old 0.5 cut discarded every texel
+  at opacity 0.5 (`FROST_CUT` 0.02).
+- A "seamless" diamond plate is a lattice: no blend closes it. Only an exact whole-period crop does.
+
+**Verdict:** landed.

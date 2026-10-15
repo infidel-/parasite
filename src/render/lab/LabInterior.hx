@@ -127,7 +127,7 @@ class LabInterior
           Const.TILE_LAB_CONSOLE => row(M.labDesk, 1.55, 2.4),
           Const.TILE_LAB_SHELF => row(M.labShelf, 4.6, 1.6),
           Const.TILE_LAB_SHELF_LOW => row(M.labShelfLow, 2.6, 1.44),
-          Const.TILE_LAB_LOCKER => row(M.labLocker, 4.4, 1.6),
+          Const.TILE_LAB_LOCKER => row(M.labLocker, 4.4, 1.68),
           Const.TILE_LAB_HAZMAT => row(M.labHazmat, 4.2, 1.1),
           Const.TILE_LAB_SEAT => row(M.labSeat, 2.1, 1.195),
           Const.TILE_LAB_FRIDGE => row(M.labFridge, 4.4, 2.0),
@@ -137,13 +137,13 @@ class LabInterior
           'sr203' => row(M.labBoxSr203, 3.0, 2.84),
           'vault' => row(M.labBoxVault, 5.2, 6.44),
           'drawercab' => row(M.labBoxDrawercab, 4.6, 2.24),
-          'radlocker' => row(M.labBoxRadlocker, 4.4, 1.84),
+          'radlocker' => row(M.labBoxRadlocker, 3.6, 1.84),
           'drawers' => row(M.labBoxDrawers, 3.6, 1.84),
           'coldbank' => row(M.labBoxColdbank, 4.8, 2.64),
           'powerbox' => row(M.labBoxPowerbox, 4.6, 1.84),
           'leverbox' => row(M.labBoxLeverbox, 4.7, 1.0, 1.3),
           'controlbox' => row(M.labBoxControlbox, 6.0, 1.2),
-          'container' => row(M.labContainer, 5.22, 6.56),
+          'container' => row(M.labContainer, 5.22, 6.36),
           // the hand-modelled machines (models-src/lab/mach/<name>.py, art/models.json lab/<name>), at
           // the size they were built: height, depth, width; a glass shell where they have one. Their
           // status lights are the lamps painted on their own art, blinking (render.lab.LabBlink)
@@ -614,6 +614,13 @@ class LabInterior
       return Math.atan2(-DC[d], -DR[d]);
     }
 
+// the hand a piece turned `yaw` faces: away()'s inverse
+  static function facing(yaw:Float):Int
+    {
+      var sx = Math.round(Math.sin(yaw)), sz = Math.round(Math.cos(yaw));
+      return (sz < 0 ? 0 : sz > 0 ? 1 : sx < 0 ? 2 : 3);
+    }
+
 // how far past its cell's edge the masonry's face stands on hand `d`
   static function faceOff(m:Facility, col:Int, row:Int, d:Int):Float
     {
@@ -976,7 +983,7 @@ class LabInterior
         {
           // the footprint's centre to its wall-side edge, then on to the masonry's face
           var half = (d < 2 ? fh : fw) * CELL / 2;
-          var back = half + faceOff(m, col, row, d) - a.d / 2;
+          var back = half + edgeOff(m, col, row, fw, fh, d) - a.d / 2;
           x += DC[d] * back;
           z += DR[d] * back;
           yaw = away(d);
@@ -990,6 +997,23 @@ class LabInterior
         {
           var hh = FacilityModel.mix((col * 40503151) ^ (row * 57885161));
           yaw = (alongX ? 0.0 : Math.PI / 2) + ((hh >>> 4) % 2) * Math.PI;
+          // never with its face to the masonry, and beside a wall with its back to it: the turns the
+          // footprint allows from the hashed one on, the first scoring best (an open front, then a
+          // walled back)
+          var turns = (k.len == k.depth ? 4 : 2);
+          var best = -1;
+          var hashed = yaw;
+          for (i in 0...turns)
+            {
+              var y = hashed + i * Math.PI * 2 / turns;
+              var score = (edgeWalled(m, col, row, fw, fh, facing(y)) ? 0 : 2) +
+                (edgeWalled(m, col, row, fw, fh, facing(y + Math.PI)) ? 1 : 0);
+              if (score > best)
+                {
+                  best = score;
+                  yaw = y;
+                }
+            }
         }
       dress(p, a, x, z, yaw, 0.0, (FacilityModel.mix(col * 7919 + row) % 628) / 100);
       // the amber tanks' lit fluid throws its colour on the floor before them
@@ -1016,7 +1040,7 @@ class LabInterior
         return;
       // facing along z, its long side runs along x, and the other way round
       var long = (a.w != null ? a.w : (alongX ? fw : fh) * CELL - 0.4);
-      var facesZ = (d >= 0 ? d < 2 : alongX);
+      var facesZ = (Math.abs(Math.cos(yaw)) > 0.5);
       var w = (facesZ ? long : a.d);
       var dd = (facesZ ? a.d : long);
       FacilityDetail.ground(m, {
@@ -1041,7 +1065,7 @@ class LabInterior
         if (fd < 0 &&
             edgeWalled(m, col, row, fw, fh, h))
           fd = h;
-      var reach = (fd < 0 ? 0.0 : (fd < 2 ? fh : fw) * CELL / 2 + faceOff(m, col, row, fd));
+      var reach = (fd < 0 ? 0.0 : (fd < 2 ? fh : fw) * CELL / 2 + edgeOff(m, col, row, fw, fh, fd));
       p.frosts.push({
         x0: x - w / 2,
         x1: x + w / 2,
@@ -1054,6 +1078,14 @@ class LabInterior
         ww: (fd < 2 ? w : dd),
         h: a.h,
       });
+    }
+
+// faceOff for a footprint's edge on hand `d`, read off the edge's own cell: off the origin cell, an
+// east or south wall of a footprint over one cell wide was the footprint's own floor, and a
+// container stood two units into the masonry
+  static function edgeOff(m:Facility, col:Int, row:Int, fw:Int, fh:Int, d:Int):Float
+    {
+      return faceOff(m, col + (d == 3 ? fw - 1 : 0), row + (d == 1 ? fh - 1 : 0), d);
     }
 
 // is the whole of a footprint's edge on hand `d` masonry?

@@ -309,10 +309,17 @@ class LabDecals
         alphaTest: LabStyle.DECAL_CUT,
         side: THREE.DoubleSide,
       });
+      // the frost: its own cold light, and laid at half strength and BLENDED without writing depth —
+      // its patches overlap on one plane, and cut opaque they z-fought each other
       if (glow != 0)
         {
           mat.emissiveMap = map;
           mat.emissive = new Color(glow);
+          mat.transparent = true;
+          mat.opacity = LabStyle.FROST_ALPHA;
+          mat.depthWrite = false;
+          // the cut tests alpha AFTER the opacity, so the decals' 0.5 would discard every texel
+          mat.alphaTest = LabStyle.FROST_CUT;
         }
       var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(mat));
       mesh.name = 'lab decals ' + tex;

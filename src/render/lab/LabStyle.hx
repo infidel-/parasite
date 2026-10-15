@@ -160,6 +160,9 @@ class LabStyle
   // the frost's own faint cold light off its map, so it reads in a dark room the way rime catches
   // whatever light there is
   public static inline var FROST_GLOW = 0x3a4a5c;
+  // and its strength over the floor (blended, so overlapping patches never z-fight)
+  public static inline var FROST_ALPHA = 0.5;
+  public static inline var FROST_CUT = 0.02;
   public static inline var TOP_SZ = 0.75;
   public static inline var TOP_SZ_VAR = 0.3;
   public static inline var TOP_LIFT = 0.008;
