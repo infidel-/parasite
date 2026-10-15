@@ -5409,8 +5409,8 @@
         512,
         454
       ],
-      "built_linear": 0.1042,
-      "built_srgb": 91.3,
+      "built_linear": 0.1059,
+      "built_srgb": 91.9,
       "lift": 1.25,
       "last_lift": 1.25,
       "crop": [
@@ -5419,7 +5419,7 @@
         1020,
         905
       ],
-      "last_converted": "2026-10-10T19:28:35"
+      "last_converted": "2026-10-15T01:21:34"
     },
     "military/chainlink-torn": {
       "src": "military/chainlink-torn.png",
@@ -5429,9 +5429,9 @@
       "prompt_exact": false,
       "note": "the torn panel on a breach cell, mapped 0..1 over one cell's span of the fence (render.military.MilitaryGeom).",
       "res": 512,
-      "last_converted": "2026-10-10T19:28:56",
-      "built_linear": 0.1091,
-      "built_srgb": 92.6,
+      "last_converted": "2026-10-15T01:22:39",
+      "built_linear": 0.1109,
+      "built_srgb": 93.3,
       "lift": 1.25,
       "last_lift": 1.25
     },
@@ -7795,7 +7795,7 @@
         506,
         506
       ],
-      "last_converted": "2026-10-14T01:43:19",
+      "last_converted": "2026-10-15T20:40:35",
       "built_linear": 0.0798,
       "built_srgb": 78.1
     },
@@ -7812,7 +7812,7 @@
         506,
         506
       ],
-      "last_converted": "2026-10-14T01:43:19",
+      "last_converted": "2026-10-15T20:40:35",
       "built_linear": 0.0443,
       "built_srgb": 52.2
     },
@@ -7829,8 +7829,8 @@
         506,
         506
       ],
-      "last_converted": "2026-10-14T01:43:19",
-      "built_linear": 0.0467,
+      "last_converted": "2026-10-15T20:40:35",
+      "built_linear": 0.0466,
       "built_srgb": 57.1
     },
     "lab/kit-crate": {
@@ -7846,7 +7846,7 @@
         506,
         506
       ],
-      "last_converted": "2026-10-14T01:43:19",
+      "last_converted": "2026-10-15T20:40:35",
       "built_linear": 0.045,
       "built_srgb": 55.5
     },
