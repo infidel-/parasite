@@ -11,6 +11,7 @@ import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
+import render.particles.LampPost;
 import render.particles.Sprites;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -60,6 +61,7 @@ typedef LabInteriorPlan = {
   heights:Map<String, Float>,
   lids:Array<LabDecals.LabLid>,     // the bench tops render.lab.LabDecals lays clutter on
   frosts:Array<LabDecals.LabFrost>, // the cold machines render.lab.LabDecals frosts round
+  glows:Array<LampPost>,            // the lamps lit fluid casts on the floor (the amber tanks)
   flames:Array<LabFlames.LabFlame>, // the burners' flames render.lab.LabFlames draws
   leds:Array<LabLed>,               // the status lights, in the world
 };
@@ -833,6 +835,7 @@ class LabInterior
         heights: new Map(),
         lids: [],
         frosts: [],
+        glows: [],
         flames: [],
         leds: [],
       };
@@ -969,6 +972,8 @@ class LabInterior
         {
           if (StringTools.endsWith(path, '-glass.glb'))
             glass(prop.mesh.material);
+          if (StringTools.endsWith(path, 'ambertanks-glass.glb'))
+            LabWater.patch(prop.mesh.material);
           VisionMask.patchMesh(prop.mesh);
           prop.mesh.castShadow = false;
         });
@@ -1365,6 +1370,25 @@ class LabInterior
           yaw = (alongX ? 0.0 : Math.PI / 2) + ((hh >>> 4) % 2) * Math.PI;
         }
       dress(p, a, x, z, yaw, 0.0, (FacilityModel.mix(col * 7919 + row) % 628) / 100);
+      // the amber tanks' lit fluid throws its colour on the floor before them
+      if (k.name == 'ambertanks')
+        {
+          var o = a.d / 2 + LabStyle.TANK_LAMP_OUT, aim = a.d / 2 + LabStyle.TANK_LAMP_AIM;
+          p.glows.push({
+            x: x + Math.sin(yaw) * o,
+            z: z + Math.cos(yaw) * o,
+            y: LabStyle.TANK_LAMP_Y,
+            tx: x + Math.sin(yaw) * aim,
+            tz: z + Math.cos(yaw) * aim,
+            color: LabStyle.TANK_LAMP_COLOR,
+            col: col,
+            row: row,
+            phase: 0.0,
+            flick: 1.0,
+            mul: LabStyle.TANK_LAMP_MUL,
+            noCast: true,
+          });
+        }
       // the footprint's own shadow; a wall box hung off the floor throws none on it
       if (a.y != null)
         return;

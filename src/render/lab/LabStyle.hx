@@ -124,6 +124,23 @@ class LabStyle
   public static inline var MARK_SZ = 2.0;
   public static inline var MARK_SZ_VAR = 0.6;
   public static inline var DECAL_Y = 0.02;
+  // the amber tanks' fluid on their glass (render.lab.LabWater): its glow, the ripple's phase speed
+  // per BASE_MS, the bubble columns' spacing, the climb of one bubble cell and its rise in cells per
+  // BASE_MS, a bubble's radius and the fluid's top over the floor
+  public static inline var WATER_TINT = 0x6a3608;
+  public static inline var WATER_RATE = 0.09;
+  public static inline var WATER_COL = 0.32;
+  public static inline var WATER_CELL = 0.7;
+  public static inline var WATER_RISE = 0.05;
+  public static inline var WATER_BUBBLE = 0.09;
+  public static inline var WATER_TOP = 3.35;
+  // the lamp the tank's fluid lights the floor with: how far out of its front, its bulb height, how
+  // far out it aims, its colour and strength
+  public static inline var TANK_LAMP_OUT = 0.6;
+  public static inline var TANK_LAMP_Y = 2.4;
+  public static inline var TANK_LAMP_AIM = 3.0;
+  public static inline var TANK_LAMP_COLOR = 0xffa040;
+  public static inline var TANK_LAMP_MUL = 0.9;
   // frost round the cold machines (render.lab.LabDecals.frost, lab/frost): the sheet, the kinds that
   // shed it, the floor patches' spacing round the footprint and how far out of it they sit, their
   // size and its spread, the wall crust's size and how far proud of the masonry it stands, which
