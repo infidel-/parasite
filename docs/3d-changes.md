@@ -464,3 +464,43 @@ four inputs cost $0.088).
 - A "seamless" diamond plate is a lattice: no blend closes it. Only an exact whole-period crop does.
 
 **Verdict:** landed.
+
+
+## Lab round 3: fittings at their own size, a salad-green vat, chairs, a turning beacon and a fan
+
+**Changed:** each wall fitting is cropped to its own art (`LabWall.FIT_BOX`, measured alpha bbox)
+and drawn at its own height (`LabStyle.WALL_FIT_H`, 1.2 keypad to 2.8 coat hooks). One 1.4 square for
+all of them drew a keypad as big as a notice board. The vat hall and store floors tile at 8.0, two
+cells (`ShellTex.floorTile`), because their drain channels and painted squares walked off the walls
+at the shared 7.0. Lab sockets are 0.8 of the compound's size (`ShellTex.elecScale`). The plug and its
+lead go to the socket's OUTLET (`FacilityStyle.SOCK_OUTLET`, compound sheet only). On the plate centre
+the plug sat between a double socket's two outlets. Frost cell 15 is out (it is an L-shaped corner).
+The locker bank is 3.4 tall with a 0.1 crown, and a `board` lid on its top. Shelf plates tile their
+perforation every 1.2 units. Plant5's purple glows (hue-cut emissive off its bake). Floor glows for
+the tube, stasis pod, specimen case and embryonic bank come from `LabStyle.TANK_GLOW`, and the
+clone vat's lamp moved out in front of its glass. The vat medium wears the 2D sprite's salad green
+through `LabWater.patchVat` (swirl, warp of its own lookup, bubbles), is double-sided, and lights the
+clone, which sways (`patchClone`). A task chair stands at every computer desk. The workshop gets a
+ceiling fan whose rotor turns under a work lamp, and the lift's beacon swings its beam round the lobby
+(`LabSpin`).
+
+**Measured:** 4 gens, ~$0.23. Chair 872 tris, fan 316 + rotor 508 tris, 0 holes and 0 coplanar
+after two fixes. Seed 768512642: 73 frost quads, none on cell 15. The vat frame diff over 2 s is 20.5
+against 0.06 on the floor. FPS 75 (cap) at the vats, fan and lift with `lastShadowRenders` 1 per
+moving post in range. Entry diff: 1 program, the NON-instanced depth variant (shell outer wall
+faces under the beacon). The warm's caster render covers the instanced one and not this.
+
+**The traps:**
+- The lab matches the sewer's light counts to share programs (LabScene), so a light of its own
+  recompiles every shared material. The moving lights are POSTS in the pool with `LampPost.moving`:
+  the caster slot serving one re-renders its map every frame.
+- A fan lamp straight over the axis: the housing's shadow, ten times its size at the floor, swallowed
+  the whole pool. Only the rotor casts.
+- A beacon circling its own spot put half its sweep on the bedrock over the walls. It circles a point
+  out in the lobby.
+- The clone went unlit once its lamp left the glass, and a single-sided medium has no lit back for it
+  to stand against. The fix is a double-sided medium plus a clone emissive off its own map.
+- Warmup's render compiles shadow depth programs only if a caster slot is dirtied. `LabWarm` dirties
+  one and turns every batch to casting.
+
+**Verdict:** landed. One depth program still compiles on entry.

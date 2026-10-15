@@ -1069,7 +1069,7 @@ class RenderConfig {
     labShelfLow: 'models/lab/lab-shelf-low.glb',            // low closed bookcase
     labShelfRow: 'models/lab/lab-shelf-row.glb',            // a store's free-standing double-sided row
     labCrate: 'models/lab/lab-crate.glb',                   // one stencilled crate, stacked by placement
-    labLocker: 'models/lab/lab-locker.glb',                 // a bank of three lockers
+    labLocker: 'models/lab/lab-locker.glb',                 // a bank of four lockers under a crown
     labSeat: 'models/lab/lab-seat.glb',                     // two waiting-room seats on a beam
     labHazmat: 'models/lab/lab-hazmat.glb',                 // suit rack: pegboard, hanger rail, boot plate
     labFridge: 'models/lab/lab-fridge.glb',                 // specimen refrigerator
@@ -1085,6 +1085,11 @@ class RenderConfig {
     labBoxLeverbox: 'models/lab/lab-box-leverbox.glb',      // hung on the wall at 1.3, conduit up
     labBoxControlbox: 'models/lab/lab-box-controlbox.glb',  // on a post at the wall, conduit up
     labContainer: 'models/lab/lab-container.glb',           // the store's sealed biohazard container
+    // the chair at each computer desk, and the workshop fan whose rotor turns under its lamp
+    // (models-src/lab/mach/chair.py, fan.py; render.lab.LabInterior, render.lab.LabSpin)
+    labChair: 'models/lab/chair.glb',
+    labFan: 'models/lab/fan.glb',                           // canopy, downrod, finned housing
+    labFanBlades: 'models/lab/fan-blades.glb',              // hub and four blades, centred on the axis
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements

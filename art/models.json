@@ -3823,6 +3823,54 @@
       "note": "hand-modelled in Blender, models-src/lab/stock/bottlebox.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-bottlebox.png, its own PACK4. baseColor 0.34 takes the sheet's luma (Ylin 0.227) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.34,0.34,0.34,1"
+    },
+    "lab/chair": {
+      "src": "lab/lab-mach-chair.glb",
+      "tris": -1,
+      "tex": 1024,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/mach/chair.py through top_build.py kit=mach (re-run it, never hand-edit the glb): the task chair render.lab.LabInterior pulls up to each computer desk, off models-src/lab/chair-src.png. 872 tris, 1.35 x 1.28 x 1.94, seat at 0.95 so the armrests clear the desk. Wears textures-src/lab/mach-fixtures.png, ONE PACK4 edit_image off chair-src and fan-src (TL vinyl panel, TR black frame, BL fan blade, BR fan housing), shared with lab/fan. baseColor 1.0: the sheet's chair half is Ylin 0.027, a black chair in teal vinyl, and lifting it to the indoor ~78 would turn it grey.",
+      "last_converted": "2026-10-15T20:15:14Z",
+      "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/fan": {
+      "src": "lab/lab-mach-fan.glb",
+      "tris": -1,
+      "tex": 1024,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/mach/fan.py through top_build.py kit=mach (re-run it, never hand-edit the glb): the workshop ceiling fan's still part (canopy, downrod, finned olive housing), off models-src/lab/fan-src.png; its rotor is lab/fan-blades, which render.lab.LabSpin turns. 316 tris, 0.72 across, 1.02 tall. mach-fixtures.png (see lab/chair); baseColor 1.0 takes the fan half's Ylin 0.074 to the indoor ~76.",
+      "last_converted": "2026-10-15T20:16:48Z",
+      "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/fan-blades": {
+      "src": "lab/lab-mach-fan-blades.glb",
+      "tris": -1,
+      "tex": 1024,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/mach/fan.py (the second object): the fan's rotor, hub cap, four brackets and four blades CUT TO THE PAINTED OUTLINE of the BL blade (fan.py OUTLINE, px of the cell) so the art's rounded tip and its dark ground never land on geometry. 508 tris, 3.14 across, 0.1 thick, centred on the fan's axis. render.lab.LabSpin spins it under the workshop lamp, whose shadow it throws.",
+      "last_converted": "2026-10-15T20:16:48Z",
+      "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc1,1,1,1"
     }
   }
 }

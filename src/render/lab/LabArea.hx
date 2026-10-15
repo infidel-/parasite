@@ -49,6 +49,7 @@ class LabArea implements Area3D
   var flames:LabFlames.LabFlameSet;
   var tanks:Array<LampPost> = [];            // the lit tanks' floor lamps, dimmed as the lab dies
   var tankMul:Array<Float> = [];             // and each one's own strength (LabStyle.TANK_GLOW)
+  var spin:LabSpin.LabSpinSet;               // the turning beacon and the workshop fan
   // the mission, taken at build: the area hands back null once it is completed, and the alarm it
   // raised keeps sounding past that (LabLamps)
   var mission:cult.missions.CombatUndergroundLabPurge;
@@ -125,6 +126,7 @@ class LabArea implements Area3D
       mission = Std.downcast(game.area.getAreaMission(), cult.missions.CombatUndergroundLabPurge);
       sounds = new LabSounds(game, model, vats, lamps, lift);
       furniture = LabInterior.build(scene, interior);
+      spin = LabSpin.build(scene, model, lift, furniture, posts);
       flames = LabFlames.build(scene, interior.flames);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
       decals = LabDecals.build(scene, model, tile, interior.lids, interior.frosts);
@@ -274,6 +276,7 @@ class LabArea implements Area3D
       var alarmed = (mission != null && mission.leadTriggerDone);
       var dead = dead();
       LabLamps.tick(lamps, opts, alarmed, dead);
+      LabSpin.tick(spin, opts, alarmed, lamps.dead);
       LabInterior.dim(furniture, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       LabWall.tick(wall, alarmed, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       LabFlames.tick(flames, opts.dtMs);

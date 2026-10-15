@@ -204,6 +204,42 @@ class LabStyle
       mul: 0.8,
     },
   ];
+  // a desk's chair (LabInterior.chair): how far its seat tucks under the desk's edge, how far more it
+  // is pulled out at most, how far off the desk's centre it slides either way, its swing off square and
+  // the share swung well round (left as someone got up) with that swing
+  public static inline var CHAIR_TUCK = 0.45;
+  public static inline var CHAIR_PULL = 0.9;
+  public static inline var CHAIR_SIDE = 0.5;
+  public static inline var CHAIR_TURN = 0.35;
+  public static inline var CHAIR_ASKEW_PCT = 20;
+  public static inline var CHAIR_ASKEW = 1.3;
+  // the lab's two moving lights (render.lab.LabSpin). The lift's beacon: its place off the shaft's
+  // centre (models-src/lab/mach/liftshaft.py: x 3.9, the back girder's end 0.35 in from 4.9, the dome
+  // 0.3 over the girder's 9.03 top), its colour and strength, where its beam lands, its sweep in turns
+  // per BASE_MS, and the reach round that inside which the furniture casts its shadow
+  public static inline var SPIN_BEACON_X = 3.9;
+  public static inline var SPIN_BEACON_Z = -4.55;
+  public static inline var SPIN_BEACON_Y = 9.35;
+  public static inline var SPIN_BEACON_COLOR = 0xffa030;
+  public static inline var SPIN_BEACON_MUL = 2.2;
+  // the floor point its pool circles, off the shaft's centre out into the lobby (the shaft stands in
+  // the lobby's north-west corner: walls at its back, -z, and its left, -x), and the circle's radius.
+  // Circling the beacon itself put half the sweep on the bedrock over the walls
+  public static inline var SPIN_SWEEP_X = 4.0;
+  public static inline var SPIN_SWEEP_Z = 6.0;
+  public static inline var SPIN_BEACON_AIM = 6.0;
+  public static inline var SPIN_BEACON_RATE = 0.35;
+  public static inline var SPIN_BEACON_REACH = 14.0;
+  // the workshop fan: the blades' height off the floor (the fan hangs at the walls' 6.0 head), the
+  // two glbs' measured heights (models-src/lab/mach/fan.py), the work lamp's height over the blades
+  // and its strength, the rotor's turns per BASE_MS and the furniture's casting reach
+  public static inline var FAN_Y = 5.7;
+  public static inline var FAN_BLADES_H = 0.1;
+  public static inline var FAN_BODY_H = 1.02;
+  public static inline var FAN_LAMP_UP = 1.9;
+  public static inline var FAN_LAMP_MUL = 1.5;
+  public static inline var FAN_RATE = 0.6;
+  public static inline var FAN_REACH = 9.0;
   // frost round the cold machines (render.lab.LabDecals.frost, lab/frost): the sheet, the kinds that
   // shed it, the floor patches' spacing round the footprint and how far out of it they sit, their
   // size and its spread, the wall crust's size and how far proud of the masonry it stands, which

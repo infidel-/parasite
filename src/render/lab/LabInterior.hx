@@ -95,6 +95,7 @@ class LabInterior
     drum:LabPieceArt,
     crate:LabPieceArt,
     work:Array<LabPieceArt>,
+    chair:LabPieceArt,
     plants:Array<LabPieceArt>,
     suits:Array<LabPieceArt>,
     tops:Array<Array<LabPieceArt>>,
@@ -111,6 +112,7 @@ class LabInterior
     drum:LabPieceArt,
     crate:LabPieceArt,
     work:Array<LabPieceArt>,
+    chair:LabPieceArt,
     plants:Array<LabPieceArt>,
     suits:Array<LabPieceArt>,
     tops:Array<Array<LabPieceArt>>,
@@ -230,6 +232,8 @@ class LabInterior
           ]),
           row(M.facilityKeyboard, FacilityStyle.WORK_KEY_H, FacilityStyle.WORK_KEY_D),
         ],
+        // the task chair pulled up to it (models-src/lab/mach/chair.py, built at world size)
+        chair: gen('chair', 1.937, 1.283, 1.349),
         // a PLANT cell's pot, one of these by hash
         plants: [
           gen('plant2', 3.0, 2.3, 2.24),
@@ -461,7 +465,8 @@ class LabInterior
     {
       var A = art();
       var all = [for (a in A.furniture) a].concat([A.shelfRow, A.drum, A.crate])
-        .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits)
+        .concat([for (a in A.machines) a]).concat(A.work).concat([A.chair]).concat(A.plants)
+        .concat(A.suits)
         .concat(A.tops[0]).concat(A.tops[1]).concat(A.stock);
       all = all.concat([for (a in all) if (a.glass != null) a.glass]);
       leds(scene, [{
@@ -639,7 +644,10 @@ class LabInterior
       var back = CELL / 2 + faceOff(m, col, row, d) - a.d / 2;
       put(p, a, c.x + DC[d] * back, c.z + DR[d] * back, away(d));
       if (t == Const.TILE_LAB_CONSOLE)
-        work(p, c.x + DC[d] * back, c.z + DR[d] * back, d, a.h);
+        {
+          work(p, c.x + DC[d] * back, c.z + DR[d] * back, d, a.h);
+          chair(p, m, c.x + DC[d] * back, c.z + DR[d] * back, d, a.d, col, row);
+        }
       if (t == Const.TILE_LAB_HAZMAT)
         suits(p, c.x + DC[d] * back, c.z + DR[d] * back, d, col, row);
       if (t == Const.TILE_LAB_SHELF ||
@@ -791,6 +799,39 @@ class LabInterior
       dress(p, w[0], x - ox * 0.4, z - oz * 0.4, away(d), top, 0.0);
       put(p, w[2], x + ox * 0.55, z + oz * 0.55, away(d), top);
       dress(p, w[1], x + sx * 1.35 - ox * 0.2, z + sz * 1.35 - oz * 0.2, away(d), top, 0.0);
+    }
+
+// a desk's chair, in front of it and turned to it: pulled out a hashed way and swung a little off
+// square, now and then left swung well round as whoever sat there got up. `depth` is the desk's
+  static function chair(p:LabInteriorPlan, m:Facility, x:Float, z:Float, d:Int, depth:Float, col:Int,
+      row:Int):Void
+    {
+      var a = art().chair;
+      var h = FacilityModel.mix((col * 83492791) ^ (row * 40503151) ^ 0xc4a1);
+      var ox = -DC[d], oz = -DR[d];
+      var sx = -oz, sz = ox;
+      // tucked so its seat front is under the desk's edge, then pulled out
+      var out = depth / 2 + a.d / 2 - LabStyle.CHAIR_TUCK + (h % 100) / 100 * LabStyle.CHAIR_PULL;
+      var side = (((h >>> 8) % 11) - 5) / 5 * LabStyle.CHAIR_SIDE;
+      var askew = ((h >>> 12) % 100 < LabStyle.CHAIR_ASKEW_PCT);
+      var swing = (askew ? LabStyle.CHAIR_ASKEW : LabStyle.CHAIR_TURN) *
+        (((h >>> 16) % 2) == 0 ? -1.0 : 1.0) * (0.5 + ((h >>> 18) % 50) / 100);
+      var cx = x + ox * out + sx * side, cz = z + oz * out + sz * side;
+      put(p, a, cx, cz, away(d) + Math.PI + swing);
+      var r = a.w / 2;
+      FacilityDetail.ground(m, {
+        col: col,
+        row: row,
+        len: 1,
+        alongX: (d < 2),
+        rect: {
+          x0: cx - r,
+          x1: cx + r,
+          z0: cz - r,
+          z1: cz + r,
+        },
+        h: a.h,
+      });
     }
 
 // a hazmat rack's suits: up to SUIT_N on its rail at hashed gaps, one hook in SUIT_TORN holding the

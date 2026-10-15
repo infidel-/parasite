@@ -22,4 +22,7 @@ typedef LampPost = {
   // caster slot, its shadow is off and its map never re-renders. a facility room fixture throws no
   // shadow anyone can see (0.000-0.006% of pixels) and cost 1.7-1.9 spot-map renders a frame on a walk
   ?noCast:Bool,
+  // its light or what it lights MOVES (the lab's turning beacon, a lamp over a turning fan): a caster
+  // slot serving it re-renders its map every frame instead of only on a hand-off (LampLights.update)
+  ?moving:Bool,
 };

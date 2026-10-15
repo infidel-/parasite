@@ -21,7 +21,8 @@ class LabWarm
       // it at creation time
       var masonry = FacilityDetail.masonry(model);
       ContactMask.attach(FacilityStyle.CONTACT, model.w, model.h, masonry.solid, masonry.holes);
-      var sc = LabScene.build(renderer, lampPool).scene;
+      var bundle = LabScene.build(renderer, lampPool);
+      var sc = bundle.scene;
       FacilityGeom.build(sc, model);
       LabGeom.build(sc, model);
       FacilityDetail.corners(sc, model);
@@ -30,7 +31,8 @@ class LabWarm
       LabDoors.build(sc, model, null);
       // the vats, the lift and the furniture, one of each part: every glb is its own material and so
       // its own program, and the glass and the medium are transparent, which is a key of its own on top
-      var paths = LabVats.warm(sc).concat(LabLift.warm(sc)).concat(LabInterior.warm(sc));
+      var paths = LabVats.warm(sc).concat(LabLift.warm(sc)).concat(LabInterior.warm(sc))
+        .concat(LabSpin.warm(sc));
       LabDecals.warm(sc);
       LabWall.warm(sc);
       LabFlames.warm(sc);
@@ -52,6 +54,22 @@ class LabWarm
                 if (left == 0)
                   res(null);
               });
-        }).then(function(_) return Warmup.compile(renderer, camera, sc));
+        }).then(function(_)
+          {
+            // the moving lights' shadow pass (LabSpin): the lab's furniture casts near them, and
+            // only a REAL shadow render compiles the depth programs (Warmup.compile's note). Every
+            // batch casts here, one caster slot is aimed down over the plate and dirtied, so the
+            // compile's one render draws its map
+            sc.traverse(function(o:Object3D)
+              {
+                if (untyped o.isInstancedMesh)
+                  o.castShadow = true;
+              });
+            var l:SpotLight = cast bundle.lampLights.debugList()[0];
+            l.position.set(0, 10, 0);
+            l.target.position.set(0, 0, 1);
+            untyped l.shadow.needsUpdate = true;
+            return Warmup.compile(renderer, camera, sc);
+          });
     }
 }

@@ -278,6 +278,21 @@ class LampLights {
                 break;
               }
           }
+      // a MOVING post's map is never valid for a second frame (LampPost.moving): its slot re-renders
+      // every frame it serves it, on top of the hand-off budget above — one pass per moving post in
+      // a caster slot, and the lab, the only kind that has any, has two
+      for (i in 0...casters)
+        {
+          var o = owners[i];
+          if (o != null &&
+              o.moving == true &&
+              o.noCast != true)
+            {
+              untyped lights[i].shadow.needsUpdate = true;
+              shadowDirty[i] = false;
+              lastShadowRenders++;
+            }
+        }
       // publish the remaining backlog for the perf trace (0 normally; jumps on a multi-slot reshuffle)
       lastShadowBacklog = 0;
       for (i in 0...casters)
