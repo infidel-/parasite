@@ -59,6 +59,7 @@ typedef LabInteriorPlan = {
   places:Map<String, Array<Models.PropPlace>>,
   heights:Map<String, Float>,
   lids:Array<LabDecals.LabLid>,     // the bench tops render.lab.LabDecals lays clutter on
+  frosts:Array<LabDecals.LabFrost>, // the cold machines render.lab.LabDecals frosts round
   flames:Array<LabFlames.LabFlame>, // the burners' flames render.lab.LabFlames draws
   leds:Array<LabLed>,               // the status lights, in the world
 };
@@ -831,6 +832,7 @@ class LabInterior
         places: new Map(),
         heights: new Map(),
         lids: [],
+        frosts: [],
         flames: [],
         leds: [],
       };
@@ -1382,6 +1384,28 @@ class LabInterior
           z0: z - dd / 2,
           z1: z + dd / 2,
         },
+        h: a.h,
+      });
+      if (LabStyle.FROST_KINDS.indexOf(k.name) < 0)
+        return;
+      // the masonry it backs onto, or failing that any its footprint touches (a cold box standing
+      // a step off the wall frosts it all the same), and that wall's face level with the piece
+      var fd = d;
+      for (h in 0...4)
+        if (fd < 0 &&
+            edgeWalled(m, col, row, fw, fh, h))
+          fd = h;
+      var reach = (fd < 0 ? 0.0 : (fd < 2 ? fh : fw) * CELL / 2 + faceOff(m, col, row, fd));
+      p.frosts.push({
+        x0: x - w / 2,
+        x1: x + w / 2,
+        z0: z - dd / 2,
+        z1: z + dd / 2,
+        wall: (fd >= 0),
+        wx: (fd < 0 || fd < 2 ? x : cx + DC[fd] * reach),
+        wz: (fd < 0 || fd >= 2 ? z : cz + DR[fd] * reach),
+        yaw: (fd < 0 ? 0.0 : away(fd)),
+        ww: (fd < 2 ? w : dd),
         h: a.h,
       });
     }

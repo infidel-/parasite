@@ -8261,6 +8261,26 @@
       "last_converted": "2026-10-14T16:13:41",
       "built_linear": 0.0779,
       "built_srgb": 52.5
+    },
+    "lab/frost": {
+      "src": "lab/frost-grid.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "[gpt-image-2.5-sunburst high, background transparent] SEPARATION IS THE MOST IMPORTANT REQUIREMENT ... 4 x 4 grid of frost marks round leaking cryogenic freezers. Rows 1-2 FLOOR frost top-down: 1 rime patch, 2 frost ring, 3 cracked ice sheet, 4 frost flecks, 5 fanning tongue, 6 fern crystals, 7 frozen puddle, 8 patchy dusting. Rows 3-4 WALL frost flat-on: 9 rime crust, 10 fringe with short icicles, 11 band feathering up from a straight bottom, 12 fern patch, 13 crust with three long icicles, 14 frozen drip veil, 15 frost bloom, 16 corner patch from the lower left. [append textures.json style]",
+      "prompt_exact": false,
+      "cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "note": "PACK16 for render.lab.LabDecals.frost round the cold machines: floor cells laid flat, wall cells as upright quads on the masonry behind them. Came back cut from the transparent mode (60% under alpha 8); tools/pack16.py --valign center re-gridded it (row seams were 253/505/738).",
+      "last_converted": "2026-10-15T21:05:59",
+      "last_cells": {
+        "grid": 4,
+        "cap": 0.1
+      },
+      "built_linear": 0.0969,
+      "built_srgb": 86.1
     }
   }
 }

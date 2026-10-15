@@ -27,6 +27,22 @@ typedef LabLid = {
   keeps:Array<{ x:Float, z:Float, r:Float }>,
 };
 
+// one cold machine render.lab.LabDecals frosts round: its footprint on the floor, and when it backs
+// onto masonry, that wall's face (the point mid-way along the piece's back, the way the room is from
+// it as a yaw, the piece's width along it and its height)
+typedef LabFrost = {
+  x0:Float,
+  x1:Float,
+  z0:Float,
+  z1:Float,
+  wall:Bool,
+  wx:Float,
+  wz:Float,
+  yaw:Float,
+  ww:Float,
+  h:Float,
+};
+
 // the FLAT things of the underground lab, every one a cut-out off a pack sheet laid as a quad: the
 // grime on its floors (lab/floor-decals, a 4x4), its paint and stencils (lab/floor-marks, a 4x4) and
 // what the staff left lying on the benches (lab/bench-research and lab/bench-workshop, 6x6 each).
@@ -68,7 +84,7 @@ class LabDecals
 
 // every floor decal and every bench top's clutter, one mesh per sheet. returns the counts, for __lab()
   public static function build(scene:Scene, m:Facility, tile:(Int, Int)->Int,
-      lids:Array<LabLid>):{ grime:Int, marks:Int, tops:Int }
+      lids:Array<LabLid>, frosts:Array<LabFrost>):{ grime:Int, marks:Int, tops:Int, frost:Int }
     {
       var grime = MeshBufTools.make();
       var marks = MeshBufTools.make();
@@ -111,10 +127,16 @@ class LabDecals
       add(scene, marks, LabStyle.DECAL_MARKS_TEX);
       add(scene, tops[0], LabStyle.DECAL_RESEARCH_TEX);
       add(scene, tops[1], LabStyle.DECAL_WORKSHOP_TEX);
+      var ice = MeshBufTools.make();
+      var nf = 0;
+      for (f in frosts)
+        nf += frost(ice, f);
+      add(scene, ice, LabStyle.FROST_TEX, LabStyle.FROST_GLOW);
       return {
         grime: ng,
         marks: nm,
         tops: nt,
+        frost: nf,
       };
     }
 
@@ -122,11 +144,11 @@ class LabDecals
   public static function warm(scene:Scene):Void
     {
       for (tex in [ LabStyle.DECAL_GRIME_TEX, LabStyle.DECAL_MARKS_TEX, LabStyle.DECAL_RESEARCH_TEX,
-          LabStyle.DECAL_WORKSHOP_TEX ])
+          LabStyle.DECAL_WORKSHOP_TEX, LabStyle.FROST_TEX ])
         {
           var b = MeshBufTools.make();
           emit(b, 0.0, 0.0, 1.0, 0.0, 0, LabStyle.DECAL_Y, 4);
-          add(scene, b, tex);
+          add(scene, b, tex, (tex == LabStyle.FROST_TEX ? LabStyle.FROST_GLOW : 0));
         }
     }
 
@@ -169,6 +191,88 @@ class LabDecals
       return n;
     }
 
+// the frost round one cold machine off lab/frost (cells 0-7 drawn top-down for the floor, 8-15 flat-on
+// for a wall): patches every FROST_STEP or so round its footprint's edge, none past the wall it backs
+// onto, and on that wall a crust beside it on each hand standing on the floor and an icicled fringe
+// over its top. Returns the quads laid
+  static function frost(b:MeshBuf, f:LabFrost):Int
+    {
+      var h = FacilityModel.mix(Std.int(f.x0 * 131) ^ (Std.int(f.z0 * 977) << 8) ^ 0xf05);
+      var n = 0;
+      // the room-ward normal of the wall, so a floor patch behind the piece is skipped
+      var nx = Math.sin(f.yaw), nz = Math.cos(f.yaw);
+      var w = f.x1 - f.x0, d = f.z1 - f.z0;
+      var per = 2 * (w + d);
+      var k = Std.int(Math.max(4, per / LabStyle.FROST_STEP));
+      for (i in 0...k)
+        {
+          var r = FacilityModel.mix(h + i * 7919);
+          // a point round the perimeter, a little way out from it
+          var t = (i + ((r >>> 4) % 100) / 200) / k * per;
+          var px:Float, pz:Float;
+          if (t < w)
+            {
+              px = f.x0 + t;
+              pz = f.z0 - LabStyle.FROST_OUT;
+            }
+          else if (t < w + d)
+            {
+              px = f.x1 + LabStyle.FROST_OUT;
+              pz = f.z0 + t - w;
+            }
+          else if (t < 2 * w + d)
+            {
+              px = f.x1 - (t - w - d);
+              pz = f.z1 + LabStyle.FROST_OUT;
+            }
+          else
+            {
+              px = f.x0 - LabStyle.FROST_OUT;
+              pz = f.z1 - (t - 2 * w - d);
+            }
+          if (f.wall &&
+              (px - f.wx) * nx + (pz - f.wz) * nz < LabStyle.FROST_OUT)
+            continue;
+          var sz = LabStyle.FROST_SZ + ((r >>> 9) % 11) * LabStyle.FROST_SZ_VAR / 10;
+          emit(b, px, pz, sz, ((r >>> 24) % 64) * Math.PI / 32,
+            LabStyle.FROST_PATCH_CELLS[(r >>> 14) % LabStyle.FROST_PATCH_CELLS.length],
+            LabStyle.DECAL_Y + 0.008, 4);
+          n++;
+        }
+      if (!f.wall)
+        return n;
+      // on the wall: a crust standing on the floor at each hand, a fringe over the top
+      var rx = Math.cos(f.yaw), rz = -Math.sin(f.yaw);
+      var ox = f.wx + nx * LabStyle.FROST_PROUD, oz = f.wz + nz * LabStyle.FROST_PROUD;
+      for (s in [-1.0, 1.0])
+        {
+          var r = FacilityModel.mix(h + Std.int(s + 2) * 104729);
+          var sz = LabStyle.FROST_WALL_SZ + ((r >>> 9) % 11) * LabStyle.FROST_SZ_VAR / 10;
+          var a = s * (f.ww / 2 + sz * 0.3);
+          upright(b, ox + rx * a, sz / 2, oz + rz * a, sz, f.yaw, LabStyle.FROST_FLOOR_CELLS[(r >>> 4) %
+            LabStyle.FROST_FLOOR_CELLS.length]);
+          n++;
+        }
+      var sz = LabStyle.FROST_WALL_SZ;
+      upright(b, ox, f.h + sz * 0.3, oz, sz, f.yaw, LabStyle.FROST_FRINGE_CELLS[(h >>> 6) %
+        LabStyle.FROST_FRINGE_CELLS.length]);
+      return n + 1;
+    }
+
+// one flat-on sheet quad standing on a wall, centred at (x, y, z), `sz` across, its face turned to
+// `yaw` (the art's top up), showing cell `idx` of lab/frost's 4x4
+  static function upright(b:MeshBuf, x:Float, y:Float, z:Float, sz:Float, yaw:Float, idx:Int):Void
+    {
+      var hs = sz * 0.5;
+      var rx = Math.cos(yaw) * hs, rz = -Math.sin(yaw) * hs;
+      var u0 = (idx % 4) / 4, u1 = (idx % 4 + 1) / 4;
+      var v0 = 1 - (Std.int(idx / 4) + 1) / 4, v1 = 1 - Std.int(idx / 4) / 4;
+      MeshBufTools.quad(b,
+        [x - rx, y - hs, z - rz], [x + rx, y - hs, z + rz], [x + rx, y + hs, z + rz],
+        [x - rx, y + hs, z - rz],
+        [u0, v0, u1, v0, u1, v1, u0, v1]);
+    }
+
 // one flat sheet quad at (x, y, z), `sz` across, turned `yaw`, showing cell `idx` of a cols x cols
 // sheet. render.corp.CorpClutter.emit's, copied for that file's reason (MilitaryClutter does the same)
   static function emit(b:MeshBuf, x:Float, z:Float, sz:Float, yaw:Float, idx:Int, y:Float, cols:Int):Void
@@ -193,16 +297,24 @@ class LabDecals
 
 // one sheet's worth as one mesh, on render.corp.CorpClutter.add's material for its three reasons: an
 // opaque alphaTest draws DoubleSide in one pass, it still writes depth, and leaving `transparent` false
-// keeps VisionMask on its darkening branch
-  static function add(scene:Scene, b:MeshBuf, tex:String):Void
+// keeps VisionMask on its darkening branch. A `glow` other than 0 lights the sheet off its own map
+// at that colour (the frost)
+  static function add(scene:Scene, b:MeshBuf, tex:String, ?glow:Int = 0):Void
     {
       if (b.idx.length == 0)
         return;
-      var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
-        map: Textures.loadTexture(tex, 'wall', 1),
+      var map = Textures.loadTexture(tex, 'wall', 1);
+      var mat = new MeshLambertMaterial({
+        map: map,
         alphaTest: LabStyle.DECAL_CUT,
         side: THREE.DoubleSide,
-      })));
+      });
+      if (glow != 0)
+        {
+          mat.emissiveMap = map;
+          mat.emissive = new Color(glow);
+        }
+      var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(mat));
       mesh.name = 'lab decals ' + tex;
       mesh.receiveShadow = true;
       mesh.castShadow = false;

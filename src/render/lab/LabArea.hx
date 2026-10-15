@@ -121,7 +121,7 @@ class LabArea implements Area3D
       furniture = LabInterior.build(scene, interior);
       flames = LabFlames.build(scene, interior.flames);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
-      decals = LabDecals.build(scene, model, tile, interior.lids);
+      decals = LabDecals.build(scene, model, tile, interior.lids, interior.frosts);
       // the compound's sockets, leads and floor units, the one family the lab borrows: LabModel marks
       // every furniture and machine cell taken, so nothing lands behind or under a piece
       elec = render.facility.FacilityCable.build(scene, model, render.world.MeshBuf.MeshBufTools.make());

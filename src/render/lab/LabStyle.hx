@@ -124,6 +124,25 @@ class LabStyle
   public static inline var MARK_SZ = 2.0;
   public static inline var MARK_SZ_VAR = 0.6;
   public static inline var DECAL_Y = 0.02;
+  // frost round the cold machines (render.lab.LabDecals.frost, lab/frost): the sheet, the kinds that
+  // shed it, the floor patches' spacing round the footprint and how far out of it they sit, their
+  // size and its spread, the wall crust's size and how far proud of the masonry it stands, which
+  // floor cells ring a footprint (not the hollow ring, which stacked into a row of loops along an
+  // edge), and which wall cells stand on the floor and which hang icicles
+  public static inline var FROST_TEX = 'textures/lab/frost.png';
+  public static var FROST_KINDS = ['cryobank', 'coldbank', 'cryopod', 'stasis', 'sr203'];
+  public static inline var FROST_STEP = 1.1;
+  public static inline var FROST_OUT = 0.25;
+  public static inline var FROST_SZ = 1.9;
+  public static inline var FROST_SZ_VAR = 1.2;
+  public static inline var FROST_WALL_SZ = 2.2;
+  public static inline var FROST_PROUD = 0.03;
+  public static var FROST_PATCH_CELLS = [0, 2, 3, 4, 5, 6, 7];
+  public static var FROST_FLOOR_CELLS = [10, 11, 15];
+  public static var FROST_FRINGE_CELLS = [9, 12];
+  // the frost's own faint cold light off its map, so it reads in a dark room the way rime catches
+  // whatever light there is
+  public static inline var FROST_GLOW = 0x3a4a5c;
   public static inline var TOP_SZ = 0.75;
   public static inline var TOP_SZ_VAR = 0.3;
   public static inline var TOP_LIFT = 0.008;
