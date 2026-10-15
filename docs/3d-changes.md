@@ -291,21 +291,24 @@ at four points); the container's door end faces +z, clear of the wall. Entry dif
 
 **Verdict:** landed.
 
-## Lab status lights: frontal specks on 27 machines and the workstations, anchors the camera can see
+## Lab status lights on 27 machines and the workstations, anchors the camera can see
 
 **Changed:** a headless Blender pass ray-casts each emissive machine's front, keeps flat unlit faces
 beside a lit texel that a ray toward the game camera clears, and writes 1-3 anchors a machine
 (`lit(...)` rows). The workstation's monitor and tower go through `dress()` with FacilityWork's own
-light spots. `LabInterior.leds` draws each speck FRONTAL (fixed yaw, leaned back by `Sprites.TILT`)
-instead of in its machine's face plane, sized `max(TOP_LED_SZ, h * LED_PER_H)`.
+light spots. `LabInterior.leds` keeps each speck in its machine's face plane, like the compound's rack
+lights, sized `max(TOP_LED_SZ, h * LED_PER_H)` and proud of the face by 0.6 of its half size.
 
-**Measured:** 91 lights in the lab on seed 768512642; per room, a camera-to-speck raycast finds
-9/14, 21/26, 15/26 visible, every hidden one behind a wall, another piece, or the far face of a
-machine standing side-on. LED_PER_H 0.02 (0.09 a speck) read as nothing; 0.03 reads. Entry diff 0.
+**Measured:** 91 lights in the lab on seed 768512642; a camera-to-speck raycast finds 10/14 (vat),
+24/26 (research), 3/11 (workshop) visible, every hidden one behind a wall, another piece, or on the
+front of a machine standing side-on. LED_PER_H 0.02 (0.09 a speck) read as nothing; 0.03 reads. Entry diff 0.
 
 **The traps:**
-- A face-plane speck goes edge-on whenever its machine stands on a side wall: the first pass lit
-  machines nobody could see.
+- Turning the specks FRONTAL (the world-FX rule) was tried and REJECTED by the user: a status light
+  is part of the machine's face, not an effect; it never faced the camera. Frontal also saw fewer
+  (9/21 vs 10/24). A light on a side-on machine's front is hidden, and that is right.
+- The first anchors sat in recesses whose top lip hides them from the 51-degree camera: the anchor
+  pass casts toward the lens and drops those.
 - Frame-diffing the depth-tested vs untested render to count hidden specks counts BLINKS too (the
   square wave moves between screenshots). Raycast from the camera instead.
 

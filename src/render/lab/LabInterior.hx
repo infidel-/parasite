@@ -12,7 +12,6 @@ import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
 import render.particles.LampPost;
-import render.particles.Sprites;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
@@ -891,30 +890,27 @@ class LabInterior
 
 // the kit's status lights: one speck each in render.facility.FacilityDeco's own blinking mesh, a rack
 // port's square wave on its own hashed phase, burning that mesh's green. The compound's material and
-// clock, so the whole lab's lights are one draw call and nothing new to compile. FRONTAL like every
-// world-anchored FX (fixed yaw, leaned back by Sprites.TILT): a speck laid in its machine's face
-// went edge-on whenever the machine stood on a side wall
+// clock, so the whole lab's lights are one draw call and nothing new to compile. Each lies in its
+// piece's face, as the compound's rack lights do
   static function leds(scene:Scene, at:Array<LabLed>):Void
     {
       if (at.length == 0)
         return;
       var b = MeshBufTools.make();
-      // the frontal plane's up, and its normal toward the overhead camera
-      var uy = Math.cos(Sprites.TILT), uz = -Math.sin(Sprites.TILT);
-      var vy = Math.sin(Sprites.TILT), vz = Math.cos(Sprites.TILT);
       for (l in at)
         {
           var s = l.s / 2;
-          // proud of the face along the piece's front by a hair, then of the face's own relief
-          // toward the lens by the speck's half size, so a sloped panel never cuts its top half
+          // proud of the face along the piece's front, `r` across it
+          var nx = Math.sin(l.yaw), nz = Math.cos(l.yaw);
+          var rx = Math.cos(l.yaw), rz = -Math.sin(l.yaw);
+          // proud by more than a hair on a big piece: on a face tilted back (a console's slope) the
+          // upright speck's top half would sink into it
           var eps = Math.max(LabStyle.TOP_LED_EPS, s * 0.6);
-          var cx = l.x + Math.sin(l.yaw) * eps;
-          var cy = l.y + vy * s;
-          var cz = l.z + Math.cos(l.yaw) * eps + vz * s;
+          var cx = l.x + nx * eps, cz = l.z + nz * eps;
           var h = FacilityModel.mix(Std.int(l.x * 977) ^ (Std.int(l.z * 131) << 10));
           MeshBufTools.quadRGB(b,
-            [cx - s, cy - uy * s, cz - uz * s], [cx + s, cy - uy * s, cz - uz * s],
-            [cx + s, cy + uy * s, cz + uz * s], [cx - s, cy + uy * s, cz + uz * s],
+            [cx - rx * s, l.y - s, cz - rz * s], [cx + rx * s, l.y - s, cz + rz * s],
+            [cx + rx * s, l.y + s, cz + rz * s], [cx - rx * s, l.y + s, cz - rz * s],
             [0, 0, 1, 0, 1, 1, 0, 1], 1.0, (h % 1000) / 1000, 1.0);
         }
       render.facility.FacilityDeco.lamps(scene, b);
