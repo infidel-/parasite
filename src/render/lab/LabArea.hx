@@ -276,6 +276,7 @@ class LabArea implements Area3D
       LabWall.tick(wall, alarmed, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       LabFlames.tick(flames, opts.dtMs);
       LabWater.tick(opts.dtMs, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
+      LabBlink.tick(opts.dtMs);
       for (t in tanks)
         t.mul = LabStyle.TANK_LAMP_MUL * (1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       // the kit's status lights blink on the compound's LED clock (LabInterior.leds)

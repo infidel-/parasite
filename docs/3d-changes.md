@@ -293,6 +293,8 @@ at four points); the container's door end faces +z, clear of the wall. Entry dif
 
 ## Lab status lights on 27 machines and the workstations, anchors the camera can see
 
+> SUPERSEDED by Lab machines' painted lamps blink in place, the added specks gone
+
 **Changed:** a headless Blender pass ray-casts each emissive machine's front, keeps flat unlit faces
 beside a lit texel that a ray toward the game camera clears, and writes 1-3 anchors a machine
 (`lit(...)` rows). The workstation's monitor and tower go through `dress()` with FacilityWork's own
@@ -368,5 +370,33 @@ store on seed 768512642. Programs unchanged, entry diff 0.
   colour between plates on the side facing the lens, and the top. Hence clutter up there.
 - `LabDecals.lid`'s hash ignored height, so a workbench's lower shelf would have dealt its top's
   clutter: `y` is in the hash now.
+
+**Verdict:** landed.
+
+## Lab machines' painted lamps blink in place, the added specks gone
+
+**Changed:** the 91 specks from the entry above were REJECTED by the user ("you just added two to all in
+random places"): a fixed count per machine on whatever unlit flat a ray found, against art that
+already paints its own lamps. Every `lit(...)` anchor came off the 35 machine rows (the workstations'
+FacilityWork spots and the two bench gadgets keep theirs). Instead `models-src/lab/_ledmask.py` finds
+the lamps ON each machine's emissive map and writes a code into its ALPHA (255 not a lamp, 250 a
+steady lamp, 16-239 a blinking one, the code its phase), and `render.lab.LabBlink` patches every lab
+piece with an emissive map: lamps burn BLINK_GAIN 2.5 over their paint, blinking ones on a square
+wave of one of two rates and a hashed duty, offset per instance by its place.
+
+**Measured:** 233 lamps on 27 machines, 127 blinking; machines with no painted lamp get none (rack6,
+rack8, processor, upw, robotarm, incubator, kiosk, generator). Switchrack from a still camera: 300 px
+swing by up to 166 levels over eight frames. Programs 93 warmed, entry diff 0 — the patched pieces
+share one `labBlink` key.
+
+**The traps:**
+- A lamp is a SMALL, COMPACT blob on BLACK. Screen text, fluid bubbles, fire embers and specimen specks
+  are small blobs too: rejected by fill (< 0.55, a glyph), by a faint field round them (> 3x the blob
+  at lum 12: a screen's ground, a fire's glow), by sitting inside a big blob's box (a monitor frame),
+  and by a 14 px clearance from any big blob. Four rects per machine `EXCLUDE` the rest (incinerator
+  fire, generator lettering, holo frame chips, tentacle streak, bioprinter tissue).
+- The resize to `tex` rings across a hard alpha step, so each code covers its lamp plus an 8 px ring,
+  and lamp texels are written last so a neighbour's ring never takes them.
+- Big round lenses (the terminal's four) fail the size cap; past 700 px a lamp must fill 0.7 of its box.
 
 **Verdict:** landed.
