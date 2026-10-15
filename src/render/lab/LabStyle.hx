@@ -168,6 +168,20 @@ class LabStyle
   // in a hundred of a second piece, and the turn step its hashed -4..4 jitter takes
   public static inline var TOP_MARGIN = 0.15;
   public static inline var TOP_PAIR = 45;
+  // the shelving's stock (render.lab.LabInterior.stock): a bay's width, the stocked plates' top
+  // surfaces on the tall units and the low bookcase, their top boards, the chance in a hundred a
+  // bay-face stands empty, the gap between two pieces, how far in from the plate's edge a front
+  // stands, the most flat things on a top board, and the chance in a hundred one piece stands there
+  public static inline var SHELF_BAY = 1.8;
+  public static var SHELF_PLATES = [0.3, 1.35, 2.4, 3.45];
+  public static var LOW_PLATES = [0.25, 1.4];
+  public static inline var SHELF_TOP = 4.5;
+  public static inline var LOW_TOP = 2.6;
+  public static inline var STOCK_GAP = 15;
+  public static inline var STOCK_SPACE = 0.06;
+  public static inline var STOCK_INSET = 0.08;
+  public static inline var STOCK_LID_COUNT = 3;
+  public static inline var STOCK_TOP = 55;
   // the most flat things a bench top carries (render.lab.LabDecals deals that or up to two fewer)
   public static inline var TOP_COUNT = 4;
   // a workbench's lower shelf: its board's top, the clear lid between the legs, the most flat things

@@ -99,6 +99,7 @@ class LabInterior
     plants:Array<LabPieceArt>,
     suits:Array<LabPieceArt>,
     tops:Array<Array<LabPieceArt>>,
+    stock:Array<LabPieceArt>,
   } = null;
 
 // the art tables: the furniture by Const row-23 tile (a PLANT is one of the generated pots by hash),
@@ -114,6 +115,7 @@ class LabInterior
     plants:Array<LabPieceArt>,
     suits:Array<LabPieceArt>,
     tops:Array<Array<LabPieceArt>>,
+    stock:Array<LabPieceArt>,
   }
     {
       if (tables != null)
@@ -706,6 +708,18 @@ class LabInterior
         ],
         // what stands on a bench top, by the lid's sheet: [0] every room's but the workshop's, [1] the
         // workshop's
+        // the shelf stock, hand-modelled (models-src/lab/stock through top_build.py kit=stock), its
+        // own heights, depths and widths: dealt onto the bare shelving by `stock`
+        stock: [
+          gen('stock-archive', 0.630, 1.102, 1.000),
+          gen('stock-binders', 0.734, 0.948, 0.842),
+          gen('stock-levers', 0.709, 0.621, 0.604),
+          gen('stock-jartray', 0.365, 0.694, 0.926),
+          gen('stock-jerrycan', 0.720, 0.666, 0.640),
+          gen('stock-trays', 0.490, 0.912, 0.784),
+          gen('stock-crate', 0.516, 0.996, 0.866),
+          gen('stock-bottlebox', 0.670, 0.836, 0.899),
+        ],
         tops: [
           [
             bench('microscope', 1.0, 0.32, 0.47),
@@ -912,7 +926,7 @@ class LabInterior
       var A = art();
       var all = [for (a in A.furniture) a].concat([A.shelfRow, A.drum, A.crate])
         .concat([for (a in A.machines) a]).concat(A.work).concat(A.plants).concat(A.suits)
-        .concat(A.tops[0]).concat(A.tops[1]);
+        .concat(A.tops[0]).concat(A.tops[1]).concat(A.stock);
       all = all.concat([for (a in all) if (a.glass != null) a.glass]);
       leds(scene, [{
         x: 0.0,
@@ -1079,6 +1093,10 @@ class LabInterior
         work(p, c.x + DC[d] * back, c.z + DR[d] * back, d, a.h);
       if (t == Const.TILE_LAB_HAZMAT)
         suits(p, c.x + DC[d] * back, c.z + DR[d] * back, d, col, row);
+      if (t == Const.TILE_LAB_SHELF ||
+          t == Const.TILE_LAB_SHELF_LOW)
+        stock(p, c.x + DC[d] * back, c.z + DR[d] * back, away(d), a.d, false,
+          t == Const.TILE_LAB_SHELF_LOW, col, row);
       if (t == Const.TILE_LAB_BENCH ||
           t == Const.TILE_LAB_WORKBENCH)
         top(p, m, c.x + DC[d] * back, c.z + DR[d] * back, d, col, row, t == Const.TILE_LAB_WORKBENCH);
@@ -1256,6 +1274,7 @@ class LabInterior
         tile(col + 1, row) == t);
       var c = CityConfig.cellToWorld(col, row);
       put(p, a, c.x, c.z, (alongX ? 0.0 : Math.PI / 2));
+      stock(p, c.x, c.z, (alongX ? 0.0 : Math.PI / 2), a.d, true, false, col, row);
       var hw = (alongX ? CELL / 2 : a.d / 2);
       var hd = (alongX ? a.d / 2 : CELL / 2);
       FacilityDetail.ground(m, {
@@ -1271,6 +1290,67 @@ class LabInterior
         },
         h: a.h,
       });
+    }
+
+// a shelving unit's stock (models-src/lab/labkit_build.py shelving: two bays of SHELF_BAY across,
+// plates whose tops are SHELF_PLATES, or LOW_PLATES on the low bookcase): on each plate, each bay and
+// each face (a store's row is stocked from both aisles), nothing on STOCK_GAP in a hundred, else one
+// piece of the kit or two side by side when they fit, fronts to the aisle at the plate's edge. Its
+// top board is a lid for the flat clutter, with a piece standing on it on STOCK_TOP in a hundred.
+// Everything in the unit's frame, `d` its depth
+  static function stock(p:LabInteriorPlan, x:Float, z:Float, yaw:Float, d:Float, both:Bool,
+      low:Bool, col:Int, row:Int):Void
+    {
+      var list = art().stock;
+      var cs = Math.cos(yaw), sn = Math.sin(yaw);
+      var h = FacilityModel.mix((col * 19349663) ^ (row * 83492791) ^ 0x570c);
+      var k = 0;
+      for (y in (low ? LabStyle.LOW_PLATES : LabStyle.SHELF_PLATES))
+        for (bx in [-LabStyle.SHELF_BAY / 2, LabStyle.SHELF_BAY / 2])
+          for (face in (both ? [1.0, -1.0] : [1.0]))
+            {
+              var r = FacilityModel.mix(h + (k++) * 7919);
+              if (r % 100 < LabStyle.STOCK_GAP)
+                continue;
+              var a = list[(r >>> 8) % list.length];
+              var b = list[(r >>> 12) % list.length];
+              var pair = (a.w + b.w + LabStyle.STOCK_SPACE < LabStyle.SHELF_BAY - 0.1);
+              // the pieces left to right across the bay, the slack shared out by hash
+              var span = a.w + (pair ? b.w + LabStyle.STOCK_SPACE : 0.0);
+              var lx = bx - span / 2 +
+                ((r >>> 16) % 11 - 5) / 10 * (LabStyle.SHELF_BAY - 0.1 - span) / 2;
+              for (q in (pair ? [a, b] : [a]))
+                {
+                  var cx = (lx + q.w / 2) * face;
+                  var cz = (d / 2 - q.d / 2 - LabStyle.STOCK_INSET) * face;
+                  var turn = (face < 0 ? Math.PI : 0.0) + ((r >>> 20) % 5 - 2) * LabStyle.TOP_JITTER;
+                  put(p, q, x + cx * cs + cz * sn, z - cx * sn + cz * cs, yaw + turn, y);
+                  lx += q.w + LabStyle.STOCK_SPACE;
+                }
+            }
+      // the top board: flat clutter, and now and then one piece standing at a hashed end
+      var l:LabDecals.LabLid = {
+        x: x,
+        z: z,
+        yaw: yaw,
+        w: LabStyle.SHELF_BAY * 2 - 0.2,
+        d: d - 0.2,
+        y: (low ? LabStyle.LOW_TOP : LabStyle.SHELF_TOP),
+        workshop: false,
+        count: LabStyle.STOCK_LID_COUNT,
+        keeps: [],
+      };
+      p.lids.push(l);
+      if (h % 100 >= LabStyle.STOCK_TOP)
+        return;
+      var a = list[(h >>> 8) % list.length];
+      var lx = (((h >>> 4) & 1) == 0 ? -1.0 : 1.0) * (l.w / 2 - a.w / 2 - LabStyle.TOP_MARGIN);
+      l.keeps.push({
+        x: lx,
+        z: 0.0,
+        r: Math.max(a.w, a.d) / 2,
+      });
+      put(p, a, x + lx * cs, z - lx * sn, yaw + ((h >>> 20) % 9 - 4) * LabStyle.TOP_JITTER, l.y);
     }
 
 // a cell of drums or a crate stack, backed onto its wall when it has one: two or three of the one

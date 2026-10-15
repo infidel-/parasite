@@ -2102,7 +2102,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the lab table, one cell wide, front to +z: epoxy top on four legs, a drawer pedestal, a low shelf. 84 tris, 4.0 x 2.4 x 1.96. bench-sheet.png packs the BUILT lab/kit-epoxy, -carcass, -drawers, -butcher, so no baseColor/lift/sat.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-workbench": {
@@ -2111,7 +2111,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the heavy workbench: butcher-block top, stout legs, a full lower shelf, a back upstand and a vice. 96 tris, 4.0 x 2.6 x 3.3, bench-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-desk": {
@@ -2120,7 +2120,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the computer desk render.lab.LabInterior stands the facility workstation on: epoxy top on two side panels, modesty panel, drawer pedestal on the right. 60 tris, 4.0 x 2.4 x 1.55, bench-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-shelf": {
@@ -2128,8 +2128,8 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): tall stocked shelving: corner uprights, five perforated plates, two stocked boxes a bay wearing one shelf row of lab/kit-stocked whole (two a bay so the row lands near its own aspect). 204 tris, 3.9 x 1.6 x 4.6, shelf-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): bare shelving, corner uprights (or side panels) and perforated plates; its stock is the lab/stock-* kit render.lab.LabInterior deals per bay. shelf-sheet.png.",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-shelf-low": {
@@ -2137,8 +2137,8 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the low closed bookcase: side, top and back panels, two stocked bays. 120 tris, 3.94 x 1.44 x 2.6, shelf-sheet.png. Its first build had 14 coplanar pairs (every panel ending on its neighbour's plane); each member now stops short of or runs past the one it meets.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): bare shelving, corner uprights (or side panels) and perforated plates; its stock is the lab/stock-* kit render.lab.LabInterior deals per bay. shelf-sheet.png.",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-shelf-row": {
@@ -2146,8 +2146,8 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): a store's free-standing double-sided shelf row, stocked front and back. 204 tris, 3.9 x 2.4 x 4.6, shelf-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): bare shelving, corner uprights (or side panels) and perforated plates; its stock is the lab/stock-* kit render.lab.LabInterior deals per bay. shelf-sheet.png.",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-crate": {
@@ -2156,7 +2156,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): one stencilled crate, lab/kit-crate whole on every face; LabInterior stacks two or three a cell. 12 tris, 2.0 x 2.0 x 1.8, shelf-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-locker": {
@@ -2165,7 +2165,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): a bank of three lockers on a recessed plinth, three of lab/kit-lockers' four doors across its front. 24 tris, 3.92 x 1.6 x 4.4, locker-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-seat": {
@@ -2174,7 +2174,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): two waiting-room seats on a beam and two pedestals, teal vinyl. 84 tris, 3.9 x 1.2 x 2.1, locker-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-hazmat": {
@@ -2183,7 +2183,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the hazmat-suit rack: pegboard on the wall, hanger rail out on two arms, boot plate. 60 tris, 3.9 x 1.1 x 4.2, locker-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-fridge": {
@@ -2192,7 +2192,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): the specimen refrigerator, lab/kit-fridge whole on its door. 24 tris, 3.2 x 2.0 x 4.4, fridge-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-drum": {
@@ -2201,7 +2201,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "hand-modelled in Blender, models-src/lab/labkit_build.py (re-run it, never hand-edit the glb): one chemical drum, lab/kit-drum twice round its side, a lid rim. 152 tris, 1.26 x 1.26 x 1.84, fridge-sheet.png.",
-      "last_converted": "2026-10-15T15:41:25Z",
+      "last_converted": "2026-10-15T16:20:25Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "lab/lab-box-sr203": {
@@ -3675,6 +3675,134 @@
       "note": "hand-modelled in Blender, models-src/lab/mach/cagecase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cagecase.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-cagecase.png, PACK4 edit_image off models-src/lab/cagecase-src.png. ",
       "last_converted": "2026-10-14T19:45:37Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
+    },
+    "lab/stock-archive": {
+      "src": "lab/lab-stock-archive.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.39,
+        0.39,
+        0.39,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/archive.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-archive.png, its own PACK4. baseColor 0.39 takes the sheet's luma (Ylin 0.193) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.39,0.39,0.39,1"
+    },
+    "lab/stock-binders": {
+      "src": "lab/lab-stock-binders.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.28,
+        0.28,
+        0.28,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/binders.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-binders.png, its own PACK4. baseColor 0.28 takes the sheet's luma (Ylin 0.270) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.28,0.28,0.28,1"
+    },
+    "lab/stock-levers": {
+      "src": "lab/lab-stock-levers.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.32,
+        0.32,
+        0.32,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/levers.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-levers.png, its own PACK4. baseColor 0.32 takes the sheet's luma (Ylin 0.238) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.32,0.32,0.32,1"
+    },
+    "lab/stock-jartray": {
+      "src": "lab/lab-stock-jartray.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.43,
+        0.43,
+        0.43,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/jartray.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-jartray.png, its own PACK4. baseColor 0.43 takes the sheet's luma (Ylin 0.177) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.43,0.43,0.43,1"
+    },
+    "lab/stock-jerrycan": {
+      "src": "lab/lab-stock-jerrycan.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.48,
+        0.48,
+        0.48,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/jerrycan.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-jerrycan.png, its own PACK4. baseColor 0.48 takes the sheet's luma (Ylin 0.159) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.48,0.48,0.48,1"
+    },
+    "lab/stock-trays": {
+      "src": "lab/lab-stock-trays.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.2,
+        0.2,
+        0.2,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/trays.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-trays.png, its own PACK4. baseColor 0.2 takes the sheet's luma (Ylin 0.382) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.2,0.2,0.2,1"
+    },
+    "lab/stock-crate": {
+      "src": "lab/lab-stock-crate.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.7,
+        0.7,
+        0.7,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/crate.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-crate.png, its own PACK4. baseColor 0.7 takes the sheet's luma (Ylin 0.108) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.7,0.7,0.7,1"
+    },
+    "lab/stock-bottlebox": {
+      "src": "lab/lab-stock-bottlebox.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.34,
+        0.34,
+        0.34,
+        1
+      ],
+      "note": "hand-modelled in Blender, models-src/lab/stock/bottlebox.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-bottlebox.png, its own PACK4. baseColor 0.34 takes the sheet's luma (Ylin 0.227) to the indoor ~78.",
+      "last_converted": "2026-10-15T16:18:26Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.34,0.34,0.34,1"
     }
   }
 }
