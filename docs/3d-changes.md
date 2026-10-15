@@ -270,3 +270,100 @@ status lights. 73 image gens, ~$3.9. Programs 90 warmed, entry diff 0. Oracle 3,
   dome, and the src is a fat rounded pod; rebuilt at 5.4 x 3.4 with the canopy over half its lid.
 
 **Verdict:** landed.
+
+## Lab fixes: lamps over free floor, no dark room, rock corner caps, the container's door to the camera
+
+**Changed:** `LabLamps` ring-searches each lattice post to the nearest room cell with `m.deco == 0`
+(free floor), and forces one post lit in any room whose posts all rolled dead. `LabGeom` fills the
+bedrock cap's outer-corner notch where both orthogonal neighbours are wall and the diagonal is rock.
+The container is rebuilt 10.6 long (castings inside the 3-cell bay's 11.2), both long sides wear the
+panel, and `machine()` turns it end for end on a side wall when `away(d)` aimed its door end up it.
+
+**Measured:** seed 768512642: the 10x6 research room (two posts, both dead before) lit; the storage
+post that sat on a shelf row moved to the aisle; the rock cap covers (24,20)'s NE notch (raycast hit
+at four points); the container's door end faces +z, clear of the wall. Entry diff 0.
+
+**The traps:**
+- A small room has two lattice posts and LAMP_DEAD_PCT 8 can kill both: a guarantee, not a lower
+  rate, is what keeps a room from going black.
+- The notch is cut on purpose (`FacilityGeom.capTop`) and filled only when the diagonal is floor;
+  rock behind it left a square hole the size of the slab's arm.
+
+**Verdict:** landed.
+
+## Lab status lights: frontal specks on 27 machines and the workstations, anchors the camera can see
+
+**Changed:** a headless Blender pass ray-casts each emissive machine's front, keeps flat unlit faces
+beside a lit texel that a ray toward the game camera clears, and writes 1-3 anchors a machine
+(`lit(...)` rows). The workstation's monitor and tower go through `dress()` with FacilityWork's own
+light spots. `LabInterior.leds` draws each speck FRONTAL (fixed yaw, leaned back by `Sprites.TILT`)
+instead of in its machine's face plane, sized `max(TOP_LED_SZ, h * LED_PER_H)`.
+
+**Measured:** 91 lights in the lab on seed 768512642; per room, a camera-to-speck raycast finds
+9/14, 21/26, 15/26 visible, every hidden one behind a wall, another piece, or the far face of a
+machine standing side-on. LED_PER_H 0.02 (0.09 a speck) read as nothing; 0.03 reads. Entry diff 0.
+
+**The traps:**
+- A face-plane speck goes edge-on whenever its machine stands on a side wall: the first pass lit
+  machines nobody could see.
+- Frame-diffing the depth-tested vs untested render to count hidden specks counts BLINKS too (the
+  square wave moves between screenshots). Raycast from the camera instead.
+
+**Verdict:** landed.
+
+## Lab frost: rime round the cold machines, on the floor and the wall behind
+
+**Changed:** one new PACK16 `lab/frost` (transparent mode, gpt-image-25 sunburst high, `style`):
+eight top-down floor cells and eight flat-on wall cells. `machine()` records cryobank, coldbank,
+cryopod, stasis and sr203 footprints (`LabInteriorPlan.frosts`); `LabDecals.frost` lays patches every
+FROST_STEP round each footprint (none past its wall), and on any wall the footprint touches a crust
+standing on the floor at each hand and an icicled fringe over the top. One extra mesh, Lambert with
+the map as a faint emissive (FROST_GLOW) so it reads in the dark rooms.
+
+**Measured:** 73 quads on seed 768512642; +1 program, warmed (90 -> 91), entry diff 0. $0.056.
+
+**The traps:**
+- Without the emissive the frost was a grey smudge in an unlit corner; sizes 1.3 -> 1.9 too.
+- The hollow ring cell stacked into a row of loops along a footprint edge: it is out of the list.
+- sr203 stands a step off its wall (`k.wall` false), so wall frost keys on any touched wall, not
+  only the one a piece backs onto.
+
+**Verdict:** landed.
+
+## Lab amber tanks: fluid ripples and bubbles on the glass, an amber lamp on the floor
+
+**Changed:** `LabWater.patch` folds into the ambertanks glass shell (cache key `labWater`): two
+crossed sine bands crawling up the pane and procedural bubbles (columns WATER_COL apart, hashed rise
+and wobble) in the piece's own frame, both into the emissive at WATER_TINT and lifting the pane's
+alpha. Clock is SewerWater's; `level` dims it with the lab's death. An amber `LampPost` (noCast) at
+the tank front joins `posts`, dimmed the same way.
+
+**Measured:** +2 programs warmed (91 -> 93), entry diff 0; frames 1.2 s apart differ on the pane.
+
+**The traps:**
+- Haxe prints a whole Float as an int, so a `1.0` spliced into GLSL is `1` and fails to compile:
+  every constant goes in as `const float X = float(...)`.
+- Amber bubbles vanish on the bright amber fluid behind the pane: they burn paler than it.
+
+**Verdict:** landed.
+
+## Lab shelves stocked bay by bay: eight hand-modelled stock pieces, clutter on the tops
+
+**Changed:** the shelving's baked stocked boxes are gone (`labkit_build.py`, 204 -> 108 tris a
+unit). Eight shelf-stock pieces (`models-src/lab/stock`, `top_build.py kit=stock`, one sub-agent,
+one PACK4 sheet each): archive box, binders, lever-arch files, jar tray, jerrycan, document trays,
+crate, bottle carton. `LabInterior.stock` deals per plate, per bay, per face (rows both aisles): an
+empty bay on STOCK_GAP %, else one piece or two side by side when they fit. Each top board is a
+`LabLid` (new `count`) and on STOCK_TOP % carries a standing piece. The workbench's lower shelf is a
+second lid (count 2) with a short workshop piece on 40%.
+
+**Measured:** 365-860 tris a piece, gates 0/0/1, $0.44 for 8 sheets, 0 re-rolls. 197 pieces in the
+store on seed 768512642. Programs unchanged, entry diff 0.
+
+**The traps:**
+- From the 51-degree camera a tall unit shows its top board and the plate edges: what reads is the
+  colour between plates on the side facing the lens, and the top. Hence clutter up there.
+- `LabDecals.lid`'s hash ignored height, so a workbench's lower shelf would have dealt its top's
+  clutter: `y` is in the hash now.
+
+**Verdict:** landed.
