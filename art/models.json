@@ -2047,22 +2047,40 @@
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
     },
     "lab/lift-deck": {
-      "src": "lab/lift-deck.glb",
+      "src": "lab/lab-mach-liftdeck.glb",
       "tris": -1,
       "tex": 1024,
-      "roughness": 1,
-      "note": "hand-modelled in Blender, models-src/lab/lift_build.py; re-run it (blender --background --python), never hand-edit the glb. The freight lift's car: tread deck with a hazard border, guard rail along the north and west wall sides, call post, rope clamps. 428 tris, 7.8 x 7.8 x 2.74, holes 0 / coplanar 0 / 1 island. render.lab.LabLift lowers it in on arrival. Wears lift-sheet.png (lab/lift-deck, -hazard, -rail, -cable).",
-      "last_converted": "2026-10-13T20:22:05Z",
-      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+      "note": "the lab's freight-lift CAR, hand-modelled off models-src/lab/liftdeck-src.png (models-src/lab/mach/liftdeck.py, top_build.py kit=mach) on its own sheet mach-liftdeck, replacing lift_build.py's flat boxes. 2,092 tris, 7.8 x 7.8 x 2.95, gates 0/0/1, bbox symmetric about the 2x2's centre (Models.normalize recentres on it). The TREAD TOP IS z 0.25 = LabStyle.LIFT_DECK_H, what WorldCtx.ground answers; LIFT_DECK_GLB_H 2.95 is this glb's height. Guard rail on the back and left (wall) edges only; the call post's green button blinks (_ledmask.py), the red one burns steady. Rope clamps at (+-0.9, 3.8) under liftshaft's ropes.",
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.63,
+        0.63,
+        0.63,
+        1
+      ],
+      "emissiveSrc": "lab/lab-mach-liftdeck-emissive.png",
+      "emissiveStrength": 1.5,
+      "last_converted": "2026-10-15T18:06:33Z",
+      "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-liftdeck-emissive.png@1.5/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/lift-shaft": {
-      "src": "lab/lift-shaft.glb",
+      "src": "lab/lab-mach-liftshaft.glb",
       "tris": -1,
       "tex": 1024,
-      "roughness": 1,
-      "note": "hand-modelled in Blender, models-src/lab/lift_build.py; re-run it (blender --background --python), never hand-edit the glb. The lift's fixed shaft: four guide rails against the wall faces, the head frame, the sheave and two ropes. 812 tris, 9.8 x 9.8 x 9.87, symmetric in plan so normalize() needs no offset. texel_off 148 is the ROPES, mapped at 0.9 units a tile against the rest's 4.0 on purpose: the cable cell draws five ropes, so one rope is a 0.16 slice of it.",
-      "last_converted": "2026-10-13T20:22:05Z",
-      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+      "note": "the lab's freight-lift SHAFT, hand-modelled off models-src/lab/liftshaft-src.png (models-src/lab/mach/liftshaft.py, kit=mach) on its own two sheets mach-liftshaft / -b, replacing lift_build.py's flat boxes. 4,104 tris, 9.8 x 9.8 x 10.33 = LabStyle.LIFT_SHAFT_H, gates 0/0/1, symmetric bbox. Four I-beam columns against the back and left walls only (backs 0.12 off the faces), nothing on the open sides under z 8.3; the head frame above the 6.0 walls carries the motor, gearbox, rope drum and the beacon; ropes from the drum (axis y 4.22 z 9.73) down to the deck's clamps landed. Emissive: the beacon dome blinks WHOLE (_ledmask.py WHOLE), the caged column lamp burns steady.",
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.63,
+        0.63,
+        0.63,
+        1
+      ],
+      "emissiveSrc": "lab/lab-mach-liftshaft-emissive.png",
+      "emissiveStrength": 1.8,
+      "last_converted": "2026-10-15T18:06:34Z",
+      "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-liftshaft-emissive.png@1.8/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/clone": {
       "src": "lab/clone.glb",

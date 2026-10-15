@@ -86,8 +86,8 @@ class LabStyle
   public static inline var VAT_CULL_R = 12.0;
 
   // ---- the lift (render.lab.LabLift, models-src/lab/lift_build.py)
-  public static inline var LIFT_SHAFT_H = 9.87;    // the shaft glb's measured height
-  public static inline var LIFT_DECK_GLB_H = 2.74; // the car glb's, guard rail and clamps included
+  public static inline var LIFT_SHAFT_H = 10.33;   // the shaft glb's measured height
+  public static inline var LIFT_DECK_GLB_H = 2.95; // the car glb's, guard rail and clamps included
   public static inline var LIFT_DECK_H = 0.25;     // the deck's tread, which is what anyone stands on
   // the car comes down from this far up the shaft on arrival, over this many BASE_MS. 5.5 keeps its
   // rope clamps under the sheave the whole way

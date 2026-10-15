@@ -400,3 +400,34 @@ share one `labBlink` key.
 - Big round lenses (the terminal's four) fail the size cap; past 700 px a lamp must fill 0.7 of its box.
 
 **Verdict:** landed.
+
+## Lab freight lift rebuilt by hand off its own reference: car and shaft, the beacon blinking
+
+**Changed:** `lab/lift-deck` and `lab/lift-shaft` now point at `lab-mach-liftdeck.glb` /
+`lab-mach-liftshaft.glb`, built by `models-src/lab/mach/liftdeck.py` and `liftshaft.py` (`top_build.py
+kit=mach`) off one gpt-image-2.5 reference of the whole lift, each on sheets painted off it with
+edit_image. They replace `lift_build.py`'s boxes on one generic sheet. The car has a diamond-plate tread,
+hazard kick curbs on the open sides and a guard rail on the wall sides (posts, panel bays, toe boards,
+balusters). It also carries a MAX LOAD plate, a call post with modelled buttons and a key switch,
+rope clamps and a raised gate bar. The shaft has four I-beam columns on the wall sides only, with
+base plates, brackets, knee braces, conduit, junction boxes and a caged amber lamp. Its head frame of
+hazard box girders above the 6.0 walls carries a finned motor, a gearbox, the rope drum with
+pillow blocks and brake, a cable tray, and the beacon. `_ledmask.py` gained `WHOLE`, so the beacon
+dome blinks as one lamp; the caged lamp is excluded (its panes blinked apart) and the green call
+button blinks.
+
+**Measured:** deck 2,092 tris, 7.8 x 7.8 x 2.95, tread top z 0.250; shaft 4,104 tris, 9.8 x 9.8 x
+10.33; both bboxes symmetric about the 2x2's centre, gates 0/0/1. LIFT_SHAFT_H 9.87 -> 10.33 and
+LIFT_DECK_GLB_H 2.74 -> 2.95 (their heights); LIFT_DECK_H 0.25 unchanged. 3 image gens + the reference,
+~$0.22. Live on seed 768512642: the car comes down with the player on it and lands at y 0; programs
+94 warmed, entry diff 0.
+
+**The traps:**
+- Models.normalize recentres a glb on its bbox, so a lift standing in a CORNER must still be
+  symmetric in plan: the head girders run the full 9.8 along both walls, and nothing on the car
+  passes the plate's +-3.9.
+- Nothing of the shaft may stand on the lobby sides below the head frame, or a column stands in a
+  walkable cell.
+
+**Verdict:** landed.
+
