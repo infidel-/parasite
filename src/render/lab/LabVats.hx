@@ -193,7 +193,19 @@ class LabVats
       if (places.length > 0)
         Models.get(path, function(t)
           {
-            dress(path, Models.firstMesh(t.pivot).material);
+            // Dynamic: the loaded glb's mesh, which the three extern types as Object3D — its
+            // geometry and Models.toLambert material are read here
+            var mesh:Dynamic = Models.firstMesh(t.pivot);
+            dress(path, mesh.material);
+            // the clone's sway is in its own units: hand it the glb's height and foot
+            if (path == RenderConfig.MODELS.labClone &&
+                mesh.material.userData.labClone != true)
+              {
+                mesh.material.userData.labClone = true;
+                mesh.geometry.computeBoundingBox();
+                var bb = mesh.geometry.boundingBox;
+                LabWater.patchClone(mesh.material, bb.max.y - bb.min.y, bb.min.y);
+              }
           });
       var p = Models.instanced(scene, path, places, h, SOLID);
       if (places.length > 0)
@@ -207,9 +219,9 @@ class LabVats
       return p;
     }
 
-// the glass and the medium's own looks, set ONCE on the shared template material (only the vats
-// draw these paths): the glass a faint double-sided tint that writes no depth, the medium a
-// see-through column lit from within by its own map
+// the glass, the medium and the clone's own looks, set ONCE on the shared template material (only the
+// vats draw these paths): the glass a faint double-sided tint that writes no depth, the medium a
+// see-through column swirling and bubbling in its own light (LabWater.patchVat), the clone lit by it
   // Dynamic: a material off a loaded glb, which the three extern types as Dynamic on Object3D — it is
   // the loader's MeshLambertMaterial (Models.toLambert) and the fields set here are all on it
   public static function dress(path:String, mat:Dynamic):Void
@@ -231,7 +243,19 @@ class LabVats
           // clone is opaque and drawn first, so it still shows through
           mat.transparent = true;
           mat.opacity = LabStyle.VAT_FLUID_OPACITY;
+          // both sides: the column's far wall glows BEHIND the clone, so the clone reads as the 2D
+          // vat's dark figure against lit fluid (drawn back faces first, then front)
+          mat.side = THREE.DoubleSide;
           mat.emissive = new Color(LabStyle.VAT_FLUID_GLOW);
+          mat.emissiveIntensity = 1.0;
+          LabWater.patchVat(mat);
+        }
+      else if (path == RenderConfig.MODELS.labClone)
+        {
+          // lit by the medium round it: its lamp is out in front of the glass, and unlit the clone
+          // was lost in the column. Purged vats show the heap instead, so this never outlives the
+          // fluid
+          mat.emissive = new Color(LabStyle.CLONE_GLOW);
           mat.emissiveMap = mat.map;
           mat.emissiveIntensity = 1.0;
         }

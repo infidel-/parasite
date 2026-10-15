@@ -76,13 +76,40 @@ class LabStyle
   public static inline var VAT_GLASS_H = 7.0;
   public static inline var VAT_FLUID_H = 6.7;
   public static inline var VAT_GLASS_OPACITY = 0.22;
-  public static inline var VAT_FLUID_OPACITY = 0.62;
-  // the medium lights itself through its own map, times this colour
-  public static inline var VAT_FLUID_GLOW = 0x2f7a24;
+  public static inline var VAT_FLUID_OPACITY = 0.5;
+  // the medium's glow (render.lab.LabWater.patchVat), and the colour its sheet is worn in: the 2D vat
+  // sprite's salad green (measured 112,182,144 over its lit fluid), where the sheet's own olive read
+  // "too primal"
+  public static inline var VAT_FLUID_GLOW = 0x1c5a3a;
+  public static inline var VAT_TINT = 0x70b690;
+  // the fluid sheet's mean linear luminance (models-src/lab/fluid-sheet.png), so the tint keeps its
+  // value; the swirl's phase speed per BASE_MS; how far the flow bends the sheet's lookup, in uv
+  public static inline var VAT_SHEET_LUM = 0.0506;
+  // how much of the tint the medium's surface takes as albedo: at the full tint it lit up mint and
+  // hid the clone, which the 2D vat shows through its fluid
+  public static inline var VAT_TINT_K = 0.3;
+  public static inline var VAT_SWIRL_RATE = 0.12;
+  public static inline var VAT_WARP = 0.012;
+  // the bubbles: columns round the turn, the climb of one cell, its rise in cells per BASE_MS, and a
+  // bubble's radius, world units
+  public static inline var VAT_BUB_N = 28;
+  public static inline var VAT_BUB_CELL = 0.9;
+  public static inline var VAT_BUB_RISE = 0.08;
+  public static inline var VAT_BUB_R = 0.09;
+  // the share of cells with no bubble in them, and the radius off the axis past which the side starts
+  // (the medium is r 3.12; its lid is inside this)
+  public static inline var VAT_BUB_ON = 0.78;
+  public static inline var VAT_BUB_RIM = 3.0;
   // the clone floats CLONE_FLOAT clear of the ring, CLONE_H from its feet to its tentacles' tips
   public static inline var CLONE_H = 5.0;
   public static inline var CLONE_FLOAT = 0.6;
   public static inline var CLONE_YAW = 0.0;
+  // the medium's light on it, through its own map
+  public static inline var CLONE_GLOW = 0x6fd49a;
+  // its sway in the medium at its crown, its bob, world units, and their phase speed per BASE_MS
+  public static inline var CLONE_SWAY = 0.18;
+  public static inline var CLONE_BOB = 0.12;
+  public static inline var CLONE_SWAY_RATE = 0.35;
   public static inline var CLONE_SLUMP_H = 1.4;
   // the heap replaces the floating clone once the level is under this fraction of the clone's height
   public static inline var CLONE_SLUMP_AT = 0.35;
