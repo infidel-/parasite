@@ -137,11 +137,11 @@ class LabStyle
   public static inline var VAT_LAMP_MUL = 1.6;
   // the medium's light on the floor round each vat (LabVats.pool, additive, the vat's level): a radial
   // glow VAT_POOL_R about the axis at VAT_POOL_Y, clipped at the room's walls, VAT_POOL_GLOW times the
-  // lamp's colour at its centre (0.4 blew out where four vats' pools meet). The plinth covers the
-  // inner 3.6
+  // lamp's colour at its centre (0.4 blew out where four vats' pools meet, 0.11 read too opaque). The
+  // plinth covers the inner 3.6
   public static inline var VAT_POOL_R = 8.0;
   public static inline var VAT_POOL_Y = 0.04;
-  public static inline var VAT_POOL_GLOW = 0.11;
+  public static inline var VAT_POOL_GLOW = 0.06;
   // the plinth slab the glow is laid over too (models-src/lab/vat_build.py: 7.8 x 11.8, 0.3 tall), its
   // half-sizes and the glow's height over it
   public static inline var VAT_SLAB_HW = 3.9;
@@ -206,13 +206,14 @@ class LabStyle
   public static inline var TANK_LAMP_AIM = 3.0;
   // a fake glow's trapezoid (LabInterior.fake): its width at the front, how far it reaches out, how
   // much wider each side its far edge is, how far under the piece it starts, its height and the mesh's
-  // strength over each glow's own (0.35, then 0.12, read as a torch beam: it is additive in linear)
+  // strength over each glow's own (additive in linear: 0.35 and 0.12 read as a torch beam, 0.05 too
+  // opaque)
   public static inline var TANK_SPILL_W = 3.0;
   public static inline var TANK_SPILL_DEPTH = 6.5;
   public static inline var TANK_SPILL_SPREAD = 2.2;
   public static inline var TANK_SPILL_IN = 0.4;
   public static inline var TANK_SPILL_Y = 0.04;
-  public static inline var TANK_SPILL_GLOW = 0.05;
+  public static inline var TANK_SPILL_GLOW = 0.03;
   // and which machines' fluid does it, by gen.lab.LabKinds name: the amber tanks, the blue tube and
   // stasis pod, the green specimen case and embryonic bank
   public static var TANK_GLOW:Map<String, LabTankGlow> = [

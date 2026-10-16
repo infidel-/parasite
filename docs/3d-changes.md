@@ -558,3 +558,15 @@ entry diff unchanged (the one depth program; the spill shares the vat pool's pro
   back at the crossing.
 
 **Verdict:** landed.
+
+
+## Lab glows fainter, and the lamp pool's lit count in the top bar
+
+**Changed:** `VAT_POOL_GLOW` 0.11 to 0.06 and `TANK_SPILL_GLOW` 0.05 to 0.03, which the user asked for as
+"more transparent". The top bar's debug readout gains `lit/pool lights`
+(`LampLights.lastLit`/`lastPool`, set each `update`). It counts the spotlight pool's slots lit this
+frame. Flame and muzzle lights are their own pools and are not in it.
+
+**Measured:** in the lab's vat hall the pool reads 12/12 lit, at 75 fps.
+
+**Verdict:** landed.

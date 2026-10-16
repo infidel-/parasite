@@ -23,6 +23,8 @@ class LampLights {
   var shadowCursor:Int = 0;               // round-robin start so a multi-slot reshuffle spreads one re-render per frame
   public static var lastShadowRenders = 0; // observability: lamp shadow passes dispatched this frame (0/1 with the cap)
   public static var lastShadowBacklog = 0; // observability: caster slots still owing a re-render (a burst shows here, drains 1/frame)
+  public static var lastLit = 0;          // observability: pool slots lit this frame (the top bar's lights readout)
+  public static var lastPool = 0;         // and the pool's size
   var intens:Array<Float> = [];           // eased intensity per slot (ramps toward its target)
   var activeList:Array<LampPost> = []; // lamps lit above epsilon this frame (drives fake shadows)
   public var flickT:Float = 0.0;          // raw-ms flicker clock, see flicker() below (read by LightCone.pulse)
@@ -294,6 +296,8 @@ class LampLights {
             }
         }
       // publish the remaining backlog for the perf trace (0 normally; jumps on a multi-slot reshuffle)
+      lastLit = activeList.length;
+      lastPool = lights.length;
       lastShadowBacklog = 0;
       for (i in 0...casters)
         if (shadowDirty[i])
