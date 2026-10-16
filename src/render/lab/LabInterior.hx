@@ -535,8 +535,12 @@ class LabInterior
               !StringTools.endsWith(path, '-glass.glb') &&
               mat.emissiveMap != null)
             LabBlink.patch(mat);
+          if (path == 'models/lab/ambertanks.glb')
+            LabWater.patchEmbryo(mat);
           VisionMask.patchMesh(prop.mesh);
-          prop.mesh.castShadow = false;
+          // every opaque piece throws its shadow under the lamps that cast (LabLamps, LabSpin); a
+          // glass shell throws none
+          prop.mesh.castShadow = !StringTools.endsWith(path, '-glass.glb');
         });
       return prop;
     }

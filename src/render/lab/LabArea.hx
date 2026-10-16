@@ -118,7 +118,7 @@ class LabArea implements Area3D
       lift = LabLift.build(scene, model);
       lamps = LabLamps.build(model, lift);
       posts = lamps.all.copy();
-      vats = LabVats.build(scene, game, drain, posts);
+      vats = LabVats.build(scene, game, model, drain, posts);
       tanks = interior.glows;
       tankMul = [for (t in tanks) t.mul];
       for (t in tanks)
@@ -126,7 +126,7 @@ class LabArea implements Area3D
       mission = Std.downcast(game.area.getAreaMission(), cult.missions.CombatUndergroundLabPurge);
       sounds = new LabSounds(game, model, vats, lamps, lift);
       furniture = LabInterior.build(scene, interior);
-      spin = LabSpin.build(scene, model, lift, furniture, posts);
+      spin = LabSpin.build(scene, model, lift, posts);
       flames = LabFlames.build(scene, interior.flames);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
       decals = LabDecals.build(scene, model, tile, interior.lids, interior.frosts);
@@ -346,7 +346,7 @@ class LabArea implements Area3D
       LabVats.dispose(vats);
       for (p in vats.posts)
         posts.remove(p);
-      vats = LabVats.build(built, game, drain, posts);
+      vats = LabVats.build(built, game, model, drain, posts);
       sounds.setVats(vats);
     }
 

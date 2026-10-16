@@ -10,7 +10,9 @@ import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
+import render.facility.FacilityModel.Facility;
 import render.particles.LampPost;
+import render.particles.Sprites;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
@@ -39,6 +41,8 @@ typedef LabVatSet = {
   spill:InstancedMesh,                   // the slurry each vat leaves on the floor, spreading with
                                          // its drain (lab/floor-marks cell 8); null with no vats
   spillAt:Array<{ x:Float, z:Float, yaw:Float }>,
+  pool:Mesh,                             // the medium's light on the floor round every vat, faded by
+                                         // its drain; null with no vats
 };
 
 class LabVats
@@ -48,7 +52,7 @@ class LabVats
   static var _zero = new Matrix4().makeScale(0, 0, 0);
 
 // the vats standing in the live area, and their lamps (pushed onto `posts`)
-  public static function build(scene:Scene, game:Game, drain:Map<Int,Float>,
+  public static function build(scene:Scene, game:Game, m:Facility, drain:Map<Int,Float>,
       posts:Array<LampPost>):LabVatSet
     {
       var roots = [];
@@ -59,16 +63,17 @@ class LabVats
             if (v.vatPartIndex == 0)
               roots.push(v);
           }
-      var set = place(scene, roots, drain);
+      var set = place(scene, m, roots, drain);
       for (p in set.posts)
         posts.push(p);
       return set;
     }
 
-// the five batches over `roots`, also the warm's entry with an empty list
-  public static function place(scene:Scene, roots:Array<CloneVat>, drain:Map<Int,Float>):LabVatSet
+// the five batches over `roots`
+  static function place(scene:Scene, m:Facility, roots:Array<CloneVat>,
+      drain:Map<Int,Float>):LabVatSet
     {
-      var frame = [], axis = [], posts = [];
+      var frame = [], axis = [], fluid = [], posts = [];
       for (v in roots)
         {
           if (!drain.exists(v.id))
@@ -88,6 +93,13 @@ class LabVats
             yaw: 0.0,
             y: LabStyle.VAT_GLASS_Y,
           });
+          // the medium's foot just over the ring's top: on it, the two z-fought through the fluid
+          fluid.push({
+            x: x,
+            z: c.z - LabStyle.VAT_AXIS,
+            yaw: 0.0,
+            y: LabStyle.VAT_GLASS_Y + LabStyle.VAT_FLUID_LIFT,
+          });
           posts.push({
             x: x,
             z: c.z - LabStyle.VAT_AXIS + LabStyle.VAT_LAMP_OUT,
@@ -100,7 +112,8 @@ class LabVats
             phase: 0.0,
             flick: 1.0,
             mul: 0.0,
-            noCast: true,
+            // between the glass and the console's back, so the console throws its shadow out in front
+            noCast: false,
           });
         }
       // the clone faces the console, i.e. south and the camera
@@ -128,13 +141,14 @@ class LabVats
         slumped: batch(scene, RenderConfig.MODELS.labCloneSlumped, heap, LabStyle.CLONE_SLUMP_H, 0),
         // the medium before the glass: both are transparent, so three sorts them by distance unless
         // told, and a vat's own glass is nearer the camera than its fluid only on the front half
-        fluid: batch(scene, RenderConfig.MODELS.labVatFluid, axis, LabStyle.VAT_FLUID_H, 1),
+        fluid: batch(scene, RenderConfig.MODELS.labVatFluid, fluid, LabStyle.VAT_FLUID_H, 1),
         glass: batch(scene, RenderConfig.MODELS.labVatGlass, axis, LabStyle.VAT_GLASS_H, 2),
         posts: posts,
         drain: drain,
         base: null,
         spill: spill(scene, roots.length),
         spillAt: spillAt,
+        pool: pool(scene, m, roots, axis),
       };
       return set;
     }
@@ -154,6 +168,7 @@ class LabVats
       batch(scene, RenderConfig.MODELS.labVatFluid, at, LabStyle.VAT_FLUID_H, 1);
       batch(scene, RenderConfig.MODELS.labVatGlass, at, LabStyle.VAT_GLASS_H, 2);
       spill(scene, 1);
+      pool(scene, null, [null], at);
       return [
         RenderConfig.MODELS.labVatFrame,
         RenderConfig.MODELS.labClone,
@@ -186,6 +201,73 @@ class LabVats
       return mesh;
     }
 
+// the medium's light on the floor round each vat, all of them in ONE additive mesh: facility glow's
+// route (render.facility.FacilityGlow), a radial quad on the floor per vat in place of more lamps,
+// since the pool's real lights only ever serve the vats nearest the player. A quad is clipped at its
+// room's walls, so no light falls through one into the next; the plinth stands over its middle. Its
+// four corners' grey is the vat's level (pose). `m` is null for the warm, and the pool unclipped
+  static function pool(scene:Scene, m:Facility, roots:Array<CloneVat>,
+      axis:Array<Models.PropPlace>):Mesh
+    {
+      if (roots.length == 0)
+        return null;
+      var b = MeshBufTools.make();
+      var r = LabStyle.VAT_POOL_R;
+      for (i in 0...roots.length)
+        {
+          var a = axis[i];
+          var x0 = a.x - r, x1 = a.x + r, z0 = a.z - r, z1 = a.z + r;
+          var v = roots[i];
+          if (m != null)
+            for (room in m.rooms)
+              if (v.x >= room.x1 &&
+                  v.x <= room.x2 &&
+                  v.y >= room.y1 &&
+                  v.y <= room.y2)
+                {
+                  // only a WALLED side: where the room opens on the next one a clip is a hard edge
+                  var lo = CityConfig.cellToWorld(room.x1, room.y1);
+                  var hi = CityConfig.cellToWorld(room.x2, room.y2);
+                  if (FacilityModel.isWall(m, room.x1 - 1, v.y))
+                    x0 = Math.max(x0, lo.x - CELL / 2);
+                  if (FacilityModel.isWall(m, room.x2 + 1, v.y))
+                    x1 = Math.min(x1, hi.x + CELL / 2);
+                  if (FacilityModel.isWall(m, v.x, room.y1 - 1))
+                    z0 = Math.max(z0, lo.z - CELL / 2);
+                  if (FacilityModel.isWall(m, v.x, room.y2 + 1))
+                    z1 = Math.min(z1, hi.z + CELL / 2);
+                }
+          // the uv stays the unclipped quad's, so the clip cuts the glow and does not squeeze it
+          var y = LabStyle.VAT_POOL_Y;
+          MeshBufTools.quadC(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0], [
+            0.5 + (x0 - a.x) / (2 * r), 0.5 + (z1 - a.z) / (2 * r),
+            0.5 + (x1 - a.x) / (2 * r), 0.5 + (z1 - a.z) / (2 * r),
+            0.5 + (x1 - a.x) / (2 * r), 0.5 + (z0 - a.z) / (2 * r),
+            0.5 + (x0 - a.x) / (2 * r), 0.5 + (z0 - a.z) / (2 * r),
+          ], [1.0, 1.0, 1.0, 1.0]);
+        }
+      var geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(b.pos, 3));
+      geo.setAttribute('uv', new Float32BufferAttribute(b.uv, 2));
+      geo.setAttribute('color', new Float32BufferAttribute(b.col, 3));
+      geo.setIndex(b.idx);
+      var mesh = new Mesh(geo, VisionMask.patch(new MeshBasicMaterial({
+        color: new Color(LabStyle.VAT_LAMP_COLOR).multiplyScalar(LabStyle.VAT_POOL_GLOW),
+        transparent: true,
+        alphaMap: Textures.makeGlowGradient(),
+        vertexColors: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        forceSinglePass: true,
+        blending: untyped THREE.AdditiveBlending,
+      })));
+      mesh.name = 'lab vat pool';
+      // below the actors, for FacilityGlow's reason: nothing in the sprite pool writes depth
+      mesh.renderOrder = Sprites.ORD_FIXTURE;
+      scene.add(mesh);
+      return mesh;
+    }
+
 // one batch, its material made what the part needs before the vision mask reads it
   static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>, h:Float,
       order:Int):Models.InstancedProp
@@ -213,8 +295,9 @@ class LabVats
           {
             VisionMask.patchMesh(p.mesh);
             p.mesh.renderOrder = order;
-            // transparent parts throw no shadow, and nothing here stands under a casting light
-            p.mesh.castShadow = false;
+            // the frame throws its shadow under its own lamp, the console's out over the floor before
+            // it; the see-through parts throw none, and the clone is behind the lamp
+            p.mesh.castShadow = (path == RenderConfig.MODELS.labVatFrame);
           });
       return p;
     }
@@ -229,6 +312,10 @@ class LabVats
       if (mat.userData.labVat == true)
         return;
       mat.userData.labVat = true;
+      // the console's lamps blink (render.lab.LabBlink, the codes off models-src/lab/_vatemi.py)
+      if (path == RenderConfig.MODELS.labVatFrame &&
+          mat.emissiveMap != null)
+        LabBlink.patch(mat);
       if (path == RenderConfig.MODELS.labVatGlass)
         {
           mat.transparent = true;
@@ -340,6 +427,10 @@ class LabVats
       e[14] = a.z;
       set.spill.setMatrixAt(i, (level >= 1 ? _zero : _m));
       set.spill.instanceMatrix.needsUpdate = true;
+      var col = set.pool.geometry.getAttribute('color');
+      for (k in i * 12...i * 12 + 12)
+        col.array[k] = level;
+      col.needsUpdate = true;
     }
 
 // every vat's state, for __lab()
@@ -362,5 +453,7 @@ class LabVats
           p.mesh.removeFromParent();
       if (set.spill != null)
         set.spill.removeFromParent();
+      if (set.pool != null)
+        set.pool.removeFromParent();
     }
 }

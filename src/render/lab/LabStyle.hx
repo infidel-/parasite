@@ -77,6 +77,8 @@ class LabStyle
   public static inline var VAT_FLUID_H = 6.7;
   public static inline var VAT_GLASS_OPACITY = 0.22;
   public static inline var VAT_FLUID_OPACITY = 0.5;
+  // the medium's foot over the base ring's top, which it z-fought through the fluid
+  public static inline var VAT_FLUID_LIFT = 0.03;
   // the medium's glow (render.lab.LabWater.patchVat), and the colour its sheet is worn in: the 2D vat
   // sprite's salad green (measured 112,182,144 over its lit fluid), where the sheet's own olive read
   // "too primal"
@@ -115,6 +117,13 @@ class LabStyle
   public static inline var CLONE_SLUMP_AT = 0.35;
   // a purged vat drains over this many BASE_MS
   public static inline var VAT_DRAIN_MULT = 20.0;
+  // the amber tanks' fetuses (LabWater.patchEmbryo): the sway's reach in the glb's units (the tank
+  // is drawn at scale 1), the height under which nothing moves (the tank floor is at 1.09), and the
+  // uv rects (u0, v0, u1, v1, glTF's v down) of the fetus skin and its eyes on the body's atlas
+  public static inline var EMBRYO_SWAY = 0.05;
+  public static inline var EMBRYO_FOOT = 1.12;
+  public static var EMBRYO_SKIN = [0.27, 0.57, 0.405, 0.88];
+  public static var EMBRYO_EYE = [0.112, 0.949, 0.138, 0.986];
   // each vat's own green lamp, faded out with its level: out in front of the glass, off the axis by
   // VAT_LAMP_OUT and aimed VAT_LAMP_AIM out, so it lays the medium's colour on the floor past the
   // console the way the amber tanks do (inside the glass it lit the glass and little else)
@@ -123,6 +132,13 @@ class LabStyle
   public static inline var VAT_LAMP_AIM = 9.0;
   public static inline var VAT_LAMP_COLOR = 0x7cff9a;
   public static inline var VAT_LAMP_MUL = 1.6;
+  // the medium's light on the floor round each vat (LabVats.pool, additive, the vat's level): a radial
+  // glow VAT_POOL_R about the axis at VAT_POOL_Y, clipped at the room's walls, VAT_POOL_GLOW times the
+  // lamp's colour at its centre (0.4 blew out where four vats' pools meet). The plinth covers the
+  // inner 3.6
+  public static inline var VAT_POOL_R = 8.0;
+  public static inline var VAT_POOL_Y = 0.04;
+  public static inline var VAT_POOL_GLOW = 0.11;
   // a vat's cull radius about its placement: the frame is 7.8 x 11.8 and 10.3 tall
   public static inline var VAT_CULL_R = 12.0;
 
@@ -216,7 +232,7 @@ class LabStyle
   // the lab's two moving lights (render.lab.LabSpin). The lift's beacon: its place off the shaft's
   // centre (models-src/lab/mach/liftshaft.py: x 3.9, the back girder's end 0.35 in from 4.9, the dome
   // 0.3 over the girder's 9.03 top), its colour and strength, where its beam lands, its sweep in turns
-  // per BASE_MS, and the reach round that inside which the furniture casts its shadow
+  // per BASE_MS
   public static inline var SPIN_BEACON_X = 3.9;
   public static inline var SPIN_BEACON_Z = -4.55;
   public static inline var SPIN_BEACON_Y = 9.35;
@@ -229,17 +245,15 @@ class LabStyle
   public static inline var SPIN_SWEEP_Z = 6.0;
   public static inline var SPIN_BEACON_AIM = 6.0;
   public static inline var SPIN_BEACON_RATE = 0.35;
-  public static inline var SPIN_BEACON_REACH = 14.0;
   // the workshop fan: the blades' height off the floor (the fan hangs at the walls' 6.0 head), the
   // two glbs' measured heights (models-src/lab/mach/fan.py), the work lamp's height over the blades
-  // and its strength, the rotor's turns per BASE_MS and the furniture's casting reach
+  // and its strength, and the rotor's turns per BASE_MS
   public static inline var FAN_Y = 5.7;
   public static inline var FAN_BLADES_H = 0.1;
   public static inline var FAN_BODY_H = 1.02;
   public static inline var FAN_LAMP_UP = 1.9;
   public static inline var FAN_LAMP_MUL = 1.5;
   public static inline var FAN_RATE = 0.6;
-  public static inline var FAN_REACH = 9.0;
   // frost round the cold machines (render.lab.LabDecals.frost, lab/frost): the sheet, the kinds that
   // shed it, the floor patches' spacing round the footprint and how far out of it they sit, their
   // size and its spread, the wall crust's size and how far proud of the masonry it stands, which

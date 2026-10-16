@@ -504,3 +504,32 @@ faces under the beacon). The warm's caster render covers the instanced one and n
   one and turns every batch to casting.
 
 **Verdict:** landed. One depth program still compiles on entry.
+
+
+## Lab round 4: vat console lamps, vat floor glow, lamps that cast, swaying fetuses, reactor seams
+
+**Changed:** the vat console's screens and nine of its twelve grid buttons glow off
+`lab-vat-frame-emissive.png` (`models-src/lab/_vatemi.py`), the buttons coded for `LabBlink`. The
+frame is patched in `LabVats.dress`. Each vat lays a radial additive glow on the floor
+(`LabVats.pool`, one mesh for all vats, FacilityGlow's route): the pool's real lights only serve the
+vats nearest the player. The glow fades with the vat's drain and is clipped only at walled room
+sides. Room and corridor lamps cast now (`noCast` false), and so do the vat lamps, which sit between
+the glass and the console. All opaque lab furniture and the vat frame cast. `LabSpin`'s per-light
+caster list is gone. The amber tanks' fetuses sway (`LabWater.patchEmbryo`, chained over the blink
+hook). The medium stands `VAT_FLUID_LIFT` 0.03 over the ring. The reactor's drum wraps keep 8 atlas px
+off the sheet edge, and its glass collar stands on the rim's flat top, 32-sided like the drum.
+
+**Measured:** seed 768512642, FPS 75 (cap) in the vat hall and the store. Entry diff unchanged: the one
+non-instanced depth program. Pool glow 0.4 blew out where four vats meet, 0.11 reads as spill. The
+console shadow falls ~2 units before each console. 0 gens.
+
+**The traps:**
+- The fetuses are part of the tanks' body glb, so the sway picks them by UV rect (skin, eyes). The
+  eyes' rect also holds two plinth corners, which a foot gate (y > 1.12) keeps still. A rebuild that
+  moves them on the sheet must re-measure `EMBRYO_SKIN`/`EMBRYO_EYE`.
+- A pool clipped to its room's whole rect drew a hard edge where the room opens on the next one with
+  no wall between.
+- Desks stand on the walls and the room lamps pool the aisles (`LabLamps.free`). Casting room lamps
+  alone threw no desk shadow. The visible one is the vat lamp's.
+
+**Verdict:** landed.

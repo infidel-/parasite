@@ -198,7 +198,9 @@ class LabLamps
           0.5 + ((h >>> 11) % 97) / 10 : 0.0),
         flick: 1.0,
         mul: LabStyle.LAMP_MUL * (1 - LabStyle.LAMP_MUL_VAR * ((h >>> 23) % 11) / 10),
-        noCast: true,
+        // the room and corridor fixtures throw the lab's furniture shadows (LabInterior.batch casts):
+        // the nearest RenderConfig.LAMP_LIGHT.shadowCasters of them, the rest light without
+        noCast: false,
       };
     }
 

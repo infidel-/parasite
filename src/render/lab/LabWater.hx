@@ -202,4 +202,53 @@ class LabWater
         return 'labClone';
       mat.needsUpdate = true;
     }
+
+// the amber tanks' fetuses sway and bob in their fluid as the vats' clones do (patchClone), folded
+// over the body's blink patch (render.lab.LabBlink) it chains. The fetuses are part of the body glb,
+// so a vertex is one by its UV: the skin's rect and the eyes' (models-src/lab/mach/ambertanks.py's
+// sheet layout, measured off its glb), the eyes' rect also holding a few plinth corners, which the
+// foot gate keeps still, as it keeps the cords' roots on the tank floor. The sway is smooth in the
+// piece's frame, so a fetus moves nearly whole and bends a little. `mat` is Dynamic for
+// PropShader.patch's reason
+  // ponytail: picked by uv rect; a rebuild that moves the skin or the eye on the sheet must re-measure
+  // EMBRYO_SKIN / EMBRYO_EYE, or split the fetuses into their own glb
+  public static function patchEmbryo(mat:Dynamic):Void
+    {
+      var prev = mat.onBeforeCompile;
+      var key = mat.customProgramCacheKey;
+      var sk = LabStyle.EMBRYO_SKIN, ey = LabStyle.EMBRYO_EYE;
+      mat.onBeforeCompile = function(shader:ShaderPatch, renderer:Dynamic)
+        {
+          prev(shader, renderer);
+          shader.uniforms.labWaterTime = uTime;
+          shader.vertexShader = 'uniform float labWaterTime;\n' +
+            'const float LE_SWAY = float(' + LabStyle.EMBRYO_SWAY + ');\n' +
+            'const float LE_RATE = float(' + LabStyle.CLONE_SWAY_RATE + ');\n' +
+            'const float LE_FOOT = float(' + LabStyle.EMBRYO_FOOT + ');\n' +
+            'const vec4 LE_SKIN = vec4(' + sk.join(', ') + ');\n' +
+            'const vec4 LE_EYE = vec4(' + ey.join(', ') + ');\n' +
+            'float labEmbryoIn( vec2 p, vec4 r ) {\n' +
+            '  return step( r.x, p.x ) * step( p.x, r.z ) * step( r.y, p.y ) * step( p.y, r.w );\n' +
+            '}\n' +
+            StringTools.replace(shader.vertexShader, '#include <begin_vertex>',
+              '#include <begin_vertex>\n' +
+              '  {\n' +
+              '  float on = max( labEmbryoIn( uv, LE_SKIN ), labEmbryoIn( uv, LE_EYE ) ) *\n' +
+              '    smoothstep( LE_FOOT, LE_FOOT + 0.5, transformed.y );\n' +
+              '  float ph = 0.0;\n' +
+              '#ifdef USE_INSTANCING\n' +
+              '  ph = 6.2831853 * fract( sin( dot( instanceMatrix[3].xz, vec2( 12.9898, 78.233 ) ) ) *\n' +
+              '    43758.5453 );\n' +
+              '#endif\n' +
+              '  float t = labWaterTime * LE_RATE + ph;\n' +
+              '  vec3 p = transformed;\n' +
+              '  transformed += on * LE_SWAY * vec3( sin( t + p.y * 2.2 + p.x * 1.3 ),\n' +
+              '    0.7 * sin( t * 0.45 + p.x * 2.0 ),\n' +
+              '    0.6 * cos( t * 0.8 + p.y * 1.7 + p.x ) );\n' +
+              '  }');
+        };
+      mat.customProgramCacheKey = function()
+        return key() + '+labEmbryo';
+      mat.needsUpdate = true;
+    }
 }

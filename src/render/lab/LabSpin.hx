@@ -17,8 +17,6 @@ typedef LabSpinSet = {
   body:Models.InstancedProp,    // the fan's canopy, rod and housing
   rotor:Models.InstancedProp,   // its blades, turned every frame
   base:Matrix4,                 // the rotor's placement before its turn, taken once its glb lands
-  casters:Array<Models.InstancedProp>, // the furniture batches within a spinner's reach, turned to
-                                       // cast once their glb lands
   beaconAt:{ x:Float, z:Float },
   sweepAt:{ x:Float, z:Float },  // the floor point the beam's pool circles: out in the lobby, so the
                                  // beam rakes the room and not the bedrock over the shaft's walls
@@ -36,18 +34,16 @@ typedef LabSpinSet = {
 // every frame it serves it (render.particles.LampLights) — the only map that has to, since only its
 // light or what it lights moves.
 //
-// WHAT CASTS: the lift's shaft and car already do (Models.instanced's default); the lab's furniture
-// does not (LabInterior.batch), so every batch with a piece inside a spinner's reach is turned on —
-// a batch is lab-wide, but three culls it to the light's frustum. The clock is BASE_MS turns of
-// ANIM_SPEED, the rates per BASE_MS in LabStyle
+// WHAT CASTS: the lift's shaft and car (Models.instanced's default) and the lab's furniture
+// (LabInterior.batch). The clock is BASE_MS turns of ANIM_SPEED, the rates per BASE_MS in LabStyle
 class LabSpin
 {
   static inline var CELL = CityConfig.CELL;
   static var _r = new Matrix4();
 
-// both spinners off the model, the lift and the furniture batches; their posts pushed onto `posts`
+// both spinners off the model and the lift; their posts pushed onto `posts`
   public static function build(scene:Scene, m:Facility, lift:LabLift.LabLiftSet,
-      furniture:Array<Models.InstancedProp>, posts:Array<LampPost>):LabSpinSet
+      posts:Array<LampPost>):LabSpinSet
     {
       var set:LabSpinSet = {
         beacon: null,
@@ -55,7 +51,6 @@ class LabSpin
         body: null,
         rotor: null,
         base: null,
-        casters: [],
         beaconAt: null,
         sweepAt: null,
         turn: 0.0,
@@ -75,7 +70,6 @@ class LabSpin
           set.beacon = post(set.beaconAt.x, set.beaconAt.z, LabStyle.SPIN_BEACON_Y,
             LabStyle.SPIN_BEACON_COLOR, LabStyle.SPIN_BEACON_MUL);
           posts.push(set.beacon);
-          casts(set, furniture, set.sweepAt.x, set.sweepAt.z, LabStyle.SPIN_BEACON_REACH);
         }
       // the fan: over the middle of the biggest workshop
       var best = null;
@@ -91,7 +85,6 @@ class LabSpin
       set.lamp = post(x, z, LabStyle.FAN_Y + LabStyle.FAN_LAMP_UP, LabStyle.LAMP_WORKSHOP,
         LabStyle.FAN_LAMP_MUL);
       posts.push(set.lamp);
-      casts(set, furniture, x, z, LabStyle.FAN_REACH);
       set.rotor = Models.instanced(scene, RenderConfig.MODELS.labFanBlades, [{
         x: x,
         z: z,
@@ -128,11 +121,6 @@ class LabSpin
   public static function tick(set:LabSpinSet, opts:Area3DTickOpts, alarmed:Bool, dead:Float):Void
     {
       set.turn += opts.dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
-      // a batch's own load turned it off (LabInterior.batch); on, once, after that
-      for (c in set.casters)
-        if (c.mesh != null &&
-            !c.mesh.castShadow)
-          c.mesh.castShadow = true;
       if (set.beacon != null)
         {
           var t = set.turn * LabStyle.SPIN_BEACON_RATE * Math.PI * 2;
@@ -172,22 +160,6 @@ class LabSpin
         mul: mul,
         moving: true,
       };
-    }
-
-// every furniture batch with a piece within `reach` of (x, z) goes on the caster list
-  static function casts(set:LabSpinSet, furniture:Array<Models.InstancedProp>, x:Float, z:Float,
-      reach:Float):Void
-    {
-      for (f in furniture)
-        {
-          var near = false;
-          for (c in f.centres)
-            if ((c.x - x) * (c.x - x) + (c.z - z) * (c.z - z) < reach * reach)
-              near = true;
-          if (near &&
-              set.casters.indexOf(f) < 0)
-            set.casters.push(f);
-        }
     }
 
 // a fan batch under the vision mask, casting or not
