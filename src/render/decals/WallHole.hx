@@ -87,9 +87,8 @@ class WallHole {
     {
       return [for (p in paths)
         {
-          var tx = render.Textures.loadTexture(p, 'wall');
+          var tx = render.Textures.loadPremultiplied(p, 'wall');
           tx.wrapS = tx.wrapT = THREE.ClampToEdgeWrapping;
-          tx.premultiplyAlpha = true;
           tx.colorSpace = THREE.NoColorSpace;
           tx;
         }];

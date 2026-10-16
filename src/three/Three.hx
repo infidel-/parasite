@@ -450,9 +450,17 @@ typedef RendererInfo = {
   public var minFilter:Dynamic; // minification filter; LinearFilter drops the mip chain (see generateMipmaps)
   public var magFilter:Dynamic; // magnification filter; LinearFilter is what turns a per-cell data map into a soft ramp
   public var generateMipmaps:Bool; // build a mip chain on upload. false for a small data map rebuilt often
+  public var source:TextureSource; // the image this texture samples; clone() shares it, and three uploads once per source + params
+  public var version:Int; // bumped by needsUpdate; a bind re-uploads when it differs from what was last uploaded
   public function clone():Texture;
   public function dispose():Void; // free the GPU texture — needed for one-off canvas-baked maps, which
                                   // render.View.disposeScene deliberately leaves alone (it assumes cached ones)
+}
+// the image data behind one or more Textures: three keys its GPU copies on this object, so every Texture
+// sharing a source (clone(), render.Textures.share) shares one decode and one upload per param set
+@:native("THREE.Source") extern class TextureSource {
+  public var data:Dynamic; // the image/canvas itself (what Texture.image reads and writes)
+  public var version:Int; // bumped by any sharer's needsUpdate; a moved version re-uploads on the next bind
 }
 // N same-size RGBA images as LAYERS of one texture, sampled `texture(sampler2DArray, vec3(u, v, layer))`:
 // each layer is its own full 0..1 space, so wrap, mips and anisotropy work per layer (an atlas cannot wrap

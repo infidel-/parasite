@@ -247,10 +247,8 @@ class SewerDetail
       geo.setAttribute('uv', new Float32BufferAttribute(b.uv, 2));
       geo.setIndex(b.idx);
       geo.computeVertexNormals();
-      var tex = Textures.loadTexture(SewerStyle.GRIME, 'wall');
-      tex.premultiplyAlpha = true;
+      var tex = Textures.loadPremultiplied(SewerStyle.GRIME, 'wall');
       tex.wrapT = THREE.ClampToEdgeWrapping;
-      tex.needsUpdate = true;
       // every band in the level on ONE material and ONE mesh: one draw call however big the sewer
       var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
         map: tex,

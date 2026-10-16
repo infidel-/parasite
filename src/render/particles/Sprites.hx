@@ -418,8 +418,9 @@ class Sprites {
       // multiplied by, so a hole's soft rim blows up instead of fading (measured on
       // bullet-hole-1: an alpha-0.1 texel renders at 229 of an authored 79, and under 0.05 it clips
       // to white and feeds the bloom).
-      // no needsUpdate: nothing else binds these, so this is always the first thing to put one in
-      // front of the GL, and both flags are read at upload
+      // no needsUpdate: WallHole's arrive from render.Textures.loadPremultiplied with both flags
+      // already set, so this never fires for them. note a Textures map is uploaded when its image
+      // lands, so one arriving here WITHOUT the flags would also need needsUpdate to take them
       if (untyped tex.premultiplyAlpha != true)
         {
           untyped tex.premultiplyAlpha = true;

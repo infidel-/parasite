@@ -967,6 +967,7 @@ void main() {
       if (actors != null)
         actors.dispose();
       disposeScene();
+      Poly.reset();
       if (composer != null)
         composer.dispose(); // bloom + other post-FX render targets
       // composer.dispose() only frees its OWN targets, never its passes: without this the AO pass

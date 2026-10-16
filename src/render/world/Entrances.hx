@@ -27,8 +27,10 @@ class Entrances {
     var st = WorldCtx.style;
     var doorTex = [for (p in st.doors) Textures.loadTexture(p, 'wall')];
     var doorWornTex = [for (p in st.doorsWorn) Textures.loadTexture(p, 'wall')];
-    for (t in doorTex) { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true; }
-    for (t in doorWornTex) { t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true; }
+    for (t in doorTex)
+      t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
+    for (t in doorWornTex)
+      t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping;
 
     // per-facade entrance-cover lintel texture [concrete, brick, stone], world-tiled per cover.
     // NEVER a flat colour. cropped to the centre band (like coping) then cloned + repeat-set per slab.
@@ -92,9 +94,8 @@ class Entrances {
       var cd = cv.depth;
       var mt = cv.matTile;
       var k = st.facadeName(di);
-      var ct = coverTex[di].clone();
+      var ct = Textures.share(coverTex[di]);
       ct.wrapS = ct.wrapT = THREE.RepeatWrapping;
-      ct.needsUpdate = true;
       var cmat = tag(new MeshLambertMaterial({ map: ct, side: THREE.DoubleSide }), 'door-cover-$k', '$k door cover', st.doorCovers[di]);
       // world pos of the local origin (door-top-center on the wall), shifted `off` along the face,
       // `outN` along the outward normal. rotation.y = f.rotY makes local +z = outward for every dir.

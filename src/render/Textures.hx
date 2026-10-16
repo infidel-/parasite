@@ -13,54 +13,145 @@ import js.html.CanvasElement;
 // no idea what art it is wearing. render.PolyProbe prints it under the texture view — clicking a
 // surface and being told which file to go and repaint is the whole point of that tool
 class Textures {
-  static var loader = new TextureLoader();
   // the persistent renderer, once render.View has made it: a loaded map is uploaded the moment its
-  // image lands rather than on the first frame something draws with it. every loadTexture call is a
-  // NEW Texture, so a warm scene's upload never served the real build, and a fresh tour paid 71
-  // uploads, 3-15 ms each, on the frames the player first looked at a room
+  // image lands rather than on the first frame something draws with it (a fresh tour used to pay 71
+  // uploads, 3-15 ms each, on the frames the player first looked at a room)
   public static var renderer:WebGLRenderer;
+  // ONE private master per loader + path (+ crop/key params): the decoded image every Texture a
+  // loader hands out for it shares, and with it one GPU upload per wrap/colour-space set (three keys
+  // its GL textures on source + params). never handed out itself, since callers change wrap, colour
+  // space and offset on what they get. measured at boot: 316 uploads, 106 Mpx (roof-base.png alone
+  // 9 times), a real build then loaded its own copies again, and every rebuild leaked them
+  // (render.View.disposeScene leaves textures alone)
+  static var masters:Map<String, Texture> = new Map();
+  // copies handed out before their image landed, keyed by the shared source. a native Map: haxe's
+  // ObjectMap would write an __id__ field onto three's Source objects
+  static var waiting:js.lib.Map<TextureSource, Array<Texture>> = new js.lib.Map();
+  // copies of an image that has already landed, uploaded together from one microtask
+  static var fresh:Array<Texture> = [];
 
+// a Texture of its own (wrap, repeat and offset are the caller's to change) over the one shared
+// image for `path`. `kind` only shapes the procedural stand-in for a missing file
   public static function loadTexture(path:String, kind:String, repeat:Float = 1):Texture {
-    var tex:Texture = null;
-    var undef = js.Lib.undefined; // three checks `onLoad !== undefined`, so null would be called
-    tex = loader.load(path, function(t:Texture) {
-      if (renderer != null)
-        renderer.initTexture(t);
-    }, undef, function(_) {
-      Browser.console.warn('[textures] "$path" missing — using procedural fallback for $kind');
-      tex.image = proceduralCanvas(kind);
-      tex.needsUpdate = true;
-    });
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    var tex = share(image('t|' + path, path, kind, false));
     tex.repeat.set(repeat, repeat);
-    tex.anisotropy = 4;
-    tex.name = path;
     return tex;
+  }
+
+// loadTexture with alpha premultiplied on upload, for hand-painted alpha whose junk RGB under
+// near-transparent texels otherwise bleeds in as specks once minified. a master of its own:
+// premultiplyAlpha is part of three's GPU cache key, so flipping it on a shared copy re-uploads
+  public static function loadPremultiplied(path:String, kind:String):Texture {
+    return share(image('pm|' + path, path, kind, true));
+  }
+
+// the master for a plain image load, created and started once per key
+  static function image(key:String, path:String, kind:String, premultiply:Bool):Texture {
+    var m = masters.get(key);
+    if (m != null)
+      return m;
+    m = master(key, path);
+    m.wrapS = m.wrapT = THREE.RepeatWrapping;
+    m.anisotropy = 4;
+    m.premultiplyAlpha = premultiply;
+    var img = new js.html.Image();
+    img.onload = function(_) landed(m, img);
+    img.onerror = function(_)
+      {
+        Browser.console.warn('[textures] "$path" missing — using procedural fallback for $kind');
+        landed(m, proceduralCanvas(kind));
+      };
+    // what three's ImageLoader set on the image TextureLoader used to make
+    img.crossOrigin = 'anonymous';
+    img.src = path;
+    return m;
+  }
+
+// a new master under `key`, stamped with the colour space and name every loader gives its art,
+// and an empty waiting list for its source
+  static function master(key:String, path:String):Texture {
+    var m = new Texture();
+    m.colorSpace = THREE.SRGBColorSpace;
+    m.name = path;
+    masters.set(key, m);
+    waiting.set(m.source, []);
+    return m;
+  }
+
+// the image (or its stand-in) is in: every copy waiting on it becomes uploadable at once, without
+// bumping the shared source again, and goes up now — their callers finished setting wrap and colour
+// space long ago, in the task that asked for them. the master itself is never uploaded: no draw
+// samples it, and its own wrap set was a second upload of doors and grime that nothing used
+  static function landed(m:Texture, image:Dynamic):Void { // Dynamic: an <img> or a canvas, whatever three's untyped Texture.image takes
+    m.image = image;
+    m.needsUpdate = true;
+    var list = waiting.get(m.source);
+    waiting.delete(m.source);
+    for (c in list)
+      c.version++;
+    if (renderer == null)
+      return;
+    for (c in list)
+      renderer.initTexture(c);
+  }
+
+// a Texture of its own over t's image: own wrap/repeat/offset, same decode and GPU upload. three's
+// clone() bumps the SHARED source.version, which re-uploads (and re-decodes an <img>) on the next
+// bind, so that version is put back. a copy of an image still in flight waits for landed(); one of
+// a landed image is uploaded from a microtask, after its caller's synchronous setup — never here,
+// since three reads wrap and colour space only at upload
+  public static function share(t:Texture):Texture {
+    var v = t.source.version;
+    var c = t.clone();
+    c.source.version = v;
+    var list = waiting.get(c.source);
+    if (list != null)
+      {
+        c.version = 0;
+        list.push(c);
+        return c;
+      }
+    if (renderer == null)
+      return c;
+    if (fresh.length == 0)
+      js.lib.Promise.resolve(null).then(function(_) flush());
+    fresh.push(c);
+    return c;
+  }
+
+// upload the copies share() handed out over landed images
+  static function flush():Void {
+    var list = fresh;
+    fresh = [];
+    for (c in list)
+      renderer.initTexture(c);
   }
 
   // load a facade cell but crop its center before tiling — trims the wall margin
   public static function loadCroppedTexture(path:String, cropX:Float, cropY:Float = 1):Texture {
-    var tex = new Texture();
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-    tex.anisotropy = 4;
-    tex.name = path;
-    var img = new js.html.Image();
-    img.onload = function(_) {
-      var cw = Math.round(img.width * cropX);
-      var ch = Math.round(img.height * cropY);
-      var ox = Math.round((img.width - cw) / 2);
-      var oy = Math.round((img.height - ch) / 2);
-      var cv = Browser.document.createCanvasElement();
-      cv.width = cw; cv.height = ch;
-      cv.getContext2d().drawImage(img, ox, oy, cw, ch, 0, 0, cw, ch);
-      tex.image = cv;
-      tex.needsUpdate = true;
-    };
-    img.onerror = function(_) { tex.image = proceduralCanvas('facade'); tex.needsUpdate = true; };
-    img.src = path;
-    return tex;
+    var key = 'crop|$path|$cropX|$cropY';
+    var m = masters.get(key);
+    if (m == null)
+      {
+        m = master(key, path);
+        m.wrapS = m.wrapT = THREE.RepeatWrapping;
+        m.anisotropy = 4;
+        var img = new js.html.Image();
+        img.onload = function(_) {
+          var cw = Math.round(img.width * cropX);
+          var ch = Math.round(img.height * cropY);
+          var ox = Math.round((img.width - cw) / 2);
+          var oy = Math.round((img.height - ch) / 2);
+          var cv = Browser.document.createCanvasElement();
+          cv.width = cw;
+          cv.height = ch;
+          cv.getContext2d().drawImage(img, ox, oy, cw, ch, 0, 0, cw, ch);
+          landed(m, cv);
+        };
+        img.onerror = function(_) landed(m, proceduralCanvas('facade'));
+        img.src = path;
+      }
+    return share(m);
   }
 
   // load a sprite and crop it to its own ALPHA bounding box, so a quad mapping 0..1 covers exactly
@@ -69,11 +160,13 @@ class Textures {
   // that is off-centre at all — the lit window's sits 9px high of its image, which shaved the top
   // rail off the frame and left an empty strip under the glass for alphaTest to discard
   public static function loadAlphaCropped(path:String):Texture {
-    var tex = new Texture();
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-    tex.anisotropy = 4;
-    tex.name = path;
+    var key = 'alpha|$path';
+    var m = masters.get(key);
+    if (m != null)
+      return share(m);
+    m = master(key, path);
+    m.wrapS = m.wrapT = THREE.ClampToEdgeWrapping;
+    m.anisotropy = 4;
     var img = new js.html.Image();
     img.onload = function(_) {
       var cv = Browser.document.createCanvasElement();
@@ -107,20 +200,21 @@ class Textures {
       out.width = x1 - x0 + 1;
       out.height = y1 - y0 + 1;
       out.getContext2d().drawImage(cv, x0, y0, out.width, out.height, 0, 0, out.width, out.height);
-      tex.image = out;
-      tex.needsUpdate = true;
+      landed(m, out);
     };
-    img.onerror = function(_) { tex.image = proceduralCanvas('facade'); tex.needsUpdate = true; };
+    img.onerror = function(_) landed(m, proceduralCanvas('facade'));
     img.src = path;
-    return tex;
+    return share(m);
   }
 
   // crop a detail sprite to its center, then chroma-key the flat bg color to
   // transparent (gpt can't emit alpha) so only the object shows over the roof
   public static function loadKeyedTexture(path:String, crop:Float, keyColor:Int, tol:Int = 24):Texture {
-    var tex = new Texture();
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.name = path;
+    var key = 'key|$path|$crop|$keyColor|$tol';
+    var m = masters.get(key);
+    if (m != null)
+      return share(m);
+    m = master(key, path);
     var kr = (keyColor >> 16) & 255;
     var kg = (keyColor >> 8) & 255;
     var kb = keyColor & 255;
@@ -142,12 +236,11 @@ class Textures {
         i += 4;
       }
       ctx.putImageData(d, 0, 0);
-      tex.image = cv;
-      tex.needsUpdate = true;
+      landed(m, cv);
     };
-    img.onerror = function(_) { tex.image = proceduralCanvas('facade'); tex.needsUpdate = true; };
+    img.onerror = function(_) landed(m, proceduralCanvas('facade'));
     img.src = path;
-    return tex;
+    return share(m);
   }
 
   // NO loadRampTexture. it baked a vertical alpha ramp (opaque at the bottom, transparent toward

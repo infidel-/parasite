@@ -894,3 +894,35 @@ call, so the override was reverted. The inline script in `app.html` is pinned in
 sha256; any edit to it needs the hash recomputed or the script (and `SoundManager`) never runs.
 
 **Verdict:** landed.
+
+
+## Textures cached by path: one decode and one upload per image (`Textures.share`)
+
+**Changed:** `render.Textures` keeps one private master per loader + path (`t|`, `pm|`, `crop|`,
+`alpha|`, `key|`) and hands out `share(master)`: a clone with its own wrap/repeat/offset over the
+master's image. `TextureLoader` is gone; `landed()` is the one load path (image, canvas variant or
+procedural stand-in). `loadPremultiplied` replaces "load, set `premultiplyAlpha`, `needsUpdate`" in
+Buildings grime, FacilityGrime, SewerDetail and WallHole. Every `clone()` + `needsUpdate` in the city
+builders (Poly.flattenBox, Buildings, Parapets, Gables, FlatRoofs, Entrances) is now `share()`.
+`Poly.reset()` drops the UV editor's per-build texture list on rebuild.
+
+**Measured (same CDP upload counter on HEAD and this build, same save):** boot to the prompt **316 →
+158 uploads, 106 → 48 Mpx, 325 → 167 live GL textures**. First entry after boot: MEDIUM city **92 → 12
+uploads (32.4 → 3.9 Mpx)**, HIGH **112 → 18**, LOW **123 → 9**; the rest are canvases and glb bitmaps,
+no texture PNG. After facility + 4 cities + facility: **1133 → 524** live textures. Warm window of the
+boot trace: Decode Image **1061ms x275 → 487ms x140**, main-thread tasks **4.04 → 2.75s**. Launch →
+prompt, 5 relaunches: **4.56 / 4.60 / 4.61 / 4.72 / 6.33s** (median 4.61, was 5.58); warm total 4.0
+→ 3.0s. Frozen frames (windows forced dark, HUD hidden, PNG) vs HEAD: city and facility **0 pixels
+off by more than 8**. Boot `__progs()` set identical (67).
+
+**Trap:** three's `clone()` ends in `needsUpdate`, which bumps the SHARED `source.version` and makes
+every sharer re-upload (and an `<img>` re-decode) on its next bind, so `share()` puts it back. And a
+copy must not be uploaded inside the loader call: callers set Clamp and colour space right after it,
+and three reads both only at upload, so a cache hit uploads from a microtask. The master is never
+uploaded: its own Repeat set was a second, unused upload of every door and grime map.
+
+**Left:** CorpMerge still disposes the maps it merges, so 7 facility maps with no other user free and
+re-upload on every facility load (20 uploads where HEAD did 100). The remaining +30 live textures per
+area entry are canvases and data textures that `Textures` never made.
+
+**Verdict:** landed.

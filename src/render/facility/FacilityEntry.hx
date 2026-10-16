@@ -351,8 +351,8 @@ class FacilityEntry
 // high-vis paint at 0.311 mean linear, and the level has to come down without the two bands moving
 // relative to each other — `color` is a LINEAR multiply and does exactly that where textures.json's
 // `lift`, a gamma, does not (see FacilityStyle.BARRIER_TINT). And the band grid needs phasing by
-// `uPhase` so the tip ends on white; `Textures.loadTexture` builds a fresh Texture per call, so the
-// offset is this mesh's own and nothing else samples it
+// `uPhase` so the tip ends on white; `Textures.loadTexture` builds a fresh Texture per call (over a
+// shared image), so the offset is this mesh's own and nothing else samples it
   static function addArm(scene:Scene, b:MeshBuf, uPhase:Float, armTex:String):Void
     {
       var tex = Textures.loadTexture(armTex, 'wall', 1);

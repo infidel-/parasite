@@ -129,10 +129,8 @@ class FacilityGrime
     {
       if (b.idx.length == 0)
         return;
-      var t = Textures.loadTexture(tex, 'wall');
-      t.premultiplyAlpha = true;
+      var t = Textures.loadPremultiplied(tex, 'wall');
       t.wrapT = THREE.ClampToEdgeWrapping;
-      t.needsUpdate = true;
       var mat = VisionMask.patch(new MeshLambertMaterial({
         map: t,
         premultipliedAlpha: true,
