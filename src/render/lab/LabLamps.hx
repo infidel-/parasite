@@ -14,11 +14,10 @@ typedef LabLampSet = {
   rooms:Array<LampPost>,       // the fixtures over each room, in its role's tint
   corridor:Array<LampPost>,    // the strip lights along the corridor
   vat:Array<LampPost>,         // the vat chamber's own fixtures, a sub-list of `rooms`: they die first
-  shaft:LampPost,              // the cold light coming down the lift shaft; null with no lift
   color:Array<Int>,            // every post's own tint and strength, in `all` order, for the alarm
   mul:Array<Float>,            // and the death to ease back from
   phase:Array<Float>,
-  all:Array<LampPost>,         // rooms + corridor + shaft
+  all:Array<LampPost>,         // rooms + corridor
   alarm:Float,                 // the strobe's clock, raw ms since the alarm went up; < 0 while quiet
   dead:Float,                  // the lab's death, eased 0 alive to 1 dark
 };
@@ -44,8 +43,8 @@ class LabLamps
 {
   static inline var CELL = CityConfig.CELL;
 
-// the fixtures over every room and along the corridor, and the shaft down the lift
-  public static function build(m:Facility, lift:LabLift.LabLiftSet):LabLampSet
+// the fixtures over every room and along the corridor
+  public static function build(m:Facility):LabLampSet
     {
       var rooms:Array<LampPost> = [], vat:Array<LampPost> = [];
       for (r in m.rooms)
@@ -108,34 +107,11 @@ class LabLamps
             if (p != null)
               corridor.push(p);
           }
-      // the shaft: high up the lift, aimed straight down at the car, and steady — it is the one light
-      // that comes from outside the lab. ITS POOL IS THE WHOLE OF IT: a cone of lit air was tried, and
-      // from the gameplay camera a shaft that starts over the wall head reads as a ghost tube stood on
-      // the lobby, its brightest end the part above the rock
-      var shaft:LampPost = null;
-      if (lift.col >= 0)
-        shaft = {
-          x: lift.x,
-          z: lift.z,
-          y: LabStyle.SHAFT_Y,
-          tx: lift.x,
-          tz: lift.z,
-          color: LabStyle.LAMP_SHAFT,
-          col: lift.col,
-          row: lift.row,
-          phase: 0.0,
-          flick: 1.0,
-          mul: LabStyle.SHAFT_MUL,
-          noCast: true,
-        };
       var all = rooms.concat(corridor);
-      if (shaft != null)
-        all.push(shaft);
       return {
         rooms: rooms,
         corridor: corridor,
         vat: vat,
-        shaft: shaft,
         color: [for (p in all) p.color],
         mul: [for (p in all) p.mul],
         phase: [for (p in all) p.phase],
@@ -243,8 +219,6 @@ class LabLamps
       for (i in 0...set.all.length)
         {
           var p = set.all[i];
-          if (p == set.shaft)
-            continue;
           var vat = (set.vat.indexOf(p) >= 0);
           // dying: the vat chamber's bulbs all sputter on the way out and end dark; the rest dim
           var life = (vat ? 1 - set.dead : 1 - set.dead * (1 - LabStyle.DEAD_DIM));

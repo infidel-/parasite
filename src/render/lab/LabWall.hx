@@ -355,8 +355,10 @@ class LabWall
         [u0, v0, u1, v0, u1, v1, u0, v1]);
     }
 
-// one sheet's quads as one mesh: alphaTest for the cut-out fittings (opaque, so it writes depth and
-// VisionMask keeps its darkening branch), and the screens sheet lit by its own map
+// one sheet's quads as one mesh: alphaTest for the cut-out fittings and screens (opaque, so it writes
+// depth and VisionMask keeps its darkening branch; the screens' cut is hand-made round the caged lamps
+// and the panels' corners, and without the test it drew the sheet's own dark ground there), and the
+// screens sheet lit by its own map
   static function add(scene:Scene, b:MeshBuf, tex:String, glow:Bool):Mesh
     {
       if (b.idx.length == 0)
@@ -364,7 +366,7 @@ class LabWall
       var map = Textures.loadTexture(tex, 'wall', 1);
       var mat = new MeshLambertMaterial({
         map: map,
-        alphaTest: (tex == LabStyle.WALL_FITTINGS_TEX ? LabStyle.DECAL_CUT : 0.0),
+        alphaTest: (tex != LabStyle.WALL_SIGNS_TEX ? LabStyle.DECAL_CUT : 0.0),
       });
       if (tex == LabStyle.WALL_SIGNS_TEX)
         mat.color.setScalar(LabStyle.WALL_SIGN_TINT);

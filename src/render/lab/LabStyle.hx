@@ -14,6 +14,8 @@ typedef LabTankGlow = {
   // a fake one glowing on ALL sides of a round piece: one smaller square of the glow centred under it,
   // its light over the axis
   ?ring:Bool,
+  // a fake one's width at its front, where the tank is wider than TANK_SPILL_W
+  ?w:Float,
 };
 
 // the underground lab's art set and its tuning constants: the shell's ShellTex, the scene rig and
@@ -231,6 +233,7 @@ class LabStyle
       color: 0xffa040,
       mul: 0.9,
       fake: true,
+      w: 5.6,
     },
     'tube' => {
       color: 0x5ad2ff,
@@ -251,6 +254,26 @@ class LabStyle
     'embryonic' => {
       color: 0x5cffc0,
       mul: 0.8,
+    },
+  ];
+  // the glowing plants' halos on the floor round them (LabInterior.halos): how far past the plant's
+  // own half-width the round falloff reaches, and each one's colour (its emissive map's mean, measured)
+  // and strength over the tank spill's TANK_SPILL_GLOW (a halo's disc is a fraction of a trapezoid's
+  // area: at the tanks' 0.9 it did not show). Only the three whose glow covers a share of the plant;
+  // plant4's is 0.7% of its map
+  public static inline var PLANT_HALO_OUT = 1.0;
+  public static var PLANT_GLOW:Map<String, LabTankGlow> = [
+    'models/lab/plant5.glb' => {
+      color: 0xae65ff,
+      mul: 2.4,
+    },
+    'models/lab/plant1.glb' => {
+      color: 0x5affde,
+      mul: 2.0,
+    },
+    'models/lab/plant6.glb' => {
+      color: 0x88ffd8,
+      mul: 1.4,
     },
   ];
   // a desk's chair (LabInterior.chair): how far its seat tucks under the desk's edge, how far more it
@@ -278,6 +301,9 @@ class LabStyle
   public static inline var SPIN_SWEEP_Z = 6.0;
   public static inline var SPIN_BEACON_AIM = 6.0;
   public static inline var SPIN_BEACON_RATE = 0.35;
+  // and how far out its fake actor shadows reach down the beam: past the far side of that circle
+  // (9.6 from the beacon to its centre, plus the 6.0 radius) by the rim fade's own width
+  public static inline var SPIN_BEACON_REACH = 20.0;
   // the workshop fan: the blades' height off the floor (the fan hangs at the walls' 6.0 head), the
   // two glbs' measured heights (models-src/lab/mach/fan.py), the work lamp's height over the blades
   // and its strength, and the rotor's turns per BASE_MS (0.6 strobed the blades' shadows)
@@ -396,10 +422,6 @@ class LabStyle
   public static inline var LAMP_STORAGE = 0xff5e4a;
   public static inline var LAMP_RESEARCH = 0x6f8cff;
   public static inline var LAMP_CORRIDOR = 0xd4e2ff;
-  // the light down the lift shaft: its tint, its height (over the shaft's 9.87 head frame) and strength
-  public static inline var LAMP_SHAFT = 0xb8d0ff;
-  public static inline var SHAFT_Y = 14.0;
-  public static inline var SHAFT_MUL = 1.4;
   // the alarm: its red, its period in BASE_MS, and how low the strobe swells down to
   public static inline var LAMP_ALARM = 0xff2a1a;
   public static inline var ALARM_MULT = 2.0;

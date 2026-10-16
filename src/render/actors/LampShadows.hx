@@ -246,9 +246,30 @@ class LampShadows {
               if (lp.flick < RenderConfig.LAMP_LIGHT.flickOff)
                 continue;
               var low = Math.min(L.lowMax, refY / lp.y);
-              (render.world.IndoorMask.indoorAt(lp.col, lp.row) ? lampIn : lampOut).push({
-                x: lp.x, z: lp.z, range: Math.min(lrange * low, lmax), lenMul: L.lenMul * low,
-                op: L.op, fade: L.fade, flicker: lp.flick,
+              var side = (render.world.IndoorMask.indoorAt(lp.col, lp.row) ? lampIn : lampOut);
+              if (lp.beam == null)
+                {
+                  side.push({
+                    x: lp.x, z: lp.z, range: Math.min(lrange * low, lmax), lenMul: L.lenMul * low,
+                    op: L.op, fade: L.fade, flicker: lp.flick,
+                  });
+                  continue;
+                }
+              // an aimed beam: cast down its cone out to its reach, and long — the light is high on a
+              // wall and rakes, so the length runs with reach over height (the beacon's 20 over 8.7)
+              var ax = lp.tx - lp.x, az = lp.tz - lp.z;
+              var ad = Math.sqrt(ax * ax + az * az);
+              side.push({
+                x: lp.x,
+                z: lp.z,
+                range: lp.beam,
+                lenMul: L.lenMul * Math.min(L.lowMax, lp.beam / lp.y),
+                op: L.op,
+                fade: L.fade,
+                flicker: lp.flick,
+                aimX: ax / ad,
+                aimZ: az / ad,
+                cos: Math.cos(RenderConfig.LAMP_LIGHT.angle),
               });
             }
         }

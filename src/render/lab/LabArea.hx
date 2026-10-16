@@ -118,7 +118,7 @@ class LabArea implements Area3D
       // the vats and the lift AFTER the chunks: an instanced batch sits at the origin, and a glb
       // already cached would be bucketed into the chunk there and culled with it
       lift = LabLift.build(scene, model);
-      lamps = LabLamps.build(model, lift);
+      lamps = LabLamps.build(model);
       posts = lamps.all.copy();
       vats = LabVats.build(scene, game, model, drain, posts);
       tanks = interior.glows;
@@ -129,6 +129,7 @@ class LabArea implements Area3D
       sounds = new LabSounds(game, model, vats, lamps, lift);
       furniture = LabInterior.build(scene, interior);
       spill = LabInterior.spill(scene, interior);
+      LabInterior.halos(scene, interior);
       fakes = interior.fakes;
       spin = LabSpin.build(scene, model, lift, posts);
       flames = LabFlames.build(scene, interior.flames);
@@ -206,7 +207,6 @@ class LabArea implements Area3D
             lamps: {
               rooms: lamps.rooms.length,
               corridor: lamps.corridor.length,
-              shaft: (lamps.shaft != null),
               alarm: lamps.alarm,
               dead: lamps.dead,
             },

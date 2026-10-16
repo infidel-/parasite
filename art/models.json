@@ -2283,9 +2283,11 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "hand-modelled in Blender, models-src/lab/boxkit_build.py (re-run it, never hand-edit the glb): the power distribution box, 2x1, two modules. 48 tris, 7.4 x 1.84 x 4.6.",
-      "last_converted": "2026-10-15T18:42:40Z",
-      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
+      "note": "hand-modelled in Blender, models-src/lab/boxkit_build.py (re-run it, never hand-edit the glb): the power distribution box, 2x1, two modules. 48 tris, 7.4 x 1.84 x 4.6. Its breakers' indicator strips glow off models-src/lab/lab-box-powerbox-emissive.png, cut from its own sheet by models-src/lab/_powerbox_emi.py: 16 a face, steady red, two of them blinking (render.lab.LabBlink's alpha code).",
+      "last_converted": "2026-10-16T13:17:23Z",
+      "last_sig": "n1/-1/1024/0.01/-/lab/lab-box-powerbox-emissive.png@1.2/rf1",
+      "emissiveSrc": "lab/lab-box-powerbox-emissive.png",
+      "emissiveStrength": 1.2
     },
     "lab/lab-box-leverbox": {
       "src": "lab/lab-box-leverbox.glb",
@@ -2527,7 +2529,7 @@
       "emissiveSrc": "lab/lab-mach-pipecapsule-emissive.png",
       "emissiveStrength": 1.2,
       "note": "hand-modelled in Blender, models-src/lab/mach/pipecapsule.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/pipecapsule.glb, kept). Wears textures-src/lab/mach-pipecapsule.png, PACK4 edit_image off models-src/lab/pipecapsule-src.png. baseColor 0.32 takes the sheets' luma (Ylin 0.237) to the indoor ~78. Glows off models-src/lab/lab-mach-pipecapsule-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:23Z",
+      "last_converted": "2026-10-16T13:15:37Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-pipecapsule-emissive.png@1.2/noMR/bc0.32,0.32,0.32,1"
     },
     "lab/tentacle": {

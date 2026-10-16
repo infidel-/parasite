@@ -69,6 +69,7 @@ class LabSpin
           };
           set.beacon = post(set.beaconAt.x, set.beaconAt.z, LabStyle.SPIN_BEACON_Y,
             LabStyle.SPIN_BEACON_COLOR, LabStyle.SPIN_BEACON_MUL);
+          set.beacon.beam = LabStyle.SPIN_BEACON_REACH;
           posts.push(set.beacon);
         }
       // the fan: over the middle of the biggest workshop

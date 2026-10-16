@@ -65,6 +65,7 @@ typedef LabInteriorPlan = {
   glows:Array<LampPost>,            // the lamps lit fluid casts on the floor (LabStyle.TANK_GLOW)
   spill:MeshBuf,                    // and the FAKE ones' floor glow, a trapezoid each (`spill`)
   fakes:Array<LampPost>,            // their light for the actors' fake shadows only, no pool slot
+  halos:MeshBuf,                    // the glowing plants' round floor glow, a square each (`halos`)
   flames:Array<LabFlames.LabFlame>, // the burners' flames render.lab.LabFlames draws
   leds:Array<LabLed>,               // the status lights, in the world
 };
@@ -399,6 +400,7 @@ class LabInterior
         glows: [],
         spill: MeshBufTools.make(),
         fakes: [],
+        halos: MeshBufTools.make(),
         flames: [],
         leds: [],
       };
@@ -447,30 +449,16 @@ class LabInterior
       glow:LabStyle.LabTankGlow):Void
     {
       var nx = Math.sin(yaw), nz = Math.cos(yaw);
-      var rx = Math.cos(yaw), rz = -Math.sin(yaw);
       var ring = (glow.ring == true);
       var n0 = front - LabStyle.TANK_SPILL_IN, n1 = front + LabStyle.TANK_SPILL_DEPTH;
-      var w0 = LabStyle.TANK_SPILL_W / 2, w1 = w0 + LabStyle.TANK_SPILL_SPREAD;
+      var w0 = (glow.w != null ? glow.w : LabStyle.TANK_SPILL_W) / 2, w1 = w0 + LabStyle.TANK_SPILL_SPREAD;
       if (ring)
         {
           n1 = front + LabStyle.TANK_RING_OUT;
           n0 = -n1;
           w0 = w1 = n1;
         }
-      var y = LabStyle.TANK_SPILL_Y;
-      var at = function(n:Float, w:Float):Array<Float>
-        return [x + nx * n + rx * w, y, z + nz * n + rz * w];
-      MeshBufTools.quadC(p.spill, at(n0, -w0), at(n0, w0), at(n1, w1), at(n1, -w1),
-        [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 1.0]);
-      // the corners' grey becomes the glow's own colour at its strength
-      var c = new Color(glow.color).multiplyScalar(glow.mul);
-      var k = p.spill.col.length - 12;
-      for (i in 0...4)
-        {
-          p.spill.col[k + i * 3] = c.r;
-          p.spill.col[k + i * 3 + 1] = c.g;
-          p.spill.col[k + i * 3 + 2] = c.b;
-        }
+      glowAt(p.spill, x, z, yaw, n0, n1, w0, w1, glow);
       var o = (ring ? 0.0 : front);
       p.fakes.push({
         x: x + nx * o,
@@ -487,11 +475,46 @@ class LabInterior
       });
     }
 
+// one floor glow into `b`: a quad `n0`..`n1` out along the yaw's front, `w0` each side at its near
+// edge and `w1` at its far one, its corners in the glow's colour at its strength
+  static function glowAt(b:MeshBuf, x:Float, z:Float, yaw:Float, n0:Float, n1:Float, w0:Float, w1:Float,
+      glow:LabStyle.LabTankGlow):Void
+    {
+      var nx = Math.sin(yaw), nz = Math.cos(yaw);
+      var rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      var y = LabStyle.TANK_SPILL_Y;
+      var at = function(n:Float, w:Float):Array<Float>
+        return [x + nx * n + rx * w, y, z + nz * n + rz * w];
+      MeshBufTools.quadC(b, at(n0, -w0), at(n0, w0), at(n1, w1), at(n1, -w1),
+        [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 1.0]);
+      // the corners' grey becomes the glow's own colour at its strength
+      var c = new Color(glow.color).multiplyScalar(glow.mul);
+      var k = b.col.length - 12;
+      for (i in 0...4)
+        {
+          b.col[k + i * 3] = c.r;
+          b.col[k + i * 3 + 1] = c.g;
+          b.col[k + i * 3 + 2] = c.b;
+        }
+    }
+
+// every glowing plant's halo in ONE additive mesh, spill's material over a round falloff; null with
+// none. A living thing's glow, so the lab's death leaves it lit
+  public static function halos(scene:Scene, p:LabInteriorPlan):Mesh
+    {
+      return glowMesh(scene, p.halos, Textures.makeRectGlowGradient(0.3, 0.3, 0.2), 'lab plant halo');
+    }
+
 // every fake tank glow in ONE additive mesh, LabVats.pool's material and so its program; null with
 // none. The lab's death dims it through its colour (LabArea.tick)
   public static function spill(scene:Scene, p:LabInteriorPlan):Mesh
     {
-      var b = p.spill;
+      return glowMesh(scene, p.spill, Textures.makeRectGlowGradient(), 'lab tank spill');
+    }
+
+// one floor-glow buffer as an additive mesh under `alpha`, at TANK_SPILL_GLOW; null when empty
+  static function glowMesh(scene:Scene, b:MeshBuf, alpha:Texture, name:String):Mesh
+    {
       if (b.idx.length == 0)
         return null;
       var geo = new BufferGeometry();
@@ -502,14 +525,14 @@ class LabInterior
       var mesh = new Mesh(geo, VisionMask.patch(new MeshBasicMaterial({
         color: new Color(0xffffff).multiplyScalar(LabStyle.TANK_SPILL_GLOW),
         transparent: true,
-        alphaMap: Textures.makeRectGlowGradient(),
+        alphaMap: alpha,
         vertexColors: true,
         depthWrite: false,
         side: THREE.DoubleSide,
         forceSinglePass: true,
         blending: untyped THREE.AdditiveBlending,
       })));
-      mesh.name = 'lab tank spill';
+      mesh.name = name;
       // below the actors, for FacilityGlow's reason: nothing in the sprite pool writes depth
       mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
       scene.add(mesh);
@@ -731,6 +754,13 @@ class LabInterior
       // the cell centre to the wall face, less half the piece's depth
       var back = CELL / 2 + faceOff(m, col, row, d) - a.d / 2;
       put(p, a, c.x + DC[d] * back, c.z + DR[d] * back, away(d));
+      var halo = LabStyle.PLANT_GLOW.get(a.path);
+      if (halo != null)
+        {
+          // a square of its glow centred under it, its round falloff landing PLANT_HALO_OUT past it
+          var r = Math.max(a.w, a.d) / 2 + LabStyle.PLANT_HALO_OUT;
+          glowAt(p.halos, c.x + DC[d] * back, c.z + DR[d] * back, 0.0, -r, r, r, r, halo);
+        }
       if (t == Const.TILE_LAB_CONSOLE)
         {
           work(p, c.x + DC[d] * back, c.z + DR[d] * back, d, a.h);

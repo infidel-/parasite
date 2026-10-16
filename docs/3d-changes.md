@@ -612,3 +612,39 @@ was added to the three extern.
 (visor, boots, seams) green. A hue fix belongs in the map, not the factor.
 
 **Verdict:** landed.
+
+
+## Lab round 7: beacon casts down its beam, plant halos, wider amber spill, screens cut out, no shaft light
+
+**Changed:**
+- **Beacon actor shadows.** `LampPost.beam` (reach, world units) makes `LampShadows` cast only inside
+  the cone round x/z → tx/tz (`CastShadows.cone`, ground half-angle `LAMP_LIGHT.angle`, eased over
+  the rim `fade`). Down a beam there is no distance fade, because its light is brightest where it lands.
+  The length runs with reach over height. The beacon carries `SPIN_BEACON_REACH` 20.
+  The old round pool round x/z was 5.2 (8 × refY/8.7) and never reached the lobby floor the beam lit.
+- **Plant halos.** `PLANT_GLOW` covers plant5 purple, plant1 and plant6 teal. Each colour is its
+  emissive map's lit mean. A square under each plant, with a half-side of half-width + 1.0, goes into
+  its own additive mesh (`LabInterior.halos`). The material is the spill's but the map is a disc
+  (`makeRectGlowGradient(0.3, 0.3, 0.2)`), so the program is the same. The halos are not dimmed with
+  the lab, since the plants are alive. plant4 is skipped: its glow is 0.7% of its map.
+- **Amber spill.** `LabTankGlow.w`: the ambertanks' near edge goes from 3.0 to 5.6, the glass's width.
+- **Wall screens.** The user cut the sheet's ground to alpha by hand. Without `alphaTest` the
+  quad drew that ground's RGB, which read as a panel behind the caged lamps. Screens now take
+  `DECAL_CUT` like the fittings (warm goes through the same `add`).
+- **Pipe capsule window.** The two halves met at sheet columns 330/180: mid-panel against a divider
+  and the frame's notch. A column scan picked 470/358, both mid-panel, at a 98th-percentile column
+  difference of 13.6/255 against 83.4 before. The window is now 3.5 long instead of 3.7.
+- **Power box.** An emissive map (`_powerbox_emi.py`) lights the 16 breaker indicator strips per face
+  steady red, and two of them blink through LabBlink's alpha code.
+- **Lift shaft light.** The steady cold `LAMP_SHAFT` post down the lift is gone, along with its
+  constants and `LabLampSet.shaft`.
+
+**Measured:** the entry diff is still only the known depth program, at 73–75 fps. Live, with the
+beacon frozen on the host at 14.7 out, a long shadow lies away from the shaft. At 4× the first
+strength the plant5 halo read as a soft round purple disc, so the strengths shipped at that.
+The amber spill quad's near edge is 5.6. The powerbox material is RGBA emissive with the blink patch.
+
+**Trap:** the halo at the tanks' 0.9 strength was invisible. A disc a plant wide has a fraction of a
+trapezoid's area under the same additive 0.03.
+
+**Verdict:** landed.
