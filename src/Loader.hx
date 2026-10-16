@@ -45,6 +45,13 @@ class Loader
         // restore region and area pointers
         game.region = game.world.get(o.game.regionID);
         game.area = game.region.get(o.game.areaID);
+        // saves made in the region right after leaving a mission site name that site, which the
+        // region had already removed (fixed in RegionGame.removeArea). in region mode the area is
+        // only the cell under the player, so take that
+        if (game.area == null &&
+            game.region != null &&
+            game.location == LOCATION_REGION)
+          game.area = game.region.getXY(game.playerRegion.x, game.playerRegion.y);
       }
       catch (e: Dynamic)
         {
