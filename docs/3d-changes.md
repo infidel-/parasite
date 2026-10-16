@@ -761,3 +761,32 @@ Rendering off-rig straight into the canvas turns on tone mapping, and that compi
 programs.
 
 **Verdict:** landed.
+
+
+## Fake shadows pinned to the sprite's feet, a turning lift beacon hung under its girder, gurneys askew
+
+**Changed:** the fake cast shadow (`Sprites.paintShadow`) used to be a rectangle rotated to face away
+from the light, centred on the feet. Its near edge swung with the light, so its corners poked out past
+the sprite's own bottom edge. The slot quad's four corners are now written directly. The near two sit
+on the sprite's bottom corners, which run along world x because the billboard is frontal. The far two
+are where the rectangle's were, square across the away direction at the length, so a side light still
+lays out a body's width and not a line. The far -x corner takes the image's left, or the quad crosses
+itself. `slot()` puts a bent quad back square (`unbend`) before any other paint uses it.
+The beacon now hangs under the back girder's lip, tip down (`liftshaft.py` BX/BY/BZ), and its light
+moved to 7.55, just under the dome's tip. Two new objects come off the same script: `lift-beacon`, seven mirror panels round a bulb on a centred
+turntable, and `lift-dome`, glass via `LabInterior.glass` with an amber emissive. `LabSpin` turns the
+reflector a full turn at `SPIN_BEACON_RATE`, and the beam lands `SPIN_BEACON_OUT` 9.0 out where it
+faces. It goes dark while it faces the back wall, 0.45 behind it (`SPIN_BEACON_DARK`/`FADE`), and its
+fake shadows fade with `mul`. Gurneys turn 0.4..1 of `MACHINE_JITTER` 0.2 rad off square. The vat's
+purge is listed once (`HUD.hasAction`).
+
+**Measured:** with the beam frozen on the player, the shadow leaves the shirt's bottom edge and fans
+away. Close renders over a turn show the dark back plates, the side, then the lit bulb and mirror.
+Gurneys stand 11.1 and 9.4 degrees off square. One purge shows from each of 14 cells in front of the
+four vats. The entry diff is still only the known depth program.
+
+**Trap:** the old beam aimed at a circle out in the lobby, so seen from the beacon it only swung
++-37 degrees. A reflector following it rocked instead of turning. A beacon that turns has to throw its
+beam round the full turn, and the wall it backs onto is what decides where that beam goes dark.
+
+**Verdict:** landed.

@@ -256,7 +256,11 @@ class LampShadows {
                   continue;
                 }
               // an aimed beam: cast down its cone out to its reach, and long — the light is high on a
-              // wall and rakes, so the length runs with reach over height (the beacon's 20 over 8.7)
+              // wall and rakes, so the length runs with reach over height (the beacon's 16 over 7.55).
+              // Faded with the beam itself under a full lamp's strength: the beacon goes dark for the
+              // part of its turn it faces the wall, and its shadows with it
+              if (lp.mul <= 0)
+                continue;
               var ax = lp.tx - lp.x, az = lp.tz - lp.z;
               var ad = Math.sqrt(ax * ax + az * az);
               side.push({
@@ -264,7 +268,7 @@ class LampShadows {
                 z: lp.z,
                 range: lp.beam,
                 lenMul: L.lenMul * Math.min(L.lowMax, lp.beam / lp.y),
-                op: L.op,
+                op: L.op * Math.min(1.0, lp.mul),
                 fade: L.fade,
                 flicker: lp.flick,
                 aimX: ax / ad,

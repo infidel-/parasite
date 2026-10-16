@@ -2070,7 +2070,7 @@
       "src": "lab/lab-mach-liftshaft.glb",
       "tris": -1,
       "tex": 1024,
-      "note": "the lab's freight-lift SHAFT, hand-modelled off models-src/lab/liftshaft-src.png (models-src/lab/mach/liftshaft.py, kit=mach) on its own two sheets mach-liftshaft / -b, replacing lift_build.py's flat boxes. 4,104 tris, 9.8 x 9.8 x 10.33 = LabStyle.LIFT_SHAFT_H, gates 0/0/1, symmetric bbox. Four I-beam columns against the back and left walls only (backs 0.12 off the faces), nothing on the open sides under z 8.3; the head frame above the 6.0 walls carries the motor, gearbox, rope drum and the beacon; ropes from the drum (axis y 4.22 z 9.73) down to the deck's clamps landed. Emissive: the beacon dome blinks WHOLE (_ledmask.py WHOLE), the caged column lamp burns steady.",
+      "note": "the lab's freight-lift SHAFT, hand-modelled off models-src/lab/liftshaft-src.png (models-src/lab/mach/liftshaft.py, kit=mach) on its own two sheets mach-liftshaft / -b, replacing lift_build.py's flat boxes. 4,104 tris, 9.8 x 9.8 x 10.33 = LabStyle.LIFT_SHAFT_H, gates 0/0/1, symmetric bbox. Four I-beam columns against the back and left walls only (backs 0.12 off the faces), nothing on the open sides under z 8.3; the head frame above the 6.0 walls carries the motor, gearbox, rope drum and the beacon's mount and guard cage, hung under the back girder's lip looking down (its reflector and dome are lab/lift-beacon and lab/lift-dome); ropes from the drum (axis y 4.22 z 9.73) down to the deck's clamps landed. Emissive: the caged column lamp burns steady.",
       "error": 0.005,
       "dropMR": true,
       "baseColor": [
@@ -2081,7 +2081,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-liftshaft-emissive.png",
       "emissiveStrength": 1.8,
-      "last_converted": "2026-10-16T14:58:15Z",
+      "last_converted": "2026-10-16T15:50:13Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-liftshaft-emissive.png@1.8/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/clone": {
@@ -3875,6 +3875,34 @@
       "note": "hand-modelled in Blender, models-src/lab/mach/fan.py (the second object): the fan's rotor, hub cap, four brackets and four blades CUT TO THE PAINTED OUTLINE of the BL blade (fan.py OUTLINE, px of the cell) so the art's rounded tip and its dark ground never land on geometry. 508 tris, 3.14 across, 0.1 thick, centred on the fan's axis. render.lab.LabSpin spins it under the workshop lamp, whose shadow it throws.",
       "last_converted": "2026-10-15T20:16:48Z",
       "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc1,1,1,1"
+    },
+    "lab/lift-beacon": {
+      "src": "lab/lab-mach-liftbeacon.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "baseColor": [
+        0.63,
+        0.63,
+        0.63,
+        1
+      ],
+      "emissiveSrc": "lab/lab-mach-liftshaft-emissive.png",
+      "emissiveStrength": 2.4,
+      "note": "hand-modelled in Blender, models-src/lab/mach/liftshaft.py beacon() (the second object), on the shaft's own atlas: the lift beacon's turning reflector, seven mirror panels round the back of the bulb (inner faces and bulb on the lit caged-lamp glass, so they glow off the shaft's emissive map) on a turntable disc that keeps the bbox centred on the axis. 288 tris, 0.34 x 0.34 x 0.38. render.lab.LabSpin turns it to face the beam it throws, inside lab/lift-dome.",
+      "last_converted": "2026-10-16T15:50:13Z",
+      "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-liftshaft-emissive.png@2.4/noMR/bc0.63,0.63,0.63,1"
+    },
+    "lab/lift-dome": {
+      "src": "lab/lab-mach-liftdome.glb",
+      "tris": -1,
+      "tex": 512,
+      "error": 0.005,
+      "dropMR": true,
+      "note": "hand-modelled in Blender, models-src/lab/mach/liftshaft.py beacon() (the third object), on the shaft's own atlas: the lift beacon's ribbed amber dome hung tip-down, the B_BL fresnel art round it. 124 tris, 0.4 x 0.4 x 0.53. render.lab.LabSpin draws it as glass (LabInterior.glass) with an amber emissive tint over the turning reflector.",
+      "last_converted": "2026-10-16T15:50:13Z",
+      "last_sig": "n1/-1/512/0.005/-/-/noMR"
     }
   }
 }

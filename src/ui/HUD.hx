@@ -418,6 +418,10 @@ public function onMouseLeave()
   public function addAction(action: _PlayerAction)
     actions.addAction(action);
 
+// is an action with this id already listed this update?
+  public function hasAction(id: String): Bool
+    return actions.hasAction(id);
+
   public function addKeyAction(action: _PlayerAction)
     actions.addKeyAction(action);
 

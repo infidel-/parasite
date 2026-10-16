@@ -42,11 +42,10 @@ class Sprites {
   var shadowCache:Map<String, GroundSprite> = new Map();  // atlas-crop -> black soft-edged silhouette
   var rectCache:Map<String, AtlasRect> = new Map();       // atlas cell -> UV rect into the shared atlas texture
   var idx:Int = 0;                                      // next free pool slot this frame
-  // scratch reused by paintShadow so a shadow pass allocates nothing
-  var _sa:Vector3 = new Vector3();
-  var _sb:Vector3 = new Vector3();
-  var _sc:Vector3 = new Vector3();
-  var _smtx:Matrix4 = new Matrix4();
+  // the pool quad's own corners (x, y), the plane's order, for unbend
+  static var SQUARE = [ -SIZE / 2, SIZE / 2, SIZE / 2, SIZE / 2, -SIZE / 2, -SIZE / 2, SIZE / 2, -SIZE / 2 ];
+  var bent:Array<Bool> = [];                            // slots whose quad paintShadow reshaped, put
+                                                        // back square when another paint takes them
   // scratch reused by paintTopple (death topple) so it allocates nothing per frame
   var _te:Euler = new Euler();
   var _tq:Quaternion = new Quaternion();
@@ -323,24 +322,59 @@ class Sprites {
   public function paintShadow(o:PaintShadowOpts):Void
     {
       if (o.gs == null || o.gs.tex == null) return;
-      // rooted at the feet: centre sits half the length out along the away direction
-      var cx = o.feetX + o.dirX * o.len * 0.5;
-      var cz = o.feetZ + o.dirZ * o.len * 0.5;
-      var m = slot(o.gs.tex, o.op, cx, o.floorY, cz, 1.0);
-      // basis: sprite local +Y (image up / head) -> length dir (so the silhouette lies head-away,
-      // feet-near), local +X (image width) -> perpendicular, local +Z (normal) -> world up
-      // right-handed basis (det +1) so setFromRotationMatrix stays a proper rotation and the quad
-      // lies FLAT: local +Y -> length dir, local +X -> width (mirrored, harmless), local +Z -> up
-      _sa.set(-o.dirZ, 0, o.dirX);
-      _sb.set(o.dirX, 0, o.dirZ);
-      _sc.set(0, 1, 0);
-      untyped _smtx.makeBasis(_sa, _sb, _sc);
-      untyped m.quaternion.setFromRotationMatrix(_smtx);
-      // geometry is SIZE square; scale each axis so the quad spans the world width/length
-      m.scale.set(o.wid / SIZE, o.len / SIZE, 1);
+      var m = slot(o.gs.tex, o.op, o.feetX, o.floorY, o.feetZ, 1.0);
+      m.rotation.set(0, 0, 0);
+      // THE NEAR EDGE IS THE ACTOR'S OWN: its two corners on the drawn sprite's bottom corners, which
+      // run along world x however the light stands (the billboard is frontal), so the shadow leaves
+      // the feet and never pokes out past them. The far edge is square across the away direction at
+      // the length, as the old rotated rectangle's was, so a side light still lays out a body's width
+      // and not a line. The far corner on the -x side takes the image's left, the near -x corner's
+      // partner, or the quad crosses itself
+      var hw = o.wid * 0.5;
+      var px = -o.dirZ * hw, pz = o.dirX * hw;
+      if (px > 0)
+        {
+          px = -px;
+          pz = -pz;
+        }
+      var fx = o.dirX * o.len, fz = o.dirZ * o.len;
+      // flat on the ground in the plane's own corner order: image top-left, top-right (the far edge),
+      // bottom-left, bottom-right (the feet), as x, z off the feet
+      var pos = m.geometry.getAttribute('position');
+      var a:Array<Float> = pos.array;
+      a[0] = fx + px;
+      a[1] = 0.0;
+      a[2] = fz + pz;
+      a[3] = fx - px;
+      a[4] = 0.0;
+      a[5] = fz - pz;
+      a[6] = -hw;
+      a[7] = 0.0;
+      a[8] = 0.0;
+      a[9] = hw;
+      a[10] = 0.0;
+      a[11] = 0.0;
+      pos.needsUpdate = true;
+      m.geometry.computeBoundingSphere();
+      bent[idx] = true;
       m.renderOrder = (o.order != null ? o.order : 0);
       m.visible = true;
       idx++;
+    }
+
+// a bent slot back to the SIZE square standing in its own plane, which every other paint expects
+  function unbend(m:Mesh):Void
+    {
+      var pos = m.geometry.getAttribute('position');
+      for (i in 0...4)
+        {
+          pos.array[i * 3] = SQUARE[i * 2];
+          pos.array[i * 3 + 1] = SQUARE[i * 2 + 1];
+          pos.array[i * 3 + 2] = 0.0;
+        }
+      pos.needsUpdate = true;
+      m.geometry.computeBoundingSphere();
+      bent[idx] = false;
     }
 
 // place/reuse a quad standing on a wall face: its normal points outward along faceRotY (see
@@ -408,6 +442,8 @@ class Sprites {
           pool[idx] = m;
           actorGroup.add(m);
         }
+      if (bent[idx] == true)
+        unbend(m);
       var mat:Dynamic = m.material;
       // swap the crop texture + reset per-frame state. NO material.needsUpdate: the material is
       // created once with map+emissiveMap present (stable defines), so swapping to another cached

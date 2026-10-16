@@ -9,23 +9,25 @@ import render.RenderConfig;
 import render.facility.FacilityModel.Facility;
 import render.particles.LampPost;
 
-// what LabSpin turns: its two lamps (null where the plate has no lift or no workshop) and the fan's
-// rotor batch
+// what LabSpin turns: its two lamps (null where the plate has no lift or no workshop), the beacon's
+// reflector and dome, and the fan's rotor batch
 typedef LabSpinSet = {
-  beacon:LampPost,              // the lift's amber beacon, its beam swinging round the shaft
+  beacon:LampPost,              // the lift's amber beacon, its beam turning with its reflector
+  reflector:Models.InstancedProp, // the beacon's mirror inside its dome, turned to face the beam
+  dome:Models.InstancedProp,    // its amber glass over the reflector
+  reflBase:Matrix4,             // the reflector's placement before its turn, taken once its glb lands
   lamp:LampPost,                // the work lamp over the workshop fan, pooled straight down
   body:Models.InstancedProp,    // the fan's canopy, rod and housing
   rotor:Models.InstancedProp,   // its blades, turned every frame
   base:Matrix4,                 // the rotor's placement before its turn, taken once its glb lands
   beaconAt:{ x:Float, z:Float },
-  sweepAt:{ x:Float, z:Float },  // the floor point the beam's pool circles: out in the lobby, so the
-                                 // beam rakes the room and not the bedrock over the shaft's walls
   turn:Float,                   // the beacon's sweep and the rotor's turn, in turns
 };
 
 // the lab's two MOVING LIGHTS, for the shadows they throw across its walls and floor: the freight
-// lift's beacon on the head frame, swinging its beam round the lobby, and a ceiling fan in the
-// workshop turning under a work lamp, whose blades sweep the room below.
+// lift's beacon hung under the head frame, its reflector turning in its glass dome and its beam
+// round the lobby with it, and a ceiling fan in the workshop turning under a work lamp, whose blades
+// sweep the room below.
 //
 // THEY ARE POSTS IN THE SHARED POOL, NOT LIGHTS OF THEIR OWN. The lab matches the sewer's light
 // counts so it shares every shared material's program (LabScene's note); two more shadow-casting
@@ -47,12 +49,14 @@ class LabSpin
     {
       var set:LabSpinSet = {
         beacon: null,
+        reflector: null,
+        dome: null,
+        reflBase: null,
         lamp: null,
         body: null,
         rotor: null,
         base: null,
         beaconAt: null,
-        sweepAt: null,
         turn: 0.0,
       };
       // the beacon: on the head frame's back girder end (models-src/lab/mach/liftshaft.py), in the
@@ -63,14 +67,25 @@ class LabSpin
             x: lift.x + LabStyle.SPIN_BEACON_X,
             z: lift.z + LabStyle.SPIN_BEACON_Z,
           };
-          set.sweepAt = {
-            x: lift.x + LabStyle.SPIN_SWEEP_X,
-            z: lift.z + LabStyle.SPIN_SWEEP_Z,
-          };
           set.beacon = post(set.beaconAt.x, set.beaconAt.z, LabStyle.SPIN_BEACON_Y,
             LabStyle.SPIN_BEACON_COLOR, LabStyle.SPIN_BEACON_MUL);
           set.beacon.beam = LabStyle.SPIN_BEACON_REACH;
           posts.push(set.beacon);
+          set.reflector = Models.instanced(scene, RenderConfig.MODELS.labLiftBeacon, [{
+            x: set.beaconAt.x,
+            z: set.beaconAt.z,
+            yaw: 0.0,
+            y: LabStyle.SPIN_REFLECTOR_Y,
+          }], LabStyle.SPIN_REFLECTOR_H, SOLID);
+          set.dome = Models.instanced(scene, RenderConfig.MODELS.labLiftDome, [{
+            x: set.beaconAt.x,
+            z: set.beaconAt.z,
+            yaw: 0.0,
+            y: LabStyle.SPIN_DOME_Y,
+          }], LabStyle.SPIN_DOME_H, SOLID);
+          // neither casts: both hang round the bulb, and their shadow would be the beam's whole pool
+          patch(RenderConfig.MODELS.labLiftBeacon, set.reflector, false);
+          patch(RenderConfig.MODELS.labLiftDome, set.dome, false);
         }
       // the fan: over the middle of the biggest workshop
       var best = null;
@@ -105,16 +120,22 @@ class LabSpin
       return set;
     }
 
-// the fan at the origin, for render.lab.LabWarm. Returns the paths to wait on
+// the fan and the beacon's parts at the origin, for render.lab.LabWarm. Returns the paths to wait on
   public static function warm(scene:Scene):Array<String>
     {
-      for (path in [ RenderConfig.MODELS.labFan, RenderConfig.MODELS.labFanBlades ])
+      var paths = [
+        RenderConfig.MODELS.labFan,
+        RenderConfig.MODELS.labFanBlades,
+        RenderConfig.MODELS.labLiftBeacon,
+        RenderConfig.MODELS.labLiftDome,
+      ];
+      for (path in paths)
         patch(path, Models.instanced(scene, path, [{
           x: 0.0,
           z: 0.0,
           yaw: 0.0,
         }], 1.0, SOLID), true);
-      return [ RenderConfig.MODELS.labFan, RenderConfig.MODELS.labFanBlades ];
+      return paths;
     }
 
 // per frame: the beam swung and the rotor turned, both posts in the alarm's red while it is up, and
@@ -124,10 +145,15 @@ class LabSpin
       set.turn += opts.dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       if (set.beacon != null)
         {
-          var t = set.turn * LabStyle.SPIN_BEACON_RATE * Math.PI * 2;
-          set.beacon.tx = set.sweepAt.x + Math.cos(t) * LabStyle.SPIN_BEACON_AIM;
-          set.beacon.tz = set.sweepAt.z + Math.sin(t) * LabStyle.SPIN_BEACON_AIM;
+          // the beam goes where the reflector faces, round the full turn, dark while that is the wall
+          var a = set.turn * LabStyle.SPIN_BEACON_RATE * Math.PI * 2;
+          var face = Math.cos(a);
+          set.beacon.tx = set.beaconAt.x + Math.sin(a) * LabStyle.SPIN_BEACON_OUT;
+          set.beacon.tz = set.beaconAt.z + face * LabStyle.SPIN_BEACON_OUT;
+          set.beacon.mul = LabStyle.SPIN_BEACON_MUL * Math.max(0.0, Math.min(1.0,
+            (face + LabStyle.SPIN_BEACON_DARK) / LabStyle.SPIN_BEACON_FADE));
           set.beacon.color = (alarmed ? LabStyle.LAMP_ALARM : LabStyle.SPIN_BEACON_COLOR);
+          beacon(set, a, alarmed);
         }
       if (set.lamp == null)
         return;
@@ -142,6 +168,25 @@ class LabSpin
       _r.makeRotationY(set.turn * LabStyle.FAN_RATE * (1 - dead) * Math.PI * 2);
       p.mesh.setMatrixAt(0, p.matrices[0].copy(set.base).multiply(_r));
       untyped p.mesh.instanceMatrix.needsUpdate = true;
+    }
+
+// the reflector turned `a` round (its open side, the glb's front, faces +z at none), and the dome
+// glowing the beam's colour
+  static function beacon(set:LabSpinSet, a:Float, alarmed:Bool):Void
+    {
+      var p = set.reflector;
+      if (p.mesh == null ||
+          set.dome.mesh == null)
+        return;
+      if (set.reflBase == null)
+        set.reflBase = p.matrices[0].clone();
+      _r.makeRotationY(a);
+      p.mesh.setMatrixAt(0, p.matrices[0].copy(set.reflBase).multiply(_r));
+      untyped p.mesh.instanceMatrix.needsUpdate = true;
+      // Dynamic: the dome's loaded Lambert, typed Material by the extern; emissive is its uniform
+      var mat:Dynamic = set.dome.mesh.material;
+      mat.emissive.setHex(alarmed ? LabStyle.LAMP_ALARM : LabStyle.SPIN_BEACON_COLOR);
+      mat.emissive.multiplyScalar(LabStyle.SPIN_DOME_GLOW);
     }
 
 // a moving, casting post
@@ -163,11 +208,14 @@ class LabSpin
       };
     }
 
-// a fan batch under the vision mask, casting or not
+// a fan or beacon batch under the vision mask, casting or not; the dome as glass, the same treatment
+// the lab's machines' shells take (LabInterior.glass), so it draws on their program
   static function patch(path:String, p:Models.InstancedProp, casts:Bool):Void
     {
       Models.get(path, function(_)
         {
+          if (path == RenderConfig.MODELS.labLiftDome)
+            LabInterior.glass(p.mesh.material);
           render.world.VisionMask.patchMesh(p.mesh);
           p.mesh.castShadow = casts;
         });

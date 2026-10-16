@@ -617,7 +617,7 @@ class LabInterior
 // body holds inside it (an embryo, a specimen) shows through
   // Dynamic: the loaded glb's material, which the three extern types as Dynamic on Object3D — it is
   // Models.toLambert's MeshLambertMaterial
-  static function glass(mat:Dynamic):Void
+  public static function glass(mat:Dynamic):Void
     {
       mat.transparent = true;
       mat.opacity = LabStyle.TOP_GLASS_OPACITY;
@@ -1188,6 +1188,10 @@ class LabInterior
                   yaw = y;
                 }
             }
+          // never next to square, where it read as set straight: 0.4..1 of its jitter, either way
+          var jit = LabStyle.MACHINE_JITTER.get(k.name);
+          if (jit != null)
+            yaw += ((hh >>> 12) % 2 * 2 - 1) * (0.4 + ((hh >>> 13) % 1001) / 1000 * 0.6) * jit;
         }
       dress(p, a, x, z, yaw, 0.0, (FacilityModel.mix(col * 7919 + row) % 628) / 100);
       // a lit fluid throws its colour on the floor before its machine

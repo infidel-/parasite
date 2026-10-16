@@ -1061,6 +1061,8 @@ class RenderConfig {
     // and its freight lift (models-src/lab/lift_build.py, render.lab.LabLift)
     labLiftDeck: 'models/lab/lift-deck.glb',                // the car, lowered in on arrival
     labLiftShaft: 'models/lab/lift-shaft.glb',              // guide rails, head frame, sheave, ropes
+    labLiftBeacon: 'models/lab/lift-beacon.glb',            // the beacon's reflector, turned with its beam
+    labLiftDome: 'models/lab/lift-dome.glb',                // the beacon's amber dome, drawn as glass
     // its furniture, one cell wide and front to +z (models-src/lab/labkit_build.py, render.lab.LabInterior)
     labBench: 'models/lab/lab-bench.glb',                   // epoxy-top lab table, drawer pedestal
     labWorkbench: 'models/lab/lab-workbench.glb',           // butcher-block bench, upstand, vice

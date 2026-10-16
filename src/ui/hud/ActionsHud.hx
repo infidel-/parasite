@@ -152,6 +152,15 @@ class ActionsHud
         listActions.add(action);
     }
 
+// is an action with this id already on the numbered list this update?
+  public function hasAction(id: String): Bool
+    {
+      for (a in listActions)
+        if (a.id == id)
+          return true;
+      return false;
+    }
+
 // add player action to key list
   public function addKeyAction(action: _PlayerAction)
     {

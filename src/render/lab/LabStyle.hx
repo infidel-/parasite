@@ -289,24 +289,30 @@ class LabStyle
   public static inline var CHAIR_ASKEW_PCT = 20;
   public static inline var CHAIR_ASKEW = 1.3;
   // the lab's two moving lights (render.lab.LabSpin). The lift's beacon: its place off the shaft's
-  // centre (models-src/lab/mach/liftshaft.py: x 4.4, the dome on its side off the back girder's 4.32
-  // front face at the girder's 8.7 middle, the bulb just past its 0.65 tip so the dome's own shell
-  // never shadows it), its colour and strength, where its beam lands, its sweep in turns per BASE_MS
+  // centre (models-src/lab/mach/liftshaft.py BX, BY: x 4.4, hung tip-down under the back girder's lip
+  // on y 4.55, the bulb just under the dome's 7.63 tip and the guard cage's 7.60 so neither shadows
+  // it), its colour and strength, how far out its beam lands, its turns per BASE_MS, and over what
+  // share of the turn's cosine off the open +z hemisphere it goes dark: the shaft backs onto the
+  // lobby's north wall 0.45 behind it, and a beam turned past it lit the bedrock over the wall
   public static inline var SPIN_BEACON_X = 4.4;
-  public static inline var SPIN_BEACON_Z = -3.6;
-  public static inline var SPIN_BEACON_Y = 8.7;
+  public static inline var SPIN_BEACON_Z = -4.55;
+  public static inline var SPIN_BEACON_Y = 7.55;
   public static inline var SPIN_BEACON_COLOR = 0xffa030;
   public static inline var SPIN_BEACON_MUL = 2.2;
-  // the floor point its pool circles, off the shaft's centre out into the lobby (the shaft stands in
-  // the lobby's north-west corner: walls at its back, -z, and its left, -x), and the circle's radius.
-  // Circling the beacon itself put half the sweep on the bedrock over the walls
-  public static inline var SPIN_SWEEP_X = 4.0;
-  public static inline var SPIN_SWEEP_Z = 6.0;
-  public static inline var SPIN_BEACON_AIM = 6.0;
+  public static inline var SPIN_BEACON_OUT = 9.0;
   public static inline var SPIN_BEACON_RATE = 0.35;
-  // and how far out its fake actor shadows reach down the beam: past the far side of that circle
-  // (9.6 from the beacon to its centre, plus the 6.0 radius) by the rim fade's own width
-  public static inline var SPIN_BEACON_REACH = 20.0;
+  public static inline var SPIN_BEACON_DARK = 0.05;
+  public static inline var SPIN_BEACON_FADE = 0.35;
+  // its turning reflector and its glass dome (liftshaft.py beacon()): each one's foot off the floor and
+  // its measured height, so both draw at the scale they were built, and the dome's glow in its light
+  public static inline var SPIN_REFLECTOR_Y = 7.76;
+  public static inline var SPIN_REFLECTOR_H = 0.38;
+  public static inline var SPIN_DOME_Y = 7.63;
+  public static inline var SPIN_DOME_H = 0.53;
+  public static inline var SPIN_DOME_GLOW = 0.45;
+  // and how far out its fake actor shadows reach down the beam: past the 9.0 it lands at by the pool's
+  // own spread
+  public static inline var SPIN_BEACON_REACH = 16.0;
   // the workshop fan: the blades' height off the floor (the fan hangs at the walls' 6.0 head), the
   // two glbs' measured heights (models-src/lab/mach/fan.py), the work lamp's height over the blades
   // and its strength, and the rotor's turns per BASE_MS (0.6 strobed the blades' shadows)
@@ -373,6 +379,13 @@ class LabStyle
   public static inline var UNDER_KIT = 40;
   public static inline var UNDER_HEAD = 1.1;
   public static inline var TOP_JITTER = 0.08;
+  // the floor machines that stand askew, pushed about rather than set square, and the most they turn
+  // off square either way (radians; never under 0.4 of it): a gurney's 5.42 x 2.32 at 0.2 still fits
+  // its 8 x 4 footprint
+  public static var MACHINE_JITTER = [
+    'gurney' => 0.2,
+    'gurneys' => 0.2,
+  ];
   // a bench-top glass shell's look (LabInterior.glass): a faint tint that writes no depth, the vat
   // glass's own recipe at a stronger opacity, since a jar is far smaller than a vat
   public static inline var TOP_GLASS_OPACITY = 0.3;
