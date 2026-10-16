@@ -1088,5 +1088,10 @@ class MainElectron
       App.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
       App.commandLine.appendSwitch('disable-renderer-backgrounding');
       App.commandLine.appendSwitch('disable-background-timer-throttling');
+      // persist compileAsync-warmed shader programs to userData/GPUCache. without it a link that
+      // finishes in the background is resolved by the decoder's MakeCurrent before chromium scopes
+      // the disk-write callback, so most warm programs land in GPU memory only and recompile next
+      // launch (measured: cold boot warm 8.4s vs 3.9s fully cached)
+      App.commandLine.appendSwitch('enable-features', 'ANGLEPerContextBlobCache');
     }
 }

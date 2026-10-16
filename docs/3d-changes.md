@@ -844,3 +844,28 @@ the face, and the fix matches AO off there.
 "untouched" side, so a sprite over the far street stays sharp, which is right for it.
 
 **Verdict:** landed.
+
+
+## Warm programs persisted to GPUCache: `ANGLEPerContextBlobCache`
+
+**Changed:** `MainElectron.main` appends `enable-features=ANGLEPerContextBlobCache`. Chromium did
+keep compiled programs in `userData/GPUCache` (ANGLE D3D11 binaries with DXBC, keyed by Chrome
+version + GPU + driver, 6 MB cap) and loaded them at launch. But a program warmed through three's
+`compileAsync` usually reached GPU MEMORY only. With `KHR_parallel_shader_compile` on, Blink wraps
+every `linkProgram` in a `GL_PROGRAM_COMPLETION_QUERY_CHROMIUM`. The GPU side mostly resolves the
+finished link inside the decoder's `MakeCurrent()` → `ProcessQueries()`, which `CommandBufferStub`
+runs BEFORE `CreateCacheUse` installs the disk-write callback. The feature gives each WebGL context
+its own ANGLE blob callbacks, whose `Set` always carries the disk callback.
+
+**Measured:** salted probe programs, polled to completion: 0/4 to disk off, 3/3 on. One launch with
+the disk cache disabled: boot warm **8405ms** with ~60 misses and ~63s of HLSL compile summed across
+threads. Fully cached: **3816-3898ms**, 0 misses, 0 WebGL compiles. Facility load on the switch:
+23 misses → 23 entries. Next launch: facility warm **4414 → 1322ms**, in-game **7.2 → 2.7s**, 1 miss.
+
+**Trap:** the drop was a RACE, not a rule. Without the switch, a link resolved on a scoped path still
+landed, so this machine had piled up ~65 of 75 boot programs over many launches and looked warm. A
+player's second launch did not. A `COMPLETION_STATUS` ask, then a later `LINK_STATUS`, is the path
+that loses. Also: a fully cached boot still takes ~3.8s with zero WebGL compiles, so that floor is
+not shaders. Skia relinks ~95 programs every launch (0/193 hits in its own cache, ~0.9s GPU thread).
+
+**Verdict:** landed. +0 calls, +0 programs.
