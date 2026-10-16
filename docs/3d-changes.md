@@ -648,3 +648,24 @@ The amber spill quad's near edge is 5.6. The powerbox material is RGBA emissive 
 trapezoid's area under the same additive 0.03.
 
 **Verdict:** landed.
+
+
+## Amber tanks: fluid block ends mapped, glass bubbles front panes only
+
+**Changed:** two picks in the amber tanks read as broken, and both were the fluid seen through the
+glass. The big tank's fluid is an opaque back block behind the fetuses (`ambertanks.py`). Its two
+ends were fitted to the whole amber rect like every other face, so each end took a 41 px sliver of
+the art stretched over its 0.99 depth. Seen through the corner panes it was a smeared strip. A new
+`sides` rect on `prism` gives each end a slice as wide against the art as the end is against the
+front (u 0.37..0.63 of BL), at the front's v, so the sediment line carries round the corner. The
+cylinder's pick was the glass over its fluid column. `LabWater` lays its bubbles out at
+q.x = x + z, so on the cylinder's flanks and the big tank's corner panes a bubble's disc smeared
+into a diagonal white streak. The bubbles are now weighted by
+`smoothstep(0.6, 0.9, |objectNormal.z|)` (a vertex varying), which keeps them on panes facing
+the front.
+
+**Measured:** live at zoom 0.05, the end strips read as plain amber and the cylinder has no streaks.
+The entry diff is still only the known depth program (the shader keeps its `labWater` key; warm
+compiles the new source).
+
+**Verdict:** landed.

@@ -36,13 +36,16 @@ class LabWater
           shader.uniforms.labWaterLevel = uLevel;
           shader.uniforms.labWaterTint = uTint;
           shader.vertexShader = 'varying vec3 vLabWater;\n' +
+            'varying float vLabWaterFace;\n' +
             StringTools.replace(shader.vertexShader, '#include <begin_vertex>',
               '#include <begin_vertex>\n' +
-              '  vLabWater = transformed;');
+              '  vLabWater = transformed;\n' +
+              '  vLabWaterFace = abs( objectNormal.z );');
           shader.fragmentShader = 'uniform float labWaterTime;\n' +
             'uniform float labWaterLevel;\n' +
             'uniform vec3 labWaterTint;\n' +
             'varying vec3 vLabWater;\n' +
+            'varying float vLabWaterFace;\n' +
             // the rates and sizes as consts, through float(): Haxe prints a whole Float as an int
             'const float LW_RATE = float(' + LabStyle.WATER_RATE + ');\n' +
             'const float LW_COL = float(' + LabStyle.WATER_COL + ');\n' +
@@ -68,8 +71,10 @@ class LabWater
               '  float bx = ( 0.5 + 0.3 * sin( t * 0.3 + h * 20.0 + k ) ) * LW_COL;\n' +
               '  vec2 d = vec2( q.x - c * LW_COL - bx, ( fract( v ) - 0.5 ) * LW_CELL );\n' +
               '  float r = LW_BUBBLE * ( 0.6 + 0.8 * labWaterHash( k + c ) );\n' +
+              // only on a pane that faces the front: q.x runs x + z, so on a corner pane or round the
+              // cylinder's flank a bubble's disc smears into a streak across it
               '  float bub = on * smoothstep( r, r * 0.6, length( d ) ) *\n' +
-              '    step( q.y, LW_TOP );\n' +
+              '    step( q.y, LW_TOP ) * smoothstep( 0.6, 0.9, vLabWaterFace );\n' +
               // a bubble burns PALER than the fluid, or it is lost on the bright amber behind the pane
               '  totalEmissiveRadiance += labWaterLevel * ( labWaterTint * ( 0.3 + 0.7 * rip ) +\n' +
               '    vec3( 0.75, 0.62, 0.4 ) * bub );\n' +
