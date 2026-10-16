@@ -217,6 +217,11 @@ class UI
 
       if (hud.consoleVisible())
         return;
+      // the lab's lift is carrying the player out
+      if (game.location == LOCATION_AREA &&
+          game.scene.view3d != null &&
+          game.scene.view3d.departing())
+        return;
 //      trace('code:' + e.code + ' alt:' + e.altKey + ' ctrl:' + e.ctrlKey + ' shift:' + e.shiftKey + ' key:' + e.key);
 
       // prevent F1-F10 from triggering defaults in browser

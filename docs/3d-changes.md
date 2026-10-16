@@ -728,3 +728,36 @@ the known depth program.
 continuous coordinate the cells are cut from.
 
 **Verdict:** landed.
+
+
+## Lab: hatchbox chart off the lamp mask, purged clone crossfades into its heap, lift carries the player out
+
+**Changed:** three picks. The hatchbox screen's bar chart was being taken for lamps. Its three short
+bars passed `_ledmask.py`'s small, compact, on-black tests, so each one blinked at `BLINK_GAIN`
+over the screen art. A hatchbox `EXCLUDE` rect (140, 690, 300, 810) now leaves one lamp, the lens.
+The purge used to swap the floating clone for the heap on one frame. Now the clone fades out over
+`CLONE_FADE` 1.5 either side of its knees, and the heap fades in over `HEAP_FADE` 1.0 as the surface
+falls below its top. The fade is the instance colour's grey, read as alpha by `LabVats.fade` (both
+materials are now transparent). The lift: `objects.Elevator` in the lab hands its leave to
+`View.liftDepart`. The car climbs `LIFT_DROP` over `LIFT_MULT` with the player on it, and the leave,
+its 5 energy and its turn run at the top. `View.departing` makes `UI.onKey`, `Mouse.onClick` and
+`ActionsHud.doAction` drop input meanwhile.
+
+**Measured:** in the built glb the bars read alpha code 255 and the lens still blinks. On the purge,
+an off-rig camera 9 units before a vat caught the clone fading through 0.19..0.97 and the heap
+coming up 0.17..1.0 with them overlapping, with no silhouette and no pop. The departure took 2.4 s
+from t 1 to 0, then went to the region. Turns and energy moved once, and a key press and a second
+click mid-climb did nothing. The entry diff is still only the known depth program, and walking into
+the vat room adds none.
+
+**Traps:** three's fragment prefix carries instance colour as `USE_COLOR`, never `USE_INSTANCING_COLOR`
+(that one is the vertex's), so a guard on it never ran. A half-faded clone still writing depth cut
+the fluid's far wall out behind it into a dark silhouette, so fading clones draw from a twin batch
+with `depthWrite` false (`ghost`, sharing the clone's hooks and key, so it uses the same program). The
+heap can't use that twin: under the medium nothing behind it is drawn yet, so a depth-free heap
+vanished and then popped. Hence it waits for the surface instead. A chained key must call three's
+prototype `customProgramCacheKey` with the material as receiver, or it throws on every draw.
+Rendering off-rig straight into the canvas turns on tone mapping, and that compiled 21 test-only
+programs.
+
+**Verdict:** landed.

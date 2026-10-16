@@ -303,6 +303,24 @@ class LabArea implements Area3D
       render.world.PropGlow.tick(opts.dtMs);
     }
 
+// the lift carries the player up the shaft and `leave` leaves the area once it is at the top
+// (objects.Elevator, through render.View.liftDepart); false on a plate with no lift or before its car
+// has landed in the scene, and the leave goes straight through
+  public function depart(leave:Void->Void):Bool
+    {
+      if (lift.col < 0 ||
+          lift.deck.mesh == null)
+        return false;
+      LabLift.depart(lift, leave);
+      return true;
+    }
+
+// is the lift carrying the player out? the game takes no input meanwhile (render.View.departing)
+  public function departing():Bool
+    {
+      return (lift.up != null);
+    }
+
   public function setTactical(v:Bool):Void
     {
       tactical = v;

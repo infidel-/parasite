@@ -16,7 +16,11 @@ import render.world.VisionMask;
 // THE CAR COMES DOWN ON ARRIVAL. A build starts it LabStyle.LIFT_DROP up the shaft and lowers it
 // over BASE_MS * LIFT_MULT, eased in and out; render.world.WorldCtx.ground answers its deck for the
 // lift cells (LabLift.ground), so whoever stands on it rides down with it rather than waiting on the
-// floor for it
+// floor for it.
+//
+// AND IT GOES BACK UP ON DEPARTURE. objects.Elevator hands its leave to depart (through
+// render.View.liftDepart), and the car climbs the same eased LIFT_DROP with the player on it before
+// the area is left, the view's zoom-in outro then playing over it at the top
 typedef LabLiftSet = {
   deck:Models.InstancedProp,
   shaft:Models.InstancedProp,
@@ -26,6 +30,8 @@ typedef LabLiftSet = {
   z:Float,
   t:Float,                    // the descent, 0 at the top of the shaft to 1 landed
   y:Float,                    // the car's height this frame
+  up:Void->Void,              // the leave the departure hands off to once the car is at the top; set
+                              // for good by depart (the area is left), null until then
 };
 
 class LabLift
@@ -54,6 +60,7 @@ class LabLift
         z: c.z + CELL / 2,
         t: 0.0,
         y: LabStyle.LIFT_DROP,
+        up: null,
       };
       var places:Array<Models.PropPlace> = (col < 0 ? [] : [{
         x: set.x,
@@ -112,23 +119,49 @@ class LabLift
       return set.y + LabStyle.LIFT_DECK_H;
     }
 
-// the descent, and the culls. `held` keeps the car at the top while a window is up: the entry's
-// own message boxes open on the frame the area does, and a descent behind one is never seen
+// carry the player back up the shaft and run `leave` once the car is at the top; a car still held up
+// there (the arrival waiting on a window) leaves at once
+  public static function depart(set:LabLiftSet, leave:Void->Void):Void
+    {
+      set.up = leave;
+      if (set.t == 0)
+        haxe.Timer.delay(leave, 0);
+    }
+
+// the descent or the departure, and the culls. `held` keeps the car at the top while a window is up:
+// the entry's own message boxes open on the frame the area does, and a descent behind one is never
+// seen. A departure runs regardless, the player having asked for it
   public static function tick(set:LabLiftSet, opts:Area3DTickOpts, held:Bool):Void
     {
       if (set.deck.mesh == null)
         return;
-      if (set.t < 1 &&
+      var step = opts.dtMs * RenderConfig.ANIM_SPEED / (RenderConfig.BASE_MS * LabStyle.LIFT_MULT);
+      if (set.up != null &&
+          set.t > 0)
+        {
+          set.t = Math.max(0.0, set.t - step);
+          pose(set);
+          // out of the frame: the leave despawns the area this tick is still reading
+          if (set.t == 0)
+            haxe.Timer.delay(set.up, 0);
+        }
+      else if (set.up == null &&
+          set.t < 1 &&
           !held)
         {
-          set.t = Math.min(1.0, set.t + opts.dtMs * RenderConfig.ANIM_SPEED /
-            (RenderConfig.BASE_MS * LabStyle.LIFT_MULT));
-          var e = set.t * set.t * (3 - 2 * set.t);
-          set.y = LabStyle.LIFT_DROP * (1 - e);
-          set.deck.matrices[0].elements[13] = set.y;
+          set.t = Math.min(1.0, set.t + step);
+          pose(set);
         }
       Models.cull(set.deck, opts.camera, LabStyle.LIFT_CULL_R);
       Models.cull(set.shaft, opts.camera, LabStyle.LIFT_CULL_R);
+    }
+
+// the car at its eased height off t
+  static function pose(set:LabLiftSet):Void
+    {
+      var e = set.t * set.t * (3 - 2 * set.t);
+      set.y = LabStyle.LIFT_DROP * (1 - e);
+      set.deck.matrices[0].elements[13] = set.y;
     }
 
 // drop the batches; their materials are the shared templates'

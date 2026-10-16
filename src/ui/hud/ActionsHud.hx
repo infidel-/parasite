@@ -285,6 +285,10 @@ class ActionsHud
     {
       if (hud.state == HUD_TARGETING)
         return;
+      // the lab's lift is carrying the player out
+      if (game.location == LOCATION_AREA &&
+          game.scene.view3d.departing())
+        return;
       if (action.id == 'targetMode')
         {
           hud.targeting.enter();

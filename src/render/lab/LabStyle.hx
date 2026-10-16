@@ -124,8 +124,11 @@ class LabStyle
   public static inline var CLONE_BOB = 0.12;
   public static inline var CLONE_SWAY_RATE = 0.35;
   public static inline var CLONE_SLUMP_H = 1.4;
-  // the heap replaces the floating clone once the level is under this fraction of the clone's height
+  // the floating clone fades out while the level falls CLONE_FADE either side of this fraction of its
+  // height (world units), and the heap fades in over the HEAP_FADE the surface falls below its top
   public static inline var CLONE_SLUMP_AT = 0.35;
+  public static inline var CLONE_FADE = 1.5;
+  public static inline var HEAP_FADE = 1.0;
   // a purged vat drains over this many BASE_MS
   public static inline var VAT_DRAIN_MULT = 20.0;
   // the amber tanks' fetuses (LabWater.patchEmbryo): the sway's reach in the glb's units (the tank

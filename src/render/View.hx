@@ -1124,6 +1124,28 @@ class View {
         pathLine.set(path);
     }
 
+// the underground lab's freight lift carries the player up before the area is left
+// (objects.Elevator): true when it took `leave` and runs it at the top, false when no 3D lab is
+// showing and the caller leaves at once
+  public function liftDepart(leave:Void->Void):Bool
+    {
+      var lab = Std.downcast(area3d, render.lab.LabArea);
+      return (running &&
+        !exiting &&
+        lab != null &&
+        lab.depart(leave));
+    }
+
+// is a lift carrying the player out of the area? ui.UI, ui.Mouse and ui.hud.ActionsHud take no input
+// meanwhile
+  public function departing():Bool
+    {
+      var lab = Std.downcast(area3d, render.lab.LabArea);
+      return (running &&
+        lab != null &&
+        lab.departing());
+    }
+
 // has the player's move animation finished? false while its actor is still sliding into its cell,
 // so ui.Mouse can hold the path preview frozen until the last step has visibly landed
   public function playerSettled():Bool

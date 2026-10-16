@@ -131,6 +131,10 @@ class Mouse
       // config - mouse disabled
       if (!game.config.mouseEnabled)
         return;
+      // the lab's lift is carrying the player out
+      if (game.location == LOCATION_AREA &&
+          game.scene.view3d.departing())
+        return;
 
       var pos = getXY();
       if (pos.x < 0 ||

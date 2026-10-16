@@ -13,6 +13,7 @@ import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.particles.LampPost;
 import render.particles.Sprites;
+import render.world.PropShader.ShaderPatch;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -27,7 +28,9 @@ import render.world.VisionMask;
 // THE DRAIN IS RENDER STATE. A group's `isFlushed` flips the turn the purge fires; the fluid then
 // eases out over BASE_MS * LabStyle.VAT_DRAIN_MULT. The eased value lives in a map the AREA owns
 // (LabArea.drain), keyed on the root object, so a rebuild halfway through (refreshObjects) picks it up
-// where it was, and a fresh build seeds it from the saved flag, so a drained vat never replays
+// where it was, and a fresh build seeds it from the saved flag, so a drained vat never replays.
+// The clone fades out as the level passes its knees, from a twin batch that writes no depth (ghost),
+// and the heap fades in as the falling surface uncovers it (pose)
 typedef LabVatSet = {
   roots:Array<CloneVat>,                 // each group's part 0, in placement order
   frame:Models.InstancedProp,
@@ -37,6 +40,10 @@ typedef LabVatSet = {
   glass:Models.InstancedProp,
   posts:Array<LampPost>,                 // one green lamp before each vat's glass, faded by its drain
   drain:Map<Int,Float>,                  // root object ID -> eased drain, 0 full to 1 empty
+  ghost:InstancedMesh,                   // the clones mid-fade, on a twin of the clone's material that
+                                         // writes no depth (a see-through clone writing it blanked the
+                                         // fluid behind into its silhouette); null until the glb lands
+  fade:Array<Float>,                     // each vat's clone-to-heap fade, 0 the clone to 1 the heap
   base:Array<Array<Matrix4>>,            // [clone, slumped, fluid] untouched placement matrices,
                                          // taken once each glb lands; null until then
   spill:InstancedMesh,                   // the slurry each vat leaves on the floor, spreading with
@@ -51,6 +58,7 @@ class LabVats
   static inline var CELL = CityConfig.CELL;
   static var _m = new Matrix4();
   static var _zero = new Matrix4().makeScale(0, 0, 0);
+  static var _c = new Color();
 
 // the vats standing in the live area, and their lamps (pushed onto `posts`)
   public static function build(scene:Scene, game:Game, m:Facility, drain:Map<Int,Float>,
@@ -146,6 +154,8 @@ class LabVats
         glass: batch(scene, RenderConfig.MODELS.labVatGlass, axis, LabStyle.VAT_GLASS_H, 2),
         posts: posts,
         drain: drain,
+        ghost: null,
+        fade: [for (_ in roots) 0.0],
         base: null,
         spill: spill(scene, roots.length),
         spillAt: spillAt,
@@ -302,6 +312,13 @@ class LabVats
                 var bb = mesh.geometry.boundingBox;
                 LabWater.patchClone(mesh.material, bb.max.y - bb.min.y, bb.min.y);
               }
+            if ((path == RenderConfig.MODELS.labClone ||
+                path == RenderConfig.MODELS.labCloneSlumped) &&
+                mesh.material.userData.labFade != true)
+              {
+                mesh.material.userData.labFade = true;
+                fade(mesh.material);
+              }
           });
       var p = Models.instanced(scene, path, places, h, SOLID);
       if (places.length > 0)
@@ -312,8 +329,38 @@ class LabVats
             // the frame throws its shadow under its own lamp, the console's out over the floor before
             // it; the see-through parts throw none, and the clone is behind the lamp
             p.mesh.castShadow = (path == RenderConfig.MODELS.labVatFrame);
+            // every instance opaque until pose fades it (the instance colour is the fade's alpha)
+            if (path == RenderConfig.MODELS.labClone ||
+                path == RenderConfig.MODELS.labCloneSlumped)
+              for (i in 0...places.length)
+                p.mesh.setColorAt(i, _c.setScalar(1));
           });
       return p;
+    }
+
+// the clone and the heap fade into each other as a vat drains: the instance colour's grey is the
+// instance's alpha (pose writes it), never a tint. `mat` is Dynamic for PropShader.patch's reason; the
+// hook it had (the clone's sway) runs first
+  static function fade(mat:Dynamic):Void
+    {
+      var prev = mat.onBeforeCompile;
+      // an OWN key only: three's prototype default reads `this` and throws unbound (VisionMask.patch)
+      var key:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
+        mat.customProgramCacheKey : null;
+      mat.onBeforeCompile = function(shader:ShaderPatch, renderer:Dynamic)
+        {
+          prev(shader, renderer);
+          // USE_COLOR: three's fragment prefix carries instance colour under that define, never under
+          // USE_INSTANCING_COLOR (the vertex's), and these glbs have no vertex colours
+          shader.fragmentShader = StringTools.replace(shader.fragmentShader, '#include <color_fragment>',
+            '#ifdef USE_COLOR\n' +
+            '  diffuseColor.a *= vColor.r;\n' +
+            '#endif');
+        };
+      mat.customProgramCacheKey = function()
+        return (key != null ? Std.string(Reflect.callMethod(mat, key, [])) : '') + 'labFade';
+      mat.transparent = true;
+      mat.needsUpdate = true;
     }
 
 // the glass, the medium and the clone's own looks, set ONCE on the shared template material (only the
@@ -375,6 +422,7 @@ class LabVats
         {
           set.base = [for (p in [ set.clone, set.slumped, set.fluid ])
             [for (m in p.matrices) m.clone()]];
+          set.ghost = ghost(set.clone.mesh, set.roots.length);
           for (i in 0...set.roots.length)
             pose(set, i);
         }
@@ -389,8 +437,36 @@ class LabVats
           set.drain.set(v.id, t < want ? Math.min(want, t + step) : Math.max(want, t - step));
           pose(set, i);
         }
-      for (p in [ set.frame, set.clone, set.slumped, set.fluid, set.glass ])
+      set.ghost.visible = Lambda.exists(set.fade, function(f) return f > 0 && f < 1);
+      for (p in [ set.frame, set.clone, set.fluid, set.glass ])
         Models.cull(p, opts.camera, LabStyle.VAT_CULL_R);
+      // ponytail: never frustum-culled, so instance i stays vat i and its fade colour with it; a
+      // handful of vats. Cull it with a colour pass of its own if a lab ever holds many
+      Models.cull(set.slumped, opts.camera, LabStyle.VAT_CULL_R, null, true);
+    }
+
+// a fading twin of the clone's batch over its geometry, every instance hidden until pose fades it. Its
+// material is the clone's with the same hooks and key, so it draws on the program the warm built
+  static function ghost(of:InstancedMesh, n:Int):InstancedMesh
+    {
+      // Dynamic: the clone's loaded Lambert, typed Material by the extern; the hooks copied here are
+      // the ones fade and VisionMask set on it, which Material.clone() leaves behind
+      var src:Dynamic = of.material;
+      var mat:Dynamic = src.clone();
+      mat.onBeforeCompile = src.onBeforeCompile;
+      mat.customProgramCacheKey = src.customProgramCacheKey;
+      mat.depthWrite = false;
+      var mesh = new InstancedMesh(of.geometry, mat, n);
+      for (i in 0...n)
+        {
+          mesh.setMatrixAt(i, _zero);
+          mesh.setColorAt(i, _c.setScalar(1));
+        }
+      mesh.name = of.name + ' fading';
+      mesh.frustumCulled = false;
+      mesh.visible = false;
+      of.parent.add(mesh);
+      return mesh;
     }
 
 // one vat's medium, clone and lamp from its eased drain: the level falls with an ease-in, the clone
@@ -411,21 +487,28 @@ class LabVats
           e[5] *= level;
           e[6] *= level;
         }
-      // the clone sinks once the surface reaches its crown
+      // the clone sinks once the surface reaches its crown, and fades into the heap round its knees
       var top = LabStyle.VAT_FLUID_H * level;
       var sink = Math.max(-LabStyle.CLONE_FLOAT,
         Math.min(0.0, top - LabStyle.CLONE_FLOAT - LabStyle.CLONE_H));
-      var up = (top > LabStyle.CLONE_FLOAT + LabStyle.CLONE_H * LabStyle.CLONE_SLUMP_AT);
-      var c = set.clone.matrices[i].copy(set.base[0][i]);
-      if (up)
-        c.elements[13] += sink;
-      else
-        c.copy(_zero);
-      var h = set.slumped.matrices[i];
-      if (up)
-        h.copy(_zero);
-      else
-        h.copy(set.base[1][i]);
+      // the floating clone whole in its batch, mid-fade in the ghost's
+      var f = Math.max(0.0, Math.min(1.0, 0.5 + (LabStyle.CLONE_FLOAT + LabStyle.CLONE_H *
+        LabStyle.CLONE_SLUMP_AT - top) / (2 * LabStyle.CLONE_FADE)));
+      set.fade[i] = f;
+      _m.copy(set.base[0][i]);
+      _m.elements[13] += sink;
+      set.clone.matrices[i].copy(f == 0 ? _m : _zero);
+      set.ghost.setMatrixAt(i, (f > 0 && f < 1) ? _m : _zero);
+      set.ghost.setColorAt(i, _c.setScalar(1 - f));
+      set.ghost.instanceMatrix.needsUpdate = true;
+      set.ghost.instanceColor.needsUpdate = true;
+      // the heap fades in as the surface uncovers it, in its own depth-writing batch: under the medium
+      // it has to block the column's far wall like the solid thing it is, and a heap half-faded there
+      // blocked it whole and read as there at once, so it only starts once the surface is at its top
+      var g = Math.max(0.0, Math.min(1.0, (LabStyle.CLONE_SLUMP_H - top) / LabStyle.HEAP_FADE));
+      set.slumped.matrices[i].copy(g > 0 ? set.base[1][i] : _zero);
+      set.slumped.mesh.setColorAt(i, _c.setScalar(g));
+      set.slumped.mesh.instanceColor.needsUpdate = true;
       set.posts[i].mul = LabStyle.VAT_LAMP_MUL * level;
       // the slurry spreads as the level falls, turned about the vertical by its hash
       var a = set.spillAt[i];
@@ -466,6 +549,9 @@ class LabVats
       for (p in [ set.frame, set.clone, set.slumped, set.fluid, set.glass ])
         if (p.mesh != null)
           p.mesh.removeFromParent();
+      if (set.ghost != null)
+        set.ghost.removeFromParent();
+
       if (set.spill != null)
         set.spill.removeFromParent();
       if (set.pool != null)

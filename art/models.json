@@ -2063,7 +2063,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-liftdeck-emissive.png",
       "emissiveStrength": 1.5,
-      "last_converted": "2026-10-15T18:48:13Z",
+      "last_converted": "2026-10-16T14:58:14Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-liftdeck-emissive.png@1.5/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/lift-shaft": {
@@ -2081,7 +2081,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-liftshaft-emissive.png",
       "emissiveStrength": 1.8,
-      "last_converted": "2026-10-16T11:33:13Z",
+      "last_converted": "2026-10-16T14:58:15Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-liftshaft-emissive.png@1.8/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/clone": {
@@ -2331,7 +2331,7 @@
       "emissiveSrc": "lab/lab-mach-reactor-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/reactor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/reactor.glb, kept). Wears textures-src/lab/mach-reactor.png and mach-reactor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/reactor-src.png. baseColor 0.38 takes the sheets' luma (Ylin 0.199) to the indoor ~78. Glows off models-src/lab/lab-mach-reactor-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-16T10:24:43Z",
+      "last_converted": "2026-10-16T14:58:29Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-reactor-emissive.png@1.5/noMR/bc0.38,0.38,0.38,1"
     },
     "lab/screenwall": {
@@ -2349,7 +2349,7 @@
       "emissiveSrc": "lab/lab-mach-screenwall-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/screenwall.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/screenwall.glb, kept). Wears textures-src/lab/mach-screenwall.png and mach-screenwall-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/screenwall-src.png. baseColor 0.62 takes the sheets' luma (Ylin 0.123) to the indoor ~78. Glows off models-src/lab/lab-mach-screenwall-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:35Z",
+      "last_converted": "2026-10-16T14:58:31Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-screenwall-emissive.png@1.5/noMR/bc0.62,0.62,0.62,1"
     },
     "lab/hatchbox": {
@@ -2367,7 +2367,7 @@
       "emissiveSrc": "lab/lab-mach-hatchbox-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/hatchbox.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/hatchbox.glb, kept). Wears textures-src/lab/mach-hatchbox.png and mach-hatchbox-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/hatchbox-src.png. baseColor 0.67 takes the sheets' luma (Ylin 0.113) to the indoor ~78. Glows off models-src/lab/lab-mach-hatchbox-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:19Z",
+      "last_converted": "2026-10-16T14:59:09Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-hatchbox-emissive.png@1.5/noMR/bc0.67,0.67,0.67,1"
     },
     "lab/dialtank": {
@@ -2385,7 +2385,7 @@
       "emissiveSrc": "lab/lab-mach-dialtank-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/dialtank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/dialtank.glb, kept). Wears textures-src/lab/mach-dialtank.png, PACK4 edit_image off models-src/lab/dialtank-src.png. baseColor 0.36 takes the sheets' luma (Ylin 0.215) to the indoor ~78. Glows off models-src/lab/lab-mach-dialtank-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:16Z",
+      "last_converted": "2026-10-16T14:58:08Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-dialtank-emissive.png@1.5/noMR/bc0.36,0.36,0.36,1"
     },
     "lab/autopsy": {
@@ -2403,7 +2403,7 @@
       "emissiveSrc": "lab/lab-mach-autopsy-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/autopsy.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/autopsy.glb, kept). Wears textures-src/lab/mach-autopsy.png and mach-autopsy-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/autopsy-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.192) to the indoor ~78. Glows off models-src/lab/lab-mach-autopsy-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:10Z",
+      "last_converted": "2026-10-16T14:58:00Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-autopsy-emissive.png@1.5/noMR/bc0.4,0.4,0.4,1"
     },
     "lab/tube": {
@@ -2421,7 +2421,7 @@
       "emissiveSrc": "lab/lab-mach-tube-emissive.png",
       "emissiveStrength": 1.2,
       "note": "hand-modelled in Blender, models-src/lab/mach/tube.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tube.glb, kept). Wears textures-src/lab/mach-tube.png and mach-tube-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tube-src.png. baseColor 0.29 takes the sheets' luma (Ylin 0.261) to the indoor ~78. Glows off models-src/lab/lab-mach-tube-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:43Z",
+      "last_converted": "2026-10-16T14:58:39Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-tube-emissive.png@1.2/noMR/bc0.29,0.29,0.29,1"
     },
     "lab/restraint": {
@@ -2439,7 +2439,7 @@
       "emissiveSrc": "lab/lab-mach-restraint-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/restraint.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/restraint.glb, kept). Wears textures-src/lab/mach-restraint.png and mach-restraint-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/restraint-src.png. baseColor 0.51 takes the sheets' luma (Ylin 0.150) to the indoor ~78. Glows off models-src/lab/lab-mach-restraint-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:33Z",
+      "last_converted": "2026-10-16T14:58:29Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-restraint-emissive.png@1.5/noMR/bc0.51,0.51,0.51,1"
     },
     "lab/switchrack": {
@@ -2457,7 +2457,7 @@
       "emissiveSrc": "lab/lab-mach-switchrack-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/mach/switchrack.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/switchrack.glb, kept). Wears textures-src/lab/mach-switchrack.png, PACK4 edit_image off models-src/lab/switchrack-src.png. baseColor 0.63 takes the sheets' luma (Ylin 0.121) to the indoor ~78. Glows off models-src/lab/lab-mach-switchrack-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:39Z",
+      "last_converted": "2026-10-16T14:58:36Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-switchrack-emissive.png@1.6/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/terminal": {
@@ -2475,7 +2475,7 @@
       "emissiveSrc": "lab/lab-mach-terminal-emissive.png",
       "emissiveStrength": 1.3,
       "note": "hand-modelled in Blender, models-src/lab/mach/terminal.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/terminal.glb, kept). Wears textures-src/lab/mach-terminal.png and mach-terminal-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/terminal-src.png. baseColor 0.63 takes the sheets' luma (Ylin 0.121) to the indoor ~78. Glows off models-src/lab/lab-mach-terminal-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:41Z",
+      "last_converted": "2026-10-16T14:58:37Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-terminal-emissive.png@1.3/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/holo": {
@@ -2493,7 +2493,7 @@
       "emissiveSrc": "lab/lab-mach-holo-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/mach/holo.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/holo.glb, kept). Wears textures-src/lab/mach-holo.png and mach-holo-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/holo-src.png. baseColor 0.53 takes the sheets' luma (Ylin 0.145) to the indoor ~78. Glows off models-src/lab/lab-mach-holo-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:19Z",
+      "last_converted": "2026-10-16T14:58:12Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-holo-emissive.png@1.6/noMR/bc0.53,0.53,0.53,1"
     },
     "lab/monitorstack": {
@@ -2511,7 +2511,7 @@
       "emissiveSrc": "lab/lab-mach-monitorstack-emissive.png",
       "emissiveStrength": 1.4,
       "note": "hand-modelled in Blender, models-src/lab/mach/monitorstack.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/monitorstack.glb, kept). Wears textures-src/lab/mach-monitorstack.png and mach-monitorstack-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/monitorstack-src.png. baseColor 0.66 takes the sheets' luma (Ylin 0.116) to the indoor ~78. Glows off models-src/lab/lab-mach-monitorstack-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:23Z",
+      "last_converted": "2026-10-16T14:58:16Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-monitorstack-emissive.png@1.4/noMR/bc0.66,0.66,0.66,1"
     },
     "lab/pipecapsule": {
@@ -2529,7 +2529,7 @@
       "emissiveSrc": "lab/lab-mach-pipecapsule-emissive.png",
       "emissiveStrength": 1.2,
       "note": "hand-modelled in Blender, models-src/lab/mach/pipecapsule.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/pipecapsule.glb, kept). Wears textures-src/lab/mach-pipecapsule.png, PACK4 edit_image off models-src/lab/pipecapsule-src.png. baseColor 0.32 takes the sheets' luma (Ylin 0.237) to the indoor ~78. Glows off models-src/lab/lab-mach-pipecapsule-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-16T13:15:37Z",
+      "last_converted": "2026-10-16T14:58:17Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-pipecapsule-emissive.png@1.2/noMR/bc0.32,0.32,0.32,1"
     },
     "lab/tentacle": {
@@ -2547,7 +2547,7 @@
       "emissiveSrc": "lab/lab-mach-tentacle-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/tentacle.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tentacle.glb, kept). Wears textures-src/lab/mach-tentacle.png and mach-tentacle-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tentacle-src.png. baseColor 0.48 takes the sheets' luma (Ylin 0.158) to the indoor ~78. Glows off models-src/lab/lab-mach-tentacle-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:40Z",
+      "last_converted": "2026-10-16T14:58:36Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-tentacle-emissive.png@1.5/noMR/bc0.48,0.48,0.48,1"
     },
     "lab/bioscreen": {
@@ -2565,7 +2565,7 @@
       "emissiveSrc": "lab/lab-mach-bioscreen-emissive.png",
       "emissiveStrength": 1.3,
       "note": "hand-modelled in Blender, models-src/lab/mach/bioscreen.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bioscreen.glb, kept). Wears textures-src/lab/mach-bioscreen.png, PACK4 edit_image off models-src/lab/bioscreen-src.png. baseColor 0.37 takes the sheets' luma (Ylin 0.206) to the indoor ~78. Glows off models-src/lab/lab-mach-bioscreen-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:12Z",
+      "last_converted": "2026-10-16T14:58:04Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-bioscreen-emissive.png@1.3/noMR/bc0.37,0.37,0.37,1"
     },
     "lab/cryopod": {
@@ -2583,7 +2583,7 @@
       "emissiveSrc": "lab/lab-mach-cryopod-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/cryopod.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryopod.glb, kept). Wears textures-src/lab/mach-cryopod.png and mach-cryopod-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryopod-src.png. baseColor 0.37 takes the sheets' luma (Ylin 0.208) to the indoor ~78. Glows off models-src/lab/lab-mach-cryopod-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:16Z",
+      "last_converted": "2026-10-16T14:58:08Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-cryopod-emissive.png@1.5/noMR/bc0.37,0.37,0.37,1"
     },
     "lab/stasis": {
@@ -2601,7 +2601,7 @@
       "emissiveSrc": "lab/lab-mach-stasis-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/mach/stasis.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/stasis.glb, kept). Wears textures-src/lab/mach-stasis.png, PACK4 edit_image off models-src/lab/stasis-src.png. baseColor 0.39 takes the sheets' luma (Ylin 0.195) to the indoor ~78. Glows off models-src/lab/lab-mach-stasis-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:39Z",
+      "last_converted": "2026-10-16T14:58:35Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-stasis-emissive.png@1.6/noMR/bc0.39,0.39,0.39,1"
     },
     "lab/upw": {
@@ -2619,7 +2619,7 @@
       "emissiveSrc": "lab/lab-mach-upw-emissive.png",
       "emissiveStrength": 1.3,
       "note": "hand-modelled in Blender, models-src/lab/mach/upw.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/upw.glb, kept). Wears textures-src/lab/mach-upw.png and mach-upw-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/upw-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.191) to the indoor ~78. Glows off models-src/lab/lab-mach-upw-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:44Z",
+      "last_converted": "2026-10-16T14:58:40Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-upw-emissive.png@1.3/noMR/bc0.4,0.4,0.4,1"
     },
     "lab/incinerator": {
@@ -2637,7 +2637,7 @@
       "emissiveSrc": "lab/lab-mach-incinerator-emissive.png",
       "emissiveStrength": 2,
       "note": "hand-modelled in Blender, models-src/lab/mach/incinerator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incinerator.glb, kept). Wears textures-src/lab/mach-incinerator.png and mach-incinerator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incinerator-src.png. baseColor 0.83 takes the sheets' luma (Ylin 0.091) to the indoor ~78. Glows off models-src/lab/lab-mach-incinerator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:21Z",
+      "last_converted": "2026-10-16T14:58:13Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-incinerator-emissive.png@2/noMR/bc0.83,0.83,0.83,1"
     },
     "lab/bioprinter": {
@@ -2655,7 +2655,7 @@
       "emissiveSrc": "lab/lab-mach-bioprinter-emissive.png",
       "emissiveStrength": 1.6,
       "note": "hand-modelled in Blender, models-src/lab/mach/bioprinter.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bioprinter.glb, kept). Wears textures-src/lab/mach-bioprinter.png and mach-bioprinter-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/bioprinter-src.png. baseColor 0.38 takes the sheets' luma (Ylin 0.202) to the indoor ~78. Glows off models-src/lab/lab-mach-bioprinter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:11Z",
+      "last_converted": "2026-10-16T14:58:02Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-bioprinter-emissive.png@1.6/noMR/bc0.38,0.38,0.38,1"
     },
     "lab/specimencase": {
@@ -2673,7 +2673,7 @@
       "emissiveSrc": "lab/lab-mach-specimencase-emissive.png",
       "emissiveStrength": 1,
       "note": "hand-modelled in Blender, models-src/lab/mach/specimencase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/specimencase.glb, kept). Wears textures-src/lab/mach-specimencase.png and mach-specimencase-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/specimencase-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.358) to the indoor ~78. Glows off models-src/lab/lab-mach-specimencase-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:38Z",
+      "last_converted": "2026-10-16T14:58:35Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-specimencase-emissive.png@1/noMR/bc0.21,0.21,0.21,1"
     },
     "lab/ambertanks": {
@@ -2691,7 +2691,7 @@
       "emissiveSrc": "lab/lab-mach-ambertanks-emissive.png",
       "emissiveStrength": 1.2,
       "note": "hand-modelled in Blender, models-src/lab/mach/ambertanks.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/ambertanks.glb, kept). Wears textures-src/lab/mach-ambertanks.png and mach-ambertanks-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/ambertanks-src.png. baseColor 0.33 takes the sheets' luma (Ylin 0.228) to the indoor ~78. Glows off models-src/lab/lab-mach-ambertanks-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:09Z",
+      "last_converted": "2026-10-16T14:58:00Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-ambertanks-emissive.png@1.2/noMR/bc0.33,0.33,0.33,1"
     },
     "lab/processor": {
@@ -2709,7 +2709,7 @@
       "emissiveSrc": "lab/lab-mach-processor-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/processor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/processor.glb, kept). Wears textures-src/lab/mach-processor.png and mach-processor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/processor-src.png. baseColor 0.47 takes the sheets' luma (Ylin 0.162) to the indoor ~78. Glows off models-src/lab/lab-mach-processor-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:24Z",
+      "last_converted": "2026-10-16T14:58:19Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-processor-emissive.png@1.5/noMR/bc0.47,0.47,0.47,1"
     },
     "lab/incubator": {
@@ -2727,7 +2727,7 @@
       "emissiveSrc": "lab/lab-mach-incubator-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/incubator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incubator.glb, kept). Wears textures-src/lab/mach-incubator.png and mach-incubator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incubator-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.188) to the indoor ~78. Glows off models-src/lab/lab-mach-incubator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:21Z",
+      "last_converted": "2026-10-16T14:58:13Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-incubator-emissive.png@1.5/noMR/bc0.4,0.4,0.4,1"
     },
     "lab/brainscan": {
@@ -2745,7 +2745,7 @@
       "emissiveSrc": "lab/lab-mach-brainscan-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/brainscan.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/brainscan.glb, kept). Wears textures-src/lab/mach-brainscan.png and mach-brainscan-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/brainscan-src.png. baseColor 0.49 takes the sheets' luma (Ylin 0.156) to the indoor ~78. Glows off models-src/lab/lab-mach-brainscan-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:13Z",
+      "last_converted": "2026-10-16T14:58:05Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-brainscan-emissive.png@1.5/noMR/bc0.49,0.49,0.49,1"
     },
     "lab/cryobank": {
@@ -2763,7 +2763,7 @@
       "emissiveSrc": "lab/lab-mach-cryobank-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/cryobank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryobank.glb, kept). Wears textures-src/lab/mach-cryobank.png and mach-cryobank-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryobank-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.368) to the indoor ~78. Glows off models-src/lab/lab-mach-cryobank-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:15Z",
+      "last_converted": "2026-10-16T14:58:06Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-cryobank-emissive.png@1.5/noMR/bc0.21,0.21,0.21,1"
     },
     "lab/centrifuge": {
@@ -2781,7 +2781,7 @@
       "emissiveSrc": "lab/lab-mach-centrifuge-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/centrifuge.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/centrifuge.glb, kept). Wears textures-src/lab/mach-centrifuge.png, PACK4 edit_image off models-src/lab/centrifuge-src.png. baseColor 0.45 takes the sheets' luma (Ylin 0.167) to the indoor ~78. Glows off models-src/lab/lab-mach-centrifuge-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:14Z",
+      "last_converted": "2026-10-16T14:58:06Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-centrifuge-emissive.png@1.5/noMR/bc0.45,0.45,0.45,1"
     },
     "lab/embryonic": {
@@ -2799,7 +2799,7 @@
       "emissiveSrc": "lab/lab-mach-embryonic-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/embryonic.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/embryonic.glb, kept). Wears textures-src/lab/mach-embryonic.png and mach-embryonic-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/embryonic-src.png. baseColor 0.48 takes the sheets' luma (Ylin 0.158) to the indoor ~78. Glows off models-src/lab/lab-mach-embryonic-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:17Z",
+      "last_converted": "2026-10-16T14:58:09Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-embryonic-emissive.png@1.5/noMR/bc0.48,0.48,0.48,1"
     },
     "lab/gestation": {
@@ -2817,7 +2817,7 @@
       "emissiveSrc": "lab/lab-mach-gestation-emissive.png",
       "emissiveStrength": 1.2,
       "note": "hand-modelled in Blender, models-src/lab/mach/gestation.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/gestation.glb, kept). Wears textures-src/lab/mach-gestation.png, PACK4 edit_image off models-src/lab/gestation-src.png. baseColor 0.34 takes the sheets' luma (Ylin 0.226) to the indoor ~78. Glows off models-src/lab/lab-mach-gestation-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:18Z",
+      "last_converted": "2026-10-16T14:58:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-gestation-emissive.png@1.2/noMR/bc0.34,0.34,0.34,1"
     },
     "lab/rack8": {
@@ -2835,7 +2835,7 @@
       "emissiveSrc": "lab/lab-mach-rack8-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/rack8.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/rack8.glb, kept). Wears textures-src/lab/mach-rack8.png and mach-rack8-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/rack8-src.png. baseColor 0.32 takes the sheets' luma (Ylin 0.236) to the indoor ~78. Glows off models-src/lab/lab-mach-rack8-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:31Z",
+      "last_converted": "2026-10-16T14:58:27Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-rack8-emissive.png@1.5/noMR/bc0.32,0.32,0.32,1"
     },
     "lab/rack6": {
@@ -2853,7 +2853,7 @@
       "emissiveSrc": "lab/lab-mach-rack6-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/rack6.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/rack6.glb, kept). Wears textures-src/lab/mach-rack6.png and mach-rack6-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/rack6-src.png. baseColor 0.23 takes the sheets' luma (Ylin 0.333) to the indoor ~78. Glows off models-src/lab/lab-mach-rack6-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:27Z",
+      "last_converted": "2026-10-16T14:58:23Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-rack6-emissive.png@1.5/noMR/bc0.23,0.23,0.23,1"
     },
     "lab/canisters": {
@@ -2871,7 +2871,7 @@
       "emissiveSrc": "lab/lab-mach-canisters-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/canisters.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/canisters.glb, kept). Wears textures-src/lab/mach-canisters.png and mach-canisters-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/canisters-src.png. baseColor 0.77 takes the sheets' luma (Ylin 0.099) to the indoor ~78. Glows off models-src/lab/lab-mach-canisters-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:14Z",
+      "last_converted": "2026-10-16T14:58:06Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-canisters-emissive.png@1.5/noMR/bc0.77,0.77,0.77,1"
     },
     "lab/generator": {
@@ -2889,7 +2889,7 @@
       "emissiveSrc": "lab/lab-mach-generator-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/generator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/generator.glb, kept). Wears textures-src/lab/mach-generator.png and mach-generator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/generator-src.png. baseColor 0.69 takes the sheets' luma (Ylin 0.110) to the indoor ~78. Glows off models-src/lab/lab-mach-generator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:17Z",
+      "last_converted": "2026-10-16T14:58:09Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-generator-emissive.png@1.5/noMR/bc0.69,0.69,0.69,1"
     },
     "lab/press": {
@@ -2923,7 +2923,7 @@
       "emissiveSrc": "lab/lab-mach-robotarm-emissive.png",
       "emissiveStrength": 1.2,
       "note": "hand-modelled in Blender, models-src/lab/mach/robotarm.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/robotarm.glb, kept). Wears textures-src/lab/mach-robotarm.png and mach-robotarm-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/robotarm-src.png. baseColor 0.45 takes the sheets' luma (Ylin 0.171) to the indoor ~78. Glows off models-src/lab/lab-mach-robotarm-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:33Z",
+      "last_converted": "2026-10-16T14:58:30Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-robotarm-emissive.png@1.2/noMR/bc0.45,0.45,0.45,1"
     },
     "lab/kiosk": {
@@ -2941,7 +2941,7 @@
       "emissiveSrc": "lab/lab-mach-kiosk-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/kiosk.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/kiosk.glb, kept). Wears textures-src/lab/mach-kiosk.png, PACK4 edit_image off models-src/lab/kiosk-src.png. baseColor 0.34 takes the sheets' luma (Ylin 0.223) to the indoor ~78. Glows off models-src/lab/lab-mach-kiosk-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:22Z",
+      "last_converted": "2026-10-16T14:58:14Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-kiosk-emissive.png@1.5/noMR/bc0.34,0.34,0.34,1"
     },
     "lab/cagecase": {
@@ -2959,7 +2959,7 @@
       "emissiveSrc": "lab/lab-mach-cagecase-emissive.png",
       "emissiveStrength": 1.2,
       "note": "hand-modelled in Blender, models-src/lab/mach/cagecase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cagecase.glb, kept). Wears textures-src/lab/mach-cagecase.png, PACK4 edit_image off models-src/lab/cagecase-src.png. baseColor 0.26 takes the sheets' luma (Ylin 0.289) to the indoor ~78. Glows off models-src/lab/lab-mach-cagecase-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:14Z",
+      "last_converted": "2026-10-16T14:58:05Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-cagecase-emissive.png@1.2/noMR/bc0.26,0.26,0.26,1"
     },
     "lab/sheetcage": {
@@ -2977,7 +2977,7 @@
       "emissiveSrc": "lab/lab-mach-sheetcage-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/sheetcage.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/sheetcage.glb, kept). Wears textures-src/lab/mach-sheetcage.png, PACK4 edit_image off models-src/lab/sheetcage-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.364) to the indoor ~78. Glows off models-src/lab/lab-mach-sheetcage-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:35Z",
+      "last_converted": "2026-10-16T14:58:31Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-sheetcage-emissive.png@1.5/noMR/bc0.21,0.21,0.21,1"
     },
     "lab/gurney": {
@@ -3109,7 +3109,7 @@
       "emissiveSrc": "lab/lab-mach-plant6-emissive.png",
       "emissiveStrength": 1.3,
       "note": "hand-modelled in Blender, models-src/lab/mach/plant6.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant6.glb, kept). Wears textures-src/lab/mach-plant6.png, PACK4 edit_image off models-src/lab/plant6-src.png. baseColor 0.99 takes the sheets' luma (Ylin 0.077) to the indoor ~78. Glows off models-src/lab/lab-mach-plant6-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T19:37:06Z",
+      "last_converted": "2026-10-16T14:59:02Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-plant6-emissive.png@1.3/noMR/bc0.99,0.99,0.99,1"
     },
     "lab/suit": {
@@ -3159,7 +3159,7 @@
       "emissiveSrc": "lab/lab-mach-scanframe-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/scanframe.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/scanframe.glb, kept). Wears textures-src/lab/mach-scanframe.png and mach-scanframe-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/scanframe-src.png. baseColor 0.59 takes the sheets' luma (Ylin 0.129) to the indoor ~78. Glows off models-src/lab/lab-mach-scanframe-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-15T17:45:34Z",
+      "last_converted": "2026-10-16T14:58:31Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-scanframe-emissive.png@1.5/noMR/bc0.59,0.59,0.59,1"
     },
     "lab/bin": {
@@ -3177,7 +3177,7 @@
       "emissiveSrc": "lab/lab-mach-bin-emissive.png",
       "emissiveStrength": 1.8,
       "note": "hand-modelled in Blender, models-src/lab/mach/bin.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bin.glb, kept). Wears textures-src/lab/mach-bin.png, PACK4 edit_image off models-src/lab/bin-src.png. baseColor 0.74 takes the sheets' luma (Ylin 0.102) to the indoor ~78. Glows off models-src/lab/lab-mach-bin-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T19:39:24Z",
+      "last_converted": "2026-10-16T14:59:01Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-bin-emissive.png@1.8/noMR/bc0.74,0.74,0.74,1"
     },
     "lab/plant1": {
@@ -3195,7 +3195,7 @@
       "emissiveSrc": "lab/lab-mach-plant1-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/plant1.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant1.glb, kept). Wears textures-src/lab/mach-plant1.png, PACK4 edit_image off models-src/lab/plant1-src.png. baseColor 0.6 takes the sheets' luma (Ylin 0.128) to the indoor ~78. Glows off models-src/lab/lab-mach-plant1-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T19:36:38Z",
+      "last_converted": "2026-10-16T14:59:02Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-plant1-emissive.png@1.5/noMR/bc0.6,0.6,0.6,1"
     },
     "lab/plant4": {
@@ -3213,7 +3213,7 @@
       "emissiveSrc": "lab/lab-mach-plant4-emissive.png",
       "emissiveStrength": 1.5,
       "note": "hand-modelled in Blender, models-src/lab/mach/plant4.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant4.glb, kept). Wears textures-src/lab/mach-plant4.png, PACK4 edit_image off models-src/lab/plant4-src.png. baseColor 1.0 takes the sheets' luma (Ylin 0.064) to the indoor ~78. Glows off models-src/lab/lab-mach-plant4-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
-      "last_converted": "2026-10-14T19:36:52Z",
+      "last_converted": "2026-10-16T14:59:02Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-plant4-emissive.png@1.5/noMR/bc1,1,1,1"
     },
     "lab/suittorn": {
@@ -3657,7 +3657,7 @@
       "error": 0.005,
       "dropMR": true,
       "note": "hand-modelled in Blender, models-src/lab/mach/ambertanks.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/ambertanks.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-ambertanks.png and mach-ambertanks-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/ambertanks-src.png. ",
-      "last_converted": "2026-10-14T19:56:51Z",
+      "last_converted": "2026-10-16T13:53:56Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
     "lab/specimencase-glass": {
