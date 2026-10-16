@@ -685,3 +685,23 @@ whole ones with the new. Live, the program compiles with no error and the entry 
 the known depth program. Three loop passes on the tank glass alone.
 
 **Verdict:** landed.
+
+
+## Lab bubbles see-through: rim and highlight, clear middle
+
+**Changed:** both of `LabWater`'s bubble passes, the amber tank glass and the clone vat medium, drew
+a bubble as a filled pale disc and lifted the alpha across it, so each one read as an opaque white
+pill. A shared `labBubble(d, r)` now draws a rim from 0.68r to r plus a highlight fleck up and left
+of the centre, and the middle stays the fluid behind. The rim's edges are at least a screen pixel
+soft (`max(fwidth(l), 0.08r)`), because a far bubble's rim is thinner than a pixel and a hard one
+broke into dotted specks. The alpha lift drops to 0.3 (amber) and 0.25 (vat) on the rim only. The
+vat pass takes the amber pass's neighbour-column lookup too, with its column index wrapped round
+the turn (`mod(c, LV_N)`) for the hashes, so the seam behind the axis has no edge.
+
+**Measured:** live at zoom 0.05, the vat bubbles read as rings with a highlight and the clone shows
+through them. On the bright amber the rings are faint by construction. No shader errors, and the
+entry diff is still only the known depth program.
+
+**Trap:** the first hard-edged rim (0.62..0.82 / 0.88..1.0 r) aliased into dots at game zoom.
+
+**Verdict:** landed.

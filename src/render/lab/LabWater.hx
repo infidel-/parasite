@@ -8,10 +8,10 @@ import render.world.PropShader.ShaderPatch;
 // render.lab.LabInterior.glass makes it, and this folds into it, in the piece's OWN frame (so every
 // tank ripples alike whatever its turn), a lit fluid seen through the pane —
 //   ripple — two crossed sine bands crawling up the pane, the slow light play of a lit liquid
-//   bubbles — pale specks, columns a WATER_COL apart, each with its own hashed rise and phase, a bubble in some
-//            cells of each as they climb, wobbling as they go, below the fluid's top (WATER_TOP)
+//   bubbles — see-through rings, columns a WATER_COL apart, each with its own hashed rise and phase, a bubble
+//            in some cells of each as they climb, wobbling as they go, below the fluid's top (WATER_TOP)
 // both go into the emissive, at WATER_TINT times `level` (render.lab.LabArea dims it as the lab
-// dies), and lift the pane's alpha where they burn so a bubble reads solid. The clock is
+// dies), and lift the pane's alpha on a bubble's rim only, so its middle stays clear. The clock is
 // SewerWater's (BASE_MS turns of ANIM_SPEED), its rates consts of the program
 class LabWater
 {
@@ -54,6 +54,18 @@ class LabWater
             'const float LW_BUBBLE = float(' + LabStyle.WATER_BUBBLE + ');\n' +
             'const float LW_TOP = float(' + LabStyle.WATER_TOP + ');\n' +
             'float labWaterHash( float n ) { return fract( sin( n * 12.9898 ) * 43758.5453 ); }\n' +
+            // a bubble is SEE-THROUGH: a thin bright rim and a fleck of highlight up its left, the
+            // fluid showing through its middle (a filled pale disc read as a white pill)
+            'float labBubble( vec2 d, float r ) {\n' +
+            '  float l = length( d );\n' +
+            // its edges at least a screen pixel soft: a far bubble's rim is thinner than one, and
+            // a hard one broke into dots
+            '  float aa = max( fwidth( l ), r * 0.08 );\n' +
+            '  float rim = smoothstep( r * 0.68 - aa, r * 0.68 + aa, l ) *\n' +
+            '    ( 1.0 - smoothstep( r - 2.0 * aa, r, l ) );\n' +
+            '  float hi = smoothstep( r * 0.3, r * 0.1, length( d - vec2( -0.35, 0.35 ) * r ) );\n' +
+            '  return max( rim, hi );\n' +
+            '}\n' +
             StringTools.replace(shader.fragmentShader, '#include <emissivemap_fragment>',
               '#include <emissivemap_fragment>\n' +
               '  {\n' +
@@ -76,7 +88,7 @@ class LabWater
               '    float bx = ( 0.5 + 0.3 * sin( t * 0.3 + h * 20.0 + k ) ) * LW_COL;\n' +
               '    vec2 d = vec2( q.x - c * LW_COL - bx, ( fract( v ) - 0.5 ) * LW_CELL );\n' +
               '    float r = LW_BUBBLE * ( 0.6 + 0.8 * labWaterHash( k + c ) );\n' +
-              '    bub = max( bub, on * smoothstep( r, r * 0.6, length( d ) ) );\n' +
+              '    bub = max( bub, on * labBubble( d, r ) );\n' +
               '  }\n' +
               // only on a pane that faces the front: q.x runs x + z, so on a corner pane or round the
               // cylinder's flank a bubble's disc smears into a streak across it
@@ -84,7 +96,7 @@ class LabWater
               // a bubble burns PALER than the fluid, or it is lost on the bright amber behind the pane
               '  totalEmissiveRadiance += labWaterLevel * ( labWaterTint * ( 0.3 + 0.7 * rip ) +\n' +
               '    vec3( 0.75, 0.62, 0.4 ) * bub );\n' +
-              '  diffuseColor.a = min( 1.0, diffuseColor.a + 0.12 * rip + 0.6 * bub );\n' +
+              '  diffuseColor.a = min( 1.0, diffuseColor.a + 0.12 * rip + 0.3 * bub );\n' +
               '  }');
         };
       // three keys programs on base params, not on the hook: its own key keeps this program off
@@ -131,6 +143,18 @@ class LabWater
             'const float LV_RISE = float(' + LabStyle.VAT_BUB_RISE + ');\n' +
             'const float LV_BUB = float(' + LabStyle.VAT_BUB_R + ');\n' +
             'float labVatHash( float n ) { return fract( sin( n * 12.9898 ) * 43758.5453 ); }\n' +
+            // a bubble is SEE-THROUGH: a thin bright rim and a fleck of highlight up its left, the
+            // fluid showing through its middle (a filled pale disc read as a white pill)
+            'float labBubble( vec2 d, float r ) {\n' +
+            '  float l = length( d );\n' +
+            // its edges at least a screen pixel soft: a far bubble's rim is thinner than one, and
+            // a hard one broke into dots
+            '  float aa = max( fwidth( l ), r * 0.08 );\n' +
+            '  float rim = smoothstep( r * 0.68 - aa, r * 0.68 + aa, l ) *\n' +
+            '    ( 1.0 - smoothstep( r - 2.0 * aa, r, l ) );\n' +
+            '  float hi = smoothstep( r * 0.3, r * 0.1, length( d - vec2( -0.35, 0.35 ) * r ) );\n' +
+            '  return max( rim, hi );\n' +
+            '}\n' +
             StringTools.replace(StringTools.replace(shader.fragmentShader, '#include <map_fragment>',
               // the angle round the axis and the height, the swirl and the warp off them
               '  float lvA = atan( vLabVat.z, vLabVat.x );\n' +
@@ -151,24 +175,30 @@ class LabWater
               '#include <emissivemap_fragment>',
               '#include <emissivemap_fragment>\n' +
               '  {\n' +
-              // the bubbles: a column every 1/LV_N of the turn, cells LV_CELL tall climbing it
-              '  float c = floor( ( lvA / 6.2831853 + 0.5 ) * LV_N );\n' +
-              '  float h = labVatHash( c );\n' +
-              '  float v = lvY / LV_CELL - lvT * LV_RISE * ( 0.6 + 0.8 * h ) - h * 7.0;\n' +
-              '  float k = floor( v );\n' +
-              '  float on = step( LV_ON, labVatHash( k * 3.1 + c * 17.0 ) );\n' +
-              '  float w = length( vLabVat.xz ) * 6.2831853 / LV_N *\n' +
-              '    ( ( lvA / 6.2831853 + 0.5 ) * LV_N - c - 0.5 -\n' +
-              '    0.25 * sin( lvT * 0.3 + h * 20.0 + k ) );\n' +
-              '  vec2 d = vec2( w, ( fract( v ) - 0.5 ) * LV_CELL );\n' +
-              '  float r = LV_BUB * ( 0.6 + 0.8 * labVatHash( k + c ) );\n' +
+              // the bubbles: a column every 1/LV_N of the turn, cells LV_CELL tall climbing it, looked
+              // up in this column and its two neighbours (a swaying one crosses the line), each
+              // hashed by its index wrapped round the turn so the seam behind the axis has no edge
+              '  float bub = 0.0;\n' +
+              '  float lvU = ( lvA / 6.2831853 + 0.5 ) * LV_N;\n' +
+              '  for ( int i = -1; i <= 1; i++ ) {\n' +
+              '    float c = floor( lvU ) + float( i );\n' +
+              '    float cw = mod( c, LV_N );\n' +
+              '    float h = labVatHash( cw );\n' +
+              '    float v = lvY / LV_CELL - lvT * LV_RISE * ( 0.6 + 0.8 * h ) - h * 7.0;\n' +
+              '    float k = floor( v );\n' +
+              '    float on = step( LV_ON, labVatHash( k * 3.1 + cw * 17.0 ) );\n' +
+              '    float w = length( vLabVat.xz ) * 6.2831853 / LV_N *\n' +
+              '      ( lvU - c - 0.5 - 0.25 * sin( lvT * 0.3 + h * 20.0 + k ) );\n' +
+              '    vec2 d = vec2( w, ( fract( v ) - 0.5 ) * LV_CELL );\n' +
+              '    float r = LV_BUB * ( 0.6 + 0.8 * labVatHash( k + cw ) );\n' +
+              '    bub = max( bub, on * labBubble( d, r ) );\n' +
+              '  }\n' +
               // only on the column's side: on the lid every column meets the axis, as spokes
-              '  float bub = on * smoothstep( r, r * 0.55, length( d ) ) *\n' +
-              '    step( LV_R, length( vLabVat.xz ) );\n' +
+              '  bub *= step( LV_R, length( vLabVat.xz ) );\n' +
               '  totalEmissiveRadiance = labWaterLevel * ( totalEmissiveRadiance *\n' +
               '    ( 0.35 + 0.65 * lvSwirl ) * ( 0.6 + 0.4 * lvLum / LV_LUM ) +\n' +
               '    vec3( 0.55, 0.85, 0.65 ) * bub );\n' +
-              '  diffuseColor.a = min( 1.0, diffuseColor.a + 0.15 * lvSwirl + 0.5 * bub );\n' +
+              '  diffuseColor.a = min( 1.0, diffuseColor.a + 0.15 * lvSwirl + 0.25 * bub );\n' +
               '  }');
         };
       mat.customProgramCacheKey = function()
