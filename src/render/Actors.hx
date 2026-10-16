@@ -175,6 +175,10 @@ class Actors {
       return true;
     }
 
+// the always-on-top UI quads' own scene, drawn after the bloom (see Sprites.overlay)
+  public inline function overlay():Scene
+    return sprites.overlay;
+
 // rebuild all actor sprites from live game state; actors slide + fade, effects layer
 // on top. objects/AI gated on player fog/LOS to match the 2D view
   public function update(dtMs:Float):Void
@@ -340,6 +344,11 @@ class Actors {
           baseY: ATTACH_HEAD_Y,
           baseScale: ATTACH_SCALE,
         });
+      // and the player's own silhouette through whatever wall hides it (not while riding a head: the
+      // host it is attaching to carries its own)
+      if (uiOn &&
+          st != _PlayerState.PLR_STATE_ATTACHED)
+        badges.drawPlayerXray();
       // seed-derived street debris + persisted decals (ground blood + wall bullet holes), then the
       // barrel flame body/embers + fake cast shadows (barrels + lamps drawn after the decals so they
       // darken them), then the fire loop + transient FX (blood, death ghosts, gun shots)

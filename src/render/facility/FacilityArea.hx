@@ -1009,7 +1009,7 @@ class FacilityArea implements Area3D
       // the pool: the nearest bulbs claim the 12 live spotlights, masts and ceiling fixtures
       // competing in one list. nothing here flickers, so this is the whole per-frame cost of the
       // lighting pass — no cone repack (render.LightCone.pulse) and no glow rebuild
-      lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
+      lampLights.update(lampPosts, opts.lightCol, opts.lightRow, opts.dtMs);
       return moon.shadow.needsUpdate ||
         LampLights.lastShadowRenders > 0;
     }

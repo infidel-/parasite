@@ -61,6 +61,10 @@ class View {
   var tactical = false;
 
   var debug:Debug;                                        // street-debug mode (backquote): HUD + tools
+  public var cine(default, null) = false;                 // camera fly mode (Shift+backquote): see setCine
+  var cineHud = false;                                    // the HUD was up when cine hid it (restored on exit)
+  public var lightCol(default, null) = 0;                 // this frame's cell the live light pools centre on:
+  public var lightRow(default, null) = 0;                 // the player's, or the cine camera's (see the loop)
 
   public var running(default, null):Bool = false;
   var svMouseX:Float = 0;                                 // last cursor client px over #view (AI-hover tooltip anchor)
@@ -91,7 +95,12 @@ class View {
     // V cycles the render scale, and Shift+1 / Shift+5 narrow 1 and 5 to bloom / cones alone
     Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
       if (!running) return;
-      if (e.code == 'Backquote') setDebug(!debug.on);
+      // Shift+`: the camera fly mode for recording footage (see setCine)
+      if (e.code == 'Backquote' &&
+          e.shiftKey)
+        setCine(!cine);
+      else if (e.code == 'Backquote')
+        setDebug(!debug.on);
       // Shift+1: bloom ALONE (plain 1 flips lighting and bloom together, so bloom's own cost was only
       // ever reachable by subtraction). the two share bloomPass.enabled — press one at a time
       else if (debug.on && e.shiftKey && e.code == 'Digit1' && bloomPass != null)
@@ -172,7 +181,7 @@ class View {
     // wheel zooms the follow camera (up = in, down = out); debug keeps its own UV-scroll wheel.
     // a GUI window open (inventory/body/etc) overlays the view — let it scroll, don't zoom
     Browser.window.addEventListener('wheel', function(e:js.html.WheelEvent) {
-      if (!running || debug.on || rig == null || game.ui.state != UISTATE_DEFAULT) return;
+      if (!running || debug.on || cine || rig == null || game.ui.state != UISTATE_DEFAULT) return;
       rig.zoomBy(e.deltaY > 0 ? 1 : -1);
     });
     // track the cursor over #view in raw client px for the AI-hover tooltip (the shared 2D
@@ -185,7 +194,7 @@ class View {
       svMouseIn = true;
       game.scene.mouseX = e.clientX * Browser.window.devicePixelRatio;
       game.scene.mouseY = e.clientY * Browser.window.devicePixelRatio;
-      if (running && !debug.on && game.location == LOCATION_AREA)
+      if (running && !debug.on && !cine && game.location == LOCATION_AREA)
         game.scene.mouse.onMove();
     });
     // off the view, onto a HUD panel or out of the window: nothing is hovered any more
@@ -193,7 +202,7 @@ class View {
     // click moves the player to / attacks the hovered tile (old 2D rules, via ui.Mouse.onClick).
     // LMB only; RMB owns camera orbit (handled below) and is left to onClick's own button gating
     canvas.addEventListener('click', function(e:js.html.MouseEvent) {
-      if (!running || debug.on || exiting)
+      if (!running || debug.on || cine || exiting)
         return;
       game.scene.mouse.onClick(e);
     });
@@ -201,7 +210,7 @@ class View {
     // release eases it back to the resting view. suppress the context menu so RMB is free
     canvas.addEventListener('contextmenu', function(e:js.html.MouseEvent) e.preventDefault());
     canvas.addEventListener('mousedown', function(e:js.html.MouseEvent) {
-      if (!running || debug.on || tactical || exiting || e.button != 2 || rig == null) return;
+      if (!running || debug.on || cine || tactical || exiting || e.button != 2 || rig == null) return;
       rig.orbitStart();
       canvas.style.cursor = 'none'; // hide the cursor while orbiting so it doesn't drift off-screen
     });
@@ -245,11 +254,44 @@ class View {
         tacticalGrid.invalidate();
     }
 
-// is street-debug mode active? (the game suppresses movement input while it is)
-  public inline function debugActive():Bool return debug.on;
+// is street-debug mode or the camera fly mode active? (the game takes no input while either is)
+  public inline function debugActive():Bool return debug.on || cine;
 
 // enter/leave street-debug mode (fly/editor/inspector + HUD — see render.Debug)
-  public inline function setDebug(on:Bool):Void debug.set(on);
+  public function setDebug(on:Bool):Void
+    {
+      if (on)
+        setCine(false);
+      debug.set(on);
+    }
+
+// enter/leave the camera fly mode (Shift+`), for recording footage: the debug fly cam with every
+// piece of UI hidden as Shift+Space hides it, the cursor too, and the live lamp pools centred on the
+// camera as if the player were the one flying (the loop's lightCol/lightRow). no debug overlay
+  public function setCine(on:Bool):Void
+    {
+      if (cine == on)
+        return;
+      if (on &&
+          debug.on)
+        debug.set(false);
+      cine = on;
+      debug.fly(on);
+      if (on)
+        {
+          cineHud = game.ui.hud.isVisible();
+          if (cineHud)
+            game.ui.hud.hide();
+        }
+      else if (cineHud)
+        game.ui.hud.show();
+      Browser.document.body.classList.toggle('cine', on);
+    }
+
+// does this area fade what stands between the camera and the player? only the city's buildings do
+// (render.Occlusion); everywhere else the player shows through a wall as an x-ray instead
+  public inline function fadesOccluders():Bool
+    return Std.isOfType(area3d, CityArea);
 
 // enter/leave the tactical city view (no-op while idle or during the exit outro, which owns
 // the zoom tween that setTactical would cancel)
@@ -345,7 +387,8 @@ class View {
       // the chain is held in a TYPED local only so the catch below compiles to `.catch`: three's
       // compileAsync extern returns Dynamic, and `catchError` on a Dynamic is emitted verbatim, which
       // is not a method any promise has
-      var chain:js.lib.Promise<Dynamic> = warm.p;
+      var chain:js.lib.Promise<Dynamic> = warm.p.then(function(_)
+        return Warmup.compile(renderer, camera, Warmup.overlay()));
       chain.then(function(_)
         {
           js.Browser.console.log('[street-warmup] boot pre-warm: ' +
@@ -726,6 +769,11 @@ class View {
       RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, a.bloomThreshold()); // per-area: WHEN the glow starts
     bloomPass.enabled = game.config.vidBloom; // re-assert per area — a fresh pass defaults to enabled
     composer.addPass(bloomPass);
+    // the always-on-top UI quads AFTER the bloom, so an AI's white badge glyphs do not halo like a
+    // lamp (render.particles.Sprites.overlay). drawn over what the passes above left, depth unread
+    var top = new RenderPass(actors.overlay(), camera);
+    top.clear = false;
+    composer.addPass(top);
     composer.addPass(new OutputPass());
     // let renderer.info accumulate across all composer passes: its OutputPass would otherwise
     // reset the per-frame draw stats to its own single quad, so we reset() manually each frame
@@ -1313,6 +1361,8 @@ class View {
         aiming: false,
         playerCol: 0,
         playerRow: 0,
+        lightCol: 0,
+        lightRow: 0,
         dtMs: dtMs,
         outro: true,
         freeCam: false,
@@ -1384,6 +1434,16 @@ class View {
       tacticalGrid.show(game.playerArea.x, game.playerArea.y);
     // what the cursor is on, ahead of the area tick and the actor pass that outline it
     updateHover();
+    // the live lamp pools centre on the player, or in the camera fly mode on the camera, as if the
+    // player were the one flying
+    lightCol = game.playerArea.x;
+    lightRow = game.playerArea.y;
+    if (cine)
+      {
+        var c = CityConfig.worldToCell(camera.position.x, camera.position.z);
+        lightCol = c.col;
+        lightRow = c.row;
+      }
     // the world tick for this area kind: occlusion fades, window switches, chunk culling and the
     // live lamp pool (see render.CityArea / render.SewerArea)
     area3d.tick({
@@ -1393,6 +1453,8 @@ class View {
       aiming: aiming,
       playerCol: game.playerArea.x,
       playerRow: game.playerArea.y,
+      lightCol: lightCol,
+      lightRow: lightRow,
       dtMs: dtMs,
       outro: stale,
       freeCam: freeing,
@@ -1438,6 +1500,7 @@ class View {
     // gated on the area still being the live location so a load/exit transition (running still true,
     // area despawned + entity links dropped) can't fault the render loop
     if (!debug.on &&
+        !cine &&
         game.location == LOCATION_AREA)
       game.scene.mouse.update();
     if (pathLine != null)

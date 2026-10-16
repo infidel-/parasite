@@ -49,6 +49,16 @@ class Debug {
 // is the free cam currently owning the camera?
   public inline function flying():Bool return freeCam != null && freeCam.active;
 
+// the fly cam alone, for the camera fly mode (render.View.setCine): no tools, no overlay
+  public function fly(o:Bool):Void {
+    if (freeCam == null) {
+      freeCam = new FreeCam(getCamera(), canvas);
+      Tools.freeCam = freeCam;
+    }
+    if (o) freeCam.activate();
+    else freeCam.deactivate();
+  }
+
 // a new city was built (area change/restart): reset cycler indices + refresh counts
   public function onRebuild():Void {
     for (f in cycRefresh) f();
@@ -141,8 +151,10 @@ class Debug {
 // attach the debug tools once (camera is persistent; scene/city read via getters)
   function attachTools():Void {
     if (toolsAttached) return;
-    freeCam = new FreeCam(getCamera(), canvas);
-    Tools.freeCam = freeCam; // __check.goto resolves the fly-cam through this
+    if (freeCam == null) {
+      freeCam = new FreeCam(getCamera(), canvas);
+      Tools.freeCam = freeCam; // __check.goto resolves the fly-cam through this
+    }
     Editor.attach(getScene, getCamera(), canvas);
     Inspector.attach(getScene, getCamera(), canvas, getCity, getSeed);
     PolyProbe.attach(getScene, getCamera(), canvas);

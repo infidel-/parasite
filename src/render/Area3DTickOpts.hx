@@ -14,10 +14,14 @@ typedef Area3DTickOpts = {
   target:Vector3,
   // targeting mode: widen the occlusion corridor so flanking buildings fade too
   aiming:Bool,
-  // player grid column (the live light pool picks the lamps nearest it)
+  // player grid column
   playerCol:Int,
   // player grid row
   playerRow:Int,
+  // the cell the live lamp pools centre on: the player's, or the camera fly mode's camera (View.setCine)
+  lightCol:Int,
+  // and its row
+  lightRow:Int,
   // frame delta in ms, already hitch-clamped by the view loop
   dtMs:Float,
   // leave-outro frame: the area is despawned, so only camera-driven fades may run

@@ -121,19 +121,34 @@ class Badges {
 // through so it stays spottable. color = current alert status (followers cult-pink)
   public function drawXray(ai:AI, badges:Array<_Badge>):Void
     {
-      // never x-ray the player's own host: buildings in front of it get made transparent instead
+      // never x-ray the player's own host here: drawPlayerXray owns it
       if (game.player.host == ai)
         return;
-      var a = actors.get(ai.entity);
+      xray(ai.entity, outlineColor(ai, badges));
+    }
+
+// the player's own x-ray, in its ring's purple: the free parasite or its host. not in the city,
+// which fades the buildings in front of the player instead (render.Occlusion); nothing fades an
+// underground or compound wall, so a player stood under the south wall of a corridor was gone
+  public function drawPlayerXray():Void
+    {
+      if (game.scene.view3d.fadesOccluders())
+        return;
+      xray(game.player.state == _PlayerState.PLR_STATE_HOST ? game.player.host.entity : game.playerArea.entity,
+        RenderConfig.XRAY.player);
+    }
+
+// paint one entity's patterned silhouette in `col` where a wall hides it from the camera
+  function xray(e:Entity, col:Int):Void
+    {
+      var a = actors.get(e);
       if (a == null ||
           a.op < 0.05)
         return;
-      var e = ai.entity;
       var tex = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
         RenderConfig.XRAY.fill, RenderConfig.XRAY.hatchSpacing, RenderConfig.XRAY.hatchThick, e.skinColor);
       if (tex == null)
         return;
-      var col = outlineColor(ai, badges);
       var wy = WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5;
       // emissive = the state color so the pattern reads at night; GreaterDepth = occluded-only
       sprites.paint({

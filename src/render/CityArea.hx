@@ -93,7 +93,7 @@ class CityArea implements Area3D
         occlusion.update(opts.camPos, opts.player, opts.target, opts.aiming, opts.dtMs);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       // park the live-spotlight pool on the nearest lamps to the player
-      lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
+      lampLights.update(lampPosts, opts.lightCol, opts.lightRow, opts.dtMs);
       // pull the cones of any flickering lamp that is mid-outage out of the draw (no-op most
       // frames), then hand the same on/off state to the post batches: a lamp that is out draws from
       // the DEAD batch instead, so its emissive head stops glowing and blooming for the outage

@@ -125,10 +125,10 @@ class LampShadows {
       if (curBarrels.length == 0)
         return;
       var F = RenderConfig.FLAME;
-      // pooled warm lights follow the nearest barrels to the player
-      var pe = game.playerArea.entity;
+      // pooled warm lights follow the nearest barrels to the player (to the camera in the fly mode)
+      var v = game.scene.view3d;
       if (flameLights != null)
-        flameLights.update(flameT, curBarrels, pe.mx, pe.my);
+        flameLights.update(flameT, curBarrels, v.lightCol, v.lightRow);
       // flame body + the odd ember, per visible barrel
       for (b in curBarrels)
         {

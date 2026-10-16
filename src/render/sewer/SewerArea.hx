@@ -183,11 +183,11 @@ class SewerArea implements Area3D
       // slide. this rebuilds through the ~9 frames of a move (BASE_MS at 60Hz) and then stops dead —
       // the slide is finite, so a rested origin re-keys to the same value and this is a no-op again
       VisionMask.update(game, opts.player.x, opts.player.z);
-      lampLights.update(lampPosts, opts.playerCol, opts.playerRow, opts.dtMs);
+      lampLights.update(lampPosts, opts.lightCol, opts.lightRow, opts.dtMs);
       // the organs' own coloured lights. a separate pool from the lamps' on purpose: a bracket is a
       // SpotLight aimed along its wall, an organ glows omnidirectionally, and sharing one pool would
       // have the two fighting for slots — the lamps would lose theirs to whatever the player stood near
-      propLights.update(game, opts.playerCol, opts.playerRow, opts.dtMs);
+      propLights.update(game, opts.lightCol, opts.lightRow, opts.dtMs);
       // a wall fixture's glow quad is its ONLY brightness source (no emissive glb head down here), so
       // this is what stops a sputtering lamp from glowing and blooming right through its own outage
       render.LightCone.pulse(wallGlow, lampLights.flickT);

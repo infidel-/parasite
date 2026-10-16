@@ -516,6 +516,7 @@ typedef Ray = {
 }
 @:native("THREE.RenderPass") extern class RenderPass {
   public function new(scene:Scene, camera:Object3D);
+  public var clear:Bool;                                   // false = draw over the buffer the previous passes left
 }
 @:native("THREE.UnrealBloomPass") extern class UnrealBloomPass {
   public function new(resolution:Vector2, strength:Float, radius:Float, threshold:Float);

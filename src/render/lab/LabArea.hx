@@ -273,8 +273,8 @@ class LabArea implements Area3D
       if (opts.outro)
         return;
       VisionMask.update(game, opts.player.x, opts.player.z);
-      lampLights.update(posts, opts.playerCol, opts.playerRow, opts.dtMs);
-      propLights.update(game, opts.playerCol, opts.playerRow, opts.dtMs);
+      lampLights.update(posts, opts.lightCol, opts.lightRow, opts.dtMs);
+      propLights.update(game, opts.lightCol, opts.lightRow, opts.dtMs);
       LabDoors.tick(doors, opts);
       LabVats.tick(vats, opts);
       var alarmed = (mission != null && mission.leadTriggerDone);

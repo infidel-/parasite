@@ -28,8 +28,9 @@ class FreeCam {
     setIndicator();
 
     Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
-      if (!Tools.enabled) return; // only in street-debug mode
-      if (e.code == 'KeyF') { if (active) { active = false; setIndicator(); } else activate(); }
+      // street-debug mode, or flying in the camera fly mode (render.View.setCine), which keeps F off
+      if (!Tools.enabled && !active) return;
+      if (e.code == 'KeyF' && Tools.enabled) { if (active) { active = false; setIndicator(); } else activate(); }
       if (active) keys.set(e.code, true);
     });
     Browser.window.addEventListener('keyup', function(e:js.html.KeyboardEvent) keys.remove(e.code));

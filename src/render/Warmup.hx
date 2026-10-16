@@ -39,6 +39,16 @@ class Warmup
       g.add(render.View.playerRing());
     }
 
+// the billboard pool's program under the post-bloom UI pass (render.particles.Sprites.overlay): a
+// scene with no lights and no fog, so its own key, the same in every area kind — warmed once at boot
+  public static function overlay():Scene
+    {
+      var sc = new Scene();
+      for (m in render.particles.Sprites.warmupMeshes())
+        sc.add(m);
+      return sc;
+    }
+
 // three renders a transparent DoubleSide (non-forceSinglePass) material as TWO single-side passes
 // (side FrontSide then BackSide), each its own program; compileAsync on the DoubleSide material
 // compiles a doubleSided program the runtime never uses (see the gas entry in docs/3d-render.md).

@@ -492,7 +492,7 @@ class CorpArea implements Area3D
       // off the SMOOTHED position and not opts.playerCol/Row — see VisionMask's own note on why
       // the logical cell is the wrong origin
       VisionMask.update(game, opts.player.x, opts.player.z);
-      lampLights.update(lamps.posts, opts.playerCol, opts.playerRow, opts.dtMs);
+      lampLights.update(lamps.posts, opts.lightCol, opts.lightRow, opts.dtMs);
       // THE ONE THING IN THIS KIND ON A WALL CLOCK: raw dtMs, no ANIM_SPEED and no BASE_MS. see
       // CorpCrowd's header — ambient city life is RenderConfig's own documented exception, and a
       // street that stops when the player stops thinking is the whole feature missing

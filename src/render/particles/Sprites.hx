@@ -51,6 +51,11 @@ class Sprites {
   var _tq:Quaternion = new Quaternion();
   var _yAxis:Vector3 = new Vector3(0, 1, 0);
 
+  // the quads drawn AFTER the bloom pass (render.View): the always-on-top UI ones, whose white self-lit
+  // glyphs crossed the bloom threshold and haloed like a lamp. their own scene, so the pass draws them
+  // and nothing else, with no lights in it — they are self-lit
+  public var overlay(default, null):Scene = new Scene();
+
   public function new(game:Game, actorGroup:Group)
     {
       this.game = game;
@@ -264,6 +269,8 @@ class Sprites {
       // depthTest off = always-on-top UI (entity badges): never occluded by walls in front.
       // depthFunc (when set) flips the compare — GreaterDepth draws only where occluded (x-ray)
       untyped mat.depthTest = (o.depthTest != false);
+      if (o.depthTest == false)
+        overlay.add(m);
       if (o.depthFunc != null)
         untyped mat.depthFunc = o.depthFunc;
       // UI overlays (badges, x-ray outline, target markers) stay out of the shadow maps — they must
@@ -444,6 +451,8 @@ class Sprites {
         }
       if (bent[idx] == true)
         unbend(m);
+      if (m.parent != actorGroup)
+        actorGroup.add(m);
       var mat:Dynamic = m.material;
       // swap the crop texture + reset per-frame state. NO material.needsUpdate: the material is
       // created once with map+emissiveMap present (stable defines), so swapping to another cached

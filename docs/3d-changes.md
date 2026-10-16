@@ -790,3 +790,34 @@ four vats. The entry diff is still only the known depth program.
 beam round the full turn, and the wall it backs onto is what decides where that beam goes dark.
 
 **Verdict:** landed.
+
+
+## Player x-ray under the south wall, badges drawn after the bloom, camera fly mode
+
+**Changed:** `Badges.drawXray` never x-rayed the player's own host, because the city fades the
+buildings in front of it (`Occlusion`). Nothing fades an underground or compound wall, so a player
+standing under a corridor's south wall, camera close, disappeared. `drawPlayerXray` paints the free
+parasite or the host in `XRAY.player` (the ring's 0xb46bff) everywhere `View.fadesOccluders()` is
+false, i.e. everywhere but `CityArea`. Not while attaching: the head it rides carries its own.
+AI badges are white self-lit glyphs and crossed the bloom threshold. `Sprites.paint` now moves every
+`depthTest:false` quad into `Sprites.overlay`, its own scene with no lights and no fog, and `slot()`
+moves it back on reuse. A `RenderPass(overlay)` with `clear = false` runs between the bloom and the
+`OutputPass`. Its one program (lights 0, fog off) is warmed at boot by `Warmup.overlay()`.
+Shift+` is the camera fly mode (`View.setCine`). It uses the debug `FreeCam` (`Debug.fly`, which
+creates it without the tools), hides the HUD the way Shift+Space does, and sets `body.cine` so no
+element shows a cursor. `debugActive()` covers it, so the game takes no keys; clicks, wheel and RMB
+orbit are gated too. Plain ` switches to debug and back. The light pools centre on
+`View.lightCol/lightRow`, which is the camera's ground cell in the fly mode. The new
+`Area3DTickOpts.lightCol/Row` fields carry it to the city, facility, corp, lab and sewer lamp pools,
+the lab and sewer prop lights, and the barrel flame lights.
+
+**Measured:** at (20,18) under the corridor's south wall at zoom 0, the host shows through the wall
+as purple scan lines. Badge emissive pushed to 4, with the overlay pass moved before the bloom: the
+annulus round the badge averages 85.8, and 60.2 with it after the bloom, i.e. no halo. Flying 1.5 s
+east moved the light cell from (20,22) to (37,22), and 6 of the 12 lit lamps changed. The player
+stayed at (20,18) and the HUD came back on exit. Lab entry compiled no new programs.
+
+**Trap:** the vision mask stays the player's, so a camera flown out of their sight looks into dark;
+`set p.los 0` lifts it for footage.
+
+**Verdict:** landed.

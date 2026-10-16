@@ -594,6 +594,7 @@ class RenderConfig {
     hatchThick: 2,       // pattern line width (crop px)
     grow: 1.0,          // silhouette scale vs the sprite
     emissive: 0.9,       // silhouette self-glow (legibility at night)
+    player: 0xb46bff,    // the player's own silhouette: its ring's purple (render.View.playerRing)
   };
   // the hover outline (render.View.hover): a ring round the sprite the cursor is on, cyan for an AI —
   // the "?" cursor's own, clear of the alert ramp above and of the object green below — and OBJMARK's

@@ -113,6 +113,13 @@ html, body {
   cursor: var(--ui-cursor-default);
 }
 
+/* the 3D camera fly mode (render.View.setCine) records footage: no cursor anywhere, over the
+   inline ones the view and the mouse set on the canvas too */
+body.cine,
+body.cine * {
+  cursor: none !important;
+}
+
 /* ---- boot warmup screen (#warmup, in app.html) ---- */
 /* the text starts TRANSPARENT and Main turns it on, because this screen paints before its font is
    settled and would otherwise change under the player twice: the faces in fonts.css are
