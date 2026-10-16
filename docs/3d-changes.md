@@ -926,3 +926,27 @@ re-upload on every facility load (20 uploads where HEAD did 100). The remaining 
 area entry are canvases and data textures that `Textures` never made.
 
 **Verdict:** landed.
+
+
+## Boot textures decoded as ImageBitmaps off the main thread: no gain, +165 MB
+
+**Tried:** `Textures` masters loaded by fetch → blob → `createImageBitmap(imageOrientation 'flipY',
+premultiplyAlpha 'premultiply'|'none', colorSpaceConversion 'default')` with `flipY = false` (WebGL
+ignores both unpack flags for a bitmap), CorpMerge flipping a layer only when its map is `flipY`, and
+the menu's `loadTex` on the same path.
+
+**Measured:** in isolation it looked like a win. On 14 PNGs (5 Mpx) through the game's renderer the
+main-thread upload cost was **13.7 ms/Mpx for `<img>`** (decoded inside `texImage2D`), **13.2 with
+`img.decode()` first** (WebGL decodes again anyway) and **1.9 for the bitmap**. Uploaded bytes were
+read back and **identical for all 14**, premultiplied grime included. At boot it moved the cost
+instead of removing it. Main-thread Decode Image in the warm went **487ms x140 → 26ms x20**, but sync
+`GetProgramiv` waits went **253 → 758ms**, because the GPU thread is now busy with the uploads. The
+bitmaps then land after the warm and their `texSubImage2D` runs **~0.8s at ~12.5 ms/Mpx** before the
+prompt. Main-thread time from warm start to prompt was **~2.75s → ~3.6s**. Prompt median over 5
+launches: **4.61 → 4.57s**. Renderer private memory: **370 → 535 MB at the prompt**, 461 → 584 after
+a city, 781 → 963 after the facility. A bitmap is never discarded; an `<img>` decode is.
+
+**Trap:** an upload benchmark on an idle GPU says nothing about an upload during the warm. Price it in
+the boot trace (main thread warm start → prompt), never per Mpx in isolation.
+
+**Verdict:** reverted. Decode stays on `<img>`.
