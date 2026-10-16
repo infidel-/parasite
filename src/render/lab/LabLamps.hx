@@ -51,8 +51,11 @@ class LabLamps
       for (r in m.rooms)
         {
           var surf = LabModel.roleSurf(r.role);
-          var nx = Std.int(Math.max(1, Math.round(r.w / LabStyle.LAMP_SPACING)));
-          var ny = Std.int(Math.max(1, Math.round(r.h / LabStyle.LAMP_SPACING)));
+          // the vat chamber takes one fixture a quadrant, none dead: its vats light it, and the
+          // lattice's seven pools all went red together under the alarm
+          var vats = (surf == Surf.LAB_VAT);
+          var nx = (vats ? 2 : Std.int(Math.max(1, Math.round(r.w / LabStyle.LAMP_SPACING))));
+          var ny = (vats ? 2 : Std.int(Math.max(1, Math.round(r.h / LabStyle.LAMP_SPACING))));
           var lit = 0, first = null;
           for (i in 0...nx)
             for (j in 0...ny)
@@ -61,7 +64,7 @@ class LabLamps
                   r.y1 + Std.int((j + 0.5) * r.h / ny));
                 if (first == null)
                   first = c;
-                var p = post(c.col, c.row, tint(surf), false);
+                var p = post(c.col, c.row, tint(surf), vats);
                 if (p == null)
                   continue;
                 lit++;

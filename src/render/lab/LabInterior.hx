@@ -441,14 +441,22 @@ class LabInterior
 // a fake tank glow: a trapezoid of its colour on the floor before its front, fanning out as the light
 // out of an aperture does (render.facility.FacilityGlow.spill's shape), and a light at its front that
 // only the actors' fake shadows see (LabArea.shadowLamps). It starts TANK_SPILL_IN under the piece,
-// so the gradient's near fade is buried. `front` is the front's distance off the centre
+// so the gradient's near fade is buried. `front` is the front's distance off the centre. A `ring` one
+// is a square centred under the piece instead, and its light stands over the axis
   static function fake(p:LabInteriorPlan, x:Float, z:Float, yaw:Float, front:Float, col:Int, row:Int,
       glow:LabStyle.LabTankGlow):Void
     {
       var nx = Math.sin(yaw), nz = Math.cos(yaw);
       var rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      var ring = (glow.ring == true);
       var n0 = front - LabStyle.TANK_SPILL_IN, n1 = front + LabStyle.TANK_SPILL_DEPTH;
       var w0 = LabStyle.TANK_SPILL_W / 2, w1 = w0 + LabStyle.TANK_SPILL_SPREAD;
+      if (ring)
+        {
+          n1 = front + LabStyle.TANK_RING_OUT;
+          n0 = -n1;
+          w0 = w1 = n1;
+        }
       var y = LabStyle.TANK_SPILL_Y;
       var at = function(n:Float, w:Float):Array<Float>
         return [x + nx * n + rx * w, y, z + nz * n + rz * w];
@@ -463,12 +471,13 @@ class LabInterior
           p.spill.col[k + i * 3 + 1] = c.g;
           p.spill.col[k + i * 3 + 2] = c.b;
         }
+      var o = (ring ? 0.0 : front);
       p.fakes.push({
-        x: x + nx * front,
-        z: z + nz * front,
+        x: x + nx * o,
+        z: z + nz * o,
         y: LabStyle.TANK_LAMP_Y,
-        tx: x + nx * n1,
-        tz: z + nz * n1,
+        tx: (ring ? x : x + nx * n1),
+        tz: (ring ? z : z + nz * n1),
         color: glow.color,
         col: col,
         row: row,

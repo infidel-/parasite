@@ -2081,7 +2081,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-liftshaft-emissive.png",
       "emissiveStrength": 1.8,
-      "last_converted": "2026-10-15T18:06:34Z",
+      "last_converted": "2026-10-16T11:33:13Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-liftshaft-emissive.png@1.8/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/clone": {
@@ -3221,14 +3221,14 @@
       "error": 0.005,
       "dropMR": true,
       "baseColor": [
-        0.55,
-        0.55,
-        0.55,
+        0.39,
+        0.39,
+        0.39,
         1
       ],
-      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/suittorn-src.png): one hazmat suit hanging empty from a hook, torn open across the chest and soaked with dark blood. Generated AT the budget (decimation_target 6000, 5716 tris). 10 components, largest 46.7%: the folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z. Reads yellow rather than orange, like lab/suit. baseColor 0.55 takes the atlas luma (Ylin 0.207) to ~95, the suits' level.",
-      "last_converted": "2026-10-14T10:35:18Z",
-      "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.55,0.55,0.55,1"
+      "note": "TRELLIS off an edit_image of the 2D lab sprite (models-src/lab/suittorn-src.png): one hazmat suit hanging empty from a hook, torn open across the chest and soaked with dark blood. Generated AT the budget (decimation_target 6000, 5716 tris). 10 components, largest 46.7%: the folds come back as their own pieces, read by eye at four sides and whole. Its front is at +z. Reads yellow rather than orange, like lab/suit. Its base colour is the texSrc override models-src/lab/suittorn.png (models-src/lab/_suittorn.py): TRELLIS drew this one's fabric orange where lab/suit's and lab/suitfloor's are yellow, and side by side on the rack it read as another suit, so the fabric's hue alone is turned to the suit's 52 (greys and blood untouched; a per-channel baseColor tinted the greys green). baseColor 0.39 then lands its linear luma (0.348) on lab/suit's 0.137.",
+      "last_converted": "2026-10-16T11:42:25Z",
+      "last_sig": "n1/-1/512/0.005/lab/suittorn.png/-/noMR/bc0.39,0.39,0.39,1"
     },
     "lab/lab-top-microscope": {
       "src": "lab/lab-top-microscope.glb",

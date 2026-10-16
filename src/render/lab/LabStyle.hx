@@ -11,6 +11,9 @@ typedef LabTankGlow = {
   // a FAKE glow: no lamp, a trapezoid on the floor (LabInterior.fake) and a light only the actors'
   // fake shadows see; a real one takes a pool lamp
   ?fake:Bool,
+  // a fake one glowing on ALL sides of a round piece: one smaller square of the glow centred under it,
+  // its light over the axis
+  ?ring:Bool,
 };
 
 // the underground lab's art set and its tuning constants: the shell's ShellTex, the scene rig and
@@ -66,8 +69,9 @@ class LabStyle
   // how far past CELL a leaf slides, so its stile does not stop in the reveal's own plane — the
   // trap FacilityStyle.DOOR_SLIDE_CLEAR records for the corp lift
   public static inline var DOOR_CLEAR = 0.06;
-  // an opening slides shut or open over this many BASE_MS — heavier than the compound's swing
-  public static inline var DOOR_MULT = 0.6;
+  // an opening slides shut or open over this many BASE_MS — heavier than the compound's swing (0.6
+  // snapped shut)
+  public static inline var DOOR_MULT = 3.0;
   // a pair's cull radius about the opening's centre: a slid leaf's far stile is 2 CELL + DOOR_CLEAR
   // out, plus the leaf's own height for the sphere
   public static inline var DOOR_CULL_R = 10.0;
@@ -216,17 +220,23 @@ class LabStyle
   public static inline var TANK_SPILL_IN = 0.4;
   public static inline var TANK_SPILL_Y = 0.04;
   public static inline var TANK_SPILL_GLOW = 0.03;
+  // a ring glow's reach past the piece's own radius: the square's half-side, so its rounded core
+  // (Textures.makeRectGlowGradient's 0.3) stays under the piece and the fade lands about this far out
+  public static inline var TANK_RING_OUT = 1.3;
   // and which machines' fluid does it, by gen.lab.LabKinds name: the amber tanks, the blue tube and
-  // stasis pod, the green specimen case and embryonic bank
+  // stasis pod, the teal specimen case (its glass's own colour: the green it had read as another
+  // light) and the embryonic bank
   public static var TANK_GLOW:Map<String, LabTankGlow> = [
     'ambertanks' => {
       color: 0xffa040,
       mul: 0.9,
+      fake: true,
     },
     'tube' => {
       color: 0x5ad2ff,
       mul: 0.9,
       fake: true,
+      ring: true,
     },
     'stasis' => {
       color: 0x8ae0ff,
@@ -234,8 +244,9 @@ class LabStyle
       fake: true,
     },
     'specimencase' => {
-      color: 0x8aff6a,
+      color: 0x6ae8d8,
       mul: 0.8,
+      fake: true,
     },
     'embryonic' => {
       color: 0x5cffc0,
@@ -252,12 +263,12 @@ class LabStyle
   public static inline var CHAIR_ASKEW_PCT = 20;
   public static inline var CHAIR_ASKEW = 1.3;
   // the lab's two moving lights (render.lab.LabSpin). The lift's beacon: its place off the shaft's
-  // centre (models-src/lab/mach/liftshaft.py: x 3.9, the back girder's end 0.35 in from 4.9, the dome
-  // 0.3 over the girder's 9.03 top), its colour and strength, where its beam lands, its sweep in turns
-  // per BASE_MS
-  public static inline var SPIN_BEACON_X = 3.9;
-  public static inline var SPIN_BEACON_Z = -4.55;
-  public static inline var SPIN_BEACON_Y = 9.35;
+  // centre (models-src/lab/mach/liftshaft.py: x 4.4, the dome on its side off the back girder's 4.32
+  // front face at the girder's 8.7 middle, the bulb just past its 0.65 tip so the dome's own shell
+  // never shadows it), its colour and strength, where its beam lands, its sweep in turns per BASE_MS
+  public static inline var SPIN_BEACON_X = 4.4;
+  public static inline var SPIN_BEACON_Z = -3.6;
+  public static inline var SPIN_BEACON_Y = 8.7;
   public static inline var SPIN_BEACON_COLOR = 0xffa030;
   public static inline var SPIN_BEACON_MUL = 2.2;
   // the floor point its pool circles, off the shaft's centre out into the lobby (the shaft stands in
@@ -269,13 +280,13 @@ class LabStyle
   public static inline var SPIN_BEACON_RATE = 0.35;
   // the workshop fan: the blades' height off the floor (the fan hangs at the walls' 6.0 head), the
   // two glbs' measured heights (models-src/lab/mach/fan.py), the work lamp's height over the blades
-  // and its strength, and the rotor's turns per BASE_MS
+  // and its strength, and the rotor's turns per BASE_MS (0.6 strobed the blades' shadows)
   public static inline var FAN_Y = 5.7;
   public static inline var FAN_BLADES_H = 0.1;
   public static inline var FAN_BODY_H = 1.02;
   public static inline var FAN_LAMP_UP = 1.9;
   public static inline var FAN_LAMP_MUL = 1.5;
-  public static inline var FAN_RATE = 0.6;
+  public static inline var FAN_RATE = 0.08;
   // frost round the cold machines (render.lab.LabDecals.frost, lab/frost): the sheet, the kinds that
   // shed it, the floor patches' spacing round the footprint and how far out of it they sit, their
   // size and its spread, the wall crust's size and how far proud of the masonry it stands, which

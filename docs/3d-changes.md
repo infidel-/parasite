@@ -583,3 +583,32 @@ was added to the three extern.
 **Measured:** both are colour uniforms, so no program changes. The facility keeps 1.0 (null).
 
 **Verdict:** landed.
+
+
+## Lab round 6: beacon on the girder face, every tank glow fake, vat hall four fixtures, slower fan and doors
+
+**Changed:**
+- **Lift beacon.** It now lies on its side, bolted to the back girder's front face (`liftshaft.py`, x 4.4,
+  the girder's 8.7 middle). The bulb (`SPIN_BEACON_*`) sits just past the dome's tip. On the girder's
+  top, the girder cut the beam's cone and its hard edge swept the lobby as a shadow. x 4.4 keeps the
+  dome clear of the car's ±3.9 deck, whose corner post rides down past it.
+- **Tank glows.** The amber tanks and the specimen case go fake like the tube and stasis pod, so no
+  tank takes a pool lamp now (only the embryonic bank still does). The specimen case's colour is its
+  glass's teal (`0x6ae8d8`) instead of the green it had been throwing. The tube takes `ring`: a square
+  of the rect glow centred under it, with a half-side of radius + `TANK_RING_OUT` 1.3. Its fake light
+  stands over the axis, aimed down, so the actors' fake shadows fall away on every side.
+- **Vat hall lamps.** The vat hall takes a 2x2 lattice with none dead. That is one fixture per
+  quadrant, down from about seven, all of which went red together under the alarm.
+- **Timing.** `FAN_RATE` 0.6 to 0.08 turns per BASE_MS: about 4 rps strobed the blades' shadows, and
+  it is now 0.53 rps. `DOOR_MULT` 0.6 to 3.0: a slide took 90 ms and now takes about 450 ms.
+- **Torn suit.** Its colour now comes from a `texSrc` override (`models-src/lab/_suittorn.py`). Only
+  the fabric's hue turns from 36 to the suit's 52, and `baseColor` 0.39 matches its luma to lab/suit.
+
+**Measured:** the entry diff is still the one known depth program, and the frame rate holds at
+73–75 fps. Live: the door eased 0 to 1 in 442 ms, and the fan turned at 6.6 BASE_MS a second ×
+0.08. The vat hall reads `lamps.vat` 4.
+
+**Trap:** a per-channel `baseColor` (0.34/0.56/0.15) did match the fabric, but it tinted every grey
+(visor, boots, seams) green. A hue fix belongs in the map, not the factor.
+
+**Verdict:** landed.
