@@ -51,6 +51,10 @@ class SceneSetup {
     // final OutputPass blits a fullscreen quad (no geometry edges to smooth). real AA lives on
     // the composer's offscreen render targets instead (View.setAA, config vidAntialias)
     var renderer = new WebGLRenderer({ canvas: canvas, antialias: false });
+    // shader info logs (renderer.info.programs[].diagnostics, the black-street diagnosis route in
+    // docs/3d-render.md) only in debug: each program's first use otherwise pays sync GPU round
+    // trips for logs a player never reads
+    renderer.debug.checkShaderErrors = Const.isDebug;
     // NOT devicePixelRatio: the street frame is fill-bound long before it is call-bound, and a
     // 125%-scaled desktop was silently costing 1.56x the pixels for it. measured GPU ~= 2.0ms +
     // 8.3ms per megapixel, i.e. ~80% of the frame scales with this one number (docs/3d-render.md)

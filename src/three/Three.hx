@@ -201,6 +201,7 @@ package three;
   public var toneMappingExposure:Float;
   public var shadowMap:Dynamic;
   public var info:RendererInfo;
+  public var debug:{ checkShaderErrors:Bool }; // checkShaderErrors: read shader/program info logs on each program's first use (fills info.programs[].diagnostics); costs sync GPU round trips
   public var autoClear:Bool;
   public function setPixelRatio(r:Float):Void;
   public function getPixelRatio():Float;                  // current render scale; passes sized outside the composer need it to match

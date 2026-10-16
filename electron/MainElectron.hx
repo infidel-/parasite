@@ -1093,5 +1093,11 @@ class MainElectron
       // the disk-write callback, so most warm programs land in GPU memory only and recompile next
       // launch (measured: cold boot warm 8.4s vs 3.9s fully cached)
       App.commandLine.appendSwitch('enable-features', 'ANGLEPerContextBlobCache');
+      // both shader caches 6 MB by default, and the disk one was full: it evicts by last WRITE and a
+      // hit never writes, so the boot set (written once, read every launch) went first and the next
+      // boot compiled cold (12s vs 6s to the menu). the memory cache is filled from disk at launch,
+      // so it has to be at least as big
+      App.commandLine.appendSwitch('gpu-disk-cache-size-kb', '65536');
+      App.commandLine.appendSwitch('gpu-program-cache-size-kb', '65536');
     }
 }

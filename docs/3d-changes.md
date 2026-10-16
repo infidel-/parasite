@@ -869,3 +869,28 @@ that loses. Also: a fully cached boot still takes ~3.8s with zero WebGL compiles
 not shaders. Skia relinks ~95 programs every launch (0/193 hits in its own cache, ~0.9s GPU thread).
 
 **Verdict:** landed. +0 calls, +0 programs.
+
+
+## Boot: shader caches to 64 MB, one menu background, shader info logs debug-only
+
+**Changed:** `MainElectron` appends `gpu-disk-cache-size-kb` and `gpu-program-cache-size-kb` =
+65536. Both default to 6 MB and the disk one sat at 5.73 MB. It evicts by last WRITE and a hit never
+writes, so the boot set, written once and read every launch, was the first to go and the next boot
+compiled cold (11.8-12.1s to the prompt vs ~6s). The memory cache is filled from disk at launch, so it
+gets the same size. `MainMenu` picks its random background BEFORE its one `setBackground` call; it
+used to decode and upload the default 2688x896 jpeg, then replace it. `SceneSetup` sets
+`renderer.debug.checkShaderErrors = Const.isDebug`, so release skips the info-log reads per program.
+
+**Measured:** launch → autosave prompt, 5 relaunches: **5.41 / 5.50 / 5.58 / 5.63 / 6.69s**
+(median 5.58) against 6.09 / 6.09 / 6.12. The warm now starts at 1.5s instead of 2.0s, and the warm
+itself is unchanged (~4.0s). `MainMenuGL` image onload over the whole boot: **322 → 34ms**. Fill
+test: 70 throwaway programs took `GPUCache` to **6.66 MB with all 381 older entries kept**, then
+`GPU.ShaderLoadPrefixOK` 451 at the next launch and 0 boot misses. `checkShaderErrors`, isolated:
+first render of 40 cached programs **27ms on, 8ms off**.
+
+**Trap:** soundmanager2's 204ms in `canPlayType` is NOT the 18-format probe. With
+`audioFormats` cut to mp3 alone it read 233ms: it is Chromium's media stack starting on the first
+call, so the override was reverted. The inline script in `app.html` is pinned in the CSP by its
+sha256; any edit to it needs the hash recomputed or the script (and `SoundManager`) never runs.
+
+**Verdict:** landed.
