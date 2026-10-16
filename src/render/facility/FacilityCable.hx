@@ -151,7 +151,7 @@ class FacilityCable
       var runs = drops(cab, pack, m, socks) + links(cab, pack, m, socks);
       var us = units(pack, cab, m, all);
       var scat = scatter(pack, m, us);
-      add(scene, pack, m.tex.elec);
+      add(scene, pack, m.tex.elec, (m.tex.elecTint != null ? m.tex.elecTint : 1.0));
       FacilityGeom.add(scene, cab, m.tex.cable, true, false);
       return {
         mounts: all,
@@ -1327,13 +1327,15 @@ class FacilityCable
 // reasons: an opaque alphaTest draws DoubleSide in ONE pass, it still writes depth so nothing sorts
 // against the floor under it, and leaving `transparent` false keeps VisionMask on its darkening
 // branch rather than the alpha-scaling one (the trap FacilityGeom.addPane records). Sharing that
-// material is also why this family costs no new program
-  static function add(scene:Scene, b:MeshBuf, tex:String):Void
+// material is also why this family costs no new program. `tint` scales the art (ShellTex.elecTint), a
+// uniform and not a program key
+  static function add(scene:Scene, b:MeshBuf, tex:String, tint:Float):Void
     {
       if (b.idx.length == 0)
         return;
       var mesh = new Mesh(FacilityGeom.geom(b), VisionMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
+        color: new Color(0xffffff).multiplyScalar(tint),
         alphaTest: FacilityStyle.ELEC_CUT,
         side: THREE.DoubleSide,
       })));

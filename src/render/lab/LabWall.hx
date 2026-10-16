@@ -366,6 +366,8 @@ class LabWall
         map: map,
         alphaTest: (tex == LabStyle.WALL_FITTINGS_TEX ? LabStyle.DECAL_CUT : 0.0),
       });
+      if (tex == LabStyle.WALL_SIGNS_TEX)
+        mat.color.setScalar(LabStyle.WALL_SIGN_TINT);
       if (glow)
         {
           mat.emissiveMap = map;

@@ -570,3 +570,16 @@ frame. Flame and muzzle lights are their own pools and are not in it.
 **Measured:** in the lab's vat hall the pool reads 12/12 lit, at 75 fps.
 
 **Verdict:** landed.
+
+
+## Lab signs and the borrowed electrical kit at half albedo
+
+**Changed:** the lab's wall signs (`LabStyle.WALL_SIGN_TINT` 0.5 on the signs sheet's material) and the
+compound's electrical kit in the lab (`ShellTex.elecTint`, lab `ELEC_TINT` 0.5, through
+`FacilityCable.add`'s colour). They were reported as too bright for the dark rooms: their white and red
+grounds at full albedo read as lit panels against walls painted near black. `MeshLambertMaterial.color`
+was added to the three extern.
+
+**Measured:** both are colour uniforms, so no program changes. The facility keeps 1.0 (null).
+
+**Verdict:** landed.

@@ -28,6 +28,8 @@ class LabStyle
   public static inline var FLOOR_GRID_SZ = 8.0;
   // the borrowed electrical kit's size against the compound's (ShellTex.elecScale)
   public static inline var ELEC_SCALE = 0.8;
+  // and its art's brightness (ShellTex.elecTint)
+  public static inline var ELEC_TINT = 0.5;
   public static inline var FLOOR_CORRIDOR = 'textures/lab/floor-corridor.png';
   public static inline var FLOOR_WORKSHOP = 'textures/lab/floor-workshop.png';
   public static inline var FLOOR_STORAGE = 'textures/lab/floor-storage.png';
@@ -401,6 +403,9 @@ class LabStyle
 
   // ---- the walls' signs, fittings, screens and lamps (render.lab.LabWall)
   public static inline var WALL_SIGNS_TEX = 'textures/lab/wall-signs.png';
+  // the signs' art drawn at this of its albedo: their white and red grounds read as lit in the dark
+  // rooms
+  public static inline var WALL_SIGN_TINT = 0.5;
   public static inline var WALL_FITTINGS_TEX = 'textures/lab/wall-fittings.png';
   public static inline var WALL_SCREENS_TEX = 'textures/lab/wall-screens.png';
   // the shortest stretch of plain masonry that takes anything, and one sign per this many cells of it
@@ -499,6 +504,7 @@ class LabStyle
           cable: FacilityStyle.CABLE_TEX,
           elec: FacilityStyle.ELEC_TEX,
           elecScale: ELEC_SCALE,
+          elecTint: ELEC_TINT,
           floorTile: tile,
           hood: COPING,
         },

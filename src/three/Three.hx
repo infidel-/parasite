@@ -346,6 +346,7 @@ typedef RendererInfo = {
 @:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
   public function new(params:Dynamic);
   public var map:Texture;
+  public var color:Color;      // the albedo tint over the map, a plain uniform (not in the program key)
   public var emissive:Color;
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;

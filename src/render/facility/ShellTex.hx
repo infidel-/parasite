@@ -85,6 +85,9 @@ typedef ShellTex = {
   // how far the electrical kit is drawn at against the compound's own size: a lab socket box at the
   // compound's 1.4 read too big on the lab's lower walls. null is 1
   @:optional var elecScale: Float;
+  // and how bright its art is drawn against the compound's: the lab's rooms are far darker, and the
+  // kit's white plates at full albedo read as lit. null is 1
+  @:optional var elecTint: Float;
   // the world size a floor's art tiles at, by surface, where it is not FacilityStyle.FLOOR_TILE_SZ: a
   // floor whose art draws a grid (the lab's vat-hall drain channels, the store's painted squares) has
   // to tile at a multiple of the 4-unit cell or its lines walk off the walls. null entries take the
