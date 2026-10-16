@@ -1896,3 +1896,4 @@ overlay overdraw** — that instrumentation is the first step.
 | **Amber tanks: fluid block ends mapped, glass bubbles front panes only** (`ambertanks.py` `prism(sides=)`, `LabWater` bubble face weight) | ends fitted to the whole rect took a 41 px sliver; x + z bubble layout smears on round/corner panes | **landed. +0 programs** |
 | **Amber tank bubbles: neighbour columns looked up** (`LabWater` 3-column loop) | a swaying bubble's disc crossed its column line and was cut flat | **landed. +0 programs** |
 | **Lab bubbles see-through: rim and highlight, clear middle** (`LabWater.labBubble`, vat neighbour columns) | filled disc + alpha lift read as a white pill; hard rim aliased to dots | **landed. +0 programs** |
+| **Lab bubbles: rim AA off a continuous footprint, tank bubbles laid out on x** (`labBubble(d, r, px)`) | fwidth of a per-cell distance spikes on cell lines; x + z ovals round the cylinder | **landed. +0 programs** |

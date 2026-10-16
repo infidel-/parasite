@@ -705,3 +705,26 @@ entry diff is still only the known depth program.
 **Trap:** the first hard-edged rim (0.62..0.82 / 0.88..1.0 r) aliased into dots at game zoom.
 
 **Verdict:** landed.
+
+
+## Lab bubbles: rim AA off a continuous footprint, tank bubbles laid out on x
+
+**Changed:** the see-through rings softened their rim by `fwidth(l)`, where l is the distance to the
+bubble's centre. That centre is relative to the bubble's column and cell, so across a column or cell
+line `d` jumps and fwidth spiked. The rim's smoothsteps collapsed there, and the bubble went clear
+along a one-pixel line, reported as "thin vertical lines that make bubbles completely transparent".
+`labBubble` now takes `px`, one pixel's footprint in the fluid's own frame (`length(fwidth(q))` on
+the tank, `length(fwidth(vLabVat))` in the vat), and both are continuous everywhere. The tank's
+bubbles also leave the ripple's x + z for plain x. They only show on front-facing panes, and round
+the cylinder x + z ran 0.37 of the arc on one side of its front and 1.37 on the other, which drew
+every bubble there as an oval.
+
+**Measured:** both were checked with an off-rig camera rendered into the canvas: one 5 units
+in front of the amber tank at fov 25, and one 5.5 in front of a clone vat at fov 30. Every ring is
+whole with no line through it, and the cylinder's bubbles are round. The entry diff is still only
+the known depth program.
+
+**Trap:** fwidth of anything built off a floor()ed cell index is not a pixel size. Take it off the
+continuous coordinate the cells are cut from.
+
+**Verdict:** landed.

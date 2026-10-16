@@ -56,11 +56,13 @@ class LabWater
             'float labWaterHash( float n ) { return fract( sin( n * 12.9898 ) * 43758.5453 ); }\n' +
             // a bubble is SEE-THROUGH: a thin bright rim and a fleck of highlight up its left, the
             // fluid showing through its middle (a filled pale disc read as a white pill)
-            'float labBubble( vec2 d, float r ) {\n' +
+            'float labBubble( vec2 d, float r, float px ) {\n' +
             '  float l = length( d );\n' +
-            // its edges at least a screen pixel soft: a far bubble's rim is thinner than one, and
-            // a hard one broke into dots
-            '  float aa = max( fwidth( l ), r * 0.08 );\n' +
+            // its edges at least a screen pixel soft (`px`, one pixel's step in the fluid's own
+            // frame): a far bubble's rim is thinner than one, and a hard one broke into dots. NOT
+            // fwidth( l ): `d` is relative to its column and cell, so across a column or cell line
+            // it jumps, fwidth spiked, and the bubble went clear along a one-pixel line
+            '  float aa = max( px, r * 0.08 );\n' +
             '  float rim = smoothstep( r * 0.68 - aa, r * 0.68 + aa, l ) *\n' +
             '    ( 1.0 - smoothstep( r - 2.0 * aa, r, l ) );\n' +
             '  float hi = smoothstep( r * 0.3, r * 0.1, length( d - vec2( -0.35, 0.35 ) * r ) );\n' +
@@ -78,20 +80,25 @@ class LabWater
               // the bubbles of this column AND its two neighbours: a bubble sways up to 0.3 of a
               // column off its centre and is up to 0.39 of one wide, so it crosses into the next
               // column, and looked up in its own alone it was cut off at the line as it swayed
+              // laid out on x, not the ripple's x + z: they only show on panes facing the front,
+              // and round the cylinder x + z ran 0.37 of the arc on one side of its front and 1.37 on
+              // the other, which drew every bubble there as an oval
               '  float bub = 0.0;\n' +
+              '  vec2 bq = vec2( vLabWater.x, q.y );\n' +
+              '  float px = length( fwidth( bq ) );\n' +
               '  for ( int i = -1; i <= 1; i++ ) {\n' +
-              '    float c = floor( q.x / LW_COL ) + float( i );\n' +
+              '    float c = floor( bq.x / LW_COL ) + float( i );\n' +
               '    float h = labWaterHash( c );\n' +
-              '    float v = q.y / LW_CELL - t * LW_RISE * ( 0.6 + 0.8 * h ) - h * 7.0;\n' +
+              '    float v = bq.y / LW_CELL - t * LW_RISE * ( 0.6 + 0.8 * h ) - h * 7.0;\n' +
               '    float k = floor( v );\n' +
               '    float on = step( 0.55, labWaterHash( k * 3.1 + c * 17.0 ) );\n' +
               '    float bx = ( 0.5 + 0.3 * sin( t * 0.3 + h * 20.0 + k ) ) * LW_COL;\n' +
-              '    vec2 d = vec2( q.x - c * LW_COL - bx, ( fract( v ) - 0.5 ) * LW_CELL );\n' +
+              '    vec2 d = vec2( bq.x - c * LW_COL - bx, ( fract( v ) - 0.5 ) * LW_CELL );\n' +
               '    float r = LW_BUBBLE * ( 0.6 + 0.8 * labWaterHash( k + c ) );\n' +
-              '    bub = max( bub, on * labBubble( d, r ) );\n' +
+              '    bub = max( bub, on * labBubble( d, r, px ) );\n' +
               '  }\n' +
-              // only on a pane that faces the front: q.x runs x + z, so on a corner pane or round the
-              // cylinder's flank a bubble's disc smears into a streak across it
+              // only on a pane that faces the front: on a corner pane or round the cylinder's flank
+              // a bubble's disc laid out on x smears into a streak across it
               '  bub *= step( q.y, LW_TOP ) * smoothstep( 0.6, 0.9, vLabWaterFace );\n' +
               // a bubble burns PALER than the fluid, or it is lost on the bright amber behind the pane
               '  totalEmissiveRadiance += labWaterLevel * ( labWaterTint * ( 0.3 + 0.7 * rip ) +\n' +
@@ -145,11 +152,13 @@ class LabWater
             'float labVatHash( float n ) { return fract( sin( n * 12.9898 ) * 43758.5453 ); }\n' +
             // a bubble is SEE-THROUGH: a thin bright rim and a fleck of highlight up its left, the
             // fluid showing through its middle (a filled pale disc read as a white pill)
-            'float labBubble( vec2 d, float r ) {\n' +
+            'float labBubble( vec2 d, float r, float px ) {\n' +
             '  float l = length( d );\n' +
-            // its edges at least a screen pixel soft: a far bubble's rim is thinner than one, and
-            // a hard one broke into dots
-            '  float aa = max( fwidth( l ), r * 0.08 );\n' +
+            // its edges at least a screen pixel soft (`px`, one pixel's step in the fluid's own
+            // frame): a far bubble's rim is thinner than one, and a hard one broke into dots. NOT
+            // fwidth( l ): `d` is relative to its column and cell, so across a column or cell line
+            // it jumps, fwidth spiked, and the bubble went clear along a one-pixel line
+            '  float aa = max( px, r * 0.08 );\n' +
             '  float rim = smoothstep( r * 0.68 - aa, r * 0.68 + aa, l ) *\n' +
             '    ( 1.0 - smoothstep( r - 2.0 * aa, r, l ) );\n' +
             '  float hi = smoothstep( r * 0.3, r * 0.1, length( d - vec2( -0.35, 0.35 ) * r ) );\n' +
@@ -179,6 +188,7 @@ class LabWater
               // up in this column and its two neighbours (a swaying one crosses the line), each
               // hashed by its index wrapped round the turn so the seam behind the axis has no edge
               '  float bub = 0.0;\n' +
+              '  float px = length( fwidth( vLabVat ) );\n' +
               '  float lvU = ( lvA / 6.2831853 + 0.5 ) * LV_N;\n' +
               '  for ( int i = -1; i <= 1; i++ ) {\n' +
               '    float c = floor( lvU ) + float( i );\n' +
@@ -191,7 +201,7 @@ class LabWater
               '      ( lvU - c - 0.5 - 0.25 * sin( lvT * 0.3 + h * 20.0 + k ) );\n' +
               '    vec2 d = vec2( w, ( fract( v ) - 0.5 ) * LV_CELL );\n' +
               '    float r = LV_BUB * ( 0.6 + 0.8 * labVatHash( k + cw ) );\n' +
-              '    bub = max( bub, on * labBubble( d, r ) );\n' +
+              '    bub = max( bub, on * labBubble( d, r, px ) );\n' +
               '  }\n' +
               // only on the column's side: on the lid every column meets the axis, as spokes
               '  bub *= step( LV_R, length( vLabVat.xz ) );\n' +
