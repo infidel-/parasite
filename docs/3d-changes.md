@@ -950,3 +950,31 @@ a city, 781 → 963 after the facility. A bitmap is never discarded; an `<img>` 
 the boot trace (main thread warm start → prompt), never per Mpx in isolation.
 
 **Verdict:** reverted. Decode stays on `<img>`.
+
+
+## Boot warm builds representative buildings only (`WorldPass`, `CityWarm.representatives`)
+
+**Changed:** `World.build`'s `audit:Bool` became `pass:WorldPass` (`REAL`, `WARM`, `WARM_NO_GROUND`).
+A warm pass builds `CityWarm.representatives(city.buildings)`, the first 2 buildings per signature
+(facade, shop, shopOpen, roof, buried, penthouse, winForce/winBlock/winInset, skipWindowFloor,
+frontInfo store/small, noBackWalls). The city's tiles stay whole. The second and third warm cities
+are `WARM_NO_GROUND`: Ground only loads its 5 textures, since Lambert + map is one program in every
+style.
+
+**Measured:** boot geometries **5382 → 1409**, same 67 programs and **same 158 uploads / 47.9 Mpx**.
+Launch → prompt, 5 relaunches: **3.26 / 3.38 / 3.55 / 3.60 / 4.22s** (median 3.55, was 4.61). Warm
+sync head **~1.1 → ~0.68s**, warm total **~3.0 → ~2.0s**. Key sets from a FIXED save (slot 6),
+HEAD vs this, over facility → MEDIUM → HIGH → LOW → MEDIUM → facility: boot identical, and **no key
+this build compiles that HEAD does not**. HEAD had 1 extra on HIGH, inside the run-to-run noise
+(5 and 1 keys between two runs of one build). City entries still upload no texture PNG.
+
+**Trap:** never diff key sets off slot 0. It is the autosave, rewritten on every reload, so two
+"identical" runs load different actor positions. three's shared shadow depth material takes `map` and
+`alphaTest` from whichever caster draws, so a depth variant came and went with the scene and looked
+like a missing warm key. Load a manual slot for both builds.
+
+**Not done:** the planned builder hot spots (isWornFace cache, owner index, a FaceUV flattenBox). With
+P2 in, World.build over the three warm cities was 540ms with isWornFace 6ms, coveredEdges 4ms and
+Ground runs 9ms. The warm now builds representatives, and a real city entry builds in 84-157ms.
+
+**Verdict:** landed.

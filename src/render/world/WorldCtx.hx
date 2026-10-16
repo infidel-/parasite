@@ -18,8 +18,10 @@ typedef WallMount = {
 // sub-builder. buildings/tiles are read by nearly every pass; the *Seen maps are
 // written by one pass each (bands/doors/windows) and read only by the checklist.
 class WorldCtx {
-  // all buildings in the current city
+  // all buildings in the current city (a warm pass: its representatives only)
   public static var buildings:Array<Building>;
+  // what the current build is for (render.World.build)
+  public static var pass:WorldPass = REAL;
   // the tile grid of the current city (row-major)
   public static var tiles:Array<Array<Tile>>;
   // citygen seed of the current city (-1 = seedless reconstruction) — for check traces

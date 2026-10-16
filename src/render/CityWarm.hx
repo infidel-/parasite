@@ -4,6 +4,8 @@ import three.Three;
 import citygen.CityGen;
 import citygen.CityConfig;
 import render.Models.ModelVariant;
+import citygen.CityModel.Building;
+import render.world.Geom;
 
 // the BOOT warm scene: a throwaway city carrying every program the streets need, plus the on-demand
 // effects that are shared across every kind and have to be warmed SOMEWHERE. built by the real
@@ -19,6 +21,10 @@ import render.Models.ModelVariant;
 // warmupMeshes if ever noticed
 class CityWarm
 {
+  // buildings kept per signature by `representatives`: one would do for the programs; the second is
+  // margin for a roof/parapet role or wall pairing the signature does not spell out
+  static inline var REPS = 2;
+
 // build the throwaway city, park the shared effects in it and start the compile. returns the promise
 // AND the stamp taken the moment the compile was issued: everything before that point was one
 // blocked main thread, and the boot screen sits there for exactly that long, so render.View reports
@@ -32,17 +38,17 @@ class CityWarm
       // different pool size would compile programs the game then never uses
       var bundle = SceneSetup.buildScene(renderer, city, lampPool); // base scene + fixed light pools + lamp cones
       var s = bundle.scene;
-      World.build(s, city, seed, null, false);             // all lit world geometry (instanced MeshStandard); audit off — throwaway city
+      World.build(s, city, seed, null, WARM);              // all lit world geometry (instanced MeshStandard) over representative buildings; no audit — throwaway city
       // also warm the downtown style's materials (glass facade/back, curtain windows, mechanical
       // penthouse, downtown ground) on a throwaway downtown city, parked in the same warm scene, so
       // the first high-density (AREA_CITY_HIGH) entry reuses the cached programs instead of recompiling
       var dtCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_HIGH));
-      World.build(s, dtCity, seed, render.world.AreaStyle.forArea(AREA_CITY_HIGH), false);
+      World.build(s, dtCity, seed, render.world.AreaStyle.forArea(AREA_CITY_HIGH), WARM_NO_GROUND);
       // and the slums style (house walls/windows/doors, shingle gable, slums ground, the dead-lawn
       // cutout) on a throwaway low-density city — a NEW GAME starts in AREA_CITY_LOW, so this is the
       // first city most sessions ever build
       var slCity = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(AREA_CITY_LOW));
-      World.build(s, slCity, seed, render.world.AreaStyle.forArea(AREA_CITY_LOW), false);
+      World.build(s, slCity, seed, render.world.AreaStyle.forArea(AREA_CITY_LOW), WARM_NO_GROUND);
       // the downtown lamp (street-lamp2) is a distinct PBR material program from the residential lamp
       // buildScene already compiled — instance one into the warm scene so the first downtown entry
       // reuses it instead of recompiling on the first frame
@@ -73,5 +79,30 @@ class CityWarm
         tSync: haxe.Timer.stamp(),
         p: p,
       };
+    }
+
+// a warm city's buildings: the first REPS of each signature, which is every Building field a builder
+// turns into a different material, mesh kind or texture set. the city itself stays whole (tiles,
+// neighbours), only fewer of its buildings are built — measured on the boot warm, the three cities'
+// thousands of materials were three's per-material program setup as much as the builders' own time.
+// THE ACCEPTANCE TEST IS THE `__progs()` KEY SET: identical at boot to a full warm, and no new key on
+// the first entry to each city style. re-run it whenever a builder starts reading another field
+  public static function representatives(bs:Array<Building>):Array<Building>
+    {
+      var seen = new Map<String, Int>();
+      var out = [];
+      for (b in bs)
+        {
+          var fi = Geom.frontInfo(b);
+          var k = '${b.facade}|${b.shop}|${b.shopOpen}|${b.roof}|${b.buriedH > 0}|${b.roofPenthouse}|' +
+            '${b.winForce != null}|${b.winBlock != null}|${b.winInset > 0}|${b.skipWindowFloor >= 0}|' +
+            '${fi.store}|${fi.small}|${Geom.noBackWalls(b)}';
+          var n = seen.exists(k) ? seen.get(k) : 0;
+          if (n >= REPS)
+            continue;
+          seen.set(k, n + 1);
+          out.push(b);
+        }
+      return out;
     }
 }

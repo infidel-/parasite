@@ -12,6 +12,7 @@ import render.world.Entrances;
 import render.world.Windows;
 import render.world.WallDecals;
 import render.world.Check;
+import render.world.WorldPass;
 
 // builds the whole static city geometry into a scene from a City model. Thin facade
 // over render.world.*: seeds the shared WorldCtx, then runs the passes in order and
@@ -20,7 +21,7 @@ import render.world.Check;
 class World {
   static var checked = false;
 
-  public static function build(scene:Scene, city:City, seed:Int = -1, ?style:render.world.AreaStyle, audit = true):Void {
+  public static function build(scene:Scene, city:City, seed:Int = -1, ?style:render.world.AreaStyle, pass:WorldPass = REAL):Void {
     // one-time geometry self-check (face-dir/rotation invariants)
     if (!checked)
       {
@@ -28,8 +29,8 @@ class World {
         if (!render.world.Geom.demo())
           js.Browser.console.warn('[walldecal] geom self-check FAILED');
       }
-    WorldCtx.buildings = city.buildings;
     WorldCtx.tiles = city.tiles;
+    WorldCtx.pass = pass;
     // a city floor steps per TILE and has no continuous relief; clear whatever the last area set.
     // the climb hook goes with it — nothing in a street is walked THROUGH and vaulted OVER, and so
     // does the wall-mount hook: a city block is citygen geometry and carries no object of its own.
@@ -41,6 +42,8 @@ class World {
     WorldCtx.standOff = null;
     WorldCtx.seed = seed;
     WorldCtx.style = style != null ? style : render.world.CityStyle.get();
+    // after the style: the warm's representatives are picked by signatures that read it
+    WorldCtx.buildings = pass == REAL ? city.buildings : CityWarm.representatives(city.buildings);
     WorldCtx.winSeen = new haxe.ds.ObjectMap();
     WorldCtx.doorSeen = new haxe.ds.ObjectMap();
     WorldCtx.bandSeen = new haxe.ds.ObjectMap();
@@ -58,6 +61,7 @@ class World {
     RoofShadows.addRoofShadows(scene);
     RoofDetails.addRoofDetails(scene);
 
-    if (audit) Check.run(); // skip on throwaway warmup cities — nobody walks them, so the audit is pure spam
+    if (pass == REAL)
+      Check.run(); // skip on throwaway warmup cities — nobody walks them, so the audit is pure spam
   }
 }

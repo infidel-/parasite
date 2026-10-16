@@ -37,6 +37,16 @@ class Ground {
       { tile: Tile.Alley, tex: st.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
       { tile: Tile.Walkway, tex: st.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
     ];
+    // a further boot-warm city: the uploads only. Lambert + map is one program in every style, and the
+    // first warm city compiled it
+    if (WorldCtx.pass == WARM_NO_GROUND)
+      {
+        for (t in types)
+          Textures.loadTexture(t.tex, t.kind, 1);
+        Textures.loadTexture(st.walkwayBorder, 'wall', 1);
+        Textures.loadTexture(st.roadPaint, 'asphalt', 1);
+        return;
+      }
     var bufs = [for (_ in types) MeshBufTools.make()];
     var borderBuf:GroundBuf = MeshBufTools.make(); // kerb-edging stripe on walkway tops (own mesh/tex)
     var markBuf:GroundBuf = MeshBufTools.make();   // road markings overlay (lane lines, crosswalks; own mesh/tex)
