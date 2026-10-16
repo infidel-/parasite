@@ -821,3 +821,26 @@ stayed at (20,18) and the HUD came back on exit. Lab entry compiled no new progr
 `set p.los 0` lifts it for footage.
 
 **Verdict:** landed.
+
+
+## AO kept off the upright sprites: the frame's alpha past 1 marks them
+
+**Changed:** GTAO's prepass hides the sprite layer (a billboard would go in as a solid slab). The AO
+under an actor is therefore the shade of what stands BEHIND it, and the stock `GTAOBlendShader`
+multiplied that over the finished frame, the actor included. Close up in front of a vat plinth, its
+steps lay as bands across a face. Upright pool quads (`Sprites.paint` with neither `flat` nor
+`faceRotY`, and `paintTopple`) now draw with `CustomBlending`: colour as three's normal blend, alpha
+`ONE + ONE`. The composer's targets are `HalfFloatType`, so an opaque pixel under a sprite reads
+alpha 2, which nothing else writes. `View` replaces the blend material's fragment shader with one that
+also samples the frame it was handed (`tBeauty` = `readBuffer.texture`, set per call in the existing
+render wrapper). It scales the AO by `1 - clamp(a - 1)`. Decals, wall quads and fake shadows keep
+`NormalBlending` and take the surface's AO. `blending` is GL state, not a program define.
+
+**Measured:** camera 4.5 in front of a host standing at the plinth's foot. AO off, the fix and the
+old blend (tBeauty forced to an alpha-1 texel), side by side: the old blend lays the step's band across
+the face, and the fix matches AO off there.
+
+**Trap:** `render.StreetBlur` already reads alpha as its mask (`1 - a`). Alpha past 1 lands on its
+"untouched" side, so a sprite over the far street stays sharp, which is right for it.
+
+**Verdict:** landed.

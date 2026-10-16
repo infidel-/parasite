@@ -737,6 +737,23 @@ class View {
     // list to keep. Collected per frame off traverseVisible, so what is already hidden stays so
     var fx = actorGroup;
     var glows:Array<Object3D> = [];
+    // and so the AO it computes under a billboard is the shade of whatever stands BEHIND it, which the
+    // stock blend then multiplied over the billboard itself (vat-plinth steps banded across a face).
+    // the upright sprites mark their pixels by pushing the frame's alpha past 1 (see
+    // render.particles.Sprites.slot), and the blend reads that back off the frame it was handed and
+    // leaves those pixels out
+    var blend = gtaoPass.blendMaterial;
+    blend.uniforms.tBeauty = { value: null };
+    blend.fragmentShader = '
+uniform float intensity;
+uniform sampler2D tDiffuse;
+uniform sampler2D tBeauty;
+varying vec2 vUv;
+void main() {
+  vec4 texel = texture2D(tDiffuse, vUv);
+  float cover = clamp(texture2D(tBeauty, vUv).a - 1.0, 0.0, 1.0);
+  gl_FragColor = vec4(mix(vec3(1.), texel.rgb, intensity * (1.0 - cover)), texel.a);
+}';
     var gtaoRender = gtaoPass.render;
     gtaoPass.render = function(renderer, writeBuffer, readBuffer, deltaTime, maskActive)
       {
@@ -750,6 +767,7 @@ class View {
           });
         for (o in glows)
           o.visible = false;
+        blend.uniforms.tBeauty.value = readBuffer.texture;
         gtaoRender.call(gtaoPass, renderer, writeBuffer, readBuffer, deltaTime, maskActive);
         for (o in glows)
           o.visible = true;

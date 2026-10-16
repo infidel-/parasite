@@ -269,6 +269,11 @@ class Sprites {
       // depthTest off = always-on-top UI (entity badges): never occluded by walls in front.
       // depthFunc (when set) flips the compare — GreaterDepth draws only where occluded (x-ray)
       untyped mat.depthTest = (o.depthTest != false);
+      // an upright sprite marks itself for the AO blend (see slot); a decal, a wall-mounted quad and
+      // a fake shadow lie in a surface and take its AO
+      if (!o.flat &&
+          o.faceRotY == null)
+        untyped mat.blending = THREE.CustomBlending;
       if (o.depthTest == false)
         overlay.add(m);
       if (o.depthFunc != null)
@@ -318,6 +323,7 @@ class Sprites {
       m.quaternion.setFromAxisAngle(_yAxis, o.spinY);
       m.quaternion.multiply(_tq);
       m.renderOrder = ORD_ACTOR;
+      untyped m.material.blending = THREE.CustomBlending; // a falling body is still a body (see slot)
       m.visible = true;
       idx++;
     }
@@ -444,6 +450,22 @@ class Sprites {
               // actor later flickers a warm emissive glow onto its own sprite — see paint())
               map: tex,
               emissiveMap: tex,
+              // THE AO SKIPS THE UPRIGHT SPRITES, AND THE ALPHA CHANNEL CARRIES WHICH PIXELS THOSE
+              // ARE. GTAO's prepass leaves the billboards out (render.View: a quad would go in as a
+              // solid slab), so the AO under an actor is the shade of what stands BEHIND it, and the
+              // blend then multiplied that across the actor's face: the steps of a vat plinth drawn
+              // as bands over a scientist's cheek. An upright sprite adds its alpha to the target's
+              // instead of blending it (CustomBlending, alpha ONE + ONE). The composer's targets are
+              // half-float, so an opaque pixel under it goes past 1, which nothing else ever writes,
+              // and View's patched GTAO blend leaves out `alpha - 1`. render.StreetBlur reads alpha
+              // below 1 as its mask, and above 1 is still "untouched" there
+              // the colour blend is three's normal one either way; `paint` switches the alpha one on
+              // for an upright sprite by flipping `blending` alone, which is GL state, not a define
+              blendEquation: THREE.AddEquation,
+              blendSrc: THREE.SrcAlphaFactor,
+              blendDst: THREE.OneMinusSrcAlphaFactor,
+              blendSrcAlpha: THREE.OneFactor,
+              blendDstAlpha: THREE.OneFactor,
             }))));
           m.name = 'sprite pool ' + idx;
           pool[idx] = m;
@@ -467,6 +489,7 @@ class Sprites {
       mat.emissiveIntensity = 0;
       untyped mat.depthTest = true;
       untyped mat.depthFunc = THREE.LessEqualDepth;
+      untyped mat.blending = THREE.NormalBlending;
       mat.roughness = 1;
       mat.metalness = 0;
       // full saturation, the byte-exact no-op — a paint that wants less re-sets it (see `unpremul`)

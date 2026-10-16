@@ -21,6 +21,12 @@ package three;
   static var GreaterDepth:Dynamic;
   static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
   static var AdditiveBlending:Dynamic; // Material.blending — the glow quads and light shafts add over what is behind them
+  static var NormalBlending:Dynamic; // Material.blending — three's default alpha blend for a transparent material
+  static var CustomBlending:Dynamic; // Material.blending — the blendSrc/blendDst/...Alpha factors below are used
+  static var SrcAlphaFactor:Dynamic; // blend factor: the source alpha
+  static var OneMinusSrcAlphaFactor:Dynamic; // blend factor: one minus the source alpha
+  static var OneFactor:Dynamic; // blend factor: one
+  static var AddEquation:Dynamic; // blend equation: source + destination
   static var ShaderChunk:haxe.DynamicAccess<String>; // the GLSL chunks `#include <name>` expands to, by name
   static var LinearFilter:Dynamic; // Texture.minFilter/magFilter — bilinear with NO mip chain (pairs with generateMipmaps=false)
   static var LinearMipmapLinearFilter:Dynamic; // Texture.minFilter — trilinear over the mip chain, three's default for a mapped texture
@@ -535,6 +541,9 @@ typedef Ray = {
   // scene with one opaque override material and a billboard goes into it as a solid slab. See
   // render.View, which hides the sprite layer for the duration of this call
   public var render:Dynamic;
+  // the full-screen quad that multiplies the AO over the frame (render.View patches its shader to
+  // leave the upright sprites out of it)
+  public var blendMaterial:Dynamic;
 }
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();
