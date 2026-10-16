@@ -669,3 +669,19 @@ The entry diff is still only the known depth program (the shader keeps its `labW
 compiles the new source).
 
 **Verdict:** landed.
+
+
+## Amber tank bubbles: neighbour columns looked up
+
+**Changed:** `LabWater` looked each fragment's bubble up in its own column only. A bubble sways up to
+0.3 of a `WATER_COL` (0.32) off the column's centre and is up to 0.39 of one wide (radius
+`WATER_BUBBLE` × 1.4), so near the end of its sway its disc crossed the column line and was cut flat
+there. Reported as "cut off by something on the left and right when they're swaying". The fragment
+now takes the max of its own column and its two neighbours, which covers the disc's reach of
+[-0.19, 1.19] columns.
+
+**Measured:** a NumPy copy of the shader at t 37 drew several half-discs with the old lookup and only
+whole ones with the new. Live, the program compiles with no error and the entry diff is still only
+the known depth program. Three loop passes on the tank glass alone.
+
+**Verdict:** landed.

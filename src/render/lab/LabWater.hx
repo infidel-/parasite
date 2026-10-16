@@ -63,18 +63,24 @@ class LabWater
               '  float rip = 0.6 * smoothstep( 0.55, 1.0,\n' +
               '    sin( q.y * 6.0 - t * LW_RATE + sin( q.x * 2.3 + t * 0.05 ) * 1.4 ) ) +\n' +
               '    0.4 * smoothstep( 0.7, 1.0, sin( q.x * 5.1 + q.y * 3.0 + t * 0.08 ) );\n' +
-              '  float c = floor( q.x / LW_COL );\n' +
-              '  float h = labWaterHash( c );\n' +
-              '  float v = q.y / LW_CELL - t * LW_RISE * ( 0.6 + 0.8 * h ) - h * 7.0;\n' +
-              '  float k = floor( v );\n' +
-              '  float on = step( 0.55, labWaterHash( k * 3.1 + c * 17.0 ) );\n' +
-              '  float bx = ( 0.5 + 0.3 * sin( t * 0.3 + h * 20.0 + k ) ) * LW_COL;\n' +
-              '  vec2 d = vec2( q.x - c * LW_COL - bx, ( fract( v ) - 0.5 ) * LW_CELL );\n' +
-              '  float r = LW_BUBBLE * ( 0.6 + 0.8 * labWaterHash( k + c ) );\n' +
+              // the bubbles of this column AND its two neighbours: a bubble sways up to 0.3 of a
+              // column off its centre and is up to 0.39 of one wide, so it crosses into the next
+              // column, and looked up in its own alone it was cut off at the line as it swayed
+              '  float bub = 0.0;\n' +
+              '  for ( int i = -1; i <= 1; i++ ) {\n' +
+              '    float c = floor( q.x / LW_COL ) + float( i );\n' +
+              '    float h = labWaterHash( c );\n' +
+              '    float v = q.y / LW_CELL - t * LW_RISE * ( 0.6 + 0.8 * h ) - h * 7.0;\n' +
+              '    float k = floor( v );\n' +
+              '    float on = step( 0.55, labWaterHash( k * 3.1 + c * 17.0 ) );\n' +
+              '    float bx = ( 0.5 + 0.3 * sin( t * 0.3 + h * 20.0 + k ) ) * LW_COL;\n' +
+              '    vec2 d = vec2( q.x - c * LW_COL - bx, ( fract( v ) - 0.5 ) * LW_CELL );\n' +
+              '    float r = LW_BUBBLE * ( 0.6 + 0.8 * labWaterHash( k + c ) );\n' +
+              '    bub = max( bub, on * smoothstep( r, r * 0.6, length( d ) ) );\n' +
+              '  }\n' +
               // only on a pane that faces the front: q.x runs x + z, so on a corner pane or round the
               // cylinder's flank a bubble's disc smears into a streak across it
-              '  float bub = on * smoothstep( r, r * 0.6, length( d ) ) *\n' +
-              '    step( q.y, LW_TOP ) * smoothstep( 0.6, 0.9, vLabWaterFace );\n' +
+              '  bub *= step( q.y, LW_TOP ) * smoothstep( 0.6, 0.9, vLabWaterFace );\n' +
               // a bubble burns PALER than the fluid, or it is lost on the bright amber behind the pane
               '  totalEmissiveRadiance += labWaterLevel * ( labWaterTint * ( 0.3 + 0.7 * rip ) +\n' +
               '    vec3( 0.75, 0.62, 0.4 ) * bub );\n' +
