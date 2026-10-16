@@ -533,3 +533,28 @@ console shadow falls ~2 units before each console. 0 gens.
   alone threw no desk shadow. The visible one is the vat lamp's.
 
 **Verdict:** landed.
+
+
+## Lab round 5: vat glow over the plinth, fake tank glows, a seamless vat floor
+
+**Changed:** each vat's floor glow (`LabVats.pool`) has a second quad on the plinth's top (`VAT_SLAB_Y`
+0.31, the slab's 7.8 x 11.8 rect). The floor quad ran under the 0.3 slab, and its edge cut the glow
+off. The tube and the stasis pod lost their pool lamps (`LabTankGlow.fake`). Each now lays a fanned
+trapezoid on the floor before its front, all of them in one additive mesh (`LabInterior.spill`,
+FacilityGlow's spill shape, vertex rgb per glow, dimmed with the lab). Each also gives a light at its
+front that only the actors' fake shadows read (`LabArea.shadowLamps`, the facility windows' contract).
+The vat-hall floor's wrap was closed by `tools/seamfix.py cross`. That is tone's blend off a rolled copy
+whose two drain channels are first filled with the field mirrored in, with the original channels then
+stamped back whole.
+
+**Measured:** vat floor wrap |diff| 9.8 / 8.9 to 2.1 / 2.6. 5 fake tank lights on seed 768512642,
+entry diff unchanged (the one depth program; the spill shares the vat pool's program), 73-75 fps.
+
+**The traps:**
+- An additive glow is added in LINEAR light: colour 0.12 still landed at sRGB 73/95 over a floor at
+  11/17 and read as a torch beam. 0.05 reads as spill.
+- A plain `tone` on a crossed field doubles the grid: the rolled copy carries the channels to the
+  edges. The fill has to read the already-filled copy for the second band, or the first band comes
+  back at the crossing.
+
+**Verdict:** landed.

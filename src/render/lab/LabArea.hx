@@ -49,6 +49,8 @@ class LabArea implements Area3D
   var flames:LabFlames.LabFlameSet;
   var tanks:Array<LampPost> = [];            // the lit tanks' floor lamps, dimmed as the lab dies
   var tankMul:Array<Float> = [];             // and each one's own strength (LabStyle.TANK_GLOW)
+  var spill:Mesh;                            // the fake tank glows on the floor, or null
+  var fakes:Array<LampPost> = [];            // and their lights, for the actors' fake shadows
   var spin:LabSpin.LabSpinSet;               // the turning beacon and the workshop fan
   // the mission, taken at build: the area hands back null once it is completed, and the alarm it
   // raised keeps sounding past that (LabLamps)
@@ -126,6 +128,8 @@ class LabArea implements Area3D
       mission = Std.downcast(game.area.getAreaMission(), cult.missions.CombatUndergroundLabPurge);
       sounds = new LabSounds(game, model, vats, lamps, lift);
       furniture = LabInterior.build(scene, interior);
+      spill = LabInterior.spill(scene, interior);
+      fakes = interior.fakes;
       spin = LabSpin.build(scene, model, lift, posts);
       flames = LabFlames.build(scene, interior.flames);
       // the flat cut-outs after the chunks too: a sheet with few quads would be bucketed by its origin
@@ -278,6 +282,9 @@ class LabArea implements Area3D
       LabLamps.tick(lamps, opts, alarmed, dead);
       LabSpin.tick(spin, opts, alarmed, lamps.dead);
       LabInterior.dim(furniture, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
+      if (spill != null)
+        untyped spill.material.color.setScalar(LabStyle.TANK_SPILL_GLOW *
+          (1 - lamps.dead * LabStyle.DEAD_EMISSIVE));
       LabWall.tick(wall, alarmed, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
       LabFlames.tick(flames, opts.dtMs);
       LabWater.tick(opts.dtMs, 1 - lamps.dead * LabStyle.DEAD_EMISSIVE);
@@ -327,8 +334,9 @@ class LabArea implements Area3D
       return null;
     }
 
+// the fake tank glows' lights: the actors throw fake shadows off them, and no pool slot is behind them
   public function shadowLamps():Array<LampPost>
-    return [];
+    return fakes;
 
   public function flyLamps():Array<LampPost>
     return [];

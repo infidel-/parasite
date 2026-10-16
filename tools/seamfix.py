@@ -24,13 +24,16 @@ that a blend cannot fix, because a blend ghosts the joints:
 
 And one seam that IS tonal, where a blend is the right tool because there is nothing to ghost:
 
+  cross   tone's blend on a field crossed by one band each way through its middle (lab/floor-vat's
+          drain channels), the bands stamped back whole after it.
+
   tone    a plain field (cut-pile carpet) whose wrap shows a low-frequency tone step. The image is
           rolled half a period on both axes, so the rolled copy's edges are the original's
           interior, and the two are cross-faded: the original in the middle, the rolled copy at
           the edges, a linear ramp over FEATHER of the size between. Joints or grain would double
           in the ramp; a pile field does not.
 
-Usage: python3 tools/seamfix.py planks|grout|tone|boards|grid <src.png> <out.png> [x,y,w,h]
+Usage: python3 tools/seamfix.py planks|grout|tone|boards|grid|cross <src.png> <out.png> [x,y,w,h]
 """
 import sys
 import numpy as np
@@ -179,14 +182,49 @@ def grid(a):
 
 
 FEATHER = 0.25
+# how far off the middle cross()'s bands may reach, px
+BAND_R = 40
 
 
-def tone(a):
+def tone(a, field=None):
+  """`field` is what the rolled copy is taken from, `a` itself unless it has to differ"""
   h, w = a.shape[:2]
-  b = np.roll(a, (h // 2, w // 2), (0, 1)).astype(float)
+  b = np.roll(a if field is None else field, (h // 2, w // 2), (0, 1)).astype(float)
   ramp = lambda n: np.clip(np.minimum(np.arange(n) + 0.5, n - np.arange(n) - 0.5) / (n * FEATHER), 0, 1)
   m = (ramp(h)[:, None] * ramp(w)[None, :])[:, :, None]
   return np.clip(a * m + b * (1 - m) + 0.5, 0, 255).astype(np.uint8)
+
+
+
+def cross(a):
+  """tone() on a field crossed by ONE straight band each way through its middle (lab/floor-vat's
+  drain channels). The rolled copy would carry the bands to the edges, doubling the grid, so it is
+  rolled off a copy with each band filled by the field beside it mirrored in; the original's bands
+  are then stamped back over the blend, whole"""
+  g = a.astype(float).mean(2)
+  bands = []
+  for axis in (0, 1):
+    prof = g.mean(axis)
+    n = len(prof)
+    # the band is every dark line within BAND_R of the middle, its rims' dark edges included
+    dark = [i for i in range(n // 2 - BAND_R, n // 2 + BAND_R) if prof[i] < np.median(prof) - 12]
+    bands.append((axis, dark[0] - 3, dark[-1] + 4))
+  f = a.copy()
+  for axis, s, e in bands:
+    mid = (s + e) // 2
+    src = [2 * s - 1 - c if c < mid else 2 * e - c for c in range(s, e)]
+    # off f, not a: the second band's fill then reads the first band already filled
+    if axis == 0:
+      f[:, s:e] = f[:, src]
+    else:
+      f[s:e] = f[src]
+  out = tone(a, f)
+  for axis, s, e in bands:
+    if axis == 0:
+      out[:, s:e] = a[:, s:e]
+    else:
+      out[s:e] = a[s:e]
+  return out
 
 
 if __name__ == '__main__':
@@ -196,7 +234,8 @@ if __name__ == '__main__':
   if len(sys.argv) > 4:
     x, y, cw, ch = [int(v) for v in sys.argv[4].split(',')]
     a = a[y:y + ch, x:x + cw]
-  out = {'planks': planks, 'grout': grout, 'tone': tone, 'boards': boards, 'grid': grid}[mode](a)
+  out = {'planks': planks, 'grout': grout, 'tone': tone, 'boards': boards, 'grid': grid,
+    'cross': cross}[mode](a)
   Image.fromarray(out).save(dst)
   o = out.astype(float)
   print('%s wrapH %.1f wrapV %.1f' % (dst, np.abs(o[:, 0] - o[:, -1]).mean(), np.abs(o[0] - o[-1]).mean()))

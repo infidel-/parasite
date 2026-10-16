@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import gen.lab.LabKinds;
 import render.Models;
 import render.RenderConfig;
+import render.Textures;
 import render.facility.FacilityDetail;
 import render.facility.FacilityGeom;
 import render.facility.FacilityModel;
@@ -12,6 +13,7 @@ import render.facility.FacilityModel.Facility;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityStyle;
 import render.particles.LampPost;
+import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
@@ -61,6 +63,8 @@ typedef LabInteriorPlan = {
   lids:Array<LabDecals.LabLid>,     // the bench tops render.lab.LabDecals lays clutter on
   frosts:Array<LabDecals.LabFrost>, // the cold machines render.lab.LabDecals frosts round
   glows:Array<LampPost>,            // the lamps lit fluid casts on the floor (LabStyle.TANK_GLOW)
+  spill:MeshBuf,                    // and the FAKE ones' floor glow, a trapezoid each (`spill`)
+  fakes:Array<LampPost>,            // their light for the actors' fake shadows only, no pool slot
   flames:Array<LabFlames.LabFlame>, // the burners' flames render.lab.LabFlames draws
   leds:Array<LabLed>,               // the status lights, in the world
 };
@@ -393,6 +397,8 @@ class LabInterior
         lids: [],
         frosts: [],
         glows: [],
+        spill: MeshBufTools.make(),
+        fakes: [],
         flames: [],
         leds: [],
       };
@@ -430,6 +436,75 @@ class LabInterior
     {
       leds(scene, p.leds);
       return [for (path in p.places.keys()) batch(scene, path, p.places.get(path), p.heights.get(path))];
+    }
+
+// a fake tank glow: a trapezoid of its colour on the floor before its front, fanning out as the light
+// out of an aperture does (render.facility.FacilityGlow.spill's shape), and a light at its front that
+// only the actors' fake shadows see (LabArea.shadowLamps). It starts TANK_SPILL_IN under the piece,
+// so the gradient's near fade is buried. `front` is the front's distance off the centre
+  static function fake(p:LabInteriorPlan, x:Float, z:Float, yaw:Float, front:Float, col:Int, row:Int,
+      glow:LabStyle.LabTankGlow):Void
+    {
+      var nx = Math.sin(yaw), nz = Math.cos(yaw);
+      var rx = Math.cos(yaw), rz = -Math.sin(yaw);
+      var n0 = front - LabStyle.TANK_SPILL_IN, n1 = front + LabStyle.TANK_SPILL_DEPTH;
+      var w0 = LabStyle.TANK_SPILL_W / 2, w1 = w0 + LabStyle.TANK_SPILL_SPREAD;
+      var y = LabStyle.TANK_SPILL_Y;
+      var at = function(n:Float, w:Float):Array<Float>
+        return [x + nx * n + rx * w, y, z + nz * n + rz * w];
+      MeshBufTools.quadC(p.spill, at(n0, -w0), at(n0, w0), at(n1, w1), at(n1, -w1),
+        [0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0], [1.0, 1.0, 1.0, 1.0]);
+      // the corners' grey becomes the glow's own colour at its strength
+      var c = new Color(glow.color).multiplyScalar(glow.mul);
+      var k = p.spill.col.length - 12;
+      for (i in 0...4)
+        {
+          p.spill.col[k + i * 3] = c.r;
+          p.spill.col[k + i * 3 + 1] = c.g;
+          p.spill.col[k + i * 3 + 2] = c.b;
+        }
+      p.fakes.push({
+        x: x + nx * front,
+        z: z + nz * front,
+        y: LabStyle.TANK_LAMP_Y,
+        tx: x + nx * n1,
+        tz: z + nz * n1,
+        color: glow.color,
+        col: col,
+        row: row,
+        phase: 0.0,
+        flick: 1.0,
+        mul: 1.0,
+      });
+    }
+
+// every fake tank glow in ONE additive mesh, LabVats.pool's material and so its program; null with
+// none. The lab's death dims it through its colour (LabArea.tick)
+  public static function spill(scene:Scene, p:LabInteriorPlan):Mesh
+    {
+      var b = p.spill;
+      if (b.idx.length == 0)
+        return null;
+      var geo = new BufferGeometry();
+      geo.setAttribute('position', new Float32BufferAttribute(b.pos, 3));
+      geo.setAttribute('uv', new Float32BufferAttribute(b.uv, 2));
+      geo.setAttribute('color', new Float32BufferAttribute(b.col, 3));
+      geo.setIndex(b.idx);
+      var mesh = new Mesh(geo, VisionMask.patch(new MeshBasicMaterial({
+        color: new Color(0xffffff).multiplyScalar(LabStyle.TANK_SPILL_GLOW),
+        transparent: true,
+        alphaMap: Textures.makeRectGlowGradient(),
+        vertexColors: true,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+        forceSinglePass: true,
+        blending: untyped THREE.AdditiveBlending,
+      })));
+      mesh.name = 'lab tank spill';
+      // below the actors, for FacilityGlow's reason: nothing in the sprite pool writes depth
+      mesh.renderOrder = render.particles.Sprites.ORD_FIXTURE;
+      scene.add(mesh);
+      return mesh;
     }
 
 // the kit's status lights: one speck each in render.facility.FacilityDeco's own blinking mesh, a rack
@@ -1078,7 +1153,10 @@ class LabInterior
       dress(p, a, x, z, yaw, 0.0, (FacilityModel.mix(col * 7919 + row) % 628) / 100);
       // a lit fluid throws its colour on the floor before its machine
       var glow = LabStyle.TANK_GLOW.get(k.name);
-      if (glow != null)
+      if (glow != null &&
+          glow.fake == true)
+        fake(p, x, z, yaw, a.d / 2, col, row, glow);
+      else if (glow != null)
         {
           var o = a.d / 2 + LabStyle.TANK_LAMP_OUT, aim = a.d / 2 + LabStyle.TANK_LAMP_AIM;
           p.glows.push({

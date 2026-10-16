@@ -7256,21 +7256,15 @@
       "built_srgb": 51.2
     },
     "lab/floor-vat": {
-      "src": "lab/floors-a.png",
+      "src": "lab/floor-vat.png",
       "class": "tile",
       "needs_alpha": false,
       "prompt": "[quadrant of lab/floors-a.png, PACK4, gpt-image-2.5-sunburst high] TOP-RIGHT: clone vat hall floor, sealed dark green-grey epoxy with recessed steel drain channels in a square grid. [append textures.json style]",
       "prompt_exact": false,
-      "note": "render.lab shell floor (LabStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. One channel cross per tile.",
-      "crop": [
-        516,
-        2,
-        506,
-        506
-      ],
-      "last_converted": "2026-10-14T00:09:58",
-      "built_linear": 0.0507,
-      "built_srgb": 60.2
+      "note": "render.lab shell floor (LabStyle.shell), world-tiled at LabStyle.FLOOR_GRID_SZ 8 (two cells), so the channel cross sits on the cell grid. THE WRAP WAS CLOSED BY SCRIPT, reported from the game as not seamless: the floors-a.png quadrant's epoxy field showed a tone step at every wrap (|diff| 9.8 / 8.9). tools/seamfix.py cross tone-blends the field off a rolled copy whose two channels are filled with the field beside them, then stamps the original channels back whole (wrap 2.1 / 2.6). Rebuild with: python3 tools/seamfix.py cross textures-src/lab/floors-a.png textures-src/lab/floor-vat.png 516,2,506,506",
+      "last_converted": "2026-10-16T15:49:52",
+      "built_linear": 0.0527,
+      "built_srgb": 61.6
     },
     "lab/floor-corridor": {
       "src": "lab/floors-a.png",

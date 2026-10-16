@@ -8,6 +8,9 @@ import render.facility.ShellOpts;
 typedef LabTankGlow = {
   color:Int,
   mul:Float,
+  // a FAKE glow: no lamp, a trapezoid on the floor (LabInterior.fake) and a light only the actors'
+  // fake shadows see; a real one takes a pool lamp
+  ?fake:Bool,
 };
 
 // the underground lab's art set and its tuning constants: the shell's ShellTex, the scene rig and
@@ -139,6 +142,11 @@ class LabStyle
   public static inline var VAT_POOL_R = 8.0;
   public static inline var VAT_POOL_Y = 0.04;
   public static inline var VAT_POOL_GLOW = 0.11;
+  // the plinth slab the glow is laid over too (models-src/lab/vat_build.py: 7.8 x 11.8, 0.3 tall), its
+  // half-sizes and the glow's height over it
+  public static inline var VAT_SLAB_HW = 3.9;
+  public static inline var VAT_SLAB_HD = 5.9;
+  public static inline var VAT_SLAB_Y = 0.31;
   // a vat's cull radius about its placement: the frame is 7.8 x 11.8 and 10.3 tall
   public static inline var VAT_CULL_R = 12.0;
 
@@ -196,6 +204,15 @@ class LabStyle
   public static inline var TANK_LAMP_OUT = 0.6;
   public static inline var TANK_LAMP_Y = 2.4;
   public static inline var TANK_LAMP_AIM = 3.0;
+  // a fake glow's trapezoid (LabInterior.fake): its width at the front, how far it reaches out, how
+  // much wider each side its far edge is, how far under the piece it starts, its height and the mesh's
+  // strength over each glow's own (0.35, then 0.12, read as a torch beam: it is additive in linear)
+  public static inline var TANK_SPILL_W = 3.0;
+  public static inline var TANK_SPILL_DEPTH = 6.5;
+  public static inline var TANK_SPILL_SPREAD = 2.2;
+  public static inline var TANK_SPILL_IN = 0.4;
+  public static inline var TANK_SPILL_Y = 0.04;
+  public static inline var TANK_SPILL_GLOW = 0.05;
   // and which machines' fluid does it, by gen.lab.LabKinds name: the amber tanks, the blue tube and
   // stasis pod, the green specimen case and embryonic bank
   public static var TANK_GLOW:Map<String, LabTankGlow> = [
@@ -206,10 +223,12 @@ class LabStyle
     'tube' => {
       color: 0x5ad2ff,
       mul: 0.9,
+      fake: true,
     },
     'stasis' => {
       color: 0x8ae0ff,
       mul: 0.8,
+      fake: true,
     },
     'specimencase' => {
       color: 0x8aff6a,

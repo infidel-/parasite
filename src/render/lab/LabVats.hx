@@ -13,6 +13,7 @@ import render.facility.FacilityModel;
 import render.facility.FacilityModel.Facility;
 import render.particles.LampPost;
 import render.particles.Sprites;
+import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
@@ -237,14 +238,13 @@ class LabVats
                   if (FacilityModel.isWall(m, v.x, room.y2 + 1))
                     z1 = Math.min(z1, hi.z + CELL / 2);
                 }
-          // the uv stays the unclipped quad's, so the clip cuts the glow and does not squeeze it
-          var y = LabStyle.VAT_POOL_Y;
-          MeshBufTools.quadC(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0], [
-            0.5 + (x0 - a.x) / (2 * r), 0.5 + (z1 - a.z) / (2 * r),
-            0.5 + (x1 - a.x) / (2 * r), 0.5 + (z1 - a.z) / (2 * r),
-            0.5 + (x1 - a.x) / (2 * r), 0.5 + (z0 - a.z) / (2 * r),
-            0.5 + (x0 - a.x) / (2 * r), 0.5 + (z0 - a.z) / (2 * r),
-          ], [1.0, 1.0, 1.0, 1.0]);
+          glowQuad(b, a, x0, x1, z0, z1, LabStyle.VAT_POOL_Y);
+          // and the same glow over the plinth's top, which stands VAT_SLAB_Y over the floor and hid
+          // the floor's quad under it: on the slab's rect, centred VAT_AXIS south of the axis
+          var sz = a.z + LabStyle.VAT_AXIS;
+          glowQuad(b, a, Math.max(x0, a.x - LabStyle.VAT_SLAB_HW), Math.min(x1, a.x + LabStyle.VAT_SLAB_HW),
+            Math.max(z0, sz - LabStyle.VAT_SLAB_HD), Math.min(z1, sz + LabStyle.VAT_SLAB_HD),
+            LabStyle.VAT_SLAB_Y);
         }
       var geo = new BufferGeometry();
       geo.setAttribute('position', new Float32BufferAttribute(b.pos, 3));
@@ -266,6 +266,20 @@ class LabVats
       mesh.renderOrder = Sprites.ORD_FIXTURE;
       scene.add(mesh);
       return mesh;
+    }
+
+// one flat quad of a vat's glow at height y; its uv stays the whole pool's about the axis, so a clip
+// cuts the glow and does not squeeze it
+  static function glowQuad(b:MeshBuf, a:Models.PropPlace, x0:Float, x1:Float, z0:Float, z1:Float,
+      y:Float):Void
+    {
+      var r = LabStyle.VAT_POOL_R;
+      MeshBufTools.quadC(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0], [
+        0.5 + (x0 - a.x) / (2 * r), 0.5 + (z1 - a.z) / (2 * r),
+        0.5 + (x1 - a.x) / (2 * r), 0.5 + (z1 - a.z) / (2 * r),
+        0.5 + (x1 - a.x) / (2 * r), 0.5 + (z0 - a.z) / (2 * r),
+        0.5 + (x0 - a.x) / (2 * r), 0.5 + (z0 - a.z) / (2 * r),
+      ], [1.0, 1.0, 1.0, 1.0]);
     }
 
 // one batch, its material made what the part needs before the vision mask reads it
@@ -428,7 +442,8 @@ class LabVats
       set.spill.setMatrixAt(i, (level >= 1 ? _zero : _m));
       set.spill.instanceMatrix.needsUpdate = true;
       var col = set.pool.geometry.getAttribute('color');
-      for (k in i * 12...i * 12 + 12)
+      // two quads a vat, floor and plinth: 8 corners of rgb
+      for (k in i * 24...i * 24 + 24)
         col.array[k] = level;
       col.needsUpdate = true;
     }
