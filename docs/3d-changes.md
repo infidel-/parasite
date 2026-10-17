@@ -1441,3 +1441,19 @@ each ~1.0 across). `demo()` deals 40 full stacks against the rule.
 models` reports it up to date: compare the glb's mtime with buildlib's.
 
 **Verdict:** landed.
+
+## Slums litter cap 0.036 -> 0.022: the hottest tier brought under its walkway
+
+**Changed:** `city/debris-slums` `cells.cap` 0.036 -> 0.022 linear (`make tex`; the pack still draws at
+mul 1.0). Reported from the game as the 2D decals being too bright. The cap was fitted reading 2.7x
+its ground under 4x ambient where the city's control read 2.0, so the slums carried the hottest litter
+of the three tiers on the darkest ground (asphalt 0.0185, walkway 0.0254, alley 0.0293).
+
+**Measured:** built sheet 0.0345 -> **0.0214** linear (sRGB 45.7 -> 35.1). Same pinned frame on a
+broken downpipe's puddle: puddle/walkway pixels **1.77 -> 0.58**, so it reads as a wet patch rather
+than a lit one; the street's litter still shows at ground level.
+
+**Trap:** the cap only ever darkens, so cells already under it keep their value and the sheet mean
+falls less than the cap does (0.61x cap, 0.62x mean here because nearly every cell sat at it).
+
+**Verdict:** landed.
