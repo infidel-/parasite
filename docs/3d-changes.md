@@ -1521,3 +1521,24 @@ to bucket. Every plume went dark whenever the origin's chunk left the frustum. T
 answer to "what happened to the steam" on the old steam stacks.
 
 **Verdict:** landed.
+
+## Steam lit by the scene: a lambert puff with its normal turned up
+
+**Changed:** `SteamPuffs` draws a `MeshLambertMaterial` instead of a `MeshBasicMaterial`. It stays
+additive, and the instance colour is still the fade, so a puff now adds the light it scatters: a moon-blue
+haze in the dark, sodium-warm under a lamp. The quad's normal is rewritten to world UP, which is
+(0, cos TILT, sin TILT) in the leaned plane, and `forceSinglePass` is set. `PlaneGeometry` now extends
+`BufferGeometry` in the extern, and `BufferAttribute` gained `setXYZ`.
+
+**Measured:** medium city (6,13), puffs frozen, each lit frame diffed against steam hidden. These are
+luma adds over the plume. Hatch (40,20) at the edge of a lamp pool: unlit **p95 +145, mean
+(56,57,60)**, lit **p95 +65, mean (16,22,37)**. The same plume moved under the bulb: plane normal
+mean **(46,38,38)**, up normal **(67,55,45)**. A hatch 7 cells from any lamp: mean (19,23,33), a
+faint blue wisp. No hatch sits under a bulb: the nearest are all 3.77 units off it, so the in-game
+case is the pool edge. Program #28 in the city and in the facility, compiled by the boot warm, so
+there is no new key on entry. The plume is 1 draw call (141 -> 142).
+
+**Trap:** a frontal quad lit by its own normal faces the camera, so a lamp above and behind the puff
+left it dark. Steam scatters light from any side. The up normal is the cheap stand-in for that.
+
+**Verdict:** landed. To make it fainter still, lower `PEAK`, which scales lit and dark alike.

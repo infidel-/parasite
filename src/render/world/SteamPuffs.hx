@@ -9,8 +9,10 @@ import render.particles.Sprites;
 // the steam off the city's sewer hatches (render.CityArea hands over each lid): soft puffs rising
 // off the lid, swelling and thinning as they climb. ONE instanced additive quad for every puff
 // in the city, so the whole plume is one draw call; a puff fades by its instance colour, which on an
-// additive blend IS its opacity. frontal like every FX tied to a world object (fixed yaw, leaned back
-// by Sprites.TILT), never camera-facing, and only the vents near the camera's target puff at all
+// additive blend IS its opacity. LIT (lambert), so what it adds is the light it scatters: a faint
+// moon-blue haze in the dark, bright under a lamp. frontal like every FX tied to a world object
+// (fixed yaw, leaned back by Sprites.TILT), never camera-facing, and only the vents near the
+// camera's target puff at all
 class SteamPuffs
 {
   // puffs per vent, the vents that may puff at once, and how near the target a vent must be (cells)
@@ -40,14 +42,22 @@ class SteamPuffs
       this.vents = vents;
       if (vents.length == 0)
         return;
-      var mat = new MeshBasicMaterial({
+      var mat = new MeshLambertMaterial({
         map: puffTexture(),
         transparent: true,
         depthWrite: false,
         side: THREE.DoubleSide,
+        forceSinglePass: true, // flat quads, no self-overlap: the back-then-front split is a second call
         blending: untyped THREE.AdditiveBlending,
       });
-      mesh = new InstancedMesh(new PlaneGeometry(1, 1), mat, CAP * PER);
+      // the quad's normal turned world UP (laid in the plane the TILT leans back), so a puff takes the
+      // light from above it, lamp or moon, the way steam scatters it: the plane's own normal faced
+      // the camera, and a lamp above and behind a puff left it dark
+      var geo = new PlaneGeometry(1, 1);
+      var nrm = geo.getAttribute('normal');
+      for (i in 0...nrm.count)
+        nrm.setXYZ(i, 0, Math.cos(Sprites.TILT), Math.sin(Sprites.TILT));
+      mesh = new InstancedMesh(geo, mat, CAP * PER);
       mesh.instanceColor = new InstancedBufferAttribute(new js.lib.Float32Array(CAP * PER * 3), 3);
       mesh.count = 0;
       mesh.frustumCulled = false;

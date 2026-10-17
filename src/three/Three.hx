@@ -272,7 +272,7 @@ typedef RendererInfo = {
   public function new(w:Float, h:Float, d:Float);
   public function translate(x:Float, y:Float, z:Float):BoxGeometry; // bakes the offset into vertices (from BufferGeometry), so a merged mesh needs no per-source transform
 }
-@:native("THREE.PlaneGeometry") extern class PlaneGeometry {
+@:native("THREE.PlaneGeometry") extern class PlaneGeometry extends BufferGeometry {
   public function new(w:Float, h:Float);
 }
 @:native("THREE.RingGeometry") extern class RingGeometry {
@@ -303,6 +303,7 @@ typedef RendererInfo = {
   public function getX(i:Int):Float;
   public function getY(i:Int):Float;
   public function getZ(i:Int):Float;
+  public function setXYZ(i:Int, x:Float, y:Float, z:Float):BufferAttribute; // set element i (flag needsUpdate after, once it is drawn)
 }
 
 @:native("THREE.BufferGeometry") extern class BufferGeometry {
