@@ -34,7 +34,7 @@ class CityArea implements Area3D
   var props:Array<render.world.ObjModels.PropBatch>;     // the object props (dumpsters), culled per frame
   var groundProps:Array<render.Models.InstancedProp> = []; // the street's ground props and car wrecks, culled per frame
   var puddles:Array<render.world.Debris.DebrisSpot> = [];  // the litter under the wall kit's broken downpipes
-  var steam:render.world.SteamPuffs;                      // the plumes off the steam stacks
+  var steam:render.world.SteamPuffs;                      // the plumes off the sewer hatches
   var kits:Array<render.world.KitChunk> = [];             // the wall kit per chunk, its slices synced to the fader per frame
   var tactical = false;                                   // tactical view up: the props show their outline
 
@@ -94,12 +94,20 @@ class CityArea implements Area3D
       // land over a loader callback after the chunk pass below, which leaves the batches at the scene
       // root; they are culled per instance in tick()
       props = render.world.ObjModels.build(scene, game, objYaw);
-      // the street's ground props, clear of every object's cell, the sacks beside the dumpsters
+      // the street's ground props, clear of every object's cell, the sacks beside the dumpsters; and
+      // steam off every sewer hatch, from the lid it lies flat on (a walkway stands a kerb up)
       var blocked = new Map<Int, Bool>();
-      for (o in game.area.getObjects())
-        blocked.set(o.y * CityConfig.GRID + o.x, true);
       var vents:Array<Vector3> = [];
-      groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k], vents);
+      for (o in game.area.getObjects())
+        {
+          blocked.set(o.y * CityConfig.GRID + o.x, true);
+          if (o.type == 'sewer_hatch')
+            {
+              var w = CityConfig.cellToWorld(o.x, o.y);
+              vents.push(new Vector3(w.x, (cityModel.tiles[o.y][o.x] == Tile.Walkway ? RenderConfig.CURB_H : 0.0), w.z));
+            }
+        }
+      groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k]);
       groundProps.push(render.world.StreetProps.wrecks(scene, game.area));
       steam = new render.world.SteamPuffs(scene, vents);
       chunks.build(scene, pre);

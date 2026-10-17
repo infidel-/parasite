@@ -253,8 +253,12 @@ class Buildings {
             'door-metal', 'metal door', TEXTURES.doorMetal);
           var mesh = new Mesh(new PlaneGeometry(doorW, doorH), mat);
           mesh.rotation.y = f.rotY;
-          mesh.position.set(f.fx, doorH / 2, f.fz);
+          // a hair off the wall, as Entrances' doors: flush, a ray hit the wall and the door at one
+          // distance and the probe could never pick the door
+          mesh.position.set(f.fx + Math.sin(f.rotY) * 0.01, doorH / 2, f.fz + Math.cos(f.rotY) * 0.01);
           scene.add(mesh);
+          // published like a pedestrian door, so the street props and the wall decals keep off it
+          WorldCtx.doorSpans.push({ b: b, dir: f.dir, lo: -doorW / 2, hi: doorW / 2 });
         }
       }
 

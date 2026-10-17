@@ -1474,3 +1474,31 @@ with a steady lamp beside a cell (64,28 / 96,70 / 40,72) and the car standing in
 camera; look from the road's other side.
 
 **Verdict:** landed.
+
+## City street pass: see-through fire-escape grating, decks under the hatch rail, lamps on the kerb, steam off the hatches
+
+**Changed:** nine reports off one medium-city walk. **Grating:** `wallkit-city.png` / `wallkit-slums.png`
+TL cell cut to alpha (a luma 14..24 ramp over the TL 512 alone, gaps read 8 and 5 against bars at 40+),
+the kit material clips (`kit_build` `Piece(clip=)` -> `buildlib.material` MASK), `wallkit.py` decks
+laid in equal lengths of at most `GRATE` 2.4 at one density, `DT` 0.08 -> 0.03 since both cut faces
+show, and a `LIP` 0.08 strip of deck across the stair hatch's front (the balusters there stood on air;
+the toe plate it replaced is gone). **Warehouse door:** `Buildings` publishes its span to
+`WorldCtx.doorSpans` (props and wall decals keep off it) and stands it 0.01 off the wall, which is
+what let the probe pick it. `StreetProps.ground` now skips KERB picks on a door cell too. **Lamps:**
+posts stand at `CURB_H` (they were sunk in the kerb) with the bulb, cones and pool lifted alike, and a
+post slid to its cell's corner keeps `LAMP_BASE` 0.35 inside an edge with no walkway past it.
+**Steam:** the steam stack prop is gone; `SteamPuffs` vents are every `sewer_hatch` lid (a walkway
+one a kerb up). Dumpster fork-pocket mouths wear the green body, newsbox `baseColor` 0.28 -> 0.16,
+`debris-city` leaf, twig, needle and leaf-pile cells at size 0.
+
+**Measured:** grating bar pitch **0.37 -> 0.17** units, 34.6% of the TL cut; kit gates 0/0/1, 688 /
+636 tris floor / base. The kit's Lambert carries `alphaTest` 0.5 and draws with program #10, one the
+boot warm compiled: no new key on entry. Newsbox shipped luma **50.9 -> 37.4**. 63 vents in the
+medium city. 33 warehouse doors published. The reported corner lamp (42,81) is a corner-stepped one:
+its `dir` points along the walkway and its slide put the post on the kerb line of the road at +z,
+base out to 2.27 against the lip's 2.2.
+
+**Trap:** a cut sheet only survives `make models` on a MASK material: an OPAQUE one has its alpha
+flattened before the resize. And a deck with both faces cut reads as two gratings unless it is thin.
+
+**Verdict:** landed. Facility and military roads spawn hatches too (`RoadBlock`) and get no steam.

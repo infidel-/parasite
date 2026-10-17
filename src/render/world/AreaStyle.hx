@@ -31,7 +31,6 @@ typedef GroundProp = {
   spot:PropSpot, // where it may stand
   chance:Float,  // odds an eligible cell takes it
   turn:Float,    // radians of hashed yaw jitter either way (a free-standing prop); 0 = square on
-  ?vent:Bool,    // its open top puffs steam (render.world.SteamPuffs)
   ?width:Float,  // world width along its wall: a turned wall prop stands off it by the corner's swing
   ?lean:Float,   // radians of hashed extra lean either way for a prop leant on its wall; it slides in
                  // or out by its height so the top stays on the wall

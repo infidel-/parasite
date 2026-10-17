@@ -3910,7 +3910,7 @@
       "tex": 1024,
       "roughness": 1,
       "note": "the CITY street dumpster the parasite hides in (objects.Dumpster, key dumpster_city), hand-modelled in Blender: models-src/city/kit/dumpster.py through models-src/city/kit_build.py (re-run it, never hand-edit the glb). Green front-load bin off models-src/dumpster-src.png, wearing textures-src/city/dumpster-city.png, a PACK4 painted by edit_image off that reference with its real brand logo replaced by a fictional CITY SANITATION sticker. 3.7 x 1.9 body in half-metre units; the back is a flat plane, it stands against a wall. tex 1024: its plain steel and lid plastic map at one isotropic density per swatch (buildlib.swatch_dens) and at 512 shipped 44 and 33 texels per unit against the ground's 57; 1024 makes them 130 and 203. gradeRect dims the three stickers (TL band, sheet pixels) to linear x0.45: painted near-white at sRGB ~215, they were the brightest thing in a black back alley, a lit panel on a bin nothing lights.",
-      "last_converted": "2026-10-17T18:51:12Z",
+      "last_converted": "2026-10-17T21:08:49Z",
       "last_sig": "n1/-1/1024/0.01/-/-/gr[{\"rect\":[40,146,118,222],\"scale\":0.45},{\"rect\":[172,334,118,222],\"scale\":0.45},{\"rect\":[352,476,118,222],\"scale\":0.45}]/rf1",
       "gradeRect": [
         {
@@ -3963,7 +3963,7 @@
         1
       ],
       "note": "the CITY wall kit: a black-iron fire escape (floor / base platform modules) and a cast-iron downpipe (pipe / shoe / head), models-src/city/kit/wallkit.py, sheet textures-src/city/wallkit-city.png. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair. lift 0.72: the black iron sampled 31, and against the night brick it was not there at gameplay zoom; lifted to the outdoor family's ~57 it reads as dark painted iron.",
-      "last_converted": "2026-10-17T20:20:41Z",
+      "last_converted": "2026-10-17T21:08:40Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.4,0.4,0.4,1/lf0.72/rf1",
       "lift": 0.72
     },
@@ -3979,7 +3979,7 @@
         1
       ],
       "note": "the SLUMS wall kit: the same modules wearing wallkit-slums.png, an edit_image off the city sheet that kept its layout (rust, a tin downpipe). models-src/city/kit/wallkit-slums.py. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair.",
-      "last_converted": "2026-10-17T20:20:41Z",
+      "last_converted": "2026-10-17T21:08:40Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.48,0.48,0.48,1/rf1"
     },
     "city/wallkit-downtown": {
@@ -4287,13 +4287,13 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY newspaper boxes: three side by side with fictional mastheads (CITY HERALD, THE DAILY LEDGER, METRO FREE), wall-backed. Hand-modelled in Blender (models-src/city/kit/newsbox.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-newsbox.png painted by edit_image off its reference models-src/city/ref/newsbox-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.28: it sampled luma ~99 against the outdoor family's 46-52.",
+      "note": "the CITY newspaper boxes: three side by side with fictional mastheads (CITY HERALD, THE DAILY LEDGER, METRO FREE), wall-backed. Hand-modelled in Blender (models-src/city/kit/newsbox.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-newsbox.png painted by edit_image off its reference models-src/city/ref/newsbox-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.16: it sampled luma ~99 against the outdoor family's 46-52, and 0.28 (shipped 50.9) still read as the loudest thing at the wall.",
       "last_converted": "2026-10-17T19:20:41Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.28,0.28,0.28,1/rf1",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.16,0.16,0.16,1/rf1",
       "baseColor": [
-        0.28,
-        0.28,
-        0.28,
+        0.16,
+        0.16,
+        0.16,
         1
       ]
     },

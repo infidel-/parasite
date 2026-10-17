@@ -712,7 +712,6 @@ class RenderConfig {
     cityHydrant: 'models/city/hydrant.glb',
     cityMeter: 'models/city/meter.glb',
     cityNewsbox: 'models/city/newsbox.glb',
-    citySteamStack: 'models/city/steamstack.glb',
     cityMeters: 'models/city/meters.glb',
     // downtown's managed street and its service alleys
     cityCompactor: 'models/city/compactor.glb',

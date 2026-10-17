@@ -6,8 +6,8 @@ import citygen.CityConfig;
 import render.RenderConfig;
 import render.particles.Sprites;
 
-// the steam off the city's steam stacks (AreaStyle.groundProps' `vent` props): soft puffs rising
-// off each open top, swelling and thinning as they climb. ONE instanced additive quad for every puff
+// the steam off the city's sewer hatches (render.CityArea hands over each lid): soft puffs rising
+// off the lid, swelling and thinning as they climb. ONE instanced additive quad for every puff
 // in the city, so the whole plume is one draw call; a puff fades by its instance colour, which on an
 // additive blend IS its opacity. frontal like every FX tied to a world object (fixed yaw, leaned back
 // by Sprites.TILT), never camera-facing, and only the vents near the camera's target puff at all

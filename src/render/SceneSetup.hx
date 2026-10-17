@@ -131,6 +131,9 @@ class SceneSetup {
       moon.target.updateMatrixWorld();
     }
 
+  // how far a lamp post's centre keeps in from a walkway edge with no walkway past it: the post's base
+  // is 0.27 either side of its centre, so a post slid to its cell's corner stood half over that kerb
+  static inline var LAMP_BASE = 0.35;
   // a street lamp's fate (lampFate)
   public static inline var LAMP_STEADY = 0;
   public static inline var LAMP_FLICKER = 1;
@@ -226,39 +229,52 @@ class SceneSetup {
     var bulbs:Array<{ x:Float, z:Float }> = [];
     var bulbsFlick:Array<{ x:Float, z:Float }> = [];
     var phasesFlick:Array<Float> = [];
+    // a lamp stands on its walkway, a kerb up, and its light with it
+    var bulbY = CityConfig.CELL * L.yMul + RenderConfig.CURB_H;
     for (lamp in city.lamps) {
       var w = CityConfig.cellToWorld(lamp.col, lamp.row);
       // dir -> yaw so local +z points toward the road (0:+z, 1:-z, 2:+x, 3:-x)
       var yaw = switch (lamp.dir) { case 0: 0.0; case 1: Math.PI; case 2: Math.PI / 2; default: -Math.PI / 2; };
       var cos = Math.cos(yaw), sin = Math.sin(yaw);
-      var px = w.x + lpdx * cos + lpdz * sin; // post nudged within its cell (edge / toward wall)
-      var pz = w.z - lpdx * sin + lpdz * cos;
+      // the post slides along its walkway to the cell's corner, unless the cell past that corner is
+      // not walkway (a lamp stepped back off a crossing road): then it keeps LAMP_BASE inside the edge
+      var nc = lamp.col + Math.round(cos);
+      var nr = lamp.row + Math.round(-sin);
+      var walk = nc >= 0 &&
+        nr >= 0 &&
+        nc < CityConfig.GRID &&
+        nr < CityConfig.GRID &&
+        city.tiles[nr][nc] == citygen.CityModel.Tile.Walkway;
+      var slide = (walk ? lpdx : Math.min(lpdx, CityConfig.CELL / 2 - LAMP_BASE));
+      var px = w.x + slide * cos + lpdz * sin; // post nudged within its cell (edge / toward wall)
+      var pz = w.z - slide * sin + lpdz * cos;
+      var py = RenderConfig.CURB_H;
       var bx = px + ldx * cos + ldz * sin;    // bulb offset FROM the post, over the road edge
       var bz = pz - ldx * sin + ldz * cos;
       var h = lampHash(lamp.col, lamp.row);
       var fate = lampFate(lamp.col, lamp.row, style);
       if (fate == LAMP_DEAD)
-        dead.push({ x: px, z: pz, yaw: yaw }); // post still stands, but its bulb is drawn unlit
+        dead.push({ x: px, y: py, z: pz, yaw: yaw }); // post still stands, but its bulb is drawn unlit
       else
         {
           var flick = fate == LAMP_FLICKER;
           var phase = flick ? ((h >>> 17) % 628) / 100 : 0.0;
           if (flick)
             {
-              flickPlace.push({ x: px, z: pz, yaw: yaw });
+              flickPlace.push({ x: px, y: py, z: pz, yaw: yaw });
               bulbsFlick.push({ x: bx, z: bz });
               flickCells.push({ col: lamp.col, row: lamp.row });
               phasesFlick.push(phase);
             }
           else
             {
-              placements.push({ x: px, z: pz, yaw: yaw });
+              placements.push({ x: px, y: py, z: pz, yaw: yaw });
               bulbs.push({ x: bx, z: bz });
             }
           lampPosts.push({
             x: bx,
             z: bz,
-            y: CityConfig.CELL * L.yMul,
+            y: bulbY,
             tx: bx, // a street lamp pools straight down: the aim point is the ground under the bulb
             tz: bz,
             color: RenderConfig.LAMP_CONE.color, // sodium amber, matching the shaft hung under it
@@ -285,7 +301,6 @@ class SceneSetup {
     // prebuilt so the per-frame pass only rewrites the first n entries (the flickering lamps)
     var lampMask = [for (i in 0...(flickPlace.length + placements.length)) true];
     var lampMaskDead = [for (i in 0...(flickPlace.length + dead.length)) i >= flickPlace.length];
-    var bulbY = CityConfig.CELL * L.yMul;
     // two cone batches, both in coneGroup so debug 5/0 still hides them together: the steady lamps'
     // (built once, never touched) and the flickering lamps' (repacked by LightCone.pulse so a cone
     // goes out with its bulb). an area with no flickering lamps builds no second mesh at all

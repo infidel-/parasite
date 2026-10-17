@@ -280,9 +280,9 @@ class StreetProps
 // scatter the style's ground props (AreaStyle.groundProps): one per cell at most, first the cells
 // beside a dumpster (`bins`, grid keys row * GRID + col), then every kerb and wall cell, each prop in
 // list order taking its `chance` off a hash of the cell. `blocked` cells (objects) and the lamps' cells
-// stay clear, and a wall prop never stands across a door. a prop with a `pile` deals its pieces there
-// (deal). one instanced batch per glb; the steam vents' open tops are pushed onto `vents`
-  public static function ground(scene:Scene, city:City, blocked:Map<Int, Bool>, bins:Array<Int>, vents:Array<Vector3>):Array<InstancedProp>
+// stay clear, and nothing stands on a cell in front of a door, kerb props included. a prop with a
+// `pile` deals its pieces there (deal). one instanced batch per glb
+  public static function ground(scene:Scene, city:City, blocked:Map<Int, Bool>, bins:Array<Int>):Array<InstancedProp>
     {
       var props = WorldCtx.style.groundProps;
       if (props == null)
@@ -382,8 +382,6 @@ class StreetProps
                   span: 0,
                   rng: rng,
                 }, put);
-              if (gp.vent == true)
-                vents.push(new Vector3(x, y + gp.h, z));
               return;
             }
         }
@@ -411,13 +409,15 @@ class StreetProps
           {
             if (!open(col, row))
               continue;
+            var w = wallDir(col, row);
+            if (w >= 0 &&
+                doorAt(owner, col, row, w))
+              continue;
             var r = roadDir(col, row);
             if (r >= 0 &&
                 WorldCtx.tiles[row][col] == Tile.Walkway)
               pick(col, row, KERB, r);
-            var w = wallDir(col, row);
-            if (w < 0 ||
-                doorAt(owner, col, row, w))
+            if (w < 0)
               continue;
             if (WorldCtx.tiles[row][col] == Tile.Alley)
               pick(col, row, SERVICE, w);
