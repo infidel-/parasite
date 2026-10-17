@@ -1376,6 +1376,8 @@ rail's top 59, meters conduit 68 at 1024).
 
 ## Slums car wrecks: a hand-modelled carcass parked over two kerb cells
 
+> SUPERSEDED by Slums car wrecks as decoration: read off the unwalkable pair, hatched in tactical, turned off square
+
 **Changed:** `models-src/city/kit/car.py` (an agent, Blender over kit_build): a rusted teal 80s
 hatchback stripped to its shell, 3,656 tris, 7.4 x 3.25 x 2.51 half-metre units: real cut-out
 arches, separate pillars over the beltline, every window an open hole, drums on concrete blocks, a
@@ -1395,5 +1397,47 @@ walkway; one batch, `noCast`.
 
 **Trap:** the boot warm waits on every `unmasked` row's glb, so a row whose glb is not built yet hangs
 the boot: keep it out of `unmasked` until `make models` has made it. Old saves get no wrecks.
+
+**Verdict:** landed.
+
+## Slums car wrecks as decoration: read off the unwalkable pair, hatched in tactical, turned off square
+
+**Changed:** `objects.CarWreck`, its `ObjModels` row, `PropYaw.KERB` and `FRAME_CAR_WRECK` deleted.
+`CityAreaGenerator.placeCars` only flips its two road cells to `TILE_ROAD_UNWALKABLE`, which nothing
+else in a city writes (barrels flip ALLEY), so `StreetProps.wrecks` draws one car over every such
+pair: midpoint, length along the pair, local -z to the walkway, `CAR_KERB` in, turned up to
+`CAR_TURN` 0.15 off square off a cell hash and pulled back off the kerb by `CAR_HALF * |sin turn|`.
+One `Models.instanced` batch culled with the ground props. `TacticalGrid.blocked` skipped all three
+unwalkable street ids as void scenery, which is corp's meaning; in the city it now hatches them. The
+car's end faces (`kit/car.py across`) take u off the painted panel's own edges per row: the front and
+rear strips are trapezoids (rear 549..981 px at its top, 531..999 lower down) and the face mapped the
+strip's full 528..1000 at every height, so both top corners sampled the black round the art.
+
+**Measured:** area 3155 draws 6 cars off 6 pairs, yaws 0.1-6.2 degrees off square; each car cell
+carries 7 hatch stripes in a tactical build, open road 0. The four end faces' corners sample 79-424
+(sum of RGB) against the background's under 45, from 0.18-0.31 dark samples per face before.
+
+**Trap:** a save holding the deleted class throws on load (`Could not resolve class`). Area 3155's six
+were removed from CDP before the reload's forced autosave; a save made since the car commit and
+never cleaned this way will not load. Not released, so no shim.
+
+**Verdict:** landed.
+
+## Street kit defects: wall kits re-packed, puddles under broken downpipes, tyre stacks kept apart
+
+**Changed:** the three wall-kit glbs re-packed (`kit_build.py pack`, no script change): they were
+built before `swatch_dens` and the rod fit landed, so the downpipe shoe's kicked-out foot (a `rod`)
+still wore the pipe's whole 32 x 246 px skin strip over 0.42 units. `AreaStyle.pipePuddle`
+(slums: the pack's puddle, row 7 col 4): `StreetProps.downpipe` returns a `DebrisSpot` for a broken
+pipe, `PUDDLE_OUT` 0.8 off the wall, and the city's debris list takes them. `StreetProps.deal`
+STACK: one leant tyre and one lying per side at most, the leaner slid 0.05 off the stack's line where
+it slid r/2, since every leaner stood at one depth and two of them passed through each other.
+
+**Measured:** shoe foot 451 x 1014 -> 116 x 116 px/u (pipe skin ~69); area 3155: 70 puddles, 79
+tyres, 0 overlapping leaner pairs and 0 overlapping ground pairs (the reported pair stood 0.34 apart,
+each ~1.0 across). `demo()` deals 40 full stacks against the rule.
+
+**Trap:** a glb built before a buildlib fix keeps the old map until it is re-exported, and `make
+models` reports it up to date: compare the glb's mtime with buildlib's.
 
 **Verdict:** landed.

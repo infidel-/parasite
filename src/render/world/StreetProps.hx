@@ -11,7 +11,9 @@ import render.Chunks;
 import render.Models.InstancedProp;
 import render.Models.PropPlace;
 import render.world.AreaStyle.GroundProp;
+import render.world.Debris.DebrisSpot;
 import render.world.Pile.PileKind;
+import game.AreaGame;
 import citygen.CityGen;
 import render.world.roofs.Gables;
 
@@ -64,13 +66,17 @@ class StreetProps
   static inline var STACK_OFF = 0.05;
   static inline var TRIES = 10;
   static inline var CLOSE = 0.65;
+  // a broken downpipe's puddle: its centre off the wall, past the pipe (0.18 out) by about its own half
+  // length, so its art stays on the open ground
+  static inline var PUDDLE_OUT = 0.8;
 
   static var checked = false;
 
 // lay the area style's wall kit out over the city WorldCtx holds, then merge it per chunk once the
 // kit glb is in. `done` gets the chunks: right away when the glb is cached (the boot warm loads it),
-// on the loader callback otherwise, when the caller's fader has to adopt their proxies
-  public static function build(scene:Scene, done:Array<KitChunk>->Void):Void
+// on the loader callback otherwise, when the caller's fader has to adopt their proxies. returns the
+// puddles under the broken downpipes, litter for the street's debris decals
+  public static function build(scene:Scene, done:Array<KitChunk>->Void):Array<DebrisSpot>
     {
       if (!checked)
         {
@@ -79,8 +85,9 @@ class StreetProps
             js.Browser.console.warn('[street-props] self-check FAILED');
         }
       var st = WorldCtx.style;
+      var puddles:Array<DebrisSpot> = [];
       if (st.wallKit == null)
-        return;
+        return puddles;
       var list:Array<KitPlace> = [];
       for (b in WorldCtx.buildings)
         {
@@ -88,7 +95,11 @@ class StreetProps
           var cols = WorldCtx.winCols.get(b);
           if (cols != null &&
               b.buriedH == 0)
-            downpipe(b, cols, st, fireEscape(b, cols, st, list), list);
+            {
+              var pool = downpipe(b, cols, st, fireEscape(b, cols, st, list), list);
+              if (pool != null)
+                puddles.push(pool);
+            }
           if (st.serviceChance > 0)
             service(b, st, list);
         }
@@ -96,6 +107,7 @@ class StreetProps
         {
           done(merge(scene, t, list));
         });
+      return puddles;
     }
 
 // a fire escape over two neighbouring window columns of one face, clear of that face's doors: the
@@ -129,12 +141,13 @@ class StreetProps
 
 // a downpipe down the wall beside one end window column, on the fire escape's face when there is one
 // and at the end away from it: the hopper head under the roofline (headTop), a length per window
-// floor, the shoe at the foot. a broken one (AreaStyle.downpipeBroken) has lost its shoe and one length
-  static function downpipe(b:Building, cols:Array<WorldCtx.WinCol>, st:AreaStyle, fe:Array<WorldCtx.WinCol>, list:Array<KitPlace>):Void
+// floor, the shoe at the foot. a broken one (AreaStyle.downpipeBroken) has lost its shoe and one length,
+// and returns the puddle it leaves (puddle); null otherwise
+  static function downpipe(b:Building, cols:Array<WorldCtx.WinCol>, st:AreaStyle, fe:Array<WorldCtx.WinCol>, list:Array<KitPlace>):DebrisSpot
     {
       var h = hash(b, 2);
       if (h % 1000 >= st.downpipeChance * 1000)
-        return;
+        return null;
       var dirs:Array<Int> = [];
       for (c in cols)
         if (dirs.indexOf(c.dir) < 0)
@@ -177,8 +190,31 @@ class StreetProps
             key: 'head',
             m: at(x, headTop(b, st) - HOPPER_H, z, e.rotY),
           });
-          return;
+          return (broken && st.pipePuddle != null ? puddle(x, z, e.rotY, h, st) : null);
         }
+      return null;
+    }
+
+// the puddle a broken downpipe leaves at its foot: the style's pipePuddle pack cell, laid PUDDLE_OUT
+// off the wall at (x, z) along the face's outward normal, sized and turned off the building's hash
+  static function puddle(x:Float, z:Float, rotY:Float, h:Int, st:AreaStyle):DebrisSpot
+    {
+      var px = x + Math.sin(rotY) * PUDDLE_OUT;
+      var pz = z + Math.cos(rotY) * PUDDLE_OUT;
+      var c = CityConfig.worldToCell(px, pz);
+      var ix = st.pipePuddle[0];
+      var iy = st.pipePuddle[1];
+      return {
+        col: c.col,
+        row: c.row,
+        dx: px / CELL + GRID / 2 - 0.5 - c.col,
+        dy: pz / CELL + GRID / 2 - 0.5 - c.row,
+        scale: st.debrisSizes[iy][ix] * (0.8 + 0.4 * ((h >> 20) % 1000) / 1000),
+        angle: (h >> 6) % 1000 / 1000 * 2 * Math.PI,
+        ix: ix,
+        iy: iy,
+        img: st.debrisPack,
+      };
     }
 
 // where a downpipe's hopper head tops out, under whatever the roofline over it does (Buildings picks
@@ -390,6 +426,48 @@ class StreetProps
       return [for (path in order) Models.instanced(scene, path, batches.get(path), heights.get(path), SOLID)];
     }
 
+// the slums' car wrecks, render-only: game.CityAreaGenerator.placeCars parks each over two road cells
+// along one walkway and flips both to Const.TILE_ROAD_UNWALKABLE, which nothing else in a city does,
+// so every such pair IS a car. the shell stands over the pair's middle, its length (model x) along it
+// and its local -z to the kerb, parked SlumsStyle.CAR_KERB in toward the kerb and turned up to
+// CAR_TURN off square, pulled back off the kerb by what the turn swings its corner out. one batch
+  public static function wrecks(scene:Scene, area:AreaGame):InstancedProp
+    {
+      var places:Array<PropPlace> = [];
+      for (row in 0...GRID)
+        for (col in 0...GRID)
+          {
+            // each pair once, off its west or north cell
+            var east = wreck(area, col + 1, row);
+            if (!wreck(area, col, row) ||
+                (!east &&
+                !wreck(area, col, row + 1)))
+              continue;
+            // the kerb: the walkway beside the pair, across its length
+            var k = -1;
+            for (d in (east ? [0, 1] : [2, 3]))
+              if (area.getCellType(col + Std.int(DX[d]), row + Std.int(DZ[d])) == Const.TILE_WALKWAY)
+                k = d;
+            if (k < 0)
+              continue;
+            var turn = ((cellHash(col, row, -1) >> 4) % 1000 / 1000.0 - 0.5) * 2 * SlumsStyle.CAR_TURN;
+            var c = cellToWorld(col + (east ? 0.5 : 0.0), row + (east ? 0.0 : 0.5));
+            var kerb = SlumsStyle.CAR_KERB - SlumsStyle.CAR_HALF * Math.abs(Math.sin(turn));
+            places.push({
+              x: c.x + DX[k] * kerb,
+              z: c.z + DZ[k] * kerb,
+              yaw: Geom.faceRotY(OPP[k]) + turn,
+            });
+          }
+      return Models.instanced(scene, RenderConfig.MODELS.cityCarWreck, places, SlumsStyle.CAR_H, SOLID);
+    }
+
+// is this cell one of a car wreck's two? false off the grid
+  static inline function wreck(area:AreaGame, col:Int, row:Int):Bool
+    {
+      return area.getCellType(col, row) == Const.TILE_ROAD_UNWALKABLE;
+    }
+
 // deal one pile's pieces at `s`, each handed to `put` with the height it is drawn at: a HEAP scattered
 // over the spot, a STACK piled flat with the rest stood on edge or lying beside, a LOAD over its bed
   static function deal(p:Pile, s:PileSpot, put:String->Float->PropPlace->Void):Void
@@ -458,14 +536,30 @@ class StreetProps
               }
             // the rest stood on the tread in front, leant back on the stack (a positive pitch tips the
             // top toward the wall; it turns about the bottom face's centre, so the tread is lifted back
-            // onto the ground by the radius), or lying flat on one side of it
+            // onto the ground by the radius), or lying flat on one side of it. ONE to each of those
+            // three places: two stood within a radius of each other, or two lying on one side, passed
+            // through one another. a piece whose place is taken takes another, and with all three
+            // taken it is not laid
+            var front = false;
+            var sides = [false, false];
             for (_ in flat...n)
               {
                 var part = draw(p.parts, s.rng);
-                if (s.rng() < 0.6)
+                var side = (s.rng() < 0.5 ? 0 : 1);
+                if (sides[side])
+                  side = 1 - side;
+                var stand = !front &&
+                  (s.rng() < 0.6 ||
+                  sides[side]);
+                if (!stand &&
+                    sides[side])
+                  continue;
+                if (stand)
                   {
+                    front = true;
                     var pitch = Math.PI / 2 - 0.25 - s.rng() * 0.15;
-                    lay(part, a0 + (s.rng() - 0.5) * r, d0 + r + STACK_OFF, {
+                    // kept square on the stack, so its rim clears a tyre lying either side
+                    lay(part, a0 + (s.rng() - 0.5) * 0.1, d0 + r + STACK_OFF, {
                       x: 0,
                       z: 0,
                       y: r * Math.sin(pitch),
@@ -475,13 +569,16 @@ class StreetProps
                     });
                   }
                 else
-                  lay(part, a0 + (s.rng() < 0.5 ? -1 : 1) * (2 * r + 0.1 + s.rng() * 0.3),
-                    r + STACK_OFF + s.rng() * 0.5, {
-                      x: 0,
-                      z: 0,
-                      yaw: s.rng() * 2 * Math.PI,
-                      scale: sc,
-                    });
+                  {
+                    sides[side] = true;
+                    lay(part, a0 + (side * 2 - 1) * (2 * r + 0.1 + s.rng() * 0.3),
+                      r + STACK_OFF + s.rng() * 0.5, {
+                        x: 0,
+                        z: 0,
+                        yaw: s.rng() * 2 * Math.PI,
+                        scale: sc,
+                      });
+                  }
               }
           case LOAD:
             var cos = Math.cos(s.yaw);
@@ -856,6 +953,26 @@ class StreetProps
         max: 3,
       }, spot, take);
       ok = ok && got.length == 3 && got[0].y < 1e-9;
+      // and a full stack keeps its extras apart: one leant on it at most, and nothing on the ground
+      // within a tyre's width of anything else there
+      for (seed in 0...40)
+        {
+          got = [];
+          spot.rng = CityGen.mulberry32(seed);
+          deal({
+            kind: STACK,
+            parts: [ part ],
+            min: 5,
+            max: 5,
+          }, spot, take);
+          var ground = [for (pl in got) if (pl.y < 1e-9) pl];
+          for (a in ground)
+            for (b in ground)
+              if (a != b &&
+                  Math.sqrt((a.x - b.x) * (a.x - b.x) + (a.z - b.z) * (a.z - b.z)) < 0.7)
+                ok = false;
+          ok = ok && [for (pl in got) if (pl.pitch != null && pl.pitch > 1) pl].length <= 1;
+        }
       got = [];
       spot.yaw = Math.PI / 2;
       deal({

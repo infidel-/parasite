@@ -32,7 +32,8 @@ class CityArea implements Area3D
   var sounds:CitySounds;                                  // the tier's beds, the street's loops and one-shots
   var sceneRef:Scene;                                     // the built scene, for refreshObjects
   var props:Array<render.world.ObjModels.PropBatch>;     // the object props (dumpsters), culled per frame
-  var groundProps:Array<render.Models.InstancedProp> = []; // the street's ground props, culled per frame
+  var groundProps:Array<render.Models.InstancedProp> = []; // the street's ground props and car wrecks, culled per frame
+  var puddles:Array<render.world.Debris.DebrisSpot> = [];  // the litter under the wall kit's broken downpipes
   var steam:render.world.SteamPuffs;                      // the plumes off the steam stacks
   var kits:Array<render.world.KitChunk> = [];             // the wall kit per chunk, its slices synced to the fader per frame
   var tactical = false;                                   // tactical view up: the props show their outline
@@ -79,8 +80,8 @@ class CityArea implements Area3D
       render.world.WorldCtx.doorBlocked = null;
       // the wall kit, merged per building and tagged with it. a cached glb (the boot warm loads it)
       // lands right here, before the occlusion pass below buckets the scene; a late one is handed to
-      // the fader
-      render.world.StreetProps.build(scene, function(kc)
+      // the fader. the puddles under its broken downpipes join the street litter (debris)
+      puddles = render.world.StreetProps.build(scene, function(kc)
         {
           kits = kc;
           if (occlusion != null)
@@ -99,6 +100,7 @@ class CityArea implements Area3D
         blocked.set(o.y * CityConfig.GRID + o.x, true);
       var vents:Array<Vector3> = [];
       groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k], vents);
+      groundProps.push(render.world.StreetProps.wrecks(scene, game.area));
       steam = new render.world.SteamPuffs(scene, vents);
       chunks.build(scene, pre);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
@@ -169,13 +171,13 @@ class CityArea implements Area3D
       return RenderConfig.CAMERA;
     }
 
-// seed-derived street debris (render-only, deterministic from the seed — no save cost); old
-// seedless saves (seed -1) get none
+// seed-derived street debris (render-only, deterministic from the seed — no save cost), and the
+// puddles under the broken downpipes; old seedless saves (seed -1) get the puddles alone
   public function debris():Array<render.world.Debris.DebrisSpot>
     {
       if (seed == -1)
-        return null;
-      return render.world.Debris.build(seed, cityModel.tiles, game.area.typeID, game.area.highCrime, style);
+        return puddles;
+      return render.world.Debris.build(seed, cityModel.tiles, game.area.typeID, game.area.highCrime, style).concat(puddles);
     }
 
 // re-bind after a settings change rebuilt the live spotlight pool (View.setLampLights)
@@ -217,27 +219,7 @@ class CityArea implements Area3D
             if (isBuilding(col, row + 1))
               return Math.PI;
             return 0;
-          // away from the walkway, so the shell's length (its model x) runs along the kerb toward the
-          // cell game.CityAreaGenerator.carTail parked its tail on
-          case KERB:
-            if (isWalkway(col, row - 1))
-              return 0;
-            if (isWalkway(col - 1, row))
-              return Math.PI / 2;
-            if (isWalkway(col + 1, row))
-              return -Math.PI / 2;
-            return Math.PI;
         }
-    }
-
-// is this cell on the grid and a walkway?
-  inline function isWalkway(col:Int, row:Int):Bool
-    {
-      return col >= 0 &&
-        row >= 0 &&
-        col < CityConfig.GRID &&
-        row < CityConfig.GRID &&
-        cityModel.tiles[row][col] == Tile.Walkway;
     }
 
 // is this cell a building (off the grid counts as one, as citygen's own edge tests do)?

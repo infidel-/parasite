@@ -3963,7 +3963,7 @@
         1
       ],
       "note": "the CITY wall kit: a black-iron fire escape (floor / base platform modules) and a cast-iron downpipe (pipe / shoe / head), models-src/city/kit/wallkit.py, sheet textures-src/city/wallkit-city.png. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair. lift 0.72: the black iron sampled 31, and against the night brick it was not there at gameplay zoom; lifted to the outdoor family's ~57 it reads as dark painted iron.",
-      "last_converted": "2026-10-17T17:56:35Z",
+      "last_converted": "2026-10-17T20:20:41Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.4,0.4,0.4,1/lf0.72/rf1",
       "lift": 0.72
     },
@@ -3979,7 +3979,7 @@
         1
       ],
       "note": "the SLUMS wall kit: the same modules wearing wallkit-slums.png, an edit_image off the city sheet that kept its layout (rust, a tin downpipe). models-src/city/kit/wallkit-slums.py. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair.",
-      "last_converted": "2026-10-17T17:56:35Z",
+      "last_converted": "2026-10-17T20:20:41Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.48,0.48,0.48,1/rf1"
     },
     "city/wallkit-downtown": {
@@ -3994,7 +3994,7 @@
         1
       ],
       "note": "the DOWNTOWN service-wall kit: galvanised conduit runs, a riser into a junction box, a louvred intake (conduit / riser / louvre), models-src/city/kit/wallkit-downtown.py, sheet textures-src/city/wallkit-downtown.png. baseColor is a FLAT scalar: the sheet came back bright galvanised (luma 97-144), against an outdoor family of 46-52. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair.",
-      "last_converted": "2026-10-17T17:51:10Z",
+      "last_converted": "2026-10-17T20:20:41Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.09,0.09,0.09,1/rf1"
     },
     "city/sack-burlap": {
@@ -4144,7 +4144,7 @@
         0.39,
         1
       ],
-      "last_converted": "2026-10-17T19:30:34Z",
+      "last_converted": "2026-10-17T20:20:19Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.39,0.39,0.39,1/rf1"
     },
     "city/mattress": {

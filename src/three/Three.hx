@@ -413,6 +413,9 @@ typedef RendererInfo = {
   public var count:Int; // instances actually drawn (<= allocated); trimmed per frame by Models.cull
   public function setMatrixAt(i:Int, m:Matrix4):Void;
   public function getMatrixAt(i:Int, m:Matrix4):Void; // reads one instance's transform back out
+  // the instances' union sphere raycast tests first: built off the first `count` instances on the
+  // first raycast and cached, null rebuilds it on the next
+  public var boundingSphere:Sphere;
   // per-instance colour, multiplied into the material's own. NULL until the first setColorAt, and
   // its existence is what compiles USE_INSTANCING_COLOR into the program
   public var instanceColor:InstancedBufferAttribute;

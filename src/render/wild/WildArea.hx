@@ -126,8 +126,7 @@ class WildArea implements Area3D
     {
       switch (mode)
         {
-          // KERB is the city street's alone
-          case FRONTAL, WALL, KERB:
+          case FRONTAL, WALL:
             return 0;
           case HASHED:
             return (WildModel.mix((col * 40503151) ^ (row * 57885161)) % 3600) / 3600.0 * 2 * Math.PI;

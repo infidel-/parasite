@@ -105,10 +105,11 @@ class CityAreaGenerator
       placeCars(area);
     }
 
-// park car wrecks along slum kerbs, spaced apart: two road cells each, end to end along the kerb, the
-// first holding the object (objects.CarWreck, which the 3D view draws over both) and both flipped to
-// their unwalkable twin, as the burning barrels are. a pair is only taken where the road runs on past
-// it, so a wreck narrows a street and never closes one
+// park car wrecks along slum kerbs, spaced apart: two road cells each, end to end along the kerb, both
+// flipped to their unwalkable twin and nothing else. a wreck is decoration, not an object: the 3D view
+// draws one over every such pair (render.world.StreetProps.wrecks), since nothing else in a city
+// makes a road cell unwalkable. a pair is only taken where the road runs on past it, so a wreck
+// narrows a street and never closes one
   function placeCars(area: AreaGame)
     {
       if (area.typeID != AREA_CITY_LOW)
@@ -139,17 +140,15 @@ class CityAreaGenerator
               area.hasObjectAt(pt.x, pt.y) ||
               area.hasObjectAt(pt.x + Const.dir4x[pt.tail], pt.y + Const.dir4y[pt.tail]))
             continue;
-          new CarWreck(game, area.id, pt.x, pt.y);
           gen.makeTileUnwalkable(area, pt.x, pt.y);
           gen.makeTileUnwalkable(area, pt.x + Const.dir4x[pt.tail], pt.y + Const.dir4y[pt.tail]);
           placed.push(pt);
         }
     }
 
-// can a wreck's front cell stand here: the Const.dir4x/dir4y index of its tail cell, or -1. both
+// can a wreck's first cell stand here: the Const.dir4x/dir4y index of its second cell, or -1. both
 // cells empty road along exactly one walkway on the same side, and road again beyond both away from
-// the kerb. the tail is the side render.CityArea.objYaw KERB turns the shell toward: facing away from
-// the kerb at (fx, fy), its length runs along (fy, -fx)
+// the kerb: facing away from the kerb at (fx, fy), its length runs along (fy, -fx)
   function carTail(area: AreaGame, x: Int, y: Int): Int
     {
       var k = kerbOf(area, x, y);

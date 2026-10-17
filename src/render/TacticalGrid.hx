@@ -251,11 +251,17 @@ class TacticalGrid
       // before it carves), so out to RADIUS 16 in every direction the lattice was hatching the
       // empty air around the building — at y = 0.06, floating 114 units above the street it looks
       // painted on. These three ids are the outdoor surfaces that are unwalkable BY BEING SCENERY
-      // rather than by something standing on them, so the rule is general and not corp's alone
+      // rather than by something standing on them, so the rule is general and not corp's alone.
+      //
+      // EXCEPT IN THE CITY, where the same three ids mean the opposite: something IS standing there.
+      // game.AreaGenerator.makeTileUnwalkable flips a street cell under a burning barrel and under
+      // both cells of a slums car wreck, which is decoration with no object of its own, so this hatch
+      // is the only thing in tactical that says the street is blocked there
       var t = area.getCellType(col, row);
-      if (t == Const.TILE_ALLEY_UNWALKABLE ||
+      if (!area.isCity() &&
+          (t == Const.TILE_ALLEY_UNWALKABLE ||
           t == Const.TILE_ROAD_UNWALKABLE ||
-          t == Const.TILE_WALKWAY_UNWALKABLE)
+          t == Const.TILE_WALKWAY_UNWALKABLE))
         return;
       var half = CityConfig.CELL / 2;
       var c = cellToWorld(col, row);

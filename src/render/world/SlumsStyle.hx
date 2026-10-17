@@ -12,10 +12,13 @@ import render.world.Pile.PileKind;
 // Ground swaps to a holed sidewalk, a cracked/patched road and a dirt alley, and the houses grow
 // dead-lawn patches. Textures live under textures/slums/.
 class SlumsStyle {
-  // the car wreck (objects.CarWreck): its drawn height (the glb's, half-metre units x 0.77, as every
-  // street piece) and how far it is parked in from its cell's middle toward the kerb
+  // the car wreck (render.world.StreetProps.wrecks): its drawn height (the glb's, half-metre units x
+  // 0.77, as every street piece) and half its drawn length (the glb's 7.4 at that scale), how far it is
+  // parked in from its cells' middle toward the kerb, and how far it may stand turned off square
   public static inline var CAR_H = 1.93;
+  public static inline var CAR_HALF = 2.84;
   public static inline var CAR_KERB = 0.4;
+  public static inline var CAR_TURN = 0.15;
   static var _s:AreaStyle;
   public static function get():AreaStyle {
     if (_s == null) {
@@ -198,6 +201,8 @@ class SlumsStyle {
       s.fireEscapeChance = 0.5;
       s.downpipeChance = 0.6;
       s.downpipeBroken = 0.6;
+      // and a broken one empties onto the ground: the pack's puddle at its foot
+      s.pipePuddle = [4, 7];
       // the junk: sacks heaped beside most dumpsters, and along the walls a cart, tyres, and in the
       // alleys a mattress. the heaps, the stacks and the cart's load are DEALT per cell from separate
       // pieces (render.world.Pile). heights are the glbs' (half-metre units x 0.77, CityStyle.DUMPSTER_H's

@@ -139,6 +139,7 @@ class AreaStyle {
   public var fireEscapeChance:Float = 0; // odds a windowed building carries a fire escape over two of its window columns
   public var downpipeChance:Float = 0;   // odds a windowed building carries a downpipe beside its end window column
   public var downpipeBroken:Float = 0;   // odds a downpipe has lost its foot and one length
+  public var pipePuddle:Array<Int> = null; // the debrisPack cell [col, row] laid as a puddle at a broken downpipe's foot; null = none
   public var serviceChance:Float = 0;    // odds an open service (worn) wall carries a conduit run, a riser and a louvre
   public var groundProps:Array<GroundProp> = null; // the street's ground props (StreetProps.ground); null = none
   public var debrisPack:String = null; // the street litter PACK64 (Images.getImage name); null = the shared entities64 rows

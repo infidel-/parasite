@@ -31,8 +31,6 @@ typedef PropBatch = {
 // this only says WHICH rule to ask for
 enum PropYaw {
   WALL;    // back to the adjacent wall — a ladder is bracketed to masonry and reads wrong free-standing
-  KERB;    // front away from the one walkway beside it, its length along the kerb: a car wreck
-           // parked over its cell and the next one along (render.CityArea.objYaw)
   HASHED;  // full-circle turn hashed off the cell, so four of a prop in one level are not clones.
            // no habitat organ takes it any more — see FRONTAL — but it is the right rule for a prop
            // that has no front at all, which is most tunnel clutter
@@ -1432,33 +1430,6 @@ class ObjModels
       off: [
         0.0,
         -render.world.CityStyle.DUMPSTER_SLUMS_BACK,
-      ],
-      noGhost: true,
-      noCast: true,
-      unmasked: true,
-    },
-    // the slums' car wrecks (objects.CarWreck), parked along the kerb over their own cell and the next:
-    // KERB turns the shell's length that way and `off` slides it half a cell along onto the pair
-    {
-      keys: [ 'car_wreck' ],
-      path: RenderConfig.MODELS.cityCarWreck,
-      h: render.world.SlumsStyle.CAR_H,
-      sink: 0.0,
-      yaw: KERB,
-      light: null,
-      anim: null,
-      pulse: null,
-      curl: null,
-      core: null,
-      fly: null,
-      shine: null,
-      eyes: null,
-      lamps: null,
-      arc: null,
-      tether: null,
-      off: [
-        CityConfig.CELL / 2,
-        -render.world.SlumsStyle.CAR_KERB,
       ],
       noGhost: true,
       noCast: true,

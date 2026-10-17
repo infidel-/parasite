@@ -329,6 +329,13 @@ class PolyProbe {
       ndc.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
       ndc.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
       ray.setFromCamera(ndc, camera);
+      // an instanced batch caches the sphere its raycast tests first off the instances packed at the
+      // FIRST pick, and render.Models.cull repacks them every frame, so once the camera moved a batch
+      // missed every later pick and the ground behind it answered instead: rebuild it on every pick
+      getScene().traverse(function(o) {
+        if ((cast o).isInstancedMesh)
+          (cast o : InstancedMesh).boundingSphere = null;
+      });
       for (h in ray.intersectObjects(getScene().children, true)) {
         var face:Dynamic = h.face;
         var obj = h.object;
