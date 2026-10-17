@@ -1295,3 +1295,30 @@ chunk pass into the 0:0 chunk and grows that chunk's sphere over the whole city;
 mesh on its contents is what lets it cull with its own chunk.
 
 **Verdict:** landed. Supersedes the per-building merge in the street wall kit entry.
+
+## Dumpster UVs: one isotropic density per swatch, the lid plastic off a whole rib panel
+
+**Changed:** `buildlib.swatch_dens` + `unwrap(dens=)` / `finish(dens=)` (additive; every other
+caller unchanged): per rect VALUE, the one texel density, equal on both axes in pixels, that every
+fitted face wearing it still fits. `kit_build` passes it for every city piece and fits a `rod`'s
+facets (axes 5) instead of laying the whole swatch over each. `kit/dumpster.py`: the lid plastic is a
+30 x 400 px rib panel (was the 12 px gap between two ribs), laid per face along its long axis after
+the lid is swung; the plate and rib tops lose their quarter turn on a lid thrown back; caster tyres
+wrap seven mirrored copies of a 30 px square; the bags a 125 x 110 px bag, mirrored, folding on a
+vertex of the oval section.
+
+**Measured** (`uvaniso.py`, sparse-axis texels per unit at 1024, area-weighted): city bin median
+41 -> 137, area under 30 px/u 11.3% -> 0%, anisotropy > 3 12.7% -> 0.2%; slums bin 39 -> 137,
+15.4% -> 1.4% (bag necks), 17.0% -> 2.3%. The reported faces: lid edges 2.9 x 96 px/u, the top lip
+85 x 41, a grab-bar facet 172 px across 0.03 units. Gates 0/0/1, tris unchanged (1,852 / 2,860).
+
+**Trap:** `unwrap`'s `scale` crops a rect to `faceExtent / scale` on EACH axis, so the density is
+`rectW / scale` along u and `rectH / scale` along v: one density only for a SQUARE rect. Every
+non-square swatch smeared one way, and `buildlib.check`'s `texel_off` is isotropic (sqrt of uv area
+over area) so it never saw it. A per-swatch minimum is only as good as the swatch: a strip serves an
+edge along its length only, and one face across it drags every face wearing it down (the thrown-back
+lid's standing sides took the plastic to 15 px/u until each face was laid along the strip). A
+MIRRORED lathe over a `roundrect` section folds mid-face unless the seam sits on a vertex.
+
+**Verdict:** landed for both dumpsters. The other city pieces still carry the per-axis maps (cart
+31% under 30 px/u, recycling 31%, planter 18%, tree 13%, tyres 25% anisotropic) until re-exported.
