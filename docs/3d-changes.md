@@ -923,7 +923,8 @@ uploaded: its own Repeat set was a second, unused upload of every door and grime
 
 **Left:** CorpMerge still disposes the maps it merges, so 7 facility maps with no other user free and
 re-upload on every facility load (20 uploads where HEAD did 100). The remaining +30 live textures per
-area entry are canvases and data textures that `Textures` never made.
+area entry are shadow maps, canvases and the bloom chain, not `Textures` art; see "Bloom pass freed on
+rebuild" for which of them actually held VRAM.
 
 **Verdict:** landed.
 
@@ -976,5 +977,33 @@ like a missing warm key. Load a manual slot for both builds.
 **Not done:** the planned builder hot spots (isWornFace cache, owner index, a FaceUV flattenBox). With
 P2 in, World.build over the three warm cities was 540ms with isWornFace 6ms, coveredEdges 4ms and
 Ground runs 9ms. The warm now builds representatives, and a real city entry builds in 84-157ms.
+
+**Verdict:** landed.
+
+
+## Bloom pass freed on rebuild; warm bloom keeps its materials only (`View.disposeBuild`, `Warmup.compile`)
+
+**Changed:** `View.disposeBuild` now calls `bloomPass.dispose()` next to `gtaoPass.dispose()`.
+`Warmup.compile` names its throwaway `UnrealBloomPass` and, after the render, disposes its 11 render
+targets (`renderTargetsHorizontal`/`Vertical`, `renderTargetBright`) but NOT its materials. The
+extern gained those three fields and a minimal `WebGLRenderTarget { dispose }`.
+
+**Measured:** reloading slot 7 (MEDIUM city), the Windows GPU counter for the game process. Before,
+10 loads: after a forced GC **1045 → 1199 MB** (~16 MB kept per load), peaks 1238 → 1354. After,
+10 loads: **940 → 939 MB**, peaks ≤ 1106; programs **77 on every load** (nothing recompiles). Live
+GL textures at the prompt **167-177 → 155-156**. Bloom on vs off still differs only around lit
+windows and the path line.
+
+**Trap:** `renderer.info.memory.textures` (+31-36 per load before, +25 after) counts what nobody
+DISPOSED, not live VRAM. Chromium frees a WebGL texture when its JS wrapper is collected, so the
+per-build shadow maps (moon 2048², 8 lamp spots 512²), the Debris atlas 768x3328 and the Sprites
+crops all go at GC. What GC could not take was the bloom chain: three's `WebGLShaderCache.materialCache`
+holds every material until `material.dispose()`, and the blur/composite materials' uniforms point at
+the mip-chain targets (found by a heap snapshot retainer path). Disposing the warm pass whole would
+release the bloom programs the moment the first real build disposes its own pass, and every load
+would recompile them; its undisposed materials are what keep them.
+
+**Left:** the GC-reclaimed garbage (~80-100 MB per load) still sits until V8 collects; disposing the
+lights' shadows and the per-build Sprites cache on rebuild would flatten the sawtooth, nothing leaks.
 
 **Verdict:** landed.

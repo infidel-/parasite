@@ -130,9 +130,10 @@ class Warmup
       // and the shockwave pass are disabled/on-demand and compile on toggle regardless
       var comp = new EffectComposer(renderer);
       comp.addPass(new RenderPass(sc, camera));
-      comp.addPass(new UnrealBloomPass(
+      var bloom = new UnrealBloomPass(
         new Vector2(Browser.window.innerWidth, Browser.window.innerHeight),
-        RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD));
+        RenderConfig.BLOOM_STRENGTH, RenderConfig.BLOOM_RADIUS, RenderConfig.BLOOM_THRESHOLD);
+      comp.addPass(bloom);
       comp.addPass(new OutputPass());
       renderer.setRenderTarget(comp.renderTarget1);
       var p:Dynamic = renderer.compileAsync(sc, camera);
@@ -161,6 +162,12 @@ class Warmup
           for (o in culled)
             o.frustumCulled = true;
           comp.dispose();
+          // the bloom mip chain is GPU memory nothing draws into again, so it goes; the bloom
+          // MATERIALS stay, because they are what keep the bloom programs alive for every real build
+          // (render.View.disposeBuild frees the real pass whole, which would otherwise release them)
+          for (rt in bloom.renderTargetsHorizontal.concat(bloom.renderTargetsVertical))
+            rt.dispose();
+          bloom.renderTargetBright.dispose();
           hold.push(sc);
           return null;
         });

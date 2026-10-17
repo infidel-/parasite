@@ -974,6 +974,10 @@ void main() {
       // orphans 3 render targets + 2 noise textures in three's cache on every rebuild
       if (gtaoPass != null)
         gtaoPass.dispose();
+      // and the bloom pass kept its whole mip chain forever, not just until GC: three's shader cache
+      // holds every undisposed material, and its blur materials' uniforms point at those targets
+      if (bloomPass != null)
+        bloomPass.dispose();
     }
 
 // dispose every geometry + material in the current scene graph. textures are shared and cached

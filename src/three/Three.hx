@@ -536,6 +536,14 @@ typedef Ray = {
 @:native("THREE.UnrealBloomPass") extern class UnrealBloomPass {
   public function new(resolution:Vector2, strength:Float, radius:Float, threshold:Float);
   public var enabled:Bool;
+  public var renderTargetsHorizontal:Array<WebGLRenderTarget>; // one per mip of the blur chain, first blur direction
+  public var renderTargetsVertical:Array<WebGLRenderTarget>;   // the same chain, second blur direction
+  public var renderTargetBright:WebGLRenderTarget;             // the high-pass input of the chain
+  public function dispose():Void; // frees its mip-chain RTs and materials — composer.dispose() does NOT touch passes
+}
+// an offscreen framebuffer; only what the render code frees by hand
+@:native("THREE.WebGLRenderTarget") extern class WebGLRenderTarget {
+  public function dispose():Void; // deletes its GL texture + framebuffer; the JS object may live on
 }
 // ground-truth ambient occlusion; renders its own depth + normal prepass of the scene each frame,
 // so it is enabled-gated (a disabled pass is skipped whole by the composer) — see render.View.setAO
