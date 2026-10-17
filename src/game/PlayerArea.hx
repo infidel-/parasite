@@ -29,6 +29,7 @@ class PlayerArea extends _SaveObject
   var actionTS: Float; // last time player moved on a path/did action
   public var currentAction(default, null): _PlayerAction; // current continuous action
   var isCultLeaveConfirmed: Bool; // confirmed leaving followers in combat
+  public var hiddenIn: Int; // id of the object the parasite hides inside (objects.Dumpster), -1 none
 
   // state "parasite"
 
@@ -52,12 +53,20 @@ class PlayerArea extends _SaveObject
       attachHold = 0;
       attachHost = null;
       attachHostID = -1;
+      hiddenIn = -1;
       knownObjects = new List<String>();
       knownObjects.add('body');
       knownObjects.add('pickup');
       knownObjects.add('habitat');
       knownObjects.add('nutrients');
       entity = new PlayerEntity(game, x, y);
+    }
+
+// called before loading: this object outlives a load, so a save made before hiding existed must
+// not inherit the current session's hiding place
+  public function init()
+    {
+      hiddenIn = -1;
     }
 
 // called post-loading game
@@ -121,6 +130,18 @@ class PlayerArea extends _SaveObject
 // get actions list (area mode)
   public function updateActionList()
     {
+      // hiding inside an object: climbing out is all there is (the HUD adds Wait on its own)
+      if (isHidden())
+        {
+          game.ui.hud.addAction({
+            id: 'climbOut',
+            type: ACTION_AREA,
+            name: 'Climb out',
+            energy: 0,
+          });
+          return;
+        }
+
       var base = (game.cults.length > 0 ? game.cults[0].base : null);
       if (base != null &&
           game.area.isHabitat &&
@@ -398,6 +419,9 @@ class PlayerArea extends _SaveObject
       // try to leave area
       else if (action.id == 'leaveArea')
         ret = leaveAreaAction(action);
+      // climb out of the hiding place
+      else if (action.id == 'climbOut')
+        ret = climbOutAction();
       // wait
       else if (action.id == 'skipTurn')
         game.turn();
@@ -1207,6 +1231,10 @@ class PlayerArea extends _SaveObject
 // returns true on success
   public function moveBy(dx: Int, dy: Int): Bool
     {
+      // hiding: a step is a climb out onto that cell
+      if (isHidden())
+        return climbOut(x + dx, y + dy, true);
+
       // if player tries to move when attached, that detaches the parasite
       if (state == PLR_STATE_ATTACHED)
         detachAction();
@@ -1314,6 +1342,62 @@ class PlayerArea extends _SaveObject
         o.onMoveTo();
 
       return true;
+    }
+
+
+// is the parasite hiding inside an object? read against the area rather than trusted, so an id
+// left behind by an area change, a death or a teleport reads false instead of hiding the player
+// somewhere it is not
+  public function isHidden(): Bool
+    {
+      if (hiddenIn < 0 ||
+          game.location != LOCATION_AREA)
+        return false;
+      var o = game.area.getObject(hiddenIn);
+      return (o != null &&
+        o.x == x &&
+        o.y == y);
+    }
+
+// slip inside an object: the parasite takes its cell, which nobody can walk onto, and is gone from
+// every AI's sight until it climbs out (Player.invisibleToAI)
+  public function hideIn(o: AreaObject)
+    {
+      clearPath();
+      x = o.x;
+      y = o.y;
+      entity.setPosition(x, y);
+      hiddenIn = o.id;
+    }
+
+// climb out of the hiding place onto (nx,ny). doPost ends the action here (a step does, the HUD
+// action leaves that to PlayerArea.action). returns true on success
+  function climbOut(nx: Int, ny: Int, doPost: Bool): Bool
+    {
+      if (!game.area.isWalkable(nx, ny) ||
+          game.area.hasAI(nx, ny))
+        {
+          game.actionFailed('Something blocks the way out.');
+          return false;
+        }
+      log('You climb out of the ' + game.area.getObject(hiddenIn).getName() + '.');
+      hiddenIn = -1;
+      return moveTo(nx, ny, doPost);
+    }
+
+// action: climb out onto the first free cell around the hiding place
+  function climbOutAction(): Bool
+    {
+      for (i in 0...Const.dirx.length)
+        {
+          var nx = x + Const.dirx[i];
+          var ny = y + Const.diry[i];
+          if (game.area.isWalkable(nx, ny) &&
+              !game.area.hasAI(nx, ny))
+            return climbOut(nx, ny, false);
+        }
+      game.actionFailed('Something blocks the way out.');
+      return false;
     }
 
 

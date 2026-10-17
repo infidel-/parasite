@@ -105,7 +105,7 @@ class ChoirOfDiscord extends AI
         }
 
       // check for player if not invisible
-      if (!game.player.vars.invisibilityEnabled &&
+      if (!game.player.invisibleToAI() &&
           seesPosition(game.playerArea.x, game.playerArea.y))
         hasTargets = true;
 

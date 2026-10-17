@@ -809,6 +809,7 @@ class Const
   public static var FRAME_BURNING_BARREL = 2;
   public static var FRAME_SUMMONING_PORTAL = 3;
   public static var FRAME_BROKEN_PORTAL = 4;
+  public static var FRAME_DUMPSTER = 5;
   public static var FRAME_CLONE_VAT = FRAME_SUMMONING_PORTAL;
   public static var FRAME_CLONE_VAT_FLUSHED = FRAME_BROKEN_PORTAL;
 

@@ -327,7 +327,8 @@ class LampShadows {
             render.facility.FacilityDeco.spriteScale(game.area, o) >= 1.0 &&
             !noCast(o))
           actorShadow(o.entity, barrelLights, lampOut, lampIn);
-      if (game.player.state == _PlayerState.PLR_STATE_PARASITE)
+      if (game.player.state == _PlayerState.PLR_STATE_PARASITE &&
+          !game.playerArea.isHidden())
         actorShadow(game.playerArea.entity, barrelLights, lampOut, lampIn);
     }
 

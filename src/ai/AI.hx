@@ -665,7 +665,7 @@ public function show()
           y2 = Std.int(Math.max(y2, enemy.y));
         }
       // add player x,y if hostile
-      if (!game.player.vars.invisibilityEnabled &&
+      if (!game.player.invisibleToAI() &&
           !isPlayerCultist())
         {
           x1 = Std.int(Math.min(x1, game.playerArea.x));
@@ -1395,9 +1395,13 @@ public function show()
       // check player first if hostile
       if (!isPlayerCultist())
         {
-          if (!game.player.vars.invisibilityEnabled &&
+          if (!game.player.invisibleToAI() &&
               seesPosition(game.playerArea.x, game.playerArea.y))
             return true;
+          if (isTracing &&
+              game.playerArea.isHidden() &&
+              seesPosition(game.playerArea.x, game.playerArea.y))
+            traceAI('AI', 'alert: player hidden in object, not seen');
         }
 
       // check enemies list
@@ -1448,7 +1452,7 @@ public function show()
         }
 
       // check for parasite
-      if (!game.player.vars.invisibilityEnabled &&
+      if (!game.player.invisibleToAI() &&
           !isPlayerCultist() &&
           seesPosition(game.playerArea.x, game.playerArea.y))
         {
@@ -1521,7 +1525,7 @@ public function show()
         }
 
       // check for parasite
-      if (!game.player.vars.invisibilityEnabled &&
+      if (!game.player.invisibleToAI() &&
           !isPlayerCultist())
         {
           // no host or attached

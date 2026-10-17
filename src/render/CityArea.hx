@@ -66,7 +66,14 @@ class CityArea implements Area3D
       // model key, so a ship part dropped on the street would be invisible — no sprite and no prop.
       // see render.world.ObjModels.active
       render.world.ObjModels.active = false;
+      // a back door must not open onto a dumpster standing against its wall
+      var bins = new Map<Int, Bool>();
+      for (o in game.area.getObjects())
+        if (o.type == 'dumpster')
+          bins.set(o.y * CityConfig.GRID + o.x, true);
+      render.world.WorldCtx.doorBlocked = function(col, row) return bins.exists(row * CityConfig.GRID + col);
       World.build(scene, cityModel, seed, style);
+      render.world.WorldCtx.doorBlocked = null;
       chunks.build(scene, pre);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
       sounds = new CitySounds(game, cityModel, flickCells, coneFlick);

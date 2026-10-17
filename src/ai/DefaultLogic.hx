@@ -82,11 +82,17 @@ class DefaultLogic
           return;
         }
 
+      // the parasite hiding inside an object sits in plain view and is not seen
+      if (ai.isTracing &&
+          game.playerArea.isHidden() &&
+          ai.seesPosition(game.playerArea.x, game.playerArea.y))
+        ai.traceAI('DefaultLogic', 'idle: player hidden in object, not seen');
+
       // full affinity + consent results in ignore
       if (ai.isAgreeable())
         ai.alertness -= 5;
       // player visibility
-      else if (!game.player.vars.invisibilityEnabled &&
+      else if (!game.player.invisibleToAI() &&
           ai.seesPosition(game.playerArea.x, game.playerArea.y))
         {
           var distance = game.playerArea.distance(ai.x, ai.y);

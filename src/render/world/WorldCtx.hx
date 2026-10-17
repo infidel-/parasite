@@ -65,6 +65,10 @@ class WorldCtx {
   // sprayed onto an office wall stood 1.12 units clear of it, reported as decals hanging in the air.
   // same contract as `ground` above — the area kind that sets it owns clearing it
   public static var wallFace:(Int, Int, Int)->Float = null;
+  // is (col,row) a cell a door must not open onto, because the area keeps something solid standing
+  // there (objects.Dumpster)? null = none. render.CityArea sets it for its own build alone and clears
+  // it right after, so a warm city or the next area never reads a stale one
+  public static var doorBlocked:(Int, Int)->Bool = null;
   // per-area render style (textures + facade behavior) for this build; DEFAULT = residential
   public static var style:AreaStyle;
 

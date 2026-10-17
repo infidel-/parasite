@@ -329,9 +329,11 @@ class Actors {
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
       // the host's head (the host itself is still drawn by the AI loop above); once in a
-      // host the parasite is hidden inside it and only the ring marks the player
+      // host the parasite is hidden inside it and only the ring marks the player; hiding inside an
+      // object (objects.Dumpster) fades it out the same way
+      var hidden = game.playerArea.isHidden();
       if (st == _PlayerState.PLR_STATE_PARASITE)
-        drawActor(game.playerArea.entity, true, dtMs);
+        drawActor(game.playerArea.entity, !hidden, dtMs);
       else if (st == _PlayerState.PLR_STATE_ATTACHED)
         drawActor(game.playerArea.entity, true, dtMs, {
           baseY: ATTACH_HEAD_Y,
@@ -360,7 +362,7 @@ class Actors {
       // green slime trail behind the free parasite (render-only ribbon): only while it crawls the
       // ground, not while riding on / hidden inside a host. head = its smoothed billboard pos
       slimeTrail.update(dtMs,
-        st == _PlayerState.PLR_STATE_PARASITE && pp != null,
+        st == _PlayerState.PLR_STATE_PARASITE && !hidden && pp != null,
         pp != null ? pp.x : pw.x,
         pp != null ? pp.z : pw.z);
       lampShadows.bodyAndShadows(dtMs);

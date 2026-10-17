@@ -247,6 +247,21 @@ class AreaGame extends _SaveObject
       return true;
     }
 
+// does any unfriendly, alerted AI see this cell? the gate on slipping out of sight (objects.Dumpster).
+// alerted is ALERT or either SEARCH state; the player's own cultists and agreeable AI are no threat
+  public function hostileSees(x: Int, y: Int): Bool
+    {
+      for (ai in _ai)
+        if ((ai.state == AI_STATE_ALERT ||
+            ai.state == AI_STATE_SEARCH_LAST_SEEN ||
+            ai.state == AI_STATE_SEARCH_AREA) &&
+            !ai.isPlayerCultist() &&
+            !ai.isAgreeable() &&
+            ai.seesPosition(x, y))
+          return true;
+      return false;
+    }
+
 // a random empty cell in a military base's wild margin, off the fence ring: where the player arrives
 // on foot, with no sewers to come up through
   function findOutsideLocation(): _Point

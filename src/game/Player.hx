@@ -457,6 +457,13 @@ class Player extends _SaveObject
         (min <= 2 && evolutionManager.isActive));
     }
 
+// can no AI see the player at all: the debug flag, or the parasite hiding inside an object
+  public inline function invisibleToAI(): Bool
+    {
+      return vars.invisibilityEnabled ||
+        game.playerArea.isHidden();
+    }
+
 // returns true when player is in mission area
   public inline function inMissionArea(): Bool
     {

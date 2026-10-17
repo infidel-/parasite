@@ -33,6 +33,11 @@ class __Math
       else if (game.location == LOCATION_AREA && game.area.isHabitat)
         energy = game.area.habitat.parasiteEnergyRestored * time;
 
+      // barely any while hiding inside an object (objects.Dumpster), still and out of sight
+      else if (game.location == LOCATION_AREA &&
+          game.playerArea.isHidden())
+        energy = -1;
+
       // lose some energy
       // do not multiple by time since we account for that in the player vars
       else if (game.location == LOCATION_AREA)

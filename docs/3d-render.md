@@ -241,6 +241,7 @@ back) — grep the change text.
 | Wall decals: albedo tint, shadow receipt, per-image classes | 2–3.5× too bright → `WALLDECAL_TINT`; fixes an editor crash | **landed** |
 | `CityStyle` extracted; textures sorted `city/decals/fx` | no visual change; 144/144 texture paths verified | **landed** |
 | Weeds in medium courtyards | 4 style knobs + 1 texture, zero render code, 1 draw call | **landed** |
+| **Hideable dumpster: the parasite fades out inside it; back doors skip its cell** (`Actors` `vis=false` while `PlayerArea.isHidden`, `WorldCtx.doorBlocked` ending a `Geom.doorRuns` run) | 6 dumpsters per regenerated MEDIUM city; `[check]` PASS, noBackDoor 0; slime trail and fake shadow off while hidden | **landed. sprite fallback off a keyed 64 px cut of `dumpster-src` until the glb** |
 | 3D sewers (`AREA_SEWERS` + `AREA_HABITAT`) | `Area3D` seam; tunnels from the SAVED cell grid, no seed; **30 calls / 5.4k tris** per level | **landed** |
 | ^ sewer fill at city intensities | renders **black**, not dim — fill IS the frame with no moon; needed ~4× against the near-black first art | **trap — see the entry** |
 | ^ 16-cell chunking for sewers | 4× the calls to buy culling that saves no fill; nothing fades down there | **rejected — dropped from the plan** |

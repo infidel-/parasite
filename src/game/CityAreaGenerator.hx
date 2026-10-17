@@ -19,6 +19,10 @@ import citygen.CityModel.Tile;
 
 class CityAreaGenerator
 {
+  static inline var DUMPSTERS_LOW = 8; // dumpsters per slums block
+  static inline var DUMPSTERS_MEDIUM = 6; // and per ordinary city block
+  static inline var DUMPSTER_SPACING = 10; // minimum cells between two dumpsters
+  static var checked = false;
   var game: Game;
   var gen: AreaGenerator;
   // carved inner-courtyard rects from the last generate() (enclosed open pockets); barrels go here
@@ -91,6 +95,129 @@ class CityAreaGenerator
 
       // impassable burning barrels on low-tier streets
       placeBurningBarrels(area);
+
+      // and the hideable dumpsters in the back alleys of the two lower tiers
+      placeDumpsters(area);
+    }
+
+// place dumpsters against back-alley walls on the two lower tiers, spaced apart. persisted objects,
+// solid through Dumpster.isWalkable and NOT a tile flip: rebuildCells regenerates the tiles from the
+// seed on old saves and would erase one
+  function placeDumpsters(area: AreaGame)
+    {
+      if (!checked)
+        {
+          checked = true;
+          if (!demo())
+            js.Browser.console.warn('[dumpster] ring self-check FAILED');
+        }
+      var amount = switch (area.typeID)
+        {
+          case AREA_CITY_LOW: DUMPSTERS_LOW;
+          case AREA_CITY_MEDIUM: DUMPSTERS_MEDIUM;
+          default: 0;
+        };
+      if (amount == 0)
+        return;
+
+      // every candidate cell, then random picks off that list that keep their distance
+      var spots = [];
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          if (isDumpsterSpot(area, x, y))
+            spots.push({ x: x, y: y });
+      var placed = [];
+      while (spots.length > 0 &&
+          placed.length < amount)
+        {
+          var pt = spots.splice(Std.random(spots.length), 1)[0];
+          var near = false;
+          for (old in placed)
+            if (Const.distanceSquared(pt.x, pt.y, old.x, old.y) <
+                DUMPSTER_SPACING * DUMPSTER_SPACING)
+              near = true;
+          if (near)
+            continue;
+          new Dumpster(game, area.id, pt.x, pt.y);
+          placed.push(pt);
+        }
+    }
+
+// can a dumpster stand here: an empty alley cell with exactly ONE building beside it (a bin stands
+// against a wall, and a one-wide gap between two buildings is a passage it would plug), whose open
+// neighbours stay one group around it, so the bin cuts no route
+  function isDumpsterSpot(area: AreaGame, x: Int, y: Int): Bool
+    {
+      if (area.getCellType(x, y) != Const.TILE_ALLEY ||
+          area.hasObjectAt(x, y))
+        return false;
+      var walls = 0;
+      for (i in 0...Const.dir4x.length)
+        if (area.getCellType(x + Const.dir4x[i], y + Const.dir4y[i]) == Const.TILE_BUILDING)
+          walls++;
+      if (walls != 1)
+        return false;
+      return ringConnected(function(i: Int) {
+        return isOpen(area.getCellType(x + Const.dirx[i], y + Const.diry[i]));
+      });
+    }
+
+// is this a tile anybody can walk on (barrel cells are flipped to their unwalkable twins)?
+  static inline function isOpen(c: Int): Bool
+    {
+      return c == Const.TILE_ROAD ||
+        c == Const.TILE_ALLEY ||
+        c == Const.TILE_WALKWAY ||
+        c == Const.TILE_CROSSWALKV ||
+        c == Const.TILE_CROSSWALKH;
+    }
+
+// do the open cells of the eight around a cell (open(i) over Const.dirx/diry) form ONE group, joined
+// 8-way the way everything here walks? false means blocking the middle cell splits them
+  static function ringConnected(open: Int->Bool): Bool
+    {
+      var ring = [];
+      for (i in 0...Const.dirx.length)
+        if (open(i))
+          ring.push(i);
+      if (ring.length == 0)
+        return false;
+      var seen = [ ring[0] ];
+      var queue = [ ring[0] ];
+      while (queue.length > 0)
+        {
+          var a = queue.pop();
+          for (b in ring)
+            if (seen.indexOf(b) < 0 &&
+                Math.abs(Const.dirx[a] - Const.dirx[b]) <= 1 &&
+                Math.abs(Const.diry[a] - Const.diry[b]) <= 1)
+              {
+                seen.push(b);
+                queue.push(b);
+              }
+        }
+      return seen.length == ring.length;
+    }
+
+// self-check of ringConnected on three hand-drawn neighbourhoods
+  static function demo(): Bool
+    {
+      // open(i) from a 3x3 picture, row by row, the middle ignored
+      function pic(rows: Array<String>): Int->Bool
+        {
+          return function(i: Int) {
+            return rows[Const.diry[i] + 1].charAt(Const.dirx[i] + 1) == '.';
+          };
+        }
+      // a one-wide corridor: blocking it splits the two ends
+      var corridor = !ringConnected(pic([ '#.#', '#.#', '#.#' ]));
+      // a bin against one wall of a wide alley: the far side goes round
+      var wall = ringConnected(pic([ '...', '...', '###' ]));
+      // the inside of an L-bend: the two arms still meet at the corner
+      var bend = ringConnected(pic([ '##.', '#..', '...' ]));
+      return corridor &&
+        wall &&
+        bend;
     }
 
 // place impassable burning barrels inside low-tier carved inner courtyards: enclosed open pockets

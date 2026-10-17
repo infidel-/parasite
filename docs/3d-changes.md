@@ -1007,3 +1007,24 @@ would recompile them; its undisposed materials are what keep them.
 lights' shadows and the per-build Sprites cache on rebuild would flatten the sawtooth, nothing leaks.
 
 **Verdict:** landed.
+
+
+## Hideable dumpster: the parasite fades out inside it; back doors skip its cell (`Actors`, `WorldCtx.doorBlocked`)
+
+**Changed:** `objects.Dumpster` is a persisted city object (`CityAreaGenerator.placeDumpsters`: 8 on
+LOW, 6 on MEDIUM, alley cells with exactly one building beside them, 10 cells apart, and only where
+the open cells around stay one 8-connected group). While the parasite hides in one,
+`render.Actors` draws it with `vis=false` (the same fade the host invade uses), the slime trail and
+`LampShadows`' player shadow stop, and the ring stays on the bin's cell. `CityArea.build` hands
+`World.build` the dumpster cells through `WorldCtx.doorBlocked`, which ends a `Geom.doorRuns` run the
+way a neighbour's wall does, and clears it right after so warm cities never read it.
+
+**Measured:** a regenerated MEDIUM city (seed 1028134918) placed 6 dumpsters, all non-walkable;
+`[check]` PASS with noBackDoor 0. The fallback sprite is entities64 16/5, a keyed LANCZOS cut of
+`models-src/dumpster-src.png` pasted by `tools/atlaspaste.py --cols 1 --cell 1024`; it reads as a
+dark low box in the alley shadow.
+
+**Trap:** an object's 64 px cell is still needed with no 2D view running: the sprite fallback, the
+outline and `LampShadows` all read it. An empty cell draws nothing, so the bin would be invisible.
+
+**Verdict:** landed. The glb replaces the sprite in the next phase.
