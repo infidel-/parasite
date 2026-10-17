@@ -10,6 +10,7 @@ import render.RenderConfig;
 import render.Models.InstancedProp;
 import render.Models.PropPlace;
 import render.world.AreaStyle.GroundProp;
+import render.world.roofs.Gables;
 
 // one module of a wall kit set down on a building
 typedef KitPlace = {
@@ -37,6 +38,9 @@ class StreetProps
   static inline var RUN_Y = 4.3;
   static inline var RISER_HALF = 0.6;
   static inline var LOUVRE_HALF = 0.75;
+  // the open hopper head's height (wallkit.py HH): its module stands on its floor, its stub reaching
+  // down over the run's last length
+  static inline var HOPPER_H = 0.4;
   // a kerb prop's centre in from the kerb line, how far one may slide along its kerb or wall either
   // way, and the gap a wall prop keeps off its wall
   static inline var KERB_IN = 0.8;
@@ -106,8 +110,8 @@ class StreetProps
     }
 
 // a downpipe down the wall beside one end window column, on the fire escape's face when there is one
-// and at the end away from it: the hopper head under the roofline, a length per window floor, the
-// shoe at the foot. a broken one (AreaStyle.downpipeBroken) has lost its shoe and one length
+// and at the end away from it: the hopper head under the roofline (headTop), a length per window
+// floor, the shoe at the foot. a broken one (AreaStyle.downpipeBroken) has lost its shoe and one length
   static function downpipe(b:Building, cols:Array<WorldCtx.WinCol>, st:AreaStyle, fe:Array<WorldCtx.WinCol>, list:Array<KitPlace>):Void
     {
       var h = hash(b, 2);
@@ -153,10 +157,26 @@ class StreetProps
           list.push({
             b: b,
             key: 'head',
-            m: at(x, b.h - CityConfig.TOP_MARGIN, z, e.rotY),
+            m: at(x, headTop(b, st) - HOPPER_H, z, e.rotY),
           });
           return;
         }
+    }
+
+// where a downpipe's hopper head tops out, under whatever the roofline over it does (Buildings picks
+// the roof the same way): a gable's eave slab; the cap of a brick parapet, which is flush with the
+// wall and whose cap starts 0.18 under its top (Parapets.addParapet); and a concrete coping, which
+// hangs PARAPET_EMBED below the roofline and juts 0.37 off the wall. a head at the old
+// b.h - TOP_MARGIN stood INSIDE that coping band and z-fought its underside, and behind brick it hung
+// 1.4 under the cap
+  static function headTop(b:Building, st:AreaStyle):Float
+    {
+      if (Gables.isGabled(b))
+        return b.h - RenderConfig.GABLE_THICK - 0.05;
+      if (b.shop < 0 &&
+          st.isMasonry(b.facade))
+        return b.h + RenderConfig.PARAPET_H_BRICK - 0.18 - 0.04;
+      return b.h - RenderConfig.PARAPET_EMBED - 0.04;
     }
 
 // a downtown service wall: on each open run of a worn face, a conduit run the run's whole length

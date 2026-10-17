@@ -144,6 +144,8 @@ class DecalBatch
       // (dropping the fade). force a unique key so the patched program stays ours
       untyped mat.customProgramCacheKey = function() return 'decalInstanceAlpha';
       var mesh = new InstancedMesh(geo, mat, CAP);
+      // named for its atlas (Sprites.atlasTex), so a probe click says which batch it hit
+      mesh.name = 'decals ' + atlas.name;
       // our own cull isn't needed (decals are few + the count trims the tail); but three's coarse
       // whole-mesh cull uses a stale boundingSphere as instances shuffle, so disable it
       untyped mesh.frustumCulled = false;
@@ -195,6 +197,7 @@ class DecalBatch
       geo.setAttribute('instanceAlpha', attr);
       geo.setAttribute('instanceUV', uvAttr);
       var mesh = new InstancedMesh(geo, g.mat, newCap);
+      mesh.name = g.mesh.name;
       untyped mesh.frustumCulled = false;
       untyped mesh.renderOrder = Sprites.ORD_DECAL;
       mesh.receiveShadow = true; // carried over from make() — the replacement mesh must still receive

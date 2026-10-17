@@ -116,6 +116,20 @@ class CityStyle {
       s.lawnPatchChance = 0.01;
       // the street litter: its own PACK64 (render.decals.Debris)
       s.debrisPack = 'debris-city';
+      // each litter cell's drawn longest side in world units, a row of the pack per line: the art
+      // draws every cell the same size, so this is what keeps a matchbox off the scale of a flattened
+      // box. pocket things about twice life so they still read at the street camera, the big flat
+      // ones (rows 6-7) about life size
+      s.debrisSizes = [
+        [0.25, 0.25, 0.2, 0.2, 0.32, 0.18, 0.3, 0.2],     // cans, caps, butts, coffee cup, lid, straw, gum
+        [0.25, 0.35, 0.45, 0.18, 0.18, 0.25, 0.25, 0.15], // receipt, flyer, poster scrap, ticket, scratch card, envelope, napkin, wrapper
+        [0.3, 0.25, 0.18, 0.25, 0.2, 0.2, 0.3, 0.18],     // burger wrapper, fries, sachets, crust, candy wrapper, fork, chopsticks, slip
+        [0.25, 0.45, 0.3, 0.5, 0.45, 0.4, 0.32, 0.3],     // maple leaf, twigs, feathers, plastic bag, newspaper, magazine page, bottles
+        [0.28, 0.2, 0.35, 0.12, 0.15, 0.15, 0.15, 0.12],  // glove, sunglasses, cable, earbud, keys, coins, rubber bands, clips
+        [0.15, 0.12, 0.3, 0.4, 0.3, 0.3, 0, 0.2],         // cigarette packet, matchbook, six-pack ring, paper bag, leaves, needles, acorns (no oak on a street), tissue
+        [0.6, 0.8, 1.0, 1.1, 0.6, 1.2, 0.8, 0.7],         // pizza box, newspaper spread, cardboard, oil stain, coffee spill, puddle, grit, skid rubber
+        [0.9, 1.0, 0.6, 0.6, 0.6, 0.4, 0.35, 0.9],        // leaf pile, umbrella, spilled shopping, glass cubes, map, chips bag, cup carrier, tarp
+      ];
       // black-iron fire escapes on a third of the windowed blocks, cast-iron downpipes on half
       s.wallKit = render.RenderConfig.MODELS.cityWallKit;
       s.fireEscapeChance = 0.35;

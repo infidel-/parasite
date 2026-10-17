@@ -885,6 +885,8 @@ class Sprites {
       // own alpha
       var tex = new CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;
+      // named for the image, so the polygon probe reports which atlas a batched decal is cut from
+      tex.name = imageName;
       // mipmaps OFF: cells sit edge-to-edge, so a coarse mip averages neighbouring cells into each
       // other and a decal would sample its neighbour's pixels at distance. the per-cell crops could
       // mip safely because each owned its own texture; an atlas cell cannot. decals radius-fade out

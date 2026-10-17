@@ -138,6 +138,7 @@ class AreaStyle {
   public var serviceChance:Float = 0;    // odds an open service (worn) wall carries a conduit run, a riser and a louvre
   public var groundProps:Array<GroundProp> = null; // the street's ground props (StreetProps.ground); null = none
   public var debrisPack:String = null; // the street litter PACK64 (Images.getImage name); null = the shared entities64 rows
+  public var debrisSizes:Array<Array<Float>> = null; // each debrisPack cell's drawn longest side in world units, [row][col]; 0 = never laid
 
   public function new() {}
 

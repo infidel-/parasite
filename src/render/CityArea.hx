@@ -170,7 +170,7 @@ class CityArea implements Area3D
     {
       if (seed == -1)
         return null;
-      return render.world.Debris.build(seed, cityModel.tiles, game.area.typeID, game.area.highCrime, style.debrisPack);
+      return render.world.Debris.build(seed, cityModel.tiles, game.area.typeID, game.area.highCrime, style);
     }
 
 // re-bind after a settings change rebuilt the live spotlight pool (View.setLampLights)

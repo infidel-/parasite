@@ -7,7 +7,9 @@ import citygen.CityModel.Tile;
 
 // one placed debris fragment: a cell + sub-cell offset (fractional, -0.5..0.5), draw transform,
 // and the atlas cell (ix=col, iy=row) to crop, off `img` (a litter pack's Images.getImage name) or
-// off entities64 when it is null. render-only — never persisted
+// off entities64 when it is null. `scale` is a factor on Sprites.SIZE for an entities64 cell and the
+// drawn longest side in world units for a pack cell (AreaStyle.debrisSizes). render-only — never
+// persisted
 typedef DebrisSpot = { col:Int, row:Int, dx:Float, dy:Float, scale:Float, angle:Float, ix:Int, iy:Int, ?img:String };
 
 // seed-deterministic street-debris scatter for the 3D city. rebuilt from the seed on every city
@@ -17,10 +19,11 @@ typedef DebrisSpot = { col:Int, row:Int, dx:Float, dy:Float, scale:Float, angle:
 // burning barrels are NOT here — they change walkability, so they stay real persisted objects
 class Debris {
 
-// build the debris list for a city: iterate street tiles, roll per tier, emit fragments. `pack` is
-// the tier's litter PACK64 (AreaStyle.debrisPack), null for the shared entities64 rows
-  public static function build(seed:Int, tiles:Array<Array<Tile>>, typeID:_AreaType, highCrime:Bool, pack:String):Array<DebrisSpot>
+// build the debris list for a city: iterate street tiles, roll per tier, emit fragments. off the
+// tier's litter PACK64 (AreaStyle.debrisPack) when it has one, the shared entities64 rows otherwise
+  public static function build(seed:Int, tiles:Array<Array<Tile>>, typeID:_AreaType, highCrime:Bool, style:AreaStyle):Array<DebrisSpot>
     {
+      var pack = style.debrisPack;
       var rng = citygen.CityGen.mulberry32(seed);
       var spots:Array<DebrisSpot> = [];
       var g = CityConfig.GRID;
@@ -45,7 +48,20 @@ class Debris {
               addFragment(spots, x, y, (pack != null ? Const.DEBRIS_PACK_STATIC : Const.STREET_DEBRIS_STATIC),
                 false, rng, ok, pack);
           }
-      return spots;
+      // a pack cell is drawn at its own size and not at the cluster's random scale: the art draws a
+      // matchbox and a flattened box the same size in their cells. a cell sized 0 is never laid
+      if (style.debrisSizes == null)
+        return spots;
+      var out = [];
+      for (s in spots)
+        {
+          var size = style.debrisSizes[s.iy][s.ix];
+          if (size <= 0)
+            continue;
+          s.scale = size * (0.8 + 0.4 * rng());
+          out.push(s);
+        }
+      return out;
     }
 
 // drop a transformable debris cluster: a center pile plus a radial scatter of smaller piles

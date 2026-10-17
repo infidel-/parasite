@@ -172,6 +172,20 @@ class SlumsStyle {
       s.lawnCourtPatches = 2;
       // the street litter: its own PACK64 (render.decals.Debris)
       s.debrisPack = 'debris-slums';
+      // each litter cell's drawn longest side in world units, a row of the pack per line: the art
+      // draws every cell the same size, so this is what keeps a matchbox off the scale of a flattened
+      // box. pocket things about twice life so they still read at the street camera, the big flat
+      // ones (rows 6-7) about life size
+      s.debrisSizes = [
+        [0.25, 0.25, 0.25, 0.2, 0.3, 0.3, 0.2, 0.2],      // cans, tin, bottle neck, green and clear shards, caps, butts
+        [0.5, 0.5, 0.28, 0.5, 0.45, 0.35, 0.3, 0.25],     // plastic bag, bin-bag scrap, paper ball, newspaper, cardboard, flyer, wrapper, bones
+        [0.15, 0.25, 0.2, 0.15, 0.25, 0.12, 0.15, 0.18],  // apple core, banana peel, crust, egg shells, noodles, matchsticks, blister pack, nails
+        [0.4, 0.18, 0.4, 0.4, 0.6, 0.12, 0.45, 0.45],     // wire, bolts, brick, rubble, plank, can lid, tyre scrap, rag
+        [0.32, 0.25, 0.16, 0.2, 0.1, 0.25, 0.15, 0.15],   // shoe, sock, comb, spoon and fork, batteries, cassette, cards, toy car
+        [0.3, 0.32, 0.15, 0.12, 0.1, 0.15, 0.15, 0.35],   // brown bottle, plastic bottle, CD, cigarette packet, matchbox, wrappers, stubs, string
+        [1.0, 0.8, 0.6, 1.1, 1.0, 1.0, 0.5, 0.7],         // flattened box, newspaper pages, foam, oil stain, puddle stain, scorch, screen glass, ash
+        [0.9, 0.9, 1.0, 1.1, 1.3, 0.8, 0.9, 1.0],         // dead leaves, rubble, tarp, pallet slats, puddle, glass and gravel, blanket, garbage
+      ];
       // rusted fire escapes on half the windowed buildings, and tin downpipes that have mostly lost
       // their feet
       s.wallKit = render.RenderConfig.MODELS.cityWallKitSlums;

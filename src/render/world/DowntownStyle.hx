@@ -179,6 +179,20 @@ class DowntownStyle {
       s.helipadFacades = [2, 3]; // glass skyscrapers only (light + dark); not concrete/stone mid-rises or the sleek high-rise
       // the street litter: its own PACK64 (render.decals.Debris)
       s.debrisPack = 'debris-downtown';
+      // each litter cell's drawn longest side in world units, a row of the pack per line: the art
+      // draws every cell the same size, so this is what keeps a matchbox off the scale of a flattened
+      // box. pocket things about twice life so they still read at the street camera, the big flat
+      // ones (rows 6-7) about life size
+      s.debrisSizes = [
+        [0.18, 0.18, 0.18, 0.32, 0.12, 0.12, 0.25, 0.15], // business card, transit card, lid, coffee cup, butt, gum, receipt, sachet
+        [0.25, 0.3, 0.4, 0.25, 0.3, 0.2, 0.3, 0.25],      // ginkgo, plane leaf, twig, petals, mulch, pebbles, confetti, ribbon
+        [0.12, 0.2, 0.15, 0.2, 0.28, 0.35, 0.2, 0.15],    // earbud, pen, badge clip, sunglasses, glove, umbrella sleeve, phone case, key card
+        [0.45, 0.45, 0.35, 0.2, 0.25, 0.3, 0.28, 0.28],   // newspaper, financial page, flyer, ticket stub, parking ticket, salad lid, wrappers
+        [0.1, 0.25, 0.25, 0.3, 0.25, 0.4, 0.25, 0.2],     // bottle cap, cans, smoothie cup, napkin, paper bag, receipt curl, tissue
+        [0.15, 0.12, 0.12, 0.12, 0.3, 0.08, 0.1, 0.15],   // cigarette packet, lighter, mints tin, sachet, face mask, button, hair tie, tea bag
+        [0.8, 0.8, 0.9, 0.6, 0.6, 1.2, 0.8, 0.9],         // newspaper spread, delivery box, umbrella, shopping bag, coffee stain, puddle, leaves, scarf
+        [0.9, 0.9, 0.5, 0.4, 0.8, 0.6, 0.35, 0.4],        // ginkgo pile, plane leaves, laptop sleeve, feathers, leaves and petals, cups, beanie, cable
+      ];
       // no fire escapes on a tower: its service walls carry conduit, junction boxes and intakes instead
       s.wallKit = render.RenderConfig.MODELS.cityWallKitDowntown;
       s.serviceChance = 0.6;

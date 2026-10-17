@@ -1230,3 +1230,37 @@ as a direction. Measure saturation as well as value on any redraw, and never des
 the subject list that the source does not carry.
 
 **Verdict:** landed.
+
+
+## Street kit and litter defect pass: blurry iron, hopper heads in the coping, struts on windows, giant litter
+
+**Changed:** reported from the free cam, nine faults. **Kit** (`models-src/city/kit/wallkit.py`,
+`wallkit-downtown.py`, unversioned): every swatch is now a whole cell with its edges trimmed, and
+`tex` 512 -> 1024 on all three kits; the bracket struts moved to x ±2.22, outside the window columns
+(glass and surround reach 2.1), where at ±1.7 each strut came down onto the window below; a toe
+plate closes the hatch's open front; the BASE deck is whole (no stair leaves it) with the drop
+ladder stowed on its front in two guides; the `head` module is an OPEN hopper (four walls and a
+floor, a scupper spout) on a 1.8 socket stub a size up from the pipe. `StreetProps.headTop` stands
+it under whatever the roofline does: a gable's eave slab, a brick parapet's cap (`b.h + 0.78`), a
+concrete coping band (`b.h - PARAPET_EMBED - 0.04`). **Litter:** `AreaStyle.debrisSizes` gives each
+pack cell its drawn longest side in world units (pocket things ~2x life, the big flat rows ~life);
+`world.Debris.build` takes the style and overwrites the cluster's random scale with it, a cell sized
+0 is never laid (the city's acorns), and `DECAL.debrisPackScale` is gone. `Sprites.atlasTex` names
+its texture and `DecalBatch` its mesh (`decals debris-city`), so a probe click on litter says what
+it hit.
+
+**Measured:** iron 10 -> ~97 texels a unit, pipe skin 34 -> 68 (ground 57). Gates 0/0/1 on every
+module; floor 652 -> 664 tris, base 624, head 64 -> 100. City litter: median 0.26 units, matchbook
+0.10-0.14 (was up to 1.34), cup lid ~0.2, 0 acorns of 694 pieces. **Draw calls:** the reported 869
+was the FREE CAM; at the gameplay camera on the same spot the frame is **247**, and detaching every
+kit and street-prop mesh takes it to 236 (+11). At the free-cam pose the same A/B gave 873 / 844
+(+29, 17 of them kit). No call moved with this pass.
+
+**Trap:** the head was placed at `b.h - TOP_MARGIN`, which is where the pipe run ends, not where
+the roof is: a concrete coping hangs 0.6 under the roofline and juts 0.37, so the hopper sat inside
+it and its floor z-fought the band's underside; behind brick it hung 1.4 under the cap. A head has
+to be placed off the roof `Buildings` actually emits. **Second:** `buildlib.check` counts co-facing
+faces closer than 0.01, so a 3 cm plate against 3 cm balusters or a 3 cm hopper wall has no legal
+spot; the walls went to 4 cm and the plate behind the balusters.
+
+**Verdict:** landed.
