@@ -992,6 +992,21 @@ class Const
     { row: 46, col: 1, amount: 11 },
     { row: 47, col: 0, amount: 10 },
   ];
+  // the per-tier street litter PACK64s (AreaStyle.debrisPack, textures/city/debris-*.png): an 8 x 8
+  // of 128 px cells, rows 0-5 the small things a cluster scatters, rows 6-7 the big flat ones
+  public static inline var DEBRIS_PACK_CELL = 128;
+  public static var DEBRIS_PACK_TRANSFORMABLE = [
+    { row: 0, col: 0, amount: 8 },
+    { row: 1, col: 0, amount: 8 },
+    { row: 2, col: 0, amount: 8 },
+    { row: 3, col: 0, amount: 8 },
+    { row: 4, col: 0, amount: 8 },
+    { row: 5, col: 0, amount: 8 },
+  ];
+  public static var DEBRIS_PACK_STATIC = [
+    { row: 6, col: 0, amount: 8 },
+    { row: 7, col: 0, amount: 8 },
+  ];
 
   // ==============================================
   // ==============================================

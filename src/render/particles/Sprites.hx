@@ -897,7 +897,7 @@ class Sprites {
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = Images.cellSize(imageName);
       // same source box tex() crops (the +1/-1 kludge avoids atlas bleed)
       var r = uvRect(img.naturalWidth, img.naturalHeight, ix * t, iy * t + 1, t, t - 1, 1.0, 1.0);
       rectCache.set(key, r);
@@ -916,7 +916,7 @@ class Sprites {
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = Images.cellSize(imageName);
       var b = cellBox(img, t, ix, iy);
       // the scan canvas stretched t-1 source rows over t rows (that same bleed kludge), so undo the
       // scale on the way back to real atlas pixels

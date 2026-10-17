@@ -374,6 +374,11 @@ class RenderConfig {
     // the city gets the same correction and wants it: its streets are that same asphalt, so the
     // defect was identical there and simply had no bright ground beside it to be caught against
     debrisMul: 0.40,
+    // the draw size of a city tier's litter PACK64 (AreaStyle.debrisPack) against the entities64 rows it
+    // replaced. MEASURED: a pack's content box fills a median 0.72 of its 128 px cell (transformable)
+    // and 0.78 (static), the old rows 0.453 and 0.484 of their 64, so the same SIZE * fw drew every
+    // piece 1.6x the litter it replaced — a scratch card as wide as a manhole
+    debrisPackScale: 0.62,
     // how far a GROUND decal (litter, blood, bullet holes) is lifted off the floor it lies on.
     //
     // 0.12 rather than the 0.04 it ran at, and the number is not a nudge: it has to clear the tallest

@@ -170,6 +170,8 @@ class SlumsStyle {
       s.lawnChance = 0.5;
       s.lawnPatchChance = 0.03;
       s.lawnCourtPatches = 2;
+      // the street litter: its own PACK64 (render.decals.Debris)
+      s.debrisPack = 'debris-slums';
       // rusted fire escapes on half the windowed buildings, and tin downpipes that have mostly lost
       // their feet
       s.wallKit = render.RenderConfig.MODELS.cityWallKitSlums;

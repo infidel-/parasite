@@ -34,12 +34,17 @@ class Debris {
     {
       if (list == null)
         return;
-      var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.debrisMul);
+      // a scatter is cut from ONE atlas: a tier's litter pack, whose value its manifest cap already
+      // fitted to the ground (no darkening on top), or the alpha-capped entities64 rows
+      var img = (list.length > 0 ? list[0].img : null);
+      var name = (img != null ? img : 'entities');
+      var atlas = d.sprites.atlasTex(name, false, (img != null ? 1.0 : RenderConfig.DECAL.debrisMul));
       if (atlas == null)
         return;
+      var k = (img != null ? RenderConfig.DECAL.debrisPackScale : 1.0);
       for (s in list)
         {
-          var r = d.sprites.contentRect('entities', s.ix, s.iy, false);
+          var r = d.sprites.contentRect(name, s.ix, s.iy, false);
           if (r == null)
             continue;
           var w = CityConfig.cellToWorld(s.col + s.dx, s.row + s.dy);
@@ -51,7 +56,7 @@ class Debris {
           // off centre, and floorY answers about the CENTRE — see RenderConfig.DECAL.groundLift for
           // what that cost on the highway
           d.batch.add(atlas, r, w.x, WorldCtx.floorYAt(w.x, w.z) + RenderConfig.DECAL.groundLift, w.z,
-            Sprites.SIZE * r.fw * s.scale, Sprites.SIZE * r.fh * s.scale, s.angle, op, 1.0, 0.0);
+            Sprites.SIZE * r.fw * s.scale * k, Sprites.SIZE * r.fh * s.scale * k, s.angle, op, 1.0, 0.0);
         }
     }
 }

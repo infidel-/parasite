@@ -8392,9 +8392,9 @@
       "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 16 separate glowing wall panels arranged as a strict 4 x 4 grid, 4 rows of 4. Imagine the square image cut into 16 equal cells of 256 by 256 pixels. Every panel must fit ENTIRELY inside the MIDDLE 75% of its own cell, leaving a clear empty margin of at least 12% of the cell on all four sides. No panel may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 256, 512 or 768 pixels must cross NOTHING, and the same for vertical lines at x = 256, 512 and 768. Do not draw any grid lines, frames, labels or numbers - only the 16 panels. Nothing may touch the outer edges of the frame.\n\nEach panel is an isolated wall-mounted object seen PERFECTLY STRAIGHT-ON from the front, orthographic: no perspective, no tilt, no cast shadow, no wall behind it. They are the screens and lamps on the steel walls of an abandoned secret underground cloning laboratory. Screens have a thin dark steel bezel and a dark background with BRIGHT, clearly glowing graphics; readings are abstract lines and bars, never real text except where a word is quoted below.\n\nThe sixteen panels, in reading order (left to right, then top to bottom):\n1. A square wall monitor showing green vital-sign waveforms.\n2. A square wall monitor showing a cyan rotating DNA double helix.\n3. A square wall monitor showing a green rising growth chart beside a pale human silhouette.\n4. A square wall monitor showing a grainy green camera feed of a figure floating in a tank.\n5. A square wall monitor showing a cyan wireframe brain scan.\n6. A square wall monitor showing a cyan floor plan of the laboratory with blinking dots.\n7. A square wall monitor showing green dividing cells under a microscope.\n8. A square wall monitor showing amber bar graphs and a pressure dial.\n9. A long horizontal cyan wall bar lamp in a steel housing, filling the cell's width but only a quarter of its height.\n10. A long horizontal glowing cyan neon tube in a steel conduit holder, filling the cell's width but only a fifth of its height.\n11. A small square caged bulkhead wall lamp glowing pale cyan.\n12. A small round amber warning lamp in a steel cage.\n13. A square wall monitor, red background, with the word \"LOCKDOWN\" in big bold white letters.\n14. A square wall monitor, black background, red border, with the words \"CONTAINMENT BREACH\" in red letters.\n15. A square wall monitor, red background, with a white biohazard trefoil and the word \"ALERT\".\n16. A square wall monitor, dark red background, with a white padlock pictogram and the word \"SEALED\".\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
       "prompt_exact": true,
       "note": "PACK16 of the lab's glowing wall panels for render.lab.LabWall, drawn emissive: 0-7 the monitors (vitals, DNA helix, growth chart, tank feed, brain scan, floor plan, dividing cells, pressure graphs), 8 cyan bar lamp, 9 cyan neon tube, 10 caged cyan bulkhead lamp, 11 caged amber lamp, 12-15 the alarm's screens (LOCKDOWN, CONTAINMENT BREACH, ALERT, SEALED) that replace every monitor while the lead's alarm is up. tools/pack16.py --fill, aspects 1.02 1.02 1.02 1.02 / 1.03 1.03 1.03 1.02 / 2.314 2.6835 1.0068 0.9658 / 1.01 1.01 1.01 1.00, the two lamps' carried in LabWall. No cap: it is the light.",
-      "last_converted": "2026-10-14T16:13:41",
-      "built_linear": 0.0779,
-      "built_srgb": 52.5
+      "last_converted": "2026-10-16T16:15:32",
+      "built_linear": 0.0813,
+      "built_srgb": 53.4
     },
     "lab/frost": {
       "src": "lab/frost-grid.png",
@@ -8415,6 +8415,72 @@
       },
       "built_linear": 0.0969,
       "built_srgb": 86.1
+    },
+    "city/debris-slums": {
+      "src": "city/debris-slums.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.036
+      },
+      "note": "PACK64 of the slums street litter (render.decals.Debris, Const.STREET_DEBRIS_SLUMS), packed by tools/pack16.py --cols 8 --rows 8 --cell 128 --tol 4 --valign center off a sunburst-high transparent drop. The drop came back UNCUT (alpha min 29, a painted backdrop); one edit_image pass ('keep the objects, remove everything else', background transparent) re-cut it to 62% clear. Cells 0-47 are the small things the scatter clusters at random scale and turn (render.world.Debris transformable); 48-63 the big flat ones it lays square at full size. cells.cap is fitted against the ground it lies on: slums/ground-asphalt 0.0185 linear, slums/ground-alley 0.0293.",
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Imagine the square image cut into 64 equal cells of 128 by 128 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell and must be SMALL: no object may be wider or taller than 75 pixels. That leaves a wide empty margin on all four sides of every object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 128, 256, 384, 512, 640, 768 or 896 pixels must cross NOTHING, and the same for vertical lines at x = 128, 256, 384, 512, 640, 768 and 896. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects. Nothing may touch the outer edges of the frame. Each object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep all 64 objects at roughly similar scale to each other. They are the litter and rubbish of a poor, decayed slum district: everything old, rusted, rotten, torn, filthy and broken. NO BRAND LOGOS, NO LETTERING, NO WRITTEN WORDS ANYWHERE: printed paper carries only abstract grey smudge bars standing in for text. Row 1: crushed beer can, crushed soda can, dented tin can with a torn label, broken brown bottle neck, green glass shards, clear glass shards, scattered rusty bottle caps, cluster of cigarette butts. Row 2: torn plastic bag, shredded black bin-bag scrap, crumpled newspaper ball, torn newspaper sheet, soggy cardboard scrap, torn paper flyer, greasy food wrapper, gnawed chicken bones. Row 3: apple core, rotten banana peel, mouldy bread crust, broken egg shells, spilled noodles, burnt matchsticks, empty pill blister pack, rusted bent nails. Row 4: tangled rusty wire, rusted bolts and nuts, broken brick fragments, concrete rubble chunks, splintered wood plank piece, rusted can lid, shredded tyre rubber scrap, tattered grey rag. Row 5: worn-out shoe, torn sock, broken plastic comb, snapped plastic spoon and fork, two old batteries, broken cassette with unspooled tape, torn playing cards, broken toy car. Row 6: brown bottle lying on its side, crushed plastic water bottle, cracked compact disc, crushed cigarette packet, empty matchbox, sweet wrappers, torn lottery ticket stubs, tangle of string. Row 7: flattened cardboard box, spread soggy newspaper pages, chunk of torn mattress foam, dark oil stain, dried brown puddle stain, scorch mark with ash, shattered screen glass fragments, heap of ash and charcoal. Row 8: pile of dead brown leaves, scatter of rubble and grit, torn blue tarpaulin piece, broken pallet slats, murky puddle, patch of broken glass and gravel, soiled blanket corner, spilled heap of rotting garbage. [append textures.json style]",
+      "last_converted": "2026-10-17T21:04:06",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.036
+      },
+      "built_linear": 0.0345,
+      "built_srgb": 45.7
+    },
+    "city/debris-city": {
+      "src": "city/debris-city.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.058
+      },
+      "note": "PACK64 of the ordinary city street litter (render.decals.Debris, Const.STREET_DEBRIS_CITY), packed by tools/pack16.py --cols 8 --rows 8 --cell 128 --tol 4 --valign center off a sunburst-high transparent drop. The drop came back UNCUT (alpha min 166); one edit_image re-cut pass gave 61% clear. Cells 0-47 are the small things the scatter clusters at random scale and turn (render.world.Debris transformable); 48-63 the big flat ones it lays square at full size. cells.cap is fitted against the ground it lies on: city/ground-asphalt 0.0329 linear, city/ground-walkway 0.068.",
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Imagine the square image cut into 64 equal cells of 128 by 128 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell and must be SMALL: no object may be wider or taller than 75 pixels. That leaves a wide empty margin on all four sides of every object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 128, 256, 384, 512, 640, 768 or 896 pixels must cross NOTHING, and the same for vertical lines at x = 128, 256, 384, 512, 640, 768 and 896. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects. Nothing may touch the outer edges of the frame. Each object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep all 64 objects at roughly similar scale to each other. They are the everyday litter of an ordinary, busy working city district: dropped, used and worn, but not rotten. NO BRAND LOGOS, NO LETTERING, NO WRITTEN WORDS ANYWHERE: printed paper carries only abstract grey smudge bars standing in for text. Row 1: crushed red soda can, crushed silver energy-drink can, scattered bottle caps, cluster of cigarette butts, paper coffee cup on its side, white plastic cup lid, bent drinking straw, grey chewing-gum spots. Row 2: crumpled receipt, folded coloured flyer, torn poster scrap, small bus ticket, scratch-off card, parking ticket envelope, crumpled paper napkin, shiny sweet wrapper. Row 3: crumpled burger wrapper, scattered french fries, torn sauce sachets, pizza crust, candy bar wrapper, white plastic fork, wooden chopsticks, small paper slip. Row 4: orange autumn maple leaves, small twigs, grey pigeon feathers, torn plastic bag, folded newspaper, torn magazine page, crushed plastic water bottle, brown glass bottle. Row 5: lost wool glove, broken sunglasses, tangled phone charger cable, single white earbud, keys on a ring, scatter of coins, rubber bands, paper clips. Row 6: crushed cigarette packet, matchbook, plastic six-pack ring, crumpled paper bag, yellow leaves, pine needles, acorns and seeds, crumpled tissue. Row 7: flattened pizza box, spread newspaper pages, flattened cardboard sheet, dark oil stain, dried coffee spill stain, small rain puddle, spilled sand and grit, black skid scrap of rubber. Row 8: pile of orange and brown autumn leaves, broken umbrella lying open, torn shopping bag with spilled oranges, scatter of shattered car-window glass cubes, dropped folded paper map, spilled bag of chips, torn cardboard coffee carrier, crumpled blue tarp scrap. [append textures.json style]",
+      "last_converted": "2026-10-17T21:04:06",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.058
+      },
+      "built_linear": 0.0549,
+      "built_srgb": 61.5
+    },
+    "city/debris-downtown": {
+      "src": "city/debris-downtown.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.058
+      },
+      "note": "PACK64 of the downtown street litter (render.decals.Debris, Const.STREET_DEBRIS_DOWNTOWN), packed by tools/pack16.py --cols 8 --rows 8 --cell 128 --tol 4 --valign center off a sunburst-high transparent drop. Cells 0-47 are the small things the scatter clusters at random scale and turn (render.world.Debris transformable); 48-63 the big flat ones it lays square at full size. cells.cap is fitted against the ground it lies on: city/ground-asphalt 0.0329 linear (downtown's roads), downtown/ground-walkway 0.0376.",
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Imagine the square image cut into 64 equal cells of 128 by 128 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell and must be SMALL: no object may be wider or taller than 75 pixels. That leaves a wide empty margin on all four sides of every object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 128, 256, 384, 512, 640, 768 or 896 pixels must cross NOTHING, and the same for vertical lines at x = 128, 256, 384, 512, 640, 768 and 896. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects. Nothing may touch the outer edges of the frame. Each object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep all 64 objects at roughly similar scale to each other. They are the few things dropped in the clean, managed financial core of a modern city: office workers' losses, takeaway leftovers and fallen leaves from the street trees - fairly new, nothing rotten, rusted or filthy. NO BRAND LOGOS, NO LETTERING, NO WRITTEN WORDS ANYWHERE: printed paper carries only abstract grey smudge bars standing in for text. Row 1: dropped business card, plastic transit card, black coffee cup lid, white paper coffee cup, single cigarette butt, grey chewing-gum spot, folded receipt, torn sugar sachet. Row 2: yellow ginkgo leaves, green plane-tree leaf, small twig, scattered pink flower petals, bark mulch chips, smooth grey pebbles, confetti scatter, curled ribbon. Row 3: single black earbud, ballpoint pen, plastic badge clip, folded sunglasses, black leather glove, umbrella sleeve, phone case, white key card. Row 4: folded newspaper, salmon-pink financial page, glossy flyer, event ticket stub, parking ticket, clear salad box lid, chopstick wrapper, straw wrapper. Row 5: bottle cap, crushed sparkling-water can, crushed slim can, smoothie cup with straw, paper napkin, folded brown paper bag, receipt curl, tissue. Row 6: slim cigarette packet, metal lighter, small mints tin, hand sanitiser sachet, disposable face mask, loose coat button, hair tie, used tea bag. Row 7: spread newspaper pages, flattened delivery box, closed black umbrella, paper shopping bag on its side, spilled coffee stain, shallow rain puddle, small drift of brown leaves, dropped wool scarf. Row 8: pile of yellow ginkgo leaves, pile of brown plane leaves, dropped laptop sleeve, grey pigeon feathers, mixed dry leaves and petals, scattered paper cups and lids, dropped grey beanie hat, tangle of headphone cable. [append textures.json style]",
+      "last_converted": "2026-10-17T21:04:07",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.058
+      },
+      "built_linear": 0.0514,
+      "built_srgb": 61.7
     }
   }
 }

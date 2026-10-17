@@ -1123,3 +1123,35 @@ under the same conditions, read 14.0 and 16.5 s.
 **Verdict:** landed. Tris are the bill (the city's +44k is the meters, bags and gas meters in view
 and in the moon's shadow pass), not calls.
 
+
+## Street litter: a PACK64 per tier, through a batched path that reads the cell size
+
+**Changed:** the city's litter no longer deals entities64 rows 41-47 (shared with the sewers, the
+facility and the wilderness, which keep them). Each tier deals its own 8x8 PACK64 of 128 px cells,
+`city/debris-slums|city|downtown` (`AreaStyle.debrisPack`): rows 0-5 the small things the scatter
+clusters at random scale and turn, rows 6-7 the big flat ones laid square. `Images.getImage` loads a
+pack on first ask; `Sprites.cellRect/contentRect` take the cell size off `Images.cellSize` instead of
+the hardcoded 64, which is also the hook blood and ground money need for their 128 redraw. One sheet
+per tier, so the scatter is still one draw: **150 calls either way** on the same frame.
+
+**Art:** three sunburst-high transparent drops, the pack64 prompt shape, no surface named. City and
+slums came back UNCUT anyway (alpha min 166 and 29, a painted backdrop); one `edit_image` pass each
+("keep the objects, remove everything else") gave 61-62% clear. `pack16.py --cols 8 --rows 8 --cell
+128 --tol 4 --valign center` packed all three first time.
+
+**Trap: a pack cell is FULLER than the cell it replaces.** The old rows' content boxes fill a median
+0.453 (transformable) / 0.484 (static) of their 64 px cell; the packs fill 0.70-0.73 / 0.75-0.80 of
+128. `SIZE * fw` scales by fill, so every piece drew 1.6x the litter it replaced (a scratch card as
+wide as a manhole). `DECAL.debrisPackScale` 0.62. **Second trap:** the packs draw at full alpha where
+the old rows draw at ~0.5, so `debrisMul` does not carry over; the value lives in the manifest's
+`cells.cap` and the pack draws at mul 1.0.
+
+**Measured:** same placements both ways (the rng sequence is unchanged), litter pixels found by
+differencing against a no-litter frame, mean linear luminance over its ground. Natural light, caps at
+0.065 first: city 1.90 against the old rows' 1.69. Caps x0.89: **city 1.70 / 1.69, downtown 1.55 /
+1.55**. Slums would not measure in natural light: a failing-sodium lamp toggles between frames and the
+dense litter sits at ground 0.001, where a JPEG step is 10%. Under 4x ambient (control: city 1.99 /
+2.12) slums reads **2.7 against the old 3.6**, kept: the old rows read hotter there only because half
+their alpha let the darker slums ground through, which nobody fitted.
+
+**Verdict:** landed. Caps slums 0.036, city 0.058, downtown 0.058.

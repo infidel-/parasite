@@ -114,6 +114,8 @@ class CityStyle {
       s.lawnFacades = [];
       s.lawnCourtPatches = 1;
       s.lawnPatchChance = 0.01;
+      // the street litter: its own PACK64 (render.decals.Debris)
+      s.debrisPack = 'debris-city';
       // black-iron fire escapes on a third of the windowed blocks, cast-iron downpipes on half
       s.wallKit = render.RenderConfig.MODELS.cityWallKit;
       s.fireEscapeChance = 0.35;

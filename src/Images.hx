@@ -32,6 +32,7 @@ class Images
   public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
   public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
   public var tileset: Image;
+  var debrisPacks = new Map<String, Image>(); // the per-tier street litter PACK64s, loaded on first ask
   var defaultTileset: Default;
   var sewerTileset: Sewers;
 
@@ -176,8 +177,28 @@ class Images
           case 'undergroundLabObjects1': return undergroundLabObjects1;
           case 'male': return male;
           case 'female': return isMaleAtlas ? male : female;
+          case 'debris-slums', 'debris-city', 'debris-downtown': return debrisPack(name);
           default: return null;
         }
+    }
+
+// a per-tier street litter PACK64 (AreaStyle.debrisPack), loaded the first time a city asks for it
+  function debrisPack(name: String): Image
+    {
+      var img = debrisPacks.get(name);
+      if (img == null)
+        {
+          img = new Image();
+          img.src = AssetPath.resolve('textures/city/' + name + '.png');
+          debrisPacks.set(name, img);
+        }
+      return img;
+    }
+
+// the cell size of an atlas getImage() hands out: a litter pack's 128, the entities grid's otherwise
+  public static function cellSize(name: String): Int
+    {
+      return (StringTools.startsWith(name, 'debris-') ? Const.DEBRIS_PACK_CELL : Const.TILE_SIZE_CLEAN);
     }
 
 // get random Firmus custos sprite data
