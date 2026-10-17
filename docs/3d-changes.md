@@ -1351,3 +1351,25 @@ A mirrored lathe over a `roundrect` folds mid-face unless the seam sits on a ver
 free-cam poses kept landing inside walls: pull the camera in along the gameplay sightline instead.
 
 **Verdict:** landed. Supersedes the modelled-whole piles in the street ground props entry.
+
+## The other eleven street pieces re-mapped on one isotropic density per swatch
+
+**Changed:** bollard, compactor, hydrant, mattress, meter, meters, newsbox, planter, recycling,
+steamstack and tree re-exported on `buildlib.swatch_dens` with their swatches refitted (modules only,
+no geometry or sheet change): plain ones `t.loose` and widened to the material's whole flat band,
+hidden faces (backs, bottoms, buried tops) routed to rects of their own so they stop sizing the
+visible ones, lathes given strips at their own density, a few flat rings re-mapped with `disc_uv`
+(height had laid each on one texel row) and some lathes mirrored or repeated with every fold on a
+vertex. The compactor, the biggest piece, ships at tex 1024; the rest stay 512.
+
+**Measured** (area-median sparse texels per unit at 1024, before -> after; % under 30): compactor
+37 -> 141, meters 44 -> 480, newsbox 35 -> 130, recycling 67 -> 132 (30.6% -> 0), planter 124 -> 211
+(17.5% -> 0), tree 126 -> 137 (12.5% -> 0), steamstack 155 -> 162 (3.6% -> 0); bollard, hydrant,
+meter, mattress unchanged at 222-285 with their anisotropy > 3 cut to 0-2%. Shipped at 512 the
+medians run 65-240 against the ground's 57. Gates 0/0/1, tri counts unchanged.
+
+**Trap:** the tree canopy's mirrored `taper_uv` still shears near its folds (9.3% anisotropic, was
+11.9%): the lathe skin itself, not a swatch. The sheets' plain areas cap a few faces (compactor top
+rail's top 59, meters conduit 68 at 1024).
+
+**Verdict:** landed.
