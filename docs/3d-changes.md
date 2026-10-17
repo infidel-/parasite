@@ -1062,6 +1062,8 @@ icon`), not the keyed reference.
 
 ## Street wall kit: fire escapes and downpipes on the residential facades, service conduit downtown
 
+> SUPERSEDED (the per-building merge) by Street kit merged per chunk with fade proxies, kits darkened, free-cam far cut
+
 **Changed:** `render.world.StreetProps` dresses the walls per `AreaStyle.wallKit`: a fire escape over
 two neighbouring window columns (`fireEscapeChance` 0.35 city, 0.5 slums), a downpipe beside the end
 column (`downpipeChance` 0.5 / 0.6; slums `downpipeBroken` 0.6 drops the shoe and one length), and
@@ -1264,3 +1266,32 @@ faces closer than 0.01, so a 3 cm plate against 3 cm balusters or a 3 cm hopper 
 spot; the walls went to 4 cm and the plate behind the balusters.
 
 **Verdict:** landed.
+
+
+## Street kit merged per chunk with fade proxies, kits darkened, free-cam far cut
+
+**Changed:** `StreetProps.merge` builds ONE kit mesh per `render.Chunks` cell (the buildings whose
+centre falls in it, one slice each, `mergeGeometries(..., true)` for the ranges), centred on its
+contents so the chunk pass buckets it. Each building keeps a PROXY: a mesh over the same buffers
+(`drawRange` = its slice) wearing an invisible clone of the material, tagged `userData.b`, so
+`render.Occlusion` buckets, hides and ghosts it like any building mesh with no change to Occlusion.
+The chunk mesh carries a material ARRAY and is tagged `occMarker`; `StreetProps.sync`, run after the
+fader in `CityArea.tick`, lays one draw group per run of slices whose proxy is still visible. Kits
+darkened with flat `baseColor`: city 0.40 (over its `lift` 0.72), slums 0.48, downtown 0.25 -> 0.09.
+`View.freeCut` pulls the camera's far plane to `RenderConfig.FREE_CAM_FAR` (200) and the scene fog to
+120-200 while the free cam flies, and puts both back when it lands.
+
+**Measured:** slums test area: 123 dressed buildings in 35 chunk meshes. Kit draws at the gameplay
+camera 7 -> 6 (the view spans few chunks); at a wide free-cam pose 79 -> 23-25. A faded building:
+proxy hidden, ghost shown, its chunk split into two groups; walking off returns every chunk to one.
+Kit luma 57.7 / 53.2 / 59.7 -> 34.9 / 35.5 / 34.2 (slums walls run 34-62). Free cam, three slums
+poses: far 500 drew 2.3-2.5k calls at ~6 fps, 250 1.8-1.9k at ~10, **200 1.2-1.3k at ~40**, 160 ~950,
+120 ~600. Gameplay frame unchanged at ~250.
+
+**Trap:** three draws a material ARRAY one call per geometry group and a single material once over
+`drawRange`, ignoring groups. So the chunk mesh takes `[mat]`, and with every slice hidden it simply
+has no groups and draws nothing. A mesh whose verts are world-baked at the origin is bucketed by the
+chunk pass into the 0:0 chunk and grows that chunk's sphere over the whole city; centring the merged
+mesh on its contents is what lets it cull with its own chunk.
+
+**Verdict:** landed. Supersedes the per-building merge in the street wall kit entry.

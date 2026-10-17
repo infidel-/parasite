@@ -7,6 +7,7 @@ import citygen.CityModel.Building;
 import citygen.CityModel.City;
 import citygen.CityModel.Tile;
 import render.RenderConfig;
+import render.Chunks;
 import render.Models.InstancedProp;
 import render.Models.PropPlace;
 import render.world.AreaStyle.GroundProp;
@@ -22,9 +23,11 @@ typedef KitPlace = {
 // the street wall kit: fire escapes and downpipes on the residential facades, conduit, junction
 // boxes and intake louvres on downtown's service walls (AreaStyle.wallKit). one glb per kit, every
 // module a mesh of its own authored in world units against the wall (models-src/city/kit/wallkit.py),
-// and every building's modules MERGED into one mesh tagged userData.b: one draw call per dressed
-// building, faded with its walls by render.Occlusion. render-only and hashed off the footprint, like
-// the wall decals, so a building dresses the same on every entry
+// and every dressed building in a render.Chunks cell MERGED into one mesh (KitChunk): one draw call
+// per chunk while its buildings are solid. each building keeps an undrawn proxy over its slice, which
+// render.Occlusion fades and ghosts like any other mesh of the building; `sync` drops a hidden
+// proxy's slice from the chunk's draw. render-only and hashed off the footprint, like the wall
+// decals, so a building dresses the same on every entry
 class StreetProps
 {
   static inline var GRID = CityConfig.GRID;
@@ -49,10 +52,10 @@ class StreetProps
 
   static var checked = false;
 
-// lay the area style's wall kit out over the city WorldCtx holds, then merge each building's set into
-// one mesh once the kit glb is in. `done` gets the meshes: right away when the glb is cached (the boot
-// warm loads it), on the loader callback otherwise, when the caller's fader has to adopt them
-  public static function build(scene:Scene, done:Array<Mesh>->Void):Void
+// lay the area style's wall kit out over the city WorldCtx holds, then merge it per chunk once the
+// kit glb is in. `done` gets the chunks: right away when the glb is cached (the boot warm loads it),
+// on the loader callback otherwise, when the caller's fader has to adopt their proxies
+  public static function build(scene:Scene, done:Array<KitChunk>->Void):Void
     {
       if (!checked)
         {
@@ -386,9 +389,11 @@ class StreetProps
       return ((col * 73856093) ^ (row * 19349663) ^ ((i + 1) * 83492791)) & 0x7fffffff;
     }
 
-// merge every building's modules into one mesh in the kit's own material, tagged with the building.
-// the modules are the kit glb's meshes, keyed by the suffix kit_build.py `pack` names them with
-  static function merge(scene:Scene, t:Models.ModelTemplate, list:Array<KitPlace>):Array<Mesh>
+// merge the kit per render.Chunks cell in the kit's own material: each building's modules into one
+// slice, the slices of the buildings whose centre falls in the cell into one mesh, centred on its
+// contents so the chunk pass buckets it where it stands. the modules are the kit glb's meshes, keyed
+// by the suffix kit_build.py `pack` names them with
+  static function merge(scene:Scene, t:Models.ModelTemplate, list:Array<KitPlace>):Array<KitChunk>
     {
       var src = new Map<String, BufferGeometry>();
       var first:Object3D = null;
@@ -400,8 +405,10 @@ class StreetProps
           if (first == null)
             first = o;
         });
+      var CH = CELL * Chunks.CELLS;
       var by = new haxe.ds.ObjectMap<Building, Array<BufferGeometry>>();
-      var order:Array<Building> = [];
+      var cells = new Map<String, Array<Building>>();
+      var order:Array<String> = [];
       for (k in list)
         {
           var geos = by.get(k.b);
@@ -409,26 +416,122 @@ class StreetProps
             {
               geos = [];
               by.set(k.b, geos);
-              order.push(k.b);
+              var c = cellToWorld(k.b.col + (k.b.w - 1) / 2, k.b.row + (k.b.d - 1) / 2);
+              var key = Math.floor(c.x / CH) + ':' + Math.floor(c.z / CH);
+              if (!cells.exists(key))
+                {
+                  cells.set(key, []);
+                  order.push(key);
+                }
+              cells.get(key).push(k.b);
             }
           var g:BufferGeometry = src.get(k.key);
           geos.push(g.clone().applyMatrix4(k.m));
         }
-      var out:Array<Mesh> = [];
-      for (b in order)
+      // the material is the kit glb's own (three's, Dynamic on Object3D): the proxies wear an
+      // invisible clone of it, which three skips before it ever compiles or draws
+      var mat:Dynamic = first.material;
+      var hidden:Dynamic = mat.clone();
+      hidden.visible = false;
+      var out:Array<KitChunk> = [];
+      for (key in order)
         {
-          var geos = by.get(b);
-          var mesh = new Mesh(THREE.mergeGeometries(geos, false), first.material);
-          for (g in geos)
+          var bs = cells.get(key);
+          var slices:Array<BufferGeometry> = [];
+          for (b in bs)
+            {
+              var geos = by.get(b);
+              slices.push(THREE.mergeGeometries(geos, false));
+              for (g in geos)
+                g.dispose();
+            }
+          // one group per slice, in building order: the index ranges the parts keep
+          var geo:BufferGeometry = THREE.mergeGeometries(slices, true);
+          for (g in slices)
             g.dispose();
+          geo.computeBoundingBox();
+          var cx = (geo.boundingBox.min.x + geo.boundingBox.max.x) / 2;
+          var cz = (geo.boundingBox.min.z + geo.boundingBox.max.z) / 2;
+          geo.translate(-cx, 0, -cz);
+          var parts:Array<KitPart> = [];
+          for (i in 0...bs.length)
+            {
+              var gr = geo.groups[i];
+              // the same buffers, so the proxy and its ghost cost no memory and no upload
+              var pg = new BufferGeometry();
+              for (name in Reflect.fields(geo.attributes))
+                pg.setAttribute(name, geo.getAttribute(name));
+              pg.setIndex(geo.index);
+              pg.setDrawRange(gr.start, gr.count);
+              var proxy = new Mesh(pg, hidden);
+              proxy.name = 'wall kit';
+              proxy.position.set(cx, 0, cz);
+              proxy.userData.b = bs[i];
+              scene.add(proxy);
+              parts.push({
+                proxy: proxy,
+                start: gr.start,
+                count: gr.count,
+                shown: true,
+              });
+            }
+          geo.clearGroups();
+          geo.addGroup(0, geo.index.count, 0);
+          // a material ARRAY, so three draws the groups `sync` lays down rather than the whole index
+          var mesh = new Mesh(geo, [mat]);
           mesh.name = 'wall kit';
-          mesh.userData.b = b;
+          mesh.position.set(cx, 0, cz);
+          // never bucketed into a building by the fader: its proxies are
+          mesh.userData.occMarker = true;
           // darkens with the wall under a neighbour's or a lamp's shadow, as the windows do
           mesh.receiveShadow = true;
           scene.add(mesh);
-          out.push(mesh);
+          out.push({
+            mesh: mesh,
+            parts: parts,
+          });
         }
       return out;
+    }
+
+// per frame, after the fader: a chunk draws one group per run of slices whose proxy the fader has
+// not hidden (render.Occlusion hides the real under a ghost once it fully covers), so a solid chunk
+// is one draw and a faded building leaves its ghost alone where its kit stood. no-op unless a proxy
+// flipped since the last call
+  public static function sync(kits:Array<KitChunk>):Void
+    {
+      for (k in kits)
+        {
+          var changed = false;
+          for (p in k.parts)
+            if (p.shown != p.proxy.visible)
+              {
+                p.shown = p.proxy.visible;
+                changed = true;
+              }
+          if (!changed)
+            continue;
+          var geo:BufferGeometry = k.mesh.geometry;
+          geo.clearGroups();
+          var start = -1;
+          var end = 0;
+          for (p in k.parts)
+            {
+              if (p.shown)
+                {
+                  if (start < 0)
+                    start = p.start;
+                  end = p.start + p.count;
+                }
+              else if (start >= 0)
+                {
+                  geo.addGroup(start, end - start, 0);
+                  start = -1;
+                }
+            }
+          if (start >= 0)
+            geo.addGroup(start, end - start, 0);
+        }
     }
 
 // how many window floors the building has, as Windows.add counts them

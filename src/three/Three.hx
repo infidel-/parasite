@@ -183,12 +183,15 @@ package three;
 
 @:native("THREE.Fog") extern class Fog {
   public function new(color:Int, near:Float, far:Float);
+  public var near:Float; // where the fog starts, world units from the camera (a uniform, not a program key)
+  public var far:Float;  // where it is opaque
 }
 
 @:native("THREE.PerspectiveCamera") extern class PerspectiveCamera extends Object3D {
   public function new(fov:Float, aspect:Float, near:Float, far:Float);
   public var fov:Float; // vertical field of view in DEGREES — world size to screen px, for brush cursors
   public var aspect:Float;
+  public var far:Float; // the far clip plane; updateProjectionMatrix() after changing it
   public var projectionMatrix:Matrix4;
   public var matrixWorldInverse:Matrix4;
   public function updateProjectionMatrix():Void;
@@ -318,6 +321,9 @@ typedef RendererInfo = {
   public function computeBoundingSphere():Void;   // re-fit the cull sphere after mutating positions in place
   public function setDrawRange(start:Int, count:Int):Void; // draw a PREFIX of a preallocated buffer,
                                                            // so a live selection overlay never reallocates
+  public function translate(x:Float, y:Float, z:Float):BufferGeometry; // bake an offset into the positions, in place
+  public function clearGroups():Void; // drop every draw group (a mesh with a material ARRAY then draws nothing)
+  public function addGroup(start:Int, count:Int, materialIndex:Int):Void; // one draw over [start, start + count) of the index
   public function dispose():Void;
 }
 

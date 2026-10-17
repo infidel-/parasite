@@ -46,6 +46,10 @@ class View {
   var lampLights:render.particles.LampLights; // fixed live-spotlight pool, ticked each frame
   var area3d:Area3D; // the area KIND: scene/lights, static geometry and the per-frame world tick
   var streetBlur:StreetBlur; // the corp street's distance blur (render.StreetBlur), off elsewhere
+  var cutFar = -1.0;         // the camera's own far plane while the free-cam cut holds (freeCut), -1 otherwise
+  var cutFog:Fog = null;     // the fog the cut pulled in, null while the free cam is not flying
+  var cutFogNear = 0.0;      // that fog's own start and end, put back when the cut lifts
+  var cutFogFar = 0.0;
 
   var actorGroup:Group;
   var ring:Mesh;
@@ -228,6 +232,44 @@ class View {
       if (running && rig != null) rig.orbitDrag(e.movementX, e.movementY);
     });
   }
+
+// while the free cam flies, the camera's far plane comes in to RenderConfig.FREE_CAM_FAR and the
+// scene's fog ends there with it, so the cut reads as the fog wall: from over the roofs it otherwise
+// draws the whole area. both go back when it lands, and a fog the cut moved is put back before the
+// cut takes a new area's
+  function freeCut(on:Bool):Void
+    {
+      var fog:Fog = (on ? scene.fog : null);
+      if (cutFog != null &&
+          cutFog != fog)
+        {
+          cutFog.near = cutFogNear;
+          cutFog.far = cutFogFar;
+          cutFog = null;
+        }
+      if (fog != null &&
+          cutFog == null)
+        {
+          cutFog = fog;
+          cutFogNear = fog.near;
+          cutFogFar = fog.far;
+          fog.near = Math.min(fog.near, RenderConfig.FREE_CAM_FAR * 0.6);
+          fog.far = Math.min(fog.far, RenderConfig.FREE_CAM_FAR);
+        }
+      if (on == (cutFar >= 0))
+        return;
+      if (on)
+        {
+          cutFar = camera.far;
+          camera.far = RenderConfig.FREE_CAM_FAR;
+        }
+      else
+        {
+          camera.far = cutFar;
+          cutFar = -1;
+        }
+      camera.updateProjectionMatrix();
+    }
 
 // drop one benign three.js warning: world tile textures load async, so their per-building
 // clones briefly render before the source image decodes (version>0, image==null) each area
@@ -1404,6 +1446,7 @@ void main() {
     var freeing = debug.flying();
     rig.update(dtMs, !freeing);
     if (freeing) debug.freeCam.update(dtMs);
+    freeCut(freeing);
     var p = rig.playerWorld();
     // rest the ring on the ground under its *smooth* position, at the HIGHEST floor its whole
     // disc overhangs (sample the 4 footprint corners): a single-Y disc that dips below a curb it

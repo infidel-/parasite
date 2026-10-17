@@ -34,6 +34,7 @@ class CityArea implements Area3D
   var props:Array<render.world.ObjModels.PropBatch>;     // the object props (dumpsters), culled per frame
   var groundProps:Array<render.Models.InstancedProp> = []; // the street's ground props, culled per frame
   var steam:render.world.SteamPuffs;                      // the plumes off the steam stacks
+  var kits:Array<render.world.KitChunk> = [];             // the wall kit per chunk, its slices synced to the fader per frame
   var tactical = false;                                   // tactical view up: the props show their outline
 
   public function new(game:Game, city:City, seed:Int)
@@ -79,11 +80,13 @@ class CityArea implements Area3D
       // the wall kit, merged per building and tagged with it. a cached glb (the boot warm loads it)
       // lands right here, before the occlusion pass below buckets the scene; a late one is handed to
       // the fader
-      render.world.StreetProps.build(scene, function(meshes)
+      render.world.StreetProps.build(scene, function(kc)
         {
+          kits = kc;
           if (occlusion != null)
-            for (m in meshes)
-              occlusion.adopt(m);
+            for (k in kc)
+              for (p in k.parts)
+                occlusion.adopt(p.proxy);
         });
       // the object props: the dumpsters, and only the rows the city may draw unpatched (see
       // render.world.ObjModels.unmasked) — every other object keeps its sprite out here. their glbs
@@ -117,6 +120,7 @@ class CityArea implements Area3D
       if (opts.outro)
         {
           occlusion.update(opts.camPos, opts.player, null, false, opts.dtMs);
+          render.world.StreetProps.sync(kits);
           return;
         }
       sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);
@@ -127,6 +131,7 @@ class CityArea implements Area3D
       render.world.Windows.pulse(opts.dtMs);
       if (!opts.freeCam)
         occlusion.update(opts.camPos, opts.player, opts.target, opts.aiming, opts.dtMs);
+      render.world.StreetProps.sync(kits);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);
       // park the live-spotlight pool on the nearest lamps to the player
       lampLights.update(lampPosts, opts.lightCol, opts.lightRow, opts.dtMs);

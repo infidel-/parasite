@@ -49,6 +49,10 @@ class RenderConfig {
   public static inline var ROOF_TILE = 16;     // world units per roof-base tile (tiled, not stretched)
   public static inline var GABLE_V = 0.5;      // metal gable-end V anchor: sample a clean mid-texture band so the worn-metal dirty base strip never lands on the high gable triangle
   public static inline var GABLE_OVER = 0.5;   // gable eave/rake overhang past the box on ALL four sides, world units (CELL = 4). 0 = the old flush roof
+  // the free cam's far plane (render.View.freeCut), with the scene fog pulled in to end there. it can
+  // see the whole area from over the roofs, which no gameplay camera does: measured in the slums from
+  // three poses, far 500 drew 2.3-2.5k calls at ~6 fps, 250 still 1.8-1.9k at ~10, 200 1.2-1.3k at ~40
+  public static inline var FREE_CAM_FAR = 200.0;
   public static inline var GABLE_THICK = 0.05; // gable slab thickness, measured VERTICALLY — what turns each slope from a bare polygon into a slab with a visible fascia/rake edge
 
   // --- building fronts: stores vs plain entrances (deterministic per footprint, no rng) ----
