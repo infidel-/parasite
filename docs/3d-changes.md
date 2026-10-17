@@ -1211,3 +1211,22 @@ draw at 0.32 scale.
 new sheet. Close-up A/B: splats gain clean edges and droplets, the money reads as notes, not blur.
 
 **Verdict:** landed. Reticle and frame came back more saturated (chroma 133 -> 180), kept: UI.
+
+## entities128: the redraw's saturation, matched back to the old cells
+
+**Changed:** one more step in the registration of `fx/entities128`, before the luminance gain: each
+cell is blended toward its own per-pixel luminance in LINEAR light (so luminance does not move) by a
+bisected factor until its mean HSV saturation equals the old 64 px cell's. Factors: 0.00 black blood,
+0.22 dog, 0.25 barrel, ~0.8 the splats, 0.73 reticle and frame, 1.0 the money.
+
+**Measured:** reported from the game ("they sure gained saturation"), and it was the MODEL, not the
+gain: the raw redraw is already 1.1-1.4x its own input (acid and slime splats 0.48 -> 0.69, reticle
+0.65 -> 0.93, red blood 0.70 -> 0.79, black blood tinted 0.00 -> 0.05, the barrel given a rust rim my
+own subject list named). A uniform linear gain cannot do this: it keeps channel ratios. After the
+match: saturation within 0.026 of every old cell, luminance 0.95-1.00 (was 0.88-1.00 — less clips).
+
+**Trap:** the edit prompt said "do NOT darken, desaturate, recolour"; a one-sided instruction is read
+as a direction. Measure saturation as well as value on any redraw, and never describe a colour in
+the subject list that the source does not carry.
+
+**Verdict:** landed.
