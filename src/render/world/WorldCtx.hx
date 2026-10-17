@@ -14,6 +14,14 @@ typedef WallMount = {
               // know nothing about how thick or how tall that kind builds its walls
 };
 
+// one upper-floor window column as render.world.Windows emitted it: where it stands, on which face
+typedef WinCol = {
+  dir:Int,    // the face (Geom.buildingFaces' dir)
+  x:Float,    // world X of the column, on the face plane
+  z:Float,    // world Z of the column, on the face plane
+  rotY:Float, // outward normal yaw of the face
+};
+
 // shared state for one city build, set by World.build() and read by every world
 // sub-builder. buildings/tiles are read by nearly every pass; the *Seen maps are
 // written by one pass each (bands/doors/windows) and read only by the checklist.
@@ -81,6 +89,9 @@ class WorldCtx {
   // placed door along-face spans (offset-from-face-center interval), so WallDecals skips graffiti
   // overlapping a door. same center + axis convention as buildingFaces `off` (see Entrances.place)
   public static var doorSpans:Array<{ b:Building, dir:Int, lo:Float, hi:Float }>;
+  // every windowed building's window columns, written by Windows.add, read by StreetProps to hang a
+  // fire escape over two of them and a downpipe beside the last
+  public static var winCols:haxe.ds.ObjectMap<Building, Array<WinCol>>;
 
 // how far out from a wall cell's centre a decal standing on face `dir` has to sit, INCLUDING the
 // proud nudge that keeps it off the surface. `dir` is render.world.Geom's numbering (0 +z, 1 -z,

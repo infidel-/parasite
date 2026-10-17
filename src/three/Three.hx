@@ -100,6 +100,7 @@ package three;
   public function clone():Matrix4;                    // a new matrix with this one's entries
   public function makeScale(x:Float, y:Float, z:Float):Matrix4; // in place; a pure scale (0,0,0 hides an instance)
   public function makeRotationY(theta:Float):Matrix4; // in place; a pure turn about y, radians
+  public function setPosition(x:Float, y:Float, z:Float):Matrix4; // in place; overwrites the translation only
   public function multiply(m:Matrix4):Matrix4;        // in place; this = this * m (m applied first)
   public var elements:js.lib.Float32Array; // the 16 entries, column-major
 }
@@ -311,6 +312,7 @@ typedef RendererInfo = {
   public function setIndex(idx:Array<Int>):Void;
   public var boundingBox:Box3;    // null until computeBoundingBox() runs; the geometry's LOCAL extent
   public function computeVertexNormals():Void;
+  public function applyMatrix4(m:Matrix4):BufferGeometry; // bake a transform into the positions/normals, in place
   public function clone():BufferGeometry;         // deep copy, attribute buffers included (render.Models.hullGeo bakes into one)
   public function computeBoundingBox():Void;      // fills boundingBox; local space, so it is unaffected by any instance transform
   public function computeBoundingSphere():Void;   // re-fit the cull sphere after mutating positions in place

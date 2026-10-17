@@ -1059,3 +1059,36 @@ the painted stickers came back near-white (sRGB ~215) and were the brightest thi
 **Verdict:** landed. The 64 px fallback icon at 16/5 is now a render of the city glb (`kit_build.py
 icon`), not the keyed reference.
 
+
+## Street wall kit: fire escapes and downpipes on the residential facades, service conduit downtown
+
+**Changed:** `render.world.StreetProps` dresses the walls per `AreaStyle.wallKit`: a fire escape over
+two neighbouring window columns (`fireEscapeChance` 0.35 city, 0.5 slums), a downpipe beside the end
+column (`downpipeChance` 0.5 / 0.6; slums `downpipeBroken` 0.6 drops the shoe and one length), and
+downtown a conduit run at 4.3 (over the 3.9 door quads) with a riser + junction box and an intake
+louvre on each open run of a worn face (`serviceChance` 0.6). Columns come from `Windows.add`, which
+now publishes them as `WorldCtx.winCols`; doors via `WorldCtx.doorSpans`; hashed off the footprint.
+Kits are hand-modelled in WORLD UNITS on the facade grid (`models-src/city/kit/wallkit*.py`, new
+`kit_build.py` modes `pack` = all modules into one glb with one material, and `wall` = a stacked
+preview), one glb per style. Each building's modules are cloned, transformed and `mergeGeometries`'d
+into ONE mesh tagged `userData.b`. Three sheets, $0.17: city generated, slums an `edit_image` of the
+city one (layout kept, so one geometry wears both), downtown generated.
+
+**Measured:** modules 652 (floor), 624 (base), 108/152/64 (pipe/shoe/head), 264/192/24 (conduit/riser/
+louvre); every gate holes 0, coplanar 0, islands 1. A/B on the kit meshes at the gameplay camera:
+city +2 calls +2.1k tris, slums +3-5 calls +5.8k, downtown alley +2 calls +2k. The kits share an
+existing program (none of their own). Occlusion bucketed 147/147, each under its own building, both
+on the cached path and on a forced late load (cache evicted, glb landed ~6s after the build).
+
+**Trap:** the city sheet's black iron sampled albedo **31** and was simply not there on night brick at
+gameplay zoom (one railing showed, against a lit window). `lift` 0.72 puts it at 57 and it reads as
+dark painted iron; the rusted slums kit (85/47/28) needed nothing. Downtown's galvanised sheet came
+back at luma 97-144: flat `baseColor` 0.25 to 57-63. **Second trap:** the boot warm first WAITED on
+the kit glbs, and a 4.2 -> 6.7 s boot looked like their cost; with the kits moved out of the warm
+entirely the boot still read 6.1-6.8 s, so that was machine drift, not the kits. They are prefetched
+after the warm now anyway: there is nothing in them to compile.
+
+**Verdict:** landed. Merged per building and not instanced city-wide on purpose: an instanced kit
+would stay solid on a faded building, and a fire escape left standing in front of the player is the
+one thing the fade exists to remove.
+

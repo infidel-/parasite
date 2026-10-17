@@ -678,6 +678,11 @@ class RenderConfig {
     // green bin and the slums' rusted one, lid thrown back. hand-modelled, models-src/city/kit/
     cityDumpster: 'models/city/dumpster.glb',
     cityDumpsterSlums: 'models/city/dumpster-slums.glb',
+    // the street wall kits (render.world.StreetProps): one glb per area style, every module a mesh of
+    // its own at the origin in world units. hand-modelled, models-src/city/kit/wallkit*.py
+    cityWallKit: 'models/city/wallkit.glb',
+    cityWallKitSlums: 'models/city/wallkit-slums.glb',
+    cityWallKitDowntown: 'models/city/wallkit-downtown.glb',
     sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
     // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
     // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be

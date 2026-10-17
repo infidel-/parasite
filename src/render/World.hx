@@ -49,6 +49,7 @@ class World {
     WorldCtx.bandSeen = new haxe.ds.ObjectMap();
     WorldCtx.noBackDoor = [];
     WorldCtx.doorSpans = [];
+    WorldCtx.winCols = new haxe.ds.ObjectMap();
 
     Ground.build(scene);          // ground tiles, road markings, kerb edging
     Lawns.build(scene);           // dead-lawn grass patches around the slums houses (no-op elsewhere)

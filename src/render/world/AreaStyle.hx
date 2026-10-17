@@ -109,6 +109,12 @@ class AreaStyle {
   public var helipadTex:String = null;   // top-down landing-deck marking; null = this area has no helipads
   public var helipadChance:Float = 0;    // odds an ELIGIBLE roof (tall + wide enough) gets one instead of its penthouse and detail decals
   public var helipadFacades:Array<Int> = null; // facade slots that may carry a pad; null = any (downtown limits it to the glass skyscrapers, not the mid-rises/sleek high-rise)
+  // --- the street wall kit (StreetProps.hx): fire escapes, downpipes, service conduit ---
+  public var wallKit:String = null;      // the kit glb; null = this area dresses no walls
+  public var fireEscapeChance:Float = 0; // odds a windowed building carries a fire escape over two of its window columns
+  public var downpipeChance:Float = 0;   // odds a windowed building carries a downpipe beside its end window column
+  public var downpipeBroken:Float = 0;   // odds a downpipe has lost its foot and one length
+  public var serviceChance:Float = 0;    // odds an open service (worn) wall carries a conduit run, a riser and a louvre
 
   public function new() {}
 

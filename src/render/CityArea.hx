@@ -74,6 +74,15 @@ class CityArea implements Area3D
       render.world.WorldCtx.doorBlocked = function(col, row) return bins.exists(row * CityConfig.GRID + col);
       World.build(scene, cityModel, seed, style);
       render.world.WorldCtx.doorBlocked = null;
+      // the wall kit, merged per building and tagged with it. a cached glb (the boot warm loads it)
+      // lands right here, before the occlusion pass below buckets the scene; a late one is handed to
+      // the fader
+      render.world.StreetProps.build(scene, function(meshes)
+        {
+          if (occlusion != null)
+            for (m in meshes)
+              occlusion.adopt(m);
+        });
       // the object props: the dumpsters, and only the rows the city may draw unpatched (see
       // render.world.ObjModels.unmasked) — every other object keeps its sprite out here. their glbs
       // land over a loader callback after the chunk pass below, which leaves the batches at the scene

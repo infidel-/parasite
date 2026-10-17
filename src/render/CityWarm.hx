@@ -98,6 +98,20 @@ class CityWarm
         });
       var p = props.then(function(_)
         return Warmup.compile(renderer, camera, s, function() new render.particles.FlameLights(g)));
+      // and the wall kits: PREFETCHED once the warm is done, never waited on. a merged kit draws the
+      // plain Lambert the walls already compile, so there is nothing to warm and no reason to hold the
+      // boot screen on three more glb reads. the menu gives them seconds to land before a save is
+      // picked; a city built sooner adopts them late (StreetProps.build)
+      p.then(function(_)
+        {
+          for (k in [
+            RenderConfig.MODELS.cityWallKit,
+            RenderConfig.MODELS.cityWallKitSlums,
+            RenderConfig.MODELS.cityWallKitDowntown,
+          ])
+            Models.get(k, function(_) {});
+          return null;
+        });
       return {
         tSync: haxe.Timer.stamp(),
         p: p,

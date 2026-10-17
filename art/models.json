@@ -3950,6 +3950,40 @@
       "note": "the SLUMS dumpster (key dumpster_slums): kit/dumpster.py's bin rusted and tagged, its left lid thrown back against the wall and the right one ajar over a load heaped to the rim (textures-src/city/dumpster-slums.png BR bottom half), four tied bags on top. models-src/city/kit/dumpster-slums.py.",
       "last_converted": "2026-10-17T13:35:46Z",
       "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "city/wallkit": {
+      "src": "city/city-wallkit.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the CITY wall kit: a black-iron fire escape (floor / base platform modules) and a cast-iron downpipe (pipe / shoe / head), models-src/city/kit/wallkit.py, sheet textures-src/city/wallkit-city.png. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 512, the dumpsters' half-size rule. lift 0.72: the black iron sampled 31, and against the night brick it was not there at gameplay zoom; lifted to the outdoor family's ~57 it reads as dark painted iron.",
+      "last_converted": "2026-10-17T14:02:32Z",
+      "last_sig": "n1/-1/512/0.01/-/-/lf0.72/rf1",
+      "lift": 0.72
+    },
+    "city/wallkit-slums": {
+      "src": "city/city-wallkit-slums.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS wall kit: the same modules wearing wallkit-slums.png, an edit_image off the city sheet that kept its layout (rust, a tin downpipe). models-src/city/kit/wallkit-slums.py. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 512, the dumpsters' half-size rule.",
+      "last_converted": "2026-10-17T14:02:32Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+    },
+    "city/wallkit-downtown": {
+      "src": "city/city-wallkit-downtown.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "baseColor": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "note": "the DOWNTOWN service-wall kit: galvanised conduit runs, a riser into a junction box, a louvred intake (conduit / riser / louvre), models-src/city/kit/wallkit-downtown.py, sheet textures-src/city/wallkit-downtown.png. baseColor is a FLAT scalar: the sheet came back bright galvanised (luma 97-144), against an outdoor family of 46-52. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 512, the dumpsters' half-size rule.",
+      "last_converted": "2026-10-17T14:02:32Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1"
     }
   }
 }

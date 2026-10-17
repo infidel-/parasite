@@ -177,6 +177,9 @@ class DowntownStyle {
       s.helipadTex = 'textures/downtown/helipad.png';
       s.helipadChance = 0.35;
       s.helipadFacades = [2, 3]; // glass skyscrapers only (light + dark); not concrete/stone mid-rises or the sleek high-rise
+      // no fire escapes on a tower: its service walls carry conduit, junction boxes and intakes instead
+      s.wallKit = render.RenderConfig.MODELS.cityWallKitDowntown;
+      s.serviceChance = 0.6;
       _s = s;
     }
     return _s;

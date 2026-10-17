@@ -170,6 +170,12 @@ class SlumsStyle {
       s.lawnChance = 0.5;
       s.lawnPatchChance = 0.03;
       s.lawnCourtPatches = 2;
+      // rusted fire escapes on half the windowed buildings, and tin downpipes that have mostly lost
+      // their feet
+      s.wallKit = render.RenderConfig.MODELS.cityWallKitSlums;
+      s.fireEscapeChance = 0.5;
+      s.downpipeChance = 0.6;
+      s.downpipeBroken = 0.6;
       _s = s;
     }
     return _s;

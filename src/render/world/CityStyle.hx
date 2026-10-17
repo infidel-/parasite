@@ -114,6 +114,10 @@ class CityStyle {
       s.lawnFacades = [];
       s.lawnCourtPatches = 1;
       s.lawnPatchChance = 0.01;
+      // black-iron fire escapes on a third of the windowed blocks, cast-iron downpipes on half
+      s.wallKit = render.RenderConfig.MODELS.cityWallKit;
+      s.fireEscapeChance = 0.35;
+      s.downpipeChance = 0.5;
       _s = s;
     }
     return _s;
