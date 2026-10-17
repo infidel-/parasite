@@ -31,6 +31,7 @@ class Images
   public var cluePack: Image; // 3D 170px clue document/book sheet (Const.CLUE_HD)
   public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
   public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
+  public var entities128: Image; // 3D 128px redraw of the entities64 cells in Const.HD128
   public var tileset: Image;
   var debrisPacks = new Map<String, Image>(); // the per-tier street litter PACK64s, loaded on first ask
   var defaultTileset: Default;
@@ -64,6 +65,9 @@ class Images
       // and the clue sheet, the same built-art route for one sheet instead of four
       cluePack = new Image();
       cluePack.src = AssetPath.resolve('textures/facility/clue-pack.png');
+      // and the 128 px redraw of the sprites, splats and FX the 3D view drew at 64
+      entities128 = new Image();
+      entities128.src = AssetPath.resolve('textures/fx/entities128.png');
       // and the sewer hatch lid, the same route again for a single cell
       hatchHD = loadHatchHD();
       // and the wall vent's grille, the same again
@@ -179,6 +183,7 @@ class Images
           case 'male': return male;
           case 'female': return isMaleAtlas ? male : female;
           case 'debris-slums', 'debris-city', 'debris-downtown': return debrisPack(name);
+          case 'entities128': return entities128;
           default: return null;
         }
     }
@@ -196,9 +201,12 @@ class Images
       return img;
     }
 
-// the cell size of an atlas getImage() hands out: a litter pack's 128, the entities grid's otherwise
+// the cell size of an atlas getImage() hands out: a litter pack's or the redraw's 128, the entities
+// grid's otherwise
   public static function cellSize(name: String): Int
     {
+      if (name == 'entities128')
+        return Const.HD128_CELL;
       return (StringTools.startsWith(name, 'debris-') ? Const.DEBRIS_PACK_CELL : Const.TILE_SIZE_CLEAN);
     }
 

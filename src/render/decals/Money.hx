@@ -87,8 +87,9 @@ class Money {
       var op = d.radiusOp(w.x, w.z);
       if (op <= 0.001)
         return false;
-      var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.debrisMul);
-      var r = d.sprites.cellRect('entities', dec.icon.col, dec.icon.row, false);
+      var bc = d.sprites.batchCell(dec.icon.col, dec.icon.row);
+      var atlas = d.sprites.atlasTex(bc.name, false, RenderConfig.DECAL.debrisMul);
+      var r = d.sprites.cellRect(bc.name, bc.ix, bc.iy, false);
       if (atlas == null ||
           r == null)
         return false;
@@ -108,8 +109,9 @@ class Money {
       if (temp.length == 0)
         return;
       var M = RenderConfig.MONEY;
-      var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.debrisMul);
-      var r = d.sprites.cellRect('entities', Const.FRAME_EFFECT_MONEY, Const.ROW_EFFECT, false);
+      var bc = d.sprites.batchCell(Const.FRAME_EFFECT_MONEY, Const.ROW_EFFECT);
+      var atlas = d.sprites.atlasTex(bc.name, false, RenderConfig.DECAL.debrisMul);
+      var r = d.sprites.cellRect(bc.name, bc.ix, bc.iy, false);
       if (atlas == null ||
           r == null)
         return;

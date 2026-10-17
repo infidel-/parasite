@@ -669,6 +669,61 @@ class Const
     { row: 53, col: 3 },
   ];
 
+  // ---- the 128 px redraw: the entities64 cells the 3D view still drew at 64 ----------------------
+  // index = the cell of textures/fx/entities128 (an 8 x 8 of 128 px, reading order); value = the
+  // entities64 frame it redraws, registered onto that frame's own content box at 2x so every anchor
+  // lands where the 64 px cell put it (art/textures.json fx/entities128). 3D-ONLY like the packs above:
+  // render.particles.Sprites.atlasFor redirects the sprite pool, Sprites.batchCell the batched decals
+  public static inline var HD128_CELL = 128;
+  public static inline var HD128_COLS = 8;
+  public static var HD128 = [
+    { row: 4, col: 0 }, // parasite
+    { row: 4, col: 1 }, // dog
+    { row: 2, col: 4 }, // item box
+    { row: 2, col: 7 }, // nutrient
+    { row: 4, col: 6 }, // Choir of Discord
+    { row: 4, col: 7 }, // its body
+    { row: 16, col: 2 }, // burning barrel
+    { row: 3, col: 2 }, // money bill
+    { row: 3, col: 3 }, // money scatter
+    { row: 3, col: 6 }, // acid spit
+    { row: 3, col: 7 }, // slime spit
+    { row: 3, col: 8 }, // paralysis spit / needle
+    { row: 1, col: 10 }, // target reticle
+    { row: 1, col: 11 }, // target frame
+    // red blood 0-4, black blood 5-9, acid 21/3-7, slime 22/3-7
+    { row: 40, col: 0 },
+    { row: 40, col: 1 },
+    { row: 40, col: 2 },
+    { row: 40, col: 3 },
+    { row: 40, col: 4 },
+    { row: 40, col: 5 },
+    { row: 40, col: 6 },
+    { row: 40, col: 7 },
+    { row: 40, col: 8 },
+    { row: 40, col: 9 },
+    { row: 21, col: 3 },
+    { row: 21, col: 4 },
+    { row: 21, col: 5 },
+    { row: 21, col: 6 },
+    { row: 21, col: 7 },
+    { row: 22, col: 3 },
+    { row: 22, col: 4 },
+    { row: 22, col: 5 },
+    { row: 22, col: 6 },
+    { row: 22, col: 7 },
+  ];
+
+// which entities128 cell redraws this frame, or -1. a linear scan, asked once per cache miss like decoHD
+  public static function hd128(row: Int, col: Int): Int
+    {
+      for (i in 0...HD128.length)
+        if (HD128[i].row == row &&
+            HD128[i].col == col)
+          return i;
+      return -1;
+    }
+
   // ---- the clue pack: the reports and books a facility hands out --------------------------------
   //
   // THE SAME REDIRECTION ONE FAMILY OVER, and a second table rather than more rows on the one above,

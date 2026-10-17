@@ -1182,3 +1182,32 @@ in an unlit slums street: diary 2.2x its ground, notebook 1.7x, paperback 1.3x, 
 
 **Verdict:** landed. No `lift`, no `sat`, no `cells` cap: a clue keeps its colour against the
 desaturated litter.
+
+## The entities64 cells the 3D view still drew at 64: one 128 px redraw sheet
+
+**Changed:** `fx/entities128`, an 8x8 of 128 px holding 34 cells (`Const.HD128`, reading order): the
+parasite, dog, item box, nutrient, Choir of Discord and its body, burning barrel, money bill and
+scatter, the three spits, the target reticle and frame, and all twenty blood/goo splats (red and
+black 40/0-9, acid 21/3-7, slime 22/3-7). `Sprites.atlasFor` redirects every sprite-pool reader (tex,
+texContent, silTex, outlineTex, shadows); the batched ground decals (plain blood, ground money) take
+`Sprites.batchCell`, since `atlasTex`/`cellRect` work on one whole image and cannot follow a per-cell
+redirect. The 2D view keeps entities64. No new program: 84 at boot before and after.
+
+**Art: an EDIT, not a generation.** The old cells laid out 1.75x on a transparent 6x6 of 170, one
+sunburst-high `edit_image` ("keep silhouette, pose, position, size, colours; only draw it better"),
+cut first time (76% clear). Then each redraw fitted ASPECT-LOCKED into its OLD content box at 2x
+(bottom-aligned for the seven upright sprites, centred for the rest), so every anchor, content rect
+and shadow root lands exactly where the 64 cell put it: fit 85-100% per axis, centres within 0.2 px.
+
+**Trap: the redraw is darker.** It adds outlines and shading: median 0.82x the old mean linear, money
+and barrel ~0.6x. The decal multipliers, the acid/slime glow and the gas blend were all fitted to the
+old values, so each cell gets a linear gain back to its own old mean (1.06-1.64; 0.88-1.00 after
+highlight clipping). **Second: the gas clouds were redrawn and left out.** A soft cloud gains nothing
+from pixels, and the repaint rimmed every lobe and lifted chroma 92/95 -> 114/128; the A/B (cells
+patched back to 64, caches cleared) showed a busier, bluer cluster. The badges stay at 64 too: they
+draw at 0.32 scale.
+
+**Verified:** all 34 frames resolve to a 128 px texture, the gas to 64, plain blood batches from the
+new sheet. Close-up A/B: splats gain clean edges and droplets, the money reads as notes, not blur.
+
+**Verdict:** landed. Reticle and frame came back more saturated (chroma 133 -> 180), kept: UI.

@@ -137,8 +137,9 @@ class Blood {
         }
       else
         {
-          var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.bloodMul);
-          var r = d.sprites.cellRect('entities', dec.icon.col, dec.icon.row, false);
+          var bc = d.sprites.batchCell(dec.icon.col, dec.icon.row);
+          var atlas = d.sprites.atlasTex(bc.name, false, RenderConfig.DECAL.bloodMul);
+          var r = d.sprites.cellRect(bc.name, bc.ix, bc.iy, false);
           if (atlas == null ||
               r == null)
             return false;

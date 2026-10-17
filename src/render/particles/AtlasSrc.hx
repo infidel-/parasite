@@ -7,8 +7,8 @@ package render.particles;
 typedef AtlasSrc = {
   // the decoded <img> to crop from. null (or still decoding) means "retry next frame"
   var img:Dynamic;
-  // that image's cell size in pixels: 64 for entities64, 128 for an actor skin sheet, 256 for a
-  // facility bench decoration pack
+  // that image's cell size in pixels: 64 for entities64, 128 for an actor skin sheet or the entities128
+  // redraw, 256 for a facility bench decoration pack
   var t:Int;
   // and the cell to crop, in THAT image's grid — not the caller's
   var ix:Int;

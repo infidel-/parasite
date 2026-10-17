@@ -530,6 +530,15 @@ class Sprites {
         };
       if (imageName == 'entities')
         {
+          // the 128 px redraw of the sprites, splats and FX that had no art of their own (Const.HD128)
+          var h = Const.hd128(iy, ix);
+          if (h >= 0)
+            return {
+              img: game.scene.images.entities128,
+              t: Const.HD128_CELL,
+              ix: h % Const.HD128_COLS,
+              iy: Std.int(h / Const.HD128_COLS),
+            };
           var hd = Const.decoHD(iy, ix);
           if (hd >= 0)
             return {
@@ -885,6 +894,25 @@ class Sprites {
       untyped tex.minFilter = THREE.LinearFilter;
       texCache.set(key, tex);
       return tex;
+    }
+
+// the image and cell a BATCHED ground decal cuts an entities64 frame from: atlasTex/cellRect take a
+// whole image, so they cannot follow atlasFor's per-cell redirect by themselves. the 128 redraw where
+// the frame has one (Const.HD128), the frame itself otherwise
+  public function batchCell(ix:Int, iy:Int):BatchCell
+    {
+      var h = Const.hd128(iy, ix);
+      if (h < 0)
+        return {
+          name: 'entities',
+          ix: ix,
+          iy: iy,
+        };
+      return {
+        name: 'entities128',
+        ix: h % Const.HD128_COLS,
+        iy: Std.int(h / Const.HD128_COLS),
+      };
     }
 
 // one whole atlas cell as a UV rect into atlasTex()
