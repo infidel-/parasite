@@ -3,6 +3,7 @@ package render;
 import three.Three;
 import citygen.CityConfig;
 import citygen.CityModel.City;
+import citygen.CityModel.Tile;
 import game.Game;
 import render.particles.LampLights;
 import render.particles.LampPost;
@@ -29,6 +30,9 @@ class CityArea implements Area3D
   var lampMaskDead:Array<Bool>;                           // its complement for lampPropDead (same posts, dark material)
   var flickCells:Array<{ col:Int, row:Int }>;            // the flickering lamps' cells, in coneFlick order
   var sounds:CitySounds;                                  // the tier's beds, the street's loops and one-shots
+  var sceneRef:Scene;                                     // the built scene, for refreshObjects
+  var props:Array<render.world.ObjModels.PropBatch>;     // the object props (dumpsters), culled per frame
+  var tactical = false;                                   // tactical view up: the props show their outline
 
   public function new(game:Game, city:City, seed:Int)
     {
@@ -61,11 +65,7 @@ class CityArea implements Area3D
       // snapshot what SceneSetup parented (lights, lamp cones, the city-wide lamp prop) so the
       // chunk pass only ever touches static geometry the world builder adds below
       var pre = scene.children.copy();
-      // and the one kind that builds NO object props, said out loud rather than left to a stale
-      // flag from the last area: render.Actors drops an object's sprite as soon as that object has a
-      // model key, so a ship part dropped on the street would be invisible — no sprite and no prop.
-      // see render.world.ObjModels.active
-      render.world.ObjModels.active = false;
+      sceneRef = scene;
       // a back door must not open onto a dumpster standing against its wall
       var bins = new Map<Int, Bool>();
       for (o in game.area.getObjects())
@@ -74,6 +74,11 @@ class CityArea implements Area3D
       render.world.WorldCtx.doorBlocked = function(col, row) return bins.exists(row * CityConfig.GRID + col);
       World.build(scene, cityModel, seed, style);
       render.world.WorldCtx.doorBlocked = null;
+      // the object props: the dumpsters, and only the rows the city may draw unpatched (see
+      // render.world.ObjModels.unmasked) — every other object keeps its sprite out here. their glbs
+      // land over a loader callback after the chunk pass below, which leaves the batches at the scene
+      // root; they are culled per instance in tick()
+      props = render.world.ObjModels.build(scene, game, objYaw);
       chunks.build(scene, pre);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
       sounds = new CitySounds(game, cityModel, flickCells, coneFlick);
@@ -83,6 +88,9 @@ class CityArea implements Area3D
 // live lamp pool (plus the flicker repack the posts and cones share)
   public function tick(opts:Area3DTickOpts):Void
     {
+      // the object props, ABOVE the outro gate: cull() reads opts.outro itself, and the camera is
+      // still on the street through the pull-out. no patch chain: the city has no vision mask
+      render.world.ObjModels.cull(props, opts, tactical && opts.ui);
       // leaving: keep fading buildings that slide between the zooming-in camera and the (frozen)
       // player, so the marker stays visible through the outro. occlusion reads no game state
       if (opts.outro)
@@ -119,6 +127,7 @@ class CityArea implements Area3D
 // tactical view toggle — the occlusion pass fades on a different rule when zoomed out
   public function setTactical(v:Bool):Void
     {
+      tactical = v;
       occlusion.setTactical(v);
     }
 
@@ -149,10 +158,50 @@ class CityArea implements Area3D
       lampLights = l;
     }
 
-// nothing to do: no city object draws as a glb prop, so ObjModels is never built up here and every
-// object on the street is an atlas sprite the actor layer re-reads every frame anyway
+// rebuild the prop batches after an object was added to or removed from the street on screen. cheap:
+// the glb templates are cached, so only the instance buffers are remade
   public function refreshObjects():Void
     {
+      if (props == null)
+        return;
+      render.world.ObjModels.dispose(sceneRef, props);
+      props = render.world.ObjModels.build(sceneRef, game, objYaw);
+    }
+
+// which way a prop faces from its cell, one branch per render.world.ObjModels.PropYaw. WALL turns its
+// back on the building beside it — north, then west, then east, then south, since the generator only
+// ever stands a dumpster against ONE wall (game.CityAreaGenerator.isDumpsterSpot). HASHED takes a turn
+// hashed off the cell, so the street looks the same on every entry; FRONTAL is unturned, the camera's
+// rest yaw
+  function objYaw(col:Int, row:Int, mode:render.world.ObjModels.PropYaw):Float
+    {
+      switch (mode)
+        {
+          case FRONTAL:
+            return 0;
+          case HASHED:
+            return (((col * 40503151) ^ (row * 57885161)) & 0x7fffffff) % 3600 / 3600.0 * 2 * Math.PI;
+          case WALL:
+            if (isBuilding(col, row - 1))
+              return 0;
+            if (isBuilding(col - 1, row))
+              return Math.PI / 2;
+            if (isBuilding(col + 1, row))
+              return -Math.PI / 2;
+            if (isBuilding(col, row + 1))
+              return Math.PI;
+            return 0;
+        }
+    }
+
+// is this cell a building (off the grid counts as one, as citygen's own edge tests do)?
+  inline function isBuilding(col:Int, row:Int):Bool
+    {
+      return col < 0 ||
+        row < 0 ||
+        col >= CityConfig.GRID ||
+        row >= CityConfig.GRID ||
+        cityModel.tiles[row][col] == Tile.Building;
     }
 
 // every light on the street owns a pool slot, so the fake shadows come from LampLights.active()

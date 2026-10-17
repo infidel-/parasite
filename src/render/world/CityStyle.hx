@@ -8,6 +8,14 @@ package render.world;
 // CityStyle.get() for every facade they reuse verbatim, so a path fixed here fixes all three.
 // Textures live under textures/city/.
 class CityStyle {
+  // the street dumpster (objects.Dumpster, models-src/city/kit/dumpster.py) at its world size. a model
+  // half-metre is 0.77 world here, the scale that stands a 1.85 m bin beside a 1.75 m actor sprite;
+  // each height is that glb's whole bbox, so the one scale serves the shut bin and the slums one whose
+  // lid stands thrown back. BACK is how far off its cell centre a bin steps toward the wall behind it
+  public static inline var DUMPSTER_H = 1.93;
+  public static inline var DUMPSTER_SLUMS_H = 3.38;
+  public static inline var DUMPSTER_BACK = 1.15;
+  public static inline var DUMPSTER_SLUMS_BACK = 1.13;
   static var _s:AreaStyle;
   public static function get():AreaStyle {
     if (_s == null) {

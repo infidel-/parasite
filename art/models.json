@@ -3903,6 +3903,53 @@
       "note": "hand-modelled in Blender, models-src/lab/mach/liftshaft.py beacon() (the third object), on the shaft's own atlas: the lift beacon's ribbed amber dome hung tip-down, the B_BL fresnel art round it. 124 tris, 0.4 x 0.4 x 0.53. render.lab.LabSpin draws it as glass (LabInterior.glass) with an amber emissive tint over the turning reflector.",
       "last_converted": "2026-10-16T15:50:13Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR"
+    },
+    "city/dumpster": {
+      "src": "city/city-dumpster.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the CITY street dumpster the parasite hides in (objects.Dumpster, key dumpster_city), hand-modelled in Blender: models-src/city/kit/dumpster.py through models-src/city/kit_build.py (re-run it, never hand-edit the glb). Green front-load bin off models-src/dumpster-src.png, wearing textures-src/city/dumpster-city.png, a PACK4 painted by edit_image off that reference with its real brand logo replaced by a fictional CITY SANITATION sticker. 3.7 x 1.9 body in half-metre units; the back is a flat plane, it stands against a wall. tex 512: one sheet, the half-size rule docs/3d-models.md records for the lab kit. gradeRect dims the three stickers (TL band, sheet pixels) to linear x0.45: painted near-white at sRGB ~215, they were the brightest thing in a black back alley, a lit panel on a bin nothing lights.",
+      "last_converted": "2026-10-17T13:35:46Z",
+      "last_sig": "n1/-1/512/0.01/-/-/gr[{\"rect\":[40,146,118,222],\"scale\":0.45},{\"rect\":[172,334,118,222],\"scale\":0.45},{\"rect\":[352,476,118,222],\"scale\":0.45}]/rf1",
+      "gradeRect": [
+        {
+          "rect": [
+            40,
+            146,
+            118,
+            222
+          ],
+          "scale": 0.45
+        },
+        {
+          "rect": [
+            172,
+            334,
+            118,
+            222
+          ],
+          "scale": 0.45
+        },
+        {
+          "rect": [
+            352,
+            476,
+            118,
+            222
+          ],
+          "scale": 0.45
+        }
+      ]
+    },
+    "city/dumpster-slums": {
+      "src": "city/city-dumpster-slums.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS dumpster (key dumpster_slums): kit/dumpster.py's bin rusted and tagged, its left lid thrown back against the wall and the right one ajar over a load heaped to the rim (textures-src/city/dumpster-slums.png BR bottom half), four tied bags on top. models-src/city/kit/dumpster-slums.py.",
+      "last_converted": "2026-10-17T13:35:46Z",
+      "last_sig": "n1/-1/512/0.01/-/-/rf1"
     }
   }
 }

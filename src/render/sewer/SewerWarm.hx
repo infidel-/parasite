@@ -43,7 +43,8 @@ class SewerWarm
           // and recompiles on the first tunnel entry. it bites the SOLID variant hardest, which
           // reuses the glb template's own shared material — the very object the real build then
           // patches (render.sewer.SewerProps)
-          var objModels = render.world.ObjModels.MODELS;
+          // all but the city-only rows, which must never take the mask patch (ObjModel.unmasked)
+          var objModels = [for (m in render.world.ObjModels.MODELS) if (m.unmasked != true) m];
           var wallProps = SewerStyle.PROP_MODELS;
           var left = objModels.length + wallProps.length;
           var done = function()

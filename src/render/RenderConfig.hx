@@ -674,6 +674,10 @@ class RenderConfig {
   public static final MODELS = {
     streetLamp: 'models/street-lamp.glb',
     streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
+    // the street dumpsters the parasite hides in (objects.Dumpster, render.world.ObjModels): the city's
+    // green bin and the slums' rusted one, lid thrown back. hand-modelled, models-src/city/kit/
+    cityDumpster: 'models/city/dumpster.glb',
+    cityDumpsterSlums: 'models/city/dumpster-slums.glb',
     sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
     // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
     // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be

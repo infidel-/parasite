@@ -507,6 +507,10 @@ typedef ObjModel = {
                       // draws (render.corp.CorpSecurity.door). Absent for a prop that fades whole
   ?noGhost:Bool,      // never fades at all: it stands clear of its cell (a shut gun cabinet in the
                       // wall's margin) and hides nobody standing there
+  ?unmasked:Bool,     // drawn only in the CITY, which has no vision mask, and the only rows that build
+                      // there. never patched: the masked kinds' warms skip it, because SOLID shares
+                      // the glb template's material and a mask patch on it would sample whatever canvas
+                      // the last masked area left behind. Absent for every other row
   ?noCast:Bool,       // casts NO fake atlas-silhouette shadow (render.actors.LampShadows): the prop
                       // always stands under a casting light of its own, or off its cell, so a flat
                       // copy of the 2D icon at the cell centre only doubles its real shadow. Absent
@@ -539,6 +543,10 @@ class ObjModels
   // never calls build, see render.CityArea) that object would have had no sprite and no prop:
   // invisible. Set true by build() and explicitly false by the kinds that do not call it
   public static var active = false;
+  // the area kind on screen has NO vision mask (the city): only `unmasked` rows build there, and every
+  // other row's object keeps its sprite, since a masked row's shared material may carry another kind's
+  // patch. set by build() off the area it is building
+  static var unmaskedOnly = false;
 
 // one receptacle's lamp table. the empty slot and the filled one differ in THREE NUMBERS and in
 // nothing else, so the table is written once here rather than twice in the rows below — two copies
@@ -1373,6 +1381,60 @@ class ObjModels
       arc: null,
       tether: null,
     },
+    // the street dumpsters the parasite hides in (objects.Dumpster), backed onto the wall the generator
+    // stood them against (render.CityArea.objYaw). they never fade: nobody stands in one but a hidden
+    // parasite, and the bin is what says where it went. `unmasked`, as the city draws them unpatched
+    {
+      keys: [ 'dumpster_city' ],
+      path: RenderConfig.MODELS.cityDumpster,
+      h: render.world.CityStyle.DUMPSTER_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [
+        0.0,
+        -render.world.CityStyle.DUMPSTER_BACK,
+      ],
+      noGhost: true,
+      noCast: true,
+      unmasked: true,
+    },
+    // and the slums' rusted one, its left lid thrown back against that wall
+    {
+      keys: [ 'dumpster_slums' ],
+      path: RenderConfig.MODELS.cityDumpsterSlums,
+      h: render.world.CityStyle.DUMPSTER_SLUMS_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [
+        0.0,
+        -render.world.CityStyle.DUMPSTER_SLUMS_BACK,
+      ],
+      noGhost: true,
+      noCast: true,
+      unmasked: true,
+    },
   ];
 
 // the prop an object draws as, or null for the ordinary sprite path. a linear scan of five rows,
@@ -1399,9 +1461,14 @@ class ObjModels
 // at all. the question every caller OUTSIDE this file has to ask: "does this object have a row" is
 // about the object, and "is its sprite therefore redundant" is about where it is standing, and only
 // the pair of them is right for a prop-backed object that can be carried from one kind to another
-  public static inline function propFor(key:String):ObjModel
+  public static function propFor(key:String):ObjModel
     {
-      return (active ? modelFor(key) : null);
+      if (!active)
+        return null;
+      var m = modelFor(key);
+      return (m != null &&
+        unmaskedOnly &&
+        m.unmasked != true ? null : m);
     }
 
 // place every prop-backed object in the area, grouped per model. `yaw` decides which way a prop faces
@@ -1413,6 +1480,7 @@ class ObjModels
       ?lift:Int->Int->Float, ?wall:Int->Int->Float):Array<PropBatch>
     {
       active = true;
+      unmaskedOnly = (game.area.info.type == 'city');
       // ONE BUCKET PER ROW, and not per model PATH as this used to key them. A path said the same
       // thing for as long as no two rows named one — and the moment two did, each of them instanced
       // a batch over the OTHER's placements too and every one of those props drew twice. The row is
@@ -1425,6 +1493,7 @@ class ObjModels
           var i = rowFor(o.getModelKey());
           // a base emits its gun cabinet as geometry, in its own art
           if (i < 0 ||
+              propFor(o.getModelKey()) == null ||
               render.military.MilitaryGeom.draws(game.area, o))
             continue;
           var m = MODELS[i];

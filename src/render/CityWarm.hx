@@ -74,7 +74,30 @@ class CityWarm
       // lights vs 5 everywhere else. warm the 5-count first, then add FlameLights and warm the
       // 10-count, so both variants are cached and neither the new-game start nor any later city
       // recompiles on entry
-      var p = Warmup.compile(renderer, camera, s, function() new render.particles.FlameLights(g));
+      // the street dumpsters (render.world.ObjModels' `unmasked` rows) in all three variants, and the
+      // compile WAITS for them: their glbs land over a loader callback, and a prop instanced after the
+      // compile walked the scene would compile on the first city entry. unpatched, as the city draws
+      // them; `transparent` and BackSide are each in three's program key, so ghost and hull are two
+      // programs of their own
+      var C = RenderConfig.OBJMARK;
+      var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
+      var rows = [for (m in render.world.ObjModels.MODELS) if (m.unmasked == true) m];
+      var props = new js.lib.Promise(function(res, _)
+        {
+          var left = rows.length;
+          for (m in rows)
+            Models.get(m.path, function(_)
+              {
+                Models.instanced(s, m.path, place, m.h, SOLID);
+                Models.instanced(s, m.path, place, m.h, GHOST);
+                Models.instanced(s, m.path, place, m.h, HULL(C.color, C.hullW));
+                left--;
+                if (left == 0)
+                  res(null);
+              });
+        });
+      var p = props.then(function(_)
+        return Warmup.compile(renderer, camera, s, function() new render.particles.FlameLights(g)));
       return {
         tSync: haxe.Timer.stamp(),
         p: p,

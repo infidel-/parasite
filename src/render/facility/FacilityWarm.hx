@@ -353,8 +353,9 @@ class FacilityWarm
           // three's own program cache key, so the ghost and the outline hull each compile a program
           // of their own and without this they land on the first step onto a prop and the first
           // tactical toggle. the whole table and not a facility subset: a row is cheap to warm and a
-          // filter here is a second place to keep in step with render.world.ObjModels.MODELS
-          var objModels = render.world.ObjModels.MODELS;
+          // filter here is a second place to keep in step with render.world.ObjModels.MODELS. all
+          // but the city-only rows, which say so themselves and must never take the mask patch
+          var objModels = [for (m in render.world.ObjModels.MODELS) if (m.unmasked != true) m];
           var C = RenderConfig.OBJMARK;
           if (ghosts == null)
             ghosts = [];

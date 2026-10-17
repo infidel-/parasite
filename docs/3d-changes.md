@@ -1028,3 +1028,34 @@ dark low box in the alley shadow.
 outline and `LampShadows` all read it. An empty cell draws nothing, so the bin would be invisible.
 
 **Verdict:** landed. The glb replaces the sprite in the next phase.
+
+
+## City object props: two hand-modelled dumpsters, and the city's rule for which rows it may draw
+
+**Changed:** `render.CityArea` now builds `ObjModels` (objYaw turns a WALL prop's back on its one
+building neighbour; `cull` in `tick`, `refreshObjects` rebuilds). Two rows, `dumpster_city` and
+`dumpster_slums`, draw `objects.Dumpster` per tier (`getModelKey`), WALL-backed with `off` from
+`CityStyle.DUMPSTER_BACK`, `noGhost` and `noCast`. Both are hand-modelled from one shape table
+(`models-src/city/kit/dumpster.py` through `models-src/city/kit_build.py`, a copy of the lab kit runner
+pointed at `city/`). Each wears a PACK4 that `edit_image` painted off `models-src/dumpster-src.png`:
+the city bin green with the reference's real brand logo swapped for a fictional sticker, the slums
+one rusted and tagged with the load across BR. Two gens, $0.128.
+
+**Measured:** 1,852 tris (city) and 2,860 (slums: left lid thrown back, right lid ajar, four bags);
+buildlib.check holes 0, coplanar 0, islands 1 on both, first export. `propstat` on the built glbs reads
+sampled albedo 49/54/52 (city) and 54/55/47 (slums), inside the outdoor 46-52 family. A regenerated
+MEDIUM city built one batch of 6, a LOW one a batch of 8. Boot warm 67 → **76** programs; the first
+boot paid **+2.7 s** compiling them (6.7 s total), the next one was 4.2 s, back inside the 3.7-4.1 s
+spread, off the persisted GPU cache.
+
+**Trap:** the city has no vision mask, and SOLID shares the glb template's material. Every masked kind's
+warm used to patch the WHOLE row table, so a city-only row would have carried a mask patch sampling
+whatever canvas the last masked area left. `ObjModel.unmasked` marks the city's rows; FacilityWarm and
+SewerWarm skip them, and in the city `ObjModels.propFor` answers only for them, so a ship part dropped
+on a street keeps its sprite instead of drawing as a prop with another kind's patch. **Second trap:**
+the painted stickers came back near-white (sRGB ~215) and were the brightest thing in a black alley;
+`gradeRect` scales the three of them to linear x0.45.
+
+**Verdict:** landed. The 64 px fallback icon at 16/5 is now a render of the city glb (`kit_build.py
+icon`), not the keyed reference.
+
