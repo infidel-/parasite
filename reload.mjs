@@ -41,6 +41,9 @@ await cdp.send('Page.enable');
 // practice; if a line ever leaks through, switch to the id from Runtime.executionContextCreated.
 await new Promise(r => setTimeout(r, 250));
 echo = true;
+// mark the outgoing page: Page.reload returns before it dies, and one sitting at the menu or the
+// offer would otherwise answer the wait below
+await evaluate(cdp, 'window.__reloading = true');
 await cdp.send('Page.reload', { ignoreCache: true });
 console.log('reloaded', cdp.page.url);
 
@@ -53,7 +56,8 @@ if (!doLoad) {
 // reveal() in Main is the only thing that sets MAINMENU, and it fires on every path the warm can
 // take — resolved, failed, or the 30s backstop it arms. The warm's own cost is in the
 // [street-warmup] line echoed above; do not carry a remembered number, it moves with the machine.
-if (await waitFor(cdp, state('UISTATE_MAINMENU'), 60000) < 0)
+// the autosave offer replaces MAINMENU one tick later, which a 100ms poll misses, so it counts too
+if (await waitFor(cdp, `!window.__reloading && ((${state('UISTATE_MAINMENU')}) || (${state('UISTATE_YESNO')}))`, 60000) < 0)
   die('never reached the main menu — warm stuck, or the page did not come back');
 console.log(`menu at ${at()}`);
 
