@@ -12,6 +12,10 @@ import render.world.Pile.PileKind;
 // Ground swaps to a holed sidewalk, a cracked/patched road and a dirt alley, and the houses grow
 // dead-lawn patches. Textures live under textures/slums/.
 class SlumsStyle {
+  // the car wreck (objects.CarWreck): its drawn height (the glb's, half-metre units x 0.77, as every
+  // street piece) and how far it is parked in from its cell's middle toward the kerb
+  public static inline var CAR_H = 1.93;
+  public static inline var CAR_KERB = 0.4;
   static var _s:AreaStyle;
   public static function get():AreaStyle {
     if (_s == null) {

@@ -700,6 +700,8 @@ class RenderConfig {
     cityCartBottle: 'models/city/cart-bottle.glb',
     cityCartBoard: 'models/city/cart-board.glb',
     cityMattress: 'models/city/mattress.glb',
+    // the slums' car wreck (objects.CarWreck, render.world.ObjModels), parked at the kerb over two cells
+    cityCarWreck: 'models/city/car.glb',
     cityTyre: 'models/city/tyre.glb',
     cityTyreMud: 'models/city/tyre-mud.glb',
     cityTyreRim: 'models/city/tyre-rim.glb',

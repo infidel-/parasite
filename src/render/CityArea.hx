@@ -217,7 +217,27 @@ class CityArea implements Area3D
             if (isBuilding(col, row + 1))
               return Math.PI;
             return 0;
+          // away from the walkway, so the shell's length (its model x) runs along the kerb toward the
+          // cell game.CityAreaGenerator.carTail parked its tail on
+          case KERB:
+            if (isWalkway(col, row - 1))
+              return 0;
+            if (isWalkway(col - 1, row))
+              return Math.PI / 2;
+            if (isWalkway(col + 1, row))
+              return -Math.PI / 2;
+            return Math.PI;
         }
+    }
+
+// is this cell on the grid and a walkway?
+  inline function isWalkway(col:Int, row:Int):Bool
+    {
+      return col >= 0 &&
+        row >= 0 &&
+        col < CityConfig.GRID &&
+        row < CityConfig.GRID &&
+        cityModel.tiles[row][col] == Tile.Walkway;
     }
 
 // is this cell a building (off the grid counts as one, as citygen's own edge tests do)?

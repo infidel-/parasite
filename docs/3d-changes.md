@@ -1373,3 +1373,27 @@ medians run 65-240 against the ground's 57. Gates 0/0/1, tri counts unchanged.
 rail's top 59, meters conduit 68 at 1024).
 
 **Verdict:** landed.
+
+## Slums car wrecks: a hand-modelled carcass parked over two kerb cells
+
+**Changed:** `models-src/city/kit/car.py` (an agent, Blender over kit_build): a rusted teal 80s
+hatchback stripped to its shell, 3,656 tris, 7.4 x 3.25 x 2.51 half-metre units: real cut-out
+arches, separate pillars over the beltline, every window an open hole, drums on concrete blocks, a
+gutted interior, bonnet gone. Its sheet is a full side view across the top (both flanks and the inner
+door skins map onto it by position), front and rear strips, the roof, and loose swatches. Game side:
+`objects.CarWreck` (non-interactive, `isWalkable` false), `CityAreaGenerator.placeCars` parks six per
+newly generated slums area on two road cells end to end along exactly one walkway, road again beyond
+both, 12 cells apart, both cells flipped to `TILE_ROAD_UNWALKABLE` as the burning barrels are.
+`ObjModels` row `car_wreck` (`unmasked`, warmed by CityWarm like the dumpsters) with a new
+`PropYaw.KERB`: front away from the walkway, length along the kerb, `off` half a cell onto the pair
+and `CAR_KERB` 0.4 toward the kerb. 64 px icon at entities64 16/6 off `kit_build.py icon`.
+
+**Measured:** sparse density median 143 px/u at 1024, 0% under 30, 0% anisotropic; sampled luma 77,
+so a flat `baseColor` 0.39; tex 1024 (a 7.4-unit flank at 512 would sit under the ground's 57). A fresh
+slums area (3155) dealt six wrecks, every car and tail cell unwalkable road, each pair along one
+walkway; one batch, `noCast`.
+
+**Trap:** the boot warm waits on every `unmasked` row's glb, so a row whose glb is not built yet hangs
+the boot: keep it out of `unmasked` until `make models` has made it. Old saves get no wrecks.
+
+**Verdict:** landed.

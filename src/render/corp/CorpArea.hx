@@ -445,7 +445,8 @@ class CorpArea implements Area3D
     {
       switch (mode)
         {
-          case FRONTAL:
+          // KERB is the city street's alone
+          case FRONTAL, KERB:
             return 0;
           case HASHED:
             return (FacilityModel.mix((col * 40503151) ^ (row * 57885161)) % 3600) / 3600.0 * 2 * Math.PI;

@@ -22,6 +22,8 @@ class CityAreaGenerator
   static inline var DUMPSTERS_LOW = 8; // dumpsters per slums block
   static inline var DUMPSTERS_MEDIUM = 6; // and per ordinary city block
   static inline var DUMPSTER_SPACING = 10; // minimum cells between two dumpsters
+  static inline var CARS_LOW = 6; // car wrecks per slums block
+  static inline var CAR_SPACING = 12; // minimum cells between two car wrecks
   static var checked = false;
   var game: Game;
   var gen: AreaGenerator;
@@ -98,6 +100,91 @@ class CityAreaGenerator
 
       // and the hideable dumpsters in the back alleys of the two lower tiers
       placeDumpsters(area);
+
+      // and the slums' car wrecks, abandoned at the kerb
+      placeCars(area);
+    }
+
+// park car wrecks along slum kerbs, spaced apart: two road cells each, end to end along the kerb, the
+// first holding the object (objects.CarWreck, which the 3D view draws over both) and both flipped to
+// their unwalkable twin, as the burning barrels are. a pair is only taken where the road runs on past
+// it, so a wreck narrows a street and never closes one
+  function placeCars(area: AreaGame)
+    {
+      if (area.typeID != AREA_CITY_LOW)
+        return;
+      var spots = [];
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          {
+            var tail = carTail(area, x, y);
+            if (tail >= 0)
+              spots.push({
+                x: x,
+                y: y,
+                tail: tail,
+              });
+          }
+      var placed = [];
+      while (spots.length > 0 &&
+          placed.length < CARS_LOW)
+        {
+          var pt = spots.splice(Std.random(spots.length), 1)[0];
+          var near = false;
+          for (old in placed)
+            if (Const.distanceSquared(pt.x, pt.y, old.x, old.y) <
+                CAR_SPACING * CAR_SPACING)
+              near = true;
+          if (near ||
+              area.hasObjectAt(pt.x, pt.y) ||
+              area.hasObjectAt(pt.x + Const.dir4x[pt.tail], pt.y + Const.dir4y[pt.tail]))
+            continue;
+          new CarWreck(game, area.id, pt.x, pt.y);
+          gen.makeTileUnwalkable(area, pt.x, pt.y);
+          gen.makeTileUnwalkable(area, pt.x + Const.dir4x[pt.tail], pt.y + Const.dir4y[pt.tail]);
+          placed.push(pt);
+        }
+    }
+
+// can a wreck's front cell stand here: the Const.dir4x/dir4y index of its tail cell, or -1. both
+// cells empty road along exactly one walkway on the same side, and road again beyond both away from
+// the kerb. the tail is the side render.CityArea.objYaw KERB turns the shell toward: facing away from
+// the kerb at (fx, fy), its length runs along (fy, -fx)
+  function carTail(area: AreaGame, x: Int, y: Int): Int
+    {
+      var k = kerbOf(area, x, y);
+      if (k < 0)
+        return -1;
+      var fx = -Const.dir4x[k];
+      var fy = -Const.dir4y[k];
+      var tx = x + fy;
+      var ty = y - fx;
+      if (kerbOf(area, tx, ty) != k ||
+          area.getCellType(x + fx, y + fy) != Const.TILE_ROAD ||
+          area.getCellType(tx + fx, ty + fy) != Const.TILE_ROAD)
+        return -1;
+      for (i in 0...Const.dir4x.length)
+        if (Const.dir4x[i] == fy &&
+            Const.dir4y[i] == -fx)
+          return i;
+      return -1;
+    }
+
+// the one Const.dir4x/dir4y direction from an empty road cell that holds a walkway, or -1
+  function kerbOf(area: AreaGame, x: Int, y: Int): Int
+    {
+      if (area.getCellType(x, y) != Const.TILE_ROAD ||
+          area.hasObjectAt(x, y))
+        return -1;
+      var found = -1;
+      for (i in 0...Const.dir4x.length)
+        if (area.getCellType(x + Const.dir4x[i], y + Const.dir4y[i]) == Const.TILE_WALKWAY)
+          {
+            if (found >= 0)
+              return -1;
+            found = i;
+          }
+      return found;
     }
 
 // place dumpsters against back-alley walls on the two lower tiers, spaced apart. persisted objects,

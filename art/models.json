@@ -4132,6 +4132,21 @@
       "last_converted": "2026-10-17T18:58:19Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.39,0.39,0.39,1/rf1"
     },
+    "city/car": {
+      "src": "city/city-car.glb",
+      "tris": -1,
+      "tex": 1024,
+      "roughness": 1,
+      "note": "the SLUMS car wreck (objects.CarWreck, key car_wreck, render.world.ObjModels row KERB): a rusted teal 80s hatchback stripped to its shell, no wheels (its drums on concrete blocks), no glass, bonnet gone, a gutted interior. Free-standing, 7.4 x 3.25 x 2.51 half-metre units, length along x and the street flank at -y, parked over two kerb cells. Hand-modelled in Blender: models-src/city/kit/car.py through models-src/city/kit_build.py, off models-src/city/ref/car-src.png, wearing textures-src/city/prop-car.png (NOT four cells: a full side view across the top, front and rear strips, the roof bottom left, swatches bottom right). tex 1024: a 7.4-unit flank at 512 would be under the ground's density. baseColor a FLAT 0.39: it sampled 77 against the outdoor family's 46-52.",
+      "baseColor": [
+        0.39,
+        0.39,
+        0.39,
+        1
+      ],
+      "last_converted": "2026-10-17T19:30:34Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/bc0.39,0.39,0.39,1/rf1"
+    },
     "city/mattress": {
       "src": "city/city-mattress.glb",
       "tris": -1,
