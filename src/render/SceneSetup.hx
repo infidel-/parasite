@@ -131,6 +131,32 @@ class SceneSetup {
       moon.target.updateMatrixWorld();
     }
 
+  // a street lamp's fate (lampFate)
+  public static inline var LAMP_STEADY = 0;
+  public static inline var LAMP_FLICKER = 1;
+  public static inline var LAMP_DEAD = 2;
+
+// a street lamp's fate off its cell and the area style's odds: dead, sputtering (a separate slice of
+// the hash, so breaking a lamp doesn't correlate with sputtering) or steady. pure, so the generator
+// can park the slums' car wrecks under the lamps that will burn (game.CityAreaGenerator.placeCars)
+  public static function lampFate(col:Int, row:Int, style:render.world.AreaStyle):Int
+    {
+      if (style == null)
+        return LAMP_STEADY;
+      var h = lampHash(col, row);
+      if (h % 1000 < style.lampBrokenRatio * 1000)
+        return LAMP_DEAD;
+      if ((h >>> 11) % 1000 < style.lampFlickerRatio * 1000)
+        return LAMP_FLICKER;
+      return LAMP_STEADY;
+    }
+
+// the footprint hash a lamp's fate and flicker phase are read off
+  static inline function lampHash(col:Int, row:Int):Int
+    {
+      return ((col * 73856093) ^ (row * 19349663)) & 0x7fffffff;
+    }
+
 // build a fresh scene (background, fog, fill lights, per-lamp point lights) for a city.
 // lampPool = how many live lamp spotlights to run (config vidLampLights)
   public static function buildScene(renderer:WebGLRenderer, city:City, lampPool:Int, ?style:render.world.AreaStyle):SceneBundle {
@@ -190,8 +216,7 @@ class SceneSetup {
     // dropped from `bulbs` (no light cone) AND from `lampPosts`, so it never even enters the pool's
     // candidate list — the survivors near the player get MORE coverage, not less. its POST still stands,
     // but in its own instanced mesh with the emissive stripped, or the bulb keeps glowing and blooming
-    var brokenPct = style != null ? style.lampBrokenRatio * 1000 : 0;
-    var flickerPct = style != null ? style.lampFlickerRatio * 1000 : 0;
+    // (lampFate, which game.CityAreaGenerator asks too)
     var placements:Array<Models.PropPlace> = [];
     var dead:Array<Models.PropPlace> = [];
     var flickPlace:Array<Models.PropPlace> = []; // posts of the flickering lamps — in BOTH batches, see below
@@ -210,13 +235,13 @@ class SceneSetup {
       var pz = w.z - lpdx * sin + lpdz * cos;
       var bx = px + ldx * cos + ldz * sin;    // bulb offset FROM the post, over the road edge
       var bz = pz - ldx * sin + ldz * cos;
-      var h = ((lamp.col * 73856093) ^ (lamp.row * 19349663)) & 0x7fffffff;
-      if (h % 1000 < brokenPct)
+      var h = lampHash(lamp.col, lamp.row);
+      var fate = lampFate(lamp.col, lamp.row, style);
+      if (fate == LAMP_DEAD)
         dead.push({ x: px, z: pz, yaw: yaw }); // post still stands, but its bulb is drawn unlit
       else
         {
-          // a separate slice of the same hash, so breaking a lamp doesn't correlate with sputtering
-          var flick = (h >>> 11) % 1000 < flickerPct;
+          var flick = fate == LAMP_FLICKER;
           var phase = flick ? ((h >>> 17) % 628) / 100 : 0.0;
           if (flick)
             {

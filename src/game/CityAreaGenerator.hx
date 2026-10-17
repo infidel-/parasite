@@ -23,12 +23,15 @@ class CityAreaGenerator
   static inline var DUMPSTERS_MEDIUM = 6; // and per ordinary city block
   static inline var DUMPSTER_SPACING = 10; // minimum cells between two dumpsters
   static inline var CARS_LOW = 6; // car wrecks per slums block
+  static inline var CARS_LIT = 3; // of which parked under a steady street lamp first, where there is one
   static inline var CAR_SPACING = 12; // minimum cells between two car wrecks
   static var checked = false;
   var game: Game;
   var gen: AreaGenerator;
   // carved inner-courtyard rects from the last generate() (enclosed open pockets); barrels go here
   var courtyards: Array<citygen.CityModel.CourtRect> = [];
+  // the street lamps from the last generate(), for the object pass (car wrecks)
+  var lamps: Array<citygen.CityModel.Lamp> = [];
 
 // store references to the owning game and shared generator helpers
   public function new(g: Game, gn: AreaGenerator)
@@ -44,8 +47,10 @@ class CityAreaGenerator
       // logic tiles here and the render pick their profile/style from the same area type
       area.cityGenSeed = Std.random(0x7FFFFFFF);
       var city = CityGen.generate(area.cityGenSeed, Profiles.forArea(area.typeID));
-      // keep the carved inner courtyards for the object pass (barrel placement)
+      // keep the carved inner courtyards for the object pass (barrel placement), and the street lamps
+      // (car wrecks under the lit ones)
       courtyards = city.courtyards;
+      lamps = city.lamps;
 
       // translate the pure Tile grid into game tiles
       // (city grid is [row][col]; game cells are [x][y])
@@ -109,28 +114,51 @@ class CityAreaGenerator
 // flipped to their unwalkable twin and nothing else. a wreck is decoration, not an object: the 3D view
 // draws one over every such pair (render.world.StreetProps.wrecks), since nothing else in a city
 // makes a road cell unwalkable. a pair is only taken where the road runs on past it, so a wreck
-// narrows a street and never closes one
+// narrows a street and never closes one. the first CARS_LIT are parked under a lamp that will burn
+// steady (render.SceneSetup.lampFate, off the same cell hash the 3D view breaks its lamps with), on a
+// kerb most of which is dark
   function placeCars(area: AreaGame)
     {
       if (area.typeID != AREA_CITY_LOW)
         return;
+      var style = render.world.AreaStyle.forArea(area.typeID);
+      var steady = new Map<Int, Bool>();
+      for (l in lamps)
+        if (render.SceneSetup.lampFate(l.col, l.row, style) == render.SceneSetup.LAMP_STEADY)
+          steady.set(l.row * area.width + l.col, true);
+      // every pair, and apart those with a steady lamp on the walkway beside either cell
       var spots = [];
+      var under = [];
       for (y in 0...area.height)
         for (x in 0...area.width)
           {
             var tail = carTail(area, x, y);
-            if (tail >= 0)
-              spots.push({
-                x: x,
-                y: y,
-                tail: tail,
-              });
+            if (tail < 0)
+              continue;
+            var k = kerbOf(area, x, y);
+            var kx = Const.dir4x[k];
+            var ky = Const.dir4y[k];
+            var tx = x + Const.dir4x[tail];
+            var ty = y + Const.dir4y[tail];
+            var pt = {
+              x: x,
+              y: y,
+              tail: tail,
+            };
+            if (steady.exists((y + ky) * area.width + x + kx) ||
+                steady.exists((ty + ky) * area.width + tx + kx))
+              under.push(pt);
+            else
+              spots.push(pt);
           }
       var placed = [];
-      while (spots.length > 0 &&
-          placed.length < CARS_LOW)
+      var lit = 0;
+      while (placed.length < CARS_LOW)
         {
-          var pt = spots.splice(Std.random(spots.length), 1)[0];
+          var from = (lit < CARS_LIT && under.length > 0 ? under : spots);
+          if (from.length == 0)
+            break;
+          var pt = from.splice(Std.random(from.length), 1)[0];
           var near = false;
           for (old in placed)
             if (Const.distanceSquared(pt.x, pt.y, old.x, old.y) <
@@ -143,6 +171,8 @@ class CityAreaGenerator
           gen.makeTileUnwalkable(area, pt.x, pt.y);
           gen.makeTileUnwalkable(area, pt.x + Const.dir4x[pt.tail], pt.y + Const.dir4y[pt.tail]);
           placed.push(pt);
+          if (from == under)
+            lit++;
         }
     }
 

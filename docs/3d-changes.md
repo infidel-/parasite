@@ -1457,3 +1457,20 @@ than a lit one; the street's litter still shows at ground level.
 falls less than the cap does (0.61x cap, 0.62x mean here because nearly every cell sat at it).
 
 **Verdict:** landed.
+
+## Slums car wrecks parked under the steady lamps first
+
+**Changed:** `SceneSetup.lampFate(col, row, style)`: the dead / sputtering / steady test the scene
+build always ran off a lamp's cell hash, now a pure static the scene build calls too.
+`CityAreaGenerator` keeps citygen's `lamps` beside its `courtyards`, and `placeCars` deals its first
+`CARS_LIT` 3 of 6 wrecks from the kerb pairs with a STEADY lamp on the walkway beside either cell, the
+rest from the others. The generator reads `AreaStyle.forArea` for the odds, the one render class it
+touches: the fate has to agree with what the 3D view will light, and that lives in the style.
+
+**Measured:** area 3155 regenerated: 252 lamps (86 steady, 41 sputtering, 125 dead), 6 wrecks, 3 of them
+with a steady lamp beside a cell (64,28 / 96,70 / 40,72) and the car standing in its pool on screen.
+
+**Trap:** a car under a lamp on the far kerb hides behind the block in front of it from the follow
+camera; look from the road's other side.
+
+**Verdict:** landed.
