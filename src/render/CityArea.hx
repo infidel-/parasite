@@ -109,8 +109,10 @@ class CityArea implements Area3D
         }
       groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k]);
       groundProps.push(render.world.StreetProps.wrecks(scene, game.area));
-      steam = new render.world.SteamPuffs(scene, vents);
       chunks.build(scene, pre);
+      // AFTER the chunk pass: one mesh at the origin holding every plume, so bucketed it went dark
+      // whenever the origin's chunk left the frustum
+      steam = new render.world.SteamPuffs(scene, vents);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
       sounds = new CitySounds(game, cityModel, flickCells, coneFlick);
     }

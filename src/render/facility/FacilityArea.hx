@@ -126,6 +126,7 @@ class FacilityArea implements Area3D
   // PropBatch is a solid/ghost/hull triple with its own masks and its own ghost ease
   var props:Array<render.world.ObjModels.PropBatch>;
   var rig:FacilityRig.Rig;                      // the study rig's glowing leads, or null
+  var steam:render.world.SteamPuffs;            // the plumes off the pavement's sewer hatches
   var tactical = false;                         // tactical view up: the props draw their outline shells
   var cabinets = 0;                             // corridor casework cells merged into the bench meshes
   var boards = 0;                               // lobby notice boards emitted: one per front entrance
@@ -428,6 +429,16 @@ class FacilityArea implements Area3D
       lampPosts = lamps.masts.concat(lamps.ceilings).concat(lamps.corridors).concat(lamps.doors);
       spillPosts = FacilityGlow.build(scene, model);
       chunks.build(scene, pre);
+      // steam off the sewer hatches down the pavement (gen.blocks.RoadBlock), which is y 0. after the
+      // chunk pass, for the reason render.CityArea gives
+      var vents:Array<Vector3> = [];
+      for (o in game.area.getObjects())
+        if (o.type == 'sewer_hatch')
+          {
+            var w = citygen.CityConfig.cellToWorld(o.x, o.y);
+            vents.push(new Vector3(w.x, 0, w.z));
+          }
+      steam = new render.world.SteamPuffs(scene, vents);
       reveal = [for (_ in shells) 0.0];
       target = [for (_ in shells) 0.0];
       inside = [for (_ in shells) 0.0];
@@ -798,6 +809,7 @@ class FacilityArea implements Area3D
       for (b in props)
         render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       FacilityRig.tick(rig, opts.dtMs);
+      steam.tick(opts.dtMs, opts.player);
       if (opts.outro)
         return;
       sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);

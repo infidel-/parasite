@@ -1502,3 +1502,22 @@ base out to 2.27 against the lip's 2.2.
 flattened before the resize. And a deck with both faces cut reads as two gratings unless it is thin.
 
 **Verdict:** landed. Facility and military roads spawn hatches too (`RoadBlock`) and get no steam.
+
+## Steam off the facility's hatches, and the plume mesh out of the chunk tree
+
+**Changed:** `FacilityArea` builds a `SteamPuffs` over the area's `sewer_hatch` lids (the pavement
+row `gen.blocks.RoadBlock` lays them down, y 0) and ticks it above the outro gate, so a compound's
+hatches steam like a street's; a military base draws through the same code and has no hatches. Both
+areas now build the plume AFTER `chunks.build`: `CityArea` built it before, and `Chunks.build`
+bucketed it.
+
+**Measured:** live, the city's steam mesh was parented to a frozen chunk `Group`, not the scene
+(`objRadius` reads an `InstancedMesh` at count 0 as a small thing at the origin). Now
+`mesh.parent === scene` in both. Facility (25,1): 4 vents, the one under the player puffing; the
+plume draws with program #29, compiled by the city's boot warm, so it adds no key on entry.
+
+**Trap:** one mesh holding a city-wide effect at the origin is exactly what the chunk pass is built
+to bucket. Every plume went dark whenever the origin's chunk left the frustum. That is the likely
+answer to "what happened to the steam" on the old steam stacks.
+
+**Verdict:** landed.
