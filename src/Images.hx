@@ -111,6 +111,7 @@ class Images
         'facility/bench-pack3',
         'facility/bench-pack4',
         'military/clue-pack',
+        'city/clue-pack',
       ];
       var out = [];
       for (i in 0...Const.decoPackCount())

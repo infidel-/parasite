@@ -648,6 +648,25 @@ class Const
     { row: 51, col: 1 },
     { row: 51, col: 2 },
     { row: 51, col: 3 },
+    // sheet 6 — the street's clue papers and books (textures/city/clue-pack), the same shape as
+    // sheet 5: entities64 grew 52 -> 54 rows, twelve papers on row 52 and four books on row 53
+    // (STREET_DOCUMENTS, STREET_BOOKS)
+    { row: 52, col: 0 },
+    { row: 52, col: 1 },
+    { row: 52, col: 2 },
+    { row: 52, col: 3 },
+    { row: 52, col: 4 },
+    { row: 52, col: 5 },
+    { row: 52, col: 6 },
+    { row: 52, col: 7 },
+    { row: 52, col: 8 },
+    { row: 52, col: 9 },
+    { row: 52, col: 10 },
+    { row: 52, col: 11 },
+    { row: 53, col: 0 },
+    { row: 53, col: 1 },
+    { row: 53, col: 2 },
+    { row: 53, col: 3 },
   ];
 
   // ---- the clue pack: the reports and books a facility hands out --------------------------------
@@ -834,6 +853,13 @@ class Const
   ];
   public static var MIL_BOOKS = [
     { row: 51, amount: 4 },
+  ];
+  // and the streets', drawn off FACILITY_DECO_HD's sixth sheet
+  public static var STREET_DOCUMENTS = [
+    { row: 52, amount: 12 },
+  ];
+  public static var STREET_BOOKS = [
+    { row: 53, amount: 4 },
   ];
 
   // row 21,22 - spaceship

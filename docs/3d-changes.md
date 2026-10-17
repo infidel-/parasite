@@ -1155,3 +1155,30 @@ dense litter sits at ground 0.001, where a JPEG step is 10%. Under 4x ambient (c
 their alpha let the darker slums ground through, which nobody fitted.
 
 **Verdict:** landed. Caps slums 0.036, city 0.058, downtown 0.058.
+
+## Street clues: a pack16 of papers and books, the sixth deco sheet
+
+**Changed:** `AreaGame.turnSpawnClues`' street branch (every area but a facility and a military base)
+lays an `objects.Document` dealt off `Const.STREET_DOCUMENTS` (row 52, twelve papers) or
+`STREET_BOOKS` (row 53, four books), where it laid the generic `Paper`/`Book` at entities64 2/1 and
+2/2. The rows redirect through `Const.FACILITY_DECO_HD` as its sixth sheet (`city/clue-pack`, named
+in `Images.loadDecoPacks`), the military pack's exact shape: 256 px cells, so 85 texels per world
+unit on the flat cell against the old frame's 21. `tools/atlaspaste.py --grow` baked the 64 px icons
+into entities64 rows 52-53 (grew 52 -> 54 rows). Being a `Document`, a street clue now takes the
+`Actors` DOC_YAW turn off square for free. Item ids stay `paper`/`book`, and `imageRow/imageCol` were
+already saved fields: no save change. Old saves' `Paper` objects still draw their 2/1 frame.
+
+**Art:** one sunburst-high transparent drop: all sixteen subjects and the three stamped words
+("EVIDENCE", "MISSING", "CONFIDENTIAL") right on the first roll, but UNCUT (alpha min 11) — the
+third of four drops this week to come back with a painted backdrop and no surface named. One
+`edit_image` re-cut, 49.4% clear, packed first time. Fill median 0.86 of the cell against the old
+paper's 0.98, so it draws at scale 1.0 (the litter's 1.6x trap does not apply).
+
+**Trap: dark AND solid on the asphalt.** The papers build 0.21-0.48 linear around the old paper's
+0.347, but the black pocket notebook (0.0319) and the red diary (0.0361) are solid slabs (0.96) at the
+asphalt's own 0.0329 and read as holes beside a clue that has to be found. `cellgamma.py` 0.62 on
+those two cells only, from a pristine copy: 0.094 and 0.105, beside the paperback's 0.085. On screen
+in an unlit slums street: diary 2.2x its ground, notebook 1.7x, paperback 1.3x, clipping 3.2x.
+
+**Verdict:** landed. No `lift`, no `sat`, no `cells` cap: a clue keeps its colour against the
+desaturated litter.

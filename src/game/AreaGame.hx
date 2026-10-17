@@ -2445,6 +2445,7 @@ class AreaGame extends _SaveObject
             }
           var maxSpawn = maxClues - cnt;
           var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
+          var list = (info.id == 'paper' ? Const.STREET_DOCUMENTS : Const.STREET_BOOKS);
           for (_ in 0...maxSpawn)
             {
               var loc = findUnseenEmptyLocation();
@@ -2455,8 +2456,10 @@ class AreaGame extends _SaveObject
                   return;
                 }
 
-              var o: AreaObject = Type.createInstance(info.areaObjectClass,
-                [ game, this.id, loc.x, loc.y ]);
+              // a street paper or book off the street clue sheet, where it used to be the one
+              // generic Paper/Book frame
+              var tiles = list[Std.random(list.length)];
+              var o = new Document(game, this.id, loc.x, loc.y, tiles.row, Std.random(tiles.amount));
               o.name = info.names[Std.random(info.names.length)];
               o.item = {
                 game: game,
