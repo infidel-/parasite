@@ -180,6 +180,50 @@ class DowntownStyle {
       // no fire escapes on a tower: its service walls carry conduit, junction boxes and intakes instead
       s.wallKit = render.RenderConfig.MODELS.cityWallKitDowntown;
       s.serviceChance = 0.6;
+      // a managed street: trees in grates, bollards, planters at the kerb; the compactors and the
+      // recycling stations kept back in the service alleys
+      s.groundProps = [
+        {
+          path: render.RenderConfig.MODELS.cityCompactor,
+          h: 2.79,
+          depth: 2.66,
+          spot: SERVICE,
+          chance: 0.03,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityRecycling,
+          h: 2.17,
+          depth: 1.1,
+          spot: SERVICE,
+          chance: 0.03,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityTree,
+          h: 4.62,
+          depth: 2.3,
+          spot: KERB,
+          chance: 0.08,
+          turn: 1.5,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityBollard,
+          h: 1.39,
+          depth: 0.46,
+          spot: KERB,
+          chance: 0.06,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityPlanter,
+          h: 1.51,
+          depth: 1.93,
+          spot: KERB,
+          chance: 0.03,
+          turn: 0.0,
+        },
+      ];
       _s = s;
     }
     return _s;

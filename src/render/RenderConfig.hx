@@ -683,6 +683,25 @@ class RenderConfig {
     cityWallKit: 'models/city/wallkit.glb',
     cityWallKitSlums: 'models/city/wallkit-slums.glb',
     cityWallKitDowntown: 'models/city/wallkit-downtown.glb',
+    // the street ground props (render.world.StreetProps.ground, AreaStyle.groundProps), hand-modelled,
+    // models-src/city/kit/<name>.py. the slums' junk
+    citySackPile: 'models/city/sack-pile.glb',
+    cityCart: 'models/city/cart.glb',
+    cityMattress: 'models/city/mattress.glb',
+    cityTyres: 'models/city/tyres.glb',
+    // the city's kerb and its walls
+    cityBagPile: 'models/city/bag-pile.glb',
+    cityHydrant: 'models/city/hydrant.glb',
+    cityMeter: 'models/city/meter.glb',
+    cityNewsbox: 'models/city/newsbox.glb',
+    citySteamStack: 'models/city/steamstack.glb',
+    cityMeters: 'models/city/meters.glb',
+    // downtown's managed street and its service alleys
+    cityCompactor: 'models/city/compactor.glb',
+    cityRecycling: 'models/city/recycling.glb',
+    cityBollard: 'models/city/bollard.glb',
+    cityTree: 'models/city/tree.glb',
+    cityPlanter: 'models/city/planter.glb',
     sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
     // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
     // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be

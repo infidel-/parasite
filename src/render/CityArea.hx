@@ -32,6 +32,8 @@ class CityArea implements Area3D
   var sounds:CitySounds;                                  // the tier's beds, the street's loops and one-shots
   var sceneRef:Scene;                                     // the built scene, for refreshObjects
   var props:Array<render.world.ObjModels.PropBatch>;     // the object props (dumpsters), culled per frame
+  var groundProps:Array<render.Models.InstancedProp> = []; // the street's ground props, culled per frame
+  var steam:render.world.SteamPuffs;                      // the plumes off the steam stacks
   var tactical = false;                                   // tactical view up: the props show their outline
 
   public function new(game:Game, city:City, seed:Int)
@@ -88,6 +90,13 @@ class CityArea implements Area3D
       // land over a loader callback after the chunk pass below, which leaves the batches at the scene
       // root; they are culled per instance in tick()
       props = render.world.ObjModels.build(scene, game, objYaw);
+      // the street's ground props, clear of every object's cell, the sacks beside the dumpsters
+      var blocked = new Map<Int, Bool>();
+      for (o in game.area.getObjects())
+        blocked.set(o.y * CityConfig.GRID + o.x, true);
+      var vents:Array<Vector3> = [];
+      groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k], vents);
+      steam = new render.world.SteamPuffs(scene, vents);
       chunks.build(scene, pre);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
       sounds = new CitySounds(game, cityModel, flickCells, coneFlick);
@@ -100,6 +109,9 @@ class CityArea implements Area3D
       // the object props, ABOVE the outro gate: cull() reads opts.outro itself, and the camera is
       // still on the street through the pull-out. no patch chain: the city has no vision mask
       render.world.ObjModels.cull(props, opts, tactical && opts.ui);
+      for (p in groundProps)
+        render.Models.cull(p, opts.camera, CityConfig.CELL);
+      steam.tick(opts.dtMs, opts.player);
       // leaving: keep fading buildings that slide between the zooming-in camera and the (frozen)
       // player, so the marker stays visible through the outro. occlusion reads no game state
       if (opts.outro)

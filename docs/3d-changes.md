@@ -1092,3 +1092,34 @@ after the warm now anyway: there is nothing in them to compile.
 would stay solid on a faded building, and a fire escape left standing in front of the player is the
 one thing the fade exists to remove.
 
+
+## Street ground props: fifteen hand-modelled pieces per tier, and steam off the stacks
+
+**Changed:** `StreetProps.ground` scatters `AreaStyle.groundProps`, one prop a cell at most, hashed off
+the cell: KERB (a walkway cell on exactly one road, at the kerb, facing it), WALL (an alley or walkway
+cell on exactly one wall, its back to it), SERVICE (WALL on alley cells only, to keep the compactor
+off the frontage) and BIN (beside a dumpster). Object cells and lamp cells stay clear, a wall prop
+never stands across a door, and each prop is ONE `Models.instanced` SOLID batch culled per instance
+in `CityArea.tick`. Slums: sack pile (BIN + WALL), mattress, cart, tyres. City: bag pile (WALL +
+KERB), hydrant, parking meter, news boxes, gas meters, steam stack. Downtown: compactor and recycling
+(SERVICE), street tree in a grate, bollard, planter. Built by three sub-agents in parallel off one
+brief, each piece a reference + a pack4 edit (30 gens, ~$1.8), Blender modules in
+`models-src/city/kit/`. `SteamPuffs` puffs off every `vent` prop near the player: ONE instanced
+additive quad, faded by instance colour, frontal (fixed yaw, `Sprites.TILT`), double-sided.
+
+**Measured:** 364-2,912 tris a piece, all gates 0/0/1. Placements in the test areas: city 192,
+slums 79, downtown 253. Gameplay-camera A/B, the batches detached (toggling `visible` does nothing,
+`Models.cull` rewrites it): city +10-12 calls +44k tris, slums +2-4 / +16k, downtown +10-11 / +22k.
+No ground prop uses a program the rest of the scene does not; the steam quad's one is warmed in
+`CityWarm`.
+
+**Trap:** every sheet came back bright for the outdoor family: sampled 62-150 against 46-52 (the
+hydrant 133, the stainless bollard 147). A flat `baseColor` scalar per piece (0.12-0.72) lands them at
+48-61 with their chroma kept. **Second trap:** the steam quad was single-sided and vanished from any
+camera behind its lean; the FX pool draws its frontal quads DoubleSide for that reason. **Third:** the
+boot read 14-17 s through this whole phase. Not this phase: the Phase 3 commit, rebuilt and timed
+under the same conditions, read 14.0 and 16.5 s.
+
+**Verdict:** landed. Tris are the bill (the city's +44k is the meters, bags and gas meters in view
+and in the moon's shadow pass), not calls.
+

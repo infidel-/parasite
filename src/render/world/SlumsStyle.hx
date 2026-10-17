@@ -176,6 +176,51 @@ class SlumsStyle {
       s.fireEscapeChance = 0.5;
       s.downpipeChance = 0.6;
       s.downpipeBroken = 0.6;
+      // the junk: sacks heaped beside most dumpsters, and along the walls a mattress, a cart, tyres.
+      // heights are the glbs' (half-metre units x 0.77, CityStyle.DUMPSTER_H's scale); a turned prop's
+      // depth is padded so its corner stays off the wall
+      s.groundProps = [
+        {
+          path: render.RenderConfig.MODELS.citySackPile,
+          h: 1.30,
+          depth: 1.63,
+          spot: BIN,
+          chance: 0.7,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.citySackPile,
+          h: 1.30,
+          depth: 1.63,
+          spot: WALL,
+          chance: 0.02,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityMattress,
+          h: 2.82,
+          depth: 1.12,
+          spot: WALL,
+          chance: 0.015,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityCart,
+          h: 1.62,
+          depth: 1.4,
+          spot: WALL,
+          chance: 0.015,
+          turn: 0.3,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityTyres,
+          h: 1.25,
+          depth: 1.9,
+          spot: WALL,
+          chance: 0.02,
+          turn: 0.3,
+        },
+      ];
       _s = s;
     }
     return _s;

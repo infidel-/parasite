@@ -13,6 +13,27 @@ typedef CoverDim = {
   matTile:Float,    // world units per material-swatch tile (never stretch the swatch)
 };
 
+// where a street ground prop may stand (render.world.StreetProps.ground)
+enum PropSpot
+{
+  KERB; // a walkway cell along exactly one road, at the kerb, facing the road
+  WALL; // an alley or walkway cell against exactly one building wall, its back to that wall
+  SERVICE; // as WALL, but an ALLEY cell only: kept off the street frontage
+  BIN;  // a cell beside a dumpster, against the same wall
+}
+
+// one street ground prop an area style scatters (AreaStyle.groundProps). each is ONE instanced batch
+// over the whole city, so `chance` is a count knob, not a cost one
+typedef GroundProp = {
+  path:String,   // the glb (RenderConfig.MODELS)
+  h:Float,       // world height it is drawn at
+  depth:Float,   // world depth back to front: how far a WALL/BIN prop's centre stands off its wall
+  spot:PropSpot, // where it may stand
+  chance:Float,  // odds an eligible cell takes it
+  turn:Float,    // radians of hashed yaw jitter either way (a free-standing prop); 0 = square on
+  ?vent:Bool,    // its open top puffs steam (render.world.SteamPuffs)
+};
+
 // per-area street-lamp prop: which lamp model to instance + where its bulb/post sit relative to the
 // cell (SceneSetup places the post at pdx/pdz within the cell, the bulb at dx/dz out from the post).
 // the bulb HEIGHT (LAMP_LIGHT.yMul), cone (angle) and the shared live-spotlight pool stay global —
@@ -115,6 +136,7 @@ class AreaStyle {
   public var downpipeChance:Float = 0;   // odds a windowed building carries a downpipe beside its end window column
   public var downpipeBroken:Float = 0;   // odds a downpipe has lost its foot and one length
   public var serviceChance:Float = 0;    // odds an open service (worn) wall carries a conduit run, a riser and a louvre
+  public var groundProps:Array<GroundProp> = null; // the street's ground props (StreetProps.ground); null = none
 
   public function new() {}
 

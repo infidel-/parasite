@@ -96,6 +96,8 @@ class CityWarm
                   res(null);
               });
         });
+      // the steam plume's quad: instanced, additive, coloured per instance, a program of its own
+      new render.world.SteamPuffs(s, [new Vector3(0, 1, 0)]).tick(0, new Vector3(0, 0, 0));
       var p = props.then(function(_)
         return Warmup.compile(renderer, camera, s, function() new render.particles.FlameLights(g)));
       // and the wall kits: PREFETCHED once the warm is done, never waited on. a merged kit draws the

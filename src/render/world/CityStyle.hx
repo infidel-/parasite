@@ -118,6 +118,68 @@ class CityStyle {
       s.wallKit = render.RenderConfig.MODELS.cityWallKit;
       s.fireEscapeChance = 0.35;
       s.downpipeChance = 0.5;
+      // the kerb and the walls: bags out for collection, hydrants, meters, news boxes, the gas meters,
+      // and now and then a steam stack puffing (SteamPuffs). heights are the glbs' (half-metre units
+      // x 0.77, DUMPSTER_H's scale)
+      s.groundProps = [
+        {
+          path: render.RenderConfig.MODELS.cityBagPile,
+          h: 1.25,
+          depth: 1.55,
+          spot: WALL,
+          chance: 0.025,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityBagPile,
+          h: 1.25,
+          depth: 1.55,
+          spot: KERB,
+          chance: 0.012,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityHydrant,
+          h: 1.16,
+          depth: 0.77,
+          spot: KERB,
+          chance: 0.025,
+          turn: 0.3,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityMeter,
+          h: 2.0,
+          depth: 0.26,
+          spot: KERB,
+          chance: 0.04,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityNewsbox,
+          h: 1.69,
+          depth: 0.77,
+          spot: WALL,
+          chance: 0.012,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.citySteamStack,
+          h: 2.77,
+          depth: 1.85,
+          spot: KERB,
+          chance: 0.008,
+          turn: 0.0,
+          vent: true,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityMeters,
+          h: 1.79,
+          depth: 0.53,
+          spot: WALL,
+          chance: 0.015,
+          turn: 0.0,
+        },
+      ];
       _s = s;
     }
     return _s;

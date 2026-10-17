@@ -4,7 +4,12 @@ import three.Three;
 import citygen.CityConfig;
 import citygen.CityConfig.cellToWorld;
 import citygen.CityModel.Building;
+import citygen.CityModel.City;
+import citygen.CityModel.Tile;
 import render.RenderConfig;
+import render.Models.InstancedProp;
+import render.Models.PropPlace;
+import render.world.AreaStyle.GroundProp;
 
 // one module of a wall kit set down on a building
 typedef KitPlace = {
@@ -32,6 +37,11 @@ class StreetProps
   static inline var RUN_Y = 4.3;
   static inline var RISER_HALF = 0.6;
   static inline var LOUVRE_HALF = 0.75;
+  // a kerb prop's centre in from the kerb line, how far one may slide along its kerb or wall either
+  // way, and the gap a wall prop keeps off its wall
+  static inline var KERB_IN = 0.8;
+  static inline var SLIDE = 0.7;
+  static inline var WALL_GAP = 0.08;
 
   static var checked = false;
 
@@ -191,6 +201,169 @@ class StreetProps
                 pos(li, 0, 'louvre');
             }
         }
+    }
+
+// scatter the style's ground props (AreaStyle.groundProps): one per cell at most, first the cells
+// beside a dumpster (`bins`, grid keys row * GRID + col), then every kerb and wall cell, each prop in
+// list order taking its `chance` off a hash of the cell. `blocked` cells (objects) and the lamps' cells
+// stay clear, and a wall prop never stands across a door. one instanced batch per prop; the steam
+// vents' open tops are pushed onto `vents`
+  public static function ground(scene:Scene, city:City, blocked:Map<Int, Bool>, bins:Array<Int>, vents:Array<Vector3>):Array<InstancedProp>
+    {
+      var props = WorldCtx.style.groundProps;
+      if (props == null)
+        return [];
+      var taken = new Map<Int, Bool>();
+      for (k in blocked.keys())
+        taken.set(k, true);
+      for (l in city.lamps)
+        taken.set(l.row * GRID + l.col, true);
+      // which building stands on each cell, for the door test
+      var owner = new Map<Int, Building>();
+      for (b in WorldCtx.buildings)
+        for (r in b.row...b.row + b.d)
+          for (c in b.col...b.col + b.w)
+            owner.set(r * GRID + c, b);
+      var places:Array<Array<PropPlace>> = [for (_ in props) []];
+      // try every prop of this spot on one cell, in list order; the first whose hash comes up stands
+      // there. `dir` is the road (KERB) or the wall (WALL, BIN) the cell faces
+      function pick(col:Int, row:Int, spot:AreaStyle.PropSpot, dir:Int):Void
+        {
+          var key = row * GRID + col;
+          if (taken.exists(key))
+            return;
+          for (i in 0...props.length)
+            {
+              var gp = props[i];
+              var h = cellHash(col, row, i);
+              if (gp.spot != spot ||
+                  h % 10000 >= gp.chance * 10000)
+                continue;
+              var c = cellToWorld(col, row);
+              var out = (spot == KERB ? CELL / 2 - KERB_IN : CELL / 2 - gp.depth / 2 - WALL_GAP);
+              var slide = ((h >> 14) % 1000 / 1000.0 - 0.5) * 2 * SLIDE;
+              var x = c.x + DX[dir] * out + DZ[dir] * slide;
+              var z = c.z + DZ[dir] * out + DX[dir] * slide;
+              var face = (spot == KERB ? dir : OPP[dir]);
+              places[i].push({
+                x: x,
+                z: z,
+                yaw: Geom.faceRotY(face) + ((h >> 4) % 1000 / 1000.0 - 0.5) * 2 * gp.turn,
+              });
+              if (gp.vent == true)
+                vents.push(new Vector3(x, gp.h, z));
+              taken.set(key, true);
+              return;
+            }
+        }
+      // the cells either side of a dumpster along its wall
+      for (k in bins)
+        {
+          var col = k % GRID;
+          var row = Std.int(k / GRID);
+          var w = wallDir(col, row);
+          if (w < 0)
+            continue;
+          for (s in (w < 2 ? [2, 3] : [0, 1]))
+            {
+              var nc = col + Std.int(DX[s]);
+              var nr = row + Std.int(DZ[s]);
+              if (open(nc, nr) &&
+                  wallDir(nc, nr) == w &&
+                  !doorAt(owner, nc, nr, w))
+                pick(nc, nr, BIN, w);
+            }
+        }
+      // every kerb and wall cell
+      for (row in 0...GRID)
+        for (col in 0...GRID)
+          {
+            if (!open(col, row))
+              continue;
+            var r = roadDir(col, row);
+            if (r >= 0 &&
+                WorldCtx.tiles[row][col] == Tile.Walkway)
+              pick(col, row, KERB, r);
+            var w = wallDir(col, row);
+            if (w < 0 ||
+                doorAt(owner, col, row, w))
+              continue;
+            if (WorldCtx.tiles[row][col] == Tile.Alley)
+              pick(col, row, SERVICE, w);
+            pick(col, row, WALL, w);
+          }
+      var out:Array<InstancedProp> = [];
+      for (i in 0...props.length)
+        if (places[i].length > 0)
+          out.push(Models.instanced(scene, props[i].path, places[i], props[i].h, SOLID));
+      return out;
+    }
+
+  // a direction's unit step on the grid, as Geom numbers the faces (0 +z, 1 -z, 2 +x, 3 -x), and the
+  // direction opposite it
+  static final DX:Array<Float> = [0, 0, 1, -1];
+  static final DZ:Array<Float> = [1, -1, 0, 0];
+  static final OPP:Array<Int> = [1, 0, 3, 2];
+
+// is the cell on the grid and open ground (alley or walkway)?
+  static function open(col:Int, row:Int):Bool
+    {
+      if (col < 0 ||
+          row < 0 ||
+          col >= GRID ||
+          row >= GRID)
+        return false;
+      var t = WorldCtx.tiles[row][col];
+      return t == Tile.Alley ||
+        t == Tile.Walkway;
+    }
+
+// the one direction from this cell that holds a tile of kind `k`, or -1 for none or several
+  static function onlyDir(col:Int, row:Int, k:Tile):Int
+    {
+      var found = -1;
+      for (d in 0...4)
+        {
+          var c = col + Std.int(DX[d]);
+          var r = row + Std.int(DZ[d]);
+          if (c < 0 ||
+              r < 0 ||
+              c >= GRID ||
+              r >= GRID ||
+              WorldCtx.tiles[r][c] != k)
+            continue;
+          if (found >= 0)
+            return -1;
+          found = d;
+        }
+      return found;
+    }
+
+// the single road beside this cell (a corner has two and is left bare)
+  static inline function roadDir(col:Int, row:Int):Int
+    {
+      return onlyDir(col, row, Tile.Road);
+    }
+
+// the single building wall beside this cell (an alley between two has none)
+  static inline function wallDir(col:Int, row:Int):Int
+    {
+      return onlyDir(col, row, Tile.Building);
+    }
+
+// would a prop against the wall at `w` from this cell stand across a door in that wall?
+  static function doorAt(owner:Map<Int, Building>, col:Int, row:Int, w:Int):Bool
+    {
+      var b = owner.get((row + Std.int(DZ[w])) * GRID + col + Std.int(DX[w]));
+      var c = cellToWorld(col, row);
+      return b != null &&
+        onDoor(b, OPP[w], (w < 2 ? c.x : c.z), CELL / 2 - 0.2);
+    }
+
+// a per-cell, per-prop decision hash
+  static inline function cellHash(col:Int, row:Int, i:Int):Int
+    {
+      return ((col * 73856093) ^ (row * 19349663) ^ ((i + 1) * 83492791)) & 0x7fffffff;
     }
 
 // merge every building's modules into one mesh in the kit's own material, tagged with the building.
