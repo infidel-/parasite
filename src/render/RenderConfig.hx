@@ -688,13 +688,25 @@ class RenderConfig {
     cityWallKitSlums: 'models/city/wallkit-slums.glb',
     cityWallKitDowntown: 'models/city/wallkit-downtown.glb',
     // the street ground props (render.world.StreetProps.ground, AreaStyle.groundProps), hand-modelled,
-    // models-src/city/kit/<name>.py. the slums' junk
-    citySackPile: 'models/city/sack-pile.glb',
+    // models-src/city/kit/<name>.py. the slums' junk, the heaps and stacks as the separate pieces a
+    // render.world.Pile deals (sack-pile.py, tyres.py, cart.py)
+    citySackBurlap: 'models/city/sack-burlap.glb',
+    citySackPlastic: 'models/city/sack-plastic.glb',
+    citySackLying: 'models/city/sack-lying.glb',
+    cityCartonBox: 'models/city/carton-box.glb',
+    cityCartonFlats: 'models/city/carton-flats.glb',
+    cityCartonLean: 'models/city/carton-lean.glb',
     cityCart: 'models/city/cart.glb',
+    cityCartBottle: 'models/city/cart-bottle.glb',
+    cityCartBoard: 'models/city/cart-board.glb',
     cityMattress: 'models/city/mattress.glb',
-    cityTyres: 'models/city/tyres.glb',
-    // the city's kerb and its walls
-    cityBagPile: 'models/city/bag-pile.glb',
+    cityTyre: 'models/city/tyre.glb',
+    cityTyreMud: 'models/city/tyre-mud.glb',
+    cityTyreRim: 'models/city/tyre-rim.glb',
+    // the city's kerb and its walls; its bag heaps dealt from three bags (bag-pile.py)
+    cityBagBlack: 'models/city/bag-black.glb',
+    cityBagGreen: 'models/city/bag-green.glb',
+    cityBagSmall: 'models/city/bag-small.glb',
     cityHydrant: 'models/city/hydrant.glb',
     cityMeter: 'models/city/meter.glb',
     cityNewsbox: 'models/city/newsbox.glb',

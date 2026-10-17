@@ -1,5 +1,7 @@
 package render.world;
 
+import render.world.Pile.PileKind;
+
 // slums (low-density outskirts) render knobs — the single file to tune the run-down look
 // independently of the mid-density residential default. Facade slots 0-2 keep the residential
 // MATERIALS (concrete/brick/stone — it is the same kind of city, just poorer) but on their own
@@ -192,49 +194,179 @@ class SlumsStyle {
       s.fireEscapeChance = 0.5;
       s.downpipeChance = 0.6;
       s.downpipeBroken = 0.6;
-      // the junk: sacks heaped beside most dumpsters, and along the walls a mattress, a cart, tyres.
-      // heights are the glbs' (half-metre units x 0.77, CityStyle.DUMPSTER_H's scale); a turned prop's
-      // depth is padded so its corner stays off the wall
+      // the junk: sacks heaped beside most dumpsters, and along the walls a cart, tyres, and in the
+      // alleys a mattress. the heaps, the stacks and the cart's load are DEALT per cell from separate
+      // pieces (render.world.Pile). heights are the glbs' (half-metre units x 0.77, CityStyle.DUMPSTER_H's
+      // scale), a part's radius its footprint's
+      var M = render.RenderConfig.MODELS;
+      var sacks:Pile = {
+        kind: HEAP,
+        parts: [
+          {
+            path: M.citySackBurlap,
+            h: 1.31,
+            r: 0.45,
+            weight: 3,
+          },
+          {
+            path: M.citySackPlastic,
+            h: 1.19,
+            r: 0.38,
+            weight: 2,
+          },
+          {
+            path: M.citySackLying,
+            h: 0.53,
+            r: 0.42,
+            weight: 1.5,
+            front: true,
+          },
+          {
+            path: M.cityCartonBox,
+            h: 0.85,
+            r: 0.55,
+            weight: 1,
+            turn: 0.5,
+          },
+          {
+            path: M.cityCartonFlats,
+            h: 0.12,
+            r: 0.48,
+            weight: 1.2,
+            front: true,
+            turn: 0.6,
+          },
+          {
+            path: M.cityCartonLean,
+            h: 1.04,
+            r: 0.45,
+            weight: 1.2,
+            back: true,
+            turn: 0.08,
+          },
+        ],
+        min: 4,
+        max: 8,
+      };
       s.groundProps = [
         {
-          path: render.RenderConfig.MODELS.citySackPile,
-          h: 1.30,
-          depth: 1.63,
+          path: null,
+          h: 1.31,
+          depth: 1.6,
           spot: BIN,
           chance: 0.7,
           turn: 0.0,
+          pile: sacks,
         },
         {
-          path: render.RenderConfig.MODELS.citySackPile,
-          h: 1.30,
-          depth: 1.63,
+          path: null,
+          h: 1.31,
+          depth: 1.6,
           spot: WALL,
           chance: 0.02,
           turn: 0.0,
+          pile: sacks,
         },
+        // kept off the street frontage, turned and leant a little each its own way
         {
-          path: render.RenderConfig.MODELS.cityMattress,
+          path: M.cityMattress,
           h: 2.82,
           depth: 1.12,
-          spot: WALL,
-          chance: 0.015,
-          turn: 0.0,
+          spot: SERVICE,
+          chance: 0.02,
+          turn: 0.25,
+          width: 1.62,
+          lean: 0.06,
         },
+        // empty, or loaded with sacks, flattened cartons, a bottle or two and the broken board, over
+        // the basket's floor (cart.py's XB0..XB1 x YB at ZB, about the glb's centre)
         {
-          path: render.RenderConfig.MODELS.cityCart,
-          h: 1.62,
+          path: M.cityCart,
+          h: 1.55,
           depth: 1.4,
           spot: WALL,
           chance: 0.015,
           turn: 0.3,
+          width: 1.54,
+          pile: {
+            kind: LOAD,
+            parts: [
+              {
+                path: M.citySackBurlap,
+                h: 0.7,
+                r: 0.24,
+                weight: 2,
+              },
+              {
+                path: M.citySackPlastic,
+                h: 0.62,
+                r: 0.21,
+                weight: 2,
+              },
+              {
+                path: M.cityCartonFlats,
+                h: 0.07,
+                r: 0.3,
+                weight: 1,
+              },
+              {
+                path: M.cityCartBottle,
+                h: 0.12,
+                r: 0.2,
+                weight: 2.5,
+              },
+              {
+                path: M.cityCartBoard,
+                h: 0.85,
+                r: 0.3,
+                weight: 1.2,
+                at: [ -0.316, 0.774, -0.031 ],
+              },
+            ],
+            min: 0,
+            max: 4,
+            bed: {
+              x0: -0.52,
+              x1: 0.53,
+              z0: -0.34,
+              z1: 0.34,
+              y: 0.78,
+            },
+          },
         },
+        // a stack of flat tyres at the wall's foot, the rest stood on edge against it or lying by it
         {
-          path: render.RenderConfig.MODELS.cityTyres,
+          path: null,
           h: 1.25,
           depth: 1.9,
           spot: WALL,
           chance: 0.02,
-          turn: 0.3,
+          turn: 0.0,
+          pile: {
+            kind: STACK,
+            parts: [
+              {
+                path: M.cityTyre,
+                h: 0.416,
+                r: 0.504,
+                weight: 2,
+              },
+              {
+                path: M.cityTyreMud,
+                h: 0.416,
+                r: 0.504,
+                weight: 1.5,
+              },
+              {
+                path: M.cityTyreRim,
+                h: 0.416,
+                r: 0.504,
+                weight: 1.2,
+              },
+            ],
+            min: 1,
+            max: 5,
+          },
         },
       ];
       _s = s;

@@ -11,6 +11,8 @@ import render.Chunks;
 import render.Models.InstancedProp;
 import render.Models.PropPlace;
 import render.world.AreaStyle.GroundProp;
+import render.world.Pile.PileKind;
+import citygen.CityGen;
 import render.world.roofs.Gables;
 
 // one module of a wall kit set down on a building
@@ -49,6 +51,19 @@ class StreetProps
   static inline var KERB_IN = 0.8;
   static inline var SLIDE = 0.7;
   static inline var WALL_GAP = 0.08;
+  // a dealt pile (deal): how far in from the kerb line a kerb heap's back line runs, how far in from
+  // the cell's ends a piece keeps, a back part's and a front part's distance off the back line (and
+  // how much further a front one may spill), how deep the rest scatter, a stack's gap off the wall,
+  // how many tries a piece gets at a clear spot, and how close two pieces may sit, of their two radii
+  static inline var KERB_BACK = 0.35;
+  static inline var PILE_MARGIN = 0.8;
+  static inline var BACK_OFF = 0.1;
+  static inline var FRONT_OFF = 0.9;
+  static inline var FRONT_RUN = 0.6;
+  static inline var HEAP_RUN = 0.7;
+  static inline var STACK_OFF = 0.05;
+  static inline var TRIES = 10;
+  static inline var CLOSE = 0.65;
 
   static var checked = false;
 
@@ -229,8 +244,8 @@ class StreetProps
 // scatter the style's ground props (AreaStyle.groundProps): one per cell at most, first the cells
 // beside a dumpster (`bins`, grid keys row * GRID + col), then every kerb and wall cell, each prop in
 // list order taking its `chance` off a hash of the cell. `blocked` cells (objects) and the lamps' cells
-// stay clear, and a wall prop never stands across a door. one instanced batch per prop; the steam
-// vents' open tops are pushed onto `vents`
+// stay clear, and a wall prop never stands across a door. a prop with a `pile` deals its pieces there
+// (deal). one instanced batch per glb; the steam vents' open tops are pushed onto `vents`
   public static function ground(scene:Scene, city:City, blocked:Map<Int, Bool>, bins:Array<Int>, vents:Array<Vector3>):Array<InstancedProp>
     {
       var props = WorldCtx.style.groundProps;
@@ -247,7 +262,21 @@ class StreetProps
         for (r in b.row...b.row + b.d)
           for (c in b.col...b.col + b.w)
             owner.set(r * GRID + c, b);
-      var places:Array<Array<PropPlace>> = [for (_ in props) []];
+      // one batch per glb, at the height it was first dealt at: a piece dealt at another rides `scale`
+      var order:Array<String> = [];
+      var heights = new Map<String, Float>();
+      var batches = new Map<String, Array<PropPlace>>();
+      function put(path:String, h:Float, pl:PropPlace):Void
+        {
+          if (!batches.exists(path))
+            {
+              order.push(path);
+              heights.set(path, h);
+              batches.set(path, []);
+            }
+          pl.scale = (pl.scale != null ? pl.scale : 1.0) * h / heights.get(path);
+          batches.get(path).push(pl);
+        }
       // try every prop of this spot on one cell, in list order; the first whose hash comes up stands
       // there. `dir` is the road (KERB) or the wall (WALL, BIN) the cell faces
       function pick(col:Int, row:Int, spot:AreaStyle.PropSpot, dir:Int):Void
@@ -262,20 +291,63 @@ class StreetProps
               if (gp.spot != spot ||
                   h % 10000 >= gp.chance * 10000)
                 continue;
+              taken.set(key, true);
               var c = cellToWorld(col, row);
+              // a walkway stands a kerb's height up
+              var y = (WorldCtx.tiles[row][col] == Tile.Walkway ? RenderConfig.CURB_H : 0.0);
+              var face = Geom.faceRotY(spot == KERB ? dir : OPP[dir]);
+              var rng = CityGen.mulberry32(h);
+              // a heap or a stack has no prop of its own: it is dealt off its back line, the wall's foot
+              // or just in from the kerb, toward the street
+              if (gp.path == null)
+                {
+                  var back = (spot == KERB ? CELL / 2 - KERB_BACK : CELL / 2 - WALL_GAP);
+                  deal(gp.pile, {
+                    x: c.x + DX[dir] * back,
+                    z: c.z + DZ[dir] * back,
+                    y: y,
+                    yaw: face,
+                    nx: -DX[dir],
+                    nz: -DZ[dir],
+                    span: CELL / 2 - PILE_MARGIN,
+                    rng: rng,
+                  }, put);
+                  return;
+                }
+              var turn = ((h >> 4) % 1000 / 1000.0 - 0.5) * 2 * gp.turn;
+              var lean = (gp.lean != null ? ((h >> 20) % 1000 / 1000.0 - 0.5) * 2 * gp.lean : 0.0);
               var out = (spot == KERB ? CELL / 2 - KERB_IN : CELL / 2 - gp.depth / 2 - WALL_GAP);
+              // a turned wall prop's corner swings toward the wall by its half width, and a leant one's
+              // top moves off it by its height (a positive pitch tips the top toward the street)
+              if (spot != KERB &&
+                  gp.width != null)
+                out -= gp.width / 2 * Math.abs(Math.sin(turn));
+              out += gp.h * Math.sin(lean);
               var slide = ((h >> 14) % 1000 / 1000.0 - 0.5) * 2 * SLIDE;
               var x = c.x + DX[dir] * out + DZ[dir] * slide;
               var z = c.z + DZ[dir] * out + DX[dir] * slide;
-              var face = (spot == KERB ? dir : OPP[dir]);
-              places[i].push({
+              var pl:PropPlace = {
                 x: x,
                 z: z,
-                yaw: Geom.faceRotY(face) + ((h >> 4) % 1000 / 1000.0 - 0.5) * 2 * gp.turn,
-              });
+                y: y,
+                yaw: face + turn,
+              };
+              if (gp.lean != null)
+                pl.pitch = lean;
+              put(gp.path, gp.h, pl);
+              if (gp.pile != null)
+                deal(gp.pile, {
+                  x: x,
+                  z: z,
+                  y: y,
+                  yaw: face + turn,
+                  nx: 0,
+                  nz: 0,
+                  span: 0,
+                  rng: rng,
+                }, put);
               if (gp.vent == true)
-                vents.push(new Vector3(x, gp.h, z));
-              taken.set(key, true);
+                vents.push(new Vector3(x, y + gp.h, z));
               return;
             }
         }
@@ -315,11 +387,176 @@ class StreetProps
               pick(col, row, SERVICE, w);
             pick(col, row, WALL, w);
           }
-      var out:Array<InstancedProp> = [];
-      for (i in 0...props.length)
-        if (places[i].length > 0)
-          out.push(Models.instanced(scene, props[i].path, places[i], props[i].h, SOLID));
-      return out;
+      return [for (path in order) Models.instanced(scene, path, batches.get(path), heights.get(path), SOLID)];
+    }
+
+// deal one pile's pieces at `s`, each handed to `put` with the height it is drawn at: a HEAP scattered
+// over the spot, a STACK piled flat with the rest stood on edge or lying beside, a LOAD over its bed
+  static function deal(p:Pile, s:PileSpot, put:String->Float->PropPlace->Void):Void
+    {
+      var n = p.min + Std.int(s.rng() * (p.max - p.min + 1));
+      // a step `d` off the back line and `a` along it, to the world; LOAD's frame is the prop's own
+      var ax = s.nz;
+      var az = s.nx;
+      function lay(part:PilePart, a:Float, d:Float, pl:PropPlace):Void
+        {
+          pl.x = s.x + s.nx * d + ax * a;
+          pl.z = s.z + s.nz * d + az * a;
+          pl.y = s.y + (pl.y != null ? pl.y : 0.0);
+          put(part.path, part.h, pl);
+        }
+      // a yaw square to the street give or take the part's `turn`, or any way at all
+      function yaw(part:PilePart):Float
+        return (part.turn != null ? s.yaw + (s.rng() * 2 - 1) * part.turn : s.rng() * 2 * Math.PI);
+      switch (p.kind)
+        {
+          case HEAP:
+            // [along, off, radius] of each piece laid, so the next keeps (mostly) off it
+            var laid:Array<Array<Float>> = [];
+            for (_ in 0...n)
+              {
+                var part = draw(p.parts, s.rng);
+                var sc = 0.85 + 0.3 * s.rng();
+                var r = part.r * sc;
+                for (_ in 0...TRIES)
+                  {
+                    var a = (s.rng() * 2 - 1) * Math.max(0.0, s.span - r);
+                    var d = (part.back == true ? BACK_OFF :
+                      part.front == true ? FRONT_OFF + s.rng() * FRONT_RUN : r * 0.8 + s.rng() * HEAP_RUN);
+                    if (!clear(laid, a, d, r))
+                      continue;
+                    laid.push([a, d, r]);
+                    lay(part, a, d, {
+                      x: 0,
+                      z: 0,
+                      yaw: yaw(part),
+                      scale: sc,
+                    });
+                    break;
+                  }
+              }
+          case STACK:
+            // the flat ones one on another at the wall's foot, each a little off the one below
+            var flat = Std.int(Math.min(n, 1 + Std.int(s.rng() * 4)));
+            var sc = 0.9 + 0.2 * s.rng();
+            var r = p.parts[0].r * sc;
+            var a0 = (s.rng() * 2 - 1) * Math.max(0.0, s.span - 3 * r);
+            var d0 = r + STACK_OFF;
+            var lift = 0.0;
+            for (_ in 0...flat)
+              {
+                var part = draw(p.parts, s.rng);
+                lay(part, a0 + (s.rng() - 0.5) * 0.12, d0 + (s.rng() - 0.5) * 0.12, {
+                  x: 0,
+                  z: 0,
+                  y: lift,
+                  yaw: s.rng() * 2 * Math.PI,
+                  pitch: (s.rng() - 0.5) * 0.08,
+                  scale: sc,
+                });
+                lift += part.h * sc;
+              }
+            // the rest stood on the tread in front, leant back on the stack (a positive pitch tips the
+            // top toward the wall; it turns about the bottom face's centre, so the tread is lifted back
+            // onto the ground by the radius), or lying flat on one side of it
+            for (_ in flat...n)
+              {
+                var part = draw(p.parts, s.rng);
+                if (s.rng() < 0.6)
+                  {
+                    var pitch = Math.PI / 2 - 0.25 - s.rng() * 0.15;
+                    lay(part, a0 + (s.rng() - 0.5) * r, d0 + r + STACK_OFF, {
+                      x: 0,
+                      z: 0,
+                      y: r * Math.sin(pitch),
+                      yaw: s.yaw + (s.rng() - 0.5) * 0.7,
+                      pitch: pitch,
+                      scale: sc,
+                    });
+                  }
+                else
+                  lay(part, a0 + (s.rng() < 0.5 ? -1 : 1) * (2 * r + 0.1 + s.rng() * 0.3),
+                    r + STACK_OFF + s.rng() * 0.5, {
+                      x: 0,
+                      z: 0,
+                      yaw: s.rng() * 2 * Math.PI,
+                      scale: sc,
+                    });
+              }
+          case LOAD:
+            var cos = Math.cos(s.yaw);
+            var sin = Math.sin(s.yaw);
+            var laid:Array<Array<Float>> = [];
+            var pinned = false;
+            for (_ in 0...n)
+              {
+                var part = draw(p.parts, s.rng);
+                var lx = 0.0;
+                var lz = 0.0;
+                var ly = p.bed.y;
+                var turn = s.rng() * 2 * Math.PI;
+                // a pinned part has one place in the basket, and only one of it
+                if (part.at != null)
+                  {
+                    if (pinned)
+                      continue;
+                    pinned = true;
+                    lx = part.at[0];
+                    ly = part.at[1];
+                    lz = part.at[2];
+                    turn = s.yaw + (s.rng() - 0.5) * 0.2;
+                  }
+                else
+                  {
+                    var ok = false;
+                    for (_ in 0...TRIES)
+                      {
+                        lx = p.bed.x0 + part.r + s.rng() * Math.max(0.0, p.bed.x1 - p.bed.x0 - 2 * part.r);
+                        lz = p.bed.z0 + part.r + s.rng() * Math.max(0.0, p.bed.z1 - p.bed.z0 - 2 * part.r);
+                        if (clear(laid, lx, lz, part.r))
+                          {
+                            ok = true;
+                            break;
+                          }
+                      }
+                    if (!ok)
+                      continue;
+                    laid.push([lx, lz, part.r]);
+                  }
+                // the prop's frame to the world, as Models.instanced turns it
+                put(part.path, part.h, {
+                  x: s.x + lx * cos + lz * sin,
+                  z: s.z - lx * sin + lz * cos,
+                  y: s.y + ly,
+                  yaw: turn,
+                });
+              }
+        }
+    }
+
+// one part off a pile's list, by weight
+  static function draw(parts:Array<PilePart>, rng:Void->Float):PilePart
+    {
+      var total = 0.0;
+      for (p in parts)
+        total += p.weight;
+      var t = rng() * total;
+      for (p in parts)
+        {
+          t -= p.weight;
+          if (t < 0)
+            return p;
+        }
+      return parts[parts.length - 1];
+    }
+
+// is (a, d) far enough off every piece laid: they may overlap a little, which is what a heap does
+  static function clear(laid:Array<Array<Float>>, a:Float, d:Float, r:Float):Bool
+    {
+      for (q in laid)
+        if ((q[0] - a) * (q[0] - a) + (q[1] - d) * (q[1] - d) < (q[2] + r) * (q[2] + r) * CLOSE * CLOSE)
+          return false;
+      return true;
     }
 
   // a direction's unit step on the grid, as Geom numbers the faces (0 +z, 1 -z, 2 +x, 3 -x), and the
@@ -579,7 +816,69 @@ class StreetProps
     {
       var v = new Vector3(0, 0, 1).applyMatrix4(at(0, 0, 0, Geom.faceRotY(2)));
       var w = new Vector3(0, 0, 1).applyMatrix4(at(0, 0, 0, Geom.faceRotY(1)));
-      return Math.abs(v.x - 1) < 1e-9 &&
+      // a heap dealt off a back line along x stays within its span and in front of the line, a stack
+      // climbs, and a load lands inside its bed
+      var part:PilePart = {
+        path: 'a',
+        h: 0.5,
+        r: 0.4,
+        weight: 1,
+      };
+      var got:Array<PropPlace> = [];
+      var spot:PileSpot = {
+        x: 0,
+        z: 0,
+        y: 0,
+        yaw: 0,
+        nx: 0,
+        nz: 1,
+        span: 1.2,
+        rng: CityGen.mulberry32(7),
+      };
+      var take = function(_:String, _:Float, pl:PropPlace) got.push(pl);
+      deal({
+        kind: HEAP,
+        parts: [ part ],
+        min: 5,
+        max: 5,
+      }, spot, take);
+      var ok = got.length > 0;
+      for (pl in got)
+        if (Math.abs(pl.x) > 1.2 ||
+            pl.z < 0 ||
+            pl.z > 2)
+          ok = false;
+      got = [];
+      deal({
+        kind: STACK,
+        parts: [ part ],
+        min: 3,
+        max: 3,
+      }, spot, take);
+      ok = ok && got.length == 3 && got[0].y < 1e-9;
+      got = [];
+      spot.yaw = Math.PI / 2;
+      deal({
+        kind: LOAD,
+        parts: [ part ],
+        min: 4,
+        max: 4,
+        bed: {
+          x0: -1,
+          x1: 1,
+          z0: -0.5,
+          z1: 0.5,
+          y: 0.7,
+        },
+      }, spot, take);
+      // turned a quarter, the bed's x runs along -z and its z along x
+      for (pl in got)
+        if (Math.abs(pl.z) > 1 + 1e-9 ||
+            Math.abs(pl.x) > 0.5 + 1e-9 ||
+            Math.abs(pl.y - 0.7) > 1e-9)
+          ok = false;
+      return ok &&
+        Math.abs(v.x - 1) < 1e-9 &&
         Math.abs(w.z + 1) < 1e-9;
     }
 }

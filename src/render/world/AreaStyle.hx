@@ -25,13 +25,17 @@ enum PropSpot
 // one street ground prop an area style scatters (AreaStyle.groundProps). each is ONE instanced batch
 // over the whole city, so `chance` is a count knob, not a cost one
 typedef GroundProp = {
-  path:String,   // the glb (RenderConfig.MODELS)
+  path:String,   // the glb (RenderConfig.MODELS); null for a HEAP or STACK dealt wholly from `pile`
   h:Float,       // world height it is drawn at
   depth:Float,   // world depth back to front: how far a WALL/BIN prop's centre stands off its wall
   spot:PropSpot, // where it may stand
   chance:Float,  // odds an eligible cell takes it
   turn:Float,    // radians of hashed yaw jitter either way (a free-standing prop); 0 = square on
   ?vent:Bool,    // its open top puffs steam (render.world.SteamPuffs)
+  ?width:Float,  // world width along its wall: a turned wall prop stands off it by the corner's swing
+  ?lean:Float,   // radians of hashed extra lean either way for a prop leant on its wall; it slides in
+                 // or out by its height so the top stays on the wall
+  ?pile:Pile,    // separate pieces dealt per cell (render.world.Pile): the heap itself, or a load in `path`
 };
 
 // per-area street-lamp prop: which lamp model to instance + where its bulb/post sit relative to the

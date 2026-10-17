@@ -1097,6 +1097,8 @@ one thing the fade exists to remove.
 
 ## Street ground props: fifteen hand-modelled pieces per tier, and steam off the stacks
 
+> SUPERSEDED (the piles) by "Street junk dealt per cell from separate pieces; loose swatches; dumpsters at 1024"
+
 **Changed:** `StreetProps.ground` scatters `AreaStyle.groundProps`, one prop a cell at most, hashed off
 the cell: KERB (a walkway cell on exactly one road, at the kerb, facing it), WALL (an alley or walkway
 cell on exactly one wall, its back to it), SERVICE (WALL on alley cells only, to keep the compactor
@@ -1322,3 +1324,30 @@ MIRRORED lathe over a `roundrect` section folds mid-face unless the seam sits on
 
 **Verdict:** landed for both dumpsters. The other city pieces still carry the per-axis maps (cart
 31% under 30 px/u, recycling 31%, planter 18%, tree 13%, tyres 25% anisotropic) until re-exported.
+
+## Street junk dealt per cell from separate pieces; loose swatches; dumpsters at 1024
+
+**Changed:** the slums sack pile, the city bag pile, the tyre stack and the cart's junk were each
+ONE modelled heap, the same heap on every street. Their modules now return pieces (sack-pile.py: two
+standing sacks, one lying, an open carton, a carton stack, a carton leant on the wall; bag-pile.py:
+three bags; tyres.py: three tyres; cart.py: the empty cart, a bottle, the board), and
+`StreetProps.deal` lays a `render.world.Pile` per cell off the cell's hash: HEAP (scattered along the
+wall's foot, `back` parts against it, `front` ones spilt forward, any yaw, size 0.85-1.15), STACK
+(1-4 flat, the rest stood on the tread leaning back on them or lying beside) and LOAD (the cart's
+basket, the board pinned at the nose). A prop on a walkway now stands `CURB_H` up. The mattress is
+alleys only (SERVICE) with a hashed yaw and lean, slid off the wall by its corner's swing and its
+height. kit_build `t.loose(rect)`: a plain swatch each face wears its own long way down, in the face's
+own longest-edge frame (`buildlib.frame(f, edge=True)`). The dumpsters' steel is the whole flat band
+of BR, hidden faces (back, bottom, the city top) wear the flank so they do not size it, tex 1024.
+
+**Measured:** the reported dumpster faces 33-45 -> 130-203 texels per unit (1024); a tilted 2.0 x 0.1
+lid side boxed by its up measured 0.46 tall and held the lid plastic at 65 until it took its own
+edge. Pieces at 512: cartons 79-132, sacks 66-68 (sub-30 only on the flattened bottoms), bags 60-78.
+Slums gameplay frames by a heap, a tyre stack and a cart: 170-192 calls, the street props 6-14 of
+them with their shadows (a whole pile was 2); 159 against 157 where none is in view.
+
+**Trap:** one glb per piece embeds its own copy of the shared sheet, so piece textures stay at 512.
+A mirrored lathe over a `roundrect` folds mid-face unless the seam sits on a vertex. Hand-placed
+free-cam poses kept landing inside walls: pull the camera in along the gameplay sightline instead.
+
+**Verdict:** landed. Supersedes the modelled-whole piles in the street ground props entry.

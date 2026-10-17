@@ -3907,11 +3907,11 @@
     "city/dumpster": {
       "src": "city/city-dumpster.glb",
       "tris": -1,
-      "tex": 512,
+      "tex": 1024,
       "roughness": 1,
-      "note": "the CITY street dumpster the parasite hides in (objects.Dumpster, key dumpster_city), hand-modelled in Blender: models-src/city/kit/dumpster.py through models-src/city/kit_build.py (re-run it, never hand-edit the glb). Green front-load bin off models-src/dumpster-src.png, wearing textures-src/city/dumpster-city.png, a PACK4 painted by edit_image off that reference with its real brand logo replaced by a fictional CITY SANITATION sticker. 3.7 x 1.9 body in half-metre units; the back is a flat plane, it stands against a wall. tex 512: one sheet, the half-size rule docs/3d-models.md records for the lab kit. gradeRect dims the three stickers (TL band, sheet pixels) to linear x0.45: painted near-white at sRGB ~215, they were the brightest thing in a black back alley, a lit panel on a bin nothing lights.",
-      "last_converted": "2026-10-17T18:38:09Z",
-      "last_sig": "n1/-1/512/0.01/-/-/gr[{\"rect\":[40,146,118,222],\"scale\":0.45},{\"rect\":[172,334,118,222],\"scale\":0.45},{\"rect\":[352,476,118,222],\"scale\":0.45}]/rf1",
+      "note": "the CITY street dumpster the parasite hides in (objects.Dumpster, key dumpster_city), hand-modelled in Blender: models-src/city/kit/dumpster.py through models-src/city/kit_build.py (re-run it, never hand-edit the glb). Green front-load bin off models-src/dumpster-src.png, wearing textures-src/city/dumpster-city.png, a PACK4 painted by edit_image off that reference with its real brand logo replaced by a fictional CITY SANITATION sticker. 3.7 x 1.9 body in half-metre units; the back is a flat plane, it stands against a wall. tex 1024: its plain steel and lid plastic map at one isotropic density per swatch (buildlib.swatch_dens) and at 512 shipped 44 and 33 texels per unit against the ground's 57; 1024 makes them 130 and 203. gradeRect dims the three stickers (TL band, sheet pixels) to linear x0.45: painted near-white at sRGB ~215, they were the brightest thing in a black back alley, a lit panel on a bin nothing lights.",
+      "last_converted": "2026-10-17T18:51:12Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/gr[{\"rect\":[40,146,118,222],\"scale\":0.45},{\"rect\":[172,334,118,222],\"scale\":0.45},{\"rect\":[352,476,118,222],\"scale\":0.45}]/rf1",
       "gradeRect": [
         {
           "rect": [
@@ -3945,11 +3945,11 @@
     "city/dumpster-slums": {
       "src": "city/city-dumpster-slums.glb",
       "tris": -1,
-      "tex": 512,
+      "tex": 1024,
       "roughness": 1,
-      "note": "the SLUMS dumpster (key dumpster_slums): kit/dumpster.py's bin rusted and tagged, its left lid thrown back against the wall and the right one ajar over a load heaped to the rim (textures-src/city/dumpster-slums.png BR bottom half), four tied bags on top. models-src/city/kit/dumpster-slums.py.",
-      "last_converted": "2026-10-17T18:38:09Z",
-      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+      "note": "the SLUMS dumpster (key dumpster_slums): kit/dumpster.py's bin rusted and tagged, its left lid thrown back against the wall and the right one ajar over a load heaped to the rim (textures-src/city/dumpster-slums.png BR bottom half), four tied bags on top. models-src/city/kit/dumpster-slums.py. tex 1024, as the city bin.",
+      "last_converted": "2026-10-17T18:51:12Z",
+      "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
     "city/wallkit": {
       "src": "city/city-wallkit.glb",
@@ -3997,28 +3997,103 @@
       "last_converted": "2026-10-17T17:51:10Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.09,0.09,0.09,1/rf1"
     },
-    "city/sack-pile": {
-      "src": "city/city-sack-pile.glb",
+    "city/sack-burlap": {
+      "src": "city/city-sack-burlap.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS sack pile: torn burlap and plastic sacks and flattened soggy cartons, wall-backed, set beside the dumpsters (spot BIN). Hand-modelled in Blender (models-src/city/kit/sack-pile.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-sack-pile.png painted by edit_image off its reference models-src/city/ref/sack-pile-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.25: it sampled 97 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:30:22Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1",
+      "note": "the SLUMS heap's big burlap sack, stuffed and twine-tied, stood up. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
       "baseColor": [
         0.25,
         0.25,
         0.25,
         1
-      ]
+      ],
+      "last_converted": "2026-10-17T18:58:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1"
+    },
+    "city/sack-plastic": {
+      "src": "city/city-sack-plastic.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS heap's woven plastic sack. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "baseColor": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1"
+    },
+    "city/sack-lying": {
+      "src": "city/city-sack-lying.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS heap's burlap sack lying on its side. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "baseColor": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1"
+    },
+    "city/carton-box": {
+      "src": "city/city-carton-box.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS heap's soggy carton sitting open, flaps hanging. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "baseColor": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1"
+    },
+    "city/carton-flats": {
+      "src": "city/city-carton-flats.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS heap's three flattened cartons dropped one on another. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "baseColor": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1"
+    },
+    "city/carton-lean": {
+      "src": "city/city-carton-lean.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS heap's flattened carton leant back on the wall. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "baseColor": [
+        0.25,
+        0.25,
+        0.25,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:12Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1"
     },
     "city/cart": {
       "src": "city/city-cart.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS abandoned shopping cart: a see-through grid of swept rust rods, junk in the basket. Free-standing. Hand-modelled in Blender (models-src/city/kit/cart.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-cart.png painted by edit_image off its reference models-src/city/ref/cart-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.39: it sampled 80 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:38:24Z",
+      "note": "the SLUMS abandoned shopping cart, EMPTY: a see-through grid of swept rust rods, each wire worn along a long strip of the rust. Free-standing. Its load is dealt per cell (render.world.Pile LOAD): the sack pile's sacks and cartons, and cart-bottle and cart-board off this sheet. Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.39.",
+      "last_converted": "2026-10-17T18:58:19Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.39,0.39,0.39,1/rf1",
       "baseColor": [
         0.39,
@@ -4027,13 +4102,43 @@
         1
       ]
     },
+    "city/cart-bottle": {
+      "src": "city/city-cart-bottle.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS cart's load: an empty amber bottle lying down. Off models-src/city/kit/cart.py, wearing textures-src/city/prop-cart.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.39, the old pile's.",
+      "baseColor": [
+        0.39,
+        0.39,
+        0.39,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:19Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.39,0.39,0.39,1/rf1"
+    },
+    "city/cart-board": {
+      "src": "city/city-cart-board.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS cart's load: the broken board poking up out of the basket's nose, exported in the cart's frame (StreetProps reads its offset). Off models-src/city/kit/cart.py, wearing textures-src/city/prop-cart.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.39, the old pile's.",
+      "baseColor": [
+        0.39,
+        0.39,
+        0.39,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:19Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.39,0.39,0.39,1/rf1"
+    },
     "city/mattress": {
       "src": "city/city-mattress.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
       "note": "the SLUMS mattress leaning on a wall. Its sheet is NOT four cells: the top half is one 1024x512 front face. Hand-modelled in Blender (models-src/city/kit/mattress.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-mattress.png painted by edit_image off its reference models-src/city/ref/mattress-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.25: it sampled 112 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:43:35Z",
+      "last_converted": "2026-10-17T18:56:22Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1",
       "baseColor": [
         0.25,
@@ -4042,35 +4147,95 @@
         1
       ]
     },
-    "city/tyres": {
-      "src": "city/city-tyres.glb",
+    "city/tyre": {
+      "src": "city/city-tyre.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS tyre stack: three askew, one leaning on its rusty rim. Each tyre one closed ring lathe, the holes open. Hand-modelled in Blender (models-src/city/kit/tyres.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-tyres.png painted by edit_image off its reference models-src/city/ref/tyres-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.62: it sampled 62 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:49:44Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.62,0.62,0.62,1/rf1",
+      "note": "the SLUMS worn tyre lying flat, one closed ring lathe with its hole open. Off models-src/city/kit/tyres.py, wearing textures-src/city/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
       "baseColor": [
         0.62,
         0.62,
         0.62,
         1
-      ]
+      ],
+      "last_converted": "2026-10-17T18:58:17Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.62,0.62,0.62,1/rf1"
     },
-    "city/bag-pile": {
-      "src": "city/city-bag-pile.glb",
+    "city/tyre-mud": {
+      "src": "city/city-tyre-mud.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY garbage bag pile: seven tied black and green bags, wall-backed (and at the kerb for collection). Hand-modelled in Blender (models-src/city/kit/bag-pile.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-bag-pile.png painted by edit_image off its reference models-src/city/ref/bag-pile-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.72: it sampled luma ~58 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:27:54Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.72,0.72,0.72,1/rf1",
+      "note": "the SLUMS muddy tyre, turned over so its mud is on the ground side. Off models-src/city/kit/tyres.py, wearing textures-src/city/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
+      "baseColor": [
+        0.62,
+        0.62,
+        0.62,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:17Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.62,0.62,0.62,1/rf1"
+    },
+    "city/tyre-rim": {
+      "src": "city/city-tyre-rim.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the SLUMS tyre still on its rusty steel rim. Off models-src/city/kit/tyres.py, wearing textures-src/city/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
+      "baseColor": [
+        0.62,
+        0.62,
+        0.62,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:17Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.62,0.62,0.62,1/rf1"
+    },
+    "city/bag-black": {
+      "src": "city/city-bag-black.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the CITY heap's big black refuse bag, knotted at the neck. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
       "baseColor": [
         0.72,
         0.72,
         0.72,
         1
-      ]
+      ],
+      "last_converted": "2026-10-17T18:58:15Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.72,0.72,0.72,1/rf1"
+    },
+    "city/bag-green": {
+      "src": "city/city-bag-green.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the CITY heap's big bottle-green bag. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
+      "baseColor": [
+        0.72,
+        0.72,
+        0.72,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:15Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.72,0.72,0.72,1/rf1"
+    },
+    "city/bag-small": {
+      "src": "city/city-bag-small.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "note": "the CITY heap's small black bag. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
+      "baseColor": [
+        0.72,
+        0.72,
+        0.72,
+        1
+      ],
+      "last_converted": "2026-10-17T18:58:15Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.72,0.72,0.72,1/rf1"
     },
     "city/hydrant": {
       "src": "city/city-hydrant.glb",
@@ -4078,7 +4243,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the CITY fire hydrant: red cast iron, silver bonnet and caps, two side nozzles and a pumper, at the kerb. Hand-modelled in Blender (models-src/city/kit/hydrant.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-hydrant.png painted by edit_image off its reference models-src/city/ref/hydrant-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.15: it sampled luma ~133 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:32:07Z",
+      "last_converted": "2026-10-17T19:02:30Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.15,0.15,0.15,1/rf1",
       "baseColor": [
         0.15,
@@ -4093,7 +4258,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the CITY coin parking meter on its pole, at the kerb facing the road. Hand-modelled in Blender (models-src/city/kit/meter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-meter.png painted by edit_image off its reference models-src/city/ref/meter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.19: it sampled luma ~112 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:36:31Z",
+      "last_converted": "2026-10-17T19:03:33Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.19,0.19,0.19,1/rf1",
       "baseColor": [
         0.19,
@@ -4108,7 +4273,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the CITY newspaper boxes: three side by side with fictional mastheads (CITY HERALD, THE DAILY LEDGER, METRO FREE), wall-backed. Hand-modelled in Blender (models-src/city/kit/newsbox.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-newsbox.png painted by edit_image off its reference models-src/city/ref/newsbox-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.28: it sampled luma ~99 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:42:31Z",
+      "last_converted": "2026-10-17T18:56:29Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.28,0.28,0.28,1/rf1",
       "baseColor": [
         0.28,
@@ -4123,7 +4288,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the CITY striped steam stack over a manhole, at the kerb; render.world.SteamPuffs puffs off its open top (the glb's top). Hand-modelled in Blender (models-src/city/kit/steamstack.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-steamstack.png painted by edit_image off its reference models-src/city/ref/steamstack-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.26: it sampled luma ~102 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:46:26Z",
+      "last_converted": "2026-10-17T18:56:36Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.26,0.26,0.26,1/rf1",
       "baseColor": [
         0.26,
@@ -4138,7 +4303,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the CITY utility corner: three gas meters on yellow pipes and an electric meter box on a strut, wall-backed. Hand-modelled in Blender (models-src/city/kit/meters.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-meters.png painted by edit_image off its reference models-src/city/ref/meters-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.12: it sampled luma ~148 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:53:06Z",
+      "last_converted": "2026-10-17T18:56:27Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.12,0.12,0.12,1/rf1",
       "baseColor": [
         0.12,
@@ -4153,7 +4318,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the DOWNTOWN service-alley trash compactor, safety blue, ram housing at its right end, wall-backed. Decor: the parasite cannot enter it. Its sheet's grid sits at x 640 / y 514, not the quadrants; the module reads it in sheet pixels. Hand-modelled in Blender (models-src/city/kit/compactor.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-compactor.png painted by edit_image off its reference models-src/city/ref/compactor-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.3: it sampled luma ~94 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:53:49Z",
+      "last_converted": "2026-10-17T18:56:17Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.3,0.3,0.3,1/rf1",
       "baseColor": [
         0.3,
@@ -4168,7 +4333,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the DOWNTOWN recycling station: blue PAPER, green GLASS, yellow PLASTIC bins under a steel frame, wall-backed. Hand-modelled in Blender (models-src/city/kit/recycling.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-recycling.png painted by edit_image off its reference models-src/city/ref/recycling-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.21: it sampled luma ~112 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:53:49Z",
+      "last_converted": "2026-10-17T18:56:34Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.21,0.21,0.21,1/rf1",
       "baseColor": [
         0.21,
@@ -4183,7 +4348,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the DOWNTOWN stainless bollard with a reflective band, at the kerb. Hand-modelled in Blender (models-src/city/kit/bollard.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-bollard.png painted by edit_image off its reference models-src/city/ref/bollard-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.13: it sampled luma ~147 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:42:03Z",
+      "last_converted": "2026-10-17T19:00:59Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.13,0.13,0.13,1/rf1",
       "baseColor": [
         0.13,
@@ -4198,7 +4363,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the DOWNTOWN street tree in a cast-iron grate, staked, six leaf masses; at the kerb. Its sheet's grid sits at x 511 / y 488. Hand-modelled in Blender (models-src/city/kit/tree.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-tree.png painted by edit_image off its reference models-src/city/ref/tree-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.42: it sampled luma ~77 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:46:51Z",
+      "last_converted": "2026-10-17T18:56:39Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.42,0.42,0.42,1/rf1",
       "baseColor": [
         0.42,
@@ -4213,7 +4378,7 @@
       "tex": 512,
       "roughness": 1,
       "note": "the DOWNTOWN concrete planter with a clipped boxwood, at the kerb. Hand-modelled in Blender (models-src/city/kit/planter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-planter.png painted by edit_image off its reference models-src/city/ref/planter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.47: it sampled luma ~73 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T14:53:49Z",
+      "last_converted": "2026-10-17T18:56:32Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.47,0.47,0.47,1/rf1",
       "baseColor": [
         0.47,

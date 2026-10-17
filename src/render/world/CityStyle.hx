@@ -1,5 +1,7 @@
 package render.world;
 
+import render.world.Pile.PileKind;
+
 // medium-density residential render knobs — the single file to tune the default city look,
 // the one every area that is not the downtown core or the low-density outskirts renders with.
 // Masonry mid-rises (concrete/brick/stone) plus a metal-warehouse special slot, punched windows
@@ -137,22 +139,51 @@ class CityStyle {
       // the kerb and the walls: bags out for collection, hydrants, meters, news boxes, the gas meters,
       // and now and then a steam stack puffing (SteamPuffs). heights are the glbs' (half-metre units
       // x 0.77, DUMPSTER_H's scale)
+      // the bags are DEALT per cell from three separate ones (render.world.Pile), a heap of its own
+      // on every wall or kerb that takes one
+      var bags:Pile = {
+        kind: HEAP,
+        parts: [
+          {
+            path: render.RenderConfig.MODELS.cityBagBlack,
+            h: 1.24,
+            r: 0.47,
+            weight: 3,
+          },
+          {
+            path: render.RenderConfig.MODELS.cityBagGreen,
+            h: 1.19,
+            r: 0.45,
+            weight: 2,
+          },
+          {
+            path: render.RenderConfig.MODELS.cityBagSmall,
+            h: 0.91,
+            r: 0.35,
+            weight: 2,
+          },
+        ],
+        min: 4,
+        max: 8,
+      };
       s.groundProps = [
         {
-          path: render.RenderConfig.MODELS.cityBagPile,
-          h: 1.25,
+          path: null,
+          h: 1.24,
           depth: 1.55,
           spot: WALL,
           chance: 0.025,
           turn: 0.0,
+          pile: bags,
         },
         {
-          path: render.RenderConfig.MODELS.cityBagPile,
-          h: 1.25,
+          path: null,
+          h: 1.24,
           depth: 1.55,
           spot: KERB,
           chance: 0.012,
           turn: 0.0,
+          pile: bags,
         },
         {
           path: render.RenderConfig.MODELS.cityHydrant,
