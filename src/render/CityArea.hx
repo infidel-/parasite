@@ -87,6 +87,12 @@ class CityArea implements Area3D
       if (furniture != null)
         for (k in furniture)
           solid.set(k, true);
+      // nor onto an alley-mouth fence (game.CityAreaGenerator.placeFences)
+      var fences = [for (row in 0...CityConfig.GRID) for (col in 0...CityConfig.GRID)
+        if (render.world.CityFences.isFence(game.area.getCellType(col, row)))
+          row * CityConfig.GRID + col];
+      for (k in fences)
+        solid.set(k, true);
       render.world.WorldCtx.doorBlocked = function(col, row) return solid.exists(row * CityConfig.GRID + col);
       World.build(scene, cityModel, seed, style);
       render.world.WorldCtx.doorBlocked = null;
@@ -109,6 +115,8 @@ class CityArea implements Area3D
       // the street's ground props, clear of every object's cell, the sacks beside the dumpsters; and
       // steam off every sewer hatch, from the lid it lies flat on (a walkway stands a kerb up)
       var blocked = new Map<Int, Bool>();
+      for (k in fences)
+        blocked.set(k, true);
       var vents:Array<Vector3> = [];
       for (o in game.area.getObjects())
         {
@@ -125,6 +133,8 @@ class CityArea implements Area3D
       // AFTER the chunk pass: one mesh at the origin holding every plume, so bucketed it went dark
       // whenever the origin's chunk left the frustum
       steam = new render.world.SteamPuffs(scene, vents);
+      // and the fences, one merged mesh for the same reason
+      render.world.CityFences.build(scene, game.area);
       occlusion = new Occlusion(scene, cityModel.buildings, cityModel.tiles);
       sounds = new CitySounds(game, cityModel, flickCells, coneFlick);
     }

@@ -5536,6 +5536,54 @@
       "lift": 1.25,
       "last_lift": 1.25
     },
+    "downtown/fence-chainlink": {
+      "src": "downtown/fence-chainlink.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "ONE square panel of a modern city CHAIN-LINK security fence, seen dead straight on, filling the whole image: a regular diamond grid of BLACK vinyl-coated steel wire, exactly SIX diamonds across and SIX down, the wire THICK (about one fortieth of the image width), small twisted knuckles where the wires cross. A thick horizontal round steel TOP RAIL tube runs along the very top edge, edge to edge, and a thinner tension wire along the very bottom edge. ONE thick vertical round steel POST stands exactly at the horizontal centre, from the bottom edge to the top rail, with a small dome cap. Dark charcoal coating, dull matte grey steel where it is scuffed. The mesh and rails run off the left and right edges and must tile seamlessly left-right. ONLY the wire, rails and post are drawn. [gpt-image-2.5-flare high, background transparent; came back UNCUT (alpha min 33) and near-black, so one edit_image re-cut + recolour: 'Keep this chain-link fence panel EXACTLY ... Remove EVERYTHING that is not wire, rail or post ... Recolour the wire, rail and post to a dull MID-GREY galvanised steel, clearly lighter than before, neutral grey with no blue tint'] [append textures.json style]",
+      "prompt_exact": false,
+      "note": "downtown alley-mouth fences (render.world.CityFences), alphaTest, one panel per cell: u tiles one image per CELL (offset half an image so the painted centre post lands on the cell boundary), v maps 0..1 over the one-cell height. Opaque fraction 0.185 at the drop.",
+      "res": 512,
+      "lift": 0.85,
+      "last_converted": "2026-10-19T01:42:17",
+      "built_linear": 0.1444,
+      "built_srgb": 104.9,
+      "last_lift": 0.85
+    },
+    "city/fence-wood": {
+      "src": "city/fence-wood.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "Seamless left-right tileable texture of a residential WOODEN PRIVACY FENCE, straight-on flat elevation view, the boards filling the ENTIRE image edge to edge and top to bottom with no background visible anywhere. Tall vertical flat-topped boards butted tight side by side, about eighteen boards across the image, weathered dark brown-grey stained timber with faint grain, a few slightly lighter replacement boards, thin dark lines between boards. A flat horizontal CAP BOARD runs along the very top edge, edge to edge. ONE square wooden POST face shows exactly at the horizontal centre, a little wider than a board, from bottom to top. Dirt and water staining along the bottom, scattered rusty nail heads in two rows where the hidden rails are. No text, no gate, no plants. Edges tile seamlessly left-right. [gpt-image-2.5-flare high, 1024x768, background opaque] [append textures.json style]",
+      "prompt_exact": true,
+      "note": "medium-city alley-mouth fences (render.world.CityFences): a 4:3 frame, u one image per CELL, v 0..1 over CityFences.WOOD_H = CELL * 0.75, so nothing stretches.",
+      "res": [
+        512,
+        384
+      ],
+      "lift": 0.55,
+      "last_converted": "2026-10-19T01:40:44",
+      "built_linear": 0.1316,
+      "built_srgb": 100.3,
+      "last_lift": 0.55
+    },
+    "slums/fence-wood": {
+      "src": "slums/fence-wood.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "A run-down slum WOODEN PLANK FENCE, straight-on flat elevation view, filling the image width and running off the left and right edges so it tiles seamlessly left-right. Mismatched vertical planks of different widths, heights and shades of rotten grey and dark brown timber, nailed to two crooked horizontal rails; some planks broken off short with jagged splintered tops, a few planks MISSING leaving narrow open GAPS between boards, one plank hanging askew on a single nail, one patch of rusty corrugated metal sheet nailed over a hole. ONE crooked square wooden POST at the horizontal centre. The top edge is ragged and uneven. Peeling old paint flecks, rust stains, dirt along the bottom. ONLY the fence is drawn; the gaps and everything above the ragged top are empty. No text. [gpt-image-2.5-flare high, 1024x768, background transparent] [append textures.json style]",
+      "prompt_exact": true,
+      "note": "slums alley-mouth fences (render.world.CityFences), alphaTest: same 4:3 mapping as city/fence-wood. Rows 0..~150 are empty above the ragged top; body gaps 8% transparent.",
+      "res": [
+        512,
+        384
+      ],
+      "lift": 0.55,
+      "last_converted": "2026-10-19T01:41:04",
+      "built_linear": 0.1192,
+      "built_srgb": 95.3,
+      "last_lift": 0.55
+    },
     "military/camo-net": {
       "src": "military/camo-net.png",
       "class": "sprite",

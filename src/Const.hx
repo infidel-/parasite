@@ -1532,9 +1532,17 @@ class Const
   public static var TILE_LAB_MACHINE = OFFSET_ROW23 + 14;
   // === rows 24-28 - one ORIGIN id per machine kind, `TILE_LAB_MACHINE0 + index` into
   // gen.lab.LabKinds.MACHINES, the way a parked vehicle is named by its origin tile. The kind table
-  // is append-only: an index is a saved tile id
+  // is append-only: an index is a saved tile id. 80 slots, ending at 463: a kind past them would
+  // collide with row 29 below, so a kind table that outgrows them needs a new range, not row 29
   public static var OFFSET_ROW24 = 384;
   public static var TILE_LAB_MACHINE0 = OFFSET_ROW24 + 0;
+  // === row 29 - city alley-mouth fences (game.CityAreaGenerator.placeFences, drawn by
+  // render.world.CityFences). No 2D art: a city always renders in 3D
+  public static var OFFSET_ROW29 = 464;
+  // downtown's chain-link. Unwalkable and see-through
+  public static var TILE_CITY_FENCE_CHAIN = OFFSET_ROW29 + 0;
+  // the board fence of the residential streets and the slums. Unwalkable and opaque
+  public static var TILE_CITY_FENCE_WOOD = OFFSET_ROW29 + 1;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

@@ -25,6 +25,9 @@ class CityAreaGenerator
   static inline var CARS_LOW = 6; // car wrecks per slums block
   static inline var CARS_LIT = 3; // of which parked under a steady street lamp first, where there is one
   static inline var CAR_SPACING = 12; // minimum cells between two car wrecks
+  static inline var FENCE_CHANCE_HIGH = 30; // % of downtown alley groups fenced at their mouths
+  static inline var FENCE_CHANCE_MEDIUM = 30; // and of residential ones
+  static inline var FENCE_CHANCE_LOW = 40; // and of slums ones
   static var checked = false;
   var game: Game;
   var gen: AreaGenerator;
@@ -113,6 +116,184 @@ class CityAreaGenerator
       // and downtown's street furniture down the kerb row and the service alleys, clear of the
       // hatches above
       placeFurniture(area);
+
+      // and last, with every other object down, fences across some blocks' alley mouths
+      placeFences(area);
+    }
+
+// fence off the alley mouths of some blocks: each 4-connected alley group rolls its tier's chance,
+// and its mouth runs (alley cells with exactly one street neighbour, grouped straight along the
+// kerb) all take a fence tile but one random run, which stays the way in. a group whose fences
+// would cut anything else off from the street (a dumpster narrowing it, a pocket behind) keeps its
+// mouths open. downtown fences in chain-link, the residential streets and the slums in boards that
+// block sight. tile flips saved in the cells, drawn by render.world.CityFences
+  function placeFences(area: AreaGame)
+    {
+      var chance = switch (area.typeID)
+        {
+          case AREA_CITY_HIGH: FENCE_CHANCE_HIGH;
+          case AREA_CITY_MEDIUM: FENCE_CHANCE_MEDIUM;
+          case AREA_CITY_LOW: FENCE_CHANCE_LOW;
+          default: 0;
+        };
+      if (chance == 0)
+        return;
+      var tile = (area.typeID == AREA_CITY_HIGH ?
+        Const.TILE_CITY_FENCE_CHAIN : Const.TILE_CITY_FENCE_WOOD);
+      var w = area.width;
+      // cells a solid object stands on (none move during the pass)
+      var solid = new Map<Int, Bool>();
+      for (o in area.getObjects())
+        if (!o.isWalkable())
+          solid.set(o.y * w + o.x, true);
+      var seen = new Map<Int, Bool>();
+      var reach = streetReach(area, solid);
+      for (y in 0...area.height)
+        for (x in 0...w)
+          {
+            if (seen.exists(y * w + x) ||
+                area.getCellType(x, y) != Const.TILE_ALLEY)
+              continue;
+            var group = alleyGroup(area, x, y, seen);
+            if (Std.random(100) >= chance)
+              continue;
+            var runs = mouthRuns(area, group);
+            if (runs.length < 2)
+              continue;
+            runs.splice(Std.random(runs.length), 1);
+            var fenced = [];
+            for (run in runs)
+              for (pt in run)
+                {
+                  area.setCellType(pt.x, pt.y, tile);
+                  fenced.push(pt);
+                }
+            // every cell that was reachable still is, but for the fences themselves
+            var after = streetReach(area, solid);
+            if (after == reach - fenced.length)
+              {
+                reach = after;
+                continue;
+              }
+            for (pt in fenced)
+              area.setCellType(pt.x, pt.y, Const.TILE_ALLEY);
+          }
+    }
+
+// one 4-connected group of plain alley cells from (x, y), marking each in seen
+  function alleyGroup(area: AreaGame, x: Int, y: Int, seen: Map<Int, Bool>): Array<_Point>
+    {
+      var w = area.width;
+      var group = [];
+      var queue: Array<_Point> = [{ x: x, y: y }];
+      seen.set(y * w + x, true);
+      while (queue.length > 0)
+        {
+          var pt = queue.pop();
+          group.push(pt);
+          for (i in 0...Const.dir4x.length)
+            {
+              var nx = pt.x + Const.dir4x[i];
+              var ny = pt.y + Const.dir4y[i];
+              if (area.getCellType(nx, ny) != Const.TILE_ALLEY ||
+                  seen.exists(ny * w + nx))
+                continue;
+              seen.set(ny * w + nx, true);
+              queue.push({ x: nx, y: ny });
+            }
+        }
+      return group;
+    }
+
+// the mouth runs of an alley group: its object-free cells with exactly one street 4-neighbour,
+// grouped into straight runs along the kerb that face the same way
+  function mouthRuns(area: AreaGame, group: Array<_Point>): Array<Array<_Point>>
+    {
+      var w = area.width;
+      // mouth cell -> the Const.dir4x/dir4y index of its street side
+      var face = new Map<Int, Int>();
+      for (pt in group)
+        {
+          if (area.hasObjectAt(pt.x, pt.y))
+            continue;
+          var side = -1;
+          var streets = 0;
+          for (i in 0...Const.dir4x.length)
+            if (isStreet(area.getCellType(pt.x + Const.dir4x[i], pt.y + Const.dir4y[i])))
+              {
+                side = i;
+                streets++;
+              }
+          if (streets == 1)
+            face.set(pt.y * w + pt.x, side);
+        }
+      // walk each run from its low end along the kerb (across its facing)
+      var runs = [];
+      var taken = new Map<Int, Bool>();
+      for (pt in group)
+        {
+          var k = pt.y * w + pt.x;
+          if (!face.exists(k) ||
+              taken.exists(k))
+            continue;
+          var side = face.get(k);
+          var ax = Const.dir4y[side] * Const.dir4y[side];
+          var ay = Const.dir4x[side] * Const.dir4x[side];
+          var sx = pt.x;
+          var sy = pt.y;
+          while (face.get((sy - ay) * w + sx - ax) == side)
+            {
+              sx -= ax;
+              sy -= ay;
+            }
+          var run = [];
+          while (face.get(sy * w + sx) == side)
+            {
+              taken.set(sy * w + sx, true);
+              run.push({ x: sx, y: sy });
+              sx += ax;
+              sy += ay;
+            }
+          runs.push(run);
+        }
+      return runs;
+    }
+
+// how many cells can be walked to from the street: an 8-way flood (the way everything here walks)
+// from every street cell over walkable tiles no solid object stands on
+  function streetReach(area: AreaGame, solid: Map<Int, Bool>): Int
+    {
+      var w = area.width;
+      var seen = new Map<Int, Bool>();
+      var queue: Array<_Point> = [];
+      for (y in 0...area.height)
+        for (x in 0...w)
+          if (isStreet(area.getCellType(x, y)) &&
+              !solid.exists(y * w + x))
+            {
+              seen.set(y * w + x, true);
+              queue.push({ x: x, y: y });
+            }
+      var count = 0;
+      while (queue.length > 0)
+        {
+          var pt = queue.pop();
+          count++;
+          for (i in 0...Const.dirx.length)
+            {
+              var nx = pt.x + Const.dirx[i];
+              var ny = pt.y + Const.diry[i];
+              var c = area.getCellType(nx, ny);
+              if (c < 0 ||
+                  tiles.Default.TILE_WALKABLE[c] != 1 ||
+                  solid.exists(ny * w + nx) ||
+                  seen.exists(ny * w + nx))
+                continue;
+              seen.set(ny * w + nx, true);
+              queue.push({ x: nx, y: ny });
+            }
+        }
+      return count;
     }
 
 // deal downtown's street furniture (the style's `block` ground props): the kerb row of its two-cell

@@ -1724,3 +1724,34 @@ spawned over the 2D canvas rect; and `AreaView.turn` ran twice per turn.
 **Verdict:** landed. The region map stays 2D and keeps `Entity`/`PawnEntity`/`Tileset.draw`. The mod
 SDK docs call 2D particles legacy, and `examples/chainsaw` dropped its two 2D particle classes for
 the engine's splat fallback.
+
+## City alley-mouth fences: chain-link downtown, boards on the residential streets and the slums
+
+**Changed:** `game.CityAreaGenerator.placeFences` is the last object post-pass. Each 4-connected
+alley group rolls 30/30/40% (downtown/medium/slums). Its mouth runs are alley cells with exactly one
+street 4-neighbour, grouped straight along the kerb. All of them take a fence tile except one random
+run, which stays open. An 8-way street-reach flood before and after reverts the group if anything
+other than the fence cells was cut off. The pass is unseeded and saved in the cells, so the CityGen
+rng is untouched. New tile row 29: `TILE_CITY_FENCE_CHAIN` 464 (unwalkable, see-through) and
+`TILE_CITY_FENCE_WOOD` 465 (unwalkable, opaque). `render.world.CityFences` emits one quad per cell
+across its middle, parallel to the kerb, as one merged Lambert mesh per area. The art paints its own
+post and rail, so there is no post geometry. u tiles one image per CELL with a half-image offset, so
+the painted post lands on the cell boundary. v maps 0..1 (chain-link 1 cell high, the 4:3 board
+panels 0.75). New labels: `downtown/fence-chainlink` (alpha, cut 0.3), `city/fence-wood` (opaque)
+and `slums/fence-wood` (alpha gaps).
+
+**Measured:** 45-48 chain cells per fresh downtown, 60-95 boards per medium, 115 per slums tile.
+calls **92 → 93** with the mesh visible (median of 9, three A/B pairs, pinned frame).
+
+**Trap 1:** the mesh is added AFTER `chunks.build`. A merged mesh at the origin under 64 units
+across is bucketed by its origin and culls with that chunk (the steam's trap).
+
+**Trap 2:** the boards drew near-black at night. A vertical face in an alley mouth gets ambient and
+hemisphere light only; the moon is shadowed and grazing. At the drop's ~48 sRGB the panel was
+invisible even with the material colour at 3x, and read from about 5x. `lift` 0.55 on both board
+labels (~48 → ~102 built) and 0.85 on the chain-link (~89 → ~105).
+
+**Trap 3:** a fence running north-south (street east or west of the mouth) is seen edge-on by the
+default camera and reads as a thin top line. Same as the military perimeter. Accepted.
+
+**Verdict:** landed. An old city save loads with no fences and plays on.

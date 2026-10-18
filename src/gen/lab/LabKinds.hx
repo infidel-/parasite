@@ -162,6 +162,9 @@ class LabKinds
           if (t >= walk.length ||
               t >= tiles.Default.TILE_SEETHROUGH.length)
             throw 'LabKinds: ' + k.name + ' origin ' + t + ' is past the tile tables';
+          // the machine range ends where the city fences (row 29) begin
+          if (t >= Const.OFFSET_ROW29)
+            throw 'LabKinds: ' + k.name + ' origin ' + t + ' runs into row 29 (city fences)';
           if ((walk[t] == 1) != k.stand)
             throw 'LabKinds: ' + k.name + ' walkable ' + walk[t] + ' but stand ' + k.stand;
           if (k.len < k.depth)
