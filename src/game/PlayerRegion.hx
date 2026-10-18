@@ -445,6 +445,8 @@ class PlayerRegion extends _SaveObject
       if (!game.region.isWalkable(nx, ny))
         return false;
 
+      var ox = x;
+      var oy = y;
       x = nx;
       y = ny;
 
@@ -456,6 +458,11 @@ class PlayerRegion extends _SaveObject
             if (a == null)
               continue;
 
+            // fade in the tiles the map still drew dark before this move
+            if (!a.isKnown &&
+                (Math.abs(xx - ox) > 1 ||
+                 Math.abs(yy - oy) > 1))
+              game.scene.region.reveal(a);
             a.isKnown = true;
           }
 

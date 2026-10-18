@@ -16,6 +16,21 @@ class RegionView
   var path: Array<{ x: Int, y: Int }>; // currently visible path
   var outlinedEntityIconCache: IntMap<CanvasElement>; // cached black silhouette icons
 
+  // move slide: the player and camera are drawn offset from their logical spots, easing to zero
+  static inline var SLIDE_MULT = 0.6; // slide length in BASE_MS multiples (under the 100ms path step)
+  static inline var REVEAL_MULT = 1.0; // newly known tile fade length in BASE_MS multiples
+  var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
+  var lastPY: Int;
+  var lastCamX: Int;
+  var lastCamY: Int;
+  var plFromX: Float; // player draw offset px at slide start
+  var plFromY: Float;
+  var camFromX: Float; // camera draw offset px at slide start
+  var camFromY: Float;
+  var slideStart: Float; // slide start timestamp, ms
+  var revealStart: IntMap<Float>; // area id -> fade-in start timestamp, ms
+  var ticking: Bool; // animation frame requested
+
   public var width: Int; // width, height in cells
   public var height: Int;
 
@@ -27,6 +42,12 @@ class RegionView
       height = 100;
       path = null;
       outlinedEntityIconCache = new IntMap();
+      lastPX = -1;
+      lastPY = lastCamX = lastCamY = 0;
+      plFromX = plFromY = camFromX = camFromY = 0;
+      slideStart = 0;
+      revealStart = new IntMap();
+      ticking = false;
     }
 
 
@@ -155,6 +176,7 @@ class RegionView
 // called twice in case player host dies on entering sewers
   public function show()
     {
+      lastPX = -1; // entering the region snaps, never slides
       var ple = game.playerRegion.entity;
       // update player image and mask
       if (game.player.host != null)
@@ -182,8 +204,12 @@ class RegionView
     {
       var renderTS = scene.beginRenderSample();
       var ctx = scene.canvas.getContext('2d');
+      var now = Browser.window.performance.now();
+      updateSlide(now);
+      var k = 1 - ease((now - slideStart) * render.RenderConfig.ANIM_SPEED /
+        (render.RenderConfig.BASE_MS * SLIDE_MULT));
       ctx.save();
-      ctx.translate(-scene.cameraSubX, -scene.cameraSubY);
+      ctx.translate(-scene.cameraSubX + camFromX * k, -scene.cameraSubY + camFromY * k);
 
       // ensure region map image exists
       if (game.region.regionMapImage == null)
@@ -196,15 +222,16 @@ class RegionView
         }
 
       // draw region map image (only visible portion)
-      var visibleTilesW = scene.cameraTileX2 - scene.cameraTileX1 + 1;
-      var visibleTilesH = scene.cameraTileY2 - scene.cameraTileY1 + 1;
+      // (one extra tile on every side, so the slide offset never shows a bare edge)
+      var visibleTilesW = scene.cameraTileX2 - scene.cameraTileX1 + 3;
+      var visibleTilesH = scene.cameraTileY2 - scene.cameraTileY1 + 3;
       game.region.regionMapImage.drawTo(ctx,
-        scene.cameraTileX1 * Const.TILE_SIZE_CLEAN,
-        scene.cameraTileY1 * Const.TILE_SIZE_CLEAN,
+        (scene.cameraTileX1 - 1) * Const.TILE_SIZE_CLEAN,
+        (scene.cameraTileY1 - 1) * Const.TILE_SIZE_CLEAN,
         visibleTilesW * Const.TILE_SIZE_CLEAN,
         visibleTilesH * Const.TILE_SIZE_CLEAN,
-        0,
-        0,
+        - Const.TILE_SIZE,
+        - Const.TILE_SIZE,
         visibleTilesW * Const.TILE_SIZE,
         visibleTilesH * Const.TILE_SIZE);
 
@@ -213,10 +240,13 @@ class RegionView
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
-          drawArea(ctx, cells[x][y], tileset);
+          drawArea(ctx, cells[x][y], tileset, now);
 
-      // draw player
+      // draw player at its slide offset
+      ctx.save();
+      ctx.translate(plFromX * k, plFromY * k);
       game.playerRegion.entity.draw(ctx);
+      ctx.restore();
 
       // path
       if (path != null)
@@ -233,6 +263,83 @@ class RegionView
             Const.TILE_SIZE);
       ctx.restore();
       scene.endRenderSampleRegion(renderTS);
+
+      // keep redrawing while the slide or a reveal is still moving
+      if (k > 0 ||
+          revealStart.keys().hasNext())
+        kick();
+    }
+
+// a move since the last draw starts a slide from where the player and camera were drawn; a jump
+// (teleport, load, region entry, resize) snaps instead
+  function updateSlide(now: Float)
+    {
+      var px = game.playerRegion.x;
+      var py = game.playerRegion.y;
+      if (px == lastPX &&
+          py == lastPY &&
+          scene.cameraX == lastCamX &&
+          scene.cameraY == lastCamY)
+        return;
+      var tile = Const.TILE_SIZE;
+      if (lastPX < 0 ||
+          Math.abs(px - lastPX) > 1 ||
+          Math.abs(py - lastPY) > 1 ||
+          Math.abs(scene.cameraX - lastCamX) > 2 * tile ||
+          Math.abs(scene.cameraY - lastCamY) > 2 * tile)
+        plFromX = plFromY = camFromX = camFromY = 0;
+      // fold what is left of the running slide into the new one, at most a tile and a half away
+      else
+        {
+          var k = 1 - ease((now - slideStart) * render.RenderConfig.ANIM_SPEED /
+            (render.RenderConfig.BASE_MS * SLIDE_MULT));
+          plFromX = clampSlide(plFromX * k + (lastPX - px) * tile);
+          plFromY = clampSlide(plFromY * k + (lastPY - py) * tile);
+          camFromX = clampSlide(camFromX * k + (scene.cameraX - lastCamX));
+          camFromY = clampSlide(camFromY * k + (scene.cameraY - lastCamY));
+        }
+      slideStart = now;
+      lastPX = px;
+      lastPY = py;
+      lastCamX = scene.cameraX;
+      lastCamY = scene.cameraY;
+    }
+
+// clamp one slide offset to a tile and a half (fast path steps would otherwise pile up)
+  inline function clampSlide(v: Float): Float
+    {
+      var max = Const.TILE_SIZE * 1.5;
+      return (v > max ? max : (v < - max ? - max : v));
+    }
+
+// smoothstep over 0..1, clamped
+  inline function ease(t: Float): Float
+    {
+      if (t >= 1)
+        return 1;
+      if (t <= 0)
+        return 0;
+      return t * t * (3 - 2 * t);
+    }
+
+// request one animation frame redraw (draw re-requests while anything still moves)
+  function kick()
+    {
+      if (ticking)
+        return;
+      ticking = true;
+      Browser.window.requestAnimationFrame(function(_)
+        {
+          ticking = false;
+          if (game.location == LOCATION_REGION)
+            scene.draw();
+        });
+    }
+
+// a tile just became known: fade its darkening out instead of popping it
+  public function reveal(a: AreaGame)
+    {
+      revealStart.set(a.id, Browser.window.performance.now());
     }
 
 // draw one special area tile on top of the region map image
@@ -385,7 +492,7 @@ class RegionView
     }
 
 // paint area icons on top of the region map image
-  function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset)
+  function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset, now: Float)
     {
       // area not visible
       if (area.x < scene.cameraTileX1 - 1 ||
@@ -445,6 +552,22 @@ class RegionView
             }
           drawIcon(ctx, icon, ax, ay);
         }
+
+      // just revealed: the darkening fades out over the whole tile
+      if (!revealStart.exists(area.id))
+        return;
+      var t = (now - revealStart.get(area.id)) * render.RenderConfig.ANIM_SPEED /
+        (render.RenderConfig.BASE_MS * REVEAL_MULT);
+      if (t >= 1)
+        {
+          revealStart.remove(area.id);
+          return;
+        }
+      ctx.save();
+      ctx.fillStyle = '#111111';
+      ctx.globalAlpha = 0.7 * (1 - ease(t));
+      ctx.fillRect(ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
+      ctx.restore();
     }
 
 // draw one area icon from the entities sprite sheet
