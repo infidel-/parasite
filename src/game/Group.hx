@@ -14,6 +14,7 @@ class Group extends _SaveObject
 
   public var priority: Float; // group priority (0-100%)
   public var difficulty: _Difficulty; // difficulty setting
+  static inline var TEAM_VERY_CLOSE = 10.0; // team distance under which the hud group mark pulses
 
   public function new(g: Game)
     {
@@ -41,16 +42,30 @@ class Group extends _SaveObject
         team.loadPost();
     }
 
-// add team distance to hud if close
-  public function hudInfo(buf: StringBuf): Bool
+// hud group mark state class: '' until the group is known and a difficulty is picked, then the
+// team state + distance band, with ' pulse' once the team is very close. an ambush only reads as
+// one when a watcher in that habitat reported it, otherwise the mark would give it away
+  public function hudMarkClass(): String
     {
-      if (difficulty == HARD ||
-          difficulty == UNSET ||
-          team == null ||
-          team.distance > 10)
-        return false;
-      buf.add('<div class=hud-team>TEAM IS VERY CLOSE!</div>');
-      return true;
+      if (!isKnown ||
+          difficulty == UNSET)
+        return '';
+      if (difficulty == HARD)
+        return 'hard';
+      if (team == null)
+        return 'idle';
+      switch (team.state)
+        {
+          case TEAM_FIGHT, TEAM_BASE_DEFENSE:
+            return 'alert';
+          case TEAM_AMBUSH:
+            if (team.ambushedHabitat != null &&
+                team.ambushedHabitat.hasWatcher)
+              return 'alert';
+          default:
+        }
+      return ['vclose', 'close', 'mid', 'far', 'far'][distanceBand(team.distance)] +
+        (team.distance < TEAM_VERY_CLOSE ? ' pulse' : '');
     }
 
 // get group and team info according to difficulty
@@ -86,7 +101,7 @@ class Group extends _SaveObject
              numToWord(team.size, 1, team.maxSize)) + '<br/>');
           buf.add(Const.col('group-note', 'Team distance: ') +
             (difficulty == EASY ? Std.int(team.distance) + '' :
-             numToWordDistance(Std.int(team.distance), 0, 150)) + '<br/>');
+             numToWordDistance(team.distance)) + '<br/>');
         }
     }
 
@@ -105,19 +120,23 @@ class Group extends _SaveObject
       else return Const.col('red', 'very high');
     }
 
-// convert distance number to word description
-  function numToWordDistance(val: Int, min: Int, max: Int): String
+// team distance band over its 0-150 range: 0 very close .. 4 very far
+  function distanceBand(val: Float): Int
     {
-      var percent = 100.0 * (val - min) / (max - min);
-      if (percent < 20)
-        return Const.col('red', 'very close');
-      else if (percent < 40)
-        return Const.col('red', 'close');
-      else if (percent < 60)
-        return Const.col('yellow', 'medium');
-      else if (percent < 80)
-        return Const.col('white', 'far');
-      else return Const.col('white', 'very far');
+      var band = Std.int(val / 30);
+      return (band > 4 ? 4 : band);
+    }
+
+// convert team distance to word description
+  function numToWordDistance(val: Float): String
+    {
+      return [
+        Const.col('red', 'very close'),
+        Const.col('red', 'close'),
+        Const.col('yellow', 'medium'),
+        Const.col('white', 'far'),
+        Const.col('white', 'very far'),
+      ][distanceBand(val)];
     }
 
 // TURN: new turn logic

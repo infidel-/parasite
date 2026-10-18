@@ -29,6 +29,8 @@ class InfoHud
 
   // persistent skeleton refs
   var compactBtn: DivElement;
+  var teamMark: DivElement; // group mark glued to the panel top (state class drives colour + pulse)
+  var teamTip: DivElement; // group info shown while the mark is hovered
   var baseInfo: DivElement; // base-building takeover region
   var playerSection: DivElement;
   var hostSection: DivElement;
@@ -38,7 +40,7 @@ class InfoHud
   var hostnameBadges: SpanElement;
   var badgesHTML: String = null; // last badge row written (skip identical rewrites)
   var extraWrap: DivElement;
-  var regionContext: DivElement; // area notes + team info
+  var regionContext: DivElement; // area notes
   var evoStrip: DivElement; // evolution direction + organs
   var cultLine: DivElement; // cult resources
   var spoonMark: DivElement; // SPOONED marker
@@ -72,6 +74,14 @@ class InfoHud
           compactBtn.classList.toggle('active', v);
         }
       info.appendChild(compactBtn);
+
+      // group mark tab on the panel top; hovering it shows the body window's group info
+      teamMark = document.createDivElement();
+      teamMark.innerHTML = UISvg.groupMark();
+      info.appendChild(teamMark);
+      teamTip = document.createDivElement();
+      teamTip.className = 'hud-team-tip';
+      info.appendChild(teamTip);
 
       // base-building takes over the whole panel
       baseInfo = document.createDivElement();
@@ -154,7 +164,7 @@ class InfoHud
           info.style.transition = 'none'; // kill padding/width interpolation for the measure
           var to = info.offsetHeight; // true full-layout height (all snapped)
           // start at old height with content clipped, ease to new
-          info.style.overflow = 'hidden';
+          info.style.clipPath = 'inset(-200px 0 0 0)';
           info.style.height = from + 'px';
           info.getBoundingClientRect(); // force reflow so the start height sticks
           info.style.transition = 'height 0.35s ease';
@@ -167,7 +177,7 @@ class InfoHud
           if ((cast e : js.html.TransitionEvent).propertyName != 'height')
             return;
           info.style.height = '';
-          info.style.overflow = '';
+          info.style.clipPath = '';
           info.style.transition = '';
           info.classList.remove('hud-revealing');
           info.removeEventListener('transitionend', onRevealEnd);
@@ -187,7 +197,7 @@ class InfoHud
           info.removeEventListener('transitionend', onExpandEnd);
           info.removeEventListener('transitionend', onRevealEnd);
           info.style.height = '';
-          info.style.overflow = '';
+          info.style.clipPath = '';
           info.style.transition = '';
           info.classList.remove('hud-revealing');
           info.classList.remove('hud-expanding');
@@ -480,6 +490,7 @@ class InfoHud
           setShown(hostSection, false);
           setShown(extraWrap, false);
           setShown(compactBtn, false);
+          setShown(teamMark, false);
           info.className = 'hud-panel hud-text';
           return;
         }
@@ -545,7 +556,7 @@ class InfoHud
       // free parasite: no host section
       else setShown(hostSection, false);
 
-      // area notes + team info
+      // area notes
       var ctx = '';
       if (game.location == LOCATION_AREA)
         {
@@ -561,10 +572,15 @@ class InfoHud
               game.cults[0].ordeals.getMarkerMission(area) != null)
             ctx += '<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>';
         }
-      var gbuf = new StringBuf();
-      game.group.hudInfo(gbuf);
-      ctx += gbuf.toString();
       var shownCtx = setRegion(regionContext, 'ctx', ctx);
+
+      // group mark: same class string keeps the pulse running, tip holds the group info
+      var mark = game.group.hudMarkClass();
+      setShown(teamMark, mark != '');
+      teamMark.className = 'hud-team-mark ' + mark;
+      var gbuf = new StringBuf();
+      game.group.getInfo(gbuf);
+      setRegion(teamTip, 'team', gbuf.toString());
 
       // evolution direction + organs (host only)
       var feat = '';
