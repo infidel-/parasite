@@ -164,58 +164,6 @@ class Default extends Tileset
       splatLayerID = 0; // persisted in SPLAT decorations: the one floor layer the 2D view had
     }
 
-// map tile id to icon coordinates.
-//
-// NINE ALIASES, and the reason none of them needed art: a mark that exists so CODE can tell two
-// surfaces apart still has to LOOK like the surface it marks. The car park's three are asphalt drawn
-// from the alley's own cell — the lot you drive into against the yard you do not, and where a car is
-// standing (Const.TILE_PARKING, TILE_PARKING_CAR). The corp office's four are the same idea indoors:
-// a cubicle farm is carpet and a server room is concrete to look at, and the id is what tells them
-// from the corridor and the lift lobby they share those floors with. The ARCHIVE is a THIRD of them
-// and is concrete like the server room it was split off, because what its own id buys is not a look
-// but an unwalkable TWIN of its own -- see Const.TILE_FLOOR_ARCHIVE
-  public override function getIcon(tileID: Int): _Icon
-    {
-      if (tileID == Const.TILE_PARKING ||
-          tileID == Const.TILE_PARKING_CAR ||
-          tileID == Const.TILE_PARKING_CAR_ORIGIN)
-        return super.getIcon(Const.TILE_ALLEY);
-      // and the corp office's three role-only floors, which are carpet and concrete to look at
-      if (tileID == Const.TILE_FLOOR_CUBICLE)
-        return super.getIcon(Const.TILE_FLOOR_CARPET);
-      if (tileID == Const.TILE_FLOOR_SERVER ||
-          tileID == Const.TILE_FLOOR_ARCHIVE)
-        return super.getIcon(Const.TILE_FLOOR_CONCRETE);
-      if (tileID == Const.TILE_FLOOR_CUBICLE + 16)
-        return super.getIcon(Const.TILE_FLOOR_CARPET + 16);
-      // the reception is the marble it was laid in before it had an id of its own
-      if (tileID == Const.TILE_FLOOR_RECEPTION)
-        return super.getIcon(Const.TILE_FLOOR_MARBLE1);
-      if (tileID == Const.TILE_FLOOR_RECEPTION + 16)
-        return super.getIcon(Const.TILE_FLOOR_MARBLE1 + 16);
-      // the counter in the reception's wall is the marble desk it replaced
-      if (tileID == Const.TILE_CORP_RECEPTION_COUNTER)
-        return super.getIcon(Const.TILE_DARK_TABLE_MARBLE1_1X1);
-      // a locker and a wall rack are the server floor's twin they stand on
-      if (tileID == Const.TILE_CORP_LOCKER ||
-          tileID == Const.TILE_CORP_WALL_RACK)
-        return super.getIcon(Const.TILE_FLOOR_CONCRETE);
-      // and the exec rug is the boardroom's carpet, the one rug-like floor the tileset has
-      if (tileID == Const.TILE_FLOOR_EXEC_RUG)
-        return super.getIcon(Const.TILE_FLOOR_CARPET_MEETING);
-      if (tileID == Const.TILE_FLOOR_EXEC_RUG + 16)
-        return super.getIcon(Const.TILE_FLOOR_CARPET_MEETING + 16);
-      if (tileID == Const.TILE_FLOOR_SERVER + 16 ||
-          tileID == Const.TILE_FLOOR_ARCHIVE + 16 ||
-          tileID == Const.TILE_ARCHIVE_HIGH ||
-          tileID == Const.TILE_RACK_HIGH)
-        return super.getIcon(Const.TILE_FLOOR_CONCRETE);
-      // the military base's row has no art of its own: it is always drawn in 3D
-      if (tileID >= Const.OFFSET_ROW19)
-        return super.getIcon(Const.TILE_ALLEY);
-      return super.getIcon(tileID);
-    }
-
 // check if default tile is walkable
   public override function isWalkable(tileID: Int): Bool
     {

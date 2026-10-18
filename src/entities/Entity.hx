@@ -11,7 +11,6 @@ import Const.TILE_SIZE_CLEAN as tileClean;
 class Entity
 {
   var game: Game; // game state
-  public var type: String;
   public var isMaleAtlas: Bool;
   public var skinColor: Int; // 3D actor skin tone (mirrors AIData.skinColor; 0 for non-actors)
   // new draw
@@ -23,75 +22,25 @@ class Entity
   // map x,y
   public var mx: Int;
   public var my: Int;
-  public var scale: Float;
-  public var angle: Float;
-  // displacement inside of tile
-  public var dx: Int;
-  public var dy: Int;
   // render hint: next slide is a real contiguous multi-cell move (push-past swap + own
   // AI move applied atomically in one turn), so the slide must not treat the 2-cell jump
   // as a teleport and snap. consumed (reset) once by the renderer. see render.ActorAnim.slideTo
   public var slideNoSnap: Bool;
 
 
-  public function new(g: Game, layer: Int)
+  public function new(g: Game)
     {
       game = g;
       imageName = 'entities';
       ix = iy = mx = my = 0;
-      type = 'undefined';
       isMaleAtlas = false;
       skinColor = 0;
-      scale = 1.0;
-      angle = 0.0;
-      dx = 0;
-      dy = 0;
       slideNoSnap = false;
     }
 
-// randomize scale
-  public inline function randomizeScale(min: Float)
-    {
-      scale = Const.round2(min + (1.0 - min) * Math.random());
-    }
-
-// randomize angle
-  public inline function randomizeAngle()
-    {
-      angle = Const.round2(360 * Math.random() * Math.PI / 180);
-    }
-
-// randomize delta
-  public inline function randomizeDelta()
-    {
-      var min = - Const.TILE_SIZE * (1.0 - scale) / 2.0;
-      var max = Const.TILE_SIZE * (1.0 - scale) / 2.0;
-      dx = Std.int(min + Math.random() * (max - min));
-      dy = Std.int(min + Math.random() * (max - min));
-    }
-
-// is currently on screen?
-  public inline function isVisible(): Bool
-    {
-      if (mx >= game.scene.cameraTileX1 - 1 &&
-          my >= game.scene.cameraTileY1 - 1 &&
-          mx <= game.scene.cameraTileX2 + 2 &&
-          my <= game.scene.cameraTileY2 + 2)
-        return true;
-      else return false;
-    }
-
-// draw image at this entity x,y
+// draw image at this entity x,y (region map)
   function drawImage(ctx: CanvasRenderingContext2D, img: Image, xx: Int, yy: Int)
     {
-      // full display
-      if (scale != 1.0 || angle != 0.0)
-        {
-          drawImageFull(ctx, img, xx, yy);
-          return;
-        }
-
-      // simple tile draw
       // kludge: draw one pixel less to avoid scaling bugs
       ctx.drawImage(img,
         xx * tileClean,
@@ -101,35 +50,8 @@ class Entity
 
         (mx - game.scene.cameraTileX1) * tile,
         (my - game.scene.cameraTileY1) * tile,
-        tile * scale,
-        tile * scale);
-    }
-
-// with scale/rotation/displacement
-  function drawImageFull(ctx: CanvasRenderingContext2D, img: Image, xx: Int, yy: Int)
-    {
-      // apply scale to x,y
-      var ex: Float = (mx - game.scene.cameraTileX1) * tile;
-      var ey: Float = (my - game.scene.cameraTileY1) * tile;
-      if (scale != 1.0)
-        {
-          ex += tile / 2 - tile * scale / 2;
-          ey += tile / 2 - tile * scale / 2;
-        }
-      // apply rotation in place
-      ctx.save();
-      ctx.translate(ex + tile * scale / 2, ey + tile * scale / 2);
-      ctx.rotate(angle);
-      ctx.translate(- tile * scale / 2, - tile * scale / 2);
-
-      // kludge: draw one pixel less to avoid scaling bugs
-      ctx.drawImage(img,
-        xx * tileClean, yy * tileClean + 1,
-        tileClean, tileClean - 1,
-        dx, dy, tile * scale, tile * scale);
-
-      // restore context state
-      ctx.restore();
+        tile,
+        tile);
     }
 
 // set entity icon
@@ -148,7 +70,7 @@ class Entity
       this.my = my;
     }
 
-// draw entity on map
+// draw entity on the region map (areas draw through render.View)
   public function draw(ctx: CanvasRenderingContext2D)
     {
       var img = game.scene.images.getImage(imageName, isMaleAtlas);

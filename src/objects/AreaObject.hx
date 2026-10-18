@@ -83,18 +83,10 @@ class AreaObject extends _SaveObject
     {
       if (entity != null)
         return;
-      entity = new ObjectEntity(this, game, x, y);
+      entity = new ObjectEntity(game, x, y);
       entity.setIcon(imageName, imageCol, imageRow);
-      if (type == 'decorationExt')
-        {
-          var o: DecorationExt = cast this;
-          entity.scale = o.scale;
-          entity.angle = o.angle;
-          entity.dx = o.dx;
-          entity.dy = o.dy;
-        }
       // a loaded body crops the dead actor's atlas cell, so restore its gender atlas and skin tone
-      else if (type == 'body')
+      if (type == 'body')
         {
           var b: BodyObject = cast this;
           entity.isMaleAtlas = b.isMaleAtlas;

@@ -1,9 +1,8 @@
-// sewer tileset wrapper with sewer-specific floor and wall mapping
+// sewer tileset wrapper: sewer-specific walkability and wall ids
 
 package tiles;
 
 import Const;
-import haxe.ds.StringMap;
 
 class Sewers extends Tileset
 {
@@ -56,92 +55,11 @@ class Sewers extends Tileset
         tileID == TILE_WALL_OUTER_BOTTOM_RIGHT);
     }
 
-  public var floor: StringMap<_Icon>;
-  public var walls: _WallMap;
-  public var wallID: _WallMapID;
-  var iconByTileID: Map<Int, _Icon>;
-
-// load sewer tileset image
+// sewer tile rules (no image: the tunnels only ever draw in 3D)
   public function new()
     {
-      super('img/sewers.png');
-      voidTile = {
-        col: 1,
-        row: 1,
-      };
-      floor = new StringMap<_Icon>();
-      iconByTileID = new Map<Int, _Icon>();
-      initFloor();
-      initWalls();
+      super();
       splatLayerID = DEBRIS_LAYER_ID;
-    }
-
-// initialize sewer floor icon map
-  function initFloor()
-    {
-      floor.set('base', {
-        col: 3,
-        row: 0,
-      });
-      iconByTileID[TILE_FLOOR] = floor.get('base');
-      iconByTileID[TILE_FLOOR_ALT] = floor.get('base');
-    }
-
-// initialize sewer wall icon and tile id maps
-  function initWalls()
-    {
-      walls = {
-        upper: { col: 1, row: 2 },
-        lower: { col: 1, row: 0 },
-        left: { col: 2, row: 1 },
-        right: { col: 0, row: 1 },
-        innerTopLeft: { col: 2, row: 2 },
-        innerTopRight: { col: 0, row: 2 },
-        innerBottomLeft: { col: 2, row: 0 },
-        innerBottomRight: { col: 0, row: 0 },
-        outerTopLeft: { col: 4, row: 2 },
-        outerTopRight: { col: 3, row: 2 },
-        outerBottomLeft: { col: 4, row: 1 },
-        outerBottomRight: { col: 3, row: 1 },
-      };
-      wallID = {
-        upper: TILE_WALL_UPPER,
-        lower: TILE_WALL_LOWER,
-        left: TILE_WALL_LEFT,
-        right: TILE_WALL_RIGHT,
-        innerTopLeft: TILE_WALL_INNER_TOP_LEFT,
-        innerTopRight: TILE_WALL_INNER_TOP_RIGHT,
-        innerBottomLeft: TILE_WALL_INNER_BOTTOM_LEFT,
-        innerBottomRight: TILE_WALL_INNER_BOTTOM_RIGHT,
-        outerTopLeft: TILE_WALL_OUTER_TOP_LEFT,
-        outerTopRight: TILE_WALL_OUTER_TOP_RIGHT,
-        outerBottomLeft: TILE_WALL_OUTER_BOTTOM_LEFT,
-        outerBottomRight: TILE_WALL_OUTER_BOTTOM_RIGHT,
-      };
-
-      iconByTileID[wallID.upper] = walls.upper;
-      iconByTileID[wallID.lower] = walls.lower;
-      iconByTileID[wallID.left] = walls.left;
-      iconByTileID[wallID.right] = walls.right;
-      iconByTileID[wallID.innerTopLeft] = walls.innerTopLeft;
-      iconByTileID[wallID.innerTopRight] = walls.innerTopRight;
-      iconByTileID[wallID.innerBottomLeft] = walls.innerBottomLeft;
-      iconByTileID[wallID.innerBottomRight] = walls.innerBottomRight;
-      iconByTileID[wallID.outerTopLeft] = walls.outerTopLeft;
-      iconByTileID[wallID.outerTopRight] = walls.outerTopRight;
-      iconByTileID[wallID.outerBottomLeft] = walls.outerBottomLeft;
-      iconByTileID[wallID.outerBottomRight] = walls.outerBottomRight;
-    }
-
-// map sewer tile id to icon coordinates
-  public override function getIcon(tileID: Int): _Icon
-    {
-      if (tileID == Const.TILE_HIDDEN)
-        return voidTile;
-      var icon = iconByTileID[tileID];
-      if (icon != null)
-        return icon;
-      return voidTile;
     }
 
 // check if sewer tile is walkable

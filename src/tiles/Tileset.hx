@@ -13,11 +13,14 @@ class Tileset
   public var voidTile: _Icon;
   public var splatLayerID: Int; // persisted into SPLAT decorations (Tile.decoration.layerID)
 
-// create tileset from image path
-  public function new(path: String)
+// create tileset, with the image the region map draws from when a path is given
+  public function new(?path: String)
     {
-      image = new Image();
-      image.src = AssetPath.resolve(path);
+      if (path != null)
+        {
+          image = new Image();
+          image.src = AssetPath.resolve(path);
+        }
       voidTile = {
         row: 0,
         col: 0,

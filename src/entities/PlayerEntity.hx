@@ -10,6 +10,5 @@ class PlayerEntity extends PawnEntity
     {
       super(g, xx, yy);
       setIcon('entities', 0, Const.ROW_PARASITE);
-      type = "player";
     }
 }

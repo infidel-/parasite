@@ -32,7 +32,6 @@ class Images
   public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
   public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
   public var entities128: Image; // 3D 128px redraw of the entities64 cells in Const.HD128
-  public var tileset: Image;
   var debrisPacks = new Map<String, Image>(); // the per-tier street litter PACK64s, loaded on first ask
   var defaultTileset: Default;
   var sewerTileset: Sewers;
@@ -75,7 +74,6 @@ class Images
       ventHD.src = AssetPath.resolve('textures/facility/vent.png');
       defaultTileset = new Default();
       sewerTileset = new Sewers();
-      tileset = defaultTileset.image;
       }
 
 // load the 3 skin-variant 128px atlases for a gender ([yellow, dark, white])
