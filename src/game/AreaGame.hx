@@ -250,13 +250,15 @@ class AreaGame extends _SaveObject
     }
 
 // does any unfriendly, alerted AI see this cell? the gate on slipping out of sight (objects.Dumpster).
-// alerted is ALERT or either SEARCH state; the player's own cultists and agreeable AI are no threat
+// alerted is ALERT or either SEARCH state; the player's own cultists, agreeable AI and dogs (no
+// witness to anything) are no threat
   public function hostileSees(x: Int, y: Int): Bool
     {
       for (ai in _ai)
         if ((ai.state == AI_STATE_ALERT ||
             ai.state == AI_STATE_SEARCH_LAST_SEEN ||
             ai.state == AI_STATE_SEARCH_AREA) &&
+            ai.type != 'dog' &&
             !ai.isPlayerCultist() &&
             !ai.isAgreeable() &&
             ai.seesPosition(x, y))
