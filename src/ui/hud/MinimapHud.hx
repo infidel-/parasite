@@ -25,6 +25,7 @@ class MinimapHud
     [ 122, 132, 152 ],
     [ 52, 58, 71 ],
   ];
+  static inline var PAD = 4; // css px of solid margin around the layout, inside the canvas so the dot can overlap it
 
   public function new(g: Game, h: HUD)
     {
@@ -50,16 +51,17 @@ class MinimapHud
 
       // size in device pixels like the 2D one was, so the scale reads the same
       var scale = game.config.minimapScale;
+      var dpr = Browser.window.devicePixelRatio;
+      var pad = Std.int(PAD * dpr);
       var w = Std.int(base.width * scale);
       var h = Std.int(base.height * scale);
-      if (canvas.width != w ||
-          canvas.height != h)
+      if (canvas.width != w + pad * 2 ||
+          canvas.height != h + pad * 2)
         {
-          var dpr = Browser.window.devicePixelRatio;
-          canvas.width = w;
-          canvas.height = h;
-          canvas.style.width = (w / dpr) + 'px';
-          canvas.style.height = (h / dpr) + 'px';
+          canvas.width = w + pad * 2;
+          canvas.height = h + pad * 2;
+          canvas.style.width = (canvas.width / dpr) + 'px';
+          canvas.style.height = (canvas.height / dpr) + 'px';
         }
       // under the event log, which grows with its rows
       var log = Browser.document.getElementById('hud-log');
@@ -67,17 +69,19 @@ class MinimapHud
 
       var ctx = canvas.getContext2d();
       ctx.imageSmoothingEnabled = (scale < 1);
-      ctx.drawImage(base, 0, 0, w, h);
+      ctx.fillStyle = 'rgb(' + COLORS[0].join(',') + ')';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(base, pad, pad, w, h);
       ctx.fillStyle = '#c441c4';
       ctx.beginPath();
-      ctx.arc((game.playerArea.x - ox + 0.5) * scale, (game.playerArea.y - oy + 0.5) * scale,
+      ctx.arc(pad + (game.playerArea.x - ox + 0.5) * scale, pad + (game.playerArea.y - oy + 0.5) * scale,
         2 * scale, 0, Math.PI * 2, false);
       ctx.fill();
     }
 
 // rebuild the 1px-per-cell layout from the area's tiles (objects left out, a door would go stale),
-// cropped to the walkable bounds plus one cell: every area has a solid rim of its own width on each
-// side, and drawn whole it framed the map in uneven dark margins
+// cropped to the walkable bounds: every area has a solid rim of its own width on each side, and drawn
+// whole it framed the map in uneven dark margins. update() adds the even PAD margin instead
   function build()
     {
       var area = game.area;
@@ -105,10 +109,10 @@ class MinimapHud
             x2 = Std.int(Math.max(x2, x));
             y2 = Std.int(Math.max(y2, y));
           }
-      ox = Std.int(Math.max(x1 - 1, 0));
-      oy = Std.int(Math.max(y1 - 1, 0));
-      var w = Std.int(Math.min(x2 + 2, area.width)) - ox;
-      var h = Std.int(Math.min(y2 + 2, area.height)) - oy;
+      ox = x1;
+      oy = y1;
+      var w = x2 + 1 - ox;
+      var h = y2 + 1 - oy;
 
       // paint the cropped rect
       base.width = w;
