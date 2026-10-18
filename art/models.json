@@ -2330,7 +2330,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-reactor-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/reactor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/reactor.glb, kept). Wears textures-src/lab/mach-reactor.png and mach-reactor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/reactor-src.png. baseColor 0.38 takes the sheets' luma (Ylin 0.199) to the indoor ~78. Glows off models-src/lab/lab-mach-reactor-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/reactor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/reactor.glb, kept). Wears textures-src/lab/Unused/mach-reactor.png and mach-reactor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/reactor-src.png. baseColor 0.38 takes the sheets' luma (Ylin 0.199) to the indoor ~78. Glows off models-src/lab/lab-mach-reactor-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:29Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-reactor-emissive.png@1.5/noMR/bc0.38,0.38,0.38,1"
     },
@@ -2348,7 +2348,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-screenwall-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/screenwall.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/screenwall.glb, kept). Wears textures-src/lab/mach-screenwall.png and mach-screenwall-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/screenwall-src.png. baseColor 0.62 takes the sheets' luma (Ylin 0.123) to the indoor ~78. Glows off models-src/lab/lab-mach-screenwall-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/screenwall.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/screenwall.glb, kept). Wears textures-src/lab/Unused/mach-screenwall.png and mach-screenwall-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/screenwall-src.png. baseColor 0.62 takes the sheets' luma (Ylin 0.123) to the indoor ~78. Glows off models-src/lab/lab-mach-screenwall-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:31Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-screenwall-emissive.png@1.5/noMR/bc0.62,0.62,0.62,1"
     },
@@ -2366,7 +2366,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-hatchbox-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/hatchbox.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/hatchbox.glb, kept). Wears textures-src/lab/mach-hatchbox.png and mach-hatchbox-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/hatchbox-src.png. baseColor 0.67 takes the sheets' luma (Ylin 0.113) to the indoor ~78. Glows off models-src/lab/lab-mach-hatchbox-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/hatchbox.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/hatchbox.glb, kept). Wears textures-src/lab/Unused/mach-hatchbox.png and mach-hatchbox-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/hatchbox-src.png. baseColor 0.67 takes the sheets' luma (Ylin 0.113) to the indoor ~78. Glows off models-src/lab/lab-mach-hatchbox-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:59:09Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-hatchbox-emissive.png@1.5/noMR/bc0.67,0.67,0.67,1"
     },
@@ -2384,7 +2384,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-dialtank-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/dialtank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/dialtank.glb, kept). Wears textures-src/lab/mach-dialtank.png, PACK4 edit_image off models-src/lab/dialtank-src.png. baseColor 0.36 takes the sheets' luma (Ylin 0.215) to the indoor ~78. Glows off models-src/lab/lab-mach-dialtank-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/dialtank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/dialtank.glb, kept). Wears textures-src/lab/Unused/mach-dialtank.png, PACK4 edit_image off models-src/lab/dialtank-src.png. baseColor 0.36 takes the sheets' luma (Ylin 0.215) to the indoor ~78. Glows off models-src/lab/lab-mach-dialtank-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:08Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-dialtank-emissive.png@1.5/noMR/bc0.36,0.36,0.36,1"
     },
@@ -2402,7 +2402,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-autopsy-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/autopsy.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/autopsy.glb, kept). Wears textures-src/lab/mach-autopsy.png and mach-autopsy-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/autopsy-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.192) to the indoor ~78. Glows off models-src/lab/lab-mach-autopsy-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/autopsy.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/autopsy.glb, kept). Wears textures-src/lab/Unused/mach-autopsy.png and mach-autopsy-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/autopsy-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.192) to the indoor ~78. Glows off models-src/lab/lab-mach-autopsy-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:00Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-autopsy-emissive.png@1.5/noMR/bc0.4,0.4,0.4,1"
     },
@@ -2420,7 +2420,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-tube-emissive.png",
       "emissiveStrength": 1.2,
-      "note": "hand-modelled in Blender, models-src/lab/mach/tube.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tube.glb, kept). Wears textures-src/lab/mach-tube.png and mach-tube-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tube-src.png. baseColor 0.29 takes the sheets' luma (Ylin 0.261) to the indoor ~78. Glows off models-src/lab/lab-mach-tube-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/tube.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tube.glb, kept). Wears textures-src/lab/Unused/mach-tube.png and mach-tube-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tube-src.png. baseColor 0.29 takes the sheets' luma (Ylin 0.261) to the indoor ~78. Glows off models-src/lab/lab-mach-tube-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:39Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-tube-emissive.png@1.2/noMR/bc0.29,0.29,0.29,1"
     },
@@ -2438,7 +2438,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-restraint-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/restraint.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/restraint.glb, kept). Wears textures-src/lab/mach-restraint.png and mach-restraint-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/restraint-src.png. baseColor 0.51 takes the sheets' luma (Ylin 0.150) to the indoor ~78. Glows off models-src/lab/lab-mach-restraint-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/restraint.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/restraint.glb, kept). Wears textures-src/lab/Unused/mach-restraint.png and mach-restraint-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/restraint-src.png. baseColor 0.51 takes the sheets' luma (Ylin 0.150) to the indoor ~78. Glows off models-src/lab/lab-mach-restraint-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:29Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-restraint-emissive.png@1.5/noMR/bc0.51,0.51,0.51,1"
     },
@@ -2456,7 +2456,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-switchrack-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/mach/switchrack.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/switchrack.glb, kept). Wears textures-src/lab/mach-switchrack.png, PACK4 edit_image off models-src/lab/switchrack-src.png. baseColor 0.63 takes the sheets' luma (Ylin 0.121) to the indoor ~78. Glows off models-src/lab/lab-mach-switchrack-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/switchrack.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/switchrack.glb, kept). Wears textures-src/lab/Unused/mach-switchrack.png, PACK4 edit_image off models-src/lab/switchrack-src.png. baseColor 0.63 takes the sheets' luma (Ylin 0.121) to the indoor ~78. Glows off models-src/lab/lab-mach-switchrack-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:36Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-switchrack-emissive.png@1.6/noMR/bc0.63,0.63,0.63,1"
     },
@@ -2474,7 +2474,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-terminal-emissive.png",
       "emissiveStrength": 1.3,
-      "note": "hand-modelled in Blender, models-src/lab/mach/terminal.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/terminal.glb, kept). Wears textures-src/lab/mach-terminal.png and mach-terminal-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/terminal-src.png. baseColor 0.63 takes the sheets' luma (Ylin 0.121) to the indoor ~78. Glows off models-src/lab/lab-mach-terminal-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/terminal.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/terminal.glb, kept). Wears textures-src/lab/Unused/mach-terminal.png and mach-terminal-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/terminal-src.png. baseColor 0.63 takes the sheets' luma (Ylin 0.121) to the indoor ~78. Glows off models-src/lab/lab-mach-terminal-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:37Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-terminal-emissive.png@1.3/noMR/bc0.63,0.63,0.63,1"
     },
@@ -2492,7 +2492,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-holo-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/mach/holo.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/holo.glb, kept). Wears textures-src/lab/mach-holo.png and mach-holo-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/holo-src.png. baseColor 0.53 takes the sheets' luma (Ylin 0.145) to the indoor ~78. Glows off models-src/lab/lab-mach-holo-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/holo.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/holo.glb, kept). Wears textures-src/lab/Unused/mach-holo.png and mach-holo-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/holo-src.png. baseColor 0.53 takes the sheets' luma (Ylin 0.145) to the indoor ~78. Glows off models-src/lab/lab-mach-holo-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:12Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-holo-emissive.png@1.6/noMR/bc0.53,0.53,0.53,1"
     },
@@ -2510,7 +2510,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-monitorstack-emissive.png",
       "emissiveStrength": 1.4,
-      "note": "hand-modelled in Blender, models-src/lab/mach/monitorstack.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/monitorstack.glb, kept). Wears textures-src/lab/mach-monitorstack.png and mach-monitorstack-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/monitorstack-src.png. baseColor 0.66 takes the sheets' luma (Ylin 0.116) to the indoor ~78. Glows off models-src/lab/lab-mach-monitorstack-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/monitorstack.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/monitorstack.glb, kept). Wears textures-src/lab/Unused/mach-monitorstack.png and mach-monitorstack-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/monitorstack-src.png. baseColor 0.66 takes the sheets' luma (Ylin 0.116) to the indoor ~78. Glows off models-src/lab/lab-mach-monitorstack-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:16Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-monitorstack-emissive.png@1.4/noMR/bc0.66,0.66,0.66,1"
     },
@@ -2528,7 +2528,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-pipecapsule-emissive.png",
       "emissiveStrength": 1.2,
-      "note": "hand-modelled in Blender, models-src/lab/mach/pipecapsule.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/pipecapsule.glb, kept). Wears textures-src/lab/mach-pipecapsule.png, PACK4 edit_image off models-src/lab/pipecapsule-src.png. baseColor 0.32 takes the sheets' luma (Ylin 0.237) to the indoor ~78. Glows off models-src/lab/lab-mach-pipecapsule-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/pipecapsule.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/pipecapsule.glb, kept). Wears textures-src/lab/Unused/mach-pipecapsule.png, PACK4 edit_image off models-src/lab/pipecapsule-src.png. baseColor 0.32 takes the sheets' luma (Ylin 0.237) to the indoor ~78. Glows off models-src/lab/lab-mach-pipecapsule-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:17Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-pipecapsule-emissive.png@1.2/noMR/bc0.32,0.32,0.32,1"
     },
@@ -2546,7 +2546,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-tentacle-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/tentacle.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tentacle.glb, kept). Wears textures-src/lab/mach-tentacle.png and mach-tentacle-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tentacle-src.png. baseColor 0.48 takes the sheets' luma (Ylin 0.158) to the indoor ~78. Glows off models-src/lab/lab-mach-tentacle-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/tentacle.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tentacle.glb, kept). Wears textures-src/lab/Unused/mach-tentacle.png and mach-tentacle-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tentacle-src.png. baseColor 0.48 takes the sheets' luma (Ylin 0.158) to the indoor ~78. Glows off models-src/lab/lab-mach-tentacle-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:36Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-tentacle-emissive.png@1.5/noMR/bc0.48,0.48,0.48,1"
     },
@@ -2564,7 +2564,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-bioscreen-emissive.png",
       "emissiveStrength": 1.3,
-      "note": "hand-modelled in Blender, models-src/lab/mach/bioscreen.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bioscreen.glb, kept). Wears textures-src/lab/mach-bioscreen.png, PACK4 edit_image off models-src/lab/bioscreen-src.png. baseColor 0.37 takes the sheets' luma (Ylin 0.206) to the indoor ~78. Glows off models-src/lab/lab-mach-bioscreen-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/bioscreen.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bioscreen.glb, kept). Wears textures-src/lab/Unused/mach-bioscreen.png, PACK4 edit_image off models-src/lab/bioscreen-src.png. baseColor 0.37 takes the sheets' luma (Ylin 0.206) to the indoor ~78. Glows off models-src/lab/lab-mach-bioscreen-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:04Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-bioscreen-emissive.png@1.3/noMR/bc0.37,0.37,0.37,1"
     },
@@ -2582,7 +2582,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-cryopod-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/cryopod.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryopod.glb, kept). Wears textures-src/lab/mach-cryopod.png and mach-cryopod-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryopod-src.png. baseColor 0.37 takes the sheets' luma (Ylin 0.208) to the indoor ~78. Glows off models-src/lab/lab-mach-cryopod-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/cryopod.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryopod.glb, kept). Wears textures-src/lab/Unused/mach-cryopod.png and mach-cryopod-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryopod-src.png. baseColor 0.37 takes the sheets' luma (Ylin 0.208) to the indoor ~78. Glows off models-src/lab/lab-mach-cryopod-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:08Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-cryopod-emissive.png@1.5/noMR/bc0.37,0.37,0.37,1"
     },
@@ -2600,7 +2600,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-stasis-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/mach/stasis.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/stasis.glb, kept). Wears textures-src/lab/mach-stasis.png, PACK4 edit_image off models-src/lab/stasis-src.png. baseColor 0.39 takes the sheets' luma (Ylin 0.195) to the indoor ~78. Glows off models-src/lab/lab-mach-stasis-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/stasis.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/stasis.glb, kept). Wears textures-src/lab/Unused/mach-stasis.png, PACK4 edit_image off models-src/lab/stasis-src.png. baseColor 0.39 takes the sheets' luma (Ylin 0.195) to the indoor ~78. Glows off models-src/lab/lab-mach-stasis-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:35Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-stasis-emissive.png@1.6/noMR/bc0.39,0.39,0.39,1"
     },
@@ -2618,7 +2618,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-upw-emissive.png",
       "emissiveStrength": 1.3,
-      "note": "hand-modelled in Blender, models-src/lab/mach/upw.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/upw.glb, kept). Wears textures-src/lab/mach-upw.png and mach-upw-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/upw-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.191) to the indoor ~78. Glows off models-src/lab/lab-mach-upw-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/upw.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/upw.glb, kept). Wears textures-src/lab/Unused/mach-upw.png and mach-upw-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/upw-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.191) to the indoor ~78. Glows off models-src/lab/lab-mach-upw-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:40Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-upw-emissive.png@1.3/noMR/bc0.4,0.4,0.4,1"
     },
@@ -2636,7 +2636,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-incinerator-emissive.png",
       "emissiveStrength": 2,
-      "note": "hand-modelled in Blender, models-src/lab/mach/incinerator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incinerator.glb, kept). Wears textures-src/lab/mach-incinerator.png and mach-incinerator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incinerator-src.png. baseColor 0.83 takes the sheets' luma (Ylin 0.091) to the indoor ~78. Glows off models-src/lab/lab-mach-incinerator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/incinerator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incinerator.glb, kept). Wears textures-src/lab/Unused/mach-incinerator.png and mach-incinerator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incinerator-src.png. baseColor 0.83 takes the sheets' luma (Ylin 0.091) to the indoor ~78. Glows off models-src/lab/lab-mach-incinerator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:13Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-incinerator-emissive.png@2/noMR/bc0.83,0.83,0.83,1"
     },
@@ -2654,7 +2654,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-bioprinter-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/mach/bioprinter.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bioprinter.glb, kept). Wears textures-src/lab/mach-bioprinter.png and mach-bioprinter-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/bioprinter-src.png. baseColor 0.38 takes the sheets' luma (Ylin 0.202) to the indoor ~78. Glows off models-src/lab/lab-mach-bioprinter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/bioprinter.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bioprinter.glb, kept). Wears textures-src/lab/Unused/mach-bioprinter.png and mach-bioprinter-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/bioprinter-src.png. baseColor 0.38 takes the sheets' luma (Ylin 0.202) to the indoor ~78. Glows off models-src/lab/lab-mach-bioprinter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:02Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-bioprinter-emissive.png@1.6/noMR/bc0.38,0.38,0.38,1"
     },
@@ -2672,7 +2672,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-specimencase-emissive.png",
       "emissiveStrength": 1,
-      "note": "hand-modelled in Blender, models-src/lab/mach/specimencase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/specimencase.glb, kept). Wears textures-src/lab/mach-specimencase.png and mach-specimencase-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/specimencase-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.358) to the indoor ~78. Glows off models-src/lab/lab-mach-specimencase-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/specimencase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/specimencase.glb, kept). Wears textures-src/lab/Unused/mach-specimencase.png and mach-specimencase-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/specimencase-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.358) to the indoor ~78. Glows off models-src/lab/lab-mach-specimencase-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:35Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-specimencase-emissive.png@1/noMR/bc0.21,0.21,0.21,1"
     },
@@ -2690,7 +2690,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-ambertanks-emissive.png",
       "emissiveStrength": 1.2,
-      "note": "hand-modelled in Blender, models-src/lab/mach/ambertanks.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/ambertanks.glb, kept). Wears textures-src/lab/mach-ambertanks.png and mach-ambertanks-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/ambertanks-src.png. baseColor 0.33 takes the sheets' luma (Ylin 0.228) to the indoor ~78. Glows off models-src/lab/lab-mach-ambertanks-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/ambertanks.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/ambertanks.glb, kept). Wears textures-src/lab/Unused/mach-ambertanks.png and mach-ambertanks-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/ambertanks-src.png. baseColor 0.33 takes the sheets' luma (Ylin 0.228) to the indoor ~78. Glows off models-src/lab/lab-mach-ambertanks-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:00Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-ambertanks-emissive.png@1.2/noMR/bc0.33,0.33,0.33,1"
     },
@@ -2708,7 +2708,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-processor-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/processor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/processor.glb, kept). Wears textures-src/lab/mach-processor.png and mach-processor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/processor-src.png. baseColor 0.47 takes the sheets' luma (Ylin 0.162) to the indoor ~78. Glows off models-src/lab/lab-mach-processor-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/processor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/processor.glb, kept). Wears textures-src/lab/Unused/mach-processor.png and mach-processor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/processor-src.png. baseColor 0.47 takes the sheets' luma (Ylin 0.162) to the indoor ~78. Glows off models-src/lab/lab-mach-processor-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:19Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-processor-emissive.png@1.5/noMR/bc0.47,0.47,0.47,1"
     },
@@ -2726,7 +2726,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-incubator-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/incubator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incubator.glb, kept). Wears textures-src/lab/mach-incubator.png and mach-incubator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incubator-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.188) to the indoor ~78. Glows off models-src/lab/lab-mach-incubator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/incubator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incubator.glb, kept). Wears textures-src/lab/Unused/mach-incubator.png and mach-incubator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incubator-src.png. baseColor 0.4 takes the sheets' luma (Ylin 0.188) to the indoor ~78. Glows off models-src/lab/lab-mach-incubator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:13Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-incubator-emissive.png@1.5/noMR/bc0.4,0.4,0.4,1"
     },
@@ -2744,7 +2744,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-brainscan-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/brainscan.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/brainscan.glb, kept). Wears textures-src/lab/mach-brainscan.png and mach-brainscan-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/brainscan-src.png. baseColor 0.49 takes the sheets' luma (Ylin 0.156) to the indoor ~78. Glows off models-src/lab/lab-mach-brainscan-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/brainscan.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/brainscan.glb, kept). Wears textures-src/lab/Unused/mach-brainscan.png and mach-brainscan-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/brainscan-src.png. baseColor 0.49 takes the sheets' luma (Ylin 0.156) to the indoor ~78. Glows off models-src/lab/lab-mach-brainscan-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:05Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-brainscan-emissive.png@1.5/noMR/bc0.49,0.49,0.49,1"
     },
@@ -2762,7 +2762,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-cryobank-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/cryobank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryobank.glb, kept). Wears textures-src/lab/mach-cryobank.png and mach-cryobank-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryobank-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.368) to the indoor ~78. Glows off models-src/lab/lab-mach-cryobank-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/cryobank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryobank.glb, kept). Wears textures-src/lab/Unused/mach-cryobank.png and mach-cryobank-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryobank-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.368) to the indoor ~78. Glows off models-src/lab/lab-mach-cryobank-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:06Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-cryobank-emissive.png@1.5/noMR/bc0.21,0.21,0.21,1"
     },
@@ -2780,7 +2780,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-centrifuge-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/centrifuge.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/centrifuge.glb, kept). Wears textures-src/lab/mach-centrifuge.png, PACK4 edit_image off models-src/lab/centrifuge-src.png. baseColor 0.45 takes the sheets' luma (Ylin 0.167) to the indoor ~78. Glows off models-src/lab/lab-mach-centrifuge-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/centrifuge.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/centrifuge.glb, kept). Wears textures-src/lab/Unused/mach-centrifuge.png, PACK4 edit_image off models-src/lab/centrifuge-src.png. baseColor 0.45 takes the sheets' luma (Ylin 0.167) to the indoor ~78. Glows off models-src/lab/lab-mach-centrifuge-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:06Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-centrifuge-emissive.png@1.5/noMR/bc0.45,0.45,0.45,1"
     },
@@ -2798,7 +2798,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-embryonic-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/embryonic.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/embryonic.glb, kept). Wears textures-src/lab/mach-embryonic.png and mach-embryonic-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/embryonic-src.png. baseColor 0.48 takes the sheets' luma (Ylin 0.158) to the indoor ~78. Glows off models-src/lab/lab-mach-embryonic-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/embryonic.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/embryonic.glb, kept). Wears textures-src/lab/Unused/mach-embryonic.png and mach-embryonic-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/embryonic-src.png. baseColor 0.48 takes the sheets' luma (Ylin 0.158) to the indoor ~78. Glows off models-src/lab/lab-mach-embryonic-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:09Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-embryonic-emissive.png@1.5/noMR/bc0.48,0.48,0.48,1"
     },
@@ -2816,7 +2816,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-gestation-emissive.png",
       "emissiveStrength": 1.2,
-      "note": "hand-modelled in Blender, models-src/lab/mach/gestation.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/gestation.glb, kept). Wears textures-src/lab/mach-gestation.png, PACK4 edit_image off models-src/lab/gestation-src.png. baseColor 0.34 takes the sheets' luma (Ylin 0.226) to the indoor ~78. Glows off models-src/lab/lab-mach-gestation-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/gestation.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/gestation.glb, kept). Wears textures-src/lab/Unused/mach-gestation.png, PACK4 edit_image off models-src/lab/gestation-src.png. baseColor 0.34 takes the sheets' luma (Ylin 0.226) to the indoor ~78. Glows off models-src/lab/lab-mach-gestation-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-gestation-emissive.png@1.2/noMR/bc0.34,0.34,0.34,1"
     },
@@ -2834,7 +2834,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-rack8-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/rack8.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/rack8.glb, kept). Wears textures-src/lab/mach-rack8.png and mach-rack8-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/rack8-src.png. baseColor 0.32 takes the sheets' luma (Ylin 0.236) to the indoor ~78. Glows off models-src/lab/lab-mach-rack8-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/rack8.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/rack8.glb, kept). Wears textures-src/lab/Unused/mach-rack8.png and mach-rack8-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/rack8-src.png. baseColor 0.32 takes the sheets' luma (Ylin 0.236) to the indoor ~78. Glows off models-src/lab/lab-mach-rack8-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:27Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-rack8-emissive.png@1.5/noMR/bc0.32,0.32,0.32,1"
     },
@@ -2852,7 +2852,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-rack6-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/rack6.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/rack6.glb, kept). Wears textures-src/lab/mach-rack6.png and mach-rack6-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/rack6-src.png. baseColor 0.23 takes the sheets' luma (Ylin 0.333) to the indoor ~78. Glows off models-src/lab/lab-mach-rack6-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/rack6.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/rack6.glb, kept). Wears textures-src/lab/Unused/mach-rack6.png and mach-rack6-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/rack6-src.png. baseColor 0.23 takes the sheets' luma (Ylin 0.333) to the indoor ~78. Glows off models-src/lab/lab-mach-rack6-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:23Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-rack6-emissive.png@1.5/noMR/bc0.23,0.23,0.23,1"
     },
@@ -2870,7 +2870,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-canisters-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/canisters.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/canisters.glb, kept). Wears textures-src/lab/mach-canisters.png and mach-canisters-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/canisters-src.png. baseColor 0.77 takes the sheets' luma (Ylin 0.099) to the indoor ~78. Glows off models-src/lab/lab-mach-canisters-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/canisters.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/canisters.glb, kept). Wears textures-src/lab/Unused/mach-canisters.png and mach-canisters-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/canisters-src.png. baseColor 0.77 takes the sheets' luma (Ylin 0.099) to the indoor ~78. Glows off models-src/lab/lab-mach-canisters-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:06Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-canisters-emissive.png@1.5/noMR/bc0.77,0.77,0.77,1"
     },
@@ -2888,7 +2888,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-generator-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/generator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/generator.glb, kept). Wears textures-src/lab/mach-generator.png and mach-generator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/generator-src.png. baseColor 0.69 takes the sheets' luma (Ylin 0.110) to the indoor ~78. Glows off models-src/lab/lab-mach-generator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/generator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/generator.glb, kept). Wears textures-src/lab/Unused/mach-generator.png and mach-generator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/generator-src.png. baseColor 0.69 takes the sheets' luma (Ylin 0.110) to the indoor ~78. Glows off models-src/lab/lab-mach-generator-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:09Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-generator-emissive.png@1.5/noMR/bc0.69,0.69,0.69,1"
     },
@@ -2904,7 +2904,7 @@
         0.44,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/mach/press.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/press.glb, kept). Wears textures-src/lab/mach-press.png, PACK4 edit_image off models-src/lab/press-src.png. baseColor 0.44 takes the sheets' luma (Ylin 0.173) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/press.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/press.glb, kept). Wears textures-src/lab/Unused/mach-press.png, PACK4 edit_image off models-src/lab/press-src.png. baseColor 0.44 takes the sheets' luma (Ylin 0.173) to the indoor ~78. ",
       "last_converted": "2026-10-14T19:58:12Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.44,0.44,0.44,1"
     },
@@ -2922,7 +2922,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-robotarm-emissive.png",
       "emissiveStrength": 1.2,
-      "note": "hand-modelled in Blender, models-src/lab/mach/robotarm.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/robotarm.glb, kept). Wears textures-src/lab/mach-robotarm.png and mach-robotarm-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/robotarm-src.png. baseColor 0.45 takes the sheets' luma (Ylin 0.171) to the indoor ~78. Glows off models-src/lab/lab-mach-robotarm-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/robotarm.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/robotarm.glb, kept). Wears textures-src/lab/Unused/mach-robotarm.png and mach-robotarm-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/robotarm-src.png. baseColor 0.45 takes the sheets' luma (Ylin 0.171) to the indoor ~78. Glows off models-src/lab/lab-mach-robotarm-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:30Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-robotarm-emissive.png@1.2/noMR/bc0.45,0.45,0.45,1"
     },
@@ -2940,7 +2940,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-kiosk-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/kiosk.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/kiosk.glb, kept). Wears textures-src/lab/mach-kiosk.png, PACK4 edit_image off models-src/lab/kiosk-src.png. baseColor 0.34 takes the sheets' luma (Ylin 0.223) to the indoor ~78. Glows off models-src/lab/lab-mach-kiosk-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/kiosk.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/kiosk.glb, kept). Wears textures-src/lab/Unused/mach-kiosk.png, PACK4 edit_image off models-src/lab/kiosk-src.png. baseColor 0.34 takes the sheets' luma (Ylin 0.223) to the indoor ~78. Glows off models-src/lab/lab-mach-kiosk-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:14Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-kiosk-emissive.png@1.5/noMR/bc0.34,0.34,0.34,1"
     },
@@ -2958,7 +2958,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-cagecase-emissive.png",
       "emissiveStrength": 1.2,
-      "note": "hand-modelled in Blender, models-src/lab/mach/cagecase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cagecase.glb, kept). Wears textures-src/lab/mach-cagecase.png, PACK4 edit_image off models-src/lab/cagecase-src.png. baseColor 0.26 takes the sheets' luma (Ylin 0.289) to the indoor ~78. Glows off models-src/lab/lab-mach-cagecase-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/cagecase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cagecase.glb, kept). Wears textures-src/lab/Unused/mach-cagecase.png, PACK4 edit_image off models-src/lab/cagecase-src.png. baseColor 0.26 takes the sheets' luma (Ylin 0.289) to the indoor ~78. Glows off models-src/lab/lab-mach-cagecase-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:05Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-cagecase-emissive.png@1.2/noMR/bc0.26,0.26,0.26,1"
     },
@@ -2976,7 +2976,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-sheetcage-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/sheetcage.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/sheetcage.glb, kept). Wears textures-src/lab/mach-sheetcage.png, PACK4 edit_image off models-src/lab/sheetcage-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.364) to the indoor ~78. Glows off models-src/lab/lab-mach-sheetcage-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/sheetcage.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/sheetcage.glb, kept). Wears textures-src/lab/Unused/mach-sheetcage.png, PACK4 edit_image off models-src/lab/sheetcage-src.png. baseColor 0.21 takes the sheets' luma (Ylin 0.364) to the indoor ~78. Glows off models-src/lab/lab-mach-sheetcage-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:31Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-sheetcage-emissive.png@1.5/noMR/bc0.21,0.21,0.21,1"
     },
@@ -2992,7 +2992,7 @@
         0.2,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/mach/gurney.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/gurney.glb, kept). Wears textures-src/lab/mach-gurney.png, PACK4 edit_image off models-src/lab/gurney-src.png. baseColor 0.2 takes the sheets' luma (Ylin 0.390) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/gurney.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/gurney.glb, kept). Wears textures-src/lab/Unused/mach-gurney.png, PACK4 edit_image off models-src/lab/gurney-src.png. baseColor 0.2 takes the sheets' luma (Ylin 0.390) to the indoor ~78. ",
       "last_converted": "2026-10-14T19:46:04Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.2,0.2,0.2,1"
     },
@@ -3008,7 +3008,7 @@
         0.43,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/mach/tarpcrate.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tarpcrate.glb, kept). Wears textures-src/lab/mach-tarpcrate.png, PACK4 edit_image off models-src/lab/tarpcrate-src.png. baseColor 0.43 takes the sheets' luma (Ylin 0.177) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/tarpcrate.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tarpcrate.glb, kept). Wears textures-src/lab/Unused/mach-tarpcrate.png, PACK4 edit_image off models-src/lab/tarpcrate-src.png. baseColor 0.43 takes the sheets' luma (Ylin 0.177) to the indoor ~78. ",
       "last_converted": "2026-10-14T19:47:17Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.43,0.43,0.43,1"
     },
@@ -3024,7 +3024,7 @@
         0.16,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/mach/gurneys.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/gurneys.glb, kept). Wears textures-src/lab/mach-gurneys.png, PACK4 edit_image off models-src/lab/gurneys-src.png. baseColor 0.16 takes the sheets' luma (Ylin 0.473) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/gurneys.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/gurneys.glb, kept). Wears textures-src/lab/Unused/mach-gurneys.png, PACK4 edit_image off models-src/lab/gurneys-src.png. baseColor 0.16 takes the sheets' luma (Ylin 0.473) to the indoor ~78. ",
       "last_converted": "2026-10-14T19:46:15Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.16,0.16,0.16,1"
     },
@@ -3040,7 +3040,7 @@
         0.67,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/mach/palletcrate.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/palletcrate.glb, kept). Wears textures-src/lab/mach-palletcrate.png, PACK4 edit_image off models-src/lab/palletcrate-src.png. baseColor 0.67 takes the sheets' luma (Ylin 0.114) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/palletcrate.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/palletcrate.glb, kept). Wears textures-src/lab/Unused/mach-palletcrate.png, PACK4 edit_image off models-src/lab/palletcrate-src.png. baseColor 0.67 takes the sheets' luma (Ylin 0.114) to the indoor ~78. ",
       "last_converted": "2026-10-14T19:48:18Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.67,0.67,0.67,1"
     },
@@ -3108,7 +3108,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-plant6-emissive.png",
       "emissiveStrength": 1.3,
-      "note": "hand-modelled in Blender, models-src/lab/mach/plant6.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant6.glb, kept). Wears textures-src/lab/mach-plant6.png, PACK4 edit_image off models-src/lab/plant6-src.png. baseColor 0.99 takes the sheets' luma (Ylin 0.077) to the indoor ~78. Glows off models-src/lab/lab-mach-plant6-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/plant6.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant6.glb, kept). Wears textures-src/lab/Unused/mach-plant6.png, PACK4 edit_image off models-src/lab/plant6-src.png. baseColor 0.99 takes the sheets' luma (Ylin 0.077) to the indoor ~78. Glows off models-src/lab/lab-mach-plant6-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:59:02Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-plant6-emissive.png@1.3/noMR/bc0.99,0.99,0.99,1"
     },
@@ -3158,7 +3158,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-scanframe-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/scanframe.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/scanframe.glb, kept). Wears textures-src/lab/mach-scanframe.png and mach-scanframe-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/scanframe-src.png. baseColor 0.59 takes the sheets' luma (Ylin 0.129) to the indoor ~78. Glows off models-src/lab/lab-mach-scanframe-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/scanframe.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/scanframe.glb, kept). Wears textures-src/lab/Unused/mach-scanframe.png and mach-scanframe-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/scanframe-src.png. baseColor 0.59 takes the sheets' luma (Ylin 0.129) to the indoor ~78. Glows off models-src/lab/lab-mach-scanframe-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:58:31Z",
       "last_sig": "n1/-1/1024/0.005/-/lab/lab-mach-scanframe-emissive.png@1.5/noMR/bc0.59,0.59,0.59,1"
     },
@@ -3176,7 +3176,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-bin-emissive.png",
       "emissiveStrength": 1.8,
-      "note": "hand-modelled in Blender, models-src/lab/mach/bin.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bin.glb, kept). Wears textures-src/lab/mach-bin.png, PACK4 edit_image off models-src/lab/bin-src.png. baseColor 0.74 takes the sheets' luma (Ylin 0.102) to the indoor ~78. Glows off models-src/lab/lab-mach-bin-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/bin.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/bin.glb, kept). Wears textures-src/lab/Unused/mach-bin.png, PACK4 edit_image off models-src/lab/bin-src.png. baseColor 0.74 takes the sheets' luma (Ylin 0.102) to the indoor ~78. Glows off models-src/lab/lab-mach-bin-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:59:01Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-bin-emissive.png@1.8/noMR/bc0.74,0.74,0.74,1"
     },
@@ -3194,7 +3194,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-plant1-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/plant1.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant1.glb, kept). Wears textures-src/lab/mach-plant1.png, PACK4 edit_image off models-src/lab/plant1-src.png. baseColor 0.6 takes the sheets' luma (Ylin 0.128) to the indoor ~78. Glows off models-src/lab/lab-mach-plant1-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/plant1.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant1.glb, kept). Wears textures-src/lab/Unused/mach-plant1.png, PACK4 edit_image off models-src/lab/plant1-src.png. baseColor 0.6 takes the sheets' luma (Ylin 0.128) to the indoor ~78. Glows off models-src/lab/lab-mach-plant1-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:59:02Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-plant1-emissive.png@1.5/noMR/bc0.6,0.6,0.6,1"
     },
@@ -3212,7 +3212,7 @@
       ],
       "emissiveSrc": "lab/lab-mach-plant4-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/lab/mach/plant4.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant4.glb, kept). Wears textures-src/lab/mach-plant4.png, PACK4 edit_image off models-src/lab/plant4-src.png. baseColor 1.0 takes the sheets' luma (Ylin 0.064) to the indoor ~78. Glows off models-src/lab/lab-mach-plant4-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/plant4.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/plant4.glb, kept). Wears textures-src/lab/Unused/mach-plant4.png, PACK4 edit_image off models-src/lab/plant4-src.png. baseColor 1.0 takes the sheets' luma (Ylin 0.064) to the indoor ~78. Glows off models-src/lab/lab-mach-plant4-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-16T14:59:02Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-plant4-emissive.png@1.5/noMR/bc1,1,1,1"
     },
@@ -3244,7 +3244,7 @@
         0.31,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/microscope.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-microscope.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.31 takes the sheet's luma (Ylin 0.247) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/microscope.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-microscope.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.31 takes the sheet's luma (Ylin 0.247) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.31,0.31,0.31,1"
     },
@@ -3260,7 +3260,7 @@
         0.41,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/bunsen.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-bunsen.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.41 takes the sheet's luma (Ylin 0.184) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/bunsen.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-bunsen.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.41 takes the sheet's luma (Ylin 0.184) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:42Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.41,0.41,0.41,1"
     },
@@ -3276,7 +3276,7 @@
         0.22,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/mortar.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-mortar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.22 takes the sheet's luma (Ylin 0.342) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/mortar.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-mortar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.22 takes the sheet's luma (Ylin 0.342) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.22,0.22,0.22,1"
     },
@@ -3292,7 +3292,7 @@
         0.24,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/tuberack.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-tuberack.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.24 takes the sheet's luma (Ylin 0.323) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/tuberack.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-tuberack.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.24 takes the sheet's luma (Ylin 0.323) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.24,0.24,0.24,1"
     },
@@ -3310,7 +3310,7 @@
       ],
       "emissiveSrc": "lab/lab-top-desklamp-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/tops/desklamp.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-desklamp.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.57 takes the sheet's luma (Ylin 0.134) to the indoor ~78. Glows off models-src/lab/lab-top-desklamp-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/tops/desklamp.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-desklamp.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.57 takes the sheet's luma (Ylin 0.134) to the indoor ~78. Glows off models-src/lab/lab-top-desklamp-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-desklamp-emissive.png@1.6/noMR/bc0.57,0.57,0.57,1"
     },
@@ -3326,7 +3326,7 @@
         0.63,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/aidcase.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-aidcase.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.63 takes the sheet's luma (Ylin 0.121) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/aidcase.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-aidcase.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.63 takes the sheet's luma (Ylin 0.121) to the indoor ~78. ",
       "last_converted": "2026-10-14T19:10:31Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.63,0.63,0.63,1"
     },
@@ -3342,7 +3342,7 @@
         1,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/radio.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-radio.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.064) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/radio.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-radio.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.064) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     },
@@ -3358,7 +3358,7 @@
         0.25,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/bottles.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-bottles.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.25 takes the sheet's luma (Ylin 0.306) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/bottles.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-bottles.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.25 takes the sheet's luma (Ylin 0.306) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.25,0.25,0.25,1"
     },
@@ -3376,7 +3376,7 @@
       ],
       "emissiveSrc": "lab/lab-top-labelprinter-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/tops/labelprinter.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-labelprinter.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.39 takes the sheet's luma (Ylin 0.196) to the indoor ~78. Glows off models-src/lab/lab-top-labelprinter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/tops/labelprinter.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-labelprinter.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.39 takes the sheet's luma (Ylin 0.196) to the indoor ~78. Glows off models-src/lab/lab-top-labelprinter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-labelprinter-emissive.png@1.6/noMR/bc0.39,0.39,0.39,1"
     },
@@ -3392,7 +3392,7 @@
         0.79,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/specbox.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-specbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.79 takes the sheet's luma (Ylin 0.097) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/specbox.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-specbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.79 takes the sheet's luma (Ylin 0.097) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.79,0.79,0.79,1"
     },
@@ -3402,7 +3402,7 @@
       "tex": 512,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/tops/specbox.py through top_build.py (re-run it, never hand-edit the glb): the see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/tops-specbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/specbox.py through top_build.py (re-run it, never hand-edit the glb): the see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/tops-specbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR"
     },
@@ -3418,7 +3418,7 @@
         0.43,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/embryojar.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-embryojar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.43 takes the sheet's luma (Ylin 0.179) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/embryojar.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-embryojar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.43 takes the sheet's luma (Ylin 0.179) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.43,0.43,0.43,1"
     },
@@ -3428,7 +3428,7 @@
       "tex": 512,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/tops/embryojar.py through top_build.py (re-run it, never hand-edit the glb): the see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/tops-embryojar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/embryojar.py through top_build.py (re-run it, never hand-edit the glb): the see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/tops-embryojar.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR"
     },
@@ -3446,7 +3446,7 @@
       ],
       "emissiveSrc": "lab/lab-top-minifuge-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/tops/minifuge.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-minifuge.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.23 takes the sheet's luma (Ylin 0.335) to the indoor ~78. Glows off models-src/lab/lab-top-minifuge-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/tops/minifuge.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-minifuge.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.23 takes the sheet's luma (Ylin 0.335) to the indoor ~78. Glows off models-src/lab/lab-top-minifuge-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-14T19:10:52Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-minifuge-emissive.png@1.6/noMR/bc0.23,0.23,0.23,1"
     },
@@ -3462,7 +3462,7 @@
         0.14,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/pipette.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-pipette.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.14 takes the sheet's luma (Ylin 0.564) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/pipette.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-pipette.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.14 takes the sheet's luma (Ylin 0.564) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.14,0.14,0.14,1"
     },
@@ -3480,7 +3480,7 @@
       ],
       "emissiveSrc": "lab/lab-top-welder-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/tops/welder.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-welder.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.59 takes the sheet's luma (Ylin 0.129) to the indoor ~78. Glows off models-src/lab/lab-top-welder-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/tops/welder.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-welder.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.59 takes the sheet's luma (Ylin 0.129) to the indoor ~78. Glows off models-src/lab/lab-top-welder-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-welder-emissive.png@1.6/noMR/bc0.59,0.59,0.59,1"
     },
@@ -3496,7 +3496,7 @@
         0.71,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/drillpress.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-drillpress.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.71 takes the sheet's luma (Ylin 0.108) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/drillpress.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-drillpress.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.71 takes the sheet's luma (Ylin 0.108) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.71,0.71,0.71,1"
     },
@@ -3512,7 +3512,7 @@
         0.37,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/armkit.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-armkit.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.37 takes the sheet's luma (Ylin 0.205) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/armkit.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-armkit.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.37 takes the sheet's luma (Ylin 0.205) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:11Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.37,0.37,0.37,1"
     },
@@ -3530,7 +3530,7 @@
       ],
       "emissiveSrc": "lab/lab-top-cleaner-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/tops/cleaner.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-cleaner.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.35 takes the sheet's luma (Ylin 0.220) to the indoor ~78. Glows off models-src/lab/lab-top-cleaner-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/tops/cleaner.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-cleaner.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.35 takes the sheet's luma (Ylin 0.220) to the indoor ~78. Glows off models-src/lab/lab-top-cleaner-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-cleaner-emissive.png@1.6/noMR/bc0.35,0.35,0.35,1"
     },
@@ -3546,7 +3546,7 @@
         1,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/grinder.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-grinder.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.074) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/grinder.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-grinder.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.074) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     },
@@ -3562,7 +3562,7 @@
         0.83,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/toolbox.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-toolbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.83 takes the sheet's luma (Ylin 0.092) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/toolbox.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-toolbox.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.83 takes the sheet's luma (Ylin 0.092) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.83,0.83,0.83,1"
     },
@@ -3580,7 +3580,7 @@
       ],
       "emissiveSrc": "lab/lab-top-multimeter-emissive.png",
       "emissiveStrength": 1.6,
-      "note": "hand-modelled in Blender, models-src/lab/tops/multimeter.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-multimeter.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.43 takes the sheet's luma (Ylin 0.175) to the indoor ~78. Glows off models-src/lab/lab-top-multimeter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
+      "note": "hand-modelled in Blender, models-src/lab/tops/multimeter.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-multimeter.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 0.43 takes the sheet's luma (Ylin 0.175) to the indoor ~78. Glows off models-src/lab/lab-top-multimeter-emissive.png, cut from its own sheet by models-src/lab/_topemi.py.",
       "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/lab/lab-top-multimeter-emissive.png@1.6/noMR/bc0.43,0.43,0.43,1"
     },
@@ -3596,7 +3596,7 @@
         1,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/tops/hvcases.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/tops-hvcases.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.055) to the indoor ~78. ",
+      "note": "hand-modelled in Blender, models-src/lab/tops/hvcases.py through top_build.py (re-run it, never hand-edit the glb): a bench-top piece render.lab.LabInterior.kit stands at a bench lid's back end. Wears textures-src/lab/Unused/tops-hvcases.png whole, a PACK4 edit_image off the TRELLIS reference it replaced. baseColor 1.0 takes the sheet's luma (Ylin 0.055) to the indoor ~78. ",
       "last_converted": "2026-10-14T18:02:12Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc1,1,1,1"
     },
@@ -3606,7 +3606,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/reactor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/reactor.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-reactor.png and mach-reactor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/reactor-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/reactor.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/reactor.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-reactor.png and mach-reactor-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/reactor-src.png. ",
       "last_converted": "2026-10-16T10:24:43Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3616,7 +3616,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/hatchbox.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/hatchbox.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-hatchbox.png and mach-hatchbox-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/hatchbox-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/hatchbox.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/hatchbox.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-hatchbox.png and mach-hatchbox-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/hatchbox-src.png. ",
       "last_converted": "2026-10-14T19:47:43Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3626,7 +3626,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/tube.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tube.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-tube.png and mach-tube-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tube-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/tube.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/tube.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-tube.png and mach-tube-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/tube-src.png. ",
       "last_converted": "2026-10-14T19:46:06Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3636,7 +3636,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/cryopod.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryopod.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-cryopod.png and mach-cryopod-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryopod-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/cryopod.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryopod.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-cryopod.png and mach-cryopod-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryopod-src.png. ",
       "last_converted": "2026-10-14T20:03:26Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3646,7 +3646,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/incubator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incubator.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-incubator.png and mach-incubator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incubator-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/incubator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/incubator.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-incubator.png and mach-incubator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/incubator-src.png. ",
       "last_converted": "2026-10-14T19:39:36Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3656,7 +3656,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/ambertanks.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/ambertanks.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-ambertanks.png and mach-ambertanks-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/ambertanks-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/ambertanks.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/ambertanks.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-ambertanks.png and mach-ambertanks-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/ambertanks-src.png. ",
       "last_converted": "2026-10-16T13:53:56Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3666,7 +3666,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/specimencase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/specimencase.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-specimencase.png and mach-specimencase-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/specimencase-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/specimencase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/specimencase.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-specimencase.png and mach-specimencase-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/specimencase-src.png. ",
       "last_converted": "2026-10-14T19:56:54Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3676,7 +3676,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/cryobank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryobank.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-cryobank.png and mach-cryobank-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryobank-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/cryobank.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cryobank.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-cryobank.png and mach-cryobank-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/cryobank-src.png. ",
       "last_converted": "2026-10-14T19:57:02Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3686,7 +3686,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/generator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/generator.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-generator.png and mach-generator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/generator-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/generator.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/generator.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-generator.png and mach-generator-b.png (one 2048 x 1024 atlas), PACK4 edit_image off models-src/lab/generator-src.png. ",
       "last_converted": "2026-10-14T19:49:48Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3696,7 +3696,7 @@
       "tex": 256,
       "error": 0.005,
       "dropMR": true,
-      "note": "hand-modelled in Blender, models-src/lab/mach/cagecase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cagecase.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/mach-cagecase.png, PACK4 edit_image off models-src/lab/cagecase-src.png. ",
+      "note": "hand-modelled in Blender, models-src/lab/mach/cagecase.py through top_build.py kit=mach (re-run it, never hand-edit the glb), replacing the TRELLIS glb the user rejected (models-src/lab/cagecase.glb, kept). The see-through shell render.lab.LabInterior draws transparent over the body, on the body's sheet. Wears textures-src/lab/Unused/mach-cagecase.png, PACK4 edit_image off models-src/lab/cagecase-src.png. ",
       "last_converted": "2026-10-14T19:45:37Z",
       "last_sig": "n1/-1/256/0.005/-/-/noMR"
     },
@@ -3712,7 +3712,7 @@
         0.39,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/archive.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-archive.png, its own PACK4. baseColor 0.39 takes the sheet's luma (Ylin 0.193) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/archive.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-archive.png, its own PACK4. baseColor 0.39 takes the sheet's luma (Ylin 0.193) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.39,0.39,0.39,1"
     },
@@ -3728,7 +3728,7 @@
         0.28,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/binders.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-binders.png, its own PACK4. baseColor 0.28 takes the sheet's luma (Ylin 0.270) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/binders.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-binders.png, its own PACK4. baseColor 0.28 takes the sheet's luma (Ylin 0.270) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.28,0.28,0.28,1"
     },
@@ -3744,7 +3744,7 @@
         0.32,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/levers.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-levers.png, its own PACK4. baseColor 0.32 takes the sheet's luma (Ylin 0.238) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/levers.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-levers.png, its own PACK4. baseColor 0.32 takes the sheet's luma (Ylin 0.238) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.32,0.32,0.32,1"
     },
@@ -3760,7 +3760,7 @@
         0.43,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/jartray.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-jartray.png, its own PACK4. baseColor 0.43 takes the sheet's luma (Ylin 0.177) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/jartray.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-jartray.png, its own PACK4. baseColor 0.43 takes the sheet's luma (Ylin 0.177) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.43,0.43,0.43,1"
     },
@@ -3776,7 +3776,7 @@
         0.48,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/jerrycan.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-jerrycan.png, its own PACK4. baseColor 0.48 takes the sheet's luma (Ylin 0.159) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/jerrycan.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-jerrycan.png, its own PACK4. baseColor 0.48 takes the sheet's luma (Ylin 0.159) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.48,0.48,0.48,1"
     },
@@ -3792,7 +3792,7 @@
         0.2,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/trays.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-trays.png, its own PACK4. baseColor 0.2 takes the sheet's luma (Ylin 0.382) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/trays.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-trays.png, its own PACK4. baseColor 0.2 takes the sheet's luma (Ylin 0.382) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.2,0.2,0.2,1"
     },
@@ -3808,7 +3808,7 @@
         0.7,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/crate.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-crate.png, its own PACK4. baseColor 0.7 takes the sheet's luma (Ylin 0.108) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/crate.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-crate.png, its own PACK4. baseColor 0.7 takes the sheet's luma (Ylin 0.108) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.7,0.7,0.7,1"
     },
@@ -3824,7 +3824,7 @@
         0.34,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/stock/bottlebox.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/stock-bottlebox.png, its own PACK4. baseColor 0.34 takes the sheet's luma (Ylin 0.227) to the indoor ~78.",
+      "note": "hand-modelled in Blender, models-src/lab/stock/bottlebox.py through top_build.py kit=stock (re-run it, never hand-edit the glb): shelf stock render.lab.LabInterior deals onto the bare shelving bay by bay. Wears textures-src/lab/Unused/stock-bottlebox.png, its own PACK4. baseColor 0.34 takes the sheet's luma (Ylin 0.227) to the indoor ~78.",
       "last_converted": "2026-10-15T16:18:26Z",
       "last_sig": "n1/-1/512/0.005/-/-/noMR/bc0.34,0.34,0.34,1"
     },
@@ -3840,7 +3840,7 @@
         1,
         1
       ],
-      "note": "hand-modelled in Blender, models-src/lab/mach/chair.py through top_build.py kit=mach (re-run it, never hand-edit the glb): the task chair render.lab.LabInterior pulls up to each computer desk, off models-src/lab/chair-src.png. 872 tris, 1.35 x 1.28 x 1.94, seat at 0.95 so the armrests clear the desk. Wears textures-src/lab/mach-fixtures.png, ONE PACK4 edit_image off chair-src and fan-src (TL vinyl panel, TR black frame, BL fan blade, BR fan housing), shared with lab/fan. baseColor 1.0: the sheet's chair half is Ylin 0.027, a black chair in teal vinyl, and lifting it to the indoor ~78 would turn it grey.",
+      "note": "hand-modelled in Blender, models-src/lab/mach/chair.py through top_build.py kit=mach (re-run it, never hand-edit the glb): the task chair render.lab.LabInterior pulls up to each computer desk, off models-src/lab/chair-src.png. 872 tris, 1.35 x 1.28 x 1.94, seat at 0.95 so the armrests clear the desk. Wears textures-src/lab/Unused/mach-fixtures.png, ONE PACK4 edit_image off chair-src and fan-src (TL vinyl panel, TR black frame, BL fan blade, BR fan housing), shared with lab/fan. baseColor 1.0: the sheet's chair half is Ylin 0.027, a black chair in teal vinyl, and lifting it to the indoor ~78 would turn it grey.",
       "last_converted": "2026-10-15T20:15:14Z",
       "last_sig": "n1/-1/1024/0.005/-/-/noMR/bc1,1,1,1"
     },
@@ -3909,7 +3909,7 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "the CITY street dumpster the parasite hides in (objects.Dumpster, key dumpster_city), hand-modelled in Blender: models-src/city/kit/dumpster.py through models-src/city/kit_build.py (re-run it, never hand-edit the glb). Green front-load bin off models-src/dumpster-src.png, wearing textures-src/city/dumpster-city.png, a PACK4 painted by edit_image off that reference with its real brand logo replaced by a fictional CITY SANITATION sticker. 3.7 x 1.9 body in half-metre units; the back is a flat plane, it stands against a wall. tex 1024: its plain steel and lid plastic map at one isotropic density per swatch (buildlib.swatch_dens) and at 512 shipped 44 and 33 texels per unit against the ground's 57; 1024 makes them 130 and 203. gradeRect dims the three stickers (TL band, sheet pixels) to linear x0.45: painted near-white at sRGB ~215, they were the brightest thing in a black back alley, a lit panel on a bin nothing lights.",
+      "note": "the CITY street dumpster the parasite hides in (objects.Dumpster, key dumpster_city), hand-modelled in Blender: models-src/city/kit/dumpster.py through models-src/city/kit_build.py (re-run it, never hand-edit the glb). Green front-load bin off models-src/dumpster-src.png, wearing textures-src/city/Unused/dumpster-city.png, a PACK4 painted by edit_image off that reference with its real brand logo replaced by a fictional CITY SANITATION sticker. 3.7 x 1.9 body in half-metre units; the back is a flat plane, it stands against a wall. tex 1024: its plain steel and lid plastic map at one isotropic density per swatch (buildlib.swatch_dens) and at 512 shipped 44 and 33 texels per unit against the ground's 57; 1024 makes them 130 and 203. gradeRect dims the three stickers (TL band, sheet pixels) to linear x0.45: painted near-white at sRGB ~215, they were the brightest thing in a black back alley, a lit panel on a bin nothing lights.",
       "last_converted": "2026-10-17T21:08:49Z",
       "last_sig": "n1/-1/1024/0.01/-/-/gr[{\"rect\":[40,146,118,222],\"scale\":0.45},{\"rect\":[172,334,118,222],\"scale\":0.45},{\"rect\":[352,476,118,222],\"scale\":0.45}]/rf1",
       "gradeRect": [
@@ -3947,7 +3947,7 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "the SLUMS dumpster (key dumpster_slums): kit/dumpster.py's bin rusted and tagged, its left lid thrown back against the wall and the right one ajar over a load heaped to the rim (textures-src/city/dumpster-slums.png BR bottom half), four tied bags on top. models-src/city/kit/dumpster-slums.py. tex 1024, as the city bin.",
+      "note": "the SLUMS dumpster (key dumpster_slums): kit/dumpster.py's bin rusted and tagged, its left lid thrown back against the wall and the right one ajar over a load heaped to the rim (textures-src/city/Unused/dumpster-slums.png BR bottom half), four tied bags on top. models-src/city/kit/dumpster-slums.py. tex 1024, as the city bin.",
       "last_converted": "2026-10-17T18:51:12Z",
       "last_sig": "n1/-1/1024/0.01/-/-/rf1"
     },
@@ -3962,7 +3962,7 @@
         0.4,
         1
       ],
-      "note": "the CITY wall kit: a black-iron fire escape (floor / base platform modules) and a cast-iron downpipe (pipe / shoe / head), models-src/city/kit/wallkit.py, sheet textures-src/city/wallkit-city.png. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair. lift 0.72: the black iron sampled 31, and against the night brick it was not there at gameplay zoom; lifted to the outdoor family's ~57 it reads as dark painted iron.",
+      "note": "the CITY wall kit: a black-iron fire escape (floor / base platform modules) and a cast-iron downpipe (pipe / shoe / head), models-src/city/kit/wallkit.py, sheet textures-src/city/Unused/wallkit-city.png. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair. lift 0.72: the black iron sampled 31, and against the night brick it was not there at gameplay zoom; lifted to the outdoor family's ~57 it reads as dark painted iron.",
       "last_converted": "2026-10-17T21:08:40Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.4,0.4,0.4,1/lf0.72/rf1",
       "lift": 0.72
@@ -3993,7 +3993,7 @@
         0.09,
         1
       ],
-      "note": "the DOWNTOWN service-wall kit: galvanised conduit runs, a riser into a junction box, a louvred intake (conduit / riser / louvre), models-src/city/kit/wallkit-downtown.py, sheet textures-src/city/wallkit-downtown.png. baseColor is a FLAT scalar: the sheet came back bright galvanised (luma 97-144), against an outdoor family of 46-52. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair.",
+      "note": "the DOWNTOWN service-wall kit: galvanised conduit runs, a riser into a junction box, a louvred intake (conduit / riser / louvre), models-src/city/kit/wallkit-downtown.py, sheet textures-src/city/Unused/wallkit-downtown.png. baseColor is a FLAT scalar: the sheet came back bright galvanised (luma 97-144), against an outdoor family of 46-52. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair.",
       "last_converted": "2026-10-17T20:20:41Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.09,0.09,0.09,1/rf1"
     },
@@ -4002,7 +4002,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS heap's big burlap sack, stuffed and twine-tied, stood up. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "note": "the SLUMS heap's big burlap sack, stuffed and twine-tied, stood up. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/Unused/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
       "baseColor": [
         0.25,
         0.25,
@@ -4017,7 +4017,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS heap's woven plastic sack. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "note": "the SLUMS heap's woven plastic sack. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/Unused/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
       "baseColor": [
         0.25,
         0.25,
@@ -4032,7 +4032,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS heap's burlap sack lying on its side. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "note": "the SLUMS heap's burlap sack lying on its side. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/Unused/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
       "baseColor": [
         0.25,
         0.25,
@@ -4047,7 +4047,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS heap's soggy carton sitting open, flaps hanging. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "note": "the SLUMS heap's soggy carton sitting open, flaps hanging. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/Unused/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
       "baseColor": [
         0.25,
         0.25,
@@ -4062,7 +4062,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS heap's three flattened cartons dropped one on another. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "note": "the SLUMS heap's three flattened cartons dropped one on another. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/Unused/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
       "baseColor": [
         0.25,
         0.25,
@@ -4077,7 +4077,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS heap's flattened carton leant back on the wall. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
+      "note": "the SLUMS heap's flattened carton leant back on the wall. Off models-src/city/kit/sack-pile.py, wearing textures-src/city/Unused/prop-sack-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.25, the old pile's.",
       "baseColor": [
         0.25,
         0.25,
@@ -4107,7 +4107,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS cart's load: an empty amber bottle lying down. Off models-src/city/kit/cart.py, wearing textures-src/city/prop-cart.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.39, the old pile's.",
+      "note": "the SLUMS cart's load: an empty amber bottle lying down. Off models-src/city/kit/cart.py, wearing textures-src/city/Unused/prop-cart.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.39, the old pile's.",
       "baseColor": [
         0.39,
         0.39,
@@ -4122,7 +4122,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS cart's load: the broken board poking up out of the basket's nose, exported in the cart's frame (StreetProps reads its offset). Off models-src/city/kit/cart.py, wearing textures-src/city/prop-cart.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.39, the old pile's.",
+      "note": "the SLUMS cart's load: the broken board poking up out of the basket's nose, exported in the cart's frame (StreetProps reads its offset). Off models-src/city/kit/cart.py, wearing textures-src/city/Unused/prop-cart.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.39, the old pile's.",
       "baseColor": [
         0.39,
         0.39,
@@ -4137,7 +4137,7 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "the SLUMS car wreck (objects.CarWreck, key car_wreck, render.world.ObjModels row KERB): a rusted teal 80s hatchback stripped to its shell, no wheels (its drums on concrete blocks), no glass, bonnet gone, a gutted interior. Free-standing, 7.4 x 3.25 x 2.51 half-metre units, length along x and the street flank at -y, parked over two kerb cells. Hand-modelled in Blender: models-src/city/kit/car.py through models-src/city/kit_build.py, off models-src/city/ref/car-src.png, wearing textures-src/city/prop-car.png (NOT four cells: a full side view across the top, front and rear strips, the roof bottom left, swatches bottom right). tex 1024: a 7.4-unit flank at 512 would be under the ground's density. baseColor a FLAT 0.39: it sampled 77 against the outdoor family's 46-52.",
+      "note": "the SLUMS car wreck (objects.CarWreck, key car_wreck, render.world.ObjModels row KERB): a rusted teal 80s hatchback stripped to its shell, no wheels (its drums on concrete blocks), no glass, bonnet gone, a gutted interior. Free-standing, 7.4 x 3.25 x 2.51 half-metre units, length along x and the street flank at -y, parked over two kerb cells. Hand-modelled in Blender: models-src/city/kit/car.py through models-src/city/kit_build.py, off models-src/city/ref/car-src.png, wearing textures-src/city/Unused/prop-car.png (NOT four cells: a full side view across the top, front and rear strips, the roof bottom left, swatches bottom right). tex 1024: a 7.4-unit flank at 512 would be under the ground's density. baseColor a FLAT 0.39: it sampled 77 against the outdoor family's 46-52.",
       "baseColor": [
         0.39,
         0.39,
@@ -4152,7 +4152,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS mattress leaning on a wall. Its sheet is NOT four cells: the top half is one 1024x512 front face. Hand-modelled in Blender (models-src/city/kit/mattress.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-mattress.png painted by edit_image off its reference models-src/city/ref/mattress-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.25: it sampled 112 against the outdoor family's 46-52.",
+      "note": "the SLUMS mattress leaning on a wall. Its sheet is NOT four cells: the top half is one 1024x512 front face. Hand-modelled in Blender (models-src/city/kit/mattress.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-mattress.png painted by edit_image off its reference models-src/city/ref/mattress-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.25: it sampled 112 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:33Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.25,0.25,0.25,1/rf1",
       "baseColor": [
@@ -4167,7 +4167,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS worn tyre lying flat, one closed ring lathe with its hole open. Off models-src/city/kit/tyres.py, wearing textures-src/city/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
+      "note": "the SLUMS worn tyre lying flat, one closed ring lathe with its hole open. Off models-src/city/kit/tyres.py, wearing textures-src/city/Unused/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
       "baseColor": [
         0.62,
         0.62,
@@ -4182,7 +4182,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS muddy tyre, turned over so its mud is on the ground side. Off models-src/city/kit/tyres.py, wearing textures-src/city/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
+      "note": "the SLUMS muddy tyre, turned over so its mud is on the ground side. Off models-src/city/kit/tyres.py, wearing textures-src/city/Unused/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
       "baseColor": [
         0.62,
         0.62,
@@ -4197,7 +4197,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the SLUMS tyre still on its rusty steel rim. Off models-src/city/kit/tyres.py, wearing textures-src/city/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
+      "note": "the SLUMS tyre still on its rusty steel rim. Off models-src/city/kit/tyres.py, wearing textures-src/city/Unused/prop-tyres.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.62, the old pile's.",
       "baseColor": [
         0.62,
         0.62,
@@ -4212,7 +4212,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY heap's big black refuse bag, knotted at the neck. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
+      "note": "the CITY heap's big black refuse bag, knotted at the neck. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/Unused/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
       "baseColor": [
         0.72,
         0.72,
@@ -4227,7 +4227,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY heap's big bottle-green bag. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
+      "note": "the CITY heap's big bottle-green bag. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/Unused/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
       "baseColor": [
         0.72,
         0.72,
@@ -4242,7 +4242,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY heap's small black bag. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
+      "note": "the CITY heap's small black bag. Off models-src/city/kit/bag-pile.py, wearing textures-src/city/Unused/prop-bag-pile.png (one sheet for every piece of its old pile; each glb carries its own copy). Hand-modelled in Blender through models-src/city/kit_build.py (half-metre units, re-run it, never hand-edit the glb). A street ground prop dealt as a PIECE: render.world.StreetProps.ground scatters, turns and sizes it per cell from an AreaStyle.groundProps pile (render.world.Pile), one instanced batch per city. baseColor a FLAT 0.72, the old pile's.",
       "baseColor": [
         0.72,
         0.72,
@@ -4257,7 +4257,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY fire hydrant: red cast iron, silver bonnet and caps, two side nozzles and a pumper, at the kerb. Hand-modelled in Blender (models-src/city/kit/hydrant.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-hydrant.png painted by edit_image off its reference models-src/city/ref/hydrant-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.15: it sampled luma ~133 against the outdoor family's 46-52.",
+      "note": "the CITY fire hydrant: red cast iron, silver bonnet and caps, two side nozzles and a pumper, at the kerb. Hand-modelled in Blender (models-src/city/kit/hydrant.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-hydrant.png painted by edit_image off its reference models-src/city/ref/hydrant-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.15: it sampled luma ~133 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:31Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.15,0.15,0.15,1/rf1",
       "baseColor": [
@@ -4272,7 +4272,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY coin parking meter on its pole, at the kerb facing the road. Hand-modelled in Blender (models-src/city/kit/meter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-meter.png painted by edit_image off its reference models-src/city/ref/meter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.19: it sampled luma ~112 against the outdoor family's 46-52.",
+      "note": "the CITY coin parking meter on its pole, at the kerb facing the road. Hand-modelled in Blender (models-src/city/kit/meter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-meter.png painted by edit_image off its reference models-src/city/ref/meter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.19: it sampled luma ~112 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:36Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.19,0.19,0.19,1/rf1",
       "baseColor": [
@@ -4287,7 +4287,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY newspaper boxes: three side by side with fictional mastheads (CITY HERALD, THE DAILY LEDGER, METRO FREE), wall-backed. Hand-modelled in Blender (models-src/city/kit/newsbox.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-newsbox.png painted by edit_image off its reference models-src/city/ref/newsbox-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.16: it sampled luma ~99 against the outdoor family's 46-52, and 0.28 (shipped 50.9) still read as the loudest thing at the wall.",
+      "note": "the CITY newspaper boxes: three side by side with fictional mastheads (CITY HERALD, THE DAILY LEDGER, METRO FREE), wall-backed. Hand-modelled in Blender (models-src/city/kit/newsbox.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-newsbox.png painted by edit_image off its reference models-src/city/ref/newsbox-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.16: it sampled luma ~99 against the outdoor family's 46-52, and 0.28 (shipped 50.9) still read as the loudest thing at the wall.",
       "last_converted": "2026-10-17T19:20:41Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.16,0.16,0.16,1/rf1",
       "baseColor": [
@@ -4302,7 +4302,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY striped steam stack over a manhole, at the kerb; render.world.SteamPuffs puffs off its open top (the glb's top). Hand-modelled in Blender (models-src/city/kit/steamstack.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-steamstack.png painted by edit_image off its reference models-src/city/ref/steamstack-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.26: it sampled luma ~102 against the outdoor family's 46-52.",
+      "note": "the CITY striped steam stack over a manhole, at the kerb; render.world.SteamPuffs puffs off its open top (the glb's top). Hand-modelled in Blender (models-src/city/kit/steamstack.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-steamstack.png painted by edit_image off its reference models-src/city/ref/steamstack-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.26: it sampled luma ~102 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:48Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.26,0.26,0.26,1/rf1",
       "baseColor": [
@@ -4317,7 +4317,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the CITY utility corner: three gas meters on yellow pipes and an electric meter box on a strut, wall-backed. Hand-modelled in Blender (models-src/city/kit/meters.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-meters.png painted by edit_image off its reference models-src/city/ref/meters-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.12: it sampled luma ~148 against the outdoor family's 46-52.",
+      "note": "the CITY utility corner: three gas meters on yellow pipes and an electric meter box on a strut, wall-backed. Hand-modelled in Blender (models-src/city/kit/meters.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-meters.png painted by edit_image off its reference models-src/city/ref/meters-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.12: it sampled luma ~148 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:38Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.12,0.12,0.12,1/rf1",
       "baseColor": [
@@ -4332,7 +4332,7 @@
       "tris": -1,
       "tex": 1024,
       "roughness": 1,
-      "note": "the DOWNTOWN service-alley trash compactor, safety blue, ram housing at its right end, wall-backed. Decor: the parasite cannot enter it. Its sheet's grid sits at x 640 / y 514, not the quadrants; the module reads it in sheet pixels. Hand-modelled in Blender (models-src/city/kit/compactor.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-compactor.png painted by edit_image off its reference models-src/city/ref/compactor-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.3: it sampled luma ~94 against the outdoor family's 46-52. tex 1024: re-mapped on buildlib.swatch_dens its median is 70 texels per unit at 512 with 7% of its surface (tops the camera sees from above) under 30; the biggest street piece, so the one that takes the full sheet.",
+      "note": "the DOWNTOWN service-alley trash compactor, safety blue, ram housing at its right end, wall-backed. Decor: the parasite cannot enter it. Its sheet's grid sits at x 640 / y 514, not the quadrants; the module reads it in sheet pixels. Hand-modelled in Blender (models-src/city/kit/compactor.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-compactor.png painted by edit_image off its reference models-src/city/ref/compactor-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.3: it sampled luma ~94 against the outdoor family's 46-52. tex 1024: re-mapped on buildlib.swatch_dens its median is 70 texels per unit at 512 with 7% of its surface (tops the camera sees from above) under 30; the biggest street piece, so the one that takes the full sheet.",
       "last_converted": "2026-10-17T19:20:29Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.3,0.3,0.3,1/rf1",
       "baseColor": [
@@ -4347,7 +4347,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the DOWNTOWN recycling station: blue PAPER, green GLASS, yellow PLASTIC bins under a steel frame, wall-backed. Hand-modelled in Blender (models-src/city/kit/recycling.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-recycling.png painted by edit_image off its reference models-src/city/ref/recycling-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.21: it sampled luma ~112 against the outdoor family's 46-52.",
+      "note": "the DOWNTOWN recycling station: blue PAPER, green GLASS, yellow PLASTIC bins under a steel frame, wall-backed. Hand-modelled in Blender (models-src/city/kit/recycling.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-recycling.png painted by edit_image off its reference models-src/city/ref/recycling-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.21: it sampled luma ~112 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:45Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.21,0.21,0.21,1/rf1",
       "baseColor": [
@@ -4362,7 +4362,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the DOWNTOWN stainless bollard with a reflective band, at the kerb. Hand-modelled in Blender (models-src/city/kit/bollard.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-bollard.png painted by edit_image off its reference models-src/city/ref/bollard-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.13: it sampled luma ~147 against the outdoor family's 46-52.",
+      "note": "the DOWNTOWN stainless bollard with a reflective band, at the kerb. Hand-modelled in Blender (models-src/city/kit/bollard.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-bollard.png painted by edit_image off its reference models-src/city/ref/bollard-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.13: it sampled luma ~147 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:26Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.13,0.13,0.13,1/rf1",
       "baseColor": [
@@ -4377,7 +4377,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the DOWNTOWN street tree in a cast-iron grate, staked, six leaf masses; at the kerb. Its sheet's grid sits at x 511 / y 488. Hand-modelled in Blender (models-src/city/kit/tree.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-tree.png painted by edit_image off its reference models-src/city/ref/tree-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.42: it sampled luma ~77 against the outdoor family's 46-52.",
+      "note": "the DOWNTOWN street tree in a cast-iron grate, staked, six leaf masses; at the kerb. Its sheet's grid sits at x 511 / y 488. Hand-modelled in Blender (models-src/city/kit/tree.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-tree.png painted by edit_image off its reference models-src/city/ref/tree-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.42: it sampled luma ~77 against the outdoor family's 46-52.",
       "last_converted": "2026-10-17T19:20:50Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.42,0.42,0.42,1/rf1",
       "baseColor": [
@@ -4392,7 +4392,7 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the DOWNTOWN concrete planter with a clipped boxwood, at the kerb. Hand-modelled in Blender (models-src/city/kit/planter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-planter.png painted by edit_image off its reference models-src/city/ref/planter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.47: it sampled luma ~73 against the outdoor family's 46-52. THE CONCRETE IS GRADED, NOT THE PLANT, reported from the game as wanting to be darker: the flat baseColor was fitted to the WHOLE map, whose dark boxwood half dragged the mean to luma 73, so the concrete itself (the sides linear 0.29, the rim 0.37) drew at 0.137 / srgb ~103 under 0.47 against downtown paving at 0.038. gradeRect scale 0.40 on the concrete rows (x 0..512, y 0..720: TL the sides and BL the rim, the soil under 724 left alone) takes the sides to ~66 and the rim to ~75. The four upright arrises wear the sides' own edge column whole now (planter.py), so the formwork joint runs round each corner instead of a plain swatch laid sideways.",
+      "note": "the DOWNTOWN concrete planter with a clipped boxwood, at the kerb. Hand-modelled in Blender (models-src/city/kit/planter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/Unused/prop-planter.png painted by edit_image off its reference models-src/city/ref/planter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.47: it sampled luma ~73 against the outdoor family's 46-52. THE CONCRETE IS GRADED, NOT THE PLANT, reported from the game as wanting to be darker: the flat baseColor was fitted to the WHOLE map, whose dark boxwood half dragged the mean to luma 73, so the concrete itself (the sides linear 0.29, the rim 0.37) drew at 0.137 / srgb ~103 under 0.47 against downtown paving at 0.038. gradeRect scale 0.40 on the concrete rows (x 0..512, y 0..720: TL the sides and BL the rim, the soil under 724 left alone) takes the sides to ~66 and the rim to ~75. The four upright arrises wear the sides' own edge column whole now (planter.py), so the formwork joint runs round each corner instead of a plain swatch laid sideways.",
       "last_converted": "2026-10-18T10:23:21Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.47,0.47,0.47,1/gr[{\"rect\":[0,512,0,720],\"scale\":0.4}]/rf1",
       "baseColor": [
