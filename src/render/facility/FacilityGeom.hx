@@ -1728,6 +1728,11 @@ class FacilityGeom
         emissive: new Color(0xffffff),
         emissiveIntensity: FacilityStyle.WINDOW_EMISSIVE,
         alphaTest: 0.02,
+        // the glass must not write depth: the actor billboards are depthWrite:false but still
+        // depth-TESTED and draw after it (Sprites.ORD_ACTOR), so a pane that wrote depth rejected
+        // every AI standing behind it — the lift car's glazing showed an empty box. the FRAME's
+        // depth comes from the colourless twin below
+        depthWrite: false,
         side: THREE.FrontSide,
       });
       // BEFORE the mask, so the mask chains onto this hook rather than the other way round. the two
@@ -1747,6 +1752,17 @@ class FacilityGeom
       // picks exactly the one of the run's two coplanar faces that looks away from the moon
       mesh.castShadow = true;
       scene.add(mesh);
+      // and the frame's depth, which the glass cannot give: depthWrite is per material, so this is
+      // a second, colourless draw of the same geometry in the OPAQUE pass with the glass (alpha
+      // 128) cut away by alphaTest — the members hide an actor behind them and the glass does not
+      var frame = new Mesh(mesh.geometry, new MeshBasicMaterial({
+        map: tex,
+        alphaTest: 0.75,
+        colorWrite: false,
+        side: THREE.FrontSide,
+      }));
+      frame.name = 'pane frame ' + path;
+      scene.add(frame);
     }
 
 // the tint every pane's GLASS takes when the player is inside, as one shared uniform — the value is
