@@ -18,7 +18,7 @@ enum PropSpot
 {
   KERB; // a walkway cell along exactly one road, at the kerb, facing the road
   WALL; // an alley or walkway cell against exactly one building wall, its back to that wall
-  SERVICE; // as WALL, but an ALLEY cell only: kept off the street frontage
+  SERVICE; // as WALL, but an ALLEY cell only, and not at its mouth: kept off the street frontage
   BIN;  // a cell beside a dumpster, against the same wall
 }
 

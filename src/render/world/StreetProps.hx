@@ -280,8 +280,8 @@ class StreetProps
 // scatter the style's ground props (AreaStyle.groundProps): one per cell at most, first the cells
 // beside a dumpster (`bins`, grid keys row * GRID + col), then every kerb and wall cell, each prop in
 // list order taking its `chance` off a hash of the cell. `blocked` cells (objects) and the lamps' cells
-// stay clear, and nothing stands on a cell in front of a door, kerb props included. a prop with a
-// `pile` deals its pieces there (deal). one instanced batch per glb
+// stay clear, and nothing stands on a cell in front of a door, kerb props included, nor at a kerb
+// where its road turns. a prop with a `pile` deals its pieces there (deal). one instanced batch per glb
   public static function ground(scene:Scene, city:City, blocked:Map<Int, Bool>, bins:Array<Int>):Array<InstancedProp>
     {
       var props = WorldCtx.style.groundProps;
@@ -415,11 +415,16 @@ class StreetProps
               continue;
             var r = roadDir(col, row);
             if (r >= 0 &&
-                WorldCtx.tiles[row][col] == Tile.Walkway)
+                WorldCtx.tiles[row][col] == Tile.Walkway &&
+                !beside(col + Std.int(DX[r]), row + Std.int(DZ[r]), r, Tile.Walkway))
               pick(col, row, KERB, r);
             if (w < 0)
               continue;
-            if (WorldCtx.tiles[row][col] == Tile.Alley)
+            // a service prop is kept back from the alley's mouth: its length runs along the wall, and
+            // at the mouth its end stood out over the pavement
+            if (WorldCtx.tiles[row][col] == Tile.Alley &&
+                !beside(col, row, w, Tile.Walkway) &&
+                !beside(col, row, w, Tile.Road))
               pick(col, row, SERVICE, w);
             pick(col, row, WALL, w);
           }
@@ -694,6 +699,27 @@ class StreetProps
           found = d;
         }
       return found;
+    }
+
+// is there a tile of kind `k` either side of this cell across direction `d` (along the kerb or the
+// wall that `d` faces)? asked of the road cell in front of a kerb cell, it is the road turning or
+// ending there: Ground bevels that cell, so the kerb runs diagonally and the cell's edge is none
+  static function beside(col:Int, row:Int, d:Int, k:Tile):Bool
+    {
+      var ac = Std.int(Math.abs(DZ[d]));
+      var ar = Std.int(Math.abs(DX[d]));
+      return isTile(col + ac, row + ar, k) ||
+        isTile(col - ac, row - ar, k);
+    }
+
+// is the cell on the grid and of kind `k`?
+  static inline function isTile(col:Int, row:Int, k:Tile):Bool
+    {
+      return col >= 0 &&
+        row >= 0 &&
+        col < GRID &&
+        row < GRID &&
+        WorldCtx.tiles[row][col] == k;
     }
 
 // the single road beside this cell (a corner has two and is left bare)

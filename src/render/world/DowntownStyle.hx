@@ -221,7 +221,8 @@ class DowntownStyle {
           depth: 2.3,
           spot: KERB,
           chance: 0.08,
-          turn: 1.5,
+          // square on: its grate lies in the paving's joints
+          turn: 0.0,
         },
         {
           path: render.RenderConfig.MODELS.cityBollard,

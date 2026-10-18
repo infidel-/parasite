@@ -1542,3 +1542,28 @@ there is no new key on entry. The plume is 1 draw call (141 -> 142).
 left it dark. Steam scatters light from any side. The up normal is the cheap stand-in for that.
 
 **Verdict:** landed. To make it fainter still, lower `PEAK`, which scales lit and dark alike.
+
+## Street corners: lamps off the turns, kerb props off the bevels, compactors off the alley mouth
+
+**Changed:** `CityGen.addLamp` steps a lamp back off a corner where the road it lights turns or ends
+(walkway beside the road cell in front: Ground bevels that cell into a diagonal kerb). It also steps
+back off a crossing road, as before. It now drops any lamp that, where it ends up, does not front a
+straight stretch of road. The L-turn connectors, which are in neither road list, get lamps along both
+edges. `StreetProps.ground` leaves a KERB cell bare when its road turns there. A SERVICE prop stays
+off the alley's mouth (`beside`: street either side along its wall). The downtown tree turns 0, so its
+grate stays square to the paving.
+
+**Measured:** in the medium city (6,13), 5 of 275 lamps faced pavement. A turned vertical road's loop
+starts on its connector's own row, and the old step-back walked the lamp off that road cell
+onto walkway. One more lit the bevelled cell of an L-turn and stood in the cut corner. After: 275
+lamps, 6 moved (one stepped back, five along the connector). Over 200 seeds of each of default
+and downtown: 0 lamps off a road and 0 at a turn. Kerb cells lost to the bevel test: 0.3% (city) and
+0.2% (downtown). Service cells lost at the mouth: 7.3% and 12.5%. The downtown compactor is 4.0 x 2.67
+world: a whole cell along its wall, so with its 0.7 slide it always crossed the walkway's kerb lip
+at a mouth.
+
+**Trap:** CityGen's step-back reads `dir` from the loop that dealt the lamp, not from the cell it
+lands on. Check the destination, not the source.
+
+**Verdict:** landed. Lamps are render-only (the slums wrecks read them once, at generation), so
+existing saves only see lamps move.

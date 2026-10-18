@@ -867,19 +867,39 @@ class CityGen {
     var lampSet = new Map<Int, Bool>();
     inline function isRoad(c:Int, r:Int):Bool
       return c >= 0 && r >= 0 && c < GRID && r < GRID && tiles[r][c] == Tile.Road;
-    inline function addLamp(c:Int, r:Int, dir:Int):Void {
+    inline function isWalk(c:Int, r:Int):Bool
+      return c >= 0 && r >= 0 && c < GRID && r < GRID && tiles[r][c] == Tile.Walkway;
+    // a direction's step (0 +z, 1 -z, 2 +x, 3 -x)
+    var ldc = [0, 0, 1, -1];
+    var ldr = [1, -1, 0, 0];
+    function addLamp(c:Int, r:Int, dir:Int):Void {
       // never on a corner: if the walkway cell touches a crossing road along the walkway axis
-      // (columns for h-roads, rows for v-roads), step one tile back down the walkway, away from it
-      if (dir == 0 || dir == 1) {
-        if (isRoad(c + 1, r)) c -= 1;
-        else if (isRoad(c - 1, r)) c += 1;
+      // (columns for h-roads, rows for v-roads), or the road it lights turns or ends there (walkway
+      // beside the road cell in front, which Ground bevels into a diagonal kerb), step one tile back
+      // down the walkway, away from it
+      var ac = (dir < 2 ? 1 : 0);
+      var ar = 1 - ac;
+      inline function turns(c:Int, r:Int, s:Int):Bool
+        return isWalk(c + ldc[dir] + s * ac, r + ldr[dir] + s * ar);
+      if (isRoad(c + ac, r + ar) ||
+          turns(c, r, 1)) {
+        c -= ac;
+        r -= ar;
       }
-      else {
-        if (isRoad(c, r + 1)) r -= 1;
-        else if (isRoad(c, r - 1)) r += 1;
+      else if (isRoad(c - ac, r - ar) ||
+          turns(c, r, -1)) {
+        c += ac;
+        r += ar;
       }
       if (c < 0 || r < 0 || c >= GRID || r >= GRID) return;
-      if (tiles[r][c] != Tile.Walkway) return;
+      // and where it stands it has to front the road it lights, a straight stretch of it: a turned
+      // vertical road's loop starts on its connector's own row, and the lamp stepped off it there
+      // stood facing the pavement
+      if (tiles[r][c] != Tile.Walkway ||
+          !isRoad(c + ldc[dir], r + ldr[dir]) ||
+          turns(c, r, 1) ||
+          turns(c, r, -1))
+        return;
       if (lamps.length >= MAX_LAMPS) return;
       var key = r * GRID + c;
       if (lampSet.exists(key)) return;
@@ -904,6 +924,16 @@ class CityGen {
         addLamp(v.pos - 1, r, 2);
         addLamp(v.pos + v.w, r, 3);
         r += LAMP_SPACING;
+      }
+    }
+    // an L-turn's connector runs sideways between two vertical roads and is in neither list: lamp
+    // both its edges over its own span, as a horizontal road's
+    for (t in turns) {
+      var c = t.cx0;
+      while (c <= t.cx1) {
+        addLamp(c, t.cy0 - 1, 0);
+        addLamp(c, t.cy1 + 1, 1);
+        c += LAMP_SPACING;
       }
     }
 
