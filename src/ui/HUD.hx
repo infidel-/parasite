@@ -410,6 +410,7 @@ public function onMouseLeave()
       if (game.location == LOCATION_REGION)
         updateRegionTooltipHover(true);
       updateAreaTooltip();
+      areaTooltip.refresh();
       if (Const.isDebug)
         updateDebugInfo();
     }

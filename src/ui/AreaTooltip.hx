@@ -6,6 +6,7 @@
 package ui;
 
 import ai.AI;
+import ai.DefaultLogic;
 import game.Game;
 import objects.AreaObject;
 
@@ -25,6 +26,19 @@ class AreaTooltip extends BeamTooltip
     {
       if (!game.scene.view3d.running)
         hide();
+    }
+
+// rebuild the shown AI tooltip once per turn: alertness and the vision helper change while the
+// cursor rests on the same AI, and the per-frame driver only rebuilds on a target change
+  public function refresh()
+    {
+      var h = game.scene.view3d.hover;
+      if (!visible ||
+          h == null ||
+          h.ai == null ||
+          h.ai.id != targetID)
+        return;
+      overlay.innerHTML = getTooltipText(h.ai);
     }
 
 // beam target id for an object. NEGATED, because AI ids and object ids come from separate counters
@@ -74,9 +88,49 @@ class AreaTooltip extends BeamTooltip
           buf.add('</div>');
         }
 
+      if (game.config.extendedInfo)
+        addVisionBlock(buf, ai);
       if (Const.isDebug)
         addDebugBlock(buf, ai);
       return buf.toString();
+    }
+
+// append the extended-info breakdown of how fast this AI grows suspicious of the player.
+// only for the states and logic that run DefaultLogic.visionIdle
+  function addVisionBlock(buf: StringBuf, ai: AI)
+    {
+      if ((ai.state != AI_STATE_IDLE &&
+           ai.state != AI_STATE_MOVE_TARGET &&
+           ai.state != AI_STATE_INVESTIGATE) ||
+          ai.isCustos ||
+          ai.isPlayerCultist())
+        return;
+      function row(k: String, v: String)
+        buf.add('<div class="area-tip-row"><span class="area-tip-rk">' + k + '</span>' + v + '</div>');
+
+      // not noticing at all
+      if (ai.isAgreeable())
+        {
+          row('notice', Const.smallgray('ignores you'));
+          return;
+        }
+      var v = DefaultLogic.playerVisibility(ai);
+      if (!v.sees)
+        {
+          row('notice', Const.smallgray(game.player.invisibleToAI() ?
+            'you are hidden' : 'does not see you'));
+          return;
+        }
+
+      // multiplier x distance factor, flat bonuses, total per turn
+      row('notice', v.base + ' &times; ' + v.distMul + ' ' + Const.smallgray('dist ' + v.distance));
+      if (v.military)
+        row('outsider', '&times;' + DefaultLogic.MILITARY_SUSPICION);
+      if (v.cover != 0)
+        row('cover', '+' + v.cover);
+      if (v.weapon != 0)
+        row('weapon', '+' + v.weapon);
+      row('alertness', (v.total >= 0 ? '+' : '') + v.total + '/turn');
     }
 
 // get tooltip HTML for a hovered object (public: the 3D view's hover driver reuses it verbatim).

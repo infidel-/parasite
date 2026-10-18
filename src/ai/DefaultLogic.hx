@@ -8,12 +8,24 @@ import ai.AI;
 import _AIState;
 import _Point;
 
+// player visibility breakdown for one AI, shared by visionIdle and the extended-info AI tooltip
+typedef VisionGain = {
+  sees: Bool,     // the AI sees the player (and the player is not invisible to AI)
+  base: Float,    // camouflage multiplier (host camouflage layer organ, 3 for a bare parasite)
+  cover: Int,     // flat protective cover bonus
+  weapon: Int,    // flat bonus for a visible weapon on the host
+  distance: Int,  // distance to the player
+  distMul: Int,   // view distance factor (never negative, small areas see past VIEW_DISTANCE)
+  military: Bool, // military base personnel watching an outsider (gain multiplied)
+  total: Int,     // alertness gained this turn
+}
+
 class DefaultLogic
 {
   public static var game: Game;
   static var SEARCH_AREA_MAX_RADIUS = 3;
   // how much faster base soldiers and officers grow suspicious of an outsider
-  static inline var MILITARY_SUSPICION = 1.5;
+  public static inline var MILITARY_SUSPICION = 1.5;
 
 // run AI logic turn
   public static function turn(ai: AI)
@@ -66,6 +78,50 @@ class DefaultLogic
         host.type != 'officer');
     }
 
+// player visibility for this AI: organ multipliers, flat bonuses, distance factor and the total
+// alertness gain one turn of seeing the player gives
+  public static function playerVisibility(ai: AI): VisionGain
+    {
+      var v: VisionGain = {
+        sees: (!game.player.invisibleToAI() &&
+          ai.seesPosition(game.playerArea.x, game.playerArea.y)),
+        base: 3,
+        cover: 0,
+        weapon: 0,
+        distance: game.playerArea.distance(ai.x, ai.y),
+        distMul: 0,
+        military: isMilitaryOutsider(ai),
+        total: 0,
+      };
+      if (!v.sees)
+        return v;
+
+      // if player is on a host, check for organs
+      if (game.player.state == PLR_STATE_HOST)
+        {
+          // organ: camouflage layer (the HOST's, not the watcher's)
+          var o = game.player.host.organs.getActive(IMP_CAMO_LAYER);
+          v.base = (o != null ? o.params.alertness :
+            EvolutionConst.getParams(IMP_CAMO_LAYER, 0).alertness);
+
+          // organ: protective cover
+          var o = game.player.host.organs.getActive(IMP_PROT_COVER);
+          v.cover = (o != null ? o.params.alertness :
+            EvolutionConst.getParams(IMP_PROT_COVER, 0).alertness);
+
+          // check if player host has a visible (non-concealable) weapon
+          if (game.player.host.inventory.hasVisibleWeapon())
+            v.weapon = 10;
+        }
+      v.distMul = Std.int(Math.max(0, AI.VIEW_DISTANCE + 1 - v.distance));
+      var gain = v.base * v.distMul;
+      // base personnel are trained to spot anyone out of uniform
+      if (v.military)
+        gain *= MILITARY_SUSPICION;
+      v.total = Std.int(gain) + v.cover + v.weapon;
+      return v;
+    }
+
 // AI vision: called in idle and movement to target states
   static function visionIdle(ai: AI)
     {
@@ -92,51 +148,26 @@ class DefaultLogic
       if (ai.isAgreeable())
         ai.alertness -= 5;
       // player visibility
-      else if (!game.player.invisibleToAI() &&
-          ai.seesPosition(game.playerArea.x, game.playerArea.y))
+      else
         {
-          var distance = game.playerArea.distance(ai.x, ai.y);
-          var baseAlertness = 3;
-          var alertnessBonus = 0;
-
-          // if player is on a host, check for organs
-          if (game.player.state == PLR_STATE_HOST)
+          var v = playerVisibility(ai);
+          if (v.sees)
             {
-              // organ: camouflage layer (the HOST's, not the watcher's)
-              var params = EvolutionConst.getParams(IMP_CAMO_LAYER, 0);
-              var o = game.player.host.organs.getActive(IMP_CAMO_LAYER);
-              if (o != null)
-                baseAlertness = o.params.alertness;
-              else baseAlertness = params.alertness;
-
-              // organ: protective cover
-              var params = EvolutionConst.getParams(IMP_PROT_COVER, 0);
-              var o = game.player.host.organs.getActive(IMP_PROT_COVER);
-              if (o != null)
-                alertnessBonus += o.params.alertness;
-              else alertnessBonus += params.alertness;
-
-              // check if player host has a visible (non-concealable) weapon
-              if (game.player.host.inventory.hasVisibleWeapon())
-                alertnessBonus += 10;
-            }
-          var gain: Float = baseAlertness * (AI.VIEW_DISTANCE + 1 - distance);
-          // base personnel are trained to spot anyone out of uniform
-          if (isMilitaryOutsider(ai))
-            {
-              gain *= MILITARY_SUSPICION;
-              ai.traceAI('DefaultLogic', 'military outsider x' + MILITARY_SUSPICION);
-              if (game.player.state == PLR_STATE_HOST &&
-                  game.player.host.isHuman)
+              if (v.military)
                 {
-                  game.goals.receive(GOAL_MILITARY_OUTSIDER, SILENT_ALL);
-                  game.goals.complete(GOAL_MILITARY_OUTSIDER);
+                  ai.traceAI('DefaultLogic', 'military outsider x' + MILITARY_SUSPICION);
+                  if (game.player.state == PLR_STATE_HOST &&
+                      game.player.host.isHuman)
+                    {
+                      game.goals.receive(GOAL_MILITARY_OUTSIDER, SILENT_ALL);
+                      game.goals.complete(GOAL_MILITARY_OUTSIDER);
+                    }
                 }
+              ai.alertness += v.total;
+              game.profile.addPediaArticle('npcAlertness');
             }
-          ai.alertness += Std.int(gain) + alertnessBonus;
-          game.profile.addPediaArticle('npcAlertness');
+          else ai.alertness -= 5;
         }
-      else ai.alertness -= 5;
 
       // nearby ai with visible weapons also raise alertness
       var nearbyAI = game.area.getAIinRadius(ai.x, ai.y, 3, true);
