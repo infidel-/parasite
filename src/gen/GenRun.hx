@@ -553,6 +553,77 @@ class GenRun
       add('walkableCells', nWalk);
       add('reachedCells', nSeen);
       add('orphanCells', nWalk - nSeen);
+      // and no doorway opens onto furniture. a door is walkable with masonry on two hands, so one with
+      // fewer than two walkable hands has a table or a chair standing in it — invisible to the floods
+      // above whenever the room has another door, which is what let CorpRooms.roomOpen pass it
+      var sealed = 0;
+      for (door in state.doors)
+        {
+          var open = 0;
+          for (i in 0...Const.dir4x.length)
+            if (walkAll[ctx.cells[door.x + Const.dir4x[i]][door.y + Const.dir4y[i]]] == 1)
+              open++;
+          if (open < 2)
+            sealed++;
+        }
+      check.ok(sealed == 0, sealed + ' corp doorway(s) open onto furniture');
+      add('sealedDoors', sealed);
+      // and no room is split between its doors: every door's inside cell reaches the others over the
+      // room's own floor. a door into a one-cell pocket (an exec desk's slab with an armchair either
+      // side of the doorway) has two walkable hands, passes the test above and leads nowhere
+      var split = 0;
+      for (r in state.rooms)
+        {
+          var inside = [];
+          for (door in state.doors)
+            if (door.roomID1 == r.id ||
+                door.roomID2 == r.id)
+              for (i in 0...Const.dir4x.length)
+                {
+                  var x = door.x + Const.dir4x[i];
+                  var y = door.y + Const.dir4y[i];
+                  if (x >= r.x1 &&
+                      x <= r.x2 &&
+                      y >= r.y1 &&
+                      y <= r.y2 &&
+                      walkAll[ctx.cells[x][y]] == 1)
+                    inside.push(x * 1000 + y);
+                }
+          if (inside.length < 2)
+            continue;
+          // flood the room's walkable floor from the first doorway
+          var seen = [ inside[0] => true ];
+          var stack = [ inside[0] ];
+          while (stack.length > 0)
+            {
+              var c = stack.pop();
+              for (i in 0...Const.dir4x.length)
+                {
+                  var x = Std.int(c / 1000) + Const.dir4x[i];
+                  var y = c % 1000 + Const.dir4y[i];
+                  if (x < r.x1 ||
+                      x > r.x2 ||
+                      y < r.y1 ||
+                      y > r.y2 ||
+                      seen.exists(x * 1000 + y) ||
+                      walkAll[ctx.cells[x][y]] != 1)
+                    continue;
+                  seen.set(x * 1000 + y, true);
+                  stack.push(x * 1000 + y);
+                }
+            }
+          for (k in inside)
+            if (!seen.exists(k))
+              {
+                split++;
+                if (verbose)
+                  log('[gen] seed ' + seed + ': room ' + r.id + ' ' + r.role + ' ' + r.x1 + ',' + r.y1 + '..' +
+                    r.x2 + ',' + r.y2 + ' is split between its doors');
+                break;
+              }
+        }
+      check.ok(split == 0, split + ' corp room(s) split between their doors');
+      add('splitRooms', split);
       // and no exec owner sits with his BACK TO A DOOR of his room (CorpRooms.doorsBehind): he faces
       // the desk cell beside his chair. a stat and not a failure, because a room with a door in
       // every wall leaves him one behind whichever way he turns

@@ -309,7 +309,10 @@ class CorpRooms
 
 // the executive's own desk, TURNED SO ITS OWNER FACES THE WAY IN: he sits against the wall behind
 // him, the desk in front and the visitors' chairs across it. Of the four ways he could face, one
-// with no door of the room behind him wins, and of those one with a door in the wall he faces.
+// with no door of the room behind him wins, of those one with the WINDOW at his back (the view
+// behind the desk, and the one wall no doorway opens in, so the slab cannot land across a door),
+// and of those one with a door in the wall he faces. A facing that cannot take a desk at all falls
+// through to the next.
 //
 // A DOOR IN BOTH END WALLS USED TO MEAN NO DESK AT ALL (382 bare exec offices in 600 seeds), then a
 // desk mid-room facing south with the north door at its owner's back. Turned a quarter he faces a
@@ -317,33 +320,34 @@ class CorpRooms
 // him, and there the desk stands free mid-room, facing the way with the fewest
   static function execDesk(state: _CorpState, node: _GenNode, room: _Room)
     {
-      // the owner's cell against the back wall for facing (fx, fy), `v` cells out from it, and
-      // centred across the room
-      var ownerAt = function(fx: Int, fy: Int, v: Int)
-        {
-          return {
-            x: (fx == 0 ? room.x1 + Std.int(room.w / 2) : (fx > 0 ? room.x1 + v : room.x2 - v)),
-            y: (fy == 0 ? room.y1 + Std.int(room.h / 2) : (fy > 0 ? room.y1 + v : room.y2 - v)),
-          };
-        };
-      var best = null;
-      var bestScore = 0;
+      // rank the four facings; the sort is stable, so a tie keeps this order
+      var ranked = [];
       for (f in [ [ 0, 1 ], [ 0, -1 ], [ 1, 0 ], [ -1, 0 ] ])
         {
-          var o = ownerAt(f[0], f[1], 0);
-          var score = doorsBehind(state, room, o.x, o.y, f[0], f[1]) * 10 -
-            (doorsAhead(state, room, f[0], f[1]) > 0 ? 1 : 0);
-          if (best == null ||
-              score < bestScore)
-            {
-              best = f;
-              bestScore = score;
-            }
+          var o = ownerAt(room, f[0], f[1], 0);
+          var behind = doorsBehind(state, room, o.x, o.y, f[0], f[1]);
+          ranked.push({
+            f: f,
+            behind: behind,
+            rank: behind * 10 -
+              (glassBehind(state, room, f[0], f[1]) ? 2 : 0) -
+              (doorsAhead(state, room, f[0], f[1]) > 0 ? 1 : 0),
+          });
         }
-      var fx = best[0], fy = best[1];
+      ranked.sort(function(a, b) return a.rank - b.rank);
+      for (r in ranked)
+        if (execDeskFacing(state, node, room, r.f[0], r.f[1], r.behind > 0))
+          return;
+    }
+
+// try the exec desk with its owner facing (fx, fy): the 3x2 slab with both visitors, else the 3x1
+// run. false when neither leaves the room open
+  static function execDeskFacing(state: _CorpState, node: _GenNode, room: _Room, fx: Int, fy: Int,
+      doorBehind: Bool): Bool
+    {
       // a door behind him whichever way he turns: out from the wall, mid-room
       var depth = (fx == 0 ? room.h : room.w);
-      var o = ownerAt(fx, fy, (bestScore >= 9 ? Std.int((depth - 2) / 2) - 1 : 0));
+      var o = ownerAt(room, fx, fy, (doorBehind ? Std.int((depth - 2) / 2) - 1 : 0));
       // the desk's long axis, across the way he faces
       var px = (fx == 0 ? 1 : 0), py = (fx == 0 ? 0 : 1);
       // THE VISITORS SIT ACROSS THE DESK FROM ITS OWNER, one at each end of the slab, and an
@@ -375,7 +379,7 @@ class CorpRooms
           var visitors = fitVisitors(state, room, blocked, cands);
           if (deep &&
               (visitors.length < cands.length ||
-              !roomOpen(state, room, blocked, MARBLE1)))
+              !roomOpen(state, room, blocked, MARBLE1, true)))
             continue;
           // the bbox above took the owner's own cell in too: off it again
           if (fx != 0)
@@ -388,11 +392,45 @@ class CorpRooms
               y0 = (fy > 0 ? o.y + 1 : y0);
               y1 = (fy > 0 ? y1 : o.y - 1);
             }
+          // the 3x1 run gets the same door check the slab got above
+          if (!deep &&
+              !roomOpen(state, room, blocked, MARBLE1, true))
+            return false;
           execDeskAt(state, node, x0, y0, x1, y1, o.x, o.y);
           for (c in visitors)
             seat(state, room, c.x, c.y, Const.CORP_ARMCHAIR);
-          return;
+          return true;
         }
+      return false;
+    }
+
+// the exec owner's cell against the back wall for facing (fx, fy), `v` cells out from it, and
+// centred across the room
+  static function ownerAt(room: _Room, fx: Int, fy: Int, v: Int): { x: Int, y: Int }
+    {
+      return {
+        x: (fx == 0 ? room.x1 + Std.int(room.w / 2) : (fx > 0 ? room.x1 + v : room.x2 - v)),
+        y: (fy == 0 ? room.y1 + Std.int(room.h / 2) : (fy > 0 ? room.y1 + v : room.y2 - v)),
+      };
+    }
+
+// is any of the wall behind someone facing (fx, fy) glazed? the room's back wall, outer or inner
+  static function glassBehind(state: _CorpState, room: _Room, fx: Int, fy: Int): Bool
+    {
+      var cells = state.area.getCells();
+      var x0 = (fx > 0 ? room.x1 - 1 : (fx < 0 ? room.x2 + 1 : room.x1));
+      var x1 = (fx > 0 ? room.x1 - 1 : (fx < 0 ? room.x2 + 1 : room.x2));
+      var y0 = (fy > 0 ? room.y1 - 1 : (fy < 0 ? room.y2 + 1 : room.y1));
+      var y1 = (fy > 0 ? room.y1 - 1 : (fy < 0 ? room.y2 + 1 : room.y2));
+      for (x in x0...x1 + 1)
+        for (y in y0...y1 + 1)
+          {
+            var t = cells[x][y];
+            if ((t >= BLDG_WINDOW && t <= BLDG_WINDOWV3) ||
+                (t >= INNER_WINDOW && t <= INNER_WINDOWV3))
+              return true;
+          }
+      return false;
     }
 
 // how many of the room's doors are BEHIND someone standing at (x,y) facing (fx,fy) — the rule every
@@ -434,7 +472,7 @@ class CorpRooms
       for (c in cands)
         {
           blocked.set(c.x * 1000 + c.y, true);
-          if (roomOpen(state, room, blocked, MARBLE1))
+          if (roomOpen(state, room, blocked, MARBLE1, true))
             out.push(c);
           else
             blocked.remove(c.x * 1000 + c.y);
@@ -634,7 +672,7 @@ class CorpRooms
                 // and what it erodes is the furniture: measured on the first build, a 9 x 4 suite
                 // came back with the desk's first column and both door-end plants eaten
                 if (!ok ||
-                    !roomOpen(state, room, blocked, MARBLE1))
+                    !roomOpen(state, room, blocked, MARBLE1, true))
                   continue;
 
                 // the desk, off its top-left cell whichever way round the room is
@@ -764,17 +802,24 @@ class CorpRooms
       var total = 0;
       for (x in room.x1...room.x2 + 1)
         for (y in room.y1...room.y2 + 1)
-          if (walk(x, y))
-            {
-              total++;
-              if (atDoor(cells, x, y) &&
-                  !(joined &&
-                  stack.length > 0))
-                {
-                  seen.set(x * 1000 + y, true);
-                  stack.push({ x: x, y: y });
-                }
-            }
+          {
+            // A DOORWAY'S OWN CELL STAYS CLEAR. a door whose inside cell is blocked is simply not a
+            // seed below, so the flood from the room's other door reached everything and called a
+            // sealed doorway open: an exec desk across the east door of a two-door office
+            if (blocked.exists(x * 1000 + y) &&
+                atDoor(cells, x, y))
+              return false;
+            if (!walk(x, y))
+              continue;
+            total++;
+            if (atDoor(cells, x, y) &&
+                !(joined &&
+                stack.length > 0))
+              {
+                seen.set(x * 1000 + y, true);
+                stack.push({ x: x, y: y });
+              }
+          }
       if (stack.length == 0)
         return true;
       var n = stack.length;

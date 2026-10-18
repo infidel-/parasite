@@ -1793,6 +1793,31 @@ The four new seat and lounge decorations sit on the four atlas cells rows 23-39 
 hidden in 3D and read back by `render.corp.CorpDeco.kindOf` as `K_EXEC_CHAIR / K_ARMCHAIR / K_SOFA /
 K_TABLE_LOW`. Measured over 3,000 seeds: 0 failures, 0 unreachable, `furn/exec` 451.
 
+**A doorway stays open, and the office stays one piece.** Reported from the game as an exec desk
+across a door. A 4x5 office with doors east and south ranked "face south" (a door ahead) level with
+"face east", and south is tried first, so the 3x2 slab ran across x 20..22 and its end cell was the
+east door's inside cell. Turned the other way, the slab and an armchair either side of that door wall
+its inside cell in as a one-cell pocket. `roomOpen` passed both:
+- it seeds its flood at every walkable doorway cell, so a BLOCKED one is just not a seed, and the
+  other door's flood still reaches every cell;
+- a pocket is a seed of its own, so it counts as reached.
+
+Now:
+- `roomOpen` fails when a blocked cell is a doorway's inside cell;
+- every exec placement floods `joined`, from ONE door. The flag existed and its comment said the exec
+  office asked it of itself, but no caller passed it;
+- the owner ranks the WINDOW at his back (`glassBehind`) between `doorsBehind` and `doorsAhead`;
+- a facing that cannot take a desk falls through to the next.
+
+`GenRun` measures both faults, and both are now failures:
+- `sealedDoors` (a door with fewer than two walkable hands): 0.16 → 0 a floor;
+- `splitRooms` (a room whose doorway cells do not reach each other): 0.60 → 0, every one an exec
+  office.
+
+Over 3,000 seeds: `exec/owners` 9.93 → 11.18, `exec/armchairs` 18.87 → 19.57, and `furn/exec`
+366.9 → 354.8, since the desks that stood in doorways are gone. One owner in 3,000 floors sits with a
+door at his back; that is the fall-through's last resort.
+
 ## The kitchen is three real sub-blocks
 
 `CorpRooms.kitchen` lays the WOOD1 floor and nothing else; `gen.corp.CorpKitchen.zones` pushes three
