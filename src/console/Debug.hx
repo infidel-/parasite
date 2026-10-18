@@ -78,8 +78,7 @@ class Debug
         'spawnCells: ' + game.area.spawnCells +
         ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', ' +
         game.area.getMaxAICoef() + ')]' +
-        '<br>Spawn region: ' + spawnRectText() +
-        ' (2D emptyScreenCells: ' + game.scene.area.emptyScreenCells + ')'
+        '<br>Spawn region: ' + spawnRectText()
       );
     }
 

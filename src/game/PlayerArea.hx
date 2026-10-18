@@ -414,7 +414,6 @@ class PlayerArea extends _SaveObject
           game.ui.hud.state = HUD_BASE_BUILDING;
           game.updateHUD();
           game.scene.mouse.update(true);
-          game.scene.area.draw();
         }
       // try to leave area
       else if (action.id == 'leaveArea')

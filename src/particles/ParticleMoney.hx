@@ -31,15 +31,4 @@ class ParticleMoney extends Particle
         dsize,
         dsize);
     }
-
-// create ground splat on death
-  public override function onDeath()
-    {
-      var e = game.scene.area.addEffect(pt.x, pt.y, 2,
-        Const.FRAME_EFFECT_MONEY);
-      e.randomizeScale(0.9);
-      e.randomizeAngle();
-      e.randomizeDelta();
-      game.scene.updateCameraNextTick();
-    }
 }

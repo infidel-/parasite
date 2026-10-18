@@ -517,8 +517,8 @@ class RenderConfig {
     minDist: 0.4,        // min landing distance from the thrower (cells)
     // lingering ground stains: a flat money decal laid on every walkable tile in the throw radius.
     // ~permFrac of them are permanent (persisted tile decorations in the shared dynamic-decal FIFO,
-    // like blood splats), the rest fade out after a short rest (view-side). 3D port of 2D
-    // ParticleMoney.onDeath's addEffect ground decal
+    // like blood splats), the rest fade out after a short rest (view-side). 3D port of the retired
+    // 2D money ground decal
     groundScaleMin: 0.9, // ground-stain scale min (of a billboard)
     groundScaleMax: 1.0, // ground-stain scale max
     groundScatter: 0.3,  // per-tile sub-cell random offset (cells)

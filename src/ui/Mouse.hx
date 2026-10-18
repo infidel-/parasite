@@ -114,15 +114,11 @@ class Mouse
         game.scene.view3d.running);
     }
 
-// LOS test that works in both views: the 2D tile cache (area.isVisible) is only maintained while the
-// 2D view draws, so in the 3D view fall back to the player's own vision (the source
-// render.Actors.pickTarget uses for its AI arm)
+// LOS test: the player's own vision (the source render.Actors.pickTarget uses for its AI arm)
   inline function seesTile(x: Int, y: Int): Bool
     {
-      if (street())
-        return (!game.player.vars.losEnabled ||
-          game.playerArea.sees(x, y));
-      return game.scene.area.isVisible(x, y);
+      return (!game.player.vars.losEnabled ||
+        game.playerArea.sees(x, y));
     }
 
 // mouse click (through canvas directly)

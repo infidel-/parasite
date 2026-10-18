@@ -43,7 +43,8 @@ class AreaTooltip extends BeamTooltip
           return;
         }
 
-      if (!game.scene.area.isVisible(pos.x, pos.y))
+      if (game.player.vars.losEnabled &&
+          !game.playerArea.sees(pos.x, pos.y))
         {
           hide();
           return;

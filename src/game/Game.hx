@@ -446,8 +446,6 @@ class Game extends _SaveObject
           var t0 = dp ? haxe.Timer.stamp() : 0.0;
           area.turn();
           var tArea = dp ? haxe.Timer.stamp() : 0.0;
-          scene.area.turn();
-          var tScene = dp ? haxe.Timer.stamp() : 0.0;
           if (state != GAMESTATE_RUNNING)
             return;
 
@@ -473,8 +471,7 @@ class Game extends _SaveObject
               if (tot > 6.0)
                 trace('[turn-perf] ' + Std.int(tot) + 'ms' +
                   ' area(ai)=' + Std.int((tArea - t0) * 1000) +
-                  ' scene=' + Std.int((tScene - tArea) * 1000) +
-                  ' mgr=' + Std.int((tMgr - tScene) * 1000) +
+                  ' mgr=' + Std.int((tMgr - tArea) * 1000) +
                   ' goals=' + Std.int((tGoals - tMgr) * 1000) +
                   ' vis=' + Std.int((tVis - tGoals) * 1000) +
                   ' | ai=' + Lambda.count(area.getAllAI()) +

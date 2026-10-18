@@ -459,7 +459,6 @@ class AreaGame extends _SaveObject
 
       // update AI and objects visibility to player
       updateVisibility();
-      game.scene.area.onEnter();
       game.scene.sounds.onEnterArea();
       // timeline goals hooks
       game.goals.onEnter();
@@ -502,8 +501,6 @@ class AreaGame extends _SaveObject
 
       // update AI and objects visibility to player
       updateVisibility();
-
-      game.scene.area.draw();
     }
 
 // a facility saved before game.FacilityAreaGenerator recorded every structure's rooms carries a
@@ -854,9 +851,6 @@ class AreaGame extends _SaveObject
 
       // remove events
       game.managerArea.onLeaveArea();
-
-      // hide gui
-      game.scene.area.hide();
 
       // notify cult about leaving area
       game.cults[0].onLeaveArea();
@@ -2227,9 +2221,6 @@ class AreaGame extends _SaveObject
       for (o in _objects)
         o.turn();
 
-      // call turn for area view
-      game.scene.area.turn();
-
       turnSpawnCommonAI(); // spawn AI
       turnSpawnMoreAI(); // spawn AI related to area alertness
       turnSpawnNPC(); // spawn NPC AI
@@ -2708,11 +2699,6 @@ class Test {
 
       // calc max possible number of AI
       var maxAI = getMaxAI();
-/*
-      trace('info:' + info.commonAI +
-        ' empty:' + game.scene.area.emptyScreenCells +
-        ' res:' + maxAI + ' cnt:' + cnt);
-*/
 
       // there are enough AI already
       if (cnt > maxAI)
@@ -2993,8 +2979,9 @@ class Test {
                 ai.onNotice();
               }
           }
-      // change tiles according to los
-      game.scene.area.updateVisibility();
+      // redraw: on area change GameScene.draw builds the 3D view, otherwise it releases the
+      // windows held for the 3D reveal
+      game.scene.draw();
     }
 
 // get random direction to a near empty space

@@ -142,8 +142,6 @@ class Options extends UIWindow
       addOptSlider('Minimap scale', game.config.minimapScale * 100, 60, 1000, 20, 'round', '%',
         function (v) {
           game.config.set('minimapScale', '' + Const.round(v / 100.0), false);
-          if (game.location == LOCATION_AREA)
-            game.scene.area.generateMinimap();
           game.scene.updateCamera();
           game.scene.draw();
         });

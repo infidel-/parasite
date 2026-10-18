@@ -208,8 +208,6 @@ class CultBase extends _SaveObject
       createOrganObject(organ);
       game.log('You shape ' + CultBaseConst.name(type) + '.');
       game.updateHUD();
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
       return true;
     }
 
@@ -404,8 +402,6 @@ class CultBase extends _SaveObject
         game.ui.hud.state = HUD_DEFAULT;
         game.updateHUD();
         game.scene.mouse.update(true);
-        if (game.location == LOCATION_AREA)
-          game.scene.area.draw();
         return true;
       }, 'f'));
       var buildableTypes = CultBaseConst.buildableTypes.copy();
@@ -474,8 +470,6 @@ class CultBase extends _SaveObject
       cursorX = x;
       cursorY = y;
       game.updateHUD();
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
       return true;
     }
 
