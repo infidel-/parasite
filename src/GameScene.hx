@@ -200,7 +200,7 @@ class GameScene
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.textAlign = 'center';
 
-      if (game.location == LOCATION_AREA && is3DArea())
+      if (game.location == LOCATION_AREA)
         draw3D();
 
       else if (game.location == LOCATION_REGION)
@@ -220,31 +220,13 @@ class GameScene
         }
     }
 
-// is the current area rendered in 3D? city streets, the underground tunnels (sewers share their
-// generator with the habitat, so both come out as the same Sewers.TILE_FLOOR grid), the open
-// wilderness, the facility compound, the corp tower floor, the military base (drawn by the
-// facility renderer) and the underground lab
-  public inline function is3DArea(): Bool
-    {
-      return game.area != null &&
-        (game.area.info.type == 'city' ||
-         game.area.info.type == 'sewers' ||
-         game.area.info.type == 'habitat' ||
-         game.area.info.type == 'wilderness' ||
-         game.area.info.type == 'facility' ||
-         game.area.info.type == 'militaryBase' ||
-         game.area.info.type == 'corp' ||
-         game.area.info.type == 'undergroundLab');
-    }
-
 // an object that draws as a 3D prop appeared or vanished in the area on screen. object props are
 // placed once at area build, so without this a habitat object grown under the player would draw
 // nothing at all until the area was left and re-entered (its sprite is dropped the moment it has a
 // model). objects drawn as sprites need none of this — the actor layer re-reads them every frame
   public function updateObjects3D()
     {
-      if (!is3DArea() ||
-          !view3d.running)
+      if (!view3d.running)
         return;
       view3d.refreshObjects();
     }
@@ -256,7 +238,7 @@ class GameScene
         game.area.info.type == 'city';
     }
 
-// show/refresh the 3D view for the current area (skips 2D area draw). (re)builds only
+// show/refresh the 3D view for the current area. (re)builds only
 // when the shown area changes; seeded areas regenerate from the seed, old seedless
 // saves reconstruct plain boxes from the saved tile grid
   function draw3D()
@@ -338,8 +320,7 @@ class GameScene
   public function forget3D()
     {
       _view3dArea = -1;
-      if (view3d != null)
-        view3d.forget();
+      view3d.forget();
     }
 
 // hide the 3D view and forget the shown area (so re-entry rebuilds). the outro plays first;
@@ -505,8 +486,7 @@ class GameScene
     {
       canvas.width = Math.ceil(Browser.window.innerWidth * Browser.window.devicePixelRatio);
       canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
-      if (view3d != null)
-        view3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
+      view3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
       updateCamera();
       if (game.location == LOCATION_AREA)
         {

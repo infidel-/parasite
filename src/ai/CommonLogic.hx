@@ -206,10 +206,9 @@ class CommonLogic
               roll, targetBloodType);
           else
             {
-              // 3D gun-shot choreography; when the view handles it, skip the 2D tracer (it is
-              // hidden under the 3D view) so blood/impact aren't doubled
-              handledShot = game.scene.view3d != null &&
-                game.scene.view3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
+              // 3D gun-shot choreography; when the view cannot play it, only the impact sound is
+              // left (Particle.createShot) and the blood below is written here
+              handledShot = game.scene.view3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
                   roll, weapon.spawnBlood, bloodIc.row, bloodIc.col,
                   weapon.sound.file, attacker.isPlayer);
               if (!handledShot)
@@ -223,8 +222,7 @@ class CommonLogic
       // now). blood/shake are added on a hit below. handled => the view took over the audio
       inline function melee(sound: AISound, hit: Bool): Bool
         {
-          if (weapon.isRanged ||
-              game.scene.view3d == null)
+          if (weapon.isRanged)
             return false;
           return game.scene.view3d.playMelee(atkE, hit ? tgtE : null,
             attacker.x, attacker.y, target.x, target.y,

@@ -12,7 +12,6 @@ class Config
 
   public var mouseEnabled: Bool;
   public var extendedInfo: Bool;
-  public var alwaysCenterCamera: Bool;
   public var laptopKeyboard: Bool;
   public var fullscreen: Bool;
   public var skipTutorial: Bool;
@@ -43,8 +42,6 @@ class Config
   public var mapScale: Float;
   public var minimapScale: Float;
   public var repeatDelay: Int;
-  public var windowHeight: Int;
-  public var windowWidth: Int;
   public var musicVolume: Int;
   public var effectsVolume: Int;
   public var ambientVolume: Int;
@@ -63,7 +60,6 @@ class Config
       // default values
       mouseEnabled = true;
       extendedInfo = Const.isDebug;
-      alwaysCenterCamera = true;
       laptopKeyboard = false;
       fullscreen = true;
       skipTutorial = false;
@@ -103,15 +99,12 @@ class Config
       effectsVolume = 40;
       ambientVolume = 30;
       repeatDelay = 100;
-      windowHeight = 768;
-      windowWidth = 1024;
       difficulty = 0;
       mods = {};
 
       map = new Map();
       map['mouseEnabled'] = '1';
       map['extendedInfo'] = '0';
-      map['alwaysCenterCamera'] = '1';
       map['laptopKeyboard'] = '0';
       map['shiftLongActions'] = '1';
       map['compactHud'] = '0';
@@ -144,8 +137,6 @@ class Config
       map['effectsVolume'] = '' + effectsVolume;
       map['ambientVolume'] = '' + ambientVolume;
       map['repeatDelay'] = '' + repeatDelay;
-      map['windowHeight'] = '' + windowHeight;
-      map['windowWidth'] = '' + windowWidth;
       map['difficulty'] = '' + difficulty;
 
       game.debug('config load');
@@ -210,8 +201,6 @@ class Config
         mouseEnabled = (val == '1');
       else if (key == 'extendedInfo')
         extendedInfo = (val == '1');
-      else if (key == 'alwaysCenterCamera')
-        alwaysCenterCamera = (val == '1');
       else if (key == 'vidShowFps')
         vidShowFps = (val == '1');
       // settings.json is user-editable (trust boundary): guard the frame cap so a bad
@@ -331,10 +320,6 @@ class Config
         ambientVolume = Const.clamp(Std.parseInt(val), 0, 100);
       else if (key == 'repeatDelay')
         repeatDelay = Std.parseInt(val);
-      else if (key == 'windowHeight')
-        windowHeight = Std.parseInt(val);
-      else if (key == 'windowWidth')
-        windowWidth = Std.parseInt(val);
       else if (key == 'difficulty')
         difficulty = Std.parseInt(val);
 

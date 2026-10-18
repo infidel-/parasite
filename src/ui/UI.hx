@@ -208,7 +208,6 @@ class UI
       // toggles the mode and would otherwise leave the host, and S, which flies the camera and would
       // otherwise shoot the target
       if (game.location == LOCATION_AREA &&
-          game.scene.view3d != null &&
           game.scene.view3d.debugActive() &&
           (!render.SoundDebug.active() ||
           e.code == 'KeyS' ||
@@ -219,7 +218,6 @@ class UI
         return;
       // the lab's lift is carrying the player out
       if (game.location == LOCATION_AREA &&
-          game.scene.view3d != null &&
           game.scene.view3d.departing())
         return;
 //      trace('code:' + e.code + ' alt:' + e.altKey + ' ctrl:' + e.ctrlKey + ' shift:' + e.shiftKey + ' key:' + e.key);
@@ -284,7 +282,6 @@ class UI
             {
               if (!e.shiftKey &&
                   game.location == LOCATION_AREA &&
-                  game.scene.view3d != null &&
                   game.scene.view3d.running)
                 game.scene.view3d.toggleTactical();
               else hud.toggle();
@@ -739,7 +736,6 @@ class UI
 
       // street-debug mode owns numpad/arrows for the 3D fly camera (not in sound mode: see onKey)
       if (game.location == LOCATION_AREA &&
-          game.scene.view3d != null &&
           game.scene.view3d.debugActive() &&
           !render.SoundDebug.active())
         return false;

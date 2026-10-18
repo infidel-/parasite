@@ -2906,6 +2906,10 @@ class Test {
           case 'facility': render.RenderConfig.CAMERA_FACILITY;
           // a base is drawn by the facility renderer under the facility's camera
           case 'militaryBase': render.RenderConfig.CAMERA_FACILITY;
+          // and so are the corp floor (render.corp.CorpArea) and the underground lab
+          // (render.lab.LabArea). missing here, the corp took the 2D canvas rect: commonAI 10,
+          // diluted by the screen's pixel count
+          case 'corp', 'undergroundLab': render.RenderConfig.CAMERA_FACILITY;
           default: null;
         };
       if (cam == null)

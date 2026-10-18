@@ -82,13 +82,11 @@ class Debug
       );
     }
 
-// describe the AI spawn region: its size and which viewport it came from (the 3D camera
-// footprint in city areas, the 2D screen rect everywhere else)
+// describe the AI spawn region: its size (the area kind's 3D camera footprint)
   function spawnRectText(): String
     {
       var r = game.area.getSpawnRect();
-      return (r.x2 - r.x1) + 'x' + (r.y2 - r.y1) +
-        (game.area.isCity() ? ' (3D camera footprint)' : ' (2D screen rect)');
+      return (r.x2 - r.x1) + 'x' + (r.y2 - r.y1);
     }
 
 // toggles debug sound info

@@ -1148,8 +1148,7 @@ void main() {
   }
 
 // drive the hover tooltip: anchor the DOM panel at the hover pick's projected px. runs every frame
-// so the beam tracks the follow-camera. the 2D AreaTooltip stands down while this view runs (see
-// AreaTooltip.update)
+// so the beam tracks the follow-camera (AreaTooltip.update only takes it down while no view shows)
   function updateHoverTooltip():Void {
     var tip = game.ui.hud.areaTooltip;
     var hit = hover;

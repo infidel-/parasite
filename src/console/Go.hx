@@ -113,7 +113,6 @@ class Go
         '(' + (i + 1) + ' of ' + hits.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
       game.playerArea.moveTo(c.x, c.y);
       game.scene.updateCamera();
-      game.scene.draw();
     }
 
 // go to a random looping sound source of a given kind: go sound [kind]. the sources are the ones
@@ -168,7 +167,6 @@ class Go
         '(' + (i + 1) + ' of ' + pick.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
       game.playerArea.moveTo(c.x, c.y);
       game.scene.updateCamera();
-      game.scene.draw();
     }
 
 // does this block hold the cell? its own cells, or one a step off them — a doorway or a furniture
@@ -241,7 +239,6 @@ class Go
           game.playerRegion.moveTo(x, y, false);
         }
       game.scene.updateCamera();
-      game.scene.draw();
     }
 
 // the target tile if it is walkable, else its first walkable neighbour, else null

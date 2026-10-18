@@ -72,10 +72,7 @@ class BasicMelee extends Ability
 // returns true if the view took over (the caller then skips the attack audio)
   function playMelee3D(ai: AI, target: AttackTarget, hit: Bool): Bool
     {
-      var scene = target.game.scene;
-      if (scene.view3d == null)
-        return false;
-      return scene.view3d.playMelee(ai.entity, hit ? target.entity() : null,
+      return target.game.scene.view3d.playMelee(ai.entity, hit ? target.entity() : null,
         ai.x, ai.y, target.x, target.y,
         hit && sound != null ? sound.file : null, null, false, 0, 0);
     }

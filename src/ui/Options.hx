@@ -137,13 +137,10 @@ class Options extends UIWindow
           game.config.set('mapScale', '' + Const.round(v / 100.0), false);
           Const.TILE_SIZE = Std.int(Const.TILE_SIZE_CLEAN * game.config.mapScale);
           game.scene.updateCamera();
-          game.scene.draw();
         });
       addOptSlider('Minimap scale', game.config.minimapScale * 100, 60, 1000, 20, 'round', '%',
         function (v) {
           game.config.set('minimapScale', '' + Const.round(v / 100.0), false);
-          game.scene.updateCamera();
-          game.scene.draw();
         });
 
       // title font selector
@@ -188,7 +185,6 @@ class Options extends UIWindow
           game.config.set('hudLogLines', '' + Std.int(v), false);
           game.hudMessageList.clear();
         });
-      addOptToggle('Center camera on player near map edges', 'alwaysCenterCamera', game.config.alwaysCenterCamera);
       addOptToggle('Laptop movement keys (uiojklm,.)', 'laptopKeyboard', game.config.laptopKeyboard);
       addOptToggle('Extended gameplay information', 'extendedInfo', game.config.extendedInfo);
       addOptToggle('Shift-click/number repeat action', 'shiftLongActions', game.config.shiftLongActions);

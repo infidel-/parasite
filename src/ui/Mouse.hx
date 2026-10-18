@@ -95,23 +95,16 @@ class Mouse
       return (hit.ai != null ? hit.ai.id : AreaTooltip.beamID(hit.obj));
     }
 
-// is the cursor on an AI or an object that has a tooltip? the 3D pick, or the 2D cell's own
-// occupant, picked the way ui.AreaTooltip picks it
-  function onInfo(pos: _Point): Bool
+// is the cursor on an AI or an object that has a tooltip (the 3D view's hover pick)?
+  inline function onInfo(): Bool
     {
-      if (street())
-        return (pick() != null);
-      return (game.ui.hud.isInspectMode() &&
-        seesTile(pos.x, pos.y) &&
-        (game.area.getAI(pos.x, pos.y) != null ||
-         game.ui.hud.areaTooltip.objectAt(pos.x, pos.y) != null));
+      return (pick() != null);
     }
 
 // is the 3D street view currently showing? cursor picking / path / cursor art route through it then
   inline function street(): Bool
     {
-      return (game.scene.view3d != null &&
-        game.scene.view3d.running);
+      return game.scene.view3d.running;
     }
 
 // LOS test: the player's own vision (the source render.Actors.pickTarget uses for its AI arm)
@@ -404,7 +397,7 @@ class Mouse
         {
           oldPos = pos;
           game.scene.area.clearPath();
-          if (onInfo(pos))
+          if (onInfo())
             c = CURSOR_INFO;
           setCursor(c);
           return;
@@ -475,7 +468,7 @@ class Mouse
 
       // info cursor: on an AI or object a click would not attack
       if (!attack &&
-          onInfo(pos))
+          onInfo())
         c = CURSOR_INFO;
 
       setCursor(c);
