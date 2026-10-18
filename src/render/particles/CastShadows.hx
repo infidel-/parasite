@@ -12,6 +12,9 @@ typedef ShadowLight = {
   var op:Float;      // base per-shadow opacity
   var fade:Float;    // outer fraction of range over which the shadow eases to 0 (no pop on enter/leave)
   var flicker:Float; // 0..1 pulse (barrels breathe with the flame; steady lamps pass 1)
+  @:optional var aimX:Float; // an aimed beam's unit ground direction; null = casts all round
+  @:optional var aimZ:Float;
+  @:optional var cos:Float;  // and the cosine of its half-angle: an actor outside the cone casts none
 };
 
 // shared fake-shadow projector: lays a black soft-edged copy of an actor's sprite on the ground,
@@ -37,7 +40,9 @@ class CastShadows {
           var dx = ax - l.x;
           var dz = az - l.z;
           var d = Math.sqrt(dx * dx + dz * dz);
-          if (d < l.range)
+          if (d < l.range &&
+              (l.cos == null ||
+              cone(l, dx, dz, d) > 0))
             near.push({ l: l, d: d });
         }
       near.sort(function(p, q)
@@ -59,9 +64,12 @@ class CastShadows {
           var edge = (l.range - dh) / (l.range * l.fade);
           if (edge > 1)
             edge = 1;
-          // fade with distance from the light: darker close to it, more transparent far off
-          var distFade = 1 - dh / l.range;
+          // fade with distance from the light: darker close to it, more transparent far off. Not down
+          // an aimed beam, whose light is brightest where it LANDS, metres out: the cone fades it
+          var distFade = (l.cos != null ? 1.0 : 1 - dh / l.range);
           var op = l.op * actorOp * edge * distFade * (0.7 + 0.3 * l.flicker);
+          if (l.cos != null)
+            op *= cone(l, ax - l.x, az - l.z, dh);
           sprites.paintShadow({
             feetX: ax,
             floorY: floorY,
@@ -75,5 +83,13 @@ class CastShadows {
             order: Sprites.ORD_SHADOW,
           });
         }
+    }
+
+// how far inside an aimed beam's cone an actor stands, off the light by dx/dz at d: 0 on its rim or
+// outside, easing to 1 over the inner `fade` of its angle, so a sweeping beam's shadow fades in
+  static function cone(l:ShadowLight, dx:Float, dz:Float, d:Float):Float
+    {
+      var w = ((dx * l.aimX + dz * l.aimZ) / d - l.cos) / ((1 - l.cos) * l.fade);
+      return (w < 0 ? 0 : (w > 1 ? 1 : w));
     }
 }

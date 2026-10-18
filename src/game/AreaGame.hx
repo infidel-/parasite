@@ -4,6 +4,7 @@ package game;
 
 import ai.*;
 import objects.*;
+import gen._GenNode;
 import const.WorldConst;
 import const.ItemsConst;
 import const.NameConst;
@@ -16,7 +17,8 @@ class AreaGame extends _SaveObject
   static var _ignoredFields = [
     'region', 'events', 'npc', 'parent',
     'info', 'clueSpawnPoints', '_decalCells',
-    'spawnCells',
+    'spawnCells', '_boothX', '_boothY',
+    'genTree', 'genSeed', '_baseFence',
   ];
   var game: Game;
   var region: RegionGame;
@@ -30,6 +32,7 @@ class AreaGame extends _SaveObject
   public var tileID: Int; // tile id on tilemap
   public var isGenerated: Bool; // has this area been generated?
   public var cityGenSeed: Int; // seed for the 3D city generator (city areas); -1 = none/old save
+  public var cityGenVersion: Int; // the city layout version it was generated at (citygen.CityProfile.Profiles.VERSION); 0 = before downtown's two-cell pavement
   public var isEntering: Bool; // is the player entering this area atm?
   public var isKnown: Bool; // has the player seen this area?
   public var highCrime: Bool; // low density area can become high crime
@@ -56,6 +59,15 @@ class AreaGame extends _SaveObject
   var _alertness: Float; // actual alertness storage
 
   public static var _maxID: Int = 0; // area id counter
+  // the share of a military base's furniture tops kept bare for clues
+  static inline var MIL_CLUE_SPOT_PCT = 40;
+  // a lab's or a base's clues: the most lying about at once, the chance a turn short of them lays
+  // one, the chance that one may go into a room already holding one, and the chance it is dropped
+  // on a room floor instead (at most one there)
+  static inline var CLUE_MAX = 2;
+  static inline var CLUE_SPAWN_PCT = 25;
+  static inline var CLUE_ROOM_SECOND_PCT = 30;
+  static inline var CLUE_FLOOR_PCT = 10;
 
   // these are empty until the area has been generated
   // when player leaves the area, ai list is emptied, cells and objects are saved
@@ -69,7 +81,21 @@ class AreaGame extends _SaveObject
   public var clueSpawnPoints: Array<{ x: Int, y: Int }>;
   public var guardSpawnPoints: Array<{ x: Int, y: Int }>;
   public var importantGuardSpawnPoints: Array<{ x: Int, y: Int }>;
+  // a military base's fence ring, re-derived from the grid on first ask (baseFence). not saved
+  var _baseFence: gen.military.MilitaryGen._Rect;
+  // the cell the parking entry's guard booth stands on, or -1,-1 where there is no gate. the booth
+  // is render-only geometry with no tile of its own, so this is the only thing that knows it is
+  // solid; transient, because initSpawnPoints re-derives it from the cell grid on every load (see
+  // gate()) and a saved copy would only be a second answer to disagree with
+  var _boothX: Int = -1;
+  var _boothY: Int = -1;
   public var generatorInfo: _GeneratorInfo;
+  // the generation tree this area was built from, and the seed that dealt it. TRANSIENT BY
+  // DESIGN, both of them: gen._GenNode is in-memory only on the grounds that nothing downstream
+  // reads blocks, and this keeps the root alive only for the console (`area room`) instead of
+  // reviving it as a second source of truth. a loaded save has neither and says so
+  public var genTree: _GenNode;
+  public var genSeed: Int = -1;
   // walkable cells inside the AI spawn region (see getSpawnRect) - drives the AI budget.
   // transient: recomputed on every visibility update, never saved
   public var spawnCells: Int;
@@ -99,6 +125,7 @@ class AreaGame extends _SaveObject
       events = [];
       isGenerated = false;
       cityGenSeed = -1;
+      cityGenVersion = 0;
       isEntering = false;
       isKnown = false;
       isHabitat = false;
@@ -170,6 +197,118 @@ class AreaGame extends _SaveObject
       Inventory.loadOrphanCount += orphan.length;
 
       migrateCityGrid();
+      migrateCorpStairs();
+      // save migration: a military base generated before the fenced base existed is thrown away, so
+      // the next entry builds the new one. the one the player stands in is walked out of and back
+      // into by Loader instead, once the whole load chain has run
+      if (isOldBase() &&
+          !(game.location == LOCATION_AREA &&
+            game.area == this))
+        regenerate();
+    }
+
+// is this a military base generated before the fenced base existed (a save from the 2D era)? its
+// grid has no fence ring
+  public function isOldBase(): Bool
+    {
+      return typeID == AREA_MILITARY_BASE &&
+        isGenerated &&
+        baseFence() == null;
+    }
+
+// a military base's fence ring, or null in any other area
+  function baseFence(): gen.military.MilitaryGen._Rect
+    {
+      if (typeID != AREA_MILITARY_BASE)
+        return null;
+      if (_baseFence == null)
+        _baseFence = gen.military.MilitaryGen.fenceOf(_cells, width, height);
+      return _baseFence;
+    }
+
+// is this cell outside a military base's fence? the ring itself counts, which is where its gate and
+// its breaches are. false in any other area
+  public function isOutsideBase(x: Int, y: Int): Bool
+    {
+      var f = baseFence();
+      return f != null &&
+        (x <= f.x1 ||
+         x >= f.x2 ||
+         y <= f.y1 ||
+         y >= f.y2);
+    }
+
+// may the player leave a military base from this cell: outside the fence, with nobody alerted
+  public function canLeaveBase(x: Int, y: Int): Bool
+    {
+      if (!isOutsideBase(x, y))
+        return false;
+      for (ai in _ai)
+        if (ai.state == AI_STATE_ALERT)
+          return false;
+      return true;
+    }
+
+// does any unfriendly, alerted AI see this cell? the gate on slipping out of sight (objects.Dumpster).
+// alerted is ALERT or either SEARCH state; the player's own cultists, agreeable AI and dogs (no
+// witness to anything) are no threat
+  public function hostileSees(x: Int, y: Int): Bool
+    {
+      for (ai in _ai)
+        if ((ai.state == AI_STATE_ALERT ||
+            ai.state == AI_STATE_SEARCH_LAST_SEEN ||
+            ai.state == AI_STATE_SEARCH_AREA) &&
+            ai.type != 'dog' &&
+            !ai.isPlayerCultist() &&
+            !ai.isAgreeable() &&
+            ai.seesPosition(x, y))
+          return true;
+      return false;
+    }
+
+// a random empty cell in a military base's wild margin, off the fence ring: where the player arrives
+// on foot, with no sewers to come up through
+  function findOutsideLocation(): _Point
+    {
+      var f = baseFence();
+      for (i in 0...200)
+        {
+          var p = findEmptyLocation();
+          if (gen.military.MilitaryGen.outside(f, p.x, p.y))
+            return p;
+        }
+      return findEmptyLocation();
+    }
+
+// save migration: corp stairs took ONE walkable cell against the end wall before the 3D model,
+// which stands over four sealed ones with the object one cell off the wall. seal the four
+// (gen.corp.CorpTemp.stairsCells) and step the object back onto its cell. a stairs object with no
+// wall beside it is already there, so this runs once
+  function migrateCorpStairs()
+    {
+      if (info.id != AREA_CORP ||
+          !isGenerated)
+        return;
+      for (o in _objects)
+        {
+          if (o.type != 'stairs')
+            continue;
+          for (d in [ [ 0, -1 ], [ 0, 1 ], [ -1, 0 ], [ 1, 0 ] ])
+            {
+              var t = getCellType(o.x + d[0], o.y + d[1]);
+              if (t != Const.TILE_BUILDING &&
+                  !(t >= Const.TILE_CORP_WINDOW1 &&
+                  t <= Const.TILE_CORP_WINDOWV3))
+                continue;
+              for (c in gen.corp.CorpTemp.stairsCells(o.x, o.y, o.x + d[0], o.y + d[1]))
+                if (getCellType(c.x, c.y) == Const.TILE_FLOOR_CARPET)
+                  setCellType(c.x, c.y,
+                    Const.TILE_FLOOR_CARPET + gen.corp.CorpTemp.UNWALKABLE_TILE_OFFSET);
+              o.x -= d[0];
+              o.y -= d[1];
+              break;
+            }
+        }
     }
 
 // save migration: older saves shrank city areas below the CityGen grid (GRID=100), leaving
@@ -232,7 +371,9 @@ class AreaGame extends _SaveObject
       // find location to appear
       // at game start always appear on empty location
       var loc = null;
-      if (!info.isInhabited || game.turns == 0)
+      if (typeID == AREA_MILITARY_BASE)
+        loc = findOutsideLocation();
+      else if (!info.isInhabited || game.turns == 0)
         loc = findEmptyLocation();
       else
         {
@@ -318,7 +459,6 @@ class AreaGame extends _SaveObject
 
       // update AI and objects visibility to player
       updateVisibility();
-      game.scene.area.onEnter();
       game.scene.sounds.onEnterArea();
       // timeline goals hooks
       game.goals.onEnter();
@@ -361,8 +501,6 @@ class AreaGame extends _SaveObject
 
       // update AI and objects visibility to player
       updateVisibility();
-
-      game.scene.area.draw();
     }
 
 // a facility saved before game.FacilityAreaGenerator recorded every structure's rooms carries a
@@ -376,12 +514,62 @@ class AreaGame extends _SaveObject
       FacilityAreaGenerator.repairRooms(this);
     }
 
+// can a clue lie on this military base cell? a furniture top render.military.MilitaryClutter
+// dresses (a desk, a table, a cabinet, a footlocker, a bunk or cot, a bench seat), reachable from a
+// walkable cell of its own room, and only a stable share of those, so the rest keep their clutter
+  function isMilitaryClueSpot(x: Int, y: Int): Bool
+    {
+      var t = _cells[x][y];
+      if (t != Const.TILE_MIL_DESK &&
+          t != Const.TILE_MIL_BRIEF_TABLE &&
+          t != Const.TILE_MIL_MESS_TABLE &&
+          t != Const.TILE_MIL_FILE &&
+          t != Const.TILE_MIL_MED_CABINET &&
+          t != Const.TILE_MIL_FOOTLOCKER &&
+          t != Const.TILE_MIL_BUNK &&
+          t != Const.TILE_MIL_COT &&
+          t != Const.TILE_MIL_BENCH)
+        return false;
+      var h = ((x * 73856093) ^ (y * 19349663)) & 0x7fffffff;
+      if ((h >>> 3) % 100 >= MIL_CLUE_SPOT_PCT ||
+          generatorInfo == null)
+        return false;
+      // picked up from any of the eight cells round it (PlayerArea), but never through a wall
+      for (r in generatorInfo.rooms)
+        {
+          if (x < r.x1 ||
+              x > r.x2 ||
+              y < r.y1 ||
+              y > r.y2)
+            continue;
+          for (i in 0...Const.dirx.length)
+            {
+              var nx = x + Const.dirx[i];
+              var ny = y + Const.diry[i];
+              if (nx >= r.x1 &&
+                  nx <= r.x2 &&
+                  ny >= r.y1 &&
+                  ny <= r.y2 &&
+                  isWalkable(nx, ny))
+                return true;
+            }
+          return false;
+        }
+      return false;
+    }
+
 // init spawn points list after generation or loading
 // necessary for more optimal clue/guard spawns in facilities
 // NOTE: used in scenario spaceship generation part
   public function initSpawnPoints()
     {
-      if (info.id != AREA_FACILITY)
+      if (info.id == AREA_CORP)
+        {
+          corpSpawnPoints();
+          return;
+        }
+      if (info.id != AREA_FACILITY &&
+          info.id != AREA_MILITARY_BASE)
         return;
       clueSpawnPoints = [];
       guardSpawnPoints = [];
@@ -389,9 +577,16 @@ class AreaGame extends _SaveObject
       for (y in 0...height)
         for (x in 0...width)
           {
+            // a base's furniture tops, with no object check: the list has to come out the same on
+            // every entry, since render.military.MilitaryClutter keeps its clutter off these spots
+            if (info.id == AREA_MILITARY_BASE)
+              {
+                if (isMilitaryClueSpot(x, y))
+                  clueSpawnPoints.push({ x: x, y: y });
+                continue;
+              }
             // tables only
-            if (_cells[x][y] < Const.TILE_LABS_TABLE_3X3_7 || 
-                _cells[x][y] > Const.TILE_LABS_TABLE2_1X1)
+            if (!Const.isTableTile(_cells[x][y]))
               continue;
             // check if there's an object there
             if (hasObjectAt(x, y))
@@ -453,8 +648,155 @@ class AreaGame extends _SaveObject
                 }
             }
         }
+      // and the parking entry's own post, which no door can ever give: the compound's gate is a
+      // hole in the pavement with a boom barrier across it and a guard booth beside it, and a
+      // checkpoint with nobody standing on it is not a checkpoint
+      _boothX = -1;
+      _boothY = -1;
+      var gate = gate();
+      if (gate != null)
+        {
+          importantGuardSpawnPoints.push({
+            x: gate.postX,
+            y: gate.postY,
+          });
+          // and the booth's own bay stops being walkable. it is a solid box a metre and a half across
+          // and the player was walking through it — but nothing is stamped on the tiles for it (that
+          // is what makes the whole checkpoint retroactive), so the block has to be derived here too
+          // and re-derived on every load. recalcTile because gate() reached isWalkable on the way in
+          // and the cache may already hold this cell
+          _boothX = gate.boothX;
+          _boothY = gate.boothY;
+          recalcTile(_boothX, _boothY);
+          // and a base's SECOND rifleman, inside the pedestrian gap past the boom's far end
+          // (gen.military.MilitaryGen.gate)
+          if (info.id == AREA_MILITARY_BASE)
+            importantGuardSpawnPoints.push({
+              x: gate.postX + gen.blocks.RoadBlock.ENTRY_W,
+              y: gate.postY,
+            });
+        }
 //      trace(importantGuardSpawnPoints);
 //      trace(guardSpawnPoints);
+    }
+
+// a corp tower floor's one guard post: in front of the security room's console, off the finished
+// grid (gen.corp.CorpRooms.securityPost), so a tower saved before the room had a console still
+// gets a guard at its desk run
+  function corpSpawnPoints()
+    {
+      clueSpawnPoints = [];
+      guardSpawnPoints = [];
+      importantGuardSpawnPoints = [];
+      if (generatorInfo == null)
+        return;
+      for (r in generatorInfo.rooms)
+        {
+          if (r.role != gen.corp.CorpTemp.ROLE_SECURITY)
+            continue;
+          var post = gen.corp.CorpRooms.securityPost(_cells, r);
+          if (post != null &&
+              post.y <= r.y2)
+            importantGuardSpawnPoints.push(post);
+        }
+    }
+
+// the parking entry's two cells: the guard post at the mouth of the drive the cars come in by, and
+// the bay beside it that the booth stands on and blocks.
+//
+// read off the TILE GRID and not off an object, exactly as render.facility.FacilityEntry reads the
+// gate furniture this guard stands among — so a compound saved long before any of it existed gets
+// its checkpoint the next time it is entered. game.FacilityAreaGenerator punches the entry as a
+// plain 4x2 hole of alley through the sidewalk band beside the road, so an alley cell within that
+// band's width of the road is one of the hole's eight and nothing else in the lot is: the band
+// always lies between the lot and the road
+  function gate(): { boothX: Int, boothY: Int, postX: Int, postY: Int }
+    {
+      var x0 = width, x1 = -1, y0 = height, y1 = -1, dir = 0;
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            if (!isMouth(x, y))
+              continue;
+            var d = roadSide(x, y);
+            if (d == 0)
+              continue;
+            dir = d;
+            if (x < x0)
+              x0 = x;
+            if (x > x1)
+              x1 = x;
+            if (y < y0)
+              y0 = y;
+            if (y > y1)
+              y1 = y;
+          }
+      if (dir == 0)
+        return null;
+      // one row further from the road than the hole reaches: the first lot cell past the mouth. the
+      // booth takes the bay in the column before this one, so the guard ends up between it and the
+      // barrier, which is where a gate guard stands
+      var y = (dir < 0 ? y1 + 1 : y0 - 1);
+      // BOTH flanking bays have to be bays, which is the same guard render.facility.FacilityEntry
+      // .find makes before it builds anything — and here it is load-bearing rather than tidy: the
+      // renderer draws no booth at all if either fails, so blocking on a weaker test walks the player
+      // into an obstacle that is not on screen
+      if (!isLot(x0 - 1, y) ||
+          !isLot(x1 + 1, y) ||
+          !isWalkable(x0, y))
+        return null;
+      return {
+        boothX: x0 - 1,
+        boothY: y,
+        postX: x0,
+        postY: y,
+      };
+    }
+
+// is this cell part of the gate MOUTH — the hole through the pavement band? two ids, because the row
+// of it the boom lies across is Const.TILE_ALLEY_UNWALKABLE (gen.facility.FacilityTemp.TEMP_BARRIER)
+// and the bounding box below has to span the whole hole or the checkpoint reads a row short
+  inline function isMouth(x: Int, y: Int): Bool
+    {
+      return _cells[x][y] == Const.TILE_ALLEY ||
+        _cells[x][y] == Const.TILE_ALLEY_UNWALKABLE;
+    }
+
+// is this cell open lot? false off the grid. Const.TILE_ALLEY is the yard and the gaps between
+// plots, Const.TILE_PARKING is the car park, and the two Const.TILE_PARKING_CAR ids are a parked
+// car's footprint — render.facility.FacilityModel reads all four back as Surf.LOT. The two rows
+// inside the gate's mouth are car park, so a test on the alley alone drew no booth at all; and the
+// far flank's bay is the one gen.facility.FacilityBays parks in first, so a test without the car
+// ids drew the booth and left its cell walkable
+  inline function isLot(x: Int, y: Int): Bool
+    {
+      if (x < 0 ||
+          y < 0 ||
+          x >= width ||
+          y >= height)
+        return false;
+      var t = _cells[x][y];
+      return t == Const.TILE_ALLEY ||
+        t == Const.TILE_PARKING ||
+        t == Const.TILE_PARKING_CAR ||
+        t == Const.TILE_PARKING_CAR_ORIGIN;
+    }
+
+// which way the main road lies from this cell, or 0 if it is further off than the sidewalk band is
+// wide (game.FacilityAreaGenerator lays that band 2 cells deep, and render.facility.FacilityPaint
+// .isEntry measures against the same number)
+  function roadSide(x: Int, y: Int): Int
+    {
+      for (i in 1...3)
+        {
+          if (y - i >= 0 &&
+              _cells[x][y - i] == Const.TILE_ROAD)
+            return -1;
+          if (y + i < height &&
+              _cells[x][y + i] == Const.TILE_ROAD)
+            return 1;
+        }
+      return 0;
     }
 
 // leave this area: hide gui, despawn, etc
@@ -510,9 +852,6 @@ class AreaGame extends _SaveObject
       // remove events
       game.managerArea.onLeaveArea();
 
-      // hide gui
-      game.scene.area.hide();
-
       // notify cult about leaving area
       game.cults[0].onLeaveArea();
     }
@@ -555,6 +894,32 @@ class AreaGame extends _SaveObject
           }
     }
 
+// DEBUG ONLY (console: area regen). throw this area's map and everything standing on it away so
+// the next enter() builds it again. the player must already be out of the area - leave() has run -
+// because every object here is removed outright. the player's host goes with them and that is
+// correct - enter() re-creates its entity and adds it back at the new spawn point
+  public function regenerate()
+    {
+      for (ai in [ for (ai in _ai) ai ])
+        removeAI(ai);
+      for (o in [ for (o in _objects) o ])
+        removeObject(o);
+      _cells = [];
+      tiles = [];
+      clueSpawnPoints = [];
+      guardSpawnPoints = [];
+      importantGuardSpawnPoints = [];
+      _decalCells = [];
+      generatorInfo = null;
+      genTree = null;
+      genSeed = -1;
+      _baseFence = null;
+      _pathEngine = null;
+      _boothX = -1;
+      _boothY = -1;
+      isGenerated = false;
+    }
+
 // generate a new area map
   public function generate()
     {
@@ -562,9 +927,28 @@ class AreaGame extends _SaveObject
         return;
 //      game.debug('Area.generate()');
 
+      // a military base created before the fenced base existed carries the old 40-50 cell grid, which
+      // cannot hold one (gen.blocks.MilitaryBlocks): roll it to the base's own size the first time it
+      // is generated, as setType would have
+      if (typeID == AREA_MILITARY_BASE &&
+          (width < info.width - 10 ||
+           height < info.height - 10))
+        {
+          width = info.width - 10 + 10 * Std.random(2);
+          height = info.height - 10 + 10 * Std.random(2);
+        }
+      // and an underground lab created before gen.lab took it carries the 2D generator's 45x35, which
+      // the grown plate does not fit: it is generated at its exact size, as setType now creates one
+      if (typeID == AREA_UNDERGROUND_LAB)
+        {
+          width = info.width;
+          height = info.height;
+        }
+
       // clear map
       _cells = [];
       tiles = [];
+      _baseFence = null;
       var baseTile = Const.TILE_WALKWAY;
       if (typeID == AREA_GROUND)
         baseTile = Const.TILE_GRASS;
@@ -579,10 +963,6 @@ class AreaGame extends _SaveObject
       game.areaGenerator.generate(this, info);
       var msec = (haxe.Timer.stamp() - t) * 1000.0;
       trace('Area generated in ' + Std.int(msec) + ' ms');
-      if (game != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(this);
 
       // set path info
       _pathEngine = new aPath.Engine(this, width, height);
@@ -702,10 +1082,6 @@ class AreaGame extends _SaveObject
       if (tiles != null &&
           tiles.length > 0)
         recalcTile(o.x, o.y);
-      if (game != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(this);
       refreshObjectProps(o);
     }
 
@@ -718,7 +1094,7 @@ class AreaGame extends _SaveObject
       if (game != null &&
           game.scene != null &&
           game.area == this &&
-          render.world.ObjModels.modelFor(o.getModelKey()) != null)
+          render.world.ObjModels.propFor(o.getModelKey()) != null)
         game.scene.updateObjects3D();
     }
 
@@ -759,10 +1135,6 @@ class AreaGame extends _SaveObject
       if (tiles != null &&
           tiles.length > 0)
         recalcTile(o.x, o.y);
-      if (game != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(this);
       refreshObjectProps(o);
     }
 
@@ -1071,15 +1443,14 @@ class AreaGame extends _SaveObject
     {
       typeID = t;
       _tileset = null;
-      if (game != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(this);
       info = WorldConst.getAreaInfo(typeID);
       // habitat and city areas use exact info dims. city especially: the 3D street renderer
       // rebuilds the full CityGen grid (GRID=100) from the seed, so shrinking the walkable
       // grid would leave visible-but-unreachable streets past the cut edge
+      // and the underground lab, whose generator (gen.lab) plans a grown floor plate against its
+      // exact size: two corridors' worth of rolled shrinkage would leave no room for the rooms
       if (typeID == AREA_HABITAT ||
+          typeID == AREA_UNDERGROUND_LAB ||
           isCity())
         {
           width = info.width;
@@ -1214,10 +1585,6 @@ class AreaGame extends _SaveObject
   public function loadHook(serialized: Dynamic, formatVersion: Int)
     {
       AreaGameSaver.load(this, serialized, formatVersion);
-      if (game != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(this);
     }
 
 
@@ -1313,6 +1680,13 @@ class AreaGame extends _SaveObject
         tileset.canSeeThrough(tileID));
       tile.isWalkable = (tileset != null &&
         tileset.isWalkable(tileID));
+      // the parking entry's guard booth stands here. it is a solid box drawn straight into the scene
+      // with no tile and no object behind it (see gate()), so nothing above this line can know. it
+      // still SEES through: the box is glazed on all four sides, and render.world.VisionMask blocks
+      // on walls alone, so making it opaque here would put a shadow on the lot that is not on screen
+      if (x == _boothX &&
+          y == _boothY)
+        tile.isWalkable = false;
       if (!tile.canSeeThrough &&
           !tile.isWalkable)
         return;
@@ -1333,17 +1707,6 @@ class AreaGame extends _SaveObject
               !tile.isWalkable)
             return;
         }
-
-      // check blocking decorations on this tile
-      if (tile.isWalkable &&
-          tile.decoration != null)
-        for (decoration in tile.decoration)
-          if (tileset != null &&
-              tileset.isBlockingDecoration(tileID, decoration))
-            {
-              tile.isWalkable = false;
-              break;
-            }
     }
 
 // recalculate cached tile stats for all tiles
@@ -1395,23 +1758,29 @@ class AreaGame extends _SaveObject
               !o.isWalkable())
             tile.isWalkable = false;
         }
+    }
 
-      // check blocking decorations
-      for (y in 0...height)
-        for (x in 0...width)
-          {
-            var tile = tiles[x][y];
-            if (!tile.isWalkable ||
-                tile.decoration == null)
-              continue;
-            for (decoration in tile.decoration)
-              if (tileset != null &&
-                  tileset.isBlockingDecoration(_cells[x][y], decoration))
-                {
-                  tile.isWalkable = false;
-                  break;
-                }
-          }
+// persist one blood splat on a floor cell: what a splat leaves when the 3D view cannot play the
+// burst (Particle.createSplat). render.particles.BloodDrop3D writes the same decoration on landing
+  public function addSplat(type: String, x: Int, y: Int)
+    {
+      if (!isWalkable(x, y) ||
+          hasObjectAt(x, y))
+        return;
+      var ic = Const.bloodIcon(type);
+      var half = Std.int(Const.TILE_SIZE / 2);
+      addTileDecoration(x, y, {
+        layerID: getTileset().splatLayerID,
+        icon: {
+          row: ic.row,
+          col: ic.col + Std.random(Const.SPLAT_VARIANTS),
+        },
+        dx: Std.random(half * 2 + 1) - half,
+        dy: Std.random(half * 2 + 1) - half,
+        scale: Const.round2(0.1 + 0.9 * Math.random()),
+        angle: Const.round2(2 * Math.PI * Math.random()),
+        tag: 'SPLAT',
+      });
     }
 
 // add one decoration descriptor to a tile
@@ -1467,10 +1836,6 @@ class AreaGame extends _SaveObject
               removeOneDecorAt(old.x, old.y, old.tag);
             }
         }
-      if (game != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(this);
     }
 
 // current tracked dynamic ground-decal count (blood splats + money; debug/instrumentation; session-added only)
@@ -1879,9 +2244,6 @@ class AreaGame extends _SaveObject
       for (o in _objects)
         o.turn();
 
-      // call turn for area view
-      game.scene.area.turn();
-
       turnSpawnCommonAI(); // spawn AI
       turnSpawnMoreAI(); // spawn AI related to area alertness
       turnSpawnNPC(); // spawn NPC AI
@@ -1999,72 +2361,36 @@ class AreaGame extends _SaveObject
             removeObject(o);
           }
 
-      // labs
-      if (info.id == AREA_FACILITY)
+      // labs and military bases: now and then one more, on the spots initSpawnPoints kept for them,
+      // and seldom a second in a room, or a barracks full of bunks drew most of them
+      if (info.id == AREA_FACILITY ||
+          info.id == AREA_MILITARY_BASE)
         {
-          var maxSpawn = 4 - cnt;
-          if (maxSpawn <= 0)
+          if (cnt >= CLUE_MAX ||
+              Std.random(100) >= CLUE_SPAWN_PCT)
             return;
+          var full = (Std.random(100) < CLUE_ROOM_SECOND_PCT ? 2 : 1);
 
-          // get all close clue spawn points
-          var spawns = [];
-          for (pt in clueSpawnPoints)
+          // somebody dropped an important paper: one on a room floor at most
+          var loc = null;
+          if (Std.random(100) < CLUE_FLOOR_PCT &&
+              !hasFloorClue())
+            loc = findFloorClueLocation(full);
+
+          // else a free, unseen spot in a room short of clues
+          if (loc == null)
             {
-              // must be on screen
-              if (!inVisibleRect(pt.x, pt.y))
-                continue;
-
-              // must not be visible to player as a parasite
-              if (game.player.state != PLR_STATE_HOST &&
-                  Const.distanceSquared(game.playerArea.x, game.playerArea.y, pt.x, pt.y) < 6 * 6)
-                continue;
-
-              // must not be visible to player when possessing a host
-              if (game.player.state == PLR_STATE_HOST &&
-                  isVisible(game.playerArea.x, game.playerArea.y, pt.x, pt.y))
-                continue;
-
-              // already an object there
-              if (hasObjectAt(pt.x, pt.y))
-                continue;
-
-              spawns.push(pt);
-            }
-          if (spawns.length == 0)
-            {
-//              trace('cannot spawn clue, no spots');
-              return;
-            }
-
-          // spawn items
-          for (_ in 0...maxSpawn)
-            {
+              var spawns = [];
+              for (pt in clueSpawnPoints)
+                if (isClueSpotUnseen(pt.x, pt.y) &&
+                    !hasObjectAt(pt.x, pt.y) &&
+                    roomClues(pt.x, pt.y) < full)
+                  spawns.push(pt);
               if (spawns.length == 0)
                 return;
-              var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
-
-              // find empty clue location
-              var loc = spawns[Std.random(spawns.length)];
-              spawns.remove(loc);
-
-              // spawn object
-              var tiles = null;
-              if (info.id == 'paper')
-                tiles = Const.CHEM_LABS_DOCUMENTS[Std.random(Const.CHEM_LABS_DOCUMENTS.length)];
-              else if (info.id == 'book')
-                tiles = Const.CHEM_LABS_BOOKS[Std.random(Const.CHEM_LABS_BOOKS.length)];
-              var o = new Document(game, this.id, loc.x, loc.y,
-                tiles.row, Std.random(tiles.amount));
-              o.name = info.names[Std.random(info.names.length)];
-              o.item = {
-                game: game,
-                id: info.id,
-                name: o.name,
-                info: info,
-                event: e
-              };
-              addObject(o);
+              loc = spawns[Std.random(spawns.length)];
             }
+          spawnDocument(e, loc.x, loc.y);
         }
 
       // default - generic algorithm for streets
@@ -2081,11 +2407,11 @@ class AreaGame extends _SaveObject
               case AREA_CITY_LOW:
                 maxClues = 1;
               default:
-                // military bases
                 maxClues = 5;
             }
           var maxSpawn = maxClues - cnt;
           var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
+          var list = (info.id == 'paper' ? Const.STREET_DOCUMENTS : Const.STREET_BOOKS);
           for (_ in 0...maxSpawn)
             {
               var loc = findUnseenEmptyLocation();
@@ -2096,8 +2422,10 @@ class AreaGame extends _SaveObject
                   return;
                 }
 
-              var o: AreaObject = Type.createInstance(info.areaObjectClass,
-                [ game, this.id, loc.x, loc.y ]);
+              // a street paper or book off the street clue sheet, where it used to be the one
+              // generic Paper/Book frame
+              var tiles = list[Std.random(list.length)];
+              var o = new Document(game, this.id, loc.x, loc.y, tiles.row, Std.random(tiles.amount));
               o.name = info.names[Std.random(info.names.length)];
               o.item = {
                 game: game,
@@ -2109,6 +2437,92 @@ class AreaGame extends _SaveObject
               addObject(o);
             }
         }
+    }
+
+// is this clue spot on screen and out of the player's sight?
+  function isClueSpotUnseen(x: Int, y: Int): Bool
+    {
+      // must be on screen
+      if (!inVisibleRect(x, y))
+        return false;
+
+      // must not be visible to player as a parasite
+      if (game.player.state != PLR_STATE_HOST &&
+          Const.distanceSquared(game.playerArea.x, game.playerArea.y, x, y) < 6 * 6)
+        return false;
+
+      // must not be visible to player when possessing a host
+      if (game.player.state == PLR_STATE_HOST &&
+          isVisible(game.playerArea.x, game.playerArea.y, x, y))
+        return false;
+      return true;
+    }
+
+// lay one clue document for this event: a report 80% of the time, else a book, off the labs' or
+// the military base's own art
+  function spawnDocument(e: scenario.Event, x: Int, y: Int)
+    {
+      var info = ItemsConst.getInfo(Std.random(100) < 80 ? 'paper' : 'book');
+      var mil = (this.info.id == AREA_MILITARY_BASE);
+      var list = (info.id == 'paper' ?
+        (mil ? Const.MIL_DOCUMENTS : Const.CHEM_LABS_DOCUMENTS) :
+        (mil ? Const.MIL_BOOKS : Const.CHEM_LABS_BOOKS));
+      var tiles = list[Std.random(list.length)];
+      var o = new Document(game, this.id, x, y, tiles.row, Std.random(tiles.amount));
+      o.name = info.names[Std.random(info.names.length)];
+      o.item = {
+        game: game,
+        id: info.id,
+        name: o.name,
+        info: info,
+        event: e
+      };
+      addObject(o);
+    }
+
+// is a clue already lying on a walkable cell, i.e. dropped on a floor rather than left on furniture?
+  function hasFloorClue(): Bool
+    {
+      for (o in _objects)
+        if (o.item != null &&
+            o.item.info.type == 'readable' &&
+            isWalkable(o.x, o.y))
+          return true;
+      return false;
+    }
+
+// how many clues lie in the room holding this cell
+  function roomClues(x: Int, y: Int): Int
+    {
+      var r = generatorInfo.getRoomAt(x, y);
+      var n = 0;
+      for (o in _objects)
+        if (o.item != null &&
+            o.item.info.type == 'readable' &&
+            generatorInfo.getRoomAt(o.x, o.y) == r)
+          n++;
+      return n;
+    }
+
+// a free, unseen floor cell for a dropped clue inside a room holding fewer than `full`, or null
+  function findFloorClueLocation(full: Int): { x: Int, y: Int }
+    {
+      if (generatorInfo == null ||
+          generatorInfo.rooms.length == 0)
+        return null;
+      // ponytail: random probes, a full scan of every room if this misses too often
+      for (_ in 0...20)
+        {
+          var r = generatorInfo.rooms[Std.random(generatorInfo.rooms.length)];
+          var x = r.x1 + Std.random(r.x2 - r.x1 + 1);
+          var y = r.y1 + Std.random(r.y2 - r.y1 + 1);
+          if (isWalkable(x, y) &&
+              !hasObjectAt(x, y) &&
+              isClueSpotUnseen(x, y) &&
+              roomClues(x, y) < full)
+            return { x: x, y: y };
+        }
+      return null;
     }
 
 // decrease area alertness
@@ -2132,15 +2546,25 @@ class AreaGame extends _SaveObject
 // guards stand on their post and do not despawn when unseen
   function spawnGuards()
     {
+      // a base's posts are manned by soldiers, and the gate's by riflemen
+      var base = (info.id == AREA_MILITARY_BASE);
+      var type = (base ? 'soldier' : 'security');
       // large chance on important points
       for (pt in importantGuardSpawnPoints)
         {
-          if (Std.random(100) > 75)
+          // and a base's gate is never left unmanned: its booth post always gets its rifleman
+          if (Std.random(100) > 75 &&
+              !(base &&
+                pt.x == _boothX + 1 &&
+                pt.y == _boothY))
             continue;
-          var ai = spawnAI('security', pt.x, pt.y);
+          var ai = spawnAI(type, pt.x, pt.y);
           ai.isGuard = true;
           ai.guardTargetX = pt.x;
           ai.guardTargetY = pt.y;
+          if (base &&
+              !ai.inventory.has('assaultRifle'))
+            ai.inventory.addID('assaultRifle');
         }
 
       // small chance on normal points
@@ -2148,7 +2572,7 @@ class AreaGame extends _SaveObject
         {
           if (Std.random(100) > 10)
             continue;
-          var ai = spawnAI('security', pt.x, pt.y);
+          var ai = spawnAI(type, pt.x, pt.y);
           ai.isGuard = true;
           ai.guardTargetX = pt.x;
           ai.guardTargetY = pt.y;
@@ -2298,11 +2722,6 @@ class Test {
 
       // calc max possible number of AI
       var maxAI = getMaxAI();
-/*
-      trace('info:' + info.commonAI +
-        ' empty:' + game.scene.area.emptyScreenCells +
-        ' res:' + maxAI + ' cnt:' + cnt);
-*/
 
       // there are enough AI already
       if (cnt > maxAI)
@@ -2419,7 +2838,7 @@ class Test {
   public static var aiTypes = [
     'agent', 'blackops', 'bum (hobo)', 'civilian (civ)',
     'choir of discord (choir)', 'dog', 'firmus', 'mordax',
-    'police (cop)', 'prostitute (pro)', 'soldier',
+    'officer', 'police (cop)', 'prostitute (pro)', 'soldier',
     'security (sec)', 'scientist (sci)', 'team',
     'thug',
   ];
@@ -2485,6 +2904,12 @@ class Test {
           // unlike the wilderness above, this one is LIVE the day it lands: a facility declares
           // commonAI 5, so the turn spawner runs here and reads the rect every turn
           case 'facility': render.RenderConfig.CAMERA_FACILITY;
+          // a base is drawn by the facility renderer under the facility's camera
+          case 'militaryBase': render.RenderConfig.CAMERA_FACILITY;
+          // and so are the corp floor (render.corp.CorpArea) and the underground lab
+          // (render.lab.LabArea). missing here, the corp took the 2D canvas rect: commonAI 10,
+          // diluted by the screen's pixel count
+          case 'corp', 'undergroundLab': render.RenderConfig.CAMERA_FACILITY;
           default: null;
         };
       if (cam == null)
@@ -2510,7 +2935,34 @@ class Test {
         rect.x2 = width;
       if (rect.y2 > height)
         rect.y2 = height;
-      return rect;
+      return insideBase(rect);
+    }
+
+// a military base's soldiers spawn INSIDE the fence, so the spawn rect is clipped to it: the margin
+// is where the player comes and goes unseen. with the player out of sight of the fence the clip is
+// empty and the whole of the inside is used instead, which is still out of their view. any other
+// area's rect is handed back as it is
+  function insideBase(rect: { x1: Int, y1: Int, x2: Int, y2: Int }): { x1: Int, y1: Int, x2: Int, y2: Int }
+    {
+      var f = baseFence();
+      if (f == null)
+        return rect;
+      // the inside, in the rect's own convention: x2/y2 exclusive
+      var r = {
+        x1: Std.int(Math.max(rect.x1, f.x1 + 1)),
+        y1: Std.int(Math.max(rect.y1, f.y1 + 1)),
+        x2: Std.int(Math.min(rect.x2, f.x2)),
+        y2: Std.int(Math.min(rect.y2, f.y2)),
+      };
+      if (r.x1 >= r.x2 ||
+          r.y1 >= r.y2)
+        return {
+          x1: f.x1 + 1,
+          y1: f.y1 + 1,
+          x2: f.x2,
+          y2: f.y2,
+        };
+      return r;
     }
 
 // recount the walkable cells in the spawn region (the AI budget input). called on every
@@ -2554,8 +3006,9 @@ class Test {
                 ai.onNotice();
               }
           }
-      // change tiles according to los
-      game.scene.area.updateVisibility();
+      // redraw: on area change GameScene.draw builds the 3D view, otherwise it releases the
+      // windows held for the 3D reveal
+      game.scene.draw();
     }
 
 // get random direction to a near empty space

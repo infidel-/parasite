@@ -3,7 +3,6 @@
 package objects;
 
 import game.Game;
-import lighting.AtmosphereLightProfiles;
 
 class AssimilationCavity extends HabitatObject
 {
@@ -71,17 +70,5 @@ class AssimilationCavity extends HabitatObject
       game.player.host.addTrait(TRAIT_ASSIMILATED);
 
       return true;
-    }
-
-// get static atmosphere light emitted by this object
-  public override function getAtmosphereLight(): _AtmosphereLightMeta
-    {
-      return AtmosphereLightProfiles.HABITAT_ASSIMILATION_CAVITY;
-    }
-
-// get atmosphere light stamp kind used by this object
-  public override function getAtmosphereLightKind(): String
-    {
-      return 'habitat-assimilation-cavity';
     }
 }

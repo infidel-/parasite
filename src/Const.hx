@@ -11,16 +11,6 @@ class Const
   public static var isDebug: Bool = false;
 
   public static var FONTS = [ 16, 24, 32, 40 ];
-  public static var LAYER_MOUSE = 10; // mouse cursor layer - highest
-  public static var LAYER_UI = 9; // ui windows layer
-  public static var LAYER_HUD = 8; // ui layer
-  public static var LAYER_TILEMAP = 7; // tilemap view layer
-  public static var LAYER_DOT = 5; // path doths layer
-  public static var LAYER_EFFECT = 4; // visual effects layer
-  public static var LAYER_PLAYER = 3; // player, enemies, etc layer
-  public static var LAYER_AI = 2; // player, enemies, etc layer
-  public static var LAYER_OBJECT = 1; // area - bodies, items, region - icons and objects
-  public static var LAYER_TILES = 0; // tilemap layer
 
   public static var TILE_SIZE_CLEAN = 64; // file tile size
   public static var TILE_SIZE = TILE_SIZE_CLEAN; // screen tile size
@@ -124,18 +114,737 @@ class Const
     { row: 13, amount: 7 },
   ];
 
-  // row 9-11 - chem laboratory decoration table
+  // rows 9-11, 14 and 48-49 - chem laboratory decoration table.
+  //
+  // 43 frames became 64 with the pack16 sheets (FACILITY_DECO_HD below): row 14's five free columns
+  // were filled, and rows 48-49 are NEW — entities64 grew from 48 rows to 50, which reaches nothing
+  // else because no other family addresses down there. The 64 px icons for the 21 invented frames
+  // are baked out of the pack art by tools/atlaspaste.py, so the 2D area view draws them too
   public static var CHEM_LABS_DECO_TABLE: Array<_TileRow> = [
     { row: 9, amount: 12 },
     { row: 10, amount: 12 },
     { row: 11, amount: 12 },
-    { row: 14, amount: 7 },
+    { row: 14, amount: 12 },
+    { row: 48, amount: 12 },
+    { row: 49, amount: 4 },
   ];
 
   // row 12 - chem laboratory decoration floor (low)
   public static var CHEM_LABS_DECO_FLOOR_LOW = [
     { row: 12, amount: 11 },
   ];
+
+  // the floor decorations the 3D view draws as a REAL 3D OBJECT instead of an upright atlas quad
+  // (render.facility.FacilityDeco). the generator asks gen.Deco for a decoration matching a MOUNT and
+  // a BLOCK, and takes one of the matching entry's frames; the renderer reads the kind back out of
+  // the frame with fittingOf below, which is what lets every save made before this table existed
+  // light up as geometry with nothing migrated — the frames were already there.
+  //
+  // the place tags (`mount`, `blocks`) are the table's only selection rule — see _DecoPlace.hx.
+  //
+  // MOST are merged geometry and two are not: a drum and a bin are round, and FacilityGeom emits
+  // axis-aligned quads only, so those two are instanced glbs the compound already ships. Being in
+  // this table is what turns their sprite off and what stamps their cell, which is the same job for
+  // both routes.
+  //
+  // the 2D area view is not affected at all: a fitting is still an objects.Decoration drawing the
+  // same entities64 cell it always drew
+  public static var FACILITY_DECO: Array<_DecoPlace> = [
+    // the open metal shelving with boxes on it, the one kind emitted as a composite rather than a box
+    {
+      id: 'shelving',
+      kind: FIT_SHELVING,
+      mount: [ 'floor-high' ],
+      // laboratory AND office. It was the lab's alone on the argument that a rack of unboxed kit is
+      // not a researcher's furniture, and it came back reported as having stopped spawning: measured
+      // end to end it was 0.70 (a slot is filled) x 0.50 (that slot is HIGH) x 0.60
+      // (FACILITY_FITTING_PCT) x a uniform 1-in-5 over the entries a lab's floor-high list holds,
+      // which is 4.2% of eligible wall cells and nothing at all next door
+      // and the STORE, which is the one room in the compound this thing is literally named after:
+      // the racking is dealt by its zones and a shelving unit is what fills the bays left over
+      blocks: [ 'lab', 'cabinet', 'storage' ],
+      // and WEIGHTED, which is the other half of the same number: three entries against a plain
+      // one's one takes it to 3-in-7 of that roll. Storage is what a storage compound is made of
+      weight: 3,
+      frames: [
+        { row: 8, col: 9 },
+        { row: 8, col: 10 },
+      ],
+    },
+    {
+      id: 'bookcase',
+      kind: FIT_BOOKCASE,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab', 'cabinet' ],
+      frames: [
+        { row: 13, col: 0 },
+        { row: 13, col: 1 },
+        { row: 13, col: 2 },
+        // the wooden shelf of books and bottles: the same silhouette as the three above, so it
+        // rides the same geometry rather than earning a fourth kind
+        { row: 8, col: 11 },
+      ],
+    },
+    {
+      id: 'rack',
+      kind: FIT_RACK,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab', 'cabinet' ],
+      frames: [
+        { row: 13, col: 3 },
+        { row: 13, col: 4 },
+        { row: 13, col: 5 },
+        { row: 13, col: 6 },
+      ],
+    },
+    // the top of the HIGH list, four frames on ONE kind: a fridge, a glass-door freezer, a twin-door
+    // storage cabinet and a biohazard safety cabinet are the same tall two-door case seen from the
+    // front, and what separates them in the atlas is a decal at 64 px. One emitted unit and one
+    // authored front serves all four — see art/textures.json's facility/deco-cabinet-front
+    {
+      id: 'cabinet',
+      kind: FIT_CABINET,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab', 'cabinet' ],
+      frames: [
+        { row: 8, col: 0 },
+        { row: 8, col: 1 },
+        { row: 8, col: 2 },
+        { row: 8, col: 3 },
+      ],
+    },
+    // the rest of the HIGH list, five frames on one kind: a hopper/conveyor filler, an analyser
+    // console, a CNC enclosure, a gear press and a bench lathe are all one boxed machine casing at
+    // this size, and what a lathe actually is — a bed, a headstock and a tailstock — is the composite
+    // silhouette a mesh generator returns as mush (see docs/3d-render.md's sewer-pile row)
+    {
+      id: 'machine',
+      kind: FIT_MACHINE,
+      mount: [ 'floor-high' ],
+      // laboratory only: a bench lathe against the wall of a researcher's room is the lab's furniture
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 8, col: 4 },
+        { row: 8, col: 6 },
+        { row: 8, col: 7 },
+        { row: 8, col: 8 },
+      ],
+    },
+    // and the fifth of those frames on its OWN kind, because the hangar needed a machine that is
+    // not a cube. NO NEW ART AND NO RENUMBERED FRAME: row 8 col 5 is the analyser console the
+    // entry above already listed among its five, and it moves here rather than being copied — a
+    // frame is the persisted identity of a decoration and two kinds claiming one is a coin toss in
+    // render.facility.FacilityModel. See render.facility.FacilityDeco's FIT_ANALYSER row
+    {
+      id: 'analyser',
+      kind: FIT_ANALYSER,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 8, col: 5 },
+      ],
+    },
+    // and the two LOW frames that are the same casing knee-high: a radiation placard panel and a grey
+    // appliance cabinet. They cost no new art at all — the machine's front TILES, so one image serves
+    // both heights where an aspect-locked 0..1 front would have needed a second kind and a second sheet
+    {
+      id: 'machine-low',
+      kind: FIT_MACHINE_LOW,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 12, col: 0 },
+        { row: 12, col: 6 },
+      ],
+    },
+    // the LOW list's four stacked-server icons: the same cabinet as the rack above, one tile tall
+    // rather than two, so they cost NO new art and NO new draw call — same three surfaces
+    {
+      id: 'rack-low',
+      kind: FIT_RACK_LOW,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 12, col: 7 },
+        { row: 12, col: 8 },
+        { row: 12, col: 9 },
+        { row: 12, col: 10 },
+      ],
+    },
+    // and the LOW list's round things, which are glbs and not geometry. they are in this table for
+    // the same two reasons every kind above is: it is what turns the 2D sprite off (FacilityDeco
+    // .draws) and what stamps the cell in FacilityModel.deco, which is the gate keeping the lab kit
+    // out of an occupied tile
+    // one kind per BARREL, because each livery is its own glb and the atlas really does draw three
+    // different drums — a grey one with a hazard triangle, a yellow biohazard one and a red
+    // radioactive one. Collapsing them onto one prop was the first build and it threw the marking
+    // away, which is most of what those three icons ARE
+    {
+      id: 'drum-steel',
+      kind: FIT_DRUM_STEEL,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 12, col: 1 },
+      ],
+    },
+    {
+      id: 'drum-bio',
+      kind: FIT_DRUM_BIO,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 12, col: 2 },
+      ],
+    },
+    {
+      id: 'drum-rad',
+      kind: FIT_DRUM_RAD,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 12, col: 5 },
+      ],
+    },
+    {
+      id: 'bin',
+      kind: FIT_BIN,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lab' ],
+      frames: [
+        { row: 12, col: 3 },
+        { row: 12, col: 4 },
+      ],
+    },
+    // the washroom pair. `floor-high` because they are standing furniture and not a knee-high drum;
+    // their BLOCK is the washroom and nothing else, which is all it takes to keep them off a
+    // laboratory floor — gen.facility.FacilityToilet places them itself, by kind and in a run.
+    // their frames are free cells of the HIGH row: the facility has no 2D view at all any more, so a
+    // fitting frame is a KEY fittingOf reads back and nothing draws it
+    {
+      id: 'stall',
+      kind: FIT_STALL,
+      mount: [ 'floor-high' ],
+      blocks: [ 'toilet' ],
+      frames: [
+        { row: 13, col: 7 },
+      ],
+    },
+    {
+      id: 'basin',
+      kind: FIT_BASIN,
+      mount: [ 'floor-high' ],
+      blocks: [ 'toilet' ],
+      frames: [
+        { row: 13, col: 8 },
+      ],
+    },
+    // and the washroom's dividing wall, on the same terms
+    {
+      id: 'partition',
+      kind: FIT_PARTITION,
+      mount: [ 'floor-high' ],
+      blocks: [ 'toilet' ],
+      frames: [
+        { row: 13, col: 9 },
+      ],
+    },
+    // and the lounge's two, on exactly the same terms. THEIR BLOCK IS `lounge` AND NOT `cabinet`,
+    // which is the whole of what keeps them off the office's ordinary wall roll: a block name is
+    // what gen.Deco.pick matches, and the office DOES call FacilityRooms.addFitting with its own
+    // role — so listed under `cabinet` the sofa is dealt as a piece of random wall furniture.
+    // Measured live before the fix: one compound came out with three sofas and one table, two of
+    // them standing where a bookcase was asked for. The washroom's three never had the problem
+    // because nothing ever asks Deco for a `toilet` fitting. Keys, not pictures — see the note above
+    {
+      id: 'sofa',
+      kind: FIT_SOFA,
+      mount: [ 'floor-high' ],
+      blocks: [ 'lounge' ],
+      frames: [
+        { row: 13, col: 10 },
+      ],
+    },
+    {
+      id: 'table-low',
+      kind: FIT_TABLE_LOW,
+      mount: [ 'floor-low' ],
+      blocks: [ 'lounge' ],
+      frames: [
+        { row: 12, col: 11 },
+      ],
+    },
+    // and the STORE's three, on the washroom trio's exact terms: their block is 'storage' and
+    // nothing else, so no other room's roll can reach them, and gen.blocks.RoomBlock deals the rack
+    // and the pallets by KIND in a run. They are keys rather than pictures — a compound never takes
+    // the 2D branch, so a fitting frame is what Const.fittingOf reads a kind back out of a save with
+    // and nothing draws it.
+    //
+    // ROW 18, AND NOT THE FREE TAIL OF ROW 49, which is the trap this cost a build to find:
+    // render.facility.FacilityModel.findDeco asks Const.isTableDeco(row) FIRST and sends the whole
+    // row to the bench branch, and row 49 is in CHEM_LABS_DECO_TABLE (amount 4, so 49/4-11 look
+    // free and are not). A frame dealt there never reaches `fittingOf` at all: the three batches
+    // were built, placed by the generator, and drew 0 instances each. Row 18 is one of the two
+    // stale 2D-era document rows CHEM_LABS_DOCUMENTS stopped dealing when the clue pack repainted
+    // rows 17 and 19 — nothing in the tree references it, and it is not a table row
+    {
+      id: 'pallet-rack',
+      kind: FIT_PALLET_RACK,
+      mount: [ 'floor-high' ],
+      blocks: [ 'storage' ],
+      frames: [
+        { row: 18, col: 0 },
+      ],
+    },
+    {
+      id: 'pallet-stack',
+      kind: FIT_PALLET_STACK,
+      mount: [ 'floor-low' ],
+      blocks: [ 'storage' ],
+      frames: [
+        { row: 18, col: 1 },
+      ],
+    },
+    {
+      id: 'drum-pallet',
+      kind: FIT_DRUM_PALLET,
+      mount: [ 'floor-low' ],
+      blocks: [ 'storage' ],
+      frames: [
+        { row: 18, col: 2 },
+      ],
+    },
+    // and the hangar's power generator, on the store trio's terms: a KEY on the free tail of row 18
+    // that nothing draws. Its block is 'hangar', which is no room role, so no random roll anywhere
+    // can deal one and gen.GenCheck.decoBlocks has no claim to check — gen.blocks.HangarBlock carves
+    // them itself, by kind
+    {
+      id: 'generator',
+      kind: FIT_GENERATOR,
+      mount: [ 'floor-high' ],
+      blocks: [ 'hangar' ],
+      frames: [
+        { row: 18, col: 3 },
+      ],
+    },
+  ];
+
+  // how often a high floor decoration comes out as one of the fittings above rather than as one of
+  // the plain sprites. the nine fitting frames were already ~47% of CHEM_LABS_DECO_FLOOR_HIGH, so
+  // this leans the mix toward 3D without emptying the rooms of the fridges, fume cabinets and
+  // machines, which exist on floor cells and nowhere else
+  public static inline var FACILITY_FITTING_PCT = 60;
+
+// the cells along a reception counter `len` long that seat a receptionist, spread evenly: one per
+// RECEPTION_STATION_PITCH cells. gen.corp.CorpRooms deals the chairs off it and
+// render.corp.CorpReception the workstations, so the two cannot drift apart
+  public static function receptionStations(len: Int): Array<Int>
+    {
+      var n = 1 + Std.int((len - 1) / RECEPTION_STATION_PITCH);
+      return [for (i in 0...n) Std.int((i + 0.5) * len / n)];
+    }
+
+// which fitting an atlas frame draws as, or -1 for a decoration that keeps its sprite. an Int and
+// not a Null<_FittingKind> because every consumer stores it in an Int channel anyway — the render
+// grid holds kind + 1 with 0 for "nothing here"
+  public static function fittingOf(row: Int, col: Int): Int
+    {
+      var p = placeOf(row, col);
+      return (p == null ? -1 : p.kind);
+    }
+
+// the whole table entry a frame belongs to, or null. fittingOf above is this one field of it, and
+// gen.GenCheck.decoBlocks needs a SECOND one — `blocks`, i.e. where the entry was ever allowed to
+// stand — which is the only way to ask, of a decoration already on the grid, whether the room it is
+// standing in should have been offered it at all.
+//
+// unique by construction: gen.Deco.selfCheck asserts no frame appears on two entries, or this would
+// stop being a function and a saved decoration would resolve to whichever the table listed first
+  public static function placeOf(row: Int, col: Int): _DecoPlace
+    {
+      for (f in FACILITY_DECO)
+        for (fr in f.frames)
+          if (fr.row == row &&
+              fr.col == col)
+            return f;
+      return null;
+    }
+
+// is this fitting kind dealt on the LOW list? read off FACILITY_DECO itself so the two can never
+// drift apart, the same stateless shape fittingOf takes. render.facility.FacilityDeco asks it for one
+// thing: a low fitting may stand against GLAZING where a high one may not
+  public static function isLowFitting(kind: Int): Bool
+    {
+      for (f in FACILITY_DECO)
+        if (f.kind == kind)
+          return f.mount.indexOf('floor-low') >= 0;
+      return false;
+    }
+
+// the frames one kind draws with, for a template placing that kind outright rather than rolling one
+  public static function framesOf(kind: Int): Array<_FittingFrame>
+    {
+      for (f in FACILITY_DECO)
+        if (f.kind == kind)
+          return f.frames;
+      return [];
+    }
+
+// does this atlas row draw a decoration that stands ON A BENCH rather than on the floor? read off
+// CHEM_LABS_DECO_TABLE itself so the two can never drift apart. STATELESS, the same shape fittingOf
+// takes: the answer is a property of the frame and of nothing else
+  public static function isTableDeco(row: Int): Bool
+    {
+      for (t in CHEM_LABS_DECO_TABLE)
+        if (t.row == row)
+          return true;
+      return false;
+    }
+
+  // the bench decorations the 3D view lays FLAT on the worktop instead of standing up as a
+  // billboard. every icon in this family is painted in elevation, which is why objects.Decoration
+  // stands them all up — but three of them are drawn looking DOWN at a thing lying on a bench, and
+  // stood upright they read as a pair of gloves balanced on one cuff.
+  //
+  // PER FRAME AND NOT PER ROW, which is the whole reason this is its own table: the gloves sit at
+  // 9/4 and 10/4 among eleven upright flasks and microscopes each, so the row-keyed shape
+  // isTableDeco takes cannot express it. Const.fittingOf's shape instead — and, like that one, read
+  // off this table alone so the two can never drift apart
+  public static var FACILITY_FLAT_DECO: Array<_FittingFrame> = [
+    // the yellow pair
+    { row: 9, col: 4 },
+    // and the blue
+    { row: 10, col: 4 },
+    // the calculator, which is drawn face-up already
+    { row: 9, col: 9 },
+  ];
+
+  // ---- pack16: the hi-res bench decoration sheets --------------------------------------------
+  //
+  // one 1024 image carries SIXTEEN decorations at 256 px each, against the 64 an entities64 cell
+  // gives one. A 3D-ONLY REDIRECTION, exactly the trade the 128 px actor atlases make: the 2D area
+  // view still draws every decoration from entities64, and render.particles.Sprites.atlasFor swaps
+  // the pack cell in underneath it for the sprite pool alone. So nothing is persisted, nothing is
+  // migrated, and a save made before any of this lights up the moment it is drawn again.
+  //
+  // WHAT IT BUYS is texel density and nothing else. A bench sprite spans Sprites.SIZE 3.0 x
+  // FacilityStyle.DECO_TABLE_SCALE 0.81 = 2.43 world units, so a 64 px cell is 26.3 texels per world
+  // unit against facility/floor-tile's own 73 — reported from the game as blurry, the same complaint
+  // art/textures.json's facility/floor-grate note records at 21.3. At 256 it is 105.3.
+  //
+  // it costs NO draw call: the pool binds one cached crop per quad either way (docs/3d-render.md:
+  // "every pooled quad is a draw call"), and a sheet is only ever cropped, never bound whole
+  public static inline var DECO_PACK_CELL = 256;
+  public static inline var DECO_PACK_COLS = 4;
+  public static inline var DECO_PACK_CELLS = DECO_PACK_COLS * DECO_PACK_COLS;
+
+  // index = the pack cell, counted across sheets in reading order (sheet DECO_PACK_CELLS at a time,
+  // then row-major inside it); value = the entities64 bench frame that cell redraws.
+  //
+  // AUTHORED BESIDE THE GENERATION PROMPT — cell i's art IS the frame it names here, so the 2D icon
+  // and the 3D sprite stay the same object and a decoration does not change identity between views.
+  // The prompts are in art/textures.json under facility/bench-pack<n>, one numbered line per cell in
+  // this same order
+  public static var FACILITY_DECO_HD: Array<_FittingFrame> = [
+    // sheet 1 — row 9 entire, then the head of row 10
+    { row: 9, col: 0 },
+    { row: 9, col: 1 },
+    { row: 9, col: 2 },
+    { row: 9, col: 3 },
+    { row: 9, col: 4 },
+    { row: 9, col: 5 },
+    { row: 9, col: 6 },
+    { row: 9, col: 7 },
+    { row: 9, col: 8 },
+    { row: 9, col: 9 },
+    { row: 9, col: 10 },
+    { row: 9, col: 11 },
+    { row: 10, col: 0 },
+    { row: 10, col: 1 },
+    { row: 10, col: 2 },
+    { row: 10, col: 3 },
+    // sheet 2 — the rest of row 10, then the head of row 11
+    { row: 10, col: 4 },
+    { row: 10, col: 5 },
+    { row: 10, col: 6 },
+    { row: 10, col: 7 },
+    { row: 10, col: 8 },
+    { row: 10, col: 9 },
+    { row: 10, col: 10 },
+    { row: 10, col: 11 },
+    { row: 11, col: 0 },
+    { row: 11, col: 1 },
+    { row: 11, col: 2 },
+    { row: 11, col: 3 },
+    { row: 11, col: 4 },
+    { row: 11, col: 5 },
+    { row: 11, col: 6 },
+    { row: 11, col: 7 },
+    // sheet 3 — the rest of row 11, then row 14. its last FIVE cells are decorations that did
+    // not exist: 14/7-11 were free columns, which is why CHEM_LABS_DECO_TABLE's row 14 above
+    // deals 12 and not 7. tools/atlaspaste.py bakes their 64 px icons into the atlas for the 2D view
+    { row: 11, col: 8 },
+    { row: 11, col: 9 },
+    { row: 11, col: 10 },
+    { row: 11, col: 11 },
+    { row: 14, col: 0 },
+    { row: 14, col: 1 },
+    { row: 14, col: 2 },
+    { row: 14, col: 3 },
+    { row: 14, col: 4 },
+    { row: 14, col: 5 },
+    { row: 14, col: 6 },
+    { row: 14, col: 7 },
+    { row: 14, col: 8 },
+    { row: 14, col: 9 },
+    { row: 14, col: 10 },
+    { row: 14, col: 11 },
+    // sheet 4 — SIXTEEN decorations that never existed, on two atlas rows that never existed
+    // either: entities64 grew from 48 rows to 50 for them. Nothing else in the game addresses
+    // rows 48-49, so growing the sheet downward reaches only this family
+    { row: 48, col: 0 },
+    { row: 48, col: 1 },
+    { row: 48, col: 2 },
+    { row: 48, col: 3 },
+    { row: 48, col: 4 },
+    { row: 48, col: 5 },
+    { row: 48, col: 6 },
+    { row: 48, col: 7 },
+    { row: 48, col: 8 },
+    { row: 48, col: 9 },
+    { row: 48, col: 10 },
+    { row: 48, col: 11 },
+    { row: 49, col: 0 },
+    { row: 49, col: 1 },
+    { row: 49, col: 2 },
+    { row: 49, col: 3 },
+    // sheet 5 — NOT a bench family: the military base's clue paperwork (textures/military/clue-pack,
+    // Images.loadDecoPacks names it), riding this table only because it is the same 4x4 of 256 px.
+    // entities64 grew 50 -> 52 rows for it; twelve papers on row 50, four books on row 51
+    // (MIL_DOCUMENTS, MIL_BOOKS). Not in isTableDeco, so no bench hook ever treats them as fittings
+    { row: 50, col: 0 },
+    { row: 50, col: 1 },
+    { row: 50, col: 2 },
+    { row: 50, col: 3 },
+    { row: 50, col: 4 },
+    { row: 50, col: 5 },
+    { row: 50, col: 6 },
+    { row: 50, col: 7 },
+    { row: 50, col: 8 },
+    { row: 50, col: 9 },
+    { row: 50, col: 10 },
+    { row: 50, col: 11 },
+    { row: 51, col: 0 },
+    { row: 51, col: 1 },
+    { row: 51, col: 2 },
+    { row: 51, col: 3 },
+    // sheet 6 — the street's clue papers and books (textures/city/clue-pack), the same shape as
+    // sheet 5: entities64 grew 52 -> 54 rows, twelve papers on row 52 and four books on row 53
+    // (STREET_DOCUMENTS, STREET_BOOKS)
+    { row: 52, col: 0 },
+    { row: 52, col: 1 },
+    { row: 52, col: 2 },
+    { row: 52, col: 3 },
+    { row: 52, col: 4 },
+    { row: 52, col: 5 },
+    { row: 52, col: 6 },
+    { row: 52, col: 7 },
+    { row: 52, col: 8 },
+    { row: 52, col: 9 },
+    { row: 52, col: 10 },
+    { row: 52, col: 11 },
+    { row: 53, col: 0 },
+    { row: 53, col: 1 },
+    { row: 53, col: 2 },
+    { row: 53, col: 3 },
+  ];
+
+  // ---- the 128 px redraw: the entities64 cells the 3D view still drew at 64 ----------------------
+  // index = the cell of textures/fx/entities128 (an 8 x 8 of 128 px, reading order); value = the
+  // entities64 frame it redraws, registered onto that frame's own content box at 2x so every anchor
+  // lands where the 64 px cell put it (art/textures.json fx/entities128). 3D-ONLY like the packs above:
+  // render.particles.Sprites.atlasFor redirects the sprite pool, Sprites.batchCell the batched decals
+  public static inline var HD128_CELL = 128;
+  public static inline var HD128_COLS = 8;
+  public static var HD128 = [
+    { row: 4, col: 0 }, // parasite
+    { row: 4, col: 1 }, // dog
+    { row: 2, col: 4 }, // item box
+    { row: 2, col: 7 }, // nutrient
+    { row: 4, col: 6 }, // Choir of Discord
+    { row: 4, col: 7 }, // its body
+    { row: 16, col: 2 }, // burning barrel
+    { row: 3, col: 2 }, // money bill
+    { row: 3, col: 3 }, // money scatter
+    { row: 3, col: 6 }, // acid spit
+    { row: 3, col: 7 }, // slime spit
+    { row: 3, col: 8 }, // paralysis spit / needle
+    { row: 1, col: 10 }, // target reticle
+    { row: 1, col: 11 }, // target frame
+    // red blood 0-4, black blood 5-9, acid 21/3-7, slime 22/3-7
+    { row: 40, col: 0 },
+    { row: 40, col: 1 },
+    { row: 40, col: 2 },
+    { row: 40, col: 3 },
+    { row: 40, col: 4 },
+    { row: 40, col: 5 },
+    { row: 40, col: 6 },
+    { row: 40, col: 7 },
+    { row: 40, col: 8 },
+    { row: 40, col: 9 },
+    { row: 21, col: 3 },
+    { row: 21, col: 4 },
+    { row: 21, col: 5 },
+    { row: 21, col: 6 },
+    { row: 21, col: 7 },
+    { row: 22, col: 3 },
+    { row: 22, col: 4 },
+    { row: 22, col: 5 },
+    { row: 22, col: 6 },
+    { row: 22, col: 7 },
+  ];
+
+// which entities128 cell redraws this frame, or -1. a linear scan, asked once per cache miss like decoHD
+  public static function hd128(row: Int, col: Int): Int
+    {
+      for (i in 0...HD128.length)
+        if (HD128[i].row == row &&
+            HD128[i].col == col)
+          return i;
+      return -1;
+    }
+
+  // ---- the clue pack: the reports and books a facility hands out --------------------------------
+  //
+  // THE SAME REDIRECTION ONE FAMILY OVER, and a second table rather than more rows on the one above,
+  // because the cell SIZE differs and DECO_PACK_CELL is inline at 256. 24 subjects on a 6x4 sheet of
+  // 170 px cells (art/textures.json facility/clue-pack carries why that grid and not a pack64's 8x8),
+  // against the 64 px an entities64 cell gave them — the clue documents were the last family in the
+  // compound still drawn straight off the atlas, i.e. at 26 texels per world unit.
+  //
+  // 3D-ONLY, like the bench packs: the 2D area view, the inventory and every window still draw the
+  // entities64 frame, which tools/atlaspaste.py bakes from these same cells, so the two are one
+  // object drawn twice. Nothing is persisted and nothing is migrated
+  // and the sewer hatch's own hi-res cell, which is a whole IMAGE rather than a pack: one object, one
+  // cell, so it needs no index table and no coordinate arithmetic (render.particles.Sprites.atlasFor
+  // and art/textures.json city/sewer-hatch)
+  public static inline var HATCH_HD_CELL = 256;
+  // and the wall vent's, the same one-image route: art/textures.json facility/vent, the source its 64
+  // px icon was cut from, drawn whole and edge to edge
+  public static inline var VENT_HD_CELL = 256;
+
+  public static inline var CLUE_PACK_CELL = 170;
+  public static inline var CLUE_PACK_COLS = 6;
+  // index = the pack cell in reading order; value = the entities64 frame it redraws. The DOCUMENTS
+  // row first (CHEM_LABS_DOCUMENTS, row 17) and then the BOOKS row (CHEM_LABS_BOOKS, row 19), which
+  // is the order the generation prompt lists its 24 subjects in.
+  //
+  // THREE CELLS ARE RETIRED and the order is what retires them: sheet cells 8 (the fanfold printout),
+  // 9 (the photostat) and 15 (the stack of three books) came back in THREE-QUARTER PERSPECTIVE rather
+  // than the top-down the prompt asked for, so they cannot lie on a worktop. A cell's pack coordinates
+  // come from its INDEX here (clueHDCol/clueHDRow), so a cell cannot be deleted from this table —
+  // instead the three are mapped to the TAIL frames of their own atlas row and the deal is shortened
+  // to stop before them (CHEM_LABS_DOCUMENTS 12 -> 10, CHEM_LABS_BOOKS 12 -> 11). The good cells
+  // behind them shift down to close the gap, so the dealt frames stay contiguous from col 0
+  public static var CLUE_HD: Array<_FittingFrame> = [
+    // cells 0-11 — row 17, the paperwork
+    { row: 17, col: 0 },
+    { row: 17, col: 1 },
+    { row: 17, col: 2 },
+    { row: 17, col: 3 },
+    { row: 17, col: 4 },
+    { row: 17, col: 5 },
+    { row: 17, col: 6 },
+    { row: 17, col: 7 },
+    { row: 17, col: 10 },   // retired: the fanfold, drawn in perspective
+    { row: 17, col: 11 },   // retired: the photostat, drawn in perspective
+    { row: 17, col: 8 },
+    { row: 17, col: 9 },
+    // cells 12-23 — row 19, the books
+    { row: 19, col: 0 },
+    { row: 19, col: 1 },
+    { row: 19, col: 2 },
+    { row: 19, col: 11 },   // retired: the stack of three, drawn in perspective
+    { row: 19, col: 3 },
+    { row: 19, col: 4 },
+    { row: 19, col: 5 },
+    { row: 19, col: 6 },
+    { row: 19, col: 7 },
+    { row: 19, col: 8 },
+    { row: 19, col: 9 },
+    { row: 19, col: 10 },
+  ];
+
+// which clue pack cell redraws this frame, or -1. decoHD's own shape and its own reason for being a
+// linear scan: it is asked once per sprite cache MISS
+  public static function clueHD(row: Int, col: Int): Int
+    {
+      for (i in 0...CLUE_HD.length)
+        if (CLUE_HD[i].row == row &&
+            CLUE_HD[i].col == col)
+          return i;
+      return -1;
+    }
+
+  public static inline function clueHDCol(hd: Int): Int
+    {
+      return hd % CLUE_PACK_COLS;
+    }
+
+  public static inline function clueHDRow(hd: Int): Int
+    {
+      return Std.int(hd / CLUE_PACK_COLS);
+    }
+
+// how many pack sheets the table above spans — read off it so adding sixteen rows is the whole edit
+  public static function decoPackCount(): Int
+    {
+      return Math.ceil(FACILITY_DECO_HD.length / DECO_PACK_CELLS);
+    }
+
+// which pack cell redraws this bench frame, or -1 for one that has no hi-res art yet (it keeps its
+// entities64 cell and simply stays soft). STATELESS, the shape fittingOf and isTableDeco both take.
+//
+// a LINEAR SCAN and deliberately so: it is asked once per sprite CACHE MISS, not per frame — every
+// reader in render.particles.Sprites keys its cache on the entities64 coordinates and returns before
+// reaching this
+  public static function decoHD(row: Int, col: Int): Int
+    {
+      for (i in 0...FACILITY_DECO_HD.length)
+        if (FACILITY_DECO_HD[i].row == row &&
+            FACILITY_DECO_HD[i].col == col)
+          return i;
+      return -1;
+    }
+
+// which sheet a pack cell lives on, and its column and row inside that sheet. three one-liners here
+// rather than the arithmetic open at both call sites (Sprites.atlasFor and render.View.iconBox),
+// which is where a 4 and a 16 would drift apart
+  public static inline function decoHDPack(hd: Int): Int
+    {
+      return Std.int(hd / DECO_PACK_CELLS);
+    }
+
+  public static inline function decoHDCol(hd: Int): Int
+    {
+      return hd % DECO_PACK_COLS;
+    }
+
+  public static inline function decoHDRow(hd: Int): Int
+    {
+      return Std.int((hd % DECO_PACK_CELLS) / DECO_PACK_COLS);
+    }
+
+// does this atlas frame draw a bench decoration that LIES DOWN? STATELESS, the shape fittingOf and
+// isTableDeco both take: the answer is a property of the frame and of nothing else
+  public static function isFlatDeco(row: Int, col: Int): Bool
+    {
+      for (f in FACILITY_FLAT_DECO)
+        if (f.row == row &&
+            f.col == col)
+          return true;
+      return false;
+    }
 
   // row 15 - doors
   public static var ROW_DOORS = 15;
@@ -151,6 +860,11 @@ class Const
   public static var FRAME_DOOR_CORP_OPEN = 9;
   public static var FRAME_DOOR_ELEVATOR = 10;
   public static var FRAME_DOOR_ELEVATOR_OPEN = 11;
+  // the solid-leaf door a PRIVATE room takes — a washroom or a researcher's office. the one facility
+  // door that blocks line of sight when it is shut (objects.Door.canSeeThrough), which is why it has
+  // no vision panel in its art either
+  public static var FRAME_DOOR_PRIVATE = 12;
+  public static var FRAME_DOOR_PRIVATE_OPEN = 13;
 
   // row 16 - objects
   public static var ROW_OBJECT2 = 16;
@@ -159,18 +873,38 @@ class Const
   public static var FRAME_BURNING_BARREL = 2;
   public static var FRAME_SUMMONING_PORTAL = 3;
   public static var FRAME_BROKEN_PORTAL = 4;
+  public static var FRAME_DUMPSTER = 5;
   public static var FRAME_CLONE_VAT = FRAME_SUMMONING_PORTAL;
   public static var FRAME_CLONE_VAT_FLUSHED = FRAME_BROKEN_PORTAL;
 
-  // row 17,18 - documents
+  // row 17 - documents, row 19 - books. ONE ROW EACH and not the two they were dealt from: rows 17
+  // and 19 are repainted from the clue pack (CLUE_HD, art/textures.json facility/clue-pack) and rows
+  // 18 and 20 still hold the old 2D-era icons, so dealing those would mix two families of art in one
+  // room. The 24 that are drawn is the whole deal; the two stale rows are left in the atlas rather
+  // than cleared, because a save made before this holds documents pointing at them and an object
+  // whose frame is blank is worse than one whose frame is old.
+  //
+  // 10 AND 11, NOT 12 AND 12: three of the sheet's 24 subjects came back in perspective and are
+  // retired at the tail of their row (see CLUE_HD), so the deal stops one short of them
   public static var CHEM_LABS_DOCUMENTS = [
-    { row: 17, amount: 12 },
-    { row: 18, amount: 12 },
+    { row: 17, amount: 10 },
   ];
-  // row 19,20 - books
   public static var CHEM_LABS_BOOKS = [
-    { row: 19, amount: 12 },
-    { row: 20, amount: 12 },
+    { row: 19, amount: 11 },
+  ];
+  // and the military base's, drawn off FACILITY_DECO_HD's fifth sheet
+  public static var MIL_DOCUMENTS = [
+    { row: 50, amount: 12 },
+  ];
+  public static var MIL_BOOKS = [
+    { row: 51, amount: 4 },
+  ];
+  // and the streets', drawn off FACILITY_DECO_HD's sixth sheet
+  public static var STREET_DOCUMENTS = [
+    { row: 52, amount: 12 },
+  ];
+  public static var STREET_BOOKS = [
+    { row: 53, amount: 4 },
   ];
 
   // row 21,22 - spaceship
@@ -255,6 +989,13 @@ class Const
   public static var CORP_VENDING = [
     { row: 34, amount: 11 },
   ];
+  // a staff kitchen's BARE counter cell, on row 34's twelfth frame, which CORP_VENDING never deals.
+  // The counter is walkable floor now (gen.corp.CorpKitchen.prep), so a cell with no tap and no
+  // appliance on it needs a name the saved grid can carry; render.corp.CorpDeco.draws hides its
+  // sprite and render.corp.CorpKitchen stands the counter glb off it
+  public static var CORP_COUNTER = [
+    { row: 34, col: 11, amount: 1 },
+  ];
   public static var CORP_TABLE_CLEANING = [
     { row: 35, amount: 12 },
     { row: 36, amount: 4 },
@@ -289,9 +1030,40 @@ class Const
   public static var CORP_TABLE_MUG = [
     { row: 39, col: 9, amount: 3 },
   ];
+  // THE EXEC OFFICE'S FURNITURE, on the four atlas cells rows 23-39 had left EMPTY. None of them
+  // has a sprite: render.corp.CorpDeco.draws hides every corp decoration in those rows and
+  // render.corp.CorpProps stands a glb on the cell instead, so the cell is only a name the saved
+  // grid can carry. The armchair is both the lounge's club chair and the visitor's chair in front
+  // of the desk; which way it faces is read off its neighbours
+  public static var CORP_EXEC_CHAIR = [
+    { row: 30, col: 11, amount: 1 },
+  ];
+  public static var CORP_ARMCHAIR = [
+    { row: 25, col: 10, amount: 1 },
+  ];
+  public static var CORP_SOFA = [
+    { row: 25, col: 11, amount: 1 },
+  ];
+  public static var CORP_TABLE_LOW = [
+    { row: 26, col: 11, amount: 1 },
+  ];
   public static var ROW_BLOOD = 40;
   public static var BLOOD_LARGE = 0;
   public static var BLACK_BLOOD_LARGE = 5;
+  public static var SPLAT_VARIANTS = 5; // splat cells per blood type, from bloodIcon's col
+
+// blood atlas cell (row + first variant col) for a blood type: the flying drop, the landed splat
+// and the persisted SPLAT decoration all draw from it
+  public static function bloodIcon(type: String): _Icon
+    {
+      return switch (type)
+        {
+          case 'black': { row: ROW_BLOOD, col: BLACK_BLOOD_LARGE };
+          case 'acid': { row: ROW_SPACESHIP1, col: ACID_LARGE };
+          case 'slime': { row: ROW_SPACESHIP2, col: SLIME_LARGE };
+          default: { row: ROW_BLOOD, col: BLOOD_LARGE };
+        };
+    }
 
   public static var STREET_DEBRIS_TRANSFORMABLE = [
     { row: 41, col: 0, amount: 12 },
@@ -304,6 +1076,21 @@ class Const
   public static var STREET_DEBRIS_STATIC = [
     { row: 46, col: 1, amount: 11 },
     { row: 47, col: 0, amount: 10 },
+  ];
+  // the per-tier street litter PACK64s (AreaStyle.debrisPack, textures/city/debris-*.png): an 8 x 8
+  // of 128 px cells, rows 0-5 the small things a cluster scatters, rows 6-7 the big flat ones
+  public static inline var DEBRIS_PACK_CELL = 128;
+  public static var DEBRIS_PACK_TRANSFORMABLE = [
+    { row: 0, col: 0, amount: 8 },
+    { row: 1, col: 0, amount: 8 },
+    { row: 2, col: 0, amount: 8 },
+    { row: 3, col: 0, amount: 8 },
+    { row: 4, col: 0, amount: 8 },
+    { row: 5, col: 0, amount: 8 },
+  ];
+  public static var DEBRIS_PACK_STATIC = [
+    { row: 6, col: 0, amount: 8 },
+    { row: 7, col: 0, amount: 8 },
   ];
 
   // ==============================================
@@ -329,6 +1116,17 @@ class Const
   // is the whole gameplay half. no 2D art needed: a wilderness area always renders in 3D
   public static var TILE_ROCK_LARGE = 12;
   public static var TILE_TREE_CLUSTER = 13;
+  // a rank of FULL-HEIGHT archive shelving, which is the one fitting in the tower that BLOCKS SIGHT:
+  // an arch-shelf stands 4.8 (2.4 m) and a person does not see over it, where the racking beside it
+  // is 2.6 of open steel and stays on the archive's see-through twin. Row 0's spare slot, already
+  // unwalkable and not see-through in tiles.Default, so naming it is the whole gameplay half; it
+  // looks like the archive's concrete and render.corp.CorpModel reads it as FIT_ARCHIVE_HIGH
+  public static var TILE_ARCHIVE_HIGH = 14;
+  // and a SERVER RACK, which blocks sight for the same reason: a rack stands RACK_H 4.0 (2 m) of
+  // closed steel. Row 0's last spare slot, on the same unwalkable-and-opaque profile. The server
+  // room's ranks and the security room's rack column are laid on it; the machinery a wall
+  // dressing stands on the server twin (TILE_FLOOR_SERVER + 16) stays low and see-through
+  public static var TILE_RACK_HIGH = 15;
 
   // row 1
   public static var OFFSET_REGION = 16;
@@ -352,7 +1150,11 @@ class Const
   public static var TILE_WINDOWV1 = OFFSET_AREA + 7;
   public static var TILE_WINDOWV2 = OFFSET_AREA + 8;
   public static var TILE_WINDOWV3 = OFFSET_AREA + 9;
-  public static var TILE_XXX = OFFSET_AREA + 10;
+  // a HIGH window: a small light well set near the ceiling, the washroom's own glazing. unwalkable
+  // like every other window tile and, unlike them, NOT see-through (tiles.Default.TILE_SEETHROUGH) —
+  // that is the whole point of it, a room that is lit and still private. it took the dead TILE_XXX
+  // slot, which had one declaration and no use anywhere in the tree
+  public static var TILE_WINDOW_HIGH = OFFSET_AREA + 10;
   public static var TILE_ROAD_UNWALKABLE = OFFSET_AREA + 11;
   public static var TILE_ALLEY_UNWALKABLE = OFFSET_AREA + 12;
   public static var TILE_WALKWAY_UNWALKABLE = OFFSET_AREA + 13;
@@ -374,12 +1176,37 @@ class Const
   public static var TILE_HANGAR_DOOR = OFFSET_CHEM_LAB + 7;
   public static var TILE_FLOOR_TILE_CANNOTSEE = OFFSET_CHEM_LAB + 8;
   public static var TILE_FLOOR_CONCRETE_UNWALKABLE = OFFSET_CHEM_LAB + 9;
+  // the car park, and the one piece of open asphalt in a compound you can drive into. the yard and
+  // the gaps between plots are Const.TILE_ALLEY and stay that way — the generator blanks the whole
+  // grid to alley before it cuts anything, so "open lot" cannot tell a car park from a back yard and
+  // render.facility.FacilityPaint was striping bays onto both. It resolves to Surf.LOT exactly like
+  // the alley does, so debris, lamps and every other lot-gated pass keep working untouched; only the
+  // two passes that mean THE CAR PARK gate on the raw mark.
+  //
+  // NO NEW ATLAS CELL: tiles.Default aliases its icon to TILE_ALLEY's. The asphalt is the same
+  // asphalt and the bay lines are emitted geometry rather than tile art
+  public static var TILE_PARKING = OFFSET_CHEM_LAB + 10;
+  // A PARKED CAR'S OWN FOOTPRINT, and the second piece of the compound's render furniture to get a
+  // tile of its own after the boom barrier's row (TILE_ALLEY_UNWALKABLE). render.facility.FacilityCars
+  // stands one glb in a bay BAY_SPACING by BAY_CELLS cells, and it was pure decoration — a car the
+  // player walked straight through. Both ids are the car park's own asphalt with the walk taken off
+  // it, and both alias to TILE_ALLEY's icon like TILE_PARKING does; they resolve to Surf.LOT so every
+  // lot-gated render pass is untouched.
+  //
+  // TWO IDS AND NOT ONE, and the second is the whole reason this works without the renderer
+  // re-deriving anything: a bay's cells are stamped TILE_PARKING_CAR and its LOW CORNER ON THE KERB
+  // is stamped TILE_PARKING_CAR_ORIGIN. Two bays standing side by side along one kerb are a single
+  // 2x4 block of marks with no seam in it, so one id alone cannot say where a car begins — the
+  // renderer would have to walk the run and agree with the generator's phase to find out. The origin
+  // says it outright, and the car's yaw comes off which of the four neighbours is pavement
+  public static var TILE_PARKING_CAR = OFFSET_CHEM_LAB + 11;
+  public static var TILE_PARKING_CAR_ORIGIN = OFFSET_CHEM_LAB + 12;
 
   // === row 8-10 - tables
   public static var OFFSET_ROW8 = 128;
   public static var OFFSET_ROW9 = 144;
   public static var OFFSET_ROW10 = 160;
-  // NOTE: first table tile! important for clue spawn!
+  // NOTE: a worktop tile is anything isTableTile() says it is — do NOT read the ids below as a range
   public static var TILE_LABS_TABLE_3X3_7 = OFFSET_ROW8 + 0;
   public static var TILE_LABS_TABLE_3X3_8 = OFFSET_ROW8 + 1;
   public static var TILE_LABS_TABLE_3X3_9 = OFFSET_ROW8 + 2;
@@ -456,9 +1283,46 @@ class Const
   public static var TILE_LABS_TABLE2_3X1_1 = OFFSET_ROW11 + 4;
   public static var TILE_LABS_TABLE2_3X1_2 = OFFSET_ROW11 + 5;
   public static var TILE_LABS_TABLE2_3X1_3 = OFFSET_ROW11 + 6;
-  // NOTE: last table tile! important for clue spawn!
-  // change check in AreaGame.initSpawnPoints() if you add more tables
-  public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 3;
+  // this used to be OFFSET_ROW11 + 3 — the SAME id as TILE_LABS_TABLE_1X1 above it — under a note
+  // calling it the last table tile. It was never laid, only read as the top of a range, and that
+  // range is what isTableTile() replaces; see there for what the lie cost
+  public static var TILE_LABS_TABLE2_1X1 = OFFSET_ROW11 + 7;
+
+// is this tile id a LABORATORY worktop — the thing render.facility.FacilityTables raises a slab on
+// and gen.facility.FacilityRooms deals out in runs.
+//
+// A STRIDE TEST AND NOT A RANGE, because only the first 8 COLUMNS of tile rows 8-11 carry one: the
+// back half of those same rows is the corp office's wood, carpet and marble furniture, which
+// game.CorpAreaGenerator lays and no facility ever does.
+//
+// FIVE PLACES ASKED IT AS THE FLAT RANGE TILE_LABS_TABLE_3X3_7 .. TILE_LABS_TABLE2_1X1 and that
+// range is wrong at BOTH ends. It takes in the corp furniture above; worse, it STOPPED AT ROW 11
+// COLUMN 3 and so missed TILE_LABS_TABLE2_3X1_1..3, the drawer run gen.blocks.RoomBlock lays along
+// every top wall. render.facility.FacilityModel.tableOf had the stride rule and the generator had
+// the range, so a drawer run was a full bench on screen and NOTHING AT ALL to fixDiagonalTables,
+// GenCheck.tablesSane, clearTableSpots and the clue spawn — which is how two worktops crossing at a
+// corner got reported a third time, at 26,3 / 27,4, over an oracle reporting 20000 clean seeds
+  public static inline function isTableTile(t:Int):Bool
+    {
+      var stride = OFFSET_ROW9 - OFFSET_ROW8;
+      var i = t - OFFSET_ROW8;
+      return i >= 0 &&
+        i < 4 * stride &&
+        i % stride < 8;
+    }
+
+// and the OTHER HALF of those same four rows: the corp office's wood, carpet and marble furniture,
+// which gen.corp's templates lay and no facility ever does. It is the exact complement of the test
+// above — same rows, columns 8-15 instead of 0-7 — and it exists for the same reason that one
+// does: render.corp.CorpFurniture raises a slab on these and needs to ask once per cell
+  public static inline function isCorpTableTile(t:Int):Bool
+    {
+      var stride = OFFSET_ROW9 - OFFSET_ROW8;
+      var i = t - OFFSET_ROW8;
+      return i >= 0 &&
+        i < 4 * stride &&
+        i % stride >= 8;
+    }
 
   // === row 12 - corpo
   public static var OFFSET_ROW12 = 192;
@@ -475,6 +1339,202 @@ class Const
   public static var TILE_FLOOR_MARBLE1 = OFFSET_ROW12 + 10;
   public static var TILE_FLOOR_MARBLE2 = OFFSET_ROW12 + 11;
   public static var TILE_FLOOR_CARPET_MEETING = OFFSET_ROW12 + 12;
+
+  // the two floors gen.corp added, and they are ALIASES rather than art: tiles.Default.getIcon
+  // draws the cubicle farm as plain carpet and the server room as concrete, the same trick the car
+  // park's marks use one row up. They exist so a reader of the SAVED GRID can tell a cubicle farm
+  // from the corridor it opens off and a server room from the lift lobby it shares its concrete
+  // with — one shared floor id cannot say that, and the floor is where a corp room's role lives
+  public static var TILE_FLOOR_CUBICLE = OFFSET_ROW12 + 13;
+  public static var TILE_FLOOR_SERVER = OFFSET_ROW12 + 14;
+  // and the THIRD, which is the archive's. It is concrete to look at exactly like the server room
+  // and even answers the same Surf — what it buys is its UNWALKABLE TWIN, because the twin is what
+  // render.corp.CorpModel.fitOf reads to decide which fitting stands on a cell, and a records room
+  // dressed off TILE_FLOOR_SERVER + 16 built SERVER RACKS: steel cabinets with blinking LEDs and
+  // cable drapes over their lids. This is the LAST free slot in row 12
+  public static var TILE_FLOOR_ARCHIVE = OFFSET_ROW12 + 15;
+  // === row 17 - corpo, again: row 12 is full. The RECEPTION's own floor, split off
+  // TILE_FLOOR_MARBLE1 so the exec office can wear its own finish and the front desk keep the pale
+  // stone. It is marble to look at in 2D (tiles.Default.getIcon) and its unwalkable twin is one row
+  // below, +16, the same as every corp floor
+  public static var OFFSET_ROW17 = 272;
+  public static var TILE_FLOOR_RECEPTION = OFFSET_ROW17 + 0;
+  // and the EXEC RUG, which is not a finish either: the exec office's own marble, but it marks the
+  // cells a rug lies over. gen.corp.CorpRooms decides where the rug goes and writes this id there;
+  // render.corp.CorpRugs lays one oval over each room's rect of it. Its twin is the furniture that
+  // stands on the rug
+  public static var TILE_FLOOR_EXEC_RUG = OFFSET_ROW17 + 1;
+  // and the RECEPTION COUNTER, which is not a floor at all: it stands IN THE WALL LINE, where the
+  // reception's wall onto the corridor was, from one corner post to the other. Unwalkable and
+  // see-through, which is what row 17 already is past its two floors, so tiles.Default needs no
+  // new table entry. render.corp.CorpModel reads it as floor with a fitting on it, so each corner
+  // post ends in a face of its own
+  public static var TILE_CORP_RECEPTION_COUNTER = OFFSET_ROW17 + 2;
+  // and a security room's STEEL LOCKER, one per cell down its west wall. Walkable and
+  // see-through: it stands in the wall's own margin, clear of its cell
+  public static var TILE_CORP_LOCKER = OFFSET_ROW17 + 3;
+  // and its SERVER RACK column down the east wall, walkable and see-through for the locker's
+  // reason. The server room's ranks stand mid-room and keep TILE_RACK_HIGH, which blocks sight
+  public static var TILE_CORP_WALL_RACK = OFFSET_ROW17 + 4;
+  // and one receptionist per this many cells of it
+  public static inline var RECEPTION_STATION_PITCH = 3;
+
+  // === row 19 - the military base (gen.military.MilitaryGen). No 2D art: a base always renders in
+  // 3D, and tiles.Default.getIcon aliases every one of these to a surface that exists
+  public static var OFFSET_ROW19 = 304;
+  // the perimeter chain-link, two cells high. Unwalkable and see-through
+  public static var TILE_MIL_FENCE = OFFSET_ROW19 + 0;
+  // a torn panel of it, which a host can squeeze through. Walkable and see-through
+  public static var TILE_MIL_FENCE_TORN = OFFSET_ROW19 + 1;
+  // a corner watchtower's 2x2 footprint. Unwalkable, see-through between its legs
+  public static var TILE_MIL_TOWER = OFFSET_ROW19 + 2;
+  // a canvas tent, unenterable. Unwalkable and opaque
+  public static var TILE_MIL_TENT = OFFSET_ROW19 + 3;
+  // a shipping container, MIL_CONTAINER_LEN cells along x from its ORIGIN cell (the west one), so
+  // two containers end to end or stacked side by side never read as one. Unwalkable and opaque
+  public static var TILE_MIL_CONTAINER = OFFSET_ROW19 + 4;
+  public static var TILE_MIL_CONTAINER_ORIGIN = OFFSET_ROW19 + 5;
+  // a parked vehicle's footprint, and its ORIGIN (top-left) cell, one id per kind, which is what
+  // names the model. Every footprint is long along y. Unwalkable and see-through, like a parked car,
+  // but for the plane's and the helicopter's origins: the plane's footprint is solid only under the
+  // outline (MIL_PLANE_MASK) and the helicopter's only inside its ring of MIL_HELI_RING cells, so the
+  // corner each is named from is open floor and walkable
+  public static var TILE_MIL_VEHICLE = OFFSET_ROW19 + 6;
+  public static var TILE_MIL_TANK = OFFSET_ROW19 + 7;
+  public static var TILE_MIL_HUMVEE = OFFSET_ROW19 + 8;
+  public static var TILE_MIL_HELI = OFFSET_ROW19 + 9;
+  public static var TILE_MIL_PLANE = OFFSET_ROW19 + 10;
+  // the helipad's painted concrete square. Walkable
+  public static var TILE_MIL_PAD = OFFSET_ROW19 + 11;
+  // a concrete jersey barrier on the pavement either side of the gate mouth. Unwalkable, see-through
+  public static var TILE_MIL_JERSEY = OFFSET_ROW19 + 12;
+  // a cluster of fuel drums against a hangar wall. Walkable (they stand in the wall's margin, the rest
+  // of the cell is the hangar's floor), see-through
+  public static var TILE_MIL_DRUMS = OFFSET_ROW19 + 13;
+  // a tent camp's stores against a tent's long side: a crate stack, fuel drums, or both. Unwalkable,
+  // see-through
+  public static var TILE_MIL_STORES = OFFSET_ROW19 + 14;
+  // a pile of yard stores on the lot's edge, an ammo crate stack or fuel drums (gen.military
+  // .MilitaryGen.piles). Unwalkable, see-through
+  public static var TILE_MIL_PILE = OFFSET_ROW19 + 15;
+  // container length, and each vehicle kind's footprint as [ w, h ] in cells
+  public static inline var MIL_CONTAINER_LEN = 3;
+  public static var MIL_TANK_SIZE = [ 2, 4 ];
+  public static var MIL_HUMVEE_SIZE = [ 2, 3 ];
+  public static var MIL_HELI_SIZE = [ 3, 7 ];
+  // how many cells round the helicopter's footprint are pad and not hull: its 1x5 body solid, the
+  // rotor's sweep over the ring above head height ("a whole 1 tile can be removed from all sides")
+  public static inline var MIL_HELI_RING = 1;
+  public static var MIL_PLANE_SIZE = [ 8, 7 ];
+  // which cells of the plane's footprint it covers from above, nose north, a row per string and 'x'
+  // solid: its outline over a fifth of a cell or more at the height render.military.MilitaryVehicles
+  // draws it, the wing's tips included (the jet's span is 28.0, so its tips reach the outer columns
+  // by a quarter, and its 27.0 length puts the nose in the first row and the tail in the last). The
+  // rest of the 8x7 is hangar floor ("you made full square while there's a TON of empty tiles"). Nose
+  // south is the same turned a half
+  public static var MIL_PLANE_MASK = [
+    '...xx...',
+    '...xx...',
+    '..xxxx..',
+    'xxxxxxxx',
+    '...xx...',
+    '...xx...',
+    '...xx...',
+  ];
+
+  // === row 20 - the military base's INTERIOR (gen.military.MilitaryRooms): five room floors, each the
+  // whole record of its room's kind the way the facility's floor tiles are, then the furniture,
+  // which render.military.MilitaryInterior emits off these ids. The floors are walkable; every
+  // piece of furniture blocks but a map board, which marks the wall cell it hangs over
+  public static var OFFSET_ROW20 = 320;
+  public static var TILE_MIL_FLOOR_BARRACKS = OFFSET_ROW20 + 0;
+  public static var TILE_MIL_FLOOR_MESS = OFFSET_ROW20 + 1;
+  public static var TILE_MIL_FLOOR_BRIEFING = OFFSET_ROW20 + 2;
+  public static var TILE_MIL_FLOOR_HQ = OFFSET_ROW20 + 3;
+  public static var TILE_MIL_FLOOR_LATRINE = OFFSET_ROW20 + 4;
+  // a bunk is two cells running out from its wall, the head against it; its footlocker the third
+  public static var TILE_MIL_BUNK = OFFSET_ROW20 + 5;
+  public static var TILE_MIL_FOOTLOCKER = OFFSET_ROW20 + 6;
+  public static var TILE_MIL_MESS_TABLE = OFFSET_ROW20 + 7;
+  public static var TILE_MIL_BENCH = OFFSET_ROW20 + 8;
+  public static var TILE_MIL_COUNTER = OFFSET_ROW20 + 9;
+  public static var TILE_MIL_BRIEF_TABLE = OFFSET_ROW20 + 10;
+  public static var TILE_MIL_MAP_BOARD = OFFSET_ROW20 + 11;
+  public static var TILE_MIL_DESK = OFFSET_ROW20 + 12;
+  public static var TILE_MIL_FILE = OFFSET_ROW20 + 13;
+  public static var TILE_MIL_STALL = OFFSET_ROW20 + 14;
+  public static var TILE_MIL_SINKS = OFFSET_ROW20 + 15;
+  // === row 21 - the base's second interior row: the comms room's radio rack and console, the supply
+  // store's shelf and crate stack, the medical bay's cot and cabinet, then the standing props the
+  // rooms' leftover bays take (gen.military.MilitaryRooms.slot): a gun locker, ammo cans, jerrycans,
+  // a flag stand, a water cooler, an IV stand and a stretcher (render.military.MilitaryInterior),
+  // a store's free-standing row of shelving back to back, and a latrine's urinal and shower. None
+  // blocks sight, and the ones that stand against a wall in its margin, clear of most of their cell,
+  // do not block either (see tiles.Default.TILE_WALKABLE)
+  public static var OFFSET_ROW21 = 336;
+  public static var TILE_MIL_RADIO_RACK = OFFSET_ROW21 + 0;
+  public static var TILE_MIL_CONSOLE = OFFSET_ROW21 + 1;
+  public static var TILE_MIL_SHELF = OFFSET_ROW21 + 2;
+  public static var TILE_MIL_CRATES = OFFSET_ROW21 + 3;
+  public static var TILE_MIL_COT = OFFSET_ROW21 + 4;
+  public static var TILE_MIL_MED_CABINET = OFFSET_ROW21 + 5;
+  public static var TILE_MIL_GUN_LOCKER = OFFSET_ROW21 + 6;
+  public static var TILE_MIL_AMMO_CANS = OFFSET_ROW21 + 7;
+  public static var TILE_MIL_JERRYCANS = OFFSET_ROW21 + 8;
+  public static var TILE_MIL_FLAG = OFFSET_ROW21 + 9;
+  public static var TILE_MIL_WATER_COOLER = OFFSET_ROW21 + 10;
+  public static var TILE_MIL_IV_STAND = OFFSET_ROW21 + 11;
+  public static var TILE_MIL_STRETCHER = OFFSET_ROW21 + 12;
+  public static var TILE_MIL_SHELF_ROW = OFFSET_ROW21 + 13;
+  // a latrine's wall-hung urinal and its shower, both on the wall in its margin
+  public static var TILE_MIL_URINAL = OFFSET_ROW21 + 14;
+  public static var TILE_MIL_SHOWER = OFFSET_ROW21 + 15;
+
+  // === row 22 - the UNDERGROUND LAB's shell (gen.lab.LabGen): the bedrock the level is cut into, its
+  // walls, the corridor, the five room floors (each the whole record of its room's kind, as on the
+  // base), the lift car, the vat pads and the doorway cells. None has 2D art: the lab is always drawn
+  // in 3D (render.lab)
+  public static var OFFSET_ROW22 = 352;
+  public static var TILE_LAB_ROCK = OFFSET_ROW22 + 0;
+  public static var TILE_LAB_WALL = OFFSET_ROW22 + 1;
+  public static var TILE_LAB_CORRIDOR = OFFSET_ROW22 + 2;
+  public static var TILE_LAB_FLOOR_ENTRANCE = OFFSET_ROW22 + 3;
+  public static var TILE_LAB_FLOOR_VAT = OFFSET_ROW22 + 4;
+  public static var TILE_LAB_FLOOR_WORKSHOP = OFFSET_ROW22 + 5;
+  public static var TILE_LAB_FLOOR_STORAGE = OFFSET_ROW22 + 6;
+  public static var TILE_LAB_FLOOR_RESEARCH = OFFSET_ROW22 + 7;
+  // the 2x2 the lift car stands on, under its four objects.Elevator parts
+  public static var TILE_LAB_LIFT = OFFSET_ROW22 + 8;
+  // a vat's 2x3 plinth, laid before the mission stands a objects.mission.CloneVat on it
+  public static var TILE_LAB_VAT_PAD = OFFSET_ROW22 + 9;
+  // a cell of a two-cell doorway, under its objects.Door
+  public static var TILE_LAB_DOOR = OFFSET_ROW22 + 10;
+  // === row 23 - its furniture, a cell per piece (gen.lab.LabRooms): the benches, the computer desks,
+  // the wall shelving, lockers, suit racks, seats and fridges (walkable: each stands in its wall's
+  // margin, see tiles.Default.TILE_WALKABLE), drums, crate stacks, a store's shelf rows, the plants
+  // and bins the leftover bays take, and the footprint every machine stands on
+  public static var OFFSET_ROW23 = 368;
+  public static var TILE_LAB_BENCH = OFFSET_ROW23 + 0;
+  public static var TILE_LAB_WORKBENCH = OFFSET_ROW23 + 1;
+  public static var TILE_LAB_CONSOLE = OFFSET_ROW23 + 2;
+  public static var TILE_LAB_SHELF = OFFSET_ROW23 + 3;
+  public static var TILE_LAB_SHELF_LOW = OFFSET_ROW23 + 4;
+  public static var TILE_LAB_LOCKER = OFFSET_ROW23 + 5;
+  public static var TILE_LAB_HAZMAT = OFFSET_ROW23 + 6;
+  public static var TILE_LAB_SEAT = OFFSET_ROW23 + 7;
+  public static var TILE_LAB_FRIDGE = OFFSET_ROW23 + 8;
+  public static var TILE_LAB_DRUMS = OFFSET_ROW23 + 9;
+  public static var TILE_LAB_CRATES = OFFSET_ROW23 + 10;
+  public static var TILE_LAB_PLANT = OFFSET_ROW23 + 11;
+  public static var TILE_LAB_BIN = OFFSET_ROW23 + 12;
+  public static var TILE_LAB_SHELF_ROW = OFFSET_ROW23 + 13;
+  // a machine's footprint, every cell of it but the ORIGIN (its low corner), which names the kind
+  public static var TILE_LAB_MACHINE = OFFSET_ROW23 + 14;
+  // === rows 24-28 - one ORIGIN id per machine kind, `TILE_LAB_MACHINE0 + index` into
+  // gen.lab.LabKinds.MACHINES, the way a parked vehicle is named by its origin tile. The kind table
+  // is append-only: an index is a saved tile id
+  public static var OFFSET_ROW24 = 384;
+  public static var TILE_LAB_MACHINE0 = OFFSET_ROW24 + 0;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;
@@ -499,6 +1559,18 @@ class Const
     [ OFFSET_ROW14 + 0, OFFSET_ROW14 + 1, OFFSET_ROW14 + 2 ],
     [ OFFSET_ROW16 + 0, OFFSET_ROW16 + 1, OFFSET_ROW16 + 2 ],
   ];
+
+// and the EXEC/RECEPTION DESK BLOCK, which is the one piece of corp furniture that lives OUTSIDE
+// the four rows above: DARK_TABLE_MARBLE1_3X2 is laid on tileset rows 14 and 16, columns 0-2, and
+// isCorpTableTile answers false for every one of its six ids. That is why an executive office and
+// a reception desk emitted NO GEOMETRY AT ALL for their whole lives — render.corp.CorpFurniture
+// raises a worktop off `m.table` and nothing set it here — while still writing six unwalkable
+// cells into the middle of the room
+  public static inline function isCorpDeskBlock(t:Int):Bool
+    {
+      return (t >= OFFSET_ROW14 && t < OFFSET_ROW14 + 3) ||
+        (t >= OFFSET_ROW16 && t < OFFSET_ROW16 + 3);
+    }
 
 // is this tile a window tile?
   public static inline function isWindowTile(tile: Int) {
@@ -738,4 +1810,11 @@ class Const
 
 typedef _TileGroup = Array<_TileRow>;
 typedef _TileRow = { row: Int, ?col: Int, amount: Int }
+// one entities64 cell (_DecoPlace.frames)
+typedef _FittingFrame = {
+  // atlas row
+  row: Int,
+  // and column
+  col: Int,
+}
 typedef _TileBlock = { row: Int, col: Int, width: Int, height: Int }

@@ -60,7 +60,7 @@ class WildBand
     // so a wood reads as a wood rather than as a stand of skeletons
     trees: [WildStyle.TREE_CONIFER, WildStyle.TREE_BROADLEAF_FULL, WildStyle.TREE_BROADLEAF_FULL,
       WildStyle.TREE_BROADLEAF],
-    bushes: [WildStyle.BUSH_LOW, WildStyle.BUSH_LOW, WildStyle.BUSH_BRAMBLE],
+    bushes: [WildStyle.BUSH_DOME, WildStyle.BUSH_UPRIGHT, WildStyle.BUSH_BRAMBLE],
     rocks: [WildStyle.ROCK_BOULDER, WildStyle.LOG_FALLEN, WildStyle.LOG_FALLEN, WildStyle.ROCK_CLUSTER],
   };
 
@@ -80,7 +80,8 @@ class WildBand
     // written as full arrays rather than as edits to this one
     trees: [WildStyle.TREE_CONIFER, WildStyle.TREE_BROADLEAF, WildStyle.TREE_BROADLEAF_FULL,
       WildStyle.TREE_DEAD],
-    bushes: [WildStyle.BUSH_LOW, WildStyle.BUSH_BRAMBLE],
+    bushes: [WildStyle.BUSH_DOME, WildStyle.BUSH_UPRIGHT, WildStyle.BUSH_BRAMBLE,
+      WildStyle.BUSH_BRAMBLE],
     rocks: [WildStyle.ROCK_BOULDER, WildStyle.ROCK_BOULDER, WildStyle.ROCK_CLUSTER],
   };
 
@@ -96,7 +97,8 @@ class WildBand
     // conifers and snags: what survives on a rock face, and nothing in leaf
     trees: [WildStyle.TREE_CONIFER, WildStyle.TREE_CONIFER, WildStyle.TREE_DEAD,
       WildStyle.TREE_BROADLEAF],
-    bushes: [WildStyle.BUSH_BRAMBLE, WildStyle.BUSH_LOW],
+    bushes: [WildStyle.BUSH_BRAMBLE, WildStyle.BUSH_BRAMBLE, WildStyle.BUSH_DOME,
+      WildStyle.BUSH_UPRIGHT],
     rocks: [WildStyle.ROCK_CLUSTER, WildStyle.ROCK_OUTCROP, WildStyle.ROCK_OUTCROP,
       WildStyle.ROCK_BOULDER],
   };

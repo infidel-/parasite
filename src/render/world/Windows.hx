@@ -77,6 +77,7 @@ class Windows {
       ];
 
       var floors = Std.int(imax(1, Math.round((b.h - GROUND_H) / FLOOR_H)));
+      var cols:Array<WorldCtx.WinCol> = []; // published for StreetProps
       for (f in faces) {
         var wf = b.winForce != null && b.winForce.indexOf(f.dir) >= 0;
         var forced = wf || Geom.noBackWalls(b);
@@ -87,6 +88,12 @@ class Windows {
         function emit(cx:Float):Void {
           WorldCtx.winSeen.set(b, true); // checklist: this building rendered at least one window
           var p = f.place(cx - centerAlong);
+          cols.push({
+            dir: f.dir,
+            x: p.x,
+            z: p.z,
+            rotY: f.rotY,
+          });
           for (j in 0...floors) {
             if (j == b.skipWindowFloor) continue;
             var y = GROUND_H + (j + 0.5) * FLOOR_H;
@@ -126,6 +133,7 @@ class Windows {
       }
 
       if (on.length == 0) continue;
+      WorldCtx.winCols.set(b, cols);
       // BOTH meshes are always built, both sized to every window of this building, and tagged with
       // the building so Occlusion fades its windows along with the rest of the box. A building whose
       // roll came up all-dark still gets its (currently all-scale-0) lit mesh — it has to exist for a

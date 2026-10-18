@@ -193,6 +193,10 @@ class Editor {
       showHud();
     }
 
+    Tools.legend('edit',
+      'E  leave the UV editor (back to building select)\n' +
+      'LMB  pick a polygon CLASS   ·   wheel  shift V   alt+wheel  shift U\n' +
+      'shift  step /10   ctrl  step x10   ·   Ctrl+C  copy overrides   R  reset');
     Tools.listen(function() {
       refreshInd();
       if (!editMode()) { selCls = null; clearOutline(); showHud(); }

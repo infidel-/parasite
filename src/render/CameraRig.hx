@@ -335,8 +335,12 @@ class CameraRig {
         return 0.0;
       var left = game.area.getCellType(col - 1, row);
       var right = game.area.getCellType(col + 1, row);
-      var sideLeft = left == Const.TILE_BUILDING || left == Const.TILE_ALLEY;
-      var sideRight = right == Const.TILE_BUILDING || right == Const.TILE_ALLEY;
+      var sideLeft = left == Const.TILE_BUILDING ||
+        left == Const.TILE_ALLEY ||
+        left == Const.TILE_PARKING;
+      var sideRight = right == Const.TILE_BUILDING ||
+        right == Const.TILE_ALLEY ||
+        right == Const.TILE_PARKING;
       if (sideLeft == sideRight)
         return 0.0;
       // positive Y rotation moves the camera toward +X; stand outside the left wall, and vice versa

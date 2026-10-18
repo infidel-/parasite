@@ -19,62 +19,12 @@ class AreaTooltip extends BeamTooltip
       super(g, h, 'hud-inspect-info', 'area-tip');
     }
 
-// show area tooltip when inspect mode is active
+// the 3D view drives the area hover tooltip itself (render.View.loop, through showBeam); with no
+// view showing yet (the entry fade) there is nothing to point at
   public function update()
     {
-      // the 3D view drives its own hover tooltip (projected anchor via render.View.loop);
-      // the 2D tile mapping is wrong under the perspective camera, so stand down there
-      if (game.scene.view3d != null &&
-          game.scene.view3d.running)
-        return;
-      if (!hud.isInspectMode())
-        {
-          hide();
-          return;
-        }
-
-      var pos = game.scene.mouse.getXY();
-      if (pos.x < 0 ||
-          pos.y < 0 ||
-          pos.x >= game.area.width ||
-          pos.y >= game.area.height)
-        {
-          hide();
-          return;
-        }
-
-      if (!game.scene.area.isVisible(pos.x, pos.y))
-        {
-          hide();
-          return;
-        }
-
-      var ai = game.area.getAI(pos.x, pos.y);
-      if (ai != null)
-        {
-          showBeam(ai.x, ai.y, ai.id, getTooltipText(ai));
-          return;
-        }
-
-      // no AI on the tile: fall through to whatever object stands there. an AI wins the tile it
-      // shares with one — it is the thing that acts
-      var obj = objectAt(pos.x, pos.y);
-      if (obj == null)
-        {
-          hide();
-          return;
-        }
-      showBeam(obj.x, obj.y, beamID(obj), getObjectText(obj));
-    }
-
-// the first object worth describing on a tile, or null. visible() is what drops decorations and
-// doors — the same test render.Actors uses to decide which objects carry the tactical marks
-  public function objectAt(x: Int, y: Int): AreaObject
-    {
-      for (o in game.area.getObjectsAt(x, y))
-        if (o.visible())
-          return o;
-      return null;
+      if (!game.scene.view3d.running)
+        hide();
     }
 
 // beam target id for an object. NEGATED, because AI ids and object ids come from separate counters

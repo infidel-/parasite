@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityModel.Building;
 import render.RenderConfig;
 import render.Poly.tag;
+import render.Textures;
 import render.world.Geom;
 import render.world.WorldCtx;
 
@@ -125,7 +126,8 @@ class Gables {
       geo.setAttribute('position', new Float32BufferAttribute(p, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(u, 2));
       geo.computeVertexNormals();
-      var t = tex.clone(); t.needsUpdate = true; t.wrapS = t.wrapT = THREE.RepeatWrapping;
+      var t = Textures.share(tex);
+      t.wrapS = t.wrapT = THREE.RepeatWrapping;
       var m = tag(new MeshLambertMaterial({ map: t, side: THREE.DoubleSide }), nm, desc, path);
       // geometry is baked in world coords (mesh stays at origin), so tag the building
       // explicitly — Occlusion's position bucketing can't place an origin-anchored mesh

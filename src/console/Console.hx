@@ -64,6 +64,10 @@ class Console
       if (Const.isDebug && arr[0] == 'ai')
         aiTraceCommand(arr);
 
+      // XXX area regen
+      else if (Const.isDebug && arr[0] == 'area')
+        areaCommand(arr);
+
       // XXX config commands
       else if (char0 == 'c')
         {
@@ -118,13 +122,14 @@ class Console
               'give trait [name], ' +
               'give evolution [name] [level],<br/>' +
               'ai trace|untrace [id] - toggle AI browser-console trace,<br/>' +
+              'area regen - regenerate the current area, '  +
+              'area room - what the generator built where you stand,<br/>' +
               'cfg|config, ' +
               'ch|chat - set chat stage,<br/>' +
               // debug
               'debug renderstats, ' +
               'debug ai, ' +
               'debug sound, ' +
-              'debug lights, ' +
               'debug colors, ' +
               'debug alert, ' +
               'debug demo, ' +
@@ -165,7 +170,6 @@ class Console
               'debug renderstats, ' +
               'debug ai, ' +
               'debug sound, ' +
-              'debug lights, ' +
               'debug colors, ' +
               'load - load game, ' +
               'mods [list|enable <id>|disable <id>|errors|rescan], ' +
@@ -388,6 +392,51 @@ class Console
           return;
         }
       game.finish(p);
+    }
+
+
+// the `area` group: `regen` and `room`.
+//
+// regen regenerates the area the player is standing in: out to the region, throw the map away,
+// back in. going out is what makes it clean - AreaGame.leave() despawns, and AreaGame.enter()
+// generates whatever is not generated, so no generation path has to know it is being re-run.
+// room reports what the generator built under the player - see console.AreaRoom
+  function areaCommand(arr: Array<String>)
+    {
+      if (arr[1] == 'room')
+        {
+          var s = AreaRoom.report(game);
+          if (s == null)
+            {
+              log('Not in area.');
+              return;
+            }
+          log(StringTools.replace(s, '\n', '<br/>'));
+          render.StreetPerf.copyText(s);
+          return;
+        }
+      if (arr[1] != 'regen')
+        {
+          log('area regen - regenerate the current area,<br/>' +
+            'area room - what the generator built where you stand (copied to clipboard)');
+          return;
+        }
+      if (game.location != LOCATION_AREA ||
+          game.area == null)
+        {
+          log('Not in area.');
+          return;
+        }
+      var area = game.area;
+      if (area.isHabitat)
+        {
+          log('Cannot regenerate a habitat.');
+          return;
+        }
+      game.setLocation(LOCATION_REGION);
+      area.regenerate();
+      game.setLocation(LOCATION_AREA, area);
+      log('Area ' + area.id + ' (' + area.name + ') regenerated.');
     }
 
 

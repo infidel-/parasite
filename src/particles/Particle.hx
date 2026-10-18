@@ -4,6 +4,12 @@ import game.Game;
 import haxe.Timer;
 import js.html.CanvasRenderingContext2D;
 
+// LEGACY: the 2D particle base. every area renders through render.View, so nothing draws a particle
+// any more; the class stays because mods subclass it and add instances through
+// AreaView.addParticle, which still fires onDeath() once the time runs out. new effects belong in
+// the 3D view (render.View.play*, mods.ModFx). the static helpers below are live: they hand the
+// effect to the 3D view and only fall back to the lasting part (sound, persisted splat) when the
+// view cannot play it — no shooter actor, or the view still building on area entry
 class Particle
 {
   // public so mod-side Particle subclasses inherit a usable scene/game ref
@@ -13,71 +19,59 @@ class Particle
   public var createdTS: Float; // in ms
   public var time: Float; // time to live in ms
 
-// weapon shot particle
+// weapon shot the 3D view did not play: the impact sound alone (CommonLogic writes the blood)
   public static function createShot(type: String, scene: GameScene, x: Int, y: Int,
       point: _Point, hit: Bool, ?bloodType: String = 'red')
     {
-      switch (type)
-        {
-          case 'attack-pistol':
-            new ParticlePistol(scene, x, y,
-              point, hit, bloodType);
-          case 'attack-assault-rifle':
-            new ParticleRifle(scene, x, y,
-              point, hit, bloodType);
-          case 'attack-shotgun':
-            new ParticleShotgun(scene, x, y,
-              point, hit, bloodType);
-          case 'attack-stun-rifle':
-            new ParticleStunRifle(scene, x, y,
-              point, hit);
-          default:
-            trace('no particle for ' + type);
-        }
+      scene.sounds.play('attack-bullet-' + (hit ? 'hit' : 'miss'), {
+        always: true,
+        delay: (hit ? 60 : 40),
+        x: point.x,
+        y: point.y,
+      });
     }
 
-// spit projectile particle
+// spit projectile
   public static function createSpit(type: String, scene: GameScene, x: Int, y: Int,
       point: _Point)
     {
       createProjectile(type, scene, x, y, point);
     }
 
-// generic projectile particle
+// generic projectile; without the 3D flight only the splat it lands is left
   public static function createProjectile(type: String, scene: GameScene, x: Int,
       y: Int, point: _Point, ?hit: Bool = true, ?bloodType: String = 'red')
     {
-      // the 3D view takes over when live (a 2D particle would be hidden under it)
-      if (scene.view3d != null &&
-          scene.view3d.playProjectile(type, x, y, point.x, point.y, hit, bloodType))
+      if (scene.view3d.playProjectile(type, x, y, point.x, point.y, hit, bloodType))
         return;
+      var source = {
+        x: x,
+        y: y,
+      };
       switch (type)
         {
-          case 'acidSpit', 'slimeSpit', 'paralysisSpit':
-            new ParticleSpit(scene, type, x, y, point);
+          case 'acidSpit':
+            createSplat('acid', scene, point, source);
+          case 'slimeSpit':
+            createSplat('slime', scene, point, source);
           case 'needle':
-            new ParticleNeedle(scene, x, y, point, hit, bloodType);
+            if (hit)
+              createSplat(bloodType, scene, point, source);
           default:
-            trace('no projectile particle for ' + type);
         }
     }
 
-// splat particle
+// blood splat; without the 3D burst only the persisted decal and the landing sound are left
   public static function createSplat(type: String, scene: GameScene, pt: _Point,
       ?source: _Point)
     {
-      // the 3D view takes over when live (a 2D particle would be hidden under it)
-      if (scene.view3d != null &&
-          scene.view3d.playSplat(type, pt.x, pt.y, source))
+      if (scene.view3d.playSplat(type, pt.x, pt.y, source))
         return;
-      switch (type)
-        {
-          case 'red', 'black', 'acid', 'slime':
-            new ParticleSplat(scene, type, pt, source);
-          default:
-            trace('unknown splat type ' + type);
-            new ParticleSplat(scene, 'red', pt, source);
-        }
+      scene.game.area.addSplat(type, pt.x, pt.y);
+      scene.sounds.play('fx-splat', {
+        x: pt.x,
+        y: pt.y,
+      });
     }
 
   public function new(s: GameScene)
@@ -94,15 +88,9 @@ class Particle
       return (Timer.stamp() * 1000 - createdTS > time);
     }
 
-// base drawing function, should be overridden
+// LEGACY: never called — kept so mod subclasses that override it still compile
   public function draw(ctx: CanvasRenderingContext2D, dt: Float)
     {}
-
-// provide optional light pulses for this particle
-  public function getLightPulses(): Array<_ParticleLightPulse>
-    {
-      return [];
-    }
 
 // on death hook
   public function onDeath()

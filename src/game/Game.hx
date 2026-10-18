@@ -374,6 +374,8 @@ class Game extends _SaveObject
           area = region.getXY(playerRegion.x, playerRegion.y);
           if (newarea != null) // enter specified area
              area = newarea;
+          // windows the entry fires wait for the 3D reveal (GameScene.draw3D resumes the queue)
+          ui.pauseQueue();
           area.enter();
           // mod event: entered area
           ModEventRegistry.fire(ModEventRegistry.AREA_ENTER, {
@@ -443,8 +445,6 @@ class Game extends _SaveObject
           var t0 = dp ? haxe.Timer.stamp() : 0.0;
           area.turn();
           var tArea = dp ? haxe.Timer.stamp() : 0.0;
-          scene.area.turn();
-          var tScene = dp ? haxe.Timer.stamp() : 0.0;
           if (state != GAMESTATE_RUNNING)
             return;
 
@@ -470,8 +470,7 @@ class Game extends _SaveObject
               if (tot > 6.0)
                 trace('[turn-perf] ' + Std.int(tot) + 'ms' +
                   ' area(ai)=' + Std.int((tArea - t0) * 1000) +
-                  ' scene=' + Std.int((tScene - tArea) * 1000) +
-                  ' mgr=' + Std.int((tMgr - tScene) * 1000) +
+                  ' mgr=' + Std.int((tMgr - tArea) * 1000) +
                   ' goals=' + Std.int((tGoals - tMgr) * 1000) +
                   ' vis=' + Std.int((tVis - tGoals) * 1000) +
                   ' | ai=' + Lambda.count(area.getAllAI()) +
@@ -772,7 +771,10 @@ class Game extends _SaveObject
 // save current game into slot
   public function save(slotID: Int)
     {
-      if (!isStarted ||
+      // isInited for the reason autosave records: a failed load leaves the game wiped but otherwise
+      // looking like a running one, and a manual save then overwrites a slot with an empty world
+      if (!isInited ||
+          !isStarted ||
           state != GAMESTATE_RUNNING)
         {
           debug('Not in game.');
@@ -836,7 +838,15 @@ class Game extends _SaveObject
 // not-allowed-to-save states as manual save (mission/chat/not-running).
   public function autosave(force: Bool = false)
     {
-      if (!isStarted ||
+      // isInited is the WIPED-GAME guard and it is the one that matters here. Loader.load calls
+      // restartPre() before it reads the file, which clears isInited and tears the world down, and
+      // a load that then fails leaves the game sitting there wiped — still isStarted, still
+      // GAMESTATE_RUNNING, so every other test below passes. The next autosave then wrote an EMPTY
+      // world over the reserved slot and destroyed the save the failed load had been reading. A
+      // successful load restores isInited from the save itself, so nothing legitimate is blocked --
+      // and so does a load that throws partway, which is why Loader.load clears it again on failure
+      if (!isInited ||
+          !isStarted ||
           state != GAMESTATE_RUNNING ||
           ui.hud.state == HUD_CHAT ||
           player.inMissionArea())
@@ -863,8 +873,9 @@ class Game extends _SaveObject
       var warnings = mods.ModRegistry.diffSaveMods(saveMods);
       if (warnings.length == 0)
         {
-          Loader.load(this, slotID);
-          applyLoaded();
+          // only on a load that actually restored a game graph — see Loader.load's return
+          if (Loader.load(this, slotID))
+            applyLoaded();
           return;
         }
 
@@ -891,9 +902,19 @@ class Game extends _SaveObject
         obj: {
           text: buf.toString(),
           func: function(yes: Bool) {
-            if (!yes) return;
-            Loader.load(self, slotID);
-            self.applyLoaded();
+            if (!yes)
+              {
+                // a cancelled boot load has no world to return to: the caller already closed
+                // the menu, so reopen it after YesNo's dismiss() has closed this dialog
+                if (!self.isStarted)
+                  js.Browser.window.setTimeout(function() {
+                    self.ui.canvas.style.visibility = 'hidden';
+                    self.ui.state = UISTATE_MAINMENU;
+                  }, 0);
+                return;
+              }
+            if (Loader.load(self, slotID))
+              self.applyLoaded();
           }
         }
       });
@@ -907,6 +928,9 @@ class Game extends _SaveObject
       isStarted = true;
       ui.hud.goals.rebuild(); // resync goal rows to the loaded model (no animation)
       ui.hud.update();
+      // the 3D view is keyed on the shown area's ID, and a load hands back the same IDs attached to
+      // brand new AreaGames — so it has to be told, or it keeps the previous save's geometry
+      scene.forget3D();
       // first area render is the LAST act of load (like New Game's restart): draw3D's
       // fader.cover defers the heavy 3D build on its own timer, so the black cover paints
       // fully before the build stalls the thread. (the mid-load 3D draw was removed from
@@ -959,6 +983,8 @@ class Game extends _SaveObject
         ai = new DogAI(this, x, y);
       else if (type == 'police' || type == 'cop')
         ai = new PoliceAI(this, x, y);
+      else if (type == 'officer')
+        ai = new OfficerAI(this, x, y);
       else if (type == 'prostitute' || type == 'pro')
         ai = new ProstituteAI(this, x, y);
       else if (type == 'security' || type == 'sec')

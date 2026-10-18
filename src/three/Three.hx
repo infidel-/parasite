@@ -21,7 +21,15 @@ package three;
   static var GreaterDepth:Dynamic;
   static var PCFShadowMap:Dynamic; // WebGLRenderer.shadowMap.type — PCF shadows (soft since r181; PCFSoftShadowMap deprecated)
   static var AdditiveBlending:Dynamic; // Material.blending — the glow quads and light shafts add over what is behind them
+  static var NormalBlending:Dynamic; // Material.blending — three's default alpha blend for a transparent material
+  static var CustomBlending:Dynamic; // Material.blending — the blendSrc/blendDst/...Alpha factors below are used
+  static var SrcAlphaFactor:Dynamic; // blend factor: the source alpha
+  static var OneMinusSrcAlphaFactor:Dynamic; // blend factor: one minus the source alpha
+  static var OneFactor:Dynamic; // blend factor: one
+  static var AddEquation:Dynamic; // blend equation: source + destination
+  static var ShaderChunk:haxe.DynamicAccess<String>; // the GLSL chunks `#include <name>` expands to, by name
   static var LinearFilter:Dynamic; // Texture.minFilter/magFilter — bilinear with NO mip chain (pairs with generateMipmaps=false)
+  static var LinearMipmapLinearFilter:Dynamic; // Texture.minFilter — trilinear over the mip chain, three's default for a mapped texture
   // merge same-attribute geometries into one (BufferGeometryUtils). useGroups=false collapses them to a
   // single draw call, so each source's placement must already be baked into its verts (see geo.translate)
   static function mergeGeometries(geos:Array<Dynamic>, ?useGroups:Bool):Dynamic;
@@ -86,6 +94,15 @@ package three;
   public function new();
   public function compose(pos:Vector3, quat:Quaternion, scl:Vector3):Matrix4;
   public function multiplyMatrices(a:Matrix4, b:Matrix4):Matrix4;
+  public function copy(m:Matrix4):Matrix4;
+  public function invert():Matrix4; // in place; world -> object frame for a picked hit
+  public function getMaxScaleOnAxis():Float; // largest axis scale, for a transformed bounding sphere's radius
+  public function clone():Matrix4;                    // a new matrix with this one's entries
+  public function makeScale(x:Float, y:Float, z:Float):Matrix4; // in place; a pure scale (0,0,0 hides an instance)
+  public function makeRotationY(theta:Float):Matrix4; // in place; a pure turn about y, radians
+  public function setPosition(x:Float, y:Float, z:Float):Matrix4; // in place; overwrites the translation only
+  public function multiply(m:Matrix4):Matrix4;        // in place; this = this * m (m applied first)
+  public var elements:js.lib.Float32Array; // the 16 entries, column-major
 }
 
 @:native("THREE.Sphere") extern class Sphere {
@@ -98,6 +115,7 @@ package three;
   public function new();
   public function setFromProjectionMatrix(m:Matrix4):Frustum;
   public function intersectsSphere(s:Sphere):Bool;
+  public function intersectsBox(b:Box3):Bool; // is any part of this world-space box inside the frustum
 }
 
 @:native("THREE.Color") extern class Color {
@@ -106,6 +124,7 @@ package three;
   public function copy(c:Color):Color;                   // copy another color's channels in place
   public function lerpColors(a:Color, b:Color, t:Float):Color; // set this = a->b lerp (t in 0..1)
   public function setHex(hex:Int):Color;                 // set channels from 0xRRGGBB (sRGB-decoded)
+  public function setScalar(v:Float):Color;              // set all three channels to one LINEAR value
   public var r:Float;                                    // LINEAR red 0..1 (setHex decodes sRGB)
   public var g:Float;                                    // linear green
   public var b:Float;                                    // linear blue
@@ -120,6 +139,7 @@ package three;
   public var castShadow:Bool;    // this object's geometry is rendered into shadow maps
   public var receiveShadow:Bool; // shadow maps are sampled onto this object's material
   public var renderOrder:Float;
+  public var frustumCulled:Bool; // off for anything rebuilt per frame, whose bounds three cannot trust
   public var matrixWorld:Matrix4;
   public var userData:Dynamic;
   public var name:String;
@@ -128,9 +148,16 @@ package three;
   public var geometry:Dynamic;   // present on meshes; Dynamic for editor traversal
   public var material:Dynamic;
   public var isInstancedMesh:Bool;
+  // fired before each SHADOW-map draw of this object: (renderer, object, camera, shadowCamera, geometry,
+  // depthMaterial, group). three's own hook, a plain no-op until assigned
+  public var onBeforeShadow:Dynamic;
+  // fired after that draw, same args
+  public var onAfterShadow:Dynamic;
   public function add(o:Object3D):Void;
   public function remove(o:Object3D):Void;
+  public function removeFromParent():Void; // detach from whatever holds it: the scene, or a Chunks group
   public function traverse(cb:Object3D->Void):Void;
+  public function traverseVisible(cb:Object3D->Void):Void; // traverse, skipping every hidden subtree
   public function applyMatrix4(m:Matrix4):Void;
   public function lookAt(v:Vector3):Void;
   public function clone(?recursive:Bool):Object3D; // deep-copy (recursive default true)
@@ -145,6 +172,7 @@ package three;
   public function setFromObject(o:Object3D):Box3;
   public function getSize(target:Vector3):Vector3;
   public function getCenter(target:Vector3):Vector3;
+  public function expandByPoint(p:Vector3):Box3; // grow the box to contain this point (a fresh Box3 is empty)
 }
 
 @:native("THREE.Scene") extern class Scene extends Object3D {
@@ -155,11 +183,15 @@ package three;
 
 @:native("THREE.Fog") extern class Fog {
   public function new(color:Int, near:Float, far:Float);
+  public var near:Float; // where the fog starts, world units from the camera (a uniform, not a program key)
+  public var far:Float;  // where it is opaque
 }
 
 @:native("THREE.PerspectiveCamera") extern class PerspectiveCamera extends Object3D {
   public function new(fov:Float, aspect:Float, near:Float, far:Float);
+  public var fov:Float; // vertical field of view in DEGREES — world size to screen px, for brush cursors
   public var aspect:Float;
+  public var far:Float; // the far clip plane; updateProjectionMatrix() after changing it
   public var projectionMatrix:Matrix4;
   public var matrixWorldInverse:Matrix4;
   public function updateProjectionMatrix():Void;
@@ -173,6 +205,7 @@ package three;
   public var toneMappingExposure:Float;
   public var shadowMap:Dynamic;
   public var info:RendererInfo;
+  public var debug:{ checkShaderErrors:Bool }; // checkShaderErrors: read shader/program info logs on each program's first use (fills info.programs[].diagnostics); costs sync GPU round trips
   public var autoClear:Bool;
   public function setPixelRatio(r:Float):Void;
   public function getPixelRatio():Float;                  // current render scale; passes sized outside the composer need it to match
@@ -185,6 +218,7 @@ package three;
   public function setRenderTarget(target:Dynamic):Void; // bind an offscreen WebGLRenderTarget (null = default framebuffer); its color space is baked into every program's cacheKey
   public function compile(scene:Scene, camera:Dynamic):Void; // pre-warm: compile all scene materials' shader programs up front (avoids first-frame stall)
   public function compileAsync(scene:Scene, camera:Dynamic):Dynamic; // like compile() but parallel + non-blocking (KHR_parallel_shader_compile); returns a Promise resolving when programs are ready
+  public function initTexture(texture:Texture):Void; // upload a texture to the GPU now instead of on the first draw that samples it
 }
 
 @:native("THREE.OrthographicCamera") extern class OrthographicCamera extends Object3D {
@@ -238,7 +272,7 @@ typedef RendererInfo = {
   public function new(w:Float, h:Float, d:Float);
   public function translate(x:Float, y:Float, z:Float):BoxGeometry; // bakes the offset into vertices (from BufferGeometry), so a merged mesh needs no per-source transform
 }
-@:native("THREE.PlaneGeometry") extern class PlaneGeometry {
+@:native("THREE.PlaneGeometry") extern class PlaneGeometry extends BufferGeometry {
   public function new(w:Float, h:Float);
 }
 @:native("THREE.RingGeometry") extern class RingGeometry {
@@ -259,23 +293,48 @@ typedef RendererInfo = {
   public function new(geo:Dynamic, ?thresholdAngle:Float);
 }
 
+// every attribute three builds off a glb is one of these. typed because reading uv per TEXEL
+// (render.PolyPaint) leans on it far harder than reading a vertex per triangle ever did
+@:native("THREE.BufferAttribute") extern class BufferAttribute {
+  public var array:Dynamic;      // the backing typed array, whichever width the loader chose
+  public var count:Int;          // ELEMENTS, not floats: vertices for position/uv, corners for index
+  public var itemSize:Int;
+  public var needsUpdate:Bool;
+  public function getX(i:Int):Float;
+  public function getY(i:Int):Float;
+  public function getZ(i:Int):Float;
+  public function setXYZ(i:Int, x:Float, y:Float, z:Float):BufferAttribute; // set element i (flag needsUpdate after, once it is drawn)
+}
+
 @:native("THREE.BufferGeometry") extern class BufferGeometry {
   public function new();
   public var groups:Array<{ var start:Int; var count:Int; var materialIndex:Int; }>;
   public var index:Dynamic;       // .getX(i)
   public var attributes:Dynamic;  // .position.getX/getY/getZ
+  public function getAttribute(name:String):BufferAttribute; // null when the glb carries no such set
   public function setAttribute(name:String, attr:Dynamic):Void;
   public function setIndex(idx:Array<Int>):Void;
   public var boundingBox:Box3;    // null until computeBoundingBox() runs; the geometry's LOCAL extent
   public function computeVertexNormals():Void;
+  public function applyMatrix4(m:Matrix4):BufferGeometry; // bake a transform into the positions/normals, in place
   public function clone():BufferGeometry;         // deep copy, attribute buffers included (render.Models.hullGeo bakes into one)
   public function computeBoundingBox():Void;      // fills boundingBox; local space, so it is unaffected by any instance transform
   public function computeBoundingSphere():Void;   // re-fit the cull sphere after mutating positions in place
+  public function setDrawRange(start:Int, count:Int):Void; // draw a PREFIX of a preallocated buffer,
+                                                           // so a live selection overlay never reallocates
+  public function translate(x:Float, y:Float, z:Float):BufferGeometry; // bake an offset into the positions, in place
+  public function clearGroups():Void; // drop every draw group (a mesh with a material ARRAY then draws nothing)
+  public function addGroup(start:Int, count:Int, materialIndex:Int):Void; // one draw over [start, start + count) of the index
   public function dispose():Void;
 }
 
 @:native("THREE.Float32BufferAttribute") extern class Float32BufferAttribute {
+  // three allocates the buffer itself when the first arg is a LENGTH rather than the values
+  @:overload(function(len:Int, itemSize:Int):Void {})
   public function new(arr:Array<Float>, itemSize:Int);
+  public var array:js.lib.Float32Array; // the backing buffer: write into it, then needsUpdate to re-upload
+  public var count:Int;
+  public var needsUpdate:Bool;
 }
 
 @:native("THREE.MeshStandardMaterial") extern class MeshStandardMaterial {
@@ -285,6 +344,10 @@ typedef RendererInfo = {
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;
   public var alphaTest:Float; // fragments with map alpha below this are discarded (window-cutout sprites)
+  public var roughness:Float;  // GGX lobe width; 1 is fully matte and is what render.Models.toLambert tests
+  public var metalness:Float;  // 0 dielectric, 1 metal — and a metal has NO diffuse term at all, so 1
+                               // with nothing to reflect renders BLACK. there is nothing to reflect in
+                               // this build (see the PMREM note above), so treat this as pinned near 0
   public var userData:Dynamic;
 }
 @:native("THREE.MeshBasicMaterial") extern class MeshBasicMaterial {
@@ -299,6 +362,7 @@ typedef RendererInfo = {
 @:native("THREE.MeshLambertMaterial") extern class MeshLambertMaterial {
   public function new(params:Dynamic);
   public var map:Texture;
+  public var color:Color;      // the albedo tint over the map, a plain uniform (not in the program key)
   public var emissive:Color;
   public var emissiveMap:Texture;
   public var emissiveIntensity:Float;
@@ -314,6 +378,20 @@ typedef RendererInfo = {
   // whether a drawn fragment writes depth. it has to follow `opacity` down: a faded surface that
   // still wrote depth would reject everything behind it however faint it drew
   public var depthWrite:Bool;
+  // multiply the geometry's `color` attribute into the base colour. settable after construction so a
+  // shared material builder (render.wild.WildGrass.material) can turn it on for one caller only
+  public var vertexColors:Bool;
+  public var userData:Dynamic;
+}
+// a lambert with a Blinn-Phong highlight: the ceiling spots reflect in it as a glint that moves with
+// the camera. render.corp.CorpFurniture's polished boardroom top
+@:native("THREE.MeshPhongMaterial") extern class MeshPhongMaterial {
+  public function new(params:Dynamic);
+  public var map:Texture;
+  // the highlight's colour, i.e. its strength
+  public var specular:Color;
+  // the highlight's tightness: higher is a smaller, harder spot
+  public var shininess:Float;
   public var userData:Dynamic;
 }
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {
@@ -335,6 +413,14 @@ typedef RendererInfo = {
   public var instanceMatrix:InstancedBufferAttribute; // per-instance transforms, 16 floats each
   public var count:Int; // instances actually drawn (<= allocated); trimmed per frame by Models.cull
   public function setMatrixAt(i:Int, m:Matrix4):Void;
+  public function getMatrixAt(i:Int, m:Matrix4):Void; // reads one instance's transform back out
+  // the instances' union sphere raycast tests first: built off the first `count` instances on the
+  // first raycast and cached, null rebuilds it on the next
+  public var boundingSphere:Sphere;
+  // per-instance colour, multiplied into the material's own. NULL until the first setColorAt, and
+  // its existence is what compiles USE_INSTANCING_COLOR into the program
+  public var instanceColor:InstancedBufferAttribute;
+  public function setColorAt(i:Int, c:Color):Void;
   public function dispose():Void; // release GPU buffers when the mesh is thrown away
 }
 @:native("THREE.InstancedBufferAttribute") extern class InstancedBufferAttribute {
@@ -356,6 +442,8 @@ typedef RendererInfo = {
 @:native("THREE.Texture") extern class Texture {
   public function new();
   public var uuid:String;
+  public var name:String; // three leaves it '', and render.Textures stamps the source path on it so
+                          // render.PolyProbe can name the art under a clicked face
   public var image:Dynamic;
   public var needsUpdate:Bool;
   public var colorSpace:Dynamic;
@@ -374,28 +462,70 @@ typedef RendererInfo = {
   public var minFilter:Dynamic; // minification filter; LinearFilter drops the mip chain (see generateMipmaps)
   public var magFilter:Dynamic; // magnification filter; LinearFilter is what turns a per-cell data map into a soft ramp
   public var generateMipmaps:Bool; // build a mip chain on upload. false for a small data map rebuilt often
+  public var source:TextureSource; // the image this texture samples; clone() shares it, and three uploads once per source + params
+  public var version:Int; // bumped by needsUpdate; a bind re-uploads when it differs from what was last uploaded
   public function clone():Texture;
   public function dispose():Void; // free the GPU texture — needed for one-off canvas-baked maps, which
                                   // render.View.disposeScene deliberately leaves alone (it assumes cached ones)
 }
+// the image data behind one or more Textures: three keys its GPU copies on this object, so every Texture
+// sharing a source (clone(), render.Textures.share) shares one decode and one upload per param set
+@:native("THREE.Source") extern class TextureSource {
+  public var data:Dynamic; // the image/canvas itself (what Texture.image reads and writes)
+  public var version:Int; // bumped by any sharer's needsUpdate; a moved version re-uploads on the next bind
+}
+// N same-size RGBA images as LAYERS of one texture, sampled `texture(sampler2DArray, vec3(u, v, layer))`:
+// each layer is its own full 0..1 space, so wrap, mips and anisotropy work per layer (an atlas cannot wrap
+// inside a sub-rect). flipY is not available on upload, so the data has to be written bottom row first
+@:native("THREE.DataArrayTexture") extern class DataArrayTexture extends Texture {
+  public function new(data:js.lib.Uint8Array, width:Int, height:Int, depth:Int);
+  public var onUpdate:Void->Void; // fired once the GPU upload has run
+}
 @:native("THREE.CanvasTexture") extern class CanvasTexture extends Texture {
   public function new(canvas:Dynamic);
 }
+// NO EXTERN FOR PMREMGenerator, DELIBERATELY. Image-based lighting is not available in this build:
+// PMREM's blurred mips render BLACK, measured on an isolated scene holding one sphere and nothing
+// else (white equirect at intensity 1 — roughness 0.05 gives 108.2, 0.25 gives 1.2, 0.45 and up give
+// 0). Only mip 0 carries anything, and the roughness band where that mip is selected is the same one
+// tools/models.mjs documents as the half-float bloom catastrophe. Binding it would compile, run, and
+// hand back black. render.world.PropEnv paints a reflection in the shader instead; its header and
+// docs/3d-changes.md carry the full measurement
 @:native("THREE.TextureLoader") extern class TextureLoader {
   public function new();
   public function load(path:String, ?onLoad:Dynamic, ?onProgress:Dynamic, ?onError:Dynamic):Texture;
 }
 
+// one hit face. a/b/c are indices into the geometry's position/uv attributes, which is what
+// makes a face referenceable back to the glb (render.PolyProbe, render.PolyPaint)
+typedef IntersectFace = {
+  var a:Int;
+  var b:Int;
+  var c:Int;
+  var materialIndex:Int;
+  @:optional var normal:Vector3; // the face's own normal, in the object's local frame
+};
+
 typedef Intersection = {
   var object:Object3D;
-  @:optional var face:{ var materialIndex:Int; };
+  @:optional var face:IntersectFace;
   @:optional var faceIndex:Int;
   @:optional var instanceId:Int;
+  @:optional var point:Vector3; // the hit, in WORLD space
+  @:optional var uv:Vector2;    // interpolated uv at the hit
   var distance:Float;
+};
+
+// the world-space ray a Raycaster is currently set to. read it to run a CHEAPER intersection than
+// intersectObjects, which is brute force: it costs 9.4ms against a 100k-triangle prop
+typedef Ray = {
+  var origin:Vector3;
+  var direction:Vector3;  // unit length
 };
 
 @:native("THREE.Raycaster") extern class Raycaster {
   public function new();
+  public var ray:Ray;
   public function setFromCamera(ndc:Vector2, cam:Object3D):Void;
   public function intersectObjects(objs:Array<Object3D>, recursive:Bool):Array<Intersection>;
 }
@@ -413,10 +543,19 @@ typedef Intersection = {
 }
 @:native("THREE.RenderPass") extern class RenderPass {
   public function new(scene:Scene, camera:Object3D);
+  public var clear:Bool;                                   // false = draw over the buffer the previous passes left
 }
 @:native("THREE.UnrealBloomPass") extern class UnrealBloomPass {
   public function new(resolution:Vector2, strength:Float, radius:Float, threshold:Float);
   public var enabled:Bool;
+  public var renderTargetsHorizontal:Array<WebGLRenderTarget>; // one per mip of the blur chain, first blur direction
+  public var renderTargetsVertical:Array<WebGLRenderTarget>;   // the same chain, second blur direction
+  public var renderTargetBright:WebGLRenderTarget;             // the high-pass input of the chain
+  public function dispose():Void; // frees its mip-chain RTs and materials — composer.dispose() does NOT touch passes
+}
+// an offscreen framebuffer; only what the render code frees by hand
+@:native("THREE.WebGLRenderTarget") extern class WebGLRenderTarget {
+  public function dispose():Void; // deletes its GL texture + framebuffer; the JS object may live on
 }
 // ground-truth ambient occlusion; renders its own depth + normal prepass of the scene each frame,
 // so it is enabled-gated (a disabled pass is skipped whole by the composer) — see render.View.setAO
@@ -427,6 +566,13 @@ typedef Intersection = {
   public function setSize(w:Float, h:Float):Void;          // resize the AO/denoise/prepass render targets
   public function updateGtaoMaterial(params:Dynamic):Void; // radius/distanceExponent/thickness/scale/samples
   public function dispose():Void;                          // frees its RTs/noise textures — composer.dispose() does NOT touch passes
+  // the composer's per-frame entry, as a FIELD so it can be wrapped: the prepass renders the whole
+  // scene with one opaque override material and a billboard goes into it as a solid slab. See
+  // render.View, which hides the sprite layer for the duration of this call
+  public var render:Dynamic;
+  // the full-screen quad that multiplies the AO over the frame (render.View patches its shader to
+  // leave the upright sprites out of it)
+  public var blendMaterial:Dynamic;
 }
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();

@@ -230,7 +230,9 @@ class PlayerRegion extends _SaveObject
         }
 
       target = null;
-      game.log(currentArea.info.isInhabited ?
+      game.log(currentArea.typeID == AREA_MILITARY_BASE ?
+        "You approach the base through the woods." :
+        currentArea.info.isInhabited ?
         "You emerge from the sewers." : "You enter the area.");
       game.setLocation(LOCATION_AREA);
 

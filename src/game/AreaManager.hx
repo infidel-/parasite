@@ -315,7 +315,7 @@ class AreaManager extends _SaveObject
     {
       var list = area.getAllAI();
       for (ai in list)
-        if (Lambda.has([ 'police', 'security', 'soldier' ], ai.type) &&
+        if (Lambda.has([ 'police', 'security', 'soldier', 'officer' ], ai.type) &&
             ai.state == AI_STATE_IDLE)
           ai.setState(AI_STATE_ALERT, REASON_BACKUP);
     }
@@ -408,7 +408,8 @@ class AreaManager extends _SaveObject
       for (ai in list)
         if (ai.type == 'police' ||
             ai.type == 'security' ||
-            ai.type == 'soldier')
+            ai.type == 'soldier' ||
+            ai.type == 'officer')
           cnt++;
       return cnt;
     }

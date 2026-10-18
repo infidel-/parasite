@@ -5,6 +5,9 @@ import game.Game;
 
 class Go
 {
+  // how far `go block` lands from you when the only block of a kind is the one you stand in
+  static inline var GO_FAR = 10;
+
   public var console: Console;
   var game: Game;
 
@@ -26,12 +29,16 @@ class Go
         {
           case 'area':
             goArea(arr);
+          case 'block':
+            goBlock(arr);
+          case 'sound':
+            goSound(arr);
           case 'event':
             goEvent(arr);
           case 'xy':
             goXY(arr);
           case '':
-            log('Usage: go [area [x] [y]|event [index]|xy [x] [y]]');
+            log('Usage: go [area [x] [y]|block [kind]|sound [kind]|event [index]|xy [x] [y]]');
           default:
             log('Unknown go target: ' + sub + '.');
         }
@@ -56,6 +63,120 @@ class Go
         }
       log('Teleporting to area (' + x + ',' + y + ').');
       game.player.teleport(area);
+    }
+
+// go to a random block of a given kind: go block [kind]
+//
+// RANDOM AND NOT THE FIRST, which is the whole point of it: a compound has two buildings, a dozen
+// labs and four offices — and a tower floor two cubicle farms and three exec rooms — and what this
+// is for is looking at ANOTHER one of them. Run it twice and
+// you are somewhere else. See console.GoBlock for where the list comes from and what it cannot
+// offer — the block tree is not persisted, so this is derived from the saved grid
+  function goBlock(arr: Array<String>)
+    {
+      var all = GoBlock.list(game);
+      if (all.length == 0)
+        {
+          log('No blocks here: `go block` reads a compound\'s or a tower\'s layout off its grid.');
+          return;
+        }
+      if (arr.length < 3)
+        {
+          log('Usage: go block [kind]. On this map: ' + GoBlock.summary(game) + '.');
+          return;
+        }
+      var kind = arr[2];
+      var hits = [for (b in all) if (b.kind == kind) b];
+      if (hits.length == 0)
+        {
+          log('No ' + kind + ' on this map. Try: ' + GoBlock.summary(game) + '.');
+          return;
+        }
+      // NOT THE ONE YOU ARE STANDING IN: run it from inside a room and the roll used to put you
+      // back in the same room one time in N, which read as the command doing nothing
+      var x = game.playerArea.x;
+      var y = game.playerArea.y;
+      var here = [for (i in 0...hits.length) if (holds(hits[i], x, y)) i];
+      var pick = [for (i in 0...hits.length) if (here.indexOf(i) < 0) i];
+      var i = (pick.length > 0 ? pick[Std.random(pick.length)] : here[0]);
+      // the only one holds you: somewhere ELSE in it, where it has an elsewhere. A base's yard is
+      // every bare cell of its lot, and run from anywhere on it this said you were already there
+      var cells = (pick.length > 0 ? hits[i].cells :
+        [for (c in hits[i].cells) if (Math.abs(c.x - x) + Math.abs(c.y - y) > GO_FAR) c]);
+      if (cells.length == 0)
+        {
+          log('You are already in the only ' + kind + ' on this map.');
+          return;
+        }
+      var c = cells[Std.random(cells.length)];
+      log('Teleporting to ' + kind + ' ' + (hits.length > 1 ?
+        '(' + (i + 1) + ' of ' + hits.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
+      game.playerArea.moveTo(c.x, c.y);
+      game.scene.updateCamera();
+    }
+
+// go to a random looping sound source of a given kind: go sound [kind]. the sources are the ones
+// the 3D view registered for this area (render.SoundSources), so a contiguous run — a rack row, a
+// lift — is one source, and it never picks the one the player is already standing at
+  function goSound(arr: Array<String>)
+    {
+      var all = render.SoundSources.sources;
+      if (all.length == 0)
+        {
+          log('No sound sources here.');
+          return;
+        }
+      if (arr.length < 3)
+        {
+          var census = [for (k in render.SoundSources.kinds())
+            k + ' ' + Lambda.count(all, function(s) return render.SoundSources.label(s.key) == k)];
+          log('Usage: go sound [kind]. On this map: ' + census.join(', ') + '.');
+          return;
+        }
+      var kind = arr[2];
+      var hits = [for (s in all) if (render.SoundSources.label(s.key) == kind) s];
+      if (hits.length == 0)
+        {
+          log('No ' + kind + ' on this map. Try: ' + render.SoundSources.kinds().join(', ') + '.');
+          return;
+        }
+      var px = game.playerArea.x;
+      var py = game.playerArea.y;
+      var pick = [for (s in hits) if (!Lambda.exists(s.cells, function(c)
+        return Math.abs(c.col - px) <= 1 && Math.abs(c.row - py) <= 1)) s];
+      if (pick.length == 0)
+        {
+          log('You are already at the only ' + kind + ' on this map.');
+          return;
+        }
+      var i = Std.random(pick.length);
+      // a walkable cell on or touching the source: a rack is solid, a cooler can be stood on
+      var spots = [];
+      for (c in pick[i].cells)
+        for (dy in -1...2)
+          for (dx in -1...2)
+            if (game.area.isWalkable(c.col + dx, c.row + dy))
+              spots.push({ x: c.col + dx, y: c.row + dy });
+      if (spots.length == 0)
+        {
+          log('No standable cell next to that ' + kind + '.');
+          return;
+        }
+      var c = spots[Std.random(spots.length)];
+      log('Teleporting to ' + kind + ' ' + (pick.length > 1 ?
+        '(' + (i + 1) + ' of ' + pick.length + ') ' : '') + 'at (' + c.x + ',' + c.y + ').');
+      game.playerArea.moveTo(c.x, c.y);
+      game.scene.updateCamera();
+    }
+
+// does this block hold the cell? its own cells, or one a step off them — a doorway or a furniture
+// cell is not in the walkable list but is still standing in the room
+  static function holds(b: GoBlock._GoBlock, x: Int, y: Int): Bool
+    {
+      for (c in b.cells)
+        if (Math.abs(c.x - x) + Math.abs(c.y - y) <= 1)
+          return true;
+      return false;
     }
 
 // go to event location: go event [index]
@@ -94,12 +215,41 @@ class Go
         }
       var x = Std.parseInt(arr[2]);
       var y = Std.parseInt(arr[3]);
-      log('Teleporting to location (' + x + ',' + y + ').');
       if (game.location == LOCATION_AREA)
-        game.playerArea.moveTo(x, y);
-      else game.playerRegion.moveTo(x, y, false);
+        {
+          // a wall, a closed door or a piece of furniture makes the target unwalkable, and moveTo
+          // then returns false and does nothing while the log still claimed a teleport. land on the
+          // nearest free tile instead — an unwalkable cell is usually exactly what you aimed at
+          var to = walkableNear(x, y);
+          if (to == null)
+            {
+              log('Cannot teleport to (' + x + ',' + y + '): tile and all its neighbours are blocked.');
+              return;
+            }
+          if (to.x != x ||
+              to.y != y)
+            log('(' + x + ',' + y + ') is blocked, teleporting to adjacent (' + to.x + ',' +
+              to.y + ').');
+          else log('Teleporting to location (' + x + ',' + y + ').');
+          game.playerArea.moveTo(to.x, to.y);
+        }
+      else
+        {
+          log('Teleporting to location (' + x + ',' + y + ').');
+          game.playerRegion.moveTo(x, y, false);
+        }
       game.scene.updateCamera();
-      game.scene.draw();
+    }
+
+// the target tile if it is walkable, else its first walkable neighbour, else null
+  function walkableNear(x: Int, y: Int): { x: Int, y: Int }
+    {
+      if (game.area.isWalkable(x, y))
+        return { x: x, y: y };
+      for (i in 0...Const.dirx.length)
+        if (game.area.isWalkable(x + Const.dirx[i], y + Const.diry[i]))
+          return { x: x + Const.dirx[i], y: y + Const.diry[i] };
+      return null;
     }
 
 // log shortcut

@@ -241,11 +241,12 @@ class AreaGameSaver
       var tag: Dynamic = dec.tag;
       if (!Std.isOfType(tag, String))
         tag = null;
-      // wall decals (bullet holes) append face dir + world height + metal-wall flag; -1 face = ground decal
+      // wall decals (bullet holes) append face dir + world height + material (0 masonry, 1 metal
+      // wall, 2 window glass; the slot was the 0/1 metal flag first); -1 face = ground decal
       var face = getHookInt(dec.face, -1);
       var height = getHookFloat(dec.height, 0.0);
-      var metal = (dec.metal == true) ? 1 : 0;
-      return [layerID, iconRow, iconCol, dx, dy, scale, angle, tag, face, height, metal];
+      var material = (dec.metal == true ? 1 : (dec.glass == true ? 2 : 0));
+      return [layerID, iconRow, iconCol, dx, dy, scale, angle, tag, face, height, material];
     }
 
 // decode compact tuple grid into runtime tile objects
@@ -293,7 +294,7 @@ class AreaGameSaver
         throw 'tiles tuple malformed at x=' + x + ' y=' + y;
 
       var values: Array<Dynamic> = untyped tuple;
-      // old saves are 8-tuples (no wall fields); face+height -> 10; +metal-wall flag -> 11
+      // old saves are 8-tuples (no wall fields); face+height -> 10; +material -> 11
       if (values.length != 8 &&
           values.length != 10 &&
           values.length != 11)
@@ -325,7 +326,7 @@ class AreaGameSaver
         };
       if (tag != null)
         decoration.tag = tag;
-      // wall decal: restore the face dir + height + metal flag (older 8-tuples decode as ground decals)
+      // wall decal: restore the face dir + height + material (older 8-tuples decode as ground decals)
       if (values.length >= 10)
         {
           var face = getHookInt(values[8], -1);
@@ -333,9 +334,11 @@ class AreaGameSaver
             {
               decoration.face = face;
               decoration.height = getHookFloat(values[9], 0.0);
-              if (values.length >= 11 &&
-                  getHookInt(values[10], 0) == 1)
+              var material = (values.length >= 11 ? getHookInt(values[10], 0) : 0);
+              if (material == 1)
                 decoration.metal = true;
+              else if (material == 2)
+                decoration.glass = true;
             }
         }
       return decoration;
@@ -365,6 +368,7 @@ typedef _DecorationSaveData = {
   @:optional var face: Dynamic;
   @:optional var height: Dynamic;
   @:optional var metal: Dynamic;
+  @:optional var glass: Dynamic;
 }
 
 typedef _IconSaveData = {

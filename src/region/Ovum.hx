@@ -81,6 +81,7 @@ class Ovum extends RegionObject
         'police' => 5,
         'smiler' => 7,
         'soldier' => 10,
+        'officer' => 12,
         'blackops' => 15,
       ];
       var pts = ovumPoints[game.player.host.type];

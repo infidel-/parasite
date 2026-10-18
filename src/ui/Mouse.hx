@@ -23,6 +23,7 @@ class Mouse
   var playerMoved: Bool; // did the player cell change since the last update? (3D view: re-path so it shortens)
   var kbMoved: Bool; // player moved by keyboard: hover path stays hidden until the mouse really moves
   var wasFrozen: Bool; // was the hover path frozen last update? (re-path once the walk fully ends)
+  var oldHoverID: Int; // what the 3D hover pick was on last update (hoverID), so a change re-runs it
 
   public function new(g: Game)
     {
@@ -35,6 +36,7 @@ class Mouse
       oldPlayerY = -1;
       kbMoved = false;
       wasFrozen = false;
+      oldHoverID = NO_HOVER;
       sceneState = game.ui.state;
       forceNextUpdate = 0;
     }
@@ -67,22 +69,49 @@ class Mouse
          (street() && !game.scene.view3d.playerSettled())));
     }
 
+// is hover info held back? while the world moves under a still cursor (a keyboard move, a clicked
+// walk) the NPCs passing beneath it would otherwise keep popping their tooltips and outlines
+  public function hoverPaused(): Bool
+    {
+      return (kbMoved ||
+        pathFrozen());
+    }
+
+// what the 3D view's hover pick is on (render.View.hover: the AI or object its tooltip and outline
+// show, which in perspective is seldom the ground cell under the cursor), or null. always null in
+// the 2D view, where that cell is the pick
+  inline function pick(): render.Actors.PickHit
+    {
+      return (street() ? game.scene.view3d.hover : null);
+    }
+
+// a key for what the hover pick is on, NO_HOVER for nothing (AI ids and object ids are told apart
+// the way ui.AreaTooltip.beamID does it)
+  function hoverID(): Int
+    {
+      var hit = pick();
+      if (hit == null)
+        return NO_HOVER;
+      return (hit.ai != null ? hit.ai.id : AreaTooltip.beamID(hit.obj));
+    }
+
+// is the cursor on an AI or an object that has a tooltip (the 3D view's hover pick)?
+  inline function onInfo(): Bool
+    {
+      return (pick() != null);
+    }
+
 // is the 3D street view currently showing? cursor picking / path / cursor art route through it then
   inline function street(): Bool
     {
-      return (game.scene.view3d != null &&
-        game.scene.view3d.running);
+      return game.scene.view3d.running;
     }
 
-// LOS test that works in both views: the 2D tile cache (area.isVisible) is only maintained while the
-// 2D view draws, so in the 3D view fall back to the player's own vision (the source
-// render.Actors.pickTarget uses for its AI arm)
+// LOS test: the player's own vision (the source render.Actors.pickTarget uses for its AI arm)
   inline function seesTile(x: Int, y: Int): Bool
     {
-      if (street())
-        return (!game.player.vars.losEnabled ||
-          game.playerArea.sees(x, y));
-      return game.scene.area.isVisible(x, y);
+      return (!game.player.vars.losEnabled ||
+        game.playerArea.sees(x, y));
     }
 
 // mouse click (through canvas directly)
@@ -90,6 +119,10 @@ class Mouse
     {
       // config - mouse disabled
       if (!game.config.mouseEnabled)
+        return;
+      // the lab's lift is carrying the player out
+      if (game.location == LOCATION_AREA &&
+          game.scene.view3d.departing())
         return;
 
       var pos = getXY();
@@ -145,17 +178,6 @@ class Mouse
         game.area.isVisible(game.playerArea.x,
           game.playerArea.y, pos.x, pos.y, true) +
         ' walk: ' + game.area.isWalkable(pos.x, pos.y));
-      if (game.scene.areaLighting != null)
-        {
-          for (line in AreaLightingDebug.getTileLightDebugLines(
-              game.scene.areaLighting,
-              game.area, pos.x, pos.y))
-            trace(line);
-          for (line in AreaLightingDebug.getTileDynamicShadowDebugLines(
-              game.scene.areaLighting,
-              game.area, pos.x, pos.y))
-            trace(line);
-        }
     }
 
 
@@ -164,15 +186,21 @@ class Mouse
     {
       if (game.ui.cannotMove())
         return;
-      // attack AI or move
-      var ai = game.area.getAI(pos.x, pos.y);
-      var obj = getAttackableObject(pos.x, pos.y);
+      // attack AI or move: what the 3D hover pick is on, the thing outlined, else the cell's own
+      var hit = pick();
+      var ai = (hit != null ? hit.ai : game.area.getAI(pos.x, pos.y));
+      var obj = (hit != null ? hit.obj : getAttackableObject(pos.x, pos.y));
       var isVisible = seesTile(pos.x, pos.y);
-      if (isVisible)
+      if (hit != null ||
+          isVisible)
         {
           // try to attack
           if (canAttack(ai))
             {
+              // melee out of reach: the cursor shows blocked, so the click must not spend a turn
+              if (!game.playerArea.getCurrentWeapon().isRanged &&
+                  !ai.isNear(game.playerArea.x, game.playerArea.y))
+                return;
               game.playerArea.attackAction(ai);
               return;
             }
@@ -181,11 +209,12 @@ class Mouse
               game.playerArea.attackObjectAction(obj);
               return;
             }
-
-          // generate a path
-          else if (game.area.isWalkable(pos.x, pos.y))
-            game.playerArea.setPath(pos.x, pos.y);
         }
+
+      // generate a path
+      if (isVisible &&
+          game.area.isWalkable(pos.x, pos.y))
+        game.playerArea.setPath(pos.x, pos.y);
     }
 
 // on click in forma mode
@@ -255,6 +284,7 @@ class Mouse
                   pos.y == oldPos.y &&
                   oldPlayerX == game.playerArea.x &&
                   oldPlayerY == game.playerArea.y &&
+                  oldHoverID == hoverID() &&
                   sceneState == game.ui.state)
                 return;
             }
@@ -268,6 +298,7 @@ class Mouse
 
       oldx = game.scene.mouseX;
       oldy = game.scene.mouseY;
+      oldHoverID = hoverID();
       // track the player cell for the 3D re-path (area mode only; playerArea is null in region/menu)
       if (game.playerArea != null)
         {
@@ -366,7 +397,7 @@ class Mouse
         {
           oldPos = pos;
           game.scene.area.clearPath();
-          if (isInspectMode())
+          if (onInfo())
             c = CURSOR_INFO;
           setCursor(c);
           return;
@@ -379,10 +410,15 @@ class Mouse
           oldPos = pos;
           posChanged = true;
         }
+      // what the 3D hover pick is on, the thing outlined, else the cell's own (see onClickArea)
+      var hit = pick();
       var isVisible = seesTile(pos.x, pos.y);
-      var ai = game.area.getAI(pos.x, pos.y);
-      var obj = getAttackableObject(pos.x, pos.y);
-      if (isVisible)
+      var ai = (hit != null ? hit.ai : game.area.getAI(pos.x, pos.y));
+      var obj = (hit != null ? hit.obj : getAttackableObject(pos.x, pos.y));
+      var attack = (hit != null || isVisible) &&
+        (canAttack(ai) || canAttackObject(obj));
+      if (attack ||
+          isVisible)
         {
           // attack cursor
           if (canAttack(ai))
@@ -430,8 +466,9 @@ class Mouse
       // clear path
       else game.scene.area.clearPath();
 
-      // info cursor
-      if (isInspectMode())
+      // info cursor: on an AI or object a click would not attack
+      if (!attack &&
+          onInfo())
         c = CURSOR_INFO;
 
       setCursor(c);
@@ -508,18 +545,6 @@ class Mouse
       return false;
     }
 
-// returns true if area inspect mode is active
-  inline function isInspectMode(): Bool
-    {
-      return (
-        game.location == LOCATION_AREA &&
-        game.ui.state == UISTATE_DEFAULT &&
-        game.ui.hud.state == HUD_DEFAULT &&
-        !game.isInputLocked() &&
-        game.scene.controlPressed
-      );
-    }
-
 
 // set new cursor image
   public function setCursor(c: Int)
@@ -569,6 +594,7 @@ class Mouse
   public static var CURSOR_ATTACK = 3;
   public static var CURSOR_ATTACK_RANGED = 4;
   public static var CURSOR_INFO = 5;
+  static inline var NO_HOVER = 0x7fffffff; // hoverID: the pick is on nothing
 
 // size in pixels
   public static var CURSOR_SIZE = 32;

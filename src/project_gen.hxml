@@ -1,0 +1,5 @@
+-D electron
+-D js-es=6
+-dce full
+-js ../bin/genrun.js
+-main gen.GenRun

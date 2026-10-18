@@ -22,7 +22,14 @@ typedef Actor = {
   > PosSlide,
   op:Float, opTarget:Float,  // opacity channel: eased toward want-visible (1/0)
   fx:Effect,                 // one-shot transient effect (render.anim.*), null = none
-  face:Float                 // horizontal facing: +1 art default, -1 mirrored; eased on a turn
+  face:Float,                // horizontal facing: +1 art default, -1 mirrored; eased on a turn
+  offx:Float, offz:Float     // resting world offset from the cell centre the slide above tracks — a
+                             // corpse's fallen pose, or a facility fitting pushed off its wall face
+                             // (render.world.WorldCtx.standOff). written by Actors.drawActor from
+                             // ActorOpts, and ON THE POSE rather than on the frame's quad alone so
+                             // everything that reads the pose agrees with where the thing is drawn:
+                             // render.actors.LampShadows was projecting its fake cast shadow from the
+                             // cell centre while the drum stood against the wall
 };
 
 class ActorAnim {

@@ -208,8 +208,6 @@ class CultBase extends _SaveObject
       createOrganObject(organ);
       game.log('You shape ' + CultBaseConst.name(type) + '.');
       game.updateHUD();
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
       return true;
     }
 
@@ -402,10 +400,9 @@ class CultBase extends _SaveObject
     {
       game.ui.hud.addKeyAction(action('baseExit', 'Exit Forma', function() {
         game.ui.hud.state = HUD_DEFAULT;
+        game.scene.view3d.setTactical(false);
         game.updateHUD();
         game.scene.mouse.update(true);
-        if (game.location == LOCATION_AREA)
-          game.scene.area.draw();
         return true;
       }, 'f'));
       var buildableTypes = CultBaseConst.buildableTypes.copy();
@@ -474,8 +471,6 @@ class CultBase extends _SaveObject
       cursorX = x;
       cursorY = y;
       game.updateHUD();
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
       return true;
     }
 
@@ -875,21 +870,8 @@ class CultBase extends _SaveObject
 
       var tileID = area.getCellType(x, y);
       var tileset = game.scene.images.getTileset(area.getTilesetTypeID());
-      if (tileset == null ||
-          !tileset.isWalkable(tileID))
-        return false;
-
-      if (area.tiles == null ||
-          area.tiles.length == 0)
-        area.initTilesFromCells();
-      var tile = area.getTiles()[x][y];
-      if (tile == null ||
-          tile.decoration == null)
-        return true;
-      for (decoration in tile.decoration)
-        if (tileset.isBlockingDecoration(tileID, decoration))
-          return false;
-      return true;
+      return (tileset != null &&
+        tileset.isWalkable(tileID));
     }
 
 // removes ribwall record/object for gate replacement

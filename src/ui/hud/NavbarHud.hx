@@ -42,7 +42,6 @@ class NavbarHud
     {
       var btn = document.createDivElement();
       btn.innerHTML = icon + '<span class="hud-nav-label">' + label + '</span>';
-      btn.title = label;
       // NOTE: must be the same with show/hide buttons at update()
       btn.className = 'hud-nav-cell';
       buttons.appendChild(btn);

@@ -74,7 +74,6 @@ class ConsoleCompletion
         { lit: 'renderstats' },
         { lit: 'ai' },
         { lit: 'sound' },
-        { lit: 'lights' },
         { lit: 'colors' },
       ];
       if (Const.isDebug)
@@ -106,6 +105,10 @@ class ConsoleCompletion
       ];
       if (Const.isDebug)
         {
+          rootChildren.push({ lit: 'area', next: [
+            { lit: 'regen' },
+            { lit: 'room' },
+          ] });
           rootChildren.push({ lit: 'give', next: [
             { lit: 'effect', next: [ { slot: '[effect]', values: effect } ] },
             { lit: 'item', next: [ { slot: '[item]', values: item } ] },
@@ -125,6 +128,13 @@ class ConsoleCompletion
           ] });
           rootChildren.push({ lit: 'go', next: [
             { lit: 'area', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
+            // the kinds actually on the CURRENT map, so the list is never a menu of things that are
+            // not there — see console.GoBlock, which caches per area because this runs per hint
+            { lit: 'block', next: [
+              { slot: '[kind]', values: function() return GoBlock.kinds(console.game) } ] },
+            // the kinds of looping sound source on the CURRENT map, from the 3D view's registry
+            { lit: 'sound', next: [
+              { slot: '[kind]', values: function() return render.SoundSources.kinds() } ] },
             { lit: 'event', next: [ { slot: '[index]' } ] },
             { lit: 'xy', next: [ { slot: '[x]', next: [ { slot: '[y]' } ] } ] },
           ] });

@@ -319,6 +319,53 @@ typedef PropShine = {
                     // landing together — the same reason `twist` and `twistRate` are unrelated
 };
 
+// one FAMILY of lamps on a prop whose glowing parts are authored geometrically rather than keyed off
+// its albedo, and which pulse INDEPENDENTLY of each other.
+//
+// it exists because PropShine above cannot express this prop. That column masks off a channel RATIO
+// of the baked albedo, which buys a mask with no art at all and costs two things the alien ship
+// needs: a ratio is ~1.0 for white AND for a pale hull, so a white lamp is not expressible as a key
+// at any threshold; and a row carries ONE ratio and ONE colour, so three differently-coloured
+// families are three props. Measured on this prop's own atlas — propstat reads chroma 5.3 against
+// the >25 a colour-keyable prop wants — so the keys were never going to separate it anyway.
+//
+// what replaces the key is the prop's EMISSIVE MAP, and the map is a MARKER rather than a light: a
+// tools/emissive.py pass paints each family in a flat tint of its own (selection is by bounding box
+// on the triangle centroid, and now optionally by the triangle's own albedo — see that tool's --key),
+// and this column matches those tints back by NORMALISED HUE so each gets its own colour, its own
+// beat and its own phase. PropGlow's header argues that a painted map is the wrong answer for these
+// props and it is right about the case it was written for: it is about hand-painting into a shattered
+// TRELLIS atlas, and about a map dying when the mesh is regenerated. Neither binds here — nothing is
+// painted by hand, selection is geometric, and this mesh is a supplied master that is never regenerated.
+//
+// costs NO draw call, NO pass, NO geometry and NO extra texture tap: <emissivemap_fragment> has
+// already sampled the map, and this reads the value it left in scope
+typedef PropLamp = {
+  hue:Int,         // the MARKER colour tools/emissive.py painted this family in — an identity, not a
+                   // look. matched by normalised hue, so the map may be modulated by the base map
+                   // (which scales value and leaves hue alone) and still resolve
+  color:Int,       // what it actually EMITS, which is free to differ from the marker
+  glow:Float,      // HDR multiplier on that colour — what carries a peak over the bloom threshold
+  base:Float,      // steady floor, so the family reads as lit at the bottom of its breath
+  pulse:Float,     // depth of the beat as a fraction of the whole, 0..1 — the level runs (1-pulse)..1
+  pulseRate:Float, // its speed as a BASE_MS multiplier. DELIBERATELY unrelated between families: the
+                   // whole point of the column is that they never land together
+  phase:Float,     // offset in turns, 0..1, so two families sharing a rate still never do
+  ?full:Float,     // the texel VALUE at which this family counts as wholly lit; under it the glow
+                   // scales with value, i.e. with how much of a minified texel is lamp. set it to
+                   // the marker's own flat value on a sparse map, where a mip's bleed lands on
+                   // bare hull. absent is hue-only, for art too fine to survive the weighting
+};
+
+// every lamp family on one prop, plus the one threshold that tells them apart
+typedef PropLamps = {
+  list:Array<PropLamp>, // the families. its LENGTH is a literal loop bound in the shader, so it rides
+                        // the program cache key — a row that changes the COUNT compiles its own
+                        // program, while retuning any colour, rate or depth compiles nothing
+  tol:Float,            // how far a texel's normalised hue may sit from a marker and still match,
+                        // 0..~1.7. Fit it against the SMALLEST gap between two markers in the table
+};
+
 // one repainted eye. the frame is render.world.PropGlow's: x and z off the bounding box's XZ centre,
 // y off its FLOOR, all as fractions of the box's Y span — so the same numbers survive any edit to the
 // row's `h`, and they are read straight off the baked atlas (see PropEyes)
@@ -445,10 +492,29 @@ typedef ObjModel = {
   shine:PropShine,    // travelling motes on its own surface, or null
   eyes:PropEyes,      // eyes repainted over its baked ones, or null. shares PropGlow's patch with
                       // `shine` and is independent of it
+  lamps:PropLamps,    // independently pulsing lamp families read off its emissive map, or null.
+                      // shares that same patch and is independent of both of the above
   arc:PropArc,        // short lightning discharged off it, or null
   tether:PropTether,  // live cord arcing to each AI this object holds, or null for one that holds
                       // none. the BINDING is the object's own (AreaObject.getLinkedAI), so nothing
                       // here knows what a preservator is
+  ?off:Array<Float>, // [x, z] off the cell centre in the prop's OWN frame, turned with its
+                      // yaw, or absent for a prop centred on its cell. Models.normalize recentres
+                      // every glb on its footprint, so a prop that must stand against the wall (or
+                      // whose two keys have different footprints) says here where it really goes
+  ?ghostPart:Bool,    // the ghost fades only PART of the prop: the solid keeps drawing the placement
+                      // under the player, and the row's own patch splits which faces each batch
+                      // draws (render.corp.CorpSecurity.door). Absent for a prop that fades whole
+  ?noGhost:Bool,      // never fades at all: it stands clear of its cell (a shut gun cabinet in the
+                      // wall's margin) and hides nobody standing there
+  ?unmasked:Bool,     // drawn only in the CITY, which has no vision mask, and the only rows that build
+                      // there. never patched: the masked kinds' warms skip it, because SOLID shares
+                      // the glb template's material and a mask patch on it would sample whatever canvas
+                      // the last masked area left behind. Absent for every other row
+  ?noCast:Bool,       // casts NO fake atlas-silhouette shadow (render.actors.LampShadows): the prop
+                      // always stands under a casting light of its own, or off its cell, so a flat
+                      // copy of the 2D icon at the cell centre only doubles its real shadow. Absent
+                      // for a prop that can stand where nothing casts (a habitat organ)
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -465,6 +531,45 @@ class ObjModels
   // the sewer lamp shadow maps are STATIC (re-rendered only when a caster changes owner), so a prop
   // packed out at the wrong moment would lose its shadow from that map until the next hand-off
   static inline var CULL_R = CityConfig.CELL * 3;
+  // the batches the last build() made: the live area's, which is the only one drawing (see standsAt)
+  static var built:Array<PropBatch> = [];
+
+  // does the area kind on screen BUILD these batches at all?
+  //
+  // it exists because render.Actors' `iconOff` is area-kind-blind: it drops an object's sprite the
+  // moment modelFor() answers, and a model key belongs to the OBJECT and not to where it is
+  // standing. Every prop-backed object used to be immovable — a ladder, a grown organ — so the two
+  // could never disagree. A ship PART can be carried and dropped anywhere, and in a city (which
+  // never calls build, see render.CityArea) that object would have had no sprite and no prop:
+  // invisible. Set true by build() and explicitly false by the kinds that do not call it
+  public static var active = false;
+  // the area kind on screen has NO vision mask (the city): only `unmasked` rows build there, and every
+  // other row's object keeps its sprite, since a masked row's shared material may carry another kind's
+  // patch. set by build() off the area it is building
+  static var unmaskedOnly = false;
+
+// one receptacle's lamp table. the empty slot and the filled one differ in THREE NUMBERS and in
+// nothing else, so the table is written once here rather than twice in the rows below — two copies
+// of a marker hue is exactly the pair that drifts apart and leaves one of them matching nothing
+  static function slotLamps(glow:Float, pulse:Float, rate:Float):PropLamps
+    return {
+      list: [
+        {
+          // the console's own violet, off the same map (models-src/scenario-a/console_emissive.py):
+          // this prop wears the console sheet and it is the PORT cell that lights, so an empty
+          // socket and the patch panel four cells away are one family by construction
+          hue: 0xb060f0,
+          color: 0xc07bff,
+          glow: glow,
+          base: 0.90,
+          pulse: pulse,
+          pulseRate: rate,
+          // off the console's own 0.0 so a shed holding both never has the two beating together
+          phase: 0.21,
+        },
+      ],
+      tol: 0.45,
+    };
 
   // every object-backed prop there is. ONE table: build() places from it, render.View warms every
   // entry at boot, modelFor() is the lookup and render.particles.PropLights reads the `light` rows —
@@ -473,6 +578,231 @@ class ObjModels
   // the habitat organs' light colours are each prop's OWN glow hue, carried over from the emissive map
   // that used to do this job on the prop's surface alone (see RenderConfig.PROP_LIGHT)
   public static final MODELS:Array<ObjModel> = [
+    // the alien ship of the crash-landing scenario, on the hangar's study podium and later on its
+    // wilderness pad. ALL FOUR OF ITS infoIDs ON ONE ROW, and that is load-bearing rather than
+    // tidy: objects.EventObject keys on infoID and the scenario REWRITES that id as the mission
+    // resolves, under batches that are only rebuilt on an object being added or removed — one path
+    // for all four means the rewrite lands inside the same batch and nothing moves
+    {
+      keys: [ 'event_spaceshipStudyShip', 'event_spaceshipStart',
+        'event_spaceshipSuccess', 'event_spaceshipFailure' ],
+      path: RenderConfig.MODELS.scenarioSpaceship,
+      // 12.8 world units across at this height (the bake's widest/height is 2.32), so the saucer
+      // covers 3.2 cells of the study pad's 5 and stops well short of its rim — and just overhangs
+      // the podium's own 12.4-wide deck, which is a saucer standing on a dais rather than a lid
+      // sitting on a jar. the ceiling is the shed's own: FacilityStyle.WALL_H 6.0 plus ~3.4 of arc
+      // rise, against the 1.15 of deck under it
+      h: 5.5,
+      // FLAT ON WHATEVER IT STANDS ON, and the podium is not it: a row's `sink` follows the model
+      // everywhere it is placed, so the negative lift that put this ship on the dais put the
+      // wilderness one 3.07 units into the air as well. The dais is a property of the CELL and is
+      // handed to build() as `lift` by the compound (render.facility.FacilityArea.objLift)
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      // THE TWO LIT FAMILIES, each matched back off the emissive map by the tint its triangles
+      // were painted in. They differ in rate by design and not by taste: a ship whose lamps all
+      // breathed together would read as one light behind a lampshade, and what says "this thing is
+      // running" is the parts of it disagreeing.
+      //
+      // WHICH TRIANGLES CARRY WHICH TINT IS PAINTED IN THE GAME (render.PolyPaint, street-debug
+      // key T) and baked by `tools/emissive.py --tris`. It used to be a bounding box on the
+      // centroid narrowed by the triangles' own albedo, and the cyan family came out as 4,983
+      // scattered patches: a luminance threshold cannot see what a lamp disc is
+      lamps: {
+        list: [
+          // THE ENTRANCE: the lit ramp doorway. Amber rather than the marker's own yellow — a
+          // doorway is a lit interior seen through a hole, and 2.2 x 0.90 puts its peak well over
+          // BLOOM_THRESHOLD 0.9 so the opening halos rather than merely being pale.
+          //
+          // THE `base` COLUMN IS 0.90 ON ALL THREE AND THAT IS THE FIX FOR "no glow on the ship":
+          // the first cut ran 0.25-0.35, which put every family's PEAK under the bloom threshold,
+          // and a marker map at emissiveStrength 0.35 is all that was left. Nothing was broken —
+          // the whole table was simply tuned below the one number that makes a lamp a lamp here
+          {
+            hue: 0xe0c23c,
+            color: 0xffb432,
+            glow: 2.2,
+            base: 0.90,
+            pulse: 0.30,
+            pulseRate: 0.17,
+            phase: 0.0,
+            // the painted marker is flat at 224, so 0.85 lights a covered texel fully and fades
+            // the mip bleed that sprinkled amber over the hull when the camera pulled back
+            full: 0.85,
+          },
+          // the hull lamp discs, spread right round the azimuth, which is what makes the ship read
+          // as running rather than as lit from one side. the FASTER of the two and the one that
+          // crosses the bloom threshold both ways: 0.55 of depth on a 1.71 peak halos at the top of
+          // the breath and does not at the bottom, which is the difference between a pulse and a
+          // shade (the preservator's own lesson, PropShine.pulse)
+          {
+            hue: 0x56c8e0,
+            color: 0x63d6ff,
+            glow: 1.9,
+            base: 0.90,
+            pulse: 0.55,
+            pulseRate: 0.41,
+            phase: 0.37,
+            full: 0.85,
+          },
+          // THERE WAS A THIRD FAMILY AND IT IS GONE ON PURPOSE: a near-white lens in the crown,
+          // which is the one part of this ship the game's camera looks straight down at. It never
+          // read as a lens. White is the hardest marker on this prop — the cap's albedo is bimodal
+          // (dark navy shell at luma 66..89, the glass at 185..250) so every geometric selection of
+          // it needed a luminance gate on top, and two lamps plus a white one is a light show
+          // rather than a machine. Two families, and the crown is lit by the room
+        ],
+        // the gap between the two markers, well inside it. measured as normalised hue: amber to
+        // cyan is 1.06 apart, so 0.25 cannot let one family claim the other's texels and is still
+        // wide enough for a marker whose value the resize has moved
+        tol: 0.25,
+      },
+      arc: null,
+      tether: null,
+    },
+    // its startup console, and the three slots the ship parts are installed into. one row each
+    // once they have shapes of their own; one shared canary until then
+    {
+      keys: [ 'event_spaceshipStudyStart' ],
+      path: RenderConfig.MODELS.scenarioConsole,
+      // the mesh's own measured height, which is how a hand-modelled prop's `h` is set:
+      // Models.instanced scales by HEIGHT alone, so any other number rescales the footprint out of
+      // step with the shape it was drawn at. SHORTER than deco-analyser's 3.31 on purpose — the two
+      // stand within four cells of each other in the same shed
+      h: 2.3221,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      // THE SCREEN, and one family is all this prop has: the art draws a violet readout on an
+      // otherwise dark panel (art/textures.json scenario-a/console-face), and the marker map is that
+      // rectangle and nothing else (models-src/scenario-a/console_emissive.py).
+      //
+      // THE GLOW IS SIZED IN BLOOM'S OWN METRIC AND NOT BY EYE, which is the whole of why the first
+      // cut neither haloed nor read as moving. UnrealBloomPass thresholds on LUMINANCE
+      // (0.2126/0.7152/0.0722) against linear values — three forces NoToneMapping into the
+      // composer's targets, so ACES runs once in OutputPass and bloom sees the raw number — and
+      // 0xc07bff is linear (0.521, 0.198, 1.0), luminance 0.3245. That is barely over half of the
+      // ship's cyan 0x63d6ff at 0.5794, so the same `glow` buys this prop little more than half the
+      // halo. Peak = 0.082 (the marker's own emissiveStrength 0.35) + 0.3245 * glow * base:
+      // 4.2 x 0.90 puts it at 1.31, over BLOOM_THRESHOLD 0.9, and the 0.60 depth drops the bottom of
+      // the breath to 0.57, under it. Crossing BOTH WAYS is what reads as a pulse rather than a
+      // shade, and 1.2 x 0.90 peaked at 0.43 — half way there, so it never crossed at all.
+      //
+      // 0.29 is a breath every 3.2s at BASE_MS 150 (the rate is radians per BASE_MS unit, so a
+      // period is 2*pi / (rate * 6.667) seconds). The old 0.13 was 7.3s, which is slower than a
+      // player looks at one thing. It sits between the ship's amber (5.5s) and its lamp discs
+      // (2.3s), and the leads that leave this console are faster than all three
+      lamps: {
+        list: [
+          {
+            hue: 0xb060f0,
+            color: 0xc07bff,
+            glow: 4.2,
+            base: 0.90,
+            pulse: 0.60,
+            pulseRate: 0.29,
+            phase: 0.0,
+          },
+        ],
+        // WIDE, where the ship's is 0.25, and the two numbers are about the same thing from opposite
+        // ends: a tolerance only has to be tight enough that no family claims another's texels, and
+        // there is one family here. The slack is spent on the shrink to the entry's `tex`, which
+        // walks the marker's hue at the bezel's edge
+        tol: 0.45,
+      },
+      arc: null,
+      tether: null,
+    },
+    {
+      // AN EMPTY SLOT, and the filled one is the row below. TWO ROWS ON ONE MODEL is what the
+      // per-row bucketing in build() bought: the scenario rewrites a slot's infoID the moment its
+      // part goes in (src/scenario/GoalsAlienCrashLanding.hx), which stops the action tables
+      // offering another install and moves this prop onto the brighter row. A key with no row at
+      // all would be a prop that vanishes — the trap the ship's own four ids are one row for — so
+      // the two ids must BOTH be spelled here
+      keys: [ 'event_spaceshipStudySlot' ],
+      path: RenderConfig.MODELS.scenarioSlot,
+      h: 1.16,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      // the socket bores of the plate looking up at the camera, waiting: the DIMMEST of the three
+      // and the slowest, which is what reads as idle rather than as working. it still crosses the
+      // bloom threshold at the top of its breath (0.082 + 0.3245 * 4.5 * 0.90 = 1.40 luminance) and
+      // sits well under it at the bottom (0.67), because an empty socket that never haloes is a socket nobody notices
+      lamps: slotLamps(4.5, 0.55, 0.15),
+      arc: null,
+      tether: null,
+    },
+    {
+      // and the same receptacle with a part in it. the ONLY differences are in the lamp table, and
+      // they are the whole signal: half again the level, a shallower breath and a much faster one,
+      // which is a socket that is carrying something rather than asking for it. it is the one lamp
+      // in this shed that NEVER drops under the bloom threshold — 6.0 x 0.90 peaks at 1.83 and the
+      // 0.35 depth floors it at 1.22 — so a filled slot haloes steadily while an empty one blinks
+      keys: [ 'event_spaceshipStudySlotFull' ],
+      path: RenderConfig.MODELS.scenarioSlot,
+      h: 1.16,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: slotLamps(6.0, 0.35, 0.55),
+      arc: null,
+      tether: null,
+    },
+    // and the ship parts themselves, the orange cases. one row, and it is the ITEM that keys it —
+    // every other pickup in the game keeps its sprite (objects.Pickup.getModelKey)
+    {
+      keys: [ 'pickup_shipPart' ],
+      path: RenderConfig.MODELS.scenarioCase,
+      // 1.87 world units long at this height (the mesh is 1.31 x 0.87 x 0.70), so the case covers
+      // most of half a cell. It was drawn at its own 0.70 first and measured at about 55 screen
+      // pixels in the shed, where the moulded ribs the sheet's whole top cell is are simply not
+      // resolvable — this is a quest item the player has to SPOT across a compound, not floor litter
+      h: 1.0,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+    },
     {
       keys: [ 'sewer_exit', 'habitat_exit' ],
       path: RenderConfig.MODELS.sewerExit,
@@ -487,8 +817,93 @@ class ObjModels
       fly: null,
       shine: null, // and nothing on it is alive enough to luminesce
       eyes: null,  // nor is anything on it looking at you
+      lamps: null, // nor does it carry an emissive map
       arc: null,   // nor carries any current
       tether: null, // and it holds nothing
+      noCast: true, // its shaft lamp stays over the cell and shadows it onto the wall for real; the
+                    // fake one was the 2D ladder lying flat at the cell centre
+    },
+    // THE CORP STAIRS, a U-stairwell over the four sealed cells of its well, the object on the one
+    // off the end wall: the well sinks under the floor (`sink`) into the hole CorpModel cuts there,
+    // and `off` puts back the footprint centre off the object's cell (CorpStyle.STAIRS_*), Blender
+    // y flipped. no window correction: the object has no wall beside it
+    {
+      keys: [ 'stairs' ],
+      path: RenderConfig.MODELS.corpStairs,
+      h: render.corp.CorpStyle.STAIRS_H,
+      sink: render.corp.CorpStyle.STAIRS_SINK,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [
+        render.corp.CorpStyle.STAIRS_X,
+        -render.corp.CorpStyle.STAIRS_Y,
+      ],
+      noCast: true, // a stairwell sunk into its own well, standing OFF the object's cell: a 2D stairs
+                    // icon laid flat on that cell is a shadow of nothing
+    },
+    // THE GUN CABINET, shut and open, objects.GunCabinet's two model keys: the Open action flips
+    // the key and CorpArea.refreshObjects rebuilds this batch, and the open glb's leaf, built shut,
+    // swings in render.corp.CorpSecurity.swing. Both stand against the masonry via `off`, which
+    // also puts back the recentre their proud leaf costs (CorpStyle.GUN_CAB_*). A shut one never
+    // fades (`noGhost`), and a player standing at an open one sees through its door alone
+    // (`ghostPart`), which swings through the cell
+    {
+      keys: [ 'gunCabinet' ],
+      path: RenderConfig.MODELS.corpGunCabinet,
+      h: render.corp.CorpStyle.GUN_CAB_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [
+        render.corp.CorpStyle.GUN_CAB_OPEN_X,
+        -render.corp.CorpStyle.GUN_CAB_BACK - render.corp.CorpStyle.GUN_CAB_OPEN_Y,
+      ],
+      noGhost: true,
+    },
+    {
+      keys: [ 'gunCabinetOpen' ],
+      path: RenderConfig.MODELS.corpGunCabinetOpen,
+      h: render.corp.CorpStyle.GUN_CAB_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      // the carcass lands at MINUS the footprint centre once recentred, and Blender y is glTF -z,
+      // so the printed centre's x carries over as it is and its y flips
+      off: [
+        render.corp.CorpStyle.GUN_CAB_OPEN_X,
+        -render.corp.CorpStyle.GUN_CAB_BACK - render.corp.CorpStyle.GUN_CAB_OPEN_Y,
+      ],
+      ghostPart: true,
     },
     {
       keys: [ 'habitat_biomineral' ],
@@ -561,6 +976,7 @@ class ObjModels
         pulseRate: 0.0,
       },
       eyes: null, // a mineral does not look back
+      lamps: null,
       // and the reason this organ exists: it makes POWER. short green discharges snapping off the
       // crystal, pale-cored the way a real arc is. every number is in units of `h` again
       arc: {
@@ -694,6 +1110,7 @@ class ObjModels
       },
       shine: null, // its glow is the membrane in the opening, not anything on the braids
       eyes: null,  // and the watcher is the organ that watches
+      lamps: null,
       arc: null,   // and the biomineral is the power organ, not this one
       tether: null, // an assimilated host walks away; nothing stays bound to the arch
     },
@@ -814,6 +1231,7 @@ class ObjModels
                          // on purpose: the two beat every ~50s, so the pod never repeats a state
       },
       eyes: null, // it holds hosts; it does not watch them
+      lamps: null,
       arc: null, // the biomineral is the power organ
       // the cords to whatever hosts this preservator is holding. every number is a fraction of the
       // row's `h` 3.6, and the span they cross is one cell — the bound hosts stand on the four
@@ -959,8 +1377,63 @@ class ObjModels
         glintOff: 0.38, // up and to the left, where the tunnel's fixtures are — see PropGlow for the
                         // direction, which is shared by every eye because one room has one light
       },
+      lamps: null,
       arc: null,
       tether: null,
+    },
+    // the street dumpsters the parasite hides in (objects.Dumpster), backed onto the wall the generator
+    // stood them against (render.CityArea.objYaw). they never fade: nobody stands in one but a hidden
+    // parasite, and the bin is what says where it went. `unmasked`, as the city draws them unpatched
+    {
+      keys: [ 'dumpster_city' ],
+      path: RenderConfig.MODELS.cityDumpster,
+      h: render.world.CityStyle.DUMPSTER_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [
+        0.0,
+        -render.world.CityStyle.DUMPSTER_BACK,
+      ],
+      noGhost: true,
+      noCast: true,
+      unmasked: true,
+    },
+    // and the slums' rusted one, its left lid thrown back against that wall
+    {
+      keys: [ 'dumpster_slums' ],
+      path: RenderConfig.MODELS.cityDumpsterSlums,
+      h: render.world.CityStyle.DUMPSTER_SLUMS_H,
+      sink: 0.0,
+      yaw: WALL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [
+        0.0,
+        -render.world.CityStyle.DUMPSTER_SLUMS_BACK,
+      ],
+      noGhost: true,
+      noCast: true,
+      unmasked: true,
     },
   ];
 
@@ -969,11 +1442,33 @@ class ObjModels
 // frame and the answer is null for everything in a city
   public static function modelFor(key:String):ObjModel
     {
-      for (m in MODELS)
-        for (k in m.keys)
+      var i = rowFor(key);
+      return (i < 0 ? null : MODELS[i]);
+    }
+
+// the same lookup as an INDEX, which is what build() buckets on — see its header for why the row and
+// not the model path is the honest key
+  public static function rowFor(key:String):Int
+    {
+      for (i in 0...MODELS.length)
+        for (k in MODELS[i].keys)
           if (k == key)
-            return m;
-      return null;
+            return i;
+      return -1;
+    }
+
+// the prop an object draws as IN THE AREA ON SCREEN — modelFor gated on this kind building batches
+// at all. the question every caller OUTSIDE this file has to ask: "does this object have a row" is
+// about the object, and "is its sprite therefore redundant" is about where it is standing, and only
+// the pair of them is right for a prop-backed object that can be carried from one kind to another
+  public static function propFor(key:String):ObjModel
+    {
+      if (!active)
+        return null;
+      var m = modelFor(key);
+      return (m != null &&
+        unmaskedOnly &&
+        m.unmasked != true ? null : m);
     }
 
 // place every prop-backed object in the area, grouped per model. `yaw` decides which way a prop faces
@@ -981,46 +1476,71 @@ class ObjModels
 // wants its back to a wall, a grown organ the fixed frontal one, clutter a hashed turn); the area kind
 // owns that rule, because only it knows what is solid. the returned batches MUST be handed to cull()
 // every frame — Models.instanced turns three's own frustum cull off, so nothing else trims their counts
-  public static function build(scene:Scene, game:Game, yaw:Int->Int->PropYaw->Float):Array<PropBatch>
+  public static function build(scene:Scene, game:Game, yaw:Int->Int->PropYaw->Float,
+      ?lift:Int->Int->Float, ?wall:Int->Int->Float):Array<PropBatch>
     {
-      var byPath:Map<String, Array<Models.PropPlace>> = new Map();
-      var cellsByPath:Map<String, Array<{ col:Int, row:Int }>> = new Map();
+      active = true;
+      unmaskedOnly = (game.area.info.type == 'city');
+      // ONE BUCKET PER ROW, and not per model PATH as this used to key them. A path said the same
+      // thing for as long as no two rows named one — and the moment two did, each of them instanced
+      // a batch over the OTHER's placements too and every one of those props drew twice. The row is
+      // what carries `h`, `sink` and the whole idle-motion column anyway, so it was always the
+      // honest key; the path is just where its geometry comes from
+      var byRow = [for (_ in MODELS) new Array<Models.PropPlace>()];
+      var cellsByRow = [for (_ in MODELS) new Array<{ col:Int, row:Int }>()];
       for (o in game.area.getObjects())
         {
-          var m = modelFor(o.getModelKey());
-          if (m == null)
+          var i = rowFor(o.getModelKey());
+          // a base emits its gun cabinet as geometry, in its own art
+          if (i < 0 ||
+              propFor(o.getModelKey()) == null ||
+              render.military.MilitaryGeom.draws(game.area, o))
             continue;
-          if (!byPath.exists(m.path))
-            {
-              byPath.set(m.path, []);
-              cellsByPath.set(m.path, []);
-            }
+          var m = MODELS[i];
           var w = CityConfig.cellToWorld(o.x, o.y);
-          byPath.get(m.path).push({
-            x: w.x,
-            z: w.z,
-            yaw: yaw(o.x, o.y, m.yaw),
-            y: -m.sink * m.h,
+          var yw = yaw(o.x, o.y, m.yaw);
+          var ox = (m.off != null ? m.off[0] : 0.0);
+          // `wall` is how much nearer the cell a WALL-yawed prop's masonry stands than the masonry
+          // its row's `off` was written against: only the area kind knows a perimeter wall is
+          // thicker than a partition, and a tower's is by 0.8
+          var oz = (m.off != null ? m.off[1] : 0.0) +
+            (m.yaw == WALL && wall != null ? wall(o.x, o.y) : 0.0);
+          byRow[i].push({
+            x: w.x + ox * Math.cos(yw) + oz * Math.sin(yw),
+            z: w.z - ox * Math.sin(yw) + oz * Math.cos(yw),
+            yaw: yw,
+            // off the FLOOR under the cell and not off y = 0. the sewer and the compound are both
+            // flat, so this was a constant for as long as those were the only two kinds building
+            // props — the wilderness is a height field (render.world.WorldCtx.ground = WildHeight.at)
+            // and a prop placed at 0 out there floats or buries itself by the local relief.
+            // floorYAt answers 0 with no ground hook attached, so the flat kinds are untouched.
+            // `lift` is the SECOND floor a cell can have — a compound's study podium is 1.15 of
+            // deck standing on a flat hangar slab, and only the area kind knows a dais is there.
+            // it is the placement and not the row's `sink` because the same ship stands on the
+            // podium in the shed and on bare dirt in the wilderness
+            y: WorldCtx.floorYAt(w.x, w.z) + (lift != null ? lift(o.x, o.y) : 0.0) -
+              m.sink * m.h,
           });
           // pushed in the SAME iteration as its placement, so the two share an index — and that shared
           // index is the whole mechanism turning "the player stands on cell X" into an instance to fade
-          cellsByPath.get(m.path).push({ col: o.x, row: o.y });
+          cellsByRow[i].push({ col: o.x, row: o.y });
         }
       var C = RenderConfig.OBJMARK;
       var out:Array<PropBatch> = [];
-      // walked in TABLE order rather than over the map, so the batch list is deterministic and each
-      // path is instanced at its own authored height
-      for (m in MODELS)
+      // walked in TABLE order, so the batch list is deterministic and each row is instanced at its
+      // own authored height
+      for (i in 0...MODELS.length)
         {
-          var places = byPath.get(m.path);
-          if (places == null)
+          var m = MODELS[i];
+          var places = byRow[i];
+          if (places.length == 0)
             continue;
           out.push({
             solid: Models.instanced(scene, m.path, places, m.h, SOLID),
             ghost: Models.instanced(scene, m.path, places, m.h, GHOST),
             hull: Models.instanced(scene, m.path, places, m.h, HULL(C.color, C.hullW)),
             model: m,
-            cells: cellsByPath.get(m.path),
+            cells: cellsByRow[i],
             solidMask: [for (_ in places) true],
             ghostMask: [for (_ in places) false],
             hullMask: [for (_ in places) false],
@@ -1028,7 +1548,32 @@ class ObjModels
             t: 0.0,
           });
         }
+      built = out;
       return out;
+    }
+
+// patch one row's three variants, and THE ORDER IS THE CONTRACT
+//
+// every patch here chains onto whatever hook the material already carries and extends its
+// customProgramCacheKey, so the same row patched in a different order spells a DIFFERENT key — and
+// an area kind that patches in one order while its warm scene patches in another warms a program the
+// game never asks for and compiles the real one on the frame the prop appears. There are four call
+// sites now (two area kinds and their two warms) and keeping four copies of the chain in step by
+// eye is exactly the bookkeeping that fails silently, so they all come through here.
+//
+// the HULL takes the idle motion and neither of the other two patches: the vision mask early-outs on
+// a marker rather than world geometry, totalEmissiveRadiance does not exist in an unlit shader, and
+// an outline that carried the body's eyes would draw them over the thing it is meant to trace. But
+// an outline that does not MOVE with its body detaches from it, so the shader patch it does take
+  public static function patchRow(m:ObjModel, so:InstancedMesh, gh:InstancedMesh, hu:InstancedMesh):Void
+    {
+      render.world.VisionMask.patchMesh(so);
+      render.world.VisionMask.patchMesh(gh);
+      PropShader.patchMesh(so, m.anim, m.pulse, m.curl);
+      PropShader.patchMesh(gh, m.anim, m.pulse, m.curl);
+      PropShader.patchMesh(hu, m.anim, m.pulse, m.curl);
+      PropGlow.patchMesh(so, m.shine, m.eyes, m.lamps);
+      PropGlow.patchMesh(gh, m.shine, m.eyes, m.lamps);
     }
 
 // tear every batch out of the scene, so build() can run again after an object was added to or removed
@@ -1042,7 +1587,7 @@ class ObjModels
         {
           for (p in [ b.solid, b.ghost, b.hull ])
             if (p.mesh != null)
-              scene.remove(p.mesh);
+              p.mesh.removeFromParent(); // a chunk group's, when the glb was cached at area build
           if (b.ghost.mesh != null)
             b.ghost.mesh.material.dispose();
           if (b.hull.mesh != null)
@@ -1050,11 +1595,37 @@ class ObjModels
         }
     }
 
+// where the prop of this row standing on this cell actually is (a WALL-yawed one is pushed off its
+// cell by its row's `off`), for render.Actors.pickTarget, or null. read off the last build, which is
+// the live area's: the pick only asks about objects the live view draws
+  public static function standsAt(col:Int, row:Int, m:ObjModel):Vector3
+    {
+      for (b in built)
+        if (b.model == m)
+          for (i in 0...b.cells.length)
+            if (b.cells[i].col == col &&
+                b.cells[i].row == row)
+              return b.solid.centres[i];
+      return null;
+    }
+
+// is the hover pick on the object standing at this cell? its outline shell shows then as it does in
+// the tactical view, and goes with the HUD like the tooltip does. render.military.MilitaryGeom's
+// armory shells ask it too
+  public static inline function hovered(opts:Area3DTickOpts, cell:{ col:Int, row:Int }):Bool
+    {
+      return (opts.ui &&
+        opts.hover != null &&
+        opts.hover.x == cell.col &&
+        opts.hover.y == cell.row);
+    }
+
 // per-frame prop pass: fade the prop the player is STANDING on to see-through so its body does not
 // hide the sprite (the tunnel camera looks near straight down and the exit ladder is a whole cell
 // tall), show the outline shells while the tactical view is up, then repack all three batches for the
-// frustum cull. call once per frame from the area kind's tick
-  public static function cull(batches:Array<PropBatch>, opts:Area3DTickOpts, tactical:Bool):Void
+// frustum cull. call once per frame from the area kind's tick. `all` packs every placement instead of
+// the camera's subset, for a frame on which a frozen shadow map renders (see Models.cull)
+  public static function cull(batches:Array<PropBatch>, opts:Area3DTickOpts, tactical:Bool, ?all:Bool):Void
     {
       var G = RenderConfig.PROP_GHOST;
       // the leave-outro despawns the area and reports cell 0/0 — a LEGAL grid cell, so it must not be
@@ -1072,7 +1643,8 @@ class ObjModels
           var idx = -1;
           for (i in 0...b.cells.length)
             if (b.cells[i].col == col &&
-                b.cells[i].row == row)
+                b.cells[i].row == row &&
+                b.model.noGhost != true)
               idx = i;
           if (idx >= 0)
             b.ghostIdx = idx;
@@ -1089,15 +1661,17 @@ class ObjModels
             {
               var g = i == b.ghostIdx && (idx >= 0 || b.t > 0);
               b.ghostMask[i] = g;
-              b.solidMask[i] = !g;
-              b.hullMask[i] = tactical;
+              b.solidMask[i] = !g || b.model.ghostPart == true;
+              b.hullMask[i] = tactical ||
+                (hovered(opts, b.cells[i]) &&
+                 modelFor(opts.hover.getModelKey()) == b.model);
             }
           // one opacity for the batch is correct BECAUSE only one placement can be mid-fade. a true
           // cross-dissolve is impossible here and must not be attempted: the solid material is shared
           // by every other placement, so dimming it would dim every copy of the prop in the level
           b.ghost.mesh.material.opacity = 1 - b.t * (1 - G.alpha);
-          Models.cull(b.solid, opts.camera, CULL_R, b.solidMask);
-          Models.cull(b.ghost, opts.camera, CULL_R, b.ghostMask);
+          Models.cull(b.solid, opts.camera, CULL_R, b.solidMask, all);
+          Models.cull(b.ghost, opts.camera, CULL_R, b.ghostMask, all);
           Models.cull(b.hull, opts.camera, CULL_R, b.hullMask);
         }
     }

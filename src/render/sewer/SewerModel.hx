@@ -110,16 +110,28 @@ class SewerModel
       return inside(m, col, row) && m.floor[row][col];
     }
 
+// does an exit ladder on this cell stand against a wall? north, west or east — never south, which
+// would put the ladder behind its own wall from this camera (game.SewerAreaGenerator.wallSpot). ONE
+// answer for the prop's yaw and standoff (SewerArea) and its shaft lamp (SewerScene), so the ladder
+// and the light over it cannot disagree about where it stands
+  public static function exitWalled(m:Sewer, col:Int, row:Int):Bool
+    {
+      return !isFloor(m, col, row - 1) ||
+        !isFloor(m, col - 1, row) ||
+        !isFloor(m, col + 1, row);
+    }
+
 // NO sludge channel. a `channel` grid used to mark the centre line of every 3-wide tunnel and
 // SewerGeom laid a muck tile there instead of walkway; the gutter is off, so the grid, the per-build
 // O(w*h*9) pass that filled it and the two rules that read it are gone with it. if it comes back,
 // note what the pass had to learn: a full floor 8-neighbourhood alone floods a hall with sludge
 // (true of every interior cell of any open space), so it also required the run to be exactly 3 cells
 // wide across one axis, and room cells were excluded because a room floor stays dry
+// standing water is render.sewer.SewerWater now: pools, and short trickles off a wall seepage stain
+// into them — never a corridor-long centreline, which is what read as a stripe
 
-// lights at 3x3 corridor corners and intersections — the same placement rule the 2D atmosphere
-// lighting uses (lighting.SewerAreaLighting.addSewerCorridorLayoutSources), so a tunnel lights up
-// in the same places it always did
+// lights at 3x3 corridor corners and intersections — the placement rule the retired 2D atmosphere
+// lighting used, so a tunnel lights up in the same places it always did
   static function addNodeLamps(m:Sewer, room:Array<Array<Bool>>, door:Array<Array<Bool>>):Void
     {
       inline function corridor(col:Int, row:Int):Bool

@@ -346,7 +346,7 @@ class StreetPerf {
 
 // copy text to the OS clipboard (debug dumps). a keydown is a user gesture, so the async clipboard API
 // is allowed; the sandboxed preload exposes no node clipboard, so fall back to textarea+execCommand
-  static function copyText(s:String):Void
+  public static function copyText(s:String):Void
     {
       var nav:Dynamic = js.Browser.navigator;
       if (nav.clipboard != null)

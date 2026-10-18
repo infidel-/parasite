@@ -208,7 +208,6 @@ class Stage
               ai.eventID = ev.id;
               ai.npcID = npc.id;
               ai.isNPC = true;
-              ai.entity.setNPC();
 
               break;
             }

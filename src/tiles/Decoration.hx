@@ -17,4 +17,6 @@ typedef Decoration = {
   @:optional var height: Float;
   // bullet hole on a metal-warehouse wall -> use the steel-dent texture set (absent/false = masonry)
   @:optional var metal: Bool;
+  // bullet hole in a window pane -> use the crack-star texture set, stood on the glass
+  @:optional var glass: Bool;
 }

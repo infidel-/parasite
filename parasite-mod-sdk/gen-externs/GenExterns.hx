@@ -35,10 +35,8 @@ class GenExterns
     'cult.effects.*',
     'cult.ArriveCultistParams',
     'cult.UpgradeFollowerEvents',
-    'lighting.*',
     'map.*',
     'mods.*',
-    'AreaLighting*',
     'HostBridge',
     'Version',
   ];

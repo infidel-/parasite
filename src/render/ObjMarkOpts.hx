@@ -15,4 +15,8 @@ typedef ObjMarkOpts = {
   flat:Bool,    // the pose lies flat as a ground decal instead of standing up
   yaw:Float,    // ground rotation of a flat pose
   order:Int,    // render order shared with the icon
+  ?faceRotY:Float, // the pose stands on a WALL face with this outward yaw instead (see PaintOpts)
+  ?faceX:Float,    // horizontal facing mirror of the pose (a side-view actor's, see PaintOpts)
+  ?ring:Int,       // the hover outline's colour, when the cursor is on this one (render.View.hover)
+  ?ringPx:Float,   // and its width, in a 64 px cell's pixels (Actors.hoverPx)
 };

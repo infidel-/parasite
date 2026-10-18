@@ -47,13 +47,13 @@ extern class ModFx
   public function overlay(): Element;
 
   // get the game's 2D #canvas element (may be null pre-scene). note this is the 2D canvas
-  // SPECIFICALLY — in a 3D area it is completely covered by #view, so viewport-anchored fx
-  // (camera shake) want viewport() below instead
+  // SPECIFICALLY — only the region map draws on it; in an area #view covers it, so
+  // viewport-anchored fx (camera shake) want viewport() below instead
   public function canvas(): Element;
 
-  // get the canvas the game is currently drawing into: the 3D view canvas (#view) while a 3D
+  // get the canvas the game is currently drawing into: the 3D view canvas (#view) while an
   // area is shown, else the 2D #canvas. fx that anchor on the rendered viewport (e.g. camera
   // shake via CSS transform) must use this — #view fully covers #canvas, so transforming
-  // #canvas alone is invisible in a 3D area
+  // #canvas alone is invisible in an area
   public function viewport(): Element;
 }

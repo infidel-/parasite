@@ -1097,6 +1097,12 @@ class RegionGame extends _SaveObject
   public function removeArea(areaID: Int)
     {
       _list.remove(areaID);
+      // a mission site is removed right after the player leaves it for the region, and game.area
+      // still pointed at it: a save made before entering another area named an area the region no
+      // longer holds and could not be loaded. point it at the cell the player stands on instead
+      if (game.area != null &&
+          game.area.id == areaID)
+        game.area = getXY(game.playerRegion.x, game.playerRegion.y);
     }
 
 // check if tile is walkable

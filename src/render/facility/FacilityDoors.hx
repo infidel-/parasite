@@ -7,6 +7,7 @@ import render.Models;
 import render.RenderConfig;
 import render.Textures;
 import render.facility.FacilityModel.DoorCell;
+import render.facility.FacilityModel.Look;
 import render.facility.FacilityModel.Facility;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
@@ -24,6 +25,10 @@ typedef DoorBatch = {
   hinge:Array<Vector3>,  // per leaf: the jamb it turns about, which is also its local origin
   shut:Array<Float>,     // per leaf: its yaw when closed
   swing:Array<Float>,    // per leaf: the signed quarter turn it travels, +-PI/2
+  // per leaf: how far it TRAVELS when open, which is zero for every look but the lift. a leaf
+  // either turns or slides and never both, so which of these two is non-zero is what says which
+  // kind of door this is — the data decides and `pose` has no branch
+  slide:Array<Vector3>,
   open:Array<Float>,     // per opening: 0 shut .. 1 open, eased toward objects.Door.isOpen
 };
 
@@ -44,12 +49,9 @@ class FacilityDoors
   // opening, so what the generator calls a single door is a double in any real building
   static inline var LEAF_W = CELL * 0.5;
 
-  // the three painted pairs, indexed by FacilityModel.Look
-  public static final TEX:Array<String> = [
-    FacilityStyle.DOOR_GLASS,
-    FacilityStyle.DOOR_CABINET,
-    FacilityStyle.DOOR_METAL,
-  ];
+  // the painted pairs live on the MODEL (ShellTex.door), indexed by FacilityModel.Look — they were
+  // four constants here until the corp tower needed its own set, and a door was the last facility
+  // texture it still wore
 
   // one leaf's geometry, shared by every batch: the looks differ only in their map
   static var geo:BufferGeometry = null;
@@ -57,18 +59,19 @@ class FacilityDoors
   static var _q = new Quaternion();
   static var _up = new Vector3(0, 1, 0);
   static var _one = new Vector3(1, 1, 1);
+  static var _p = new Vector3();
 
 // every door in the area, one instanced batch per look. `area` may be null, which is the boot warm:
 // the geometry and the programs are built the same way and nothing ever opens
   public static function build(scene:Scene, m:Facility, area:game.AreaGame):Array<DoorBatch>
     {
-      var byLook = [for (_ in TEX) new Array<DoorCell>()];
+      var byLook = [for (_ in m.tex.door) new Array<DoorCell>()];
       for (d in m.doors)
         byLook[d.look].push(d);
       var out = [];
-      for (li in 0...TEX.length)
+      for (li in 0...m.tex.door.length)
         if (byLook[li].length > 0)
-          out.push(batch(scene, TEX[li], byLook[li], area));
+          out.push(batch(scene, m.tex.door[li], byLook[li], area));
       return out;
     }
 
@@ -85,6 +88,7 @@ class FacilityDoors
         map: map,
         side: THREE.FrontSide,
       })), cells.length * 2);
+      inst.name = 'door ' + tex;
       inst.castShadow = true;
       inst.receiveShadow = true;
       // tick() culls per instance, so three's own whole-mesh cull must not also have an opinion —
@@ -101,6 +105,7 @@ class FacilityDoors
         hinge: [],
         shut: [],
         swing: [],
+        slide: [],
         open: [],
       };
       for (c in cells)
@@ -122,12 +127,26 @@ class FacilityDoors
           // opposite jambs, which is what a real pair does — and it falls out of taking the second
           // leaf's turn as the negative of the first
           var d0 = wrap(Math.atan2(-nz, nx) - yaw);
+          // A LIFT PAIR SLIDES AND DOES NOT TURN. Each leaf runs one LEAF_W further along the
+          // wall line, away from the centre, and disappears into the masonry beside the opening —
+          // which is the one thing a hinged leaf cannot be made to look like however it is eased.
+          // The travel is `-s * u * LEAF_W` because leaf 0's jamb is already at `-u * LEAF_W` and
+          // it has to go the same way again.
+          //
+          // PLUS FacilityStyle.DOOR_SLIDE_CLEAR, and that number's header is the whole reason: at
+          // exactly LEAF_W the leaf's hinge edge stops in the cell boundary plane and z-fights the
+          // doorway reveal standing in it
+          var slides = (c.look == Look.LIFT);
           for (k in 0...2)
             {
               var s = (k == 0 ? 1.0 : -1.0);
               b.hinge.push(new Vector3(cx - ux * s * LEAF_W, 0.0, cz - uz * s * LEAF_W));
               b.shut.push(k == 0 ? yaw : yaw + Math.PI);
-              b.swing.push(k == 0 ? d0 : -d0);
+              b.swing.push(slides ? 0.0 : (k == 0 ? d0 : -d0));
+              var run = LEAF_W + FacilityStyle.DOOR_SLIDE_CLEAR;
+              b.slide.push(slides
+                ? new Vector3(-s * ux * run, 0.0, -s * uz * run)
+                : new Vector3(0.0, 0.0, 0.0));
               b.prop.matrices.push(new Matrix4());
               // the frustum centre is the SHUT centre and is never moved by the swing — see
               // FacilityStyle.DOOR_CULL_R, which is sized off how far a leaf gets from it
@@ -144,7 +163,16 @@ class FacilityDoors
 // per-frame: ease every opening toward its live state, turn its two leaves, and cull
   public static function tick(batches:Array<DoorBatch>, opts:Area3DTickOpts):Void
     {
+      swing(batches, opts);
+      cull(batches, opts, false);
+    }
+
+// ease every leaf toward its door's open state and pose the ones that moved. returns whether any did,
+// which is what tells a frozen shadow map that a leaf it holds has gone somewhere else
+  public static function swing(batches:Array<DoorBatch>, opts:Area3DTickOpts):Bool
+    {
       var step = opts.dtMs / (RenderConfig.BASE_MS * FacilityStyle.DOOR_SWING_MULT);
+      var moved = false;
       for (b in batches)
         {
           for (c in 0...b.open.length)
@@ -158,9 +186,17 @@ class FacilityDoors
               else continue;
               b.open[c] = t;
               pose(b, c);
+              moved = true;
             }
-          Models.cull(b.prop, opts.camera, FacilityStyle.DOOR_CULL_R);
         }
+      return moved;
+    }
+
+// the leaves' frustum cull; `all` packs every leaf for a frame a frozen shadow map renders on
+  public static function cull(batches:Array<DoorBatch>, opts:Area3DTickOpts, all:Bool):Void
+    {
+      for (b in batches)
+        Models.cull(b.prop, opts.camera, FacilityStyle.DOOR_CULL_R, null, all);
     }
 
 // write one opening's two leaf matrices from its eased state. composes in place, so nothing here
@@ -170,8 +206,10 @@ class FacilityDoors
       for (k in 0...2)
         {
           var i = c * 2 + k;
-          _q.setFromAxisAngle(_up, b.shut[i] + b.swing[i] * b.open[c]);
-          b.prop.matrices[i].compose(b.hinge[i], _q, _one);
+          var t = b.open[c];
+          _q.setFromAxisAngle(_up, b.shut[i] + b.swing[i] * t);
+          _p.set(b.hinge[i].x + b.slide[i].x * t, b.hinge[i].y, b.hinge[i].z + b.slide[i].z * t);
+          b.prop.matrices[i].compose(_p, _q, _one);
         }
     }
 
@@ -181,7 +219,9 @@ class FacilityDoors
     {
       for (b in batches)
         {
-          scene.remove(b.prop.mesh);
+          // from its PARENT, not the scene: a leaf built before render.Chunks.build was swept into a
+          // chunk group, and scene.remove left it drawing under the rebuilt batch
+          b.prop.mesh.removeFromParent();
           b.prop.mesh.material.dispose();
         }
     }
@@ -192,12 +232,18 @@ class FacilityDoors
 // the actor layer's `iconOff` is otherwise only ever true for a glb prop out of
 // render.world.ObjModels, and a leaf pair is not one — so every facility doorway had the old tile
 // image painted across its threshold, a pale square lying under geometry that had replaced it.
-// scoped to the facility on purpose: the corporate and underground-lab generators deal
-// objects.Door too and nothing draws leaves for those, so there the icon is still all there is
+// BOTH 3D KINDS, and the corp tower was left out of it for a whole pass: this used to be scoped to
+// AREA_FACILITY on the grounds that "the corporate and underground-lab generators deal objects.Door
+// too and nothing draws leaves for those". render.corp.CorpArea has called build() since the tower
+// got its own four pairs, so every corp doorway had real leaves standing in it AND the old tile
+// image lying across its threshold. The underground lab slides leaves of its own and answers for
+// them itself (render.lab.LabArea.draws)
   public static function draws(area:game.AreaGame, o:objects.AreaObject):Bool
     {
       return area != null &&
-        area.typeID == AREA_FACILITY &&
+        (area.typeID == AREA_FACILITY ||
+         area.typeID == AREA_CORP ||
+         area.typeID == AREA_MILITARY_BASE) &&
         o.type == 'door';
     }
 
@@ -222,8 +268,21 @@ class FacilityDoors
       return a;
     }
 
-// one leaf: hinge edge at local x = 0, free edge at +LEAF_W, base at y = 0, so the instance matrix is
-// a plain turn about the hinge with no recentring correction to undo
+// one leaf: hinge edge at local x = 0, free edge at +LEAF_W, head at y = DOOR_H, so the instance
+// matrix is a plain turn about the hinge with no recentring correction to undo.
+//
+// it does NOT start at y = 0, and that is item (c) of the hangar's wall base. a leaf stands on the
+// FLOOR, y = 0, and the surface a doorway opens ONTO need not be that floor: FacilityStyle.KERB_DROP
+// puts the lot a fifth of a unit under it, and the hangar is the one structure that opens straight
+// onto the lot, so its side doors hung over 0.2 of daylight exactly as its walls did. the walls were
+// answered by FacilityStyle.WALL_BASE and this is the same answer in the one place that could not
+// take it: the leaf keeps its hinge at floor level, because that is what the swing turns about and
+// what DOOR_H is measured from, and grows a SKIRT downward instead.
+//
+// its v goes NEGATIVE over that skirt and the art is loaded ClampToEdgeWrapping (see `batch`), so
+// the skirt samples the leaf's own bottom texel row rather than wrapping to its head — the one thing
+// that makes this free of a second art and free of any stretch. everywhere but the hangar the skirt
+// is simply buried under an opaque pavement or floor plane whose top edge is y = 0
   static function leafGeom():BufferGeometry
     {
       if (geo != null)
@@ -231,23 +290,25 @@ class FacilityDoors
       var b = MeshBufTools.make();
       var w = LEAF_W;
       var h = FacilityStyle.DOOR_H;
+      var y0 = -FacilityStyle.KERB_DROP;
+      var v0 = y0 / h;
       var t = FacilityStyle.DOOR_T * 0.5;
       // the face the art reads off, and its back carrying the SAME u. seen from behind, local +x runs
       // the other way across the screen, so one mapping delivers the mirror of the front — and the
       // mirror of the left leaf IS the right leaf. that is why one square image serves both halves,
       // and it is exact rather than approximate: the source measures 2.0 sRGB mean absolute
       // difference about its own midline, which is film grain
-      MeshBufTools.quad(b, [0, 0, t], [w, 0, t], [w, h, t], [0, h, t],
-        [0, 0, 0.5, 0, 0.5, 1, 0, 1]);
-      MeshBufTools.quad(b, [w, 0, -t], [0, 0, -t], [0, h, -t], [w, h, -t],
-        [0.5, 0, 0, 0, 0, 1, 0.5, 1]);
+      MeshBufTools.quad(b, [0, y0, t], [w, y0, t], [w, h, t], [0, h, t],
+        [0, v0, 0.5, v0, 0.5, 1, 0, 1]);
+      MeshBufTools.quad(b, [w, y0, -t], [0, y0, -t], [0, h, -t], [w, h, -t],
+        [0.5, v0, 0, v0, 0, 1, 0.5, 1]);
       // the hinge edge, the free edge and the top, each sampling a sliver of the art's own frame
       // rather than a flat colour. they exist because this camera looks down at 51 degrees, where a
       // bare quad would vanish edge-on the moment the leaf swung square to the view
-      MeshBufTools.quad(b, [0, 0, -t], [0, 0, t], [0, h, t], [0, h, -t],
-        [0.005, 0, 0.02, 0, 0.02, 1, 0.005, 1]);
-      MeshBufTools.quad(b, [w, 0, t], [w, 0, -t], [w, h, -t], [w, h, t],
-        [0.48, 0, 0.495, 0, 0.495, 1, 0.48, 1]);
+      MeshBufTools.quad(b, [0, y0, -t], [0, y0, t], [0, h, t], [0, h, -t],
+        [0.005, v0, 0.02, v0, 0.02, 1, 0.005, 1]);
+      MeshBufTools.quad(b, [w, y0, t], [w, y0, -t], [w, h, -t], [w, h, t],
+        [0.48, v0, 0.495, v0, 0.495, 1, 0.48, 1]);
       MeshBufTools.quad(b, [0, h, t], [w, h, t], [w, h, -t], [0, h, -t],
         [0, 0.985, 0.5, 0.985, 0.5, 1, 0, 1]);
       // no underside: it stands on the floor and is never seen, and this is per leaf

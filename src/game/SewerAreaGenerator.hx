@@ -9,7 +9,6 @@ import game.AreaGenerator;
 import objects.mission.HabitatExit;
 import objects.mission.SewerExit;
 import tiles.Sewers;
-import tiles._FloorDecorMeta;
 
 typedef SewerAreaGeneratorOptions = {
   @:optional var blockWidth: Int;
@@ -798,7 +797,7 @@ class SewerAreaGenerator
       return Const.TILE_HIDDEN;
     }
 
-// place sewer exits in room centers
+// place sewer exits against a room wall (see wallSpot)
   function placeExits(area: AreaGame, rooms: Array<_Room>,
       ?options: SewerAreaGeneratorOptions)
     {
@@ -827,11 +826,48 @@ class SewerAreaGenerator
         {
           if (i >= shuffled.length)
             return;
-          var room = shuffled[i];
-          var cx = room.x1 + Std.int(room.w / 2);
-          var cy = room.y1 + Std.int(room.h / 2);
-          addExit(area, cx, cy, options);
+          var spot = wallSpot(area, shuffled[i]);
+          addExit(area, spot.x, spot.y, options);
         }
+    }
+
+// pick an exit cell backed by a room wall: the ladder is bracketed to masonry, so it has to stand
+// against some. north, west or east in random order and NEVER south — the camera looks north, so a
+// south wall would hide the ladder behind itself. each side is scanned from its middle outward, so a
+// tunnel mouth is stepped past — and a tunnel is 3 wide, centred, i.e. EVERY middle cell of a 5-room's
+// side, so the corners come last and are what saves a room with tunnels on all three (measured 12 of
+// 92 exits over 60 levels before). the renderer turns a corner ladder north whatever side picked it,
+// still onto masonry. the centre fallback, where the ladder stands free, is for a room with none
+  function wallSpot(area: AreaGame, room: _Room): { x: Int, y: Int }
+    {
+      var cx = room.x1 + Std.int(room.w / 2);
+      var cy = room.y1 + Std.int(room.h / 2);
+      // 0 north, 1 west, 2 east
+      var sides = [ 0, 1, 2 ];
+      for (i in 0...sides.length)
+        {
+          var j = Std.random(sides.length);
+          var tmp = sides[i];
+          sides[i] = sides[j];
+          sides[j] = tmp;
+        }
+      for (side in sides)
+        {
+          var len = (side == 0 ? room.w : room.h);
+          for (k in 0...len)
+            {
+              // 0, -1, +1, -2, +2 ... off the middle
+              var d = (k % 2 == 0 ? 1 : -1) * Std.int((k + 1) / 2);
+              var x = (side == 0 ? cx + d : side == 1 ? room.x1 : room.x2);
+              var y = (side == 0 ? room.y1 : cy + d);
+              var bx = (side == 0 ? x : side == 1 ? x - 1 : x + 1);
+              var by = (side == 0 ? y - 1 : y);
+              if (area.getCellType(x, y) == Const.TILE_WALKWAY &&
+                  area.getCellType(bx, by) != Const.TILE_WALKWAY)
+                return { x: x, y: y };
+            }
+        }
+      return { x: cx, y: cy };
     }
 
 // get number of exits to place

@@ -25,8 +25,7 @@ class PawnEntity extends Entity
 
   public function new(g: Game, xx: Int, yy: Int)
     {
-      super(g, Const.LAYER_AI);
-      type = 'pawn';
+      super(g);
       maskx = -1;
 
       _textTimer = 0;
@@ -90,36 +89,12 @@ class PawnEntity extends Entity
         }
     }
 
-// draw pawn entity
+// draw pawn entity on the region map: mask image, then the entity image
   public override function draw(ctx: CanvasRenderingContext2D)
     {
-      // draw mask image first
       drawImage(ctx, game.scene.images.entities,
         maskx, Const.ROW_PARASITE);
-
-      // draw entity image
       super.draw(ctx);
-
-      // draw text
-      if (text != null)
-        {
-          var x = (mx - game.scene.cameraTileX1) * Const.TILE_SIZE;
-          var y = (my - game.scene.cameraTileY1) * Const.TILE_SIZE;
-          // text bg
-          ctx.font = Std.int(14 * game.config.mapScale) + "px " + textFontFamily;
-          var m = ctx.measureText(text);
-          var h = Std.int(14 * game.config.mapScale);
-          var tx = x + Const.TILE_SIZE / 2;
-          var ty = y + 4;
-          var bgX = tx - m.width / 2 - 5;
-          var bgY = y - h / 2 - 4;
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-          ctx.fillRect(bgX, bgY, m.width + 10, h + 3);
-
-          // text
-          ctx.fillStyle = 'white';
-          ctx.fillText(text, tx, ty);
-        }
     }
 
 // formats a font family for canvas usage

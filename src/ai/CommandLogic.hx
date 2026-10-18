@@ -125,13 +125,19 @@ class CommandLogic
       return true;
     }
 
-// check if ai is standing on an exit tile
+// check if ai is standing on an exit tile, or beside one used from beside it (the corp stairs)
   static function isExitTile(ai: AI): Bool
     {
-      for (o in game.area.getObjectsAt(ai.x, ai.y))
+      for (o in game.area.getObjectsInRadius(ai.x, ai.y, 2, false))
         {
-          if (o.type == 'elevator' ||
-              o.type == 'stairs')
+          if (o.type != 'elevator' &&
+              o.type != 'stairs')
+            continue;
+          if (o.x == ai.x &&
+              o.y == ai.y)
+            return true;
+          if (o.canActivateNear() &&
+              Std.int(Math.max(Math.abs(o.x - ai.x), Math.abs(o.y - ai.y))) == 1)
             return true;
         }
       return false;
@@ -149,26 +155,38 @@ class CommandLogic
           if (o.type != 'elevator' &&
               o.type != 'stairs')
             continue;
-          if (!game.area.isWalkable(o.x, o.y))
-            continue;
-
-          // check if the tile is occupied by another ai
-          var occupant = game.area.getAI(o.x, o.y);
-          if (occupant != null &&
-              occupant != ai)
-            continue;
-
-          // check if the tile is reachable
-          var path = game.area.getPath(ai.x, ai.y, o.x, o.y);
-          if (path == null)
-            continue;
-
-          // prefer the closest reachable exit tile
-          if (best == null ||
-              path.length < bestPathLength)
+          // the tile itself, and the eight round one used from beside it (the corp stairs, whose
+          // own cell is sealed)
+          var cands = [ { x: o.x, y: o.y } ];
+          if (o.canActivateNear())
+            for (dx in -1...2)
+              for (dy in -1...2)
+                if (dx != 0 ||
+                    dy != 0)
+                  cands.push({ x: o.x + dx, y: o.y + dy });
+          for (c in cands)
             {
-              best = { x: o.x, y: o.y };
-              bestPathLength = path.length;
+              if (!game.area.isWalkable(c.x, c.y))
+                continue;
+
+              // check if the tile is occupied by another ai
+              var occupant = game.area.getAI(c.x, c.y);
+              if (occupant != null &&
+                  occupant != ai)
+                continue;
+
+              // check if the tile is reachable
+              var path = game.area.getPath(ai.x, ai.y, c.x, c.y);
+              if (path == null)
+                continue;
+
+              // prefer the closest reachable exit tile
+              if (best == null ||
+                  path.length < bestPathLength)
+                {
+                  best = { x: c.x, y: c.y };
+                  bestPathLength = path.length;
+                }
             }
         }
 

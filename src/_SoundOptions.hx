@@ -8,4 +8,9 @@ typedef _SoundOptions = {
 // x,y for in-world sounds
   @:optional var x: Int;
   @:optional var y: Int;
+// the volume to play at, 0-100, instead of the effects slider and any x,y falloff: a caller that
+// worked its level out itself (render.AreaSounds' intermittent ambience)
+  @:optional var volume: Float;
+// an area's ambient one-shot (render.AreaSounds.once): cut off when a menu comes up, like the loops
+  @:optional var ambient: Bool;
 }

@@ -15,6 +15,7 @@ class HUD
   var game: Game;
   var ui: UI;
   public var state: _HUDState;
+  public var pickupFrom: objects.GunCabinet; // the container HUD_PICKUP_MENU lists, or null for the tile's pickups
   var blinkingText: DivElement;
   var overlay: DivElement;
   public var container: DivElement;
@@ -32,6 +33,7 @@ class HUD
   // per-block sub-classes (each owns its DOM, appended to container)
   public var topbar: TopbarHud;
   var log: LogHud;
+  public var minimap: MinimapHud;
   public var goals: GoalsHud;
   public var infoHud: InfoHud;
   var navbar: NavbarHud;
@@ -105,6 +107,7 @@ class HUD
       console = new ConsoleHud(game, this);
       topbar = new TopbarHud(game, this);
       log = new LogHud(game, this);
+      minimap = new MinimapHud(game, this);
       goals = new GoalsHud(game, this);
       infoHud = new InfoHud(game, this);
 
@@ -308,7 +311,8 @@ public function onMouseLeave()
         resetRegionTooltipHover();
     }
 
-// returns true if area inspect mode is active (Ctrl held: hover an AI or an object for a tooltip)
+// returns true if area inspect mode is active: hovering an AI or an object shows what is known
+// about it, unless a window or a mode is up, or the world is moving under a still cursor
   public function isInspectMode(): Bool
     {
       return (
@@ -316,8 +320,8 @@ public function onMouseLeave()
         ui.state == UISTATE_DEFAULT &&
         state == HUD_DEFAULT &&
         !game.isInputLocked() &&
-        game.scene.controlPressed &&
-        game.config.mouseEnabled
+        game.config.mouseEnabled &&
+        !game.scene.mouse.hoverPaused()
       );
     }
 
@@ -335,8 +339,6 @@ public function onMouseLeave()
       if (container.style.visibility == 'visible')
         hide();
       else show();
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
     }
 
 // returns true if HUD is visible
@@ -355,6 +357,7 @@ public function onMouseLeave()
     {
       container.style.visibility = 'visible';
       navbar.show();
+      minimap.update();
     }
 
   public function hide()
@@ -363,6 +366,8 @@ public function onMouseLeave()
       areaTooltip.hide();
       container.style.visibility = 'hidden';
       navbar.hide();
+      // the minimap shows through while the options window is up
+      minimap.update();
     }
 
 // position the navbar for a UI state (delegates to the navbar block)
@@ -398,6 +403,7 @@ public function onMouseLeave()
       actions.updateActions();
       infoHud.update();
       log.update();
+      minimap.update();
       navbar.update();
       goals.update();
       topbar.update();
@@ -415,6 +421,10 @@ public function onMouseLeave()
 // action block delegates
   public function addAction(action: _PlayerAction)
     actions.addAction(action);
+
+// is an action with this id already listed this update?
+  public function hasAction(id: String): Bool
+    return actions.hasAction(id);
 
   public function addKeyAction(action: _PlayerAction)
     actions.addKeyAction(action);
@@ -453,20 +463,16 @@ public function onMouseLeave()
         Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
         Std.int(game.scene.canvas.height / Const.TILE_SIZE) +
         '<br>spawnCells: ' + game.area.spawnCells +
-        ', maxAI: ' + game.area.getMaxAI() +
-        '<br>emptyScreenCells (2D): ' + game.scene.area.emptyScreenCells + '<br>');
+        ', maxAI: ' + game.area.getMaxAI() + '<br>');
       if (!game.group.isKnown)
         buf.add('Group known count: ' + game.group.knownCount + '<br/>');
       buf.add('Group priority: ' + Const.round(game.group.priority) +
         ', team timeout: ' + game.group.teamTimeout + '<br/>');
       if (game.group.team != null)
         buf.add('Team: ' + game.group.team + '<br/>');
-      // render stats for the active view only: region timing in region mode,
-      // 2D area timing in area mode unless the 3D street view is rendering
+      // region render timing (areas render through the 3D view, timed by `perf street`)
       if (game.location == LOCATION_REGION)
         buf.add('<br/>' + game.scene.getRegionRenderStatsText() + '<br/>');
-      else if (!game.scene.view3d.running)
-        buf.add('<br/>' + game.scene.getAreaRenderStatsText() + '<br/>');
       if (game.location == LOCATION_AREA)
         game.managerArea.debugInfo(buf);
       debugBody.innerHTML = buf.toString();

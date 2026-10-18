@@ -21,17 +21,10 @@ typedef Turn = { sx0:Int, sy0:Int, sx1:Int, sy1:Int, cx0:Int, cy0:Int, cx1:Int, 
 // as walkway (touching a road) or alley; landlocked buildings are dropped.
 // mulberry32(1337) keeps the layout stable across runs
 class CityGen {
-  static inline function imul(a:Int, b:Int):Int return js.Syntax.code("Math.imul({0}, {1})", a, b);
-
-  public static function mulberry32(seed:Int):Void->Float {
-    var a = seed;
-    return function():Float {
-      a = a | 0; a = (a + 0x6D2B79F5) | 0;
-      var t = imul(a ^ (a >>> 15), 1 | a);
-      t = (t + imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
+  // the city's rng stream, now shared with the rest of area generation. the arithmetic moved to
+  // gen.Rng unchanged and this stays as the name every caller already uses (render debris passes
+  // key off it too), so no city layout moves
+  public static inline function mulberry32(seed:Int):Void->Float return gen.Rng.mulberry32(seed);
 
   static function fillRect(tiles:Array<Array<Tile>>, x0:Int, y0:Int, w:Int, h:Int, val:Tile):Void {
     for (r in y0...y0 + h) for (c in x0...x0 + w)
@@ -742,13 +735,15 @@ class CityGen {
       }
     }
 
-    // tile grid: roads, then buildings, then WALKWAY if touching a road else ALLEY
+    // tile grid: roads, then buildings, then WALKWAY if within the setback of a road else ALLEY
     var tiles:Array<Array<Tile>> = [for (r in 0...GRID) [for (c in 0...GRID) isRoad(c, r) ? Tile.Road : Tile.Walkway]];
     for (b in buildings) fillRect(tiles, b.col, b.row, b.w, b.d, Tile.Building);
-    // 8-neighbour: diagonals included so the pavement wraps convex road corners
-    // (an L-turn / dead-end tip outer corner touches its road only diagonally)
+    // the square of the setback round the cell: diagonals included so the pavement wraps convex road
+    // corners (an L-turn / dead-end tip outer corner touches its road only diagonally), and every
+    // ring of a wider setback is pavement rather than a dead alley strip against the buildings
+    var sb = profile.setback;
     function touchesRoad(c:Int, r:Int):Bool {
-      for (dr in -1...2) for (dc in -1...2) {
+      for (dr in -sb...sb + 1) for (dc in -sb...sb + 1) {
         var cc = c + dc, rr = r + dr;
         if ((dc != 0 || dr != 0) && cc >= 0 && rr >= 0 && cc < GRID && rr < GRID && isRoad(cc, rr)) return true;
       }
@@ -874,19 +869,39 @@ class CityGen {
     var lampSet = new Map<Int, Bool>();
     inline function isRoad(c:Int, r:Int):Bool
       return c >= 0 && r >= 0 && c < GRID && r < GRID && tiles[r][c] == Tile.Road;
-    inline function addLamp(c:Int, r:Int, dir:Int):Void {
+    inline function isWalk(c:Int, r:Int):Bool
+      return c >= 0 && r >= 0 && c < GRID && r < GRID && tiles[r][c] == Tile.Walkway;
+    // a direction's step (0 +z, 1 -z, 2 +x, 3 -x)
+    var ldc = [0, 0, 1, -1];
+    var ldr = [1, -1, 0, 0];
+    function addLamp(c:Int, r:Int, dir:Int):Void {
       // never on a corner: if the walkway cell touches a crossing road along the walkway axis
-      // (columns for h-roads, rows for v-roads), step one tile back down the walkway, away from it
-      if (dir == 0 || dir == 1) {
-        if (isRoad(c + 1, r)) c -= 1;
-        else if (isRoad(c - 1, r)) c += 1;
+      // (columns for h-roads, rows for v-roads), or the road it lights turns or ends there (walkway
+      // beside the road cell in front, which Ground bevels into a diagonal kerb), step one tile back
+      // down the walkway, away from it
+      var ac = (dir < 2 ? 1 : 0);
+      var ar = 1 - ac;
+      inline function turns(c:Int, r:Int, s:Int):Bool
+        return isWalk(c + ldc[dir] + s * ac, r + ldr[dir] + s * ar);
+      if (isRoad(c + ac, r + ar) ||
+          turns(c, r, 1)) {
+        c -= ac;
+        r -= ar;
       }
-      else {
-        if (isRoad(c, r + 1)) r -= 1;
-        else if (isRoad(c, r - 1)) r += 1;
+      else if (isRoad(c - ac, r - ar) ||
+          turns(c, r, -1)) {
+        c += ac;
+        r += ar;
       }
       if (c < 0 || r < 0 || c >= GRID || r >= GRID) return;
-      if (tiles[r][c] != Tile.Walkway) return;
+      // and where it stands it has to front the road it lights, a straight stretch of it: a turned
+      // vertical road's loop starts on its connector's own row, and the lamp stepped off it there
+      // stood facing the pavement
+      if (tiles[r][c] != Tile.Walkway ||
+          !isRoad(c + ldc[dir], r + ldr[dir]) ||
+          turns(c, r, 1) ||
+          turns(c, r, -1))
+        return;
       if (lamps.length >= MAX_LAMPS) return;
       var key = r * GRID + c;
       if (lampSet.exists(key)) return;
@@ -911,6 +926,16 @@ class CityGen {
         addLamp(v.pos - 1, r, 2);
         addLamp(v.pos + v.w, r, 3);
         r += LAMP_SPACING;
+      }
+    }
+    // an L-turn's connector runs sideways between two vertical roads and is in neither list: lamp
+    // both its edges over its own span, as a horizontal road's
+    for (t in turns) {
+      var c = t.cx0;
+      while (c <= t.cx1) {
+        addLamp(c, t.cy0 - 1, 0);
+        addLamp(c, t.cy1 + 1, 1);
+        c += LAMP_SPACING;
       }
     }
 

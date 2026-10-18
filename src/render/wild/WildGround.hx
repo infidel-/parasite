@@ -78,7 +78,7 @@ class WildGround
             // 2% stretch back on ground the camera sees at a steep angle anyway
             uv.push(x / WildStyle.GROUND_TILE);
             uv.push(z / WildStyle.GROUND_TILE);
-            var t = tint(x, z);
+            var t = tint(x, z) * WildHeight.shade(x, z);
             colr.push(t);
             colr.push(t);
             colr.push(t);

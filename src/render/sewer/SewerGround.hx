@@ -38,13 +38,10 @@ class SewerGround
         solid: true,
         cross: false,
       });
-      // floor decals: standing water and the drains it should be going down. the two puddles and the
-      // stain keep an opacity below 1 — unlike the props, shallow water genuinely IS see-through,
-      // and letting the walkway read through it is what stops it looking like a pit
+      // floor decals: the drains and the stains. the stain keeps an opacity below 1, as genuinely
+      // translucent art. standing water is not a decal any more — see render.sewer.SewerWater
       scatter(scene, m, {
         types: [
-          { tex: SewerStyle.FLOOR_PUDDLE, w: 2.8, d: 2.2, alpha: 0.3, organic: true },
-          { tex: SewerStyle.FLOOR_PUDDLE_2, w: 1.8, d: 1.6, alpha: 0.35, organic: true },
           { tex: SewerStyle.FLOOR_GRATE, w: 1.6, d: 1.6, alpha: 1.0, organic: false },
           { tex: SewerStyle.FLOOR_STAIN, w: 2.6, d: 2.0, alpha: 0.8, organic: true },
         ],
@@ -54,6 +51,9 @@ class SewerGround
         solid: false,
         cross: true,
       });
+      // pools on the walkway. from HERE so View.warmup's demo tunnel, which runs this function,
+      // compiles their program too
+      SewerWater.build(scene, m);
     }
 
 // ---------------------------------------------------------------------------------------------

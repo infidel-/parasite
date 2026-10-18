@@ -75,6 +75,25 @@ class MeshBufTools
         }
     }
 
+// append one quad whose `col` channel carries THREE INDEPENDENT numbers per vertex rather than the
+// one grey quadC pushes — the same rgb for all four corners.
+//
+// it exists because a quad sometimes has to carry more than a brightness: render.facility
+// .FacilityDeco's server-rack lights put their level in r and their BLINK PHASE in g, and a shader
+// patch there reads the two apart. a material taking this must reconstruct its colour from the
+// channels rather than letting `vertexColors` multiply them in, or the phase tints the quad green
+  public static function quadRGB(b:MeshBuf, p0:Array<Float>, p1:Array<Float>, p2:Array<Float>, p3:Array<Float>,
+    uv:Array<Float>, r:Float, g:Float, bl:Float):Void
+    {
+      quad(b, p0, p1, p2, p3, uv);
+      for (i in 0...4)
+        {
+          b.col.push(r);
+          b.col.push(g);
+          b.col.push(bl);
+        }
+    }
+
 // a fresh empty buffer
   public static function make():MeshBuf
     {

@@ -124,10 +124,10 @@ class Entry
           40 + Std.random(20));
       });
 
-      // split-icon kill effect: on player chainsaw kills, slice the target
-      // sprite in two unevenly, fling halves to nearby tiles, hold briefly,
-      // then fade. uses ai:die-pre because ai.entity is still live there;
-      // by the time ai:die fires AreaGame.removeAI has already nulled it
+      // gore kill effect: on player chainsaw kills, a staggered ring of blood
+      // bursts around the death cell. staggered because each splat fires
+      // fx-splat — a same-frame ring would stack 6 copies of the sound. the
+      // engine's own death fade already covers the corpse transition
       parasite.events.onAIDiePre(function(e) {
         if (e.attacker == null)
           return;
@@ -136,38 +136,19 @@ class Entry
         if (e.attacker.weaponInfo == null ||
             e.attacker.weaponInfo.id != 'mod-chainsaw-chainsaw')
           return;
-        if (e.entity == null)
-          return;
         var pos: _Point = { x: e.ai.x, y: e.ai.y };
-        // 3D areas have no sprite-gib primitive a mod can reach, so the halves
-        // become a staggered ring of blood bursts around the death cell instead.
-        // staggered because playSplat fires fx-splat per call — a same-frame ring
-        // would stack 6 copies of the sound. the engine's own death fade already
-        // covers the corpse transition, so this is purely the gore
-        if (e.game.scene.view3d.running)
+        var scene = e.game.scene;
+        for (i in 0...6)
           {
-            var scene = e.game.scene;
-            for (i in 0...6)
-              {
-                var a = Math.PI * 2 * i / 6 + Math.random() * 0.5;
-                var rx = pos.x + Math.round(Math.cos(a));
-                var ry = pos.y + Math.round(Math.sin(a));
-                js.Browser.window.setTimeout(function() {
-                  scene.view3d.playSplat('red', rx, ry, pos);
-                }, i * 40);
-              }
-            return;
+            var a = Math.PI * 2 * i / 6 + Math.random() * 0.5;
+            var rx = pos.x + Math.round(Math.cos(a));
+            var ry = pos.y + Math.round(Math.sin(a));
+            js.Browser.window.setTimeout(function() {
+              particles.Particle.createSplat('red', scene,
+                { x: rx, y: ry },
+                pos);
+            }, i * 40);
           }
-        // random cut: angle in [0, π) covers all unique lines; pivot near
-        // tile center so both halves stay roughly non-degenerate in area
-        var tile = Const.TILE_SIZE;
-        var cutAngle = Math.random() * Math.PI;
-        var cutX = tile * (0.35 + Math.random() * 0.30);
-        var cutY = tile * (0.35 + Math.random() * 0.30);
-        new ParticleSplitIconHalf(e.game.scene, pos, e.entity,
-          cutAngle, cutX, cutY, 0);
-        new ParticleSplitIconHalf(e.game.scene, pos, e.entity,
-          cutAngle, cutX, cutY, 1);
       });
 
       // kill counter — once the player has the goal, every AI death in the

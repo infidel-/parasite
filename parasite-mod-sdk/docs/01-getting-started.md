@@ -85,7 +85,7 @@ With debug on you also get the expanded in-game console command set described
 in [09-console-reference.md](09-console-reference.md) (`give`, `go`, `goal`,
 `learn`, `set`, `spa`, `spc`, `snd`, etc.). With it off the console still
 exposes the release subset (`load`, `save`, `restart`, `quit`, `mods`,
-`debug renderstats|ai|sound|lights`, `cfg`).
+`debug renderstats|ai|sound`, `cfg`).
 
 ## 6. Launch and verify
 

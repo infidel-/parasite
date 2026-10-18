@@ -120,7 +120,7 @@ Enter / NumPad5 / LMB on target - confirm selected target<br>
 ESC - clear target<br>
 <br>
 <b>Inspection:</b><br>
-Hold Ctrl + hover over an NPC or an object - show a tooltip with what you know about it<br>",
+Hover over an NPC or an object - show a tooltip with what you know about it<br>",
         },
         {
           id: 'lifeParasite',
@@ -301,7 +301,11 @@ Hold Ctrl + hover over an NPC or an object - show a tooltip with what you know a
           id: 'areaMilitary',
           name: 'Military Base',
           img: 'pedia/area_military',
-          text: "All military base areas are actively patrolled by soldiers and officers, ensuring a constant state of vigilance and security. The presence of well-trained personnel underscores the importance of maintaining order and readiness at all times. Routine inspections and drills are conducted to ensure that protocols are strictly followed, contributing to the overall efficiency and preparedness of the base. This disciplined environment is crucial for the effective operation and rapid response capabilities of the military.",
+          text: "<p>All military base areas are actively patrolled by soldiers and officers, ensuring a constant state of vigilance and security. The presence of well-trained personnel underscores the importance of maintaining order and readiness at all times. Routine inspections and drills are conducted to ensure that protocols are strictly followed, contributing to the overall efficiency and preparedness of the base. This disciplined environment is crucial for the effective operation and rapid response capabilities of the military.</p>
+
+<p>Base personnel are trained to spot anyone out of place. A host that is not in uniform draws their attention much faster than on the streets. Wearing a soldier or an officer, or a well-grown camouflage layer, helps the parasite blend in.</p>
+
+<p>Officers are rarer than soldiers and carry a sidearm. They are well informed and always know something about the events that took place on their base.</p>",
         },
         {
           id: 'areaLab',

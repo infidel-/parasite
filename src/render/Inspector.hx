@@ -18,6 +18,9 @@ class Inspector {
     var downX = 0.0, downY = 0.0;
 
     inline function active() return Tools.mode == 'select';
+    Tools.legend('select',
+      'B  leave building select\n' +
+      'LMB  inspect the building / ground spot under the cursor (report -> #binfo + clipboard)');
     Tools.listen(function() {
       if (out != null) out.textContent = active() ? 'select buildings: ON (B)' : '';
     });

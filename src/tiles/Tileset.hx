@@ -3,48 +3,29 @@
 package tiles;
 
 import Const;
-import _AtmosphereLightMeta;
-import game.AreaGame;
 import js.html.CanvasRenderingContext2D;
 import js.html.Image;
 import mods.AssetPath;
-
-typedef _WallDecorationLayer = {
-  var path: String;
-  @:optional var repeatEvery: Int;
-  @:optional var chance: Int;
-  @:optional var light: _AtmosphereLightMeta;
-  @:optional var noCorners: Bool;
-}
 
 class Tileset
 {
   public var image: Image;
   public var voidTile: _Icon;
-  public var splatLayerID: Int;
-  public var floorDecorationLayers: Array<Image>;
-  public var floorDecorationLayerIcons: Array<Array<_Icon>>;
-  public var wallDecorationLayers: Array<Image>;
-  public var wallDecorationLayerRepeatEvery: Array<Int>;
-  public var wallDecorationLayerChance: Array<Int>;
-  public var wallDecorationLayerMeta: Array<_WallDecorationLayer>;
+  public var splatLayerID: Int; // persisted into SPLAT decorations (Tile.decoration.layerID)
 
-// create tileset from image path
-  public function new(path: String)
+// create tileset, with the image the region map draws from when a path is given
+  public function new(?path: String)
     {
-      image = new Image();
-      image.src = AssetPath.resolve(path);
+      if (path != null)
+        {
+          image = new Image();
+          image.src = AssetPath.resolve(path);
+        }
       voidTile = {
         row: 0,
         col: 0,
       };
       splatLayerID = -1;
-      floorDecorationLayers = [];
-      floorDecorationLayerIcons = [];
-      wallDecorationLayers = [];
-      wallDecorationLayerRepeatEvery = [];
-      wallDecorationLayerChance = [];
-      wallDecorationLayerMeta = [];
     }
 
 // map tile id to icon coordinates
@@ -70,205 +51,10 @@ class Tileset
       return false;
     }
 
-// add one floor decoration image layer with source icons and full rows
-  public function addFloorDecorationLayer(path: String, icons: Array<_Icon>,
-      ?rows: Array<Int>)
-    {
-      var layer = new Image();
-      layer.src = AssetPath.resolve(path);
-      floorDecorationLayers.push(layer);
-
-      var layerIcons: Array<_Icon> = [];
-      if (icons != null)
-        layerIcons = icons.copy();
-
-      // append all columns from each requested row
-      if (rows != null)
-        for (row in rows)
-          for (col in 0...8)
-            layerIcons.push({
-              row: row,
-              col: col,
-            });
-
-      floorDecorationLayerIcons.push(layerIcons);
-    }
-
-// place one floor decoration descriptor on tile for a chosen layer
-  public function decorateFloor(area: AreaGame, x: Int, y: Int, layerID: Int)
-    {
-      var icon = pickFloorDecorationIcon(layerID);
-      if (icon == null)
-        return;
-
-      area.addTileDecoration(x, y, {
-        layerID: layerID,
-        icon: {
-          row: icon.row,
-          col: icon.col,
-        },
-      });
-    }
-
-// pick one floor decoration icon from a configured layer
-  function pickFloorDecorationIcon(layerID: Int): _Icon
-    {
-      if (layerID < 0 ||
-          layerID >= floorDecorationLayerIcons.length)
-        return null;
-
-      var icons = floorDecorationLayerIcons[layerID];
-      if (icons == null ||
-          icons.length <= 0)
-        return null;
-      return icons[Std.random(icons.length)];
-    }
-
-// add one wall decoration image layer with repeat rule
-  public function addWallDecorationLayerRepeat(layerInfo: _WallDecorationLayer)
-    {
-      var layer = new Image();
-      layer.src = AssetPath.resolve(layerInfo.path);
-      var repeatEvery = (layerInfo.repeatEvery != null ?
-        layerInfo.repeatEvery : -1);
-      wallDecorationLayers.push(layer);
-      wallDecorationLayerRepeatEvery.push(repeatEvery);
-      wallDecorationLayerChance.push(-1);
-      wallDecorationLayerMeta.push({
-        path: layerInfo.path,
-        repeatEvery: repeatEvery,
-        chance: -1,
-        light: layerInfo.light,
-        noCorners: layerInfo.noCorners,
-      });
-    }
-
-// add one wall decoration image layer with chance rule
-  public function addWallDecorationLayerChance(layerInfo: _WallDecorationLayer)
-    {
-      var layer = new Image();
-      layer.src = AssetPath.resolve(layerInfo.path);
-      var chance = (layerInfo.chance != null ?
-        layerInfo.chance : -1);
-      wallDecorationLayers.push(layer);
-      wallDecorationLayerRepeatEvery.push(-1);
-      wallDecorationLayerChance.push(chance);
-      wallDecorationLayerMeta.push({
-        path: layerInfo.path,
-        repeatEvery: -1,
-        chance: chance,
-        light: layerInfo.light,
-        noCorners: layerInfo.noCorners,
-      });
-    }
-
-// get number of wall decoration image layers
-  public function getWallDecorationLayerCount(): Int
-    {
-      return wallDecorationLayers.length;
-    }
-
-// get optional light metadata for one wall decoration layer
-  public function getWallDecorationLayerLight(layerID: Int): _AtmosphereLightMeta
-    {
-      if (layerID < 0 ||
-          layerID >= wallDecorationLayerMeta.length)
-        return null;
-      var layerMeta = wallDecorationLayerMeta[layerID];
-      if (layerMeta == null)
-        return null;
-      return layerMeta.light;
-    }
-
-// check if tile id is a wall tile for decoration painting
+// check if tile id is a wall tile (forma build rules)
   public function isWallTile(tileID: Int): Bool
     {
       return false;
-    }
-
-// check if tile id is a horizontal wall tile
-  public function isHorizontalWallTile(tileID: Int): Bool
-    {
-      return false;
-    }
-
-// check if tile id is a vertical wall tile
-  public function isVerticalWallTile(tileID: Int): Bool
-    {
-      return false;
-    }
-
-// check if a tile decoration entry blocks movement
-  public function isBlockingDecoration(tileID: Int, decoration: tiles.Decoration): Bool
-    {
-      return false;
-    }
-
-// place one wall decoration descriptor on tile
-  public function decorateWallTile(area: AreaGame, x: Int, y: Int)
-    {
-      if (wallDecorationLayers.length <= 0)
-        return;
-
-      var tileID = area.getCellType(x, y);
-      if (!isWallTile(tileID))
-        return;
-      var isCornerWallTile = (!isHorizontalWallTile(tileID) &&
-        !isVerticalWallTile(tileID));
-
-      // first check tile layers with repeat rules
-      var repeatLayerID = -1;
-      for (i in 0...wallDecorationLayers.length)
-        {
-          var layerMeta = wallDecorationLayerMeta[i];
-          if (isCornerWallTile &&
-              layerMeta != null &&
-              layerMeta.noCorners == true)
-            continue;
-          var repeatEvery = wallDecorationLayerRepeatEvery[i];
-          if (repeatEvery > 0 &&
-              ((isHorizontalWallTile(tileID) &&
-                x % repeatEvery == 0) ||
-               (isVerticalWallTile(tileID) &&
-                y % repeatEvery == 0)))
-            {
-              repeatLayerID = i;
-              break;
-            }
-        }
-
-      // then check tile layers with chance rules
-      var chanceLayerID = -1;
-      for (i in 0...wallDecorationLayers.length)
-        {
-          var layerMeta = wallDecorationLayerMeta[i];
-          if (isCornerWallTile &&
-              layerMeta != null &&
-              layerMeta.noCorners == true)
-            continue;
-          var chance = wallDecorationLayerChance[i];
-          if (chance > 0 &&
-              Std.random(100) < chance)
-            {
-              chanceLayerID = i;
-              break;
-            }
-        }
-
-      // add repeat layer first
-      var layerID = repeatLayerID;
-      area.addTileDecoration(x, y, {
-        layerID: layerID,
-      });
-
-      // then add chance layer on top of repeat layer
-      if (chanceLayerID >= 0)
-        layerID = chanceLayerID;
-      if (layerID < 0)
-        return;
-      area.addTileDecoration(x, y, {
-        layerID: layerID,
-      });
     }
 
 // draw one tile icon at screen position
@@ -283,125 +69,5 @@ class Tileset
         y,
         Const.TILE_SIZE,
         Const.TILE_SIZE);
-    }
-
-// draw all wall decoration icons for this tile at screen position
-  public function drawWallDecoration(ctx: CanvasRenderingContext2D, icon: _Icon,
-      tileID: Int, tile: tiles.Tile, x: Int, y: Int)
-    {
-      if (tileID == Const.TILE_HIDDEN ||
-          !isWallTile(tileID) ||
-          tile == null ||
-          tile.decoration == null)
-        return;
-      for (decoration in tile.decoration)
-        {
-          var layerID = decoration.layerID;
-          if (layerID < 0 ||
-              layerID >= wallDecorationLayers.length)
-            continue;
-          var layer = wallDecorationLayers[layerID];
-          if (layer == null)
-            continue;
-          var wallIcon = icon;
-          if (decoration.icon != null)
-            wallIcon = decoration.icon;
-          var dx = (decoration.dx != null ? decoration.dx : 0);
-          var dy = (decoration.dy != null ? decoration.dy : 0);
-          ctx.drawImage(layer,
-            wallIcon.col * Const.TILE_SIZE_CLEAN,
-            wallIcon.row * Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            x + dx,
-            y + dy,
-            Const.TILE_SIZE,
-            Const.TILE_SIZE);
-        }
-    }
-
-// draw all floor decoration icons for this tile at screen position
-  public function drawFloorDecoration(ctx: CanvasRenderingContext2D,
-      tileID: Int, tile: tiles.Tile, x: Int, y: Int)
-    {
-      if (tileID == Const.TILE_HIDDEN ||
-          isWallTile(tileID) ||
-          tile == null ||
-          tile.decoration == null)
-        return;
-      for (decoration in tile.decoration)
-        {
-          var floorIcon = decoration.icon;
-          if (floorIcon == null)
-            continue;
-
-          var layerID = decoration.layerID;
-          if (layerID < 0 ||
-              layerID >= floorDecorationLayers.length)
-            continue;
-          var layer = floorDecorationLayers[layerID];
-          if (layer == null ||
-              !layer.complete ||
-              layer.naturalWidth <= 0)
-            continue;
-          var scale = (decoration.scale != null ? decoration.scale : 1.0);
-          var angle = (decoration.angle != null ? decoration.angle : 0.0);
-          var dx = (decoration.dx != null ? decoration.dx : 0);
-          var dy = (decoration.dy != null ? decoration.dy : 0);
-          var smoothSplat = (layerID == splatLayerID);
-          var prevSmoothing = false;
-          if (smoothSplat)
-            {
-              prevSmoothing = ctx.imageSmoothingEnabled;
-              ctx.imageSmoothingEnabled = true;
-            }
-
-          // if no transformation, draw directly for better performance
-          if (scale == 1.0 &&
-              angle == 0.0 &&
-              dx == 0 &&
-              dy == 0)
-            {
-              ctx.drawImage(layer,
-                floorIcon.col * Const.TILE_SIZE_CLEAN,
-                floorIcon.row * Const.TILE_SIZE_CLEAN,
-                Const.TILE_SIZE_CLEAN,
-                Const.TILE_SIZE_CLEAN,
-                x,
-                y,
-                Const.TILE_SIZE,
-                Const.TILE_SIZE);
-              if (smoothSplat)
-                ctx.imageSmoothingEnabled = prevSmoothing;
-              continue;
-            }
-
-          // for transformations, draw with rotation and scaling around tile center, with optional offset
-          var ex: Float = x;
-          var ey: Float = y;
-          if (scale != 1.0)
-            {
-              ex += Const.TILE_SIZE / 2 - Const.TILE_SIZE * scale / 2;
-              ey += Const.TILE_SIZE / 2 - Const.TILE_SIZE * scale / 2;
-            }
-          ctx.save();
-          ctx.translate(ex + Const.TILE_SIZE * scale / 2,
-            ey + Const.TILE_SIZE * scale / 2);
-          ctx.rotate(angle);
-          ctx.translate(-Const.TILE_SIZE * scale / 2,
-            -Const.TILE_SIZE * scale / 2);
-          ctx.drawImage(layer,
-            floorIcon.col * Const.TILE_SIZE_CLEAN,
-            floorIcon.row * Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            dx,
-            dy,
-            Const.TILE_SIZE * scale,
-            Const.TILE_SIZE * scale);
-          ctx.restore();
-          if (smoothSplat)
-            ctx.imageSmoothingEnabled = prevSmoothing;
-        }
     }
 }

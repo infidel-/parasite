@@ -58,11 +58,12 @@ class ActionsHud
           hud.command.updateActions();
           return;
         }
-      // ground-items submenu: the full list of tile pickups + a Back item. nothing else
-      // (no movement, no other actions) is offered while it is open
+      // ground-items submenu: the full list of tile pickups (or of one container's items) + a Back
+      // item. nothing else (no movement, no other actions) is offered while it is open
       if (hud.state == HUD_PICKUP_MENU)
         {
-          for (a in game.playerArea.getTileItemActions())
+          for (a in (hud.pickupFrom != null ? hud.pickupFrom.takeActions() :
+              game.playerArea.getTileItemActions()))
             addAction(a);
           addAction({
             id: 'pickupMenu.abort',
@@ -149,6 +150,15 @@ class ActionsHud
         action.energy = 1;
       if (game.player.actionCheckEnergy(action))
         listActions.add(action);
+    }
+
+// is an action with this id already on the numbered list this update?
+  public function hasAction(id: String): Bool
+    {
+      for (a in listActions)
+        if (a.id == id)
+          return true;
+      return false;
     }
 
 // add player action to key list
@@ -283,6 +293,10 @@ class ActionsHud
   function doAction(withRepeat: Bool, action: _PlayerAction)
     {
       if (hud.state == HUD_TARGETING)
+        return;
+      // the lab's lift is carrying the player out
+      if (game.location == LOCATION_AREA &&
+          game.scene.view3d.departing())
         return;
       if (action.id == 'targetMode')
         {

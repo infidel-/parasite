@@ -49,6 +49,10 @@ class RenderConfig {
   public static inline var ROOF_TILE = 16;     // world units per roof-base tile (tiled, not stretched)
   public static inline var GABLE_V = 0.5;      // metal gable-end V anchor: sample a clean mid-texture band so the worn-metal dirty base strip never lands on the high gable triangle
   public static inline var GABLE_OVER = 0.5;   // gable eave/rake overhang past the box on ALL four sides, world units (CELL = 4). 0 = the old flush roof
+  // the free cam's far plane (render.View.freeCut), with the scene fog pulled in to end there. it can
+  // see the whole area from over the roofs, which no gameplay camera does: measured in the slums from
+  // three poses, far 500 drew 2.3-2.5k calls at ~6 fps, 250 still 1.8-1.9k at ~10, 200 1.2-1.3k at ~40
+  public static inline var FREE_CAM_FAR = 200.0;
   public static inline var GABLE_THICK = 0.05; // gable slab thickness, measured VERTICALLY — what turns each slope from a bare polygon into a slab with a visible fascia/rake edge
 
   // --- building fronts: stores vs plain entrances (deterministic per footprint, no rng) ----
@@ -240,6 +244,14 @@ class RenderConfig {
     shakeMs: 150.0,      // target hit-shake duration
     shakeAmp: 0.10,      // target hit-shake amplitude, as a fraction of a CELL
   };
+  // host breaking hit: the player's host flashes red once and shakes when degradation brings it
+  // close to collapsing (render.anim.BreakShake)
+  public static final BREAKING = {
+    ms: BASE_MS * 3.0,   // flash + shake duration
+    shakeAmp: 0.09,      // jitter amplitude, as a fraction of a CELL
+    color: 0xff2a2a,     // flash color: purer than --text-color-alert, as it multiplies the sprite's own colors
+    glow: 2.0,           // flash peak self-glow intensity
+  };
   // attack-FX sprite visuals: a glowing procedural rasterized-SVG shape — melee swings spawned at
   // the strike apex (keyed by the weapon's _AttackEffect) and impact marks stamped on a struck
   // target. per kind: color (emissive tint), scale (of Sprites.SIZE), sweep (roll swept over the
@@ -347,6 +359,10 @@ class RenderConfig {
   // (it draws from the source image, not these crops). blood stays a touch more vivid than debris
   public static final DECAL = {
     bloodMul: 0.6,       // blood-splat crop darken factor
+    // how far proud of a wall's own face a splat standing on it sits. it was 0.12 written inline and
+    // measured from the CELL CENTRE, which is only the same thing where the masonry fills its cell;
+    // it is measured from the face the area kind actually draws now (WorldCtx.faceOff)
+    wallProud: 0.12,
     // street-debris + thrown-money crop darken factor (matte trash, no bright glow).
     //
     // 0.40 and MEASURED, after the wilderness roadside litter put this art on turf for the first
@@ -426,7 +442,6 @@ class RenderConfig {
     shadowSoftPx: 3,        // blur radius baked into the black crop for the soft edge
     shadowFade: 0.3,        // outer fraction of the range over which a shadow eases to 0 (smooth
                             // enter/leave as the actor slides across the radius — motion is the anim)
-    soundRangeCells: 4,     // looping fire sound fades to silent at this world-cell distance
   };
   // 3D gun-shot choreography: a blooming tracer streak races muzzle->impact, a muzzle flash +
   // transient point light pop at the shooter, impact sparks + blood on a hit, and (player only)
@@ -502,8 +517,8 @@ class RenderConfig {
     minDist: 0.4,        // min landing distance from the thrower (cells)
     // lingering ground stains: a flat money decal laid on every walkable tile in the throw radius.
     // ~permFrac of them are permanent (persisted tile decorations in the shared dynamic-decal FIFO,
-    // like blood splats), the rest fade out after a short rest (view-side). 3D port of 2D
-    // ParticleMoney.onDeath's addEffect ground decal
+    // like blood splats), the rest fade out after a short rest (view-side). 3D port of the retired
+    // 2D money ground decal
     groundScaleMin: 0.9, // ground-stain scale min (of a billboard)
     groundScaleMax: 1.0, // ground-stain scale max
     groundScatter: 0.3,  // per-tile sub-cell random offset (cells)
@@ -565,10 +580,17 @@ class RenderConfig {
 
   // bullet holes: a missed shot that strikes a BARE (worn/windowless) wall leaves a small
   // rotated decal, persisted as a WALLHOLE tile-decoration + re-painted on the wall each frame
-  // (fog-gated, cleared on area exit, capped like blood splats). glass/window faces get none
+  // (fog-gated, cleared on area exit, capped like blood splats). a city storefront gets none; a
+  // facility/corp window pane the tracer crosses gets a crack star from the glass set
   public static final WALLHOLE = {
     scale: 0.13,       // hole quad scale (of Sprites.SIZE)
     scaleVar: 0.04,    // +/- random scale spread
+    glassScale: 0.6,   // crack star quad scale (of Sprites.SIZE). the star fills its frame; under 0.45 the
+                       // gameplay camera's tilt leaves the hole alone, the cracks go sub-pixel
+    glassScaleVar: 0.08, // +/- random crack star scale spread
+    glassFloor: 1.0,   // lowest a crack star's lower edge sits over the floor: a ribbon pane's sill stands
+                       // ~0.95 (FacilityGeom.paneTall centres a ~4.1 pane in WALL_H 6), and below it the
+                       // spandrel is coplanar with the decal, so a star hanging past it painted the masonry
     spread: 0.35,      // horizontal wall-miss scatter (cells): tracer end + spark + hole SHARE it,
                        // so repeated shots at one wall spread out (and stay aligned) instead of stacking
     vspread: 0.12,     // vertical scatter (cells): kept small so holes cluster near aim height
@@ -583,6 +605,15 @@ class RenderConfig {
     hatchThick: 2,       // pattern line width (crop px)
     grow: 1.0,          // silhouette scale vs the sprite
     emissive: 0.9,       // silhouette self-glow (legibility at night)
+    player: 0xb46bff,    // the player's own silhouette: its ring's purple (render.View.playerRing)
+  };
+  // the hover outline (render.View.hover): a ring round the sprite the cursor is on, cyan for an AI —
+  // the "?" cursor's own, clear of the alert ramp above and of the object green below — and OBJMARK's
+  // green for an object. a prop-backed object wears its OBJMARK hull shell instead
+  public static final HOVER = {
+    aiColor: 0x73f3ff,   // the AI ring (--ui-cursor-help's ring in app.css)
+    width: 0.06,         // ring width in WORLD units, OBJMARK.hullW's, so the ring round an AI, an item
+                         // and the shell round a prop are one weight whatever the sprite's scale
   };
   // world-object marks (render.Actors object pass), the object twin of XRAY above: a glowing ring
   // hugging the object's sprite while the TACTICAL view is up (the icons are tiny at that zoom), and
@@ -595,7 +626,8 @@ class RenderConfig {
     color: 0x35dd7a,     // emerald green — clear of the AI colors, the cool-blue footprint dashes, and
                          // bluer/colder than the path line's yellow-green slime (PATH.color 0x7ddc46)
     emissive: 0.9,       // silhouette/ring self-glow (legibility at night), as XRAY.emissive
-    outlinePx: 1.5,      // tactical ring width (crop px; fractional is fine, the dilation is canvas-drawn)
+    outlinePx: 1.5,      // tactical ring width (crop px of a 64 px cell, scaled to a bigger one; fractional
+                         // is fine, the dilation is canvas-drawn)
     fill: 'dots',        // occluded-silhouette pattern: the AI keeps 'scan'
     hatchSpacing: 6,     // pattern period (crop px)
     hatchThick: 2,       // pattern dot width (crop px)
@@ -643,14 +675,61 @@ class RenderConfig {
   // hi-poly vertex normals that light faces turning away (shading artifacts); recomputing smooths
   // them (fixes the artifact but loses hard-edge detail). true = smooth, false = keep authored normals
   public static inline var MODEL_SMOOTH_NORMALS = false;
+  // anisotropic filtering on a loaded glb's textures. GLTFLoader leaves every texture it makes at 1,
+  // while render.Textures.loadTexture sets 4 on everything the game loads BY HAND — so the ground,
+  // the walkway and the grass sprite were filtered and every PROP was not. Anisotropy 1 blurs hardest
+  // at grazing angles, which from a camera 18-55 units up is a tree's flank and a bush's top, i.e.
+  // most of what a prop shows. 4 to match Textures, so a prop and the ground it stands on sample alike
+  public static inline var MODEL_ANISO = 4;
   // baked glb props (make models -> app/models/), loaded via render.Models
   public static final MODELS = {
     streetLamp: 'models/street-lamp.glb',
     streetLamp2: 'models/street-lamp2.glb', // PBR variant (base + normal + metallic-roughness maps)
+    // the street dumpsters the parasite hides in (objects.Dumpster, render.world.ObjModels): the city's
+    // green bin and the slums' rusted one, lid thrown back. hand-modelled, models-src/city/kit/
+    cityDumpster: 'models/city/dumpster.glb',
+    cityDumpsterSlums: 'models/city/dumpster-slums.glb',
+    // the street wall kits (render.world.StreetProps): one glb per area style, every module a mesh of
+    // its own at the origin in world units. hand-modelled, models-src/city/kit/wallkit*.py
+    cityWallKit: 'models/city/wallkit.glb',
+    cityWallKitSlums: 'models/city/wallkit-slums.glb',
+    cityWallKitDowntown: 'models/city/wallkit-downtown.glb',
+    // the street ground props (render.world.StreetProps.ground, AreaStyle.groundProps), hand-modelled,
+    // models-src/city/kit/<name>.py. the slums' junk, the heaps and stacks as the separate pieces a
+    // render.world.Pile deals (sack-pile.py, tyres.py, cart.py)
+    citySackBurlap: 'models/city/sack-burlap.glb',
+    citySackPlastic: 'models/city/sack-plastic.glb',
+    citySackLying: 'models/city/sack-lying.glb',
+    cityCartonBox: 'models/city/carton-box.glb',
+    cityCartonFlats: 'models/city/carton-flats.glb',
+    cityCartonLean: 'models/city/carton-lean.glb',
+    cityCart: 'models/city/cart.glb',
+    cityCartBottle: 'models/city/cart-bottle.glb',
+    cityCartBoard: 'models/city/cart-board.glb',
+    cityMattress: 'models/city/mattress.glb',
+    // the slums' car wreck (render.world.StreetProps.wrecks), decoration over two kerb cells
+    cityCarWreck: 'models/city/car.glb',
+    cityTyre: 'models/city/tyre.glb',
+    cityTyreMud: 'models/city/tyre-mud.glb',
+    cityTyreRim: 'models/city/tyre-rim.glb',
+    // the city's kerb and its walls; its bag heaps dealt from three bags (bag-pile.py)
+    cityBagBlack: 'models/city/bag-black.glb',
+    cityBagGreen: 'models/city/bag-green.glb',
+    cityBagSmall: 'models/city/bag-small.glb',
+    cityHydrant: 'models/city/hydrant.glb',
+    cityMeter: 'models/city/meter.glb',
+    cityNewsbox: 'models/city/newsbox.glb',
+    cityMeters: 'models/city/meters.glb',
+    // downtown's managed street and its service alleys
+    cityCompactor: 'models/city/compactor.glb',
+    cityRecycling: 'models/city/recycling.glb',
+    cityBollard: 'models/city/bollard.glb',
+    cityTree: 'models/city/tree.glb',
+    cityPlanter: 'models/city/planter.glb',
     sewerExit: 'models/sewer/exit.glb',     // the sewer/habitat exit ladder (render.world.ObjModels)
     // tunnel clutter, scattered against the walls by render.sewer.SewerProps. everything under
     // sewer/ is ONE simple object per glb — a composite comes back with an atlas that cannot be
-    // decimated (see AGENTS.md), which is why the sewer-pile-1 rubble-and-pipe heap and the
+    // decimated (see docs/3d-models.md), which is why the sewer-pile-1 rubble-and-pipe heap and the
     // sewer-pile-2 sack-and-crate heap are both gone, split into the simple objects they were made of
     sewerDrum: 'models/sewer/drum.glb',     // 200L steel drum, upright
     sewerCrates: 'models/sewer/crates.glb', // two solid-walled plastic stacking crates
@@ -661,26 +740,351 @@ class RenderConfig {
     sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
     // wilderness scatter, placed off the area's own tile grid by render.wild.WildProps. FOUR trees,
     // one per tile ID the 2D generator rolls (Const.TILE_TREE1 + 0..3), so the variant already written
-    // into the saved grid picks the model. all arrived AT the budget; the two rocks are hard surfaces
-    // and decimate offline — see their models.json notes
-    wildTreeConifer: 'models/wild/tree-conifer.glb',              // dark conifer, one solid cone
-    wildTreeBroadleaf: 'models/wild/tree-broadleaf.glb',          // bare broadleaf, thick limbs, no foliage
-    wildTreeBroadleafFull: 'models/wild/tree-broadleaf-full.glb', // broadleaf in leaf, broad solid dome
-    wildTreeDead: 'models/wild/tree-dead.glb',                    // dead snag, blunt broken limbs
-    wildRockBoulder: 'models/wild/rock-boulder.glb',              // single weathered boulder
-    wildRockCluster: 'models/wild/rock-cluster.glb',              // three angular slabs fused into one mass
-    wildBushLow: 'models/wild/bush-low.glb',                      // low scrubby bush, one solid foliage dome
+    // into the saved grid picks the model. every one of them is HAND-MODELLED in models-src/wild
+    // (*_build.py) except the bramble, which is still the TRELLIS bake — see the models.json notes
+    wildTreeBroadleaf: 'models/wild/tree-bare-hand.glb',          // bare broadleaf, thick forked limbs, no foliage
+    wildTreeDead: 'models/wild/tree-dead-hand.glb',               // dead snag, ragged top, broken bare limbs
+    wildRockBoulder: 'models/wild/rock-boulder-hand.glb',         // low weathered boulder, chipped facets
+    wildRockCluster: 'models/wild/rock-cluster-hand.glb',         // three angular slabs fused into one mass
     wildBushBramble: 'models/wild/bush-bramble.glb',              // low sprawling bramble, interlocking thorny canes
+    // the planting, shared by the wilderness scatter and the facility's park
+    // (render.facility.FacilityGround.GREEN): the conifer as five lobed skirts over a bole, and the
+    // shrub dealt out into two silhouettes
+    wildTreeConiferHand: 'models/wild/tree-conifer-hand.glb',     // lobed conifer, 824 tris against 4,880
+    wildTreeBroadleafHand: 'models/wild/tree-broadleaf-hand.glb', // broadleaf, one deep lobed crown, 800 against 4,866
+    wildBushDomeHand: 'models/wild/bush-dome-hand.glb',           // shrub dome, one lathe plus an off-centre crown
+    wildBushUprightHand: 'models/wild/bush-upright-hand.glb',     // upright shrub, three canes each with a crown
     // the two BAND props: what a TILE_ROCK cell means in the forest and in the mountains respectively
     // (render.wild.WildBand), where plains keeps the two rocks above
-    wildLogFallen: 'models/wild/log-fallen.glb',                  // fallen trunk, bark all over, broken at both ends
-    wildRockOutcrop: 'models/wild/rock-outcrop.glb',              // low wedge of fractured bedrock
+    wildLogFallen: 'models/wild/log-fallen-hand.glb',             // fallen trunk, broken at both ends, one stub
+    wildRockOutcrop: 'models/wild/rock-outcrop-hand.glb',         // low wedge of stacked tilted bedrock
     // the one wilderness prop that is not per-cell: one of these covers the 2x2 Const.TILE_ROCK_LARGE
     // rect it is placed on (render.wild.WildProps.bigRocks)
-    wildRockLarge: 'models/wild/rock-large.glb',                  // 2x2 boulder, one solid domed mass
+    wildRockLarge: 'models/wild/rock-large-hand.glb',             // 2x2 boulder, domed mass with a shoulder
+    // the facility compound's own lamp, instanced along the walkway kerb, the lot edge and the park
+    // path (render.facility.FacilityLamps). it carries NO emissive map where the two street lamps
+    // above both do — the glowing head is an additive quad in the area's merged glow mesh instead
+    facilityLamp: 'models/facility/lamp-post.glb',        // modern slim mast, shrouded downlight head
+    // the compound's park bench, one per unwalkable grass cell beside the park path. the second prop
+    // in the game with an AUTHORED FRONT after the guard rail: its yaw is turned at the path, never
+    // random (render.facility.FacilityGround.facing)
+    facilityBenchPark: 'models/facility/bench-park.glb',  // slatted seat and back on cast-steel ends
+    // and the same bench hand-modelled (models-src/facility/bench_build.py), 1,660 tris against
+    // 3,650 — five seat slats and four back slats, the count the generated one's reference asked
+    // for, with the gaps as real gaps rather than as something a bake had to resolve, and all nine
+    // placed by ARC LENGTH on one lumbar curve rather than square to a flat seat
+    facilityBenchParkHand: 'models/facility/bench-park-hand.glb', // same slats, stated not segmented
+    // the railing round the OUTSIDE of the park — never along the path through it. the second prop in
+    // the game sized to TILE after the guard rail: FacilityStyle.FENCE_H is derived from its own
+    // aspect so one segment draws exactly a cell wide and a run meets end to end
+    facilityFence: 'models/facility/fence-park.glb',      // flat-topped steel railing, one cell long
+    // and the same railing hand-modelled (models-src/facility/fence_build.py), 564 tris against
+    // 5,056 — two end posts, two rails and eleven balusters, built at LEN 4.0 by LEN / FENCE_ASPECT
+    // so the segment is exactly a cell wide and a run still meets end to end
+    facilityFenceHand: 'models/facility/fence-park-hand.glb', // boxes, because a railing is a RHYTHM
+    // the park litter bin, one beside every bench. it is placed off the BENCH and not off a tile of
+    // its own, so it needs no generator change and is retroactive to every saved compound
+    // (render.facility.FacilityGround.bins)
+    facilityBin: 'models/facility/trash-bin.glb',         // solid-walled steel bin, domed lid, side mouth
+    // and the same bin hand-modelled (models-src/facility/bin_build.py), 504 tris against 4,765 — a
+    // sixteen-sided lathe with a rolled foot and a rolled rim, wearing a FLAT UNROLLED WRAP whose
+    // painted aperture the seam lands on local +Z. FacilityStyle.BIN_BLENDER picks between the pair
+    facilityBinHand: 'models/facility/trash-bin-hand.glb', // same can, cell of a sheet not a bake
+    // the cars parked in the lot, in the bays nearest the gate (render.facility.FacilityCars). the
+    // one prop in the compound the silhouette-vs-surface test says yes to outright — a car is nothing
+    // but its outline, where the booth and the barrier beside it are boxes and a stripe pattern
+    facilityCar: 'models/facility/car.glb',               // modern compact hatchback, four wheels, dark glass
+    // a military base's hardware, parked on the footprints gen.military.MilitaryGen stamps
+    // (render.military.MilitaryVehicles)
+    militaryTank: 'models/military/tank.glb',             // main battle tank, along local x
+    militaryHumvee: 'models/military/humvee.glb',         // light utility 4x4, along local x
+    militaryHeli: 'models/military/heli.glb',             // utility helicopter, four-blade rotor
+    militaryPlane: 'models/military/plane.glb',           // high-wing twin-jet transport, span along local z
+    // and its hand-modelled kit (models-src/military/basekit_build.py)
+    militarySandbag: 'models/military/sandbag-hand.glb',  // one bag, long axis local x, one course high
+    militaryMast: 'models/military/mast-hand.glb',        // floodlight mast on the facility lamp's head contract
+    militaryDrum: 'models/military/drum-hand.glb',        // fuel drum, lid up
+    militaryCrate: 'models/military/crate-hand.glb',      // ammo crate, long axis local x, lid and battens on top
+    militaryContainer: 'models/military/container-hand.glb', // 20 ft container, long axis local x, door at -x
+    militaryWaterTank: 'models/military/water-tank-hand.glb', // roof water tank on its legs
+    // the roofs' own kit (models-src/military/roofkit_build.py), on FacilityRoof's spots and batches
+    militaryRoofHatch: 'models/military/roof-hatch-hand.glb', // access hatch, hinges at local +z
+    militaryRoofJbox: 'models/military/roof-jbox-hand.glb',   // isolator on struts, door to local -z
+    militaryRoofVent: 'models/military/roof-vent-hand.glb',   // mushroom extract vent
+    militaryRoofDuct: 'models/military/roof-duct-hand.glb',   // one cell of round duct along local x
+    militaryRoofAerial: 'models/military/roof-aerial-hand.glb', // lattice aerial mast on the dish spot
+    // the rooms' hand-modelled kit (models-src/military/roomkit_build.py), each facing local +z
+    militaryRadioRack: 'models/military/radio-rack-hand.glb', // comms rack, four radio units proud of its front
+    militaryRadioDesk: 'models/military/radio-desk-hand.glb', // operator desk, one cell long, pedestal at local -x
+    militaryRadioBig: 'models/military/radio-big-hand.glb',   // field transceiver, carry handle on top
+    militaryRadioSmall: 'models/military/radio-small-hand.glb', // keypad radio set, handset on top
+    militaryBunk: 'models/military/bunk-hand.glb',        // two-deck bunk, two cells along local x, head at -x
+    militaryCot: 'models/military/cot-hand.glb',          // camp cot along local x, pillow at -x
+    militaryFootlocker: 'models/military/footlocker-hand.glb', // plank trunk, long axis x, hasp at +z
+    militaryOfficeDesk: 'models/military/office-desk-hand.glb', // office desk, one cell long, pedestal at -x
+    militaryFileCabinet: 'models/military/file-cabinet-hand.glb', // two-drawer filing cabinet
+    militaryChair: 'models/military/chair-hand.glb',      // folding chair, the sitter facing +z
+    militaryShelf: 'models/military/shelf-unit-hand.glb', // store shelf unit with its cartons
+    militaryMedCabinet: 'models/military/medcab-hand.glb', // white medical cabinet
+    militaryMessTable: 'models/military/mess-table-hand.glb', // one cell of mess table along x
+    militaryBriefTable: 'models/military/brief-table-hand.glb', // the same in darkwood
+    militaryBench: 'models/military/bench-hand.glb',      // one cell of bench along x
+    militaryCounter: 'models/military/counter-hand.glb',  // one cell of serving counter, pans at the top
+    militaryCounter2: 'models/military/counter2-hand.glb', // and its other two pans
+    militaryAmmoCans: 'models/military/ammo-cans-hand.glb', // stack of five ammo cans
+    militaryJerrycans: 'models/military/jerrycans-hand.glb', // three jerrycans and one across them
+    militaryFlag: 'models/military/flag-stand-hand.glb',  // flag stand, the flag facing +z
+    militaryWaterCooler: 'models/military/water-cooler-hand.glb', // water cooler, its tap at +z
+    militaryIvStand: 'models/military/iv-stand-hand.glb', // IV stand with its bag
+    militaryStretcher: 'models/military/stretcher-hand.glb', // stretcher on two trestles along x, head at -x
+    militarySink: 'models/military/sink-hand.glb',        // latrine pedestal basin, its tap at the back (-z)
+    militaryToilet: 'models/military/toilet-hand.glb',    // latrine toilet, the bowl at +z, cistern at -z
+    militaryUrinal: 'models/military/urinal-hand.glb',    // latrine urinal, wall-hung, its screen on the floor
+    militaryShower: 'models/military/shower-hand.glb',    // latrine shower, riser and rose, the grate under it
+    militaryLocker: 'models/military/locker-hand.glb',    // armory locker bank, one cell wide, doors at +z
+    militaryGunCabinet: 'models/military/gun-cabinet-hand.glb', // gun cabinet, doors at +z
+    militarySafe: 'models/military/safe-hand.glb',        // the HQ safe, its door at +z
+    militaryBoots: 'models/military/boots-hand.glb',      // a pair of combat boots, toes at -x
+    militaryCanteen: 'models/military/canteen-hand.glb',  // a canteen in its cover, upright, flanks at +-z
+    militaryRucksack: 'models/military/rucksack-hand.glb', // a rucksack standing, its front at +z
+    // what stands on a lab building's roof, inside its parapet (render.facility.FacilityRoof). the
+    // ACCESS HATCH standing beside them is not here and never will be: it is a box, so it is merged
+    // geometry, the same call the guard booth's rebuild settled
+    // the hangar's study podium: a two-step dais with a ring of eight emitters, hand-modelled at
+    // 540 tris because the generator had already fixed every number in it — the pad it stands on is
+    // carved PAD_SZ cells square and the machine banks are placed off its edge. It is the one prop
+    // in the compound the cable service runs TO rather than from
+    facilityHangarPodium: 'models/facility/hangar-podium.glb',
+    facilityRoofAc: 'models/facility/roof-ac.glb',        // rooftop condenser, fan guard on the lid, coil louvres
+    facilityRoofDish: 'models/facility/roof-dish.glb',    // comms dish on a solid pedestal, feed horn on one arm
+    // and the hand-modelled pair that replaces those two behind FacilityStyle.ROOF_BLENDER, at 660
+    // and 948 tris against 5,619 and 5,800. Both are built AT the world size the batch draws them
+    // at: the condenser's fan well is a real cowl with the guard set down inside it, and the dish is
+    // a paraboloid at a stated focal ratio with its horn standing at the focus
+    facilityRoofAcHand: 'models/facility/roof-ac-hand.glb',
+    facilityRoofDishHand: 'models/facility/roof-dish-hand.glb',
+    // and the two SERVICE boxes, which used to be merged quads and are behind the same flag. They
+    // are a box each and they went to Blender anyway, because the thing they were reported for was
+    // the ART: merged geometry takes a TILING texture on a world-aligned UV, and a tread-plate lid
+    // and a louvred door are both a picture that has to map 0..1 onto one face
+    facilityRoofHatchHand: 'models/facility/roof-hatch-hand.glb',
+    facilityRoofJboxHand: 'models/facility/roof-jbox-hand.glb',
+    // and the SERVICE KIT, three families off one sheet (models-src/facility/roofsvc_build.py) at
+    // 172 / 220 / 236 tris. The duct is the odd one: it is built exactly ONE CELL long, so a run is
+    // N placements on neighbouring cell centres rather than a swept mesh, and it abuts seamlessly
+    // because render.Models.instanced scales by height alone and the segment is built at its own
+    facilityRoofVentHand: 'models/facility/roof-vent-hand.glb',
+    facilityRoofDuctHand: 'models/facility/roof-duct-hand.glb',
+    facilityRoofTankHand: 'models/facility/roof-tank-hand.glb',
+    // the junk standing about in the parking lot (render.facility.FacilityDebris), which scatters
+    // flat litter decals over the same asphalt. all three are DROPPED objects and take a free turn,
+    // unlike the parked cars and the roof condensers above; all three are carried by their outline
+    // and none of them is a box, which is what the emit-it test in FacilityEntry's header asks
+    facilityLotCone: 'models/facility/lot-cone.glb',      // traffic cone, weighted square base, one collar
+    facilityLotTyres: 'models/facility/lot-tyres.glb',    // three worn car tyres stacked flat, no rims
+    facilityLotReel: 'models/facility/lot-reel.glb',      // empty steel cable reel standing on its flanges
+    // and the two of those three that are hand-modelled (models-src/facility/lot_build.py), 360 and
+    // 676 tris against 4,798 and 4,960. FacilityStyle.LOT_BLENDER picks between the pairs. The TYRE
+    // STACK has no hand row and never will — it is the one prop in the compound that passes its own
+    // propstat gate, and a stack of holed toroids is not a shape a lathe states
+    facilityLotConeHand: 'models/facility/lot-cone-hand.glb', // shell as a wrap, slab as a base
+    facilityLotReelHand: 'models/facility/lot-reel-hand.glb', // ONE lathe: flanges, barrel, rib, hub
+    // the lab kit standing INDOORS, against the room walls (render.facility.FacilityKit) — the first
+    // two glb props in the compound that are not outdoors. both earn a glb on the same test the
+    // corridor's casework fails: a rack of domed bottles and an open wheeled frame are silhouette,
+    // where a cabinet run is a box and is merged geometry
+    facilityKitGas: 'models/facility/gas-cylinders.glb',  // four-bottle cylinder rack, strap rail, foot rail
+    facilityKitTrolley: 'models/facility/lab-trolley-hand.glb', // two trays, tube frame, castors
+    // the three hazard barrels standing on a LOW decoration cell (render.facility.FacilityDeco).
+    // ONE MESH, THREE PAINTS — all three are art/models.json labels over the tunnels' own
+    // sewer/drum.glb source, recoloured by tools/livery.py, so they cost three batches and no new
+    // geometry. They are separate paths because a batch is keyed by path and carries no
+    // per-instance UV offset, which is the whole reason a livery costs a draw call
+    facilityDrumSteel: 'models/facility/drum-steel.glb', // grey drum, clean steel, hoop ribs
+    facilityDrumBio: 'models/facility/drum-bio.glb',     // yellow drum, biohazard livery
+    facilityDrumRad: 'models/facility/drum-rad.glb',     // red drum, radioactive livery
+    // and the same four ROUND props hand-modelled instead of generated — a twelve-sided can and four
+    // eight-sided bottles in an angle-iron frame, wearing a pack4 of flat UNROLLED cylinder wraps
+    // rather than a bake (models-src/facility/drum_build.py). FacilityStyle.DECO_DRUM_BLENDER picks
+    // between the pairs; no draw call is at stake here, only triangles and control of the palette
+    facilityDrumSteelHand: 'models/facility/drum-steel-hand.glb', // 44 tris against 1,200
+    facilityDrumBioHand: 'models/facility/drum-bio-hand.glb',     // same can, yellow cell
+    facilityDrumRadHand: 'models/facility/drum-rad-hand.glb',     // same can, orange-red cell
+    facilityGasHand: 'models/facility/gas-rack-hand.glb',         // 284 tris against 5,710
+    // the four things that stand ON the researcher's desk, all off one pack4 and all NEW — nothing
+    // was there before but the three machines (models-src/facility/desk_build.py). Placed by
+    // render.facility.FacilityWork.trinket, two per desk
+    facilityDeskMug: 'models/facility/desk-mug.glb',           // cup, 28 tris
+    facilityDeskPlant: 'models/facility/desk-plant.glb',       // pot and a leaf cone, 56
+    facilityDeskLamp: 'models/facility/desk-lamp.glb',         // foot, stem, shade, 52
+    facilityDeskTray: 'models/facility/desk-tray.glb',         // a sheaf and a folder, 24
+    // and TWO MORE GLAZES OF THE SAME CUP, which is what a mug on a desk that is somebody's needs:
+    // one model dealt to every desk in the compound reads as issue kit whatever its frequency. Three
+    // LABELS OFF ONE MESH exactly as the three hazard barrels are — art/models.json gives each its own
+    // baseColor tint and sat over the same desk-mug.glb, so the variety costs no art and no
+    // triangles. It does cost a batch each (render.Models.instanced is keyed by path and carries no
+    // per-instance colour), which is the same price the drums pay for the same thing
+    facilityDeskMugB: 'models/facility/desk-mug-b.glb',        // the same cup, grey-blue
+    facilityDeskMugC: 'models/facility/desk-mug-c.glb',        // the same cup, warm brown
+    // and the stack of logbooks beside them, off the JANITOR pack rather than the desk one — it
+    // shares its binding cloth and its page edges with nothing on that sheet
+    facilityDeskJournals: 'models/facility/desk-journals.glb', // four hardbacks, 48 tris
+    // the two things a cleaner leaves in a corridor or a washroom (models-src/facility/janitor_build.py).
+    // render-only and unstamped, the litter bin's own contract — see render.facility.FacilityJanitor
+    facilityBroom: 'models/facility/janitor-broom.glb',        // leaning, 52 tris
+    facilityBucket: 'models/facility/janitor-bucket.glb',      // a vessel with a bail, 300
+    // the ROOM TEMPLATE props. A WC pan is a curved shell with a cistern behind it and a chair is a
+    // shaped back over a five-star base on castors: both are silhouettes no axis-aligned quad states,
+    // which is what earns a mesh generator
+    facilityToilet: 'models/facility/toilet.glb',        // WC pan, closed cistern, lid down
+    facilityChair: 'models/facility/chair.glb',          // office swivel chair, arms, star base
+    // and the same two hand-modelled (models-src/facility/toilet_build.py, chair_build.py), 692 and
+    // 1,072 tris against 4,068 and 2,930. THE PAN IS BUILT TO TOILET_D AND THE BAKE WAS NOT: 1.4 is
+    // what FacilityDeco.toilets stands it off the cubicle wall by, and the generated mesh is 0.954
+    // deep at TOILET_H, so the shipped pan floats 0.22 off the masonry. The chair is the closest
+    // call of the eleven — CHAIR_H's own note argues it is the case FOR a generator — but five arms
+    // at 72 degrees is a loop index, and the bake was a REJECT at 9 components / 61.8% anyway
+    facilityToiletHand: 'models/facility/toilet-hand.glb',  // open bowl, seat ring, 692 tris
+    // THE CORP TOWER'S SEVEN (render.corp.CorpProps). Five of them are hand-modelled, which is the
+    // opposite balance to the compound's and is not a change of policy: every brief on this floor
+    // plate is a NUMBER off CorpStyle — a chair that has to sit at DESK_H, a monitor that has to
+    // stand on it, a pan built to WC_D so its cistern meets the divider. The plant is the one shape
+    // no lathe states, and the cooler and the printer are stepped bodies, i.e. silhouette
+    corpChair: 'models/corp/chair.glb',        // task chair, split back, five-star base, 1,344 tris
+    corpMonitor: 'models/corp/monitor.glb',    // 16:9 panel on a stainless stem, 268
+    corpKeyboard: 'models/corp/keyboard.glb',  // a wedge, 44
+    corpWc: 'models/corp/wc.glb',              // open bowl, water at the profile's own cap, 652
+    corpPlant: 'models/corp/plant.glb',        // potted ficus, TRELLIS, the one generated silhouette
+    corpCooler: 'models/corp/cooler.glb',      // water cooler, bottle on a lacquer cabinet
+    corpPrinter: 'models/corp/printer.glb',    // multifunction copier, drawer pedestal, amber panel
+    corpDesk: 'models/corp/desk-bench.glb',    // bench desk: thin top, O-leg frame, pedestal, 96 tris
+    corpTableLeg: 'models/corp/table-leg.glb', // the blade leg under a boardroom slab, 36 tris
+    corpBin: 'models/corp/bin.glb',            // the waste bin, a 12-sided lathe, the one round piece
+    // the casework credenza, which used to be render.corp.CorpDeco.box — a plain slab with the
+    // OFFICE DESK LAMINATE on its lid, reported by probing a face at local y 1.3 (exactly
+    // CorpDeco.CASE[K_CABINET][2]). Its height was then fixed TO the drawer art, 1.30 -> 2.00, so
+    // two full-width courses land with no stretch; see art/models.json's note
+    corpCase: 'models/corp/case-cabinet.glb',  // carcass, two proud drawers, brass label holders, 324
+    corpGunCabinet: 'models/corp/gun-cabinet.glb',            // security room, shut, 108
+    corpGunCabinetOpen: 'models/corp/gun-cabinet-open.glb',   // and open, leaf swung, 264
+    corpStairs: 'models/corp/stairs.glb',                     // switchback over two cells, 924
+    corpWallCam: 'models/corp/wall-cam.glb',                  // plate, arm, pitched bullet head, 124
+    // AND THE RECORDS ROOM'S TWO, which stand in the ranks gen.corp.CorpRooms.archive lays and are
+    // dealt one per rank (render.corp.CorpFurniture.archive). Both are glbs for the reason the
+    // credenza is: a drawer standing proud of a carcass and a board standing proud of the binders
+    // behind it are the one thing a flat face cannot have. Both sizes came off the ART -- the
+    // drawer course's aspect and the spine sheet's bay -- so neither number was chosen; see
+    // art/models.json
+    corpArchCase: 'models/corp/arch-cabinet.glb',   // four-drawer lateral file, 2.70 x 3.60, 156 tris
+    corpArchShelf: 'models/corp/arch-shelf.glb',    // six shelves of box files, 3.20 x 4.80, 168
+    // AND THE FOUR DESK-CLUTTER CELLS THAT ARE PROPS (render.corp.CorpClutter). corp/desk-clutter
+    // is a PACK64 of flat cut-outs and that is the right route for a sheet of paper or a folder;
+    // it fails on a cell whose read is a ROUND or UPRIGHT silhouette, which no top-down art can
+    // give a side to. These four were reported cell by cell from the game
+    corpDeskMug: 'models/corp/desk-mug.glb',        // a vessel lathe with a swept handle, 220 tris
+    corpDeskBottle: 'models/corp/desk-bottle.glb',  // shouldered steel, charcoal cap, 184
+    corpDeskPlant: 'models/corp/desk-plant.glb',    // pot, soil cap, six pitched leaves, 280
+    corpDeskCam: 'models/corp/desk-cam.glb',        // puck, stalk, lens head with an amber ring, 120
+    // AND THE EXEC OFFICE'S SEVEN (render.corp.CorpExec, models-src/corp/exec_build.py), all one
+    // sheet packed off the exec pack4's built labels. The desk comes in three footprints because a
+    // footprint is the generator's cells and a glb cannot be stretched to one
+    corpExecDesk: 'models/corp/exec-desk.glb',          // 3x2 pedestal desk, leather inlay, 516
+    corpExecDesk3: 'models/corp/exec-desk-3.glb',       // the 3-cell run, 516
+    corpExecDesk2: 'models/corp/exec-desk-2.glb',       // the 2-cell run, 516
+    corpExecChair: 'models/corp/exec-chair.glb',        // high-backed leather swivel, 1,380
+    corpExecArmchair: 'models/corp/exec-armchair.glb',  // club chair, lounge and visitor, 552
+    corpExecSofa: 'models/corp/exec-sofa.glb',          // two-cell chesterfield, 768
+    corpExecTableLow: 'models/corp/exec-table-low.glb', // walnut on brass legs, 168
+    corpExecPlaque: 'models/corp/exec-plaque.glb',      // brass nameplate on walnut, 24
+    corpExecPhoto: 'models/corp/exec-photo.glb',        // brass frame on an easel, 80
+    // the reception counter's three trinkets (models-src/corp/reception_build.py)
+    corpRecPhone: 'models/corp/rec-phone.glb',          // base, cradle, handset, key pad, 48
+    corpRecBoard: 'models/corp/rec-board.glb',          // WELCOME on a brass foot, 44
+    corpRecBell: 'models/corp/rec-bell.glb',            // base, brass dome, plunger, 248
+    // AND THE STAFF KITCHEN'S ELEVEN (render.corp.CorpKitchen, models-src/corp/kitchen_build.py),
+    // on five sheets packed off built labels. The fridge and the vending machine were
+    // render.corp.CorpDeco.box, casework wearing the office desk's laminate
+    corpKitchenTable: 'models/corp/kitchen-table.glb',       // beech on four steel legs, 376
+    corpKitchenChair: 'models/corp/kitchen-chair.glb',       // terracotta shell, four legs, 412
+    corpKitchenCounter: 'models/corp/kitchen-counter.glb',   // one cell of base unit, 452
+    corpVanity: 'models/corp/vanity.glb',                    // washroom basin cell, glazed bowl, 896
+    corpKitchenSink: 'models/corp/kitchen-sink.glb',         // the unit with bowl and tap, 884
+    corpKitchenCab: 'models/corp/kitchen-wall-cab.glb',      // the wall cabinet over it, 336
+    corpKitchenFridge: 'models/corp/kitchen-fridge.glb',     // fridge-freezer with notes, 552
+    corpKitchenVending: 'models/corp/kitchen-vending.glb',   // lit snack machine, emissive, 216
+    corpKitchenMicrowave: 'models/corp/kitchen-microwave.glb', // 192
+    corpKitchenCoffee: 'models/corp/kitchen-coffee.glb',     // bean-to-cup, 256
+    corpKitchenKettle: 'models/corp/kitchen-kettle.glb',     // 344
+    corpKitchenToaster: 'models/corp/kitchen-toaster.glb',   // 220
+    facilityChairHand: 'models/facility/chair-hand.glb',    // split back, star base, 1,072
+    // and the workstation on the desk in front of that chair, which is the one family here to have
+    // been a glb, then emitted quads, and now a glb again — for a different reason each time. The
+    // GENERATED facility/computer.glb died correctly: 1,200 triangles rounding the corners off three
+    // slabs, reported as blocky. The 22 emitted quads that replaced it were right about the
+    // proportions and could state no silhouette at all. These three are HAND-MODELLED IN BLENDER
+    // (models-src/facility/computer_build.py) on the same FacilityStyle numbers, at 268/116/44 tris,
+    // and they wear the game's OWN facility/workstation sheet rather than a bake — so the screen
+    // tilts, the tower's front panel is recessed and the keyboard is a wedge, which is what the
+    // quads could not do. THREE PATHS AND NOT ONE PROP: the tower stands on a hand rolled per desk
+    // (WorkSpot.side), so a fused set could only ever stand on one of them
+    facilityMonitor: 'models/facility/computer-monitor.glb',   // screen on a tapered neck, tilted 8° back
+    facilityTower: 'models/facility/computer-tower.glb',       // desktop case on end, front panel recessed
+    facilityKeyboard: 'models/facility/computer-keyboard.glb', // keyboard wedge, front lip low
+    // the server rack, the first of the room FITTINGS down that same route
+    // (models-src/facility/rack_build.py, 156 tris). It does NOT replace the four quads
+    // render.facility.FacilityDeco still emits — FacilityStyle.DECO_RACK_GLB picks between them and
+    // both ship, because a fitting on a wall is exactly the axis-aligned slab the triage says to
+    // EMIT and the only way to settle that is to measure both in the same frame
+    facilityRack: 'models/facility/deco-rack.glb',             // six chassis in a skirted frame
+    // and the one-tile cabinet, which is a SECOND MESH and not the first one scaled. DECO_RACK_LOW_H
+    // is DECO_RACK_TILE, i.e. exactly three chassis, and FacilityDeco.lights deals its status specks
+    // off that same arithmetic — Models.instanced scales by HEIGHT alone, so the six-chassis mesh
+    // drawn at the low height gave six squashed units under three rows of lights
+    facilityRackLow: 'models/facility/deco-rack-low.glb',      // three of them, same frame
+    // and the storage cabinet, same switch and same argument: three labels emitted is three calls,
+    // one packed sheet is one. Its shape claim is smaller than the rack's — two proud door LEAVES,
+    // for a reveal at their edges and a toe kick under them (models-src/facility/cabinet_build.py)
+    facilityCabinet: 'models/facility/deco-cabinet.glb',       // double-door case, leaves proud
+    // and the lab machine, ONE mesh for both of its heights — DECO_MACHINE_LOW_SZ is not a count of
+    // anything, the unit is a cube at either size and `machLights` reads fractions, so scaling by
+    // height (which is all Models.instanced does) is exactly right here and was wrong for the rack
+    facilityMachine: 'models/facility/deco-machine.glb',       // three bands, louvre panel set back
+    facilityAnalyser: 'models/facility/deco-analyser.glb',     // the tall one: sloped console on top
+    // and the bookcase, whose whole read at this camera is that the BOARDS stand in front of the
+    // spines — four proud boxes running between the stiles (models-src/facility/bookcase_build.py)
+    facilityBookcase: 'models/facility/deco-bookcase.glb',     // four boards, books behind them
+    // and the open shelving, the strongest shape claim of the lot: the quads it replaces are two
+    // alpha-cut PANES standing in for end frames, i.e. a cut-out drawing of a frame with
+    // zero-thickness shelves between them (models-src/facility/store_build.py, one sheet with the
+    // trolley, and neither of them a pixel of new art)
+    facilityShelving: 'models/facility/deco-shelving.glb',     // four uprights, rails, three plates
+    // and the washroom counter, whose bowl is a real RECESS and whose tap is two boxes — which
+    // between them retire the family's only alpha-cut mesh (models-src/facility/basin_build.py)
+    facilityBasin: 'models/facility/deco-basin.glb',           // counter, sunk bowl, mixer tap
+    // and the lounge's pair, the first two here that never had an emitted version to convert: what
+    // earns a sofa a mesh is the notch its arms and back cut out of a rectangle, and a low table is
+    // one the camera sees THROUGH (models-src/facility/lounge_build.py, one sheet between them)
+    facilitySofa: 'models/facility/deco-sofa.glb',             // two-seater, arms, dark plinth
+    facilityTableLow: 'models/facility/deco-table-low.glb',    // slab on four legs, seen through
+    // and the STORE ROOM's three (models-src/facility/storerack_build.py), glbs only like the
+    // lounge pair above: none of them had an emitted version, because none of them is a box —
+    // racking is mostly the air between its members, and a pallet is read by the slot of shadow
+    // under it
+    facilityPalletRack: 'models/facility/deco-pallet-rack.glb',   // two bays, three beam levels
+    facilityPalletStack: 'models/facility/deco-pallet-stack.glb', // wrapped cartons on a pallet
+    facilityDrumPallet: 'models/facility/deco-drum-pallet.glb',   // four drums on a pallet
+    facilityGenerator: 'models/facility/deco-generator.glb',      // the hangar's olive genset
+    // and the parking entry's checkpoint, which is here for the THIRD time and by a different route
+    // each time. Generated it was a 40-component bake with the hazard bands merged to orange on tan;
+    // emitted it was 56 triangles of quad with no arris on it anywhere; these are hand-modelled to
+    // FacilityStyle's own numbers (models-src/facility/entry_build.py) and switched by
+    // FacilityStyle.ENTRY_BLENDER, with the emitted pair still shipping behind that flag. The BOOM
+    // is the one mesh in the compound whose LENGTH is load-bearing — see that script's header
+    facilityBarrier: 'models/facility/barrier-hand.glb',       // cabinet, boom, splice collar, tip lamp
+    facilityBooth: 'models/facility/booth-hand.glb',           // kiosk shell, sill and head reveals, aerial
     // the only wilderness prop with an AUTHORED FRONT: it lines the highway shoulder, so its yaw is
     // locked to the corridor axis where every other row out there takes a full random turn
-    wildGuardRail: 'models/wild/guard-rail.glb',                  // W-beam crash barrier, one cell long
+    wildGuardRail: 'models/wild/guard-rail-hand.glb',             // W-beam on two posts, hand-modelled, one cell long
     // the habitat's four grown objects, standing in for their atlas sprites. unlike the clutter above
     // each of these HAS an AreaObject behind it, so they go through render.world.ObjModels and carry
     // the full solid / ghost / outline-hull set rather than one decoration batch
@@ -688,6 +1092,59 @@ class RenderConfig {
     habitatAssimilation: 'models/habitat/assimilation.glb', // braided tentacle arch with a maw
     habitatPreservator: 'models/habitat/preservator.glb',   // amber pod caged in veins
     habitatWatcher: 'models/habitat/watcher.glb',           // eye-studded mass ringed by tendrils
+    // the alien ship of the crash-landing scenario, which goes through render.world.ObjModels for
+    // the same reason the four organs above do: it has an objects.EventObject behind it, so it
+    // carries the full solid / ghost / outline-hull set. supplied as a 584k-tri master and decimated
+    // by the pipeline — see its art/models.json note for why tex is 1024 and why it carries no
+    // baseColor
+    scenarioSpaceship: 'models/scenario-a/spaceship.glb',   // saucer, lit panels and lamp discs
+    // and the rig round it, hand-modelled to three silhouettes that cannot be confused with each
+    // other or with the machine banks already standing in the same shed
+    // (models-src/scenario-a/scenario_build.py)
+    scenarioCase: 'models/scenario-a/case.glb',             // orange transport case, overhanging lid
+    scenarioConsole: 'models/scenario-a/console.glb',       // lectern: column and a canted head
+    scenarioSlot: 'models/scenario-a/slot.glb',             // receptacle, socket plate facing up
+    // the underground lab's clone vat, three hand-modelled parts and the two TRELLIS clones that
+    // float in it and lie in it drained (models-src/lab/vat_build.py, render.lab.LabVats)
+    labVatFrame: 'models/lab/vat-frame.glb',                // plinth, ring, posts, cap, pipes, console
+    labVatGlass: 'models/lab/vat-glass.glb',                // open glass cylinder, drawn transparent
+    labVatFluid: 'models/lab/vat-fluid.glb',                // growth medium, base at 0 so it drains by y-scale
+    labClone: 'models/lab/clone.glb',                       // the tentacled clone, floating upright
+    labCloneSlumped: 'models/lab/clone-slumped.glb',        // the same clone heaped on a drained vat's floor
+    // and its freight lift (models-src/lab/lift_build.py, render.lab.LabLift)
+    labLiftDeck: 'models/lab/lift-deck.glb',                // the car, lowered in on arrival
+    labLiftShaft: 'models/lab/lift-shaft.glb',              // guide rails, head frame, sheave, ropes
+    labLiftBeacon: 'models/lab/lift-beacon.glb',            // the beacon's reflector, turned with its beam
+    labLiftDome: 'models/lab/lift-dome.glb',                // the beacon's amber dome, drawn as glass
+    // its furniture, one cell wide and front to +z (models-src/lab/labkit_build.py, render.lab.LabInterior)
+    labBench: 'models/lab/lab-bench.glb',                   // epoxy-top lab table, drawer pedestal
+    labWorkbench: 'models/lab/lab-workbench.glb',           // butcher-block bench, upstand, vice
+    labDesk: 'models/lab/lab-desk.glb',                     // computer desk under the facility workstation
+    labShelf: 'models/lab/lab-shelf.glb',                   // tall stocked shelving
+    labShelfLow: 'models/lab/lab-shelf-low.glb',            // low closed bookcase
+    labShelfRow: 'models/lab/lab-shelf-row.glb',            // a store's free-standing double-sided row
+    labCrate: 'models/lab/lab-crate.glb',                   // one stencilled crate, stacked by placement
+    labLocker: 'models/lab/lab-locker.glb',                 // a bank of four lockers under a crown
+    labSeat: 'models/lab/lab-seat.glb',                     // two waiting-room seats on a beam
+    labHazmat: 'models/lab/lab-hazmat.glb',                 // suit rack: pegboard, hanger rail, boot plate
+    labFridge: 'models/lab/lab-fridge.glb',                 // specimen refrigerator
+    labDrum: 'models/lab/lab-drum.glb',                     // one biohazard chemical drum
+    // and its box machines (models-src/lab/boxkit_build.py), front to +z, centred on the footprint
+    labBoxSr203: 'models/lab/lab-box-sr203.glb',
+    labBoxVault: 'models/lab/lab-box-vault.glb',
+    labBoxDrawercab: 'models/lab/lab-box-drawercab.glb',
+    labBoxRadlocker: 'models/lab/lab-box-radlocker.glb',
+    labBoxDrawers: 'models/lab/lab-box-drawers.glb',
+    labBoxColdbank: 'models/lab/lab-box-coldbank.glb',
+    labBoxPowerbox: 'models/lab/lab-box-powerbox.glb',
+    labBoxLeverbox: 'models/lab/lab-box-leverbox.glb',      // hung on the wall at 1.3, conduit up
+    labBoxControlbox: 'models/lab/lab-box-controlbox.glb',  // on a post at the wall, conduit up
+    labContainer: 'models/lab/lab-container.glb',           // the store's sealed biohazard container
+    // the chair at each computer desk, and the workshop fan whose rotor turns under its lamp
+    // (models-src/lab/mach/chair.py, fan.py; render.lab.LabInterior, render.lab.LabSpin)
+    labChair: 'models/lab/chair.glb',
+    labFan: 'models/lab/fan.glb',                           // canopy, downrod, finned housing
+    labFanBlades: 'models/lab/fan-blades.glb',              // hub and four blades, centred on the axis
   };
   // a prop the player is STANDING on fades see-through, so its body does not hide the sprite. one
   // InstancedMesh carries one material, so the fade is a second (ghost) batch over the same placements
@@ -872,7 +1329,10 @@ class RenderConfig {
     lowMax: 3.0,        // both numbers above are tuned for a street bulb at CELL * LAMP_LIGHT.yMul, and
                         // a LOW fixture (a sewer wall bracket at 0.6) rakes light across the floor
                         // instead of pooling it — so lenMul and rangeCells are both scaled by
-                        // refY / post.y, capped here. a street lamp lands on exactly 1.0
+                        // refY / post.y, capped here. a street lamp lands on exactly 1.0, and a
+                        // facility ceiling fixture at 5.8 against refY 5.6 lands on 0.966 — so the
+                        // one HIGH fixture in the game is the reference bulb to within 4% and needs
+                        // no floor under this ratio
     lowRangeCells: 3,   // absolute reach cap in cells for that scaled-up low fixture, so a bracket
                         // still throws LONG shadows (lenMul keeps the full lowMax) but only over a
                         // small pool. sits just under the burning barrel's FLAME.shadowRangeCells 4.
@@ -904,6 +1364,9 @@ class RenderConfig {
     bulletHoles: ['textures/decals/bullet-hole-1.png', 'textures/decals/bullet-hole-2.png'],
     // corrugated-steel dents/punctures for hits on metal-warehouse walls (facade 3)
     bulletHolesMetal: ['textures/decals/bullet-hole-metal-1.png', 'textures/decals/bullet-hole-metal-2.png'],
+    // crack stars for a shot crossing a facility/corp window pane (one packed sheet, four cells)
+    bulletHolesGlass: ['textures/decals/bullet-hole-glass-1.png', 'textures/decals/bullet-hole-glass-2.png',
+      'textures/decals/bullet-hole-glass-3.png', 'textures/decals/bullet-hole-glass-4.png'],
     graffiti: ['textures/decals/graffiti-1.png', 'textures/decals/graffiti-2.png'],
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],
@@ -912,5 +1375,46 @@ class RenderConfig {
     // assimilation arch and writhes, and the mote its fireflies are drawn with. both chroma-keyed
     fxInnards: 'textures/fx/innards.png',
     fxFirefly: 'textures/fx/firefly.png',
+  };
+  // the gnats over the compound's PARK lamps, drawn by the very same pass: a `fly` row is a fraction
+  // of its prop's height, so handing it a lamp's FacilityStyle.LAMP_H makes the mast the prop. Only
+  // the park's masts get them (render.facility.FacilityLamps.LampSet.park) — a bug cloud belongs
+  // over a lawn, not over a parking bay.
+  //
+  // EVERY POOLED QUAD IS A DRAW CALL and that is the whole budget (measured: 21 dots took calls
+  // 88-90 to 109-111, exactly +21). So `trail` is 0 — a trail multiplies a swarm by trail + 1 — and
+  // `posts` x `count` is what the feature costs, in full, every frame it draws
+  public static final LAMP_FLY = {
+    enabled: true,
+    posts: 2,   // the nearest park masts to the player that carry a swarm at all
+    count: 4,   // flies per mast. 2 x 4 = 8 quads = 8 draw calls
+    // and how near a mast has to be before it is one of them, in cells. past this the swarm is a
+    // few pixels of noise and not worth a call — the same distance gate LampLights keys its pool on
+    rangeCells: 14.0,
+    fly: {
+      tex: RenderConfig.TEXTURES.fxFirefly,
+      perLevel: 1,  // unused here: `count` is passed straight to drawFlies
+      // a fraction of LAMP_H 5.9, so the ring centre sits at 5.02 — just under the head, which is at
+      // LAMP_HEAD_Y 0.95. flies gather at the bulb and not halfway down the pole
+      y: 0.88,
+      yVar: 0.06,   // 4.9..5.6 world, a tight band around the lamp head
+      r: 0.14,      // 0.83 world — clear of the hood without leaving the light
+      rVar: 0.35,
+      // steeper than the arch's: a gnat cloud has no plane, and the lean is what says so. it is also
+      // what sets the vertical reach — r * sin(tilt) = 0.34 either side, so a dot laps from just
+      // under the hood to level with it rather than falling away down the pole
+      tilt: 0.45,
+      size: 0.05,   // 0.30 world, a third of the arch's dot — these are insects, not spirits
+      color: 0xffe3a8, // the sodium head's own warm, so they read as lit BY the lamp
+      glow: 2.2,
+      alpha: 0.75,
+      rate: 0.9,    // five times the arch's: an insect's orbit is frantic where an organ's is slow
+      rateVar: 0.55,
+      bob: 0.05,
+      twinkle: 0.7, // deep, so a fly keeps blinking out of the light and back into it
+      trail: 0,
+      trailGap: 0.0,
+      trailSize: 0.0,
+    },
   };
 }

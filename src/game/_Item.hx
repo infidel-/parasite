@@ -41,11 +41,18 @@ import ItemInfo;
   public function initPost(onLoad: Bool)
     {
       if (onLoad)
-        {
-          info = ItemsConst.tryGetInfo(id);
-          if (eventID != null)
-            event = game.timeline.getEvent(eventID);
-        }
+        info = ItemsConst.tryGetInfo(id);
+    }
+
+// the scenario event this clue is about, or null. looked up on first use and not in initPost: the
+// world loads ahead of the timeline it names, so a load-time lookup found nothing and every clue paper
+// lost its event to a save
+  public function getEvent(): scenario.Event
+    {
+      if (event == null &&
+          eventID != null)
+        event = game.timeline.getEvent(eventID);
+      return event;
     }
 
 // name without article

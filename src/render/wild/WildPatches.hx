@@ -30,21 +30,23 @@ class WildPatches
   // the same reason)
   static var masks:Array<Texture> = [];
 
-// emit both patch layers
-  public static function build(scene:Scene, m:Wild):Void
+// emit both patch layers. `keep` limits them to the cells it answers true for (a military base's
+// margin, render.military.MilitaryMargin); null is the whole area
+  public static function build(scene:Scene, m:Wild, ?keep:Int->Int->Bool):Void
     {
       for (t in masks)
         t.dispose();
       masks = [];
       // earth first so it sits UNDER the dead grass: bare soil is what is left where nothing grew,
       // and dry grass lying over it reads the right way round
-      layer(scene, m, WildStyle.PATCH_EARTH, WildBand.cur.earthChance, 0);
-      layer(scene, m, WildStyle.PATCH_DEAD, WildBand.cur.deadChance, 1);
+      layer(scene, m, WildStyle.PATCH_EARTH, WildBand.cur.earthChance, 0, keep);
+      layer(scene, m, WildStyle.PATCH_DEAD, WildBand.cur.deadChance, 1, keep);
     }
 
 // one overlay layer: pick its cells, bake its mask, then emit its geometry per chunk block.
 // `i` is the layer index, which salts the hash and sets the height it sits at
-  static function layer(scene:Scene, m:Wild, tex:String, chance:Float, i:Int):Void
+  static function layer(scene:Scene, m:Wild, tex:String, chance:Float, i:Int,
+      keep:Int->Int->Bool):Void
     {
       // pass 1 — which cells this patch may cover. a seed marks itself plus whichever of its four
       // neighbours the spare bits of its hash pick, so it becomes a 1-5 cell clump rather than a lone
@@ -56,15 +58,15 @@ class WildPatches
             var h = WildModel.mix(((col * 40503803) ^ (row * 12582917)) ^ (SALT * (i + 1)));
             if ((h % 1000) >= chance * 1000)
               continue;
-            mark(taken, m, col, row);
+            mark(taken, m, col, row, keep);
             if (((h >> 10) & 1) != 0)
-              mark(taken, m, col + 1, row);
+              mark(taken, m, col + 1, row, keep);
             if (((h >> 11) & 1) != 0)
-              mark(taken, m, col - 1, row);
+              mark(taken, m, col - 1, row, keep);
             if (((h >> 12) & 1) != 0)
-              mark(taken, m, col, row + 1);
+              mark(taken, m, col, row + 1, keep);
             if (((h >> 13) & 1) != 0)
-              mark(taken, m, col, row - 1);
+              mark(taken, m, col, row - 1, keep);
           }
       var mask = CoverageMask.bake(taken, WildStyle.PATCH_TILE, WildStyle.PATCH_KERN,
         WildStyle.PATCH_KERN_JIT);
@@ -81,6 +83,7 @@ class WildPatches
       var mat = render.world.VisionMask.patch(tag(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         alphaMap: mask,
+        vertexColors: true,
         transparent: true,
         opacity: WildStyle.PATCH_ALPHA,
         alphaTest: WildStyle.PATCH_ALPHA * 0.5,
@@ -122,6 +125,7 @@ class WildPatches
       var pos = [];
       var nor = [];
       var uv = [];
+      var colr = [];
       var idx = [];
       for (dr in 0...ch)
         for (dc in 0...cw)
@@ -172,6 +176,11 @@ class WildPatches
                       WildHeight.pushNormal(nor, p[0], p[1]);
                       uv.push(p[0] / WildStyle.PATCH_TILE);
                       uv.push(p[1] / WildStyle.PATCH_TILE);
+                      // the hollow shade the turf under it takes, or the patch glows in a dip
+                      var k = WildHeight.shade(p[0], p[1]);
+                      colr.push(k);
+                      colr.push(k);
+                      colr.push(k);
                     }
                   idx.push(base);
                   idx.push(base + 2);
@@ -187,6 +196,7 @@ class WildPatches
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
       geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+      geo.setAttribute('color', new Float32BufferAttribute(colr, 3));
       geo.setIndex(idx);
       var mesh = new Mesh(geo, mat);
       mesh.renderOrder = render.particles.Sprites.ORD_DECAL - 1; // under blood and debris: this is ground, not a decal
@@ -195,10 +205,13 @@ class WildPatches
       scene.add(mesh);
     }
 
-// mark a cell, if it is on the grid at all
-  static inline function mark(taken:Array<Array<Bool>>, m:Wild, col:Int, row:Int):Void
+// mark a cell, if it is on the grid at all and `keep` lets it
+  static inline function mark(taken:Array<Array<Bool>>, m:Wild, col:Int, row:Int,
+      keep:Int->Int->Bool):Void
     {
-      if (WildModel.inside(m, col, row))
+      if (WildModel.inside(m, col, row) &&
+          (keep == null ||
+          keep(col, row)))
         taken[row][col] = true;
     }
 

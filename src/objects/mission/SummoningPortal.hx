@@ -78,11 +78,6 @@ class SummoningPortal extends AreaObject
           portal.updatePortalIcon();
           area.recalcTile(portal.x, portal.y);
         }
-
-      if (game != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(area);
     }
 
 // remove every portal part object from its area

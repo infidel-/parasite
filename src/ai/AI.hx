@@ -123,11 +123,7 @@ class AI extends AIData
     {
       sounds = SoundConst.getSounds(isCultist ? 'cultist' : soundsID);
       if (onLoad)
-        {
-          createEntity();
-          if (isNPC)
-            entity.setNPC();
-        }
+        createEntity();
     }
 
 // called in main post-load
@@ -145,10 +141,7 @@ class AI extends AIData
         traits.remove(t);
       TraitsConst.loadOrphanCount += orphan.length;
       if (npc != null)
-        {
-          npc.ai = this;
-          entity.setNPC();
-        }
+        npc.ai = this;
       // could be bugs before save?
       recalc();
     }
@@ -157,8 +150,6 @@ class AI extends AIData
 public function show()
   {
     createEntity();
-    if (isNPC)
-      entity.setNPC();
   }
 
 // hide AI graphics
@@ -171,10 +162,7 @@ public function show()
   public function createEntity()
     {
       if (entity != null)
-        {
-          updateEntity();
-          return;
-        }
+        return;
 
       // select random icon if not set
       if (tileAtlasX == -1 &&
@@ -212,8 +200,6 @@ public function show()
         entity.setIcon(
           (isMale ? 'male' : 'female'),
           tileAtlasX, tileAtlasY);
-
-      updateEntity(); // update icon
     }
 
 // select AI icon data before entity creation
@@ -452,54 +438,17 @@ public function show()
         log(msg);
 
       onStateChange(); // dynamic event
-      if (entity != null) // could despawn in state change hook
-        updateEntity(); // update icon
     }
 
-
-// post alert changes, clamp and change icon
-  public function updateEntity()
-    {
-      // already despawned
-      if (entity == null)
-        return;
-
-      var alertFrame = Const.FRAME_EMPTY;
-      if (state == AI_STATE_ALERT ||
-          state == AI_STATE_SEARCH_LAST_SEEN ||
-          state == AI_STATE_SEARCH_AREA)
-        alertFrame = Const.FRAME_ALERTED;
-      else if (state == AI_STATE_IDLE ||
-          state == AI_STATE_MOVE_TARGET ||
-          state == AI_STATE_INVESTIGATE)
-        {
-          if (alertness > 75)
-            alertFrame = Const.FRAME_ALERT3;
-          else if (alertness > 50)
-            alertFrame = Const.FRAME_ALERT2;
-          else if (alertness > 0)
-            alertFrame = Const.FRAME_ALERT1;
-        }
-
-      // calling
-      if (game.managerArea.hasAI(this, AREAEVENT_CALL_LAW) ||
-          game.managerArea.hasAI(this, AREAEVENT_CALL_BACKUP) ||
-          game.managerArea.hasAI(this, AREAEVENT_CALL_TEAM_BACKUP))
-        alertFrame = Const.FRAME_CALLING;
-
-      entity.setAlert(alertFrame);
-      entity.setEffect(effects.getIcon());
-    }
 
 
 // ordered active entity badges (alert / npc / cultist / effect) for the world entity. shared
-// source for the 3D street-view badge pass; mirrors the 2D AIEntity.draw ordering + updateEntity's
-// alert-frame pick. alert + npc carry a UISvg glyph key (scalable 3D render); effect + cultist are
+// source for the 3D badge pass. alert + npc carry a UISvg glyph key (scalable 3D render); effect + cultist are
 // left as PNG atlas cells (svg == null)
   public function getBadges(): Array<_Badge>
     {
       var out: Array<_Badge> = [];
-      // alert badge: same pick as updateEntity, then the search-state glyph override
+      // alert badge: alert frame by state and alertness, then the search-state glyph override
       var alertFrame = Const.FRAME_EMPTY;
       if (state == AI_STATE_ALERT ||
           state == AI_STATE_SEARCH_LAST_SEEN ||
@@ -581,6 +530,15 @@ public function show()
               svg: effectSvg(eff.col),
             });
         }
+      // the player's host close to collapsing from degradation: the cracked heart after the effects
+      // (svg-only, no atlas cell — the 2D view does not draw it)
+      if (game.player.host == this &&
+          game.player.isHostBreaking())
+        out.push({
+          col: Const.FRAME_EMPTY,
+          row: Const.ROW_EFFECT,
+          svg: 'breaking',
+        });
       return out;
     }
 
@@ -656,7 +614,7 @@ public function show()
           y2 = Std.int(Math.max(y2, enemy.y));
         }
       // add player x,y if hostile
-      if (!game.player.vars.invisibilityEnabled &&
+      if (!game.player.invisibleToAI() &&
           !isPlayerCultist())
         {
           x1 = Std.int(Math.min(x1, game.playerArea.x));
@@ -877,7 +835,6 @@ public function show()
       traceAI('AI', '===');
       turn();
 
-      updateEntity(); // clamp and change entity icons
       checkDespawn(); // check for this AI to despawn
 
       // emit random sound if it exists
@@ -1152,8 +1109,6 @@ public function show()
   public function onEffect(effect: Effect)
     {
       effects.add(effect);
-
-      updateEntity(); // update entity graphics
     }
 
 // increase parasite affinity (never goes down)
@@ -1200,7 +1155,6 @@ public function show()
       this.isJobKnown = true;
       this.isNPC = true;
       this.updateTile(npc.tileAtlasX, npc.tileAtlasY);
-      this.entity.setNPC();
     }
 
 // returns true if this AI has NPC clues or chat clues
@@ -1229,6 +1183,7 @@ public function show()
         type == 'police' ||
         type == 'security' ||
         type == 'soldier' ||
+        type == 'officer' ||
         type == 'agent' ||
         type == 'blackops'
       );
@@ -1385,9 +1340,13 @@ public function show()
       // check player first if hostile
       if (!isPlayerCultist())
         {
-          if (!game.player.vars.invisibilityEnabled &&
+          if (!game.player.invisibleToAI() &&
               seesPosition(game.playerArea.x, game.playerArea.y))
             return true;
+          if (isTracing &&
+              game.playerArea.isHidden() &&
+              seesPosition(game.playerArea.x, game.playerArea.y))
+            traceAI('AI', 'alert: player hidden in object, not seen');
         }
 
       // check enemies list
@@ -1438,7 +1397,7 @@ public function show()
         }
 
       // check for parasite
-      if (!game.player.vars.invisibilityEnabled &&
+      if (!game.player.invisibleToAI() &&
           !isPlayerCultist() &&
           seesPosition(game.playerArea.x, game.playerArea.y))
         {
@@ -1511,7 +1470,7 @@ public function show()
         }
 
       // check for parasite
-      if (!game.player.vars.invisibilityEnabled &&
+      if (!game.player.invisibleToAI() &&
           !isPlayerCultist())
         {
           // no host or attached

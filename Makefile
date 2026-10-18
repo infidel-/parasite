@@ -1,9 +1,17 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload git-diff tex adopt model-deps models model-export ai
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds
 
 game-debug:
 	cd src && $(MAKE) electron
+
+# headless area generation: build bin/genrun.js and run the structural checks over N seeds, with no
+# Electron, no renderer and no save. The oracle for any generator change -- run it BEFORE reaching
+# for the game. See docs/area-gen.md.
+# usage: make gen [seeds=3000] [args="--print --stats"]
+gen:
+	cd src && haxe project_gen.hxml
+	node tools/genrun.mjs --count $(or $(seeds),3000) $(args)
 
 # dev: screenshot the running game over CDP -> sshot.jpg (game must run on debug port 9300)
 sshot:
@@ -13,6 +21,12 @@ sshot:
 reload:
 	node reload.mjs
 
+# dev: reload AND carry on through the boot — waits out the warm, answers the autosave offer and
+# returns once the first frame presented, so the hooks (__facility(), __wild(), __check) and
+# `make sshot` see a built area instead of the main menu. usage: make reload-load [slot=1]
+reload-load:
+	node reload.mjs --load $(slot)
+
 # dev: show working-tree diff (stat + full) without a pager
 git-diff:
 	@git --no-pager diff --stat HEAD
@@ -21,10 +35,16 @@ git-diff:
 	@git --no-pager status --short
 
 # 3D street-view texture pipeline: downscale/bake textures-src/ 1024px sources
-# straight into the app dir (app/textures/, per textures.json). textures-src is a
-# symlink to the asset store; sources are NOT committed.
+# straight into the app dir (app/textures/, per art/textures.json). textures-src is a
+# symlink to the asset store; the sources are NOT committed, the manifest IS.
 tex:
 	python3 tools/textures.py
+
+# sound pipeline: sounds-src/<area>/*.wav (fal-sfx MCP takes) -> app/sound/<name><N>.mp3, mono,
+# one static gain to the manifest's LUFS, loops seamed. never touches a sound it did not make.
+# sounds-src is a symlink; the wavs are NOT committed, art/sounds.json IS
+sounds:
+	python3 tools/sounds.py
 
 # adopt freshly generated gpt drops into textures-src/ without baking
 adopt:
@@ -39,7 +59,8 @@ model-deps:
 	npm --prefix tools install
 
 # 3D model pipeline: decimate + shrink embedded textures of models-src/ .glb sources
-# straight into app/models/ (per models.json). models-src is a symlink; sources are NOT committed.
+# straight into app/models/ (per art/models.json). models-src is a symlink; the sources are NOT
+# committed, the manifest IS.
 models:
 	node tools/models.mjs
 

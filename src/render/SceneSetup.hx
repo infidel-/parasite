@@ -35,6 +35,7 @@ typedef SceneBundle = {
   coneFlick:render.LightCone.ConeSet, // the flickering lamps' cone batch, repacked per frame so a cone goes dark with its bulb
   lampMask:Array<Bool>,     // per-instance draw mask for lampProp — entries 0..n-1 are the flickering lamps, cleared while one is out
   lampMaskDead:Array<Bool>, // the complement for lampPropDead, which holds the same n posts at the same indices
+  ?flickCells:Array<{ col:Int, row:Int }>, // city only: the flickering lamps' cells, in coneFlick order (render.CitySounds' buzz)
   wallGlow:render.LightCone.ConeSet, // sewer only (null in a city): the wall lamps' emissive quads, repacked
                                      // like coneFlick so a fixture stops glowing AND blooming while its bulb is out
   propLights:render.particles.PropLights, // sewer only (null in a city): fixed point-light pool for the
@@ -50,6 +51,10 @@ class SceneSetup {
     // final OutputPass blits a fullscreen quad (no geometry edges to smooth). real AA lives on
     // the composer's offscreen render targets instead (View.setAA, config vidAntialias)
     var renderer = new WebGLRenderer({ canvas: canvas, antialias: false });
+    // shader info logs (renderer.info.programs[].diagnostics, the black-street diagnosis route in
+    // docs/3d-render.md) only in debug: each program's first use otherwise pays sync GPU round
+    // trips for logs a player never reads
+    renderer.debug.checkShaderErrors = Const.isDebug;
     // NOT devicePixelRatio: the street frame is fill-bound long before it is call-bound, and a
     // 125%-scaled desktop was silently costing 1.56x the pixels for it. measured GPU ~= 2.0ms +
     // 8.3ms per megapixel, i.e. ~80% of the frame scales with this one number (docs/3d-render.md)
@@ -126,6 +131,35 @@ class SceneSetup {
       moon.target.updateMatrixWorld();
     }
 
+  // how far a lamp post's centre keeps in from a walkway edge with no walkway past it: the post's base
+  // is 0.27 either side of its centre, so a post slid to its cell's corner stood half over that kerb
+  static inline var LAMP_BASE = 0.35;
+  // a street lamp's fate (lampFate)
+  public static inline var LAMP_STEADY = 0;
+  public static inline var LAMP_FLICKER = 1;
+  public static inline var LAMP_DEAD = 2;
+
+// a street lamp's fate off its cell and the area style's odds: dead, sputtering (a separate slice of
+// the hash, so breaking a lamp doesn't correlate with sputtering) or steady. pure, so the generator
+// can park the slums' car wrecks under the lamps that will burn (game.CityAreaGenerator.placeCars)
+  public static function lampFate(col:Int, row:Int, style:render.world.AreaStyle):Int
+    {
+      if (style == null)
+        return LAMP_STEADY;
+      var h = lampHash(col, row);
+      if (h % 1000 < style.lampBrokenRatio * 1000)
+        return LAMP_DEAD;
+      if ((h >>> 11) % 1000 < style.lampFlickerRatio * 1000)
+        return LAMP_FLICKER;
+      return LAMP_STEADY;
+    }
+
+// the footprint hash a lamp's fate and flicker phase are read off
+  static inline function lampHash(col:Int, row:Int):Int
+    {
+      return ((col * 73856093) ^ (row * 19349663)) & 0x7fffffff;
+    }
+
 // build a fresh scene (background, fog, fill lights, per-lamp point lights) for a city.
 // lampPool = how many live lamp spotlights to run (config vidLampLights)
   public static function buildScene(renderer:WebGLRenderer, city:City, lampPool:Int, ?style:render.world.AreaStyle):SceneBundle {
@@ -185,48 +219,62 @@ class SceneSetup {
     // dropped from `bulbs` (no light cone) AND from `lampPosts`, so it never even enters the pool's
     // candidate list — the survivors near the player get MORE coverage, not less. its POST still stands,
     // but in its own instanced mesh with the emissive stripped, or the bulb keeps glowing and blooming
-    var brokenPct = style != null ? style.lampBrokenRatio * 1000 : 0;
-    var flickerPct = style != null ? style.lampFlickerRatio * 1000 : 0;
+    // (lampFate, which game.CityAreaGenerator asks too)
     var placements:Array<Models.PropPlace> = [];
     var dead:Array<Models.PropPlace> = [];
     var flickPlace:Array<Models.PropPlace> = []; // posts of the flickering lamps — in BOTH batches, see below
+    var flickCells:Array<{ col:Int, row:Int }> = []; // and their cells, for the buzz
     // cones are split by fate: the steady ones are built once and never touched, the flickering ones
     // keep their phases so LightCone.pulse can drop a cone whose bulb is in its dark stretch
     var bulbs:Array<{ x:Float, z:Float }> = [];
     var bulbsFlick:Array<{ x:Float, z:Float }> = [];
     var phasesFlick:Array<Float> = [];
+    // a lamp stands on its walkway, a kerb up, and its light with it
+    var bulbY = CityConfig.CELL * L.yMul + RenderConfig.CURB_H;
     for (lamp in city.lamps) {
       var w = CityConfig.cellToWorld(lamp.col, lamp.row);
       // dir -> yaw so local +z points toward the road (0:+z, 1:-z, 2:+x, 3:-x)
       var yaw = switch (lamp.dir) { case 0: 0.0; case 1: Math.PI; case 2: Math.PI / 2; default: -Math.PI / 2; };
       var cos = Math.cos(yaw), sin = Math.sin(yaw);
-      var px = w.x + lpdx * cos + lpdz * sin; // post nudged within its cell (edge / toward wall)
-      var pz = w.z - lpdx * sin + lpdz * cos;
+      // the post slides along its walkway to the cell's corner, unless the cell past that corner is
+      // not walkway (a lamp stepped back off a crossing road): then it keeps LAMP_BASE inside the edge
+      var nc = lamp.col + Math.round(cos);
+      var nr = lamp.row + Math.round(-sin);
+      var walk = nc >= 0 &&
+        nr >= 0 &&
+        nc < CityConfig.GRID &&
+        nr < CityConfig.GRID &&
+        city.tiles[nr][nc] == citygen.CityModel.Tile.Walkway;
+      var slide = (walk ? lpdx : Math.min(lpdx, CityConfig.CELL / 2 - LAMP_BASE));
+      var px = w.x + slide * cos + lpdz * sin; // post nudged within its cell (edge / toward wall)
+      var pz = w.z - slide * sin + lpdz * cos;
+      var py = RenderConfig.CURB_H;
       var bx = px + ldx * cos + ldz * sin;    // bulb offset FROM the post, over the road edge
       var bz = pz - ldx * sin + ldz * cos;
-      var h = ((lamp.col * 73856093) ^ (lamp.row * 19349663)) & 0x7fffffff;
-      if (h % 1000 < brokenPct)
-        dead.push({ x: px, z: pz, yaw: yaw }); // post still stands, but its bulb is drawn unlit
+      var h = lampHash(lamp.col, lamp.row);
+      var fate = lampFate(lamp.col, lamp.row, style);
+      if (fate == LAMP_DEAD)
+        dead.push({ x: px, y: py, z: pz, yaw: yaw }); // post still stands, but its bulb is drawn unlit
       else
         {
-          // a separate slice of the same hash, so breaking a lamp doesn't correlate with sputtering
-          var flick = (h >>> 11) % 1000 < flickerPct;
+          var flick = fate == LAMP_FLICKER;
           var phase = flick ? ((h >>> 17) % 628) / 100 : 0.0;
           if (flick)
             {
-              flickPlace.push({ x: px, z: pz, yaw: yaw });
+              flickPlace.push({ x: px, y: py, z: pz, yaw: yaw });
               bulbsFlick.push({ x: bx, z: bz });
+              flickCells.push({ col: lamp.col, row: lamp.row });
               phasesFlick.push(phase);
             }
           else
             {
-              placements.push({ x: px, z: pz, yaw: yaw });
+              placements.push({ x: px, y: py, z: pz, yaw: yaw });
               bulbs.push({ x: bx, z: bz });
             }
           lampPosts.push({
             x: bx,
             z: bz,
-            y: CityConfig.CELL * L.yMul,
+            y: bulbY,
             tx: bx, // a street lamp pools straight down: the aim point is the ground under the bulb
             tz: bz,
             color: RenderConfig.LAMP_CONE.color, // sodium amber, matching the shaft hung under it
@@ -253,7 +301,6 @@ class SceneSetup {
     // prebuilt so the per-frame pass only rewrites the first n entries (the flickering lamps)
     var lampMask = [for (i in 0...(flickPlace.length + placements.length)) true];
     var lampMaskDead = [for (i in 0...(flickPlace.length + dead.length)) i >= flickPlace.length];
-    var bulbY = CityConfig.CELL * L.yMul;
     // two cone batches, both in coneGroup so debug 5/0 still hides them together: the steady lamps'
     // (built once, never touched) and the flickering lamps' (repacked by LightCone.pulse so a cone
     // goes out with its bulb). an area with no flickering lamps builds no second mesh at all
@@ -297,6 +344,7 @@ class SceneSetup {
       coneFlick: coneFlick,
       lampMask: lampMask,
       lampMaskDead: lampMaskDead,
+      flickCells: flickCells,
       wallGlow: null, // no wall-mounted fixtures on a street
       // no object prop in a city lights, and an unused slot is not free: three unrolls the point-light
       // loop into every lit material, so a pool here would cost the street frame a full light

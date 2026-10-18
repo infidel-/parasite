@@ -27,10 +27,14 @@ class Images
   public var female: Image;
   public var male128: Array<Image>; // 3D 128px atlas, [SKIN_YELLOW, SKIN_DARK, SKIN_WHITE]
   public var female128: Array<Image>;
-  public var tileset: Image;
+  public var decoPacks: Array<Image>; // 3D 256px facility bench decoration sheets (Const.FACILITY_DECO_HD)
+  public var cluePack: Image; // 3D 170px clue document/book sheet (Const.CLUE_HD)
+  public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
+  public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
+  public var entities128: Image; // 3D 128px redraw of the entities64 cells in Const.HD128
+  var debrisPacks = new Map<String, Image>(); // the per-tier street litter PACK64s, loaded on first ask
   var defaultTileset: Default;
   var sewerTileset: Sewers;
-  var undergroundLabTileset: UndergroundLab;
 
   public function new(s: GameScene)
     {
@@ -56,10 +60,20 @@ class Images
       // 3D-only 128px skin-variant atlases (2D views keep using the 64px sheets above)
       male128 = loadAtlas128('male');
       female128 = loadAtlas128('female');
+      decoPacks = loadDecoPacks();
+      // and the clue sheet, the same built-art route for one sheet instead of four
+      cluePack = new Image();
+      cluePack.src = AssetPath.resolve('textures/facility/clue-pack.png');
+      // and the 128 px redraw of the sprites, splats and FX the 3D view drew at 64
+      entities128 = new Image();
+      entities128.src = AssetPath.resolve('textures/fx/entities128.png');
+      // and the sewer hatch lid, the same route again for a single cell
+      hatchHD = loadHatchHD();
+      // and the wall vent's grille, the same again
+      ventHD = new Image();
+      ventHD.src = AssetPath.resolve('textures/facility/vent.png');
       defaultTileset = new Default();
       sewerTileset = new Sewers();
-      undergroundLabTileset = new UndergroundLab();
-      tileset = defaultTileset.image;
       }
 
 // load the 3 skin-variant 128px atlases for a gender ([yellow, dark, white])
@@ -73,6 +87,48 @@ class Images
           out.push(img);
         }
       return out;
+    }
+
+// load the hi-res facility bench decoration sheets (3D only; the 2D view keeps entities64).
+//
+// out of textures/ and not img/, which is where every other atlas here lives: these are BUILT ART —
+// art/textures.json carries their prompts and `make tex` writes them — and the img/ sheets are
+// hand-maintained. They are still plain <img> and not render.Textures loads, because the sprite pool
+// crops cells out of a canvas rather than binding a whole texture
+// the hi-res sewer hatch lid (3D only, like the packs above). ONE IMAGE AND ONE CELL, so there is no
+// index table and no arithmetic behind it — the image IS the cell, which is the whole difference
+// between this and the bench and clue packs
+  function loadHatchHD(): Image
+    {
+      var img = new Image();
+      img.src = AssetPath.resolve('textures/city/sewer-hatch.png');
+      return img;
+    }
+
+  function loadDecoPacks(): Array<Image>
+    {
+      var paths = [
+        'facility/bench-pack1',
+        'facility/bench-pack2',
+        'facility/bench-pack3',
+        'facility/bench-pack4',
+        'military/clue-pack',
+        'city/clue-pack',
+      ];
+      var out = [];
+      for (i in 0...Const.decoPackCount())
+        {
+          var img = new Image();
+          img.src = AssetPath.resolve('textures/' + paths[i] + '.png');
+          out.push(img);
+        }
+      return out;
+    }
+
+// one hi-res bench decoration sheet, by the index Const.decoHDPack returns
+  public function getDecoPack(n: Int): Image
+    {
+      return decoPacks[n];
     }
 
 // 3D actor atlas: pick the 128px skin-variant sheet for a gender.
@@ -97,8 +153,6 @@ class Images
         {
           case AREA_SEWERS:
             return sewerTileset;
-          case AREA_UNDERGROUND_LAB:
-            return undergroundLabTileset;
           default:
             return defaultTileset;
         }
@@ -126,8 +180,32 @@ class Images
           case 'undergroundLabObjects1': return undergroundLabObjects1;
           case 'male': return male;
           case 'female': return isMaleAtlas ? male : female;
+          case 'debris-slums', 'debris-city', 'debris-downtown': return debrisPack(name);
+          case 'entities128': return entities128;
           default: return null;
         }
+    }
+
+// a per-tier street litter PACK64 (AreaStyle.debrisPack), loaded the first time a city asks for it
+  function debrisPack(name: String): Image
+    {
+      var img = debrisPacks.get(name);
+      if (img == null)
+        {
+          img = new Image();
+          img.src = AssetPath.resolve('textures/city/' + name + '.png');
+          debrisPacks.set(name, img);
+        }
+      return img;
+    }
+
+// the cell size of an atlas getImage() hands out: a litter pack's or the redraw's 128, the entities
+// grid's otherwise
+  public static function cellSize(name: String): Int
+    {
+      if (name == 'entities128')
+        return Const.HD128_CELL;
+      return (StringTools.startsWith(name, 'debris-') ? Const.DEBRIS_PACK_CELL : Const.TILE_SIZE_CLEAN);
     }
 
 // get random Firmus custos sprite data
@@ -453,6 +531,12 @@ class Images
       { x: 6, y: 8 },
       { x: 7, y: 8 },
     ],
+    'officer' => [
+      { x: 8, y: 7 },
+      { x: 9, y: 7 },
+      { x: 8, y: 8 },
+      { x: 9, y: 8 },
+    ],
     'police' => [
       { x: 0, y: 6 },
       { x: 1, y: 6 },
@@ -478,6 +562,16 @@ class Images
       { x: 5, y: 9 },
       { x: 6, y: 9 },
       { x: 7, y: 9 },
+    ],
+    'soldier' => [
+      { x: 0, y: 11 },
+      { x: 1, y: 11 },
+      { x: 2, y: 11 },
+      { x: 3, y: 11 },
+      { x: 4, y: 11 },
+      { x: 5, y: 11 },
+      { x: 6, y: 11 },
+      { x: 7, y: 11 },
     ],
     'thug' => [
       { x: 0, y: 10 },
@@ -535,6 +629,12 @@ class Images
       { x: 6, y: 10 },
       { x: 7, y: 10 },
     ],
+    'officer' => [
+      { x: 5, y: 15 },
+      { x: 6, y: 15 },
+      { x: 7, y: 15 },
+      { x: 8, y: 15 },
+    ],
     'police' => [
       { x: 9, y: 2 },
       { x: 1, y: 4 },
@@ -558,6 +658,13 @@ class Images
     ],
     'soldier' => [
       { x: 8, y: 7 },
+      { x: 0, y: 16 },
+      { x: 1, y: 16 },
+      { x: 2, y: 16 },
+      { x: 3, y: 16 },
+      { x: 4, y: 16 },
+      { x: 5, y: 16 },
+      { x: 6, y: 16 },
     ],
     'thug' => [
       { x: 0, y: 11 },

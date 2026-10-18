@@ -247,7 +247,7 @@ class AlienMissionCommon
       // NOTE: there can be no office, then the task is easier
       // limit by 100 points
       var solopts = [];
-      var workpts = [];
+      var cubiclepts = [];
       var meetingpts = [];
       var cells = game.area.getCells();
       for (y in 0...cells.length)
@@ -258,12 +258,12 @@ class AlienMissionCommon
                 solopts.push({ x: x, y: y });
               else if (cells[x][y] == Const.TILE_FLOOR_CARPET_MEETING)
                 meetingpts.push({ x: x, y: y });
-              else if (cells[x][y] == Const.TILE_FLOOR_WOOD2)
-                workpts.push({ x: x, y: y });
+              else if (cells[x][y] == Const.TILE_FLOOR_CUBICLE)
+                cubiclepts.push({ x: x, y: y });
           }
         else break;
 
-      // solo office -> meeting room -> work room
+      // solo office -> meeting room -> cubicle farm
       var pt = null;
       if (solopts.length > 0)
         {
@@ -277,8 +277,8 @@ class AlienMissionCommon
         }
       else
         {
-          game.debug('work room found');
-          pt = workpts[Std.random(workpts.length)];
+          game.debug('cubicle farm found');
+          pt = cubiclepts[Std.random(cubiclepts.length)];
         }
 
       return pt;

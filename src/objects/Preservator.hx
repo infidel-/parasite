@@ -4,7 +4,6 @@ package objects;
 
 import ai.AI;
 import game.Game;
-import lighting.AtmosphereLightProfiles;
 
 class Preservator extends HabitatObject
 {
@@ -127,17 +126,5 @@ class Preservator extends HabitatObject
         }
 
       return false;
-    }
-
-// get static atmosphere light emitted by this object
-  public override function getAtmosphereLight(): _AtmosphereLightMeta
-    {
-      return AtmosphereLightProfiles.HABITAT_PRESERVATOR;
-    }
-
-// get atmosphere light stamp kind used by this object
-  public override function getAtmosphereLightKind(): String
-    {
-      return 'habitat-preservator';
     }
 }

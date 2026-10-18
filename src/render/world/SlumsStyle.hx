@@ -1,5 +1,7 @@
 package render.world;
 
+import render.world.Pile.PileKind;
+
 // slums (low-density outskirts) render knobs — the single file to tune the run-down look
 // independently of the mid-density residential default. Facade slots 0-2 keep the residential
 // MATERIALS (concrete/brick/stone — it is the same kind of city, just poorer) but on their own
@@ -10,6 +12,13 @@ package render.world;
 // Ground swaps to a holed sidewalk, a cracked/patched road and a dirt alley, and the houses grow
 // dead-lawn patches. Textures live under textures/slums/.
 class SlumsStyle {
+  // the car wreck (render.world.StreetProps.wrecks): its drawn height (the glb's, half-metre units x
+  // 0.77, as every street piece) and half its drawn length (the glb's 7.4 at that scale), how far it is
+  // parked in from its cells' middle toward the kerb, and how far it may stand turned off square
+  public static inline var CAR_H = 1.93;
+  public static inline var CAR_HALF = 2.84;
+  public static inline var CAR_KERB = 0.4;
+  public static inline var CAR_TURN = 0.15;
   static var _s:AreaStyle;
   public static function get():AreaStyle {
     if (_s == null) {
@@ -170,6 +179,205 @@ class SlumsStyle {
       s.lawnChance = 0.5;
       s.lawnPatchChance = 0.03;
       s.lawnCourtPatches = 2;
+      // the street litter: its own PACK64 (render.decals.Debris)
+      s.debrisPack = 'debris-slums';
+      // each litter cell's drawn longest side in world units, a row of the pack per line: the art
+      // draws every cell the same size, so this is what keeps a matchbox off the scale of a flattened
+      // box. pocket things about twice life so they still read at the street camera, the big flat
+      // ones (rows 6-7) about life size
+      s.debrisSizes = [
+        [0.25, 0.25, 0.25, 0.2, 0.3, 0.3, 0.2, 0.2],      // cans, tin, bottle neck, green and clear shards, caps, butts
+        [0.5, 0.5, 0.28, 0.5, 0.45, 0.35, 0.3, 0.25],     // plastic bag, bin-bag scrap, paper ball, newspaper, cardboard, flyer, wrapper, bones
+        [0.15, 0.25, 0.2, 0.15, 0.25, 0.12, 0.15, 0.18],  // apple core, banana peel, crust, egg shells, noodles, matchsticks, blister pack, nails
+        [0.4, 0.18, 0.4, 0.4, 0.6, 0.12, 0.45, 0.45],     // wire, bolts, brick, rubble, plank, can lid, tyre scrap, rag
+        [0.32, 0.25, 0.16, 0.2, 0.1, 0.25, 0.15, 0.15],   // shoe, sock, comb, spoon and fork, batteries, cassette, cards, toy car
+        [0.3, 0.32, 0.15, 0.12, 0.1, 0.15, 0.15, 0.35],   // brown bottle, plastic bottle, CD, cigarette packet, matchbox, wrappers, stubs, string
+        [1.0, 0.8, 0.6, 1.1, 1.0, 1.0, 0.5, 0.7],         // flattened box, newspaper pages, foam, oil stain, puddle stain, scorch, screen glass, ash
+        [0.9, 0.9, 1.0, 1.1, 1.3, 0.8, 0.9, 1.0],         // dead leaves, rubble, tarp, pallet slats, puddle, glass and gravel, blanket, garbage
+      ];
+      // rusted fire escapes on half the windowed buildings, and tin downpipes that have mostly lost
+      // their feet
+      s.wallKit = render.RenderConfig.MODELS.cityWallKitSlums;
+      s.fireEscapeChance = 0.5;
+      s.downpipeChance = 0.6;
+      s.downpipeBroken = 0.6;
+      // and a broken one empties onto the ground: the pack's puddle at its foot
+      s.pipePuddle = [4, 7];
+      // the junk: sacks heaped beside most dumpsters, and along the walls a cart, tyres, and in the
+      // alleys a mattress. the heaps, the stacks and the cart's load are DEALT per cell from separate
+      // pieces (render.world.Pile). heights are the glbs' (half-metre units x 0.77, CityStyle.DUMPSTER_H's
+      // scale), a part's radius its footprint's
+      var M = render.RenderConfig.MODELS;
+      var sacks:Pile = {
+        kind: HEAP,
+        parts: [
+          {
+            path: M.citySackBurlap,
+            h: 1.31,
+            r: 0.45,
+            weight: 3,
+          },
+          {
+            path: M.citySackPlastic,
+            h: 1.19,
+            r: 0.38,
+            weight: 2,
+          },
+          {
+            path: M.citySackLying,
+            h: 0.53,
+            r: 0.42,
+            weight: 1.5,
+            front: true,
+          },
+          {
+            path: M.cityCartonBox,
+            h: 0.85,
+            r: 0.55,
+            weight: 1,
+            turn: 0.5,
+          },
+          {
+            path: M.cityCartonFlats,
+            h: 0.12,
+            r: 0.48,
+            weight: 1.2,
+            front: true,
+            turn: 0.6,
+          },
+          {
+            path: M.cityCartonLean,
+            h: 1.04,
+            r: 0.45,
+            weight: 1.2,
+            back: true,
+            turn: 0.08,
+          },
+        ],
+        min: 4,
+        max: 8,
+      };
+      s.groundProps = [
+        {
+          path: null,
+          h: 1.31,
+          depth: 1.6,
+          spot: BIN,
+          chance: 0.7,
+          turn: 0.0,
+          pile: sacks,
+        },
+        {
+          path: null,
+          h: 1.31,
+          depth: 1.6,
+          spot: WALL,
+          chance: 0.02,
+          turn: 0.0,
+          pile: sacks,
+        },
+        // kept off the street frontage, turned and leant a little each its own way
+        {
+          path: M.cityMattress,
+          h: 2.82,
+          depth: 1.12,
+          spot: SERVICE,
+          chance: 0.02,
+          turn: 0.25,
+          width: 1.62,
+          lean: 0.06,
+        },
+        // empty, or loaded with sacks, flattened cartons, a bottle or two and the broken board, over
+        // the basket's floor (cart.py's XB0..XB1 x YB at ZB, about the glb's centre)
+        {
+          path: M.cityCart,
+          h: 1.55,
+          depth: 1.4,
+          spot: WALL,
+          chance: 0.015,
+          turn: 0.3,
+          width: 1.54,
+          pile: {
+            kind: LOAD,
+            parts: [
+              {
+                path: M.citySackBurlap,
+                h: 0.7,
+                r: 0.24,
+                weight: 2,
+              },
+              {
+                path: M.citySackPlastic,
+                h: 0.62,
+                r: 0.21,
+                weight: 2,
+              },
+              {
+                path: M.cityCartonFlats,
+                h: 0.07,
+                r: 0.3,
+                weight: 1,
+              },
+              {
+                path: M.cityCartBottle,
+                h: 0.12,
+                r: 0.2,
+                weight: 2.5,
+              },
+              {
+                path: M.cityCartBoard,
+                h: 0.85,
+                r: 0.3,
+                weight: 1.2,
+                at: [ -0.316, 0.774, -0.031 ],
+              },
+            ],
+            min: 0,
+            max: 4,
+            bed: {
+              x0: -0.52,
+              x1: 0.53,
+              z0: -0.34,
+              z1: 0.34,
+              y: 0.78,
+            },
+          },
+        },
+        // a stack of flat tyres at the wall's foot, the rest stood on edge against it or lying by it
+        {
+          path: null,
+          h: 1.25,
+          depth: 1.9,
+          spot: WALL,
+          chance: 0.02,
+          turn: 0.0,
+          pile: {
+            kind: STACK,
+            parts: [
+              {
+                path: M.cityTyre,
+                h: 0.416,
+                r: 0.504,
+                weight: 2,
+              },
+              {
+                path: M.cityTyreMud,
+                h: 0.416,
+                r: 0.504,
+                weight: 1.5,
+              },
+              {
+                path: M.cityTyreRim,
+                h: 0.416,
+                r: 0.504,
+                weight: 1.2,
+              },
+            ],
+            min: 1,
+            max: 5,
+          },
+        },
+      ];
       _s = s;
     }
     return _s;

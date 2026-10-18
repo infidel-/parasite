@@ -28,12 +28,17 @@ class FreeCam {
     setIndicator();
 
     Browser.window.addEventListener('keydown', function(e:js.html.KeyboardEvent) {
-      if (!Tools.enabled) return; // only in street-debug mode
-      if (e.code == 'KeyF') { if (active) { active = false; setIndicator(); } else activate(); }
+      // street-debug mode, or flying in the camera fly mode (render.View.setCine), which keeps F off
+      if (!Tools.enabled && !active) return;
+      if (e.code == 'KeyF' && Tools.enabled) { if (active) { active = false; setIndicator(); } else activate(); }
       if (active) keys.set(e.code, true);
     });
     Browser.window.addEventListener('keyup', function(e:js.html.KeyboardEvent) keys.remove(e.code));
-    dom.addEventListener('mousedown', function(e:js.html.MouseEvent) { if (active && e.button == 0) dragging = true; });
+    // LMB is the emissive brush while paint mode owns it, so drag-look moves to ctrl+LMB there
+    dom.addEventListener('mousedown', function(e:js.html.MouseEvent) {
+      if (Tools.mode == 'paint' && !e.ctrlKey) return;
+      if (active && e.button == 0) dragging = true;
+    });
     Browser.window.addEventListener('mouseup', function(_) dragging = false);
     Browser.window.addEventListener('mousemove', function(e:js.html.MouseEvent) {
       if (!active || !dragging) return;

@@ -3,7 +3,6 @@ package abilities;
 
 import ai.AI;
 import effects.BlackNoise;
-import particles.ParticleSilentScream;
 
 class ChoirSilentScream extends Ability
 {
@@ -51,14 +50,8 @@ class ChoirSilentScream extends Ability
       if (affected == 0)
         return false;
 
-      // 3D view live: expanding dome + screen shockwave instead of the flat 2D rings
-      var scene = target.game.scene;
-      if (scene.view3d == null ||
-          !scene.view3d.playScream(ai.x, ai.y))
-        new ParticleSilentScream(scene, {
-          x: ai.x,
-          y: ai.y
-        });
+      // expanding dome + screen shockwave
+      target.game.scene.view3d.playScream(ai.x, ai.y);
       target.game.scene.sounds.play('ability-silent-scream', {
         x: ai.x,
         y: ai.y,

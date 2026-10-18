@@ -2,18 +2,12 @@
 
 package entities;
 
-import js.html.CanvasRenderingContext2D;
-
 import ai.AI;
 import game.Game;
 
 class AIEntity extends PawnEntity
 {
   public var ai: AI; // AI link
-  // -1, 0: do not draw
-  var alertx: Int; // alert frame (new draw)
-  var effectIcon: _Icon; // currently active effect icon
-  var isNPC: Bool;
   public var isMissionTarget: Bool;
 
 
@@ -21,98 +15,8 @@ class AIEntity extends PawnEntity
     {
       super(g, xx, yy);
 
-      alertx = -1;
-      effectIcon = null;
-      isNPC = false;
       isMissionTarget = false;
       ai = vai;
-      type = "ai";
-    }
-
-
-// set alert image index
-  public inline function setAlert(index: Int)
-    {
-      alertx = index;
-    }
-
-// set effect image index
-  public inline function setEffect(icon: _Icon)
-    {
-      effectIcon = icon;
-    }
-
-// ai entity draw
-  public override function draw(ctx: CanvasRenderingContext2D)
-    {
-      // get targeting/target flags
-      var showTargeting = false;
-      var showTarget = false;
-      if (game.ui.hud.state == HUD_TARGETING &&
-          game.ui.hud.targeting.isTargetingAI(ai))
-        showTargeting = true;
-      if (game.ui.hud.targeting.isTargetedAI(ai))
-        showTarget = true;
-
-      // draw target frame
-      if (showTarget)
-        drawImage(ctx, game.scene.images.entities,
-          Const.FRAME_TARGET_FRAME,
-          Const.ROW_REGION_ICON);
-
-      // draw pawn image (mask -> entity -> text)
-      super.draw(ctx);
-
-      // draw alert icon
-      if (alertx > 0)
-        {
-          if (ai.state == AI_STATE_SEARCH_LAST_SEEN ||
-              ai.state == AI_STATE_SEARCH_AREA)
-            drawImage(ctx, game.scene.images.entities,
-              Const.FRAME_SEARCH,
-              Const.ROW_EFFECT);
-          else drawImage(ctx, game.scene.images.entities,
-            alertx, Const.ROW_ALERT);
-        }
-      // draw npc/mission target icon
-      if (isNPC || isMissionTarget)
-        drawImage(ctx, game.scene.images.entities,
-          Const.FRAME_EVENT_NPC_AREA,
-          Const.ROW_REGION_ICON);
-      // draw cultist icon
-      if (ai.isPlayerCultist())
-        drawImage(ctx, game.scene.images.entities,
-          Const.FRAME_CULTIST0,
-          Const.ROW_EFFECT);
-      else if (ai.isCultist)
-        drawImage(ctx, game.scene.images.entities,
-          Const.FRAME_CULTIST_UNKNOWN,
-          Const.ROW_EFFECT);
-      // draw effect icon
-      if (effectIcon != null)
-        drawImage(ctx, game.scene.images.entities,
-          effectIcon.col,
-          effectIcon.row);
-
-      // draw target reticle
-      if (showTargeting)
-        {
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-          ctx.shadowBlur = 5;
-          ctx.shadowOffsetX = 1;
-          ctx.shadowOffsetY = 1;
-          drawImage(ctx, game.scene.images.entities,
-            Const.FRAME_TARGET_RETICLE,
-            Const.ROW_REGION_ICON);
-          ctx.shadowColor = 'transparent';
-        }
-    }
-
-
-// set npc flag
-  public inline function setNPC()
-    {
-      isNPC = true;
     }
 
 // set mission target flag

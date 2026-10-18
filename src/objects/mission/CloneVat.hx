@@ -102,11 +102,6 @@ class CloneVat extends AreaObject
           vat.isFlushed = true;
           vat.updateVatIcon();
         }
-      if (game != null &&
-          game.area != null &&
-          game.scene != null &&
-          game.scene.areaLighting != null)
-        game.scene.areaLighting.invalidateArea(game.area);
     }
 
 // allow using the vat from adjacent tiles
@@ -127,11 +122,13 @@ class CloneVat extends AreaObject
       return 0;
     }
 
-// expose mission action for vat flushing
+// expose mission action for vat flushing, on the console's two front parts. Listed ONCE: next to
+// both of one console, or between two vats, the player would otherwise get two identical purges
   override function updateActionList()
     {
       if (isFlushed ||
-          vatPartIndex < 4)
+          vatPartIndex < 4 ||
+          game.ui.hud.hasAction('flushCloneVat'))
         return;
 
       game.ui.hud.addAction({

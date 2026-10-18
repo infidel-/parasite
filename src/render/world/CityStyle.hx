@@ -1,5 +1,7 @@
 package render.world;
 
+import render.world.Pile.PileKind;
+
 // medium-density residential render knobs — the single file to tune the default city look,
 // the one every area that is not the downtown core or the low-density outskirts renders with.
 // Masonry mid-rises (concrete/brick/stone) plus a metal-warehouse special slot, punched windows
@@ -8,6 +10,14 @@ package render.world;
 // CityStyle.get() for every facade they reuse verbatim, so a path fixed here fixes all three.
 // Textures live under textures/city/.
 class CityStyle {
+  // the street dumpster (objects.Dumpster, models-src/city/kit/dumpster.py) at its world size. a model
+  // half-metre is 0.77 world here, the scale that stands a 1.85 m bin beside a 1.75 m actor sprite;
+  // each height is that glb's whole bbox, so the one scale serves the shut bin and the slums one whose
+  // lid stands thrown back. BACK is how far off its cell centre a bin steps toward the wall behind it
+  public static inline var DUMPSTER_H = 1.93;
+  public static inline var DUMPSTER_SLUMS_H = 3.38;
+  public static inline var DUMPSTER_BACK = 1.15;
+  public static inline var DUMPSTER_SLUMS_BACK = 1.13;
   static var _s:AreaStyle;
   public static function get():AreaStyle {
     if (_s == null) {
@@ -106,6 +116,107 @@ class CityStyle {
       s.lawnFacades = [];
       s.lawnCourtPatches = 1;
       s.lawnPatchChance = 0.01;
+      // the street litter: its own PACK64 (render.decals.Debris)
+      s.debrisPack = 'debris-city';
+      // each litter cell's drawn longest side in world units, a row of the pack per line: the art
+      // draws every cell the same size, so this is what keeps a matchbox off the scale of a flattened
+      // box. pocket things about twice life so they still read at the street camera, the big flat
+      // ones (rows 6-7) about life size. no leaves, twigs or needles: a 0 is never laid
+      s.debrisSizes = [
+        [0.25, 0.25, 0.2, 0.2, 0.32, 0.18, 0.3, 0.2],     // cans, caps, butts, coffee cup, lid, straw, gum
+        [0.25, 0.35, 0.45, 0.18, 0.18, 0.25, 0.25, 0.15], // receipt, flyer, poster scrap, ticket, scratch card, envelope, napkin, wrapper
+        [0.3, 0.25, 0.18, 0.25, 0.2, 0.2, 0.3, 0.18],     // burger wrapper, fries, sachets, crust, candy wrapper, fork, chopsticks, slip
+        [0, 0, 0.3, 0.5, 0.45, 0.4, 0.32, 0.3],           // (maple leaf), (twigs), feathers, plastic bag, newspaper, magazine page, bottles
+        [0.28, 0.2, 0.35, 0.12, 0.15, 0.15, 0.15, 0.12],  // glove, sunglasses, cable, earbud, keys, coins, rubber bands, clips
+        [0.15, 0.12, 0.3, 0.4, 0, 0, 0, 0.2],             // cigarette packet, matchbook, six-pack ring, paper bag, (leaves), (needles), (acorns), tissue
+        [0.6, 0.8, 1.0, 1.1, 0.6, 1.2, 0.8, 0.7],         // pizza box, newspaper spread, cardboard, oil stain, coffee spill, puddle, grit, skid rubber
+        [0, 1.0, 0.6, 0.6, 0.6, 0.4, 0.35, 0.9],          // (leaf pile), umbrella, spilled shopping, glass cubes, map, chips bag, cup carrier, tarp
+      ];
+      // black-iron fire escapes on a third of the windowed blocks, cast-iron downpipes on half
+      s.wallKit = render.RenderConfig.MODELS.cityWallKit;
+      s.fireEscapeChance = 0.35;
+      s.downpipeChance = 0.5;
+      // the kerb and the walls: bags out for collection, hydrants, meters, news boxes, the gas meters.
+      // heights are the glbs' (half-metre units x 0.77, DUMPSTER_H's scale)
+      // the bags are DEALT per cell from three separate ones (render.world.Pile), a heap of its own
+      // on every wall or kerb that takes one
+      var bags:Pile = {
+        kind: HEAP,
+        parts: [
+          {
+            path: render.RenderConfig.MODELS.cityBagBlack,
+            h: 1.24,
+            r: 0.47,
+            weight: 3,
+          },
+          {
+            path: render.RenderConfig.MODELS.cityBagGreen,
+            h: 1.19,
+            r: 0.45,
+            weight: 2,
+          },
+          {
+            path: render.RenderConfig.MODELS.cityBagSmall,
+            h: 0.91,
+            r: 0.35,
+            weight: 2,
+          },
+        ],
+        min: 4,
+        max: 8,
+      };
+      s.groundProps = [
+        {
+          path: null,
+          h: 1.24,
+          depth: 1.55,
+          spot: WALL,
+          chance: 0.025,
+          turn: 0.0,
+          pile: bags,
+        },
+        {
+          path: null,
+          h: 1.24,
+          depth: 1.55,
+          spot: KERB,
+          chance: 0.012,
+          turn: 0.0,
+          pile: bags,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityHydrant,
+          h: 1.16,
+          depth: 0.77,
+          spot: KERB,
+          chance: 0.025,
+          turn: 0.3,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityMeter,
+          h: 2.0,
+          depth: 0.26,
+          spot: KERB,
+          chance: 0.04,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityNewsbox,
+          h: 1.69,
+          depth: 0.77,
+          spot: WALL,
+          chance: 0.012,
+          turn: 0.0,
+        },
+        {
+          path: render.RenderConfig.MODELS.cityMeters,
+          h: 1.79,
+          depth: 0.53,
+          spot: WALL,
+          chance: 0.015,
+          turn: 0.0,
+        },
+      ];
       _s = s;
     }
     return _s;

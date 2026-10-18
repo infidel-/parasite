@@ -71,10 +71,7 @@ class Targeting
       hud.state = HUD_TARGETING;
       game.updateHUD();
       if (game.location == LOCATION_AREA)
-        {
-          game.scene.mouse.update(true);
-          game.scene.area.draw();
-        }
+        game.scene.mouse.update(true);
       return true;
     }
 
@@ -89,8 +86,6 @@ class Targeting
         {
           game.scene.mouse.update(true);
           game.updateHUD();
-          if (game.location == LOCATION_AREA)
-            game.scene.area.draw();
         }
     }
 
@@ -113,8 +108,6 @@ class Targeting
             index = 0;
         }
       targetingTarget = list[index];
-      if (game.location == LOCATION_AREA)
-        game.scene.area.draw();
     }
 
 // confirm target and exit targeting
@@ -161,7 +154,6 @@ class Targeting
 
       index = i;
       targetingTarget = list[index];
-      game.scene.area.draw();
       return true;
     }
 

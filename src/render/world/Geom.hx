@@ -83,9 +83,11 @@ class Geom {
   public static function doorRuns(b:Building, dir:Int):Array<{lo:Int, hi:Int}> {
     var tiles = WorldCtx.tiles;
     var dc = DIRV[dir][0], dr = DIRV[dir][1];
+    // a cell the area keeps something standing on (WorldCtx.doorBlocked) ends a run like a wall does
+    var blocked = WorldCtx.doorBlocked;
     inline function clear(idx:Int):Bool {
-      if (dc != 0) { var col = dc > 0 ? b.col + b.w : b.col - 1; return col < 0 || col >= GRID || tiles[idx][col] != Tile.Building; }
-      var row = dr > 0 ? b.row + b.d : b.row - 1; return row < 0 || row >= GRID || tiles[row][idx] != Tile.Building;
+      if (dc != 0) { var col = dc > 0 ? b.col + b.w : b.col - 1; return col < 0 || col >= GRID || (tiles[idx][col] != Tile.Building && (blocked == null || !blocked(col, idx))); }
+      var row = dr > 0 ? b.row + b.d : b.row - 1; return row < 0 || row >= GRID || (tiles[row][idx] != Tile.Building && (blocked == null || !blocked(idx, row)));
     }
     var lo = dc != 0 ? b.row : b.col;
     var hi = dc != 0 ? b.row + b.d : b.col + b.w; // exclusive

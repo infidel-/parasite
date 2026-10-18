@@ -12,12 +12,10 @@ class GameScene
 {
   public var game: Game; // game state link
   public var area: AreaView; // area view
-  public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
   public var view3d: render.View; // 3D area view (city streets + the underground tunnels)
   public var mouse: Mouse; // mouse cursor entity
   public var sounds: Sounds;
-  public var controlPressed: Bool; // Ctrl key pressed?
   public var controlKey: String; // ctrl / alt
   public var shiftPressed: Bool; // Shift key pressed?
   var isFullScreen: Bool; // game is in fullscreen mode?
@@ -44,7 +42,6 @@ class GameScene
   var _enter3D: Bool = false; // a 3D-view enter fade+build is in flight (guard re-entry)
   static inline var FADE_MS = 150; // transition fade duration (1x BASE_MS)
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
-  var _renderStatsArea: _RenderStats;
   var _renderStatsRegion: _RenderStats;
 
 
@@ -53,7 +50,6 @@ class GameScene
       isFocused = true; // may not be true but we want the game to play immediately
       isFullScreen = false;
       game = g;
-      controlPressed = false;
       shiftPressed = false;
       cameraTileX1 = 0;
       cameraTileY1 = 0;
@@ -74,7 +70,6 @@ class GameScene
         {
           resize();
         };
-      _renderStatsArea = createRenderStats();
       _renderStatsRegion = createRenderStats();
     }
 
@@ -91,7 +86,6 @@ class GameScene
       images = new Images(this);
       mouse = new Mouse(game);
       area = new AreaView(this);
-      areaLighting = new AreaLighting(this);
       region = new RegionView(this);
       view3d = new render.View(game);
       fader = new Fader();
@@ -206,17 +200,12 @@ class GameScene
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.textAlign = 'center';
 
-      if (game.location == LOCATION_AREA && is3DArea())
+      if (game.location == LOCATION_AREA)
         draw3D();
-
-      else if (game.location == LOCATION_AREA)
-        {
-          hide3D();
-          game.scene.area.draw();
-        }
 
       else if (game.location == LOCATION_REGION)
         {
+          game.ui.resumeQueue();
           // leaving a city area: let the zoom-in outro finish (it covers the region); its
           // completion (on3DExitDone) covers to black, then draws/generates the region under
           // black. don't draw the region now — that would run the heavy first-draw gen stall
@@ -231,27 +220,13 @@ class GameScene
         }
     }
 
-// is the current area rendered in 3D? city streets, the underground tunnels (sewers share their
-// generator with the habitat, so both come out as the same Sewers.TILE_FLOOR grid) and the open
-// wilderness
-  public inline function is3DArea(): Bool
-    {
-      return game.area != null &&
-        (game.area.info.type == 'city' ||
-         game.area.info.type == 'sewers' ||
-         game.area.info.type == 'habitat' ||
-         game.area.info.type == 'wilderness' ||
-         game.area.info.type == 'facility');
-    }
-
 // an object that draws as a 3D prop appeared or vanished in the area on screen. object props are
 // placed once at area build, so without this a habitat object grown under the player would draw
 // nothing at all until the area was left and re-entered (its sprite is dropped the moment it has a
 // model). objects drawn as sprites need none of this — the actor layer re-reads them every frame
   public function updateObjects3D()
     {
-      if (!is3DArea() ||
-          !view3d.running)
+      if (!view3d.running)
         return;
       view3d.refreshObjects();
     }
@@ -263,7 +238,7 @@ class GameScene
         game.area.info.type == 'city';
     }
 
-// show/refresh the 3D view for the current area (skips 2D area draw). (re)builds only
+// show/refresh the 3D view for the current area. (re)builds only
 // when the shown area changes; seeded areas regenerate from the seed, old seedless
 // saves reconstruct plain boxes from the saved tile grid
   function draw3D()
@@ -271,38 +246,81 @@ class GameScene
       if (_enter3D)
         return;
       if (game.area.id == _view3dArea && view3d.running)
-        return;
+        {
+          game.ui.resumeQueue();
+          return;
+        }
       // cover to black, then build the city + arm the zoom-out intro UNDER black (the geometry
       // build + async texture decode is the enter stall), then reveal as the intro plays
       _enter3D = true;
       _view3dArea = game.area.id;
+      view3d.stale = true;
       fader.cover(FADE_MS, function()
         {
-          if (game.area.info.type == 'wilderness')
-            view3d.showWild(game.area);
-          else if (game.area.info.type == 'facility')
-            view3d.showFacility(game.area);
-          else if (!isCityArea())
-            view3d.showSewer(game.area);
-          else if (game.area.cityGenSeed >= 0)
-            view3d.show(game.area.cityGenSeed);
-          else view3d.showCity(reconstructCity());
-          _enter3D = false;
-          // reveal only once the view has PRESENTED a frame: the first composer.render
-          // compiles every scene shader (a multi-second stall on a cold driver cache) and
-          // would otherwise run over an already-revealed, never-drawn black canvas.
-          // timeout = backstop so black never sticks if the loop dies before a frame
-          var revealed = false;
-          var reveal = function()
+          // the boot pre-warm covers the CITY only, because waiting for the tunnels' and the
+          // facility's ~20 glbs put 7.6s on the warmup screen for art most sessions never reach.
+          // so a kind pays for its own warm here, on the first entry to it, under the black this
+          // fader has already brought up — and warmKind is a straight call-through for a city, a
+          // wilderness, or a kind already warmed (see render.View.warmKind)
+          // and the WARMUP SCREEN goes back up over it when there is a warm to wait for. the
+          // per-kind warm is ~1.7s of blocked main thread for the facility, and behind the fader's
+          // plain black that is a second and a half of nothing — the same complaint the boot screen
+          // was added for (docs/3d-changes.md, "the boot warm gets a SCREEN"). asked of `needsWarm`
+          // rather than shown unconditionally, because a kind already warmed is a straight
+          // call-through and a screen for it would be a flash
+          var warmEl = (view3d.needsWarm(game.area.info.type)
+            ? Browser.document.getElementById('warmup') : null);
+          if (warmEl != null)
+            warmEl.classList.remove('off');
+          view3d.warmKind(game.area.info.type, function()
             {
-              if (revealed)
-                return;
-              revealed = true;
-              fader.reveal(FADE_MS);
-            };
-          view3d.onFirstFrame(reveal);
-          Browser.window.setTimeout(reveal, 5000);
+              if (game.area.info.type == 'wilderness')
+                view3d.showWild(game.area);
+              else if (game.area.info.type == 'facility' ||
+                  game.area.info.type == 'militaryBase')
+                view3d.showFacility(game.area);
+              else if (game.area.info.type == 'corp')
+                view3d.showCorp(game.area);
+              else if (game.area.info.type == 'undergroundLab')
+                view3d.showLab(game.area);
+              else if (!isCityArea())
+                view3d.showSewer(game.area);
+              else if (game.area.cityGenSeed >= 0)
+                view3d.show(game.area.cityGenSeed);
+              else view3d.showCity(reconstructCity());
+              _enter3D = false;
+              view3d.stale = false;
+              // reveal only once the view has PRESENTED a frame: the first composer.render
+              // compiles every scene shader (a multi-second stall on a cold driver cache) and
+              // would otherwise run over an already-revealed, never-drawn black canvas.
+              // timeout = backstop so black never sticks if the loop dies before a frame
+              var revealed = false;
+              var reveal = function()
+                {
+                  if (revealed)
+                    return;
+                  revealed = true;
+                  // the screen comes down on the same beat the fader lifts — it sits above the
+                  // fader (z 100000), so hiding it uncovers black that is already fading out
+                  if (warmEl != null)
+                    warmEl.classList.add('off');
+                  fader.reveal(FADE_MS);
+                  // and only now the windows the entry fired (held by Game.setLocation)
+                  game.ui.resumeQueue();
+                };
+              view3d.onFirstFrame(reveal);
+              Browser.window.setTimeout(reveal, 5000);
+            });
         });
+    }
+
+// forget which area the 3D view is showing, so the next draw3D rebuilds it — the view keeps
+// running and nothing is torn down. BOTH guards have to be cleared or the other one still skips the
+// rebuild. called on LOAD; see render.View.forget for what goes wrong without it
+  public function forget3D()
+    {
+      _view3dArea = -1;
+      view3d.forget();
     }
 
 // hide the 3D view and forget the shown area (so re-entry rebuilds). the outro plays first;
@@ -354,13 +372,6 @@ class GameScene
       return Timer.stamp() * 1000;
     }
 
-// add area render timing sample
-  public inline function endRenderSampleArea(startTS: Float)
-    {
-      updateRenderStats(_renderStatsArea,
-        Timer.stamp() * 1000 - startTS);
-    }
-
 // add region render timing sample
   public inline function endRenderSampleRegion(startTS: Float)
     {
@@ -368,42 +379,17 @@ class GameScene
         Timer.stamp() * 1000 - startTS);
     }
 
-// get formatted area render stats text
-  public inline function getAreaRenderStatsText(): String
-    {
-      return formatRenderStats('Area', _renderStatsArea);
-    }
-
-// get formatted area smooth los overlay render stats text
-  public inline function getAreaSmoothLOSRenderStatsText(): String
-    {
-      if (area == null)
-        return Const.small('Area smooth LOS overlay render time (ms): N/A<br/>' +
-          'Area smooth LOS overlay counts: N/A');
-      return area.getSmoothLOSRenderStatsText();
-    }
-
 // get plain render profile text for browser console copy-paste
   public function getRenderStatsConsoleText(): String
     {
       return 'Parasite render profile\n' +
-        formatRenderStatsConsole('Region', _renderStatsRegion) + '\n' +
-        formatRenderStatsConsole('Area', _renderStatsArea) + '\n' +
-        getAreaSmoothLOSRenderStatsConsoleText();
+        formatRenderStatsConsole('Region', _renderStatsRegion);
     }
 
 // log render profile to browser console
   public inline function logRenderStatsToConsole()
     {
       Browser.console.log(getRenderStatsConsoleText());
-    }
-
-// get plain area smooth los overlay profile for browser console copy-paste
-  public inline function getAreaSmoothLOSRenderStatsConsoleText(): String
-    {
-      if (area == null)
-        return 'Area smooth LOS overlay: no samples';
-      return area.getSmoothLOSRenderStatsConsoleText();
     }
 
 // get formatted region render stats text
@@ -500,8 +486,7 @@ class GameScene
     {
       canvas.width = Math.ceil(Browser.window.innerWidth * Browser.window.devicePixelRatio);
       canvas.height = Math.ceil(Browser.window.innerHeight * Browser.window.devicePixelRatio);
-      if (view3d != null)
-        view3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
+      view3d.resize(Browser.window.innerWidth, Browser.window.innerHeight);
       updateCamera();
       if (game.location == LOCATION_AREA)
         {

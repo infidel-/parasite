@@ -29,10 +29,29 @@ class TacticalGrid
   // the fill reads as fill and not as a second lattice on top of the corner marks
   static inline var HATCH = 1.0;    // world units between diagonal stripes (CELL / 4 = 7 per cell)
   static inline var HATCH_W = 0.010; // hatch line half-width (cells)
+  static inline var EPS = 0.01;      // hatch height sample nudge off a cell boundary (world units)
   // HDR color multiplier: must clear BLOOM_THRESHOLD (0.9) in bloom's luminance metric (blue
   // weighs only 0.11) after the alpha mix, with headroom — subpixel segments get diluted by
   // the AA/downsample average and cut out of the glow otherwise
   static inline var GLOW = 5.0;
+  // the door arrows: tip to tip, and how far the barbs reach back off each tip, both in cells. much
+  // bigger than the lattice's own ARM, because this is a MARK and not a texture — it has to read as
+  // one shape at the tactical camera rather than as two more crosses.
+  //
+  // AND THE LENGTH IS SET BY THE WALL, not by the cell — so ARROW_LEN is over 1.0 and the glyph
+  // deliberately leaves its own tile. It lies on the DOORWAY tile, where FacilityStyle.WALL_T 2.0 of
+  // masonry stands centred in a 4.0 cell and rises WALL_H 6.0 — and at the facility camera's 51
+  // degrees a wall hides `6 / tan(pitch)` = 4.9 units of floor behind it (RenderConfig's own
+  // figure). So an arrow that FITS the cell shows ONE HEAD: measured at 0.78 and again at 1.20, the
+  // far tip was inside that band on every door. 2.00 reaches HALF A TILE past the cell on each
+  // side, which clears it; 2.60 and 3.00 were tried and are further than the read needs, 3.00
+  // landing its heads on the NEXT cell's crosses.
+  //
+  // the two have to be read together: a head eats `LEN/2 - BARB` of shaft at each end, so at 0.52
+  // over a 0.24 barb the two heads met in the middle and the glyph came out a diamond
+  static inline var ARROW_LEN = 2.00;
+  static inline var ARROW_BARB = 0.28;
+  static inline var ARROW_W = 0.022; // thicker than the lattice, for the same reason
 
   var scene:Scene;
   var area:AreaGame;
@@ -110,6 +129,7 @@ class TacticalGrid
                     marks.set(key, y);
                 }
           }
+      arrows(pos, idx);
       // one small cross per marked corner
       var arm = CityConfig.CELL * ARM;
       for (key in marks.keys())
@@ -146,6 +166,65 @@ class TacticalGrid
       untyped mesh.geometry = geometry;
     }
 
+// a double-headed arrow on the floor OF every door cell in the window, lying along the passage it
+// opens. ON THE DOORWAY TILE ITSELF and not on the approach to it: the mark is then a label on the
+// door rather than an instruction to the player, and it reads the same from either side.
+//
+// ASKED OF THE DOOR OBJECT AND OF WALKABILITY, never of a model: `objects.Door` is laid by
+// gen.GenSpawner for every generator that deals one, so this works in a compound, an underground lab
+// and anywhere else alike, where render.facility.FacilityModel.DoorCell (which carries a real
+// `alongX`/`inDir`) exists only in a facility. The door object itself carries no orientation either —
+// only its icon frames — so the passage axis is read off the two opposed neighbours that are open.
+//
+// TWO HEADS, so no side and no player. The single arrow this replaced had to pick the approach cell
+// nearer the player and turn over when he stepped through; a doorway is passable both ways and the
+// glyph now says so, which also takes the last thing the arrows asked of the rebuild centre.
+//
+// no open/shut state on it, so no new `invalidate` hook: an arrow marks a door you can go through,
+// which is true whether the leaf is standing open or not
+  function arrows(pos:Array<Float>, idx:Array<Int>):Void
+    {
+      var it = area.getObjects();
+      while (it.hasNext())
+        {
+          var o = it.next();
+          if (o.type != 'door' ||
+              o.x < ccol - RADIUS ||
+              o.x > ccol + RADIUS ||
+              o.y < crow - RADIUS ||
+              o.y > crow + RADIUS)
+            continue;
+          // the axis the doorway passes along: the one whose two opposed neighbours are BOTH open.
+          // asked of the neighbours and not of the door's own cell, which a shut leaf blocks
+          var ux = 0.0, uz = 0.0;
+          if (area.isWalkable(o.x, o.y - 1) &&
+              area.isWalkable(o.x, o.y + 1))
+            uz = 1;
+          else if (area.isWalkable(o.x - 1, o.y) &&
+                   area.isWalkable(o.x + 1, o.y))
+            ux = 1;
+          else continue;
+          var c = cellToWorld(o.x, o.y);
+          var y = WorldCtx.floorY(o.x, o.y) + Y;
+          var barb = CityConfig.CELL * ARROW_BARB;
+          var hx = ux * CityConfig.CELL * ARROW_LEN * 0.5;
+          var hz = uz * CityConfig.CELL * ARROW_LEN * 0.5;
+          addSeg(pos, idx, c.x - hx, c.z - hz, y, c.x + hx, c.z + hz, y, ARROW_W);
+          // a head on each end: two barbs swept back off the tip at 45 degrees either side of the
+          // shaft. the perpendicular is (-uz, ux), so each barb is one step back along the shaft
+          // plus one across it
+          for (s in [ -1.0, 1.0 ])
+            {
+              var tipX = c.x + hx * s, tipZ = c.z + hz * s;
+              var bx = ux * barb * s, bz = uz * barb * s;
+              addSeg(pos, idx, tipX, tipZ, y,
+                tipX - bx - uz * barb, tipZ - bz + ux * barb, y, ARROW_W);
+              addSeg(pos, idx, tipX, tipZ, y,
+                tipX - bx + uz * barb, tipZ - bz - ux * barb, y, ARROW_W);
+            }
+        }
+    }
+
 // one non-passable cell: a dashed line along each edge it shares with a walkable neighbour, plus the
 // diagonal hatch inside it. PERIMETER only, like the dashed rectangle render.Occlusion draws around a
 // faded building's footprint — dashing every edge would fill the inside of a thicket with a lattice.
@@ -156,8 +235,33 @@ class TacticalGrid
       // .Ground paves road/alley/walkway only), so the dashes would hang in midair under a solid
       // wall that hides them — and the moment the block DOES fade, which in tactical is the whole
       // selected block, render.Occlusion already draws that identical rectangle a hair above them.
-      // what is left over is what actually surprises a player: barrels, objects, blocking decoration
-      if (area.getCellType(col, row) == Const.TILE_BUILDING)
+      // what is left over is what actually surprises a player: barrels, objects, blocking decoration.
+      //
+      // the CITY test is load-bearing, not decoration. a facility wall is the same TILE_BUILDING and
+      // not one word of the above holds for it: it is a half-cell slab with real floor either side
+      // (render.facility.FacilityGeom.strips), nothing ever fades it, and no Occlusion runs there.
+      // skipping it left 186 of the 330 blocked cells in one tactical window unmarked, while the
+      // WINDOWS in the same wall — a different tile — drew dashes and hatch in full
+      if (area.isCity() &&
+          area.getCellType(col, row) == Const.TILE_BUILDING)
+        return;
+      // AND THE OUTDOOR VOID, which is not an obstacle and is the second half of the same rule. A
+      // corp tower's plate is a floor twenty storeys up and everything off it is drawn as the
+      // alley the 2D view has always put there (gen.corp.CorpGen fills the whole area with ALLEY
+      // before it carves), so out to RADIUS 16 in every direction the lattice was hatching the
+      // empty air around the building — at y = 0.06, floating 114 units above the street it looks
+      // painted on. These three ids are the outdoor surfaces that are unwalkable BY BEING SCENERY
+      // rather than by something standing on them, so the rule is general and not corp's alone.
+      //
+      // EXCEPT IN THE CITY, where the same three ids mean the opposite: something IS standing there.
+      // game.AreaGenerator.makeTileUnwalkable flips a street cell under a burning barrel and under
+      // both cells of a slums car wreck, which is decoration with no object of its own, so this hatch
+      // is the only thing in tactical that says the street is blocked there
+      var t = area.getCellType(col, row);
+      if (!area.isCity() &&
+          (t == Const.TILE_ALLEY_UNWALKABLE ||
+          t == Const.TILE_ROAD_UNWALKABLE ||
+          t == Const.TILE_WALKWAY_UNWALKABLE))
         return;
       var half = CityConfig.CELL / 2;
       var c = cellToWorld(col, row);
@@ -191,12 +295,25 @@ class TacticalGrid
           // slope between them. in the city floorYAt routes back to this cell's own step
           if (xb - xa >= 0.001)
             addSeg(pos, idx,
-              xa, s - xa, WorldCtx.floorYAt(xa, s - xa) + Y,
-              xb, s - xb, WorldCtx.floorYAt(xb, s - xb) + Y,
+              xa, s - xa, hatchY(xa, s - xa, c) + Y,
+              xb, s - xb, hatchY(xb, s - xb, c) + Y,
               HATCH_W);
           s += HATCH;
         }
     }
+
+// ground height under one hatch endpoint, sampled a hair INSIDE the cell the stripe belongs to.
+//
+// an endpoint of a clipped stripe lies exactly ON a cell boundary, and citygen.CityConfig.worldToCell
+// ROUNDS, so a boundary coordinate lands in the NEXT cell — x0/z0 round back into this cell, x1/z1
+// into the neighbour. that only shows where the two cells stand at different heights, which in a
+// facility is every edge of a laboratory bench: a stripe ending on the block's +x or +z side read the
+// bare room floor beside the worktop and was drawn a metre down inside the casework. measured on one
+// 3x2 island, endpoints landing on the top: 14/14 for a cell whose far neighbours are bench, 10/14 on
+// an outer cell, 6/14 on the far corner — the half-hatched table it was reported as. the nudge is far
+// under any relief the wilderness carries, so a sloped floor answers with the height it did before
+  inline function hatchY(x:Float, z:Float, c:{x:Float, z:Float}):Float
+    return WorldCtx.floorYAt(x + (x < c.x ? EPS : -EPS), z + (z < c.z ? EPS : -EPS));
 
 // height of a dash on the seam between the cell it outlines (already lifted, `y`) and its neighbour
   inline function edgeY(y:Float, ncol:Int, nrow:Int):Float

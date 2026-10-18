@@ -39,7 +39,7 @@ class SewerStyle
   public static inline var LEDGE = 'textures/sewer/ledge.png';   // flat top of a wall, seen from the overhead camera
   public static inline var GRIME = 'textures/sewer/grime.png';   // damp base band; alpha is hand-painted into the source
   // NO sludge gutter and NO ledge pipe run. both are switched off, so their paths are not listed
-  // here — the art itself is still registered in textures-src/textures.json (sewer/sludge,
+  // here — the art itself is still registered in art/textures.json (sewer/sludge,
   // sewer/top-pipe-1) and still builds, so reviving either is a path plus its emit
 
   // wall detail decals. these ARE the old wall-worn variant, broken into pieces: everything that
@@ -150,8 +150,9 @@ class SewerStyle
   public static inline var TOP_VALVE = 'textures/sewer/top-valve-1.png';
   public static inline var TOP_RUBBLE = 'textures/sewer/top-rubble-1.png';
   public static inline var TOP_MOSS = 'textures/sewer/top-moss-1.png';
-  public static inline var FLOOR_PUDDLE = 'textures/sewer/floor-puddle-1.png';
-  public static inline var FLOOR_PUDDLE_2 = 'textures/sewer/floor-puddle-2.png';
+  // NO puddle decals. the two Lambert puddles (sewer/floor-puddle-1/2, still registered and still
+  // building) are replaced by render.sewer.SewerWater's pools — matte art at 0.3 opacity could only
+  // ever read as a faint dark smear
   public static inline var FLOOR_GRATE = 'textures/sewer/floor-grate-1.png';
   public static inline var FLOOR_STAIN = 'textures/sewer/floor-stain-1.png';
 
@@ -166,9 +167,56 @@ class SewerStyle
   public static inline var LEDGE_PCT = 22;      // % of solid cells that get a ledge-top prop
   public static inline var LEDGE_MARGIN = 0.3;  // keep a prop this far inside the cell (never overhangs the drop)
   public static inline var LEDGE_DECAL_Y = 0.03; // clear of the cap, so a prop never z-fights the ledge
-  public static inline var FLOOR_PCT = 16;      // % of eligible floor cells that get a decal
+  public static inline var FLOOR_PCT = 8;       // % of eligible floor cells that get a decal (16 when 2 of 4 types were puddles)
   public static inline var FLOOR_MARGIN = 0.2;  // decals sit inside their own cell, never across a wall
   public static inline var FLOOR_DECAL_Y = 0.01; // UNDER the contact shadows at SHADOW_Y, so a puddle at a wall foot still darkens
+
+  // --- standing water (render.sewer.SewerWater) ---
+  public static inline var WATER_POOLS = 'textures/sewer/water-pools.png';   // 3 pool cut-outs on one packed sheet
+  public static inline var WATER_STREAM = 'textures/sewer/water-stream.png'; // the same sheet's flowing swatch, tiles along u
+  // per atlas cell: [u0, vTop, u1, vBottom], the chroma-key bbox measured off the drop + 4 px. a pool
+  // quad takes its cell's own aspect, so nothing is stretched
+  public static var POOL_RECTS:Array<Array<Float>> = [
+    [0.0225, 0.9678, 0.4766, 0.5264], // wide, lobed
+    [0.5283, 0.9844, 0.9766, 0.5244], // long kidney
+    [0.0439, 0.4619, 0.4570, 0.0537], // round, with a satellite splash
+  ];
+  public static inline var POOL_PCT = 6;          // % of floor cells that get a scatter pool (halved in rooms)
+  public static inline var LAMP_POOL_PCT = 55;    // % of corridor-node lamps with a pool in their glint
+  public static inline var LAMP_POOL_SOUTH = 3.0; // lamp pool centre south of its bulb: between the near (4.2) and far (2.0) glint
+  public static inline var POOL_MIN = 3.0;        // smallest pool quad, world units (the art fills ~half of it)
+  public static inline var POOL_MAX = 7.0;        // largest; a lamp pool starts here and shrinks to fit
+  public static inline var POOL_MARGIN = 0.3;     // a pool's footprint keeps this far off any wall
+  public static inline var POOL_Y = 0.015;        // over the floor decals at FLOOR_DECAL_Y, under the contact shadows at SHADOW_Y
+  public static inline var POOL_ALPHA = 0.92;     // near opaque: the glint is scaled by alpha too
+  // trickles: off a seepage stain on a N/W/E wall, across the walkway, into a pool of their own
+  public static inline var STREAM_PCT = 70;       // % of seepage-stained faces that run a trickle
+  public static inline var STREAM_MIN = 3.0;      // shortest trickle, world units (shorter than this = none)
+  public static inline var STREAM_MAX = 9.0;      // longest; cut to stop a pool short of the far wall
+  public static inline var STREAM_POOL = 4.0;     // the sink pool's starting size
+  public static inline var STREAM_STEP = 0.5;     // spine spacing, world units
+  public static inline var STREAM_WALK = 0.12;    // meander step per spine point
+  public static inline var STREAM_WANDER = 0.6;   // furthest the meander strays off the straight line
+  public static inline var STREAM_W = 0.9;        // full width, world units (~a fifth of a cell)
+  public static inline var STREAM_JITTER = 0.2;   // per-point width jitter, so the edges are not parallel
+  public static inline var STREAM_CORE = 0.45;    // inner vertex pair as a fraction of the half width: the soft edge is the rest
+  public static inline var STREAM_FADE = 1.2;     // length of the fade out across the sink pool
+  public static inline var STREAM_TILE = 3.0;     // world units per texture repeat, both axes, so the swatch is never stretched
+  public static inline var STREAM_Y = 0.017;      // over the pools at POOL_Y, under the contact shadows at SHADOW_Y
+  public static inline var STREAM_FLOW = 0.03;    // texture repeats scrolled per BASE_MS: ~0.6 world units a second
+  // the water SURFACE shader (SewerWater.surface): ripples, roughness by material, a tamed highlight
+  public static inline var WATER_RIPPLE = 0.05;   // pool ripple slope (rise/run) at full strength: a still, ankle-deep film, never waves
+  public static inline var STREAM_RIPPLE = 0.1;   // the trickles run a little choppier than standing water
+  public static inline var WATER_SCALE = 4.0;    // ripple units per world unit: a cell (4u) is one person, so a puddle's ripples are a fraction of a unit, not one
+  public static inline var WATER_RATE = 0.06;     // ripple phase, radians per BASE_MS: a slow crawl, not a boil
+  public static inline var STREAM_RATE = 0.15;
+  public static inline var WATER_SMOOTH = 0.18;   // roughness on open water. the ripples spread the glint; this keeps each one crisp
+  public static inline var WATER_ROUGH = 0.65;    // roughness on the silt rim and the scum patches
+  public static inline var WATER_SILT_LO = 0.07;  // albedo luminance (linear) where water turns to silt...
+  public static inline var WATER_SILT_HI = 0.10;  // ...and where it is all silt
+  public static inline var WATER_SCUM = 0.6;      // how matte the still patches go, 0..1 toward WATER_ROUGH
+  public static inline var WATER_SPEC_TINT = 0x8f9a7a; // murky green-grey on the highlight: sewer water is not clean glass
+  public static inline var WATER_SPEC_CAP = 0.9;  // soft knee on the highlight's peak channel, so it never clips to flat white
 
   // --- wall detail decals (render.sewer.SewerDetail) ---
   // RenderConfig.WALLDECAL_PCT is 35, but that is per whole building FACE; a sewer face is a single
@@ -244,7 +292,7 @@ class SewerStyle
     // how far a hidden fragment sinks toward the fog colour. 0.0 is the 2D view's flat black, and this
     // is deliberately NOT that: underground the whole screen is tunnel, so blacking out everything past
     // a corner leaves a mostly-empty frame. at 0.18 the masonry still reads as a silhouette — the
-    // LAYOUT stays legible, which the minimap gives away anyway (AreaView.generateMinimap is not
+    // LAYOUT stays legible, which the minimap gives away anyway (ui.hud.MinimapHud is not
     // fog-aware) — while nothing standing in it does, since render.Actors already hides the AI and the
     // objects outright on the same predicate
     hidden: 0.18,
@@ -297,6 +345,10 @@ class SewerStyle
     // only bleeds half a texel, and holding the last lit texel a texel clear of the shared edge puts the
     // whole ramp inside the cell that can actually be seen. 0 gives the old hard per-cell reveal back
     wallFade: 0.5,
+    // 0, and structurally so rather than by taste: SewerGeom fills a solid cell corner to corner, so a
+    // blocker cell here IS masonry all the way to its edges and there is nothing to pull the reveal
+    // back off. the facility is the one kind whose wall is thinner than its cell
+    blockerInset: 0.0,
     // how far the LEVEL'S OUTER RIM fades out, in cells — the mask's BLUE channel, which multiplies
     // visAmt after everything else.
     // this is the one edge no amount of `blur` can soften, and not for want of trying: the blur is a
@@ -345,6 +397,11 @@ class SewerStyle
   // would read as two different lights. the lamp's col/row stay the exit cell: that is what
   // LampLights gates player distance on
   public static inline var EXIT_LAMP_SOUTH = 2.0;
+  // the ladder glb's depth, rail front to the wall plates' backs, at its drawn size (scale 1). it is
+  // recentred on its bbox, so standing it on the wall face — CELL / 2 off the cell centre, exactly,
+  // the walls have no inset — takes CELL / 2 - EXIT_DEPTH / 2 of offset (SewerArea.objWall).
+  // MEASURED off models-src/sewer/ladder_build.py, which prints it: re-read it on any rebuild
+  public static inline var EXIT_DEPTH = 0.395;
 
   // --- 3D clutter scattered against the walls (render.sewer.SewerProps) ---
   // the first CONVEX geometry down here. the shell is a concave box and everything dressing it is

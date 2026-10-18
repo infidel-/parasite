@@ -19,6 +19,8 @@ typedef PropPlace = {
   ?y:Float,    // signed offset off the floor; absent = 0, which is where normalize() puts the base
   ?scale:Float, // multiplier on the batch's target height; absent = 1. a batch is ONE glb drawn many
                 // times, so without this a stand of trees is one tree repeated
+  ?pitch:Float, // turn about the prop's own x axis before its yaw, radians; absent = 0. it turns about
+                // the base's centre, so a prop laid on its back is lifted and recentred by the caller
 };
 
 // handle for a bulk-instanced prop: the mesh plus every placement's precomputed world matrix and
@@ -28,6 +30,7 @@ typedef InstancedProp = {
   var mesh:InstancedMesh;      // null until the glb finishes loading
   var matrices:Array<Matrix4>; // full per-placement transforms (all instances)
   var centres:Array<Vector3>;  // per-placement world position, for the frustum test
+  @:optional var spheres:Array<Sphere>; // per-placement world bounding sphere, built by cullExact's first call
 };
 
 // the material a batch draws with. one InstancedMesh = one material, so a level that wants two looks
@@ -75,6 +78,7 @@ class Models {
             {
               if (o.material == null)
                 return;
+              o.material = toLambert(o.material);
               o.material.side = THREE.FrontSide;
               // DEBUG: smooth away the decimation shading artifact (see MODEL_SMOOTH_NORMALS). recomputes
               // per-vertex normals from the coarse geometry, dropping the mismatched authored normals
@@ -86,6 +90,19 @@ class Models {
               // the normal map down (0 = ignore it, flat shading from geometry only)
               if (o.material.normalMap != null)
                 o.material.normalScale.set(RenderConfig.MODEL_NORMAL_SCALE, RenderConfig.MODEL_NORMAL_SCALE);
+              // and anisotropic filtering on every map the glb carries — see MODEL_ANISO for why a
+              // prop is the ONE thing in the frame that was not getting it. safe to set here without
+              // needsUpdate: these textures are minutes old and have never been uploaded, so the
+              // value is read on their first upload rather than forcing a second one
+              for (t in [ o.material.map, o.material.normalMap, o.material.roughnessMap,
+                o.material.metalnessMap, o.material.emissiveMap, o.material.aoMap ])
+                if (t != null)
+                  {
+                    t.anisotropy = RenderConfig.MODEL_ANISO;
+                    // and where it came from, for render.PolyProbe's caption. a glb's maps are
+                    // embedded, so nothing else in the renderer knows their provenance
+                    t.name = path;
+                  }
             });
           // instanced() reads each mesh's RAW geometry and ignores its node transform — so a rotation
           // authored on the NODE (not baked into the verts) is silently dropped, laying the prop over.
@@ -137,6 +154,43 @@ class Models {
         });
     }
 
+// swap a glb's PBR material for the flat MeshLambert every other surface in the game already draws
+// with. the night art has no specular in it, and a prop was the last thing in the frame still shading
+// through the full PBR path — which costs far more than its triangles do: a TRELLIS prop is ~5k tris
+// over a 40-pixel silhouette, so its triangles are SUB-PIXEL and the fragment shader runs once per
+// 2x2 quad however small they get, which is why prop cost tracks TRIANGLES and barely moves with
+// resolution. measured on the integrated Radeon with the whole park in frame (3.6M tris, 1080p):
+// 31.4ms -> 20.3ms GPU, and the culled follow view 8.9 -> 6.6. metalness/roughness go with the path,
+// which on a TRELLIS bake is a FIX and not a loss — it lands at metallic 1 with an MR map and reads
+// as chrome against flat art. the one family that really does want specular says so IN THE GLB:
+// models.json's `roughness` dial bakes a roughnessFactor below 1 (the habitat props, 0.30-0.45), and
+// those keep MeshStandard
+  static function toLambert(m:Dynamic):Dynamic
+    {
+      var rough:Null<Float> = m.roughness;
+      if (rough == null ||
+          rough < 1)
+        return m;
+      return new MeshLambertMaterial({
+        name: m.name,
+        map: m.map,
+        color: m.color,
+        // the baked per-vertex AO (tools/models.mjs `bakeAO`, manifest key `ao`), which arrives as
+        // COLOR_0 and is multiplied into the base colour by three's own shader. CARRIED EXPLICITLY
+        // because this builds a NEW material rather than editing the loaded one — GLTFLoader sets the
+        // flag on the material it made, and dropping it here would throw the bake away silently, with
+        // the attribute still in the glb and nothing to show for it
+        vertexColors: m.vertexColors,
+        normalMap: m.normalMap,
+        aoMap: m.aoMap,
+        emissive: m.emissive,
+        emissiveMap: m.emissiveMap,
+        emissiveIntensity: m.emissiveIntensity,
+        alphaTest: m.alphaTest,
+        transparent: m.transparent,
+      });
+    }
+
 // per-model yaw correction (radians about the vertical Y) so a prop's facing matches the placement
 // convention; 0 = as-authored. street-lamp2's arm sits 90° off the residential lamp
   static function yawFix(path:String):Float
@@ -169,8 +223,9 @@ class Models {
         });
     }
 
-// find the first mesh (has geometry) in a subtree — the source for instancing
-  static function firstMesh(root:Object3D):Object3D
+// find the first mesh (has geometry) in a subtree — the source for instancing, and for
+// render.military.MilitaryDoors, which patches the material every SOLID batch of a path shares
+  public static function firstMesh(root:Object3D):Object3D
     {
       var found:Object3D = null;
       root.traverse(function(o)
@@ -315,6 +370,7 @@ class Models {
                 });
             }
           var inst = new InstancedMesh(geo, mat, placements.length);
+          inst.name = 'prop ' + path;
           // bulk props (lamp posts, ladders) cast AND receive real shadows — the post throws an angled
           // moon shadow, shows up in nearby lamp-spotlight casters, and self-shadows (crossarm/head
           // shadow the pole under the angled moon). own-light self-shadow is negligible (bulb straight
@@ -328,6 +384,7 @@ class Models {
           untyped inst.frustumCulled = false;
           var q = new Quaternion(), scl = new Vector3(s, s, s);
           var up = new Vector3(0, 1, 0);
+          var side = new Vector3(1, 0, 0), qx = new Quaternion(), off = new Vector3();
           for (i in 0...placements.length)
             {
               var pl = placements[i];
@@ -344,6 +401,14 @@ class Models {
                 ry * ps + (pl.y != null ? pl.y : 0.0),
                 pl.z + (-rx * sin + rz * cos) * ps);
               q.setFromAxisAngle(up, pl.yaw);
+              // a pitched prop: world = T · Ry(yaw) · Rx(pitch) · S · T(recenter), the recenter turned
+              // by both
+              if (pl.pitch != null)
+                {
+                  q.multiply(qx.setFromAxisAngle(side, pl.pitch));
+                  off.set(rx * ps, ry * ps, rz * ps).applyQuaternion(q);
+                  pos.set(pl.x + off.x, off.y + (pl.y != null ? pl.y : 0.0), pl.z + off.z);
+                }
               var mtx = new Matrix4();
               mtx.compose(pos, q, scl);
               inst.setMatrixAt(i, mtx);
@@ -362,11 +427,13 @@ class Models {
 // the camera frustum (plus a per-instance radius margin) into the front of the buffer and cap count.
 // without this a single InstancedMesh draws every instance whenever any one is on screen.
 // `mask` (optional, indexed like the placements) additionally drops instances the caller wants held
-// back this frame — a lamp mid-outage swaps between the lit and the dead batch that way, for free
+// back this frame — a lamp mid-outage swaps between the lit and the dead batch that way, for free.
+// `all` skips the frustum test and packs every masked instance: a frame on which a FROZEN shadow map
+// renders has to see every caster, or that map keeps the hole until its next render
   static var _frustum = new Frustum();
   static var _projScreen = new Matrix4();
   static var _sph = new Sphere();
-  public static function cull(prop:InstancedProp, camera:PerspectiveCamera, radius:Float, ?mask:Array<Bool>):Void
+  public static function cull(prop:InstancedProp, camera:PerspectiveCamera, radius:Float, ?mask:Array<Bool>, ?all:Bool):Void
     {
       if (prop.mesh == null)
         return;
@@ -380,12 +447,82 @@ class Models {
           if (mask != null && !mask[i])
             continue;
           _sph.center.copy(prop.centres[i]);
-          if (!_frustum.intersectsSphere(_sph))
+          if (all != true &&
+              !_frustum.intersectsSphere(_sph))
             continue;
           prop.mesh.setMatrixAt(k, prop.matrices[i]);
           k++;
         }
       prop.mesh.count = k;
+      // an empty batch leaves the render list: at count 0 three still binds its program, uniforms and
+      // VAO and skips only the draw, ~20-25 us a batch, and 32-57 of them sat empty every facility frame
+      prop.mesh.visible = k > 0;
       untyped prop.mesh.instanceMatrix.needsUpdate = true;
+    }
+
+// exact per-instance cull for a static casting batch: each placement's own world bounding sphere
+// (+ margin) against the frustum, visible instances packed first and the hidden ones after them, so
+// the buffer always holds ALL of them. the main pass draws the visible count; every SHADOW pass draws
+// the full set (spheres() hooks it), because a frozen spot or moon map rendered off the camera's
+// subset keeps that hole until it next refreshes. an empty batch leaves the render list unless
+// `keep` says a shadow map renders this frame. placements must not move after build: the spheres
+// are baked once, so a posed batch (the doors) stays on cull()
+  public static function cullExact(prop:InstancedProp, camera:PerspectiveCamera, margin:Float, keep:Bool):Void
+    {
+      var mesh = prop.mesh;
+      if (mesh == null)
+        return;
+      if (prop.spheres == null)
+        spheres(prop, margin);
+      camera.updateMatrixWorld();
+      _projScreen.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+      _frustum.setFromProjectionMatrix(_projScreen);
+      var k = 0;
+      var j = prop.matrices.length;
+      for (i in 0...prop.matrices.length)
+        {
+          if (_frustum.intersectsSphere(prop.spheres[i]))
+            {
+              mesh.setMatrixAt(k, prop.matrices[i]);
+              k++;
+            }
+          else
+            {
+              j--;
+              mesh.setMatrixAt(j, prop.matrices[i]);
+            }
+        }
+      mesh.count = k;
+      mesh.visible = k > 0 || keep;
+      untyped mesh.instanceMatrix.needsUpdate = true;
+    }
+
+// builds every placement's world bounding sphere for cullExact, and hooks the batch's shadow draws to
+// the full instance count, handing the visible count back to the main pass after each one
+  static function spheres(prop:InstancedProp, margin:Float):Void
+    {
+      var mesh = prop.mesh;
+      if (mesh.geometry.boundingSphere == null)
+        mesh.geometry.computeBoundingSphere();
+      var bs:Sphere = mesh.geometry.boundingSphere;
+      prop.spheres = [];
+      for (m in prop.matrices)
+        {
+          var s = new Sphere();
+          s.center.copy(bs.center).applyMatrix4(m);
+          s.radius = bs.radius * m.getMaxScaleOnAxis() + margin;
+          prop.spheres.push(s);
+        }
+      var n = prop.matrices.length;
+      var shown = 0;
+      mesh.onBeforeShadow = function()
+        {
+          shown = mesh.count;
+          mesh.count = n;
+        };
+      mesh.onAfterShadow = function()
+        {
+          mesh.count = shown;
+        };
     }
 }

@@ -29,6 +29,7 @@ class PlayerArea extends _SaveObject
   var actionTS: Float; // last time player moved on a path/did action
   public var currentAction(default, null): _PlayerAction; // current continuous action
   var isCultLeaveConfirmed: Bool; // confirmed leaving followers in combat
+  public var hiddenIn: Int; // id of the object the parasite hides inside (objects.Dumpster), -1 none
 
   // state "parasite"
 
@@ -52,12 +53,20 @@ class PlayerArea extends _SaveObject
       attachHold = 0;
       attachHost = null;
       attachHostID = -1;
+      hiddenIn = -1;
       knownObjects = new List<String>();
       knownObjects.add('body');
       knownObjects.add('pickup');
       knownObjects.add('habitat');
       knownObjects.add('nutrients');
       entity = new PlayerEntity(game, x, y);
+    }
+
+// called before loading: this object outlives a load, so a save made before hiding existed must
+// not inherit the current session's hiding place
+  public function init()
+    {
+      hiddenIn = -1;
     }
 
 // called post-loading game
@@ -121,6 +130,18 @@ class PlayerArea extends _SaveObject
 // get actions list (area mode)
   public function updateActionList()
     {
+      // hiding inside an object: climbing out is all there is (the HUD adds Wait on its own)
+      if (isHidden())
+        {
+          game.ui.hud.addAction({
+            id: 'climbOut',
+            type: ACTION_AREA,
+            name: 'Climb out',
+            energy: 0,
+          });
+          return;
+        }
+
       var base = (game.cults.length > 0 ? game.cults[0].base : null);
       if (base != null &&
           game.area.isHabitat &&
@@ -217,10 +238,18 @@ class PlayerArea extends _SaveObject
 
       // area object actions - need to learn about objects
 //      var olist = game.area.getObjectsAt(x, y);
-      var olist = game.area.getObjectsInRadius(x, y, 1, false);
+      // THE EIGHT NEIGHBOURS AND NOT THE FOUR. getObjectsInRadius is euclidean, so a radius of 1
+      // was the compass cells alone and a diagonal (distance squared 2) fell outside it — which
+      // left the crash-landing scenario's console and slots, standing on the study pad's four
+      // unwalkable CORNERS, activatable from nowhere at all. No integer radius is sqrt(2), so it is
+      // asked at 2 and narrowed to chebyshev below
+      var olist = game.area.getObjectsInRadius(x, y, 2, false);
       if (olist != null && game.goals.completed(GOAL_PROBE_BRAIN))
         for (o in olist)
           {
+            // the radius-2 overshoot: a knight's move and a two-cell step are not "next to"
+            if (Std.int(Math.max(Math.abs(o.x - x), Math.abs(o.y - y))) > 1)
+              continue;
             // check if object is near and can be activated when near
             if ((o.x != x || o.y != y) && !o.canActivateNear())
               continue;
@@ -273,15 +302,23 @@ class PlayerArea extends _SaveObject
 // do a player action
 // action energy availability is checked when the list is formed
 // all item-pickup actions offered by objects on the player's own tile (body loot + loose
-// pickups). used both to group them (one Get vs submenu) and to fill the open submenu
+// pickups), plus those of a pickup next to it that is worked from beside it. used both to group them (one Get vs submenu) and to fill the open submenu
   public function getTileItemActions(): Array<_PlayerAction>
     {
       // no known() gate: unknown items are grabbable too (they show as their unknown name,
       // same as loot on a searched body). each object's getItemActions() applies its own rule
       var list: Array<_PlayerAction> = [];
-      for (o in game.area.getObjectsAt(x, y))
-        for (a in o.getItemActions())
-          list.push(a);
+      // a pickup that is worked from BESIDE it counts too: a clue document or a ship part lying on a
+      // lab table sits on a tile nobody can stand on. the radius-2 + chebyshev pair is the object
+      // loop's own, for its own reason (no integer radius reaches the diagonals alone)
+      for (o in game.area.getObjectsInRadius(x, y, 2, false))
+        {
+          if (Std.int(Math.max(Math.abs(o.x - x), Math.abs(o.y - y))) > 1 ||
+              ((o.x != x || o.y != y) && !o.canActivateNear()))
+            continue;
+          for (a in o.getItemActions())
+            list.push(a);
+        }
       return list;
     }
 
@@ -355,6 +392,7 @@ class PlayerArea extends _SaveObject
       // open the ground-items submenu (several pickups on the tile)
       else if (action.id == 'pickupMenu')
         {
+          game.ui.hud.pickupFrom = null;
           game.ui.hud.state = HUD_PICKUP_MENU;
           game.updateHUD();
         }
@@ -374,13 +412,17 @@ class PlayerArea extends _SaveObject
           base.cursorX = x;
           base.cursorY = y;
           game.ui.hud.state = HUD_BASE_BUILDING;
+          // the far camera frames the whole habitat, so the cursor cannot walk off screen
+          game.scene.view3d.setTactical(true);
           game.updateHUD();
           game.scene.mouse.update(true);
-          game.scene.area.draw();
         }
       // try to leave area
       else if (action.id == 'leaveArea')
         ret = leaveAreaAction(action);
+      // climb out of the hiding place
+      else if (action.id == 'climbOut')
+        ret = climbOutAction();
       // wait
       else if (action.id == 'skipTurn')
         game.turn();
@@ -884,6 +926,10 @@ class PlayerArea extends _SaveObject
 // NOTE: this is for displaying the leave area action, the actual checks are done in leaveAreaAction and can be different
   function canLeaveArea(): Bool
     {
+      // a military base is left on foot from outside its fence, with nobody alerted
+      if (game.area.typeID == AREA_MILITARY_BASE)
+        return state != PLR_STATE_ATTACHED &&
+          game.area.canLeaveBase(x, y);
       return state != PLR_STATE_ATTACHED &&
         !game.area.info.isInhabited &&
         (!game.area.isHabitat || !hasHabitatExit());
@@ -931,6 +977,15 @@ class PlayerArea extends _SaveObject
               game.actionFailed('You cannot leave the habitat with a mold.');
               return false;
             }
+        }
+      // and out of a military base only from outside the fence, unseen
+      if (game.area.typeID == AREA_MILITARY_BASE &&
+          !game.area.canLeaveBase(x, y))
+        {
+          game.actionFailed(game.area.isOutsideBase(x, y) ?
+            'You cannot slip away while the soldiers are alerted.' :
+            'You have to get outside the fence first.');
+          return false;
         }
       if (!game.area.canLeave())
         return false;
@@ -1177,6 +1232,10 @@ class PlayerArea extends _SaveObject
 // returns true on success
   public function moveBy(dx: Int, dy: Int): Bool
     {
+      // hiding: a step is a climb out onto that cell
+      if (isHidden())
+        return climbOut(x + dx, y + dy, true);
+
       // if player tries to move when attached, that detaches the parasite
       if (state == PLR_STATE_ATTACHED)
         detachAction();
@@ -1287,6 +1346,64 @@ class PlayerArea extends _SaveObject
     }
 
 
+// is the parasite hiding inside an object? read against the area rather than trusted, so an id
+// left behind by an area change, a death or a teleport reads false instead of hiding the player
+// somewhere it is not
+  public function isHidden(): Bool
+    {
+      if (hiddenIn < 0 ||
+          game.location != LOCATION_AREA)
+        return false;
+      var o = game.area.getObject(hiddenIn);
+      return (o != null &&
+        o.x == x &&
+        o.y == y);
+    }
+
+// slip inside an object: the parasite takes its cell, which nobody can walk onto, and is gone from
+// every AI's sight until it climbs out (Player.invisibleToAI)
+  public function hideIn(o: AreaObject)
+    {
+      clearPath();
+      x = o.x;
+      y = o.y;
+      entity.setPosition(x, y);
+      hiddenIn = o.id;
+    }
+
+// climb out of the hiding place onto (nx,ny). doPost ends the action here (a step does, the HUD
+// action leaves that to PlayerArea.action). returns true on success
+  function climbOut(nx: Int, ny: Int, doPost: Bool): Bool
+    {
+      if (!game.area.isWalkable(nx, ny) ||
+          game.area.hasAI(nx, ny))
+        {
+          game.actionFailed('Something blocks the way out.');
+          return false;
+        }
+      log('You climb out of the ' + game.area.getObject(hiddenIn).getName() + '.');
+      // the dumpster is the only hiding place
+      game.scene.sounds.play('city/dumpster-close');
+      hiddenIn = -1;
+      return moveTo(nx, ny, doPost);
+    }
+
+// action: climb out onto the first free cell around the hiding place
+  function climbOutAction(): Bool
+    {
+      for (i in 0...Const.dirx.length)
+        {
+          var nx = x + Const.dirx[i];
+          var ny = y + Const.diry[i];
+          if (game.area.isWalkable(nx, ny) &&
+              !game.area.hasAI(nx, ny))
+            return climbOut(nx, ny, false);
+        }
+      game.actionFailed('Something blocks the way out.');
+      return false;
+    }
+
+
 // does the player hear something in this location?
 // technically we should separate parasite/host hearing radius
 // but nobody will probably notice the difference :)
@@ -1332,6 +1449,15 @@ class PlayerArea extends _SaveObject
 
       // start doing it
       nextAction();
+    }
+
+// stop the repeating action, if any
+  public function clearAction()
+    {
+      if (currentAction == null)
+        return;
+      currentAction = null;
+      game.ui.hud.hideOverlay();
     }
 
 // create a path to given x,y and start moving on it

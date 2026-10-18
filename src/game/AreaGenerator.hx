@@ -21,11 +21,23 @@ class AreaGenerator
   public var sewers: SewerAreaGenerator;
   public var undergroundLab: UndergroundLabAreaGenerator;
 
-  public static var deltaMap: Map<Int, { x: Int, y: Int }>;
-  public static var DIR_UP = 8;
-  public static var DIR_LEFT = 4;
-  public static var DIR_RIGHT = 6;
-  public static var DIR_DOWN = 2;
+  public static inline var DIR_UP = 8;
+  public static inline var DIR_LEFT = 4;
+  public static inline var DIR_RIGHT = 6;
+  public static inline var DIR_DOWN = 2;
+
+  // INITIALIZED HERE AND NOT IN THE CONSTRUCTOR, which is where it used to be built. A static
+  // filled in by an instance constructor is only there once somebody has made an instance, so
+  // every static helper on this class that steps a direction — drawLine, drawChunk, and the wall
+  // walks in the facility and corp generators — silently depended on a Game having been built
+  // first. That held while the only caller was a running game and broke the moment
+  // tools/genrun.mjs called one of them directly
+  public static var deltaMap: Map<Int, { x: Int, y: Int }> = [
+    DIR_LEFT => { x: -1, y: 0 },
+    DIR_RIGHT => { x: 1, y: 0 },
+    DIR_UP => { x: 0, y: -1 },
+    DIR_DOWN => { x: 0, y: 1 },
+  ];
 
   // wilderness highway width, in cells. an actor billboard is 3 world units against a 4-unit cell, so
   // a cell is roughly 2.4m and three of them is a two-lane rural highway. two reads as a farm track,
@@ -36,17 +48,13 @@ class AreaGenerator
   public function new(g: Game)
     {
       game = g;
-      facility = new FacilityAreaGenerator(game, this);
+      // no `this`: the facility generator's passes are all static and live in gen.facility now, so
+      // it kept no AreaGenerator reference to shadow the package of the same name
+      facility = new FacilityAreaGenerator(game);
       city = new CityAreaGenerator(game, this);
-      corp = new CorpAreaGenerator(game, this);
+      corp = new CorpAreaGenerator(game);
       sewers = new SewerAreaGenerator(game, this);
-      undergroundLab = new UndergroundLabAreaGenerator(game, this);
-      deltaMap = [
-        DIR_LEFT => { x: -1, y: 0 },
-        DIR_RIGHT => { x: 1, y: 0 },
-        DIR_UP => { x: 0, y: -1 },
-        DIR_DOWN => { x: 0, y: 1 },
-      ];
+      undergroundLab = new UndergroundLabAreaGenerator(game);
     }
 
 // generate area
@@ -61,7 +69,7 @@ class AreaGenerator
       if (info.type == 'city')
         city.generate(state, area, info);
       else if (info.type == 'militaryBase')
-        generateBuildings(game, area, info);
+        MilitaryAreaGenerator.generate(game, area);
       else if (info.type == 'facility')
         facility.generate(area, info);
       else if (info.type == 'wilderness')
@@ -109,6 +117,10 @@ class AreaGenerator
       var cols = [
         Const.TILE_ROAD => cols1[TEMP_ROAD],
         Const.TILE_ALLEY => cols1[TEMP_ALLEY],
+        Const.TILE_PARKING => cols1[TEMP_ALLEY],
+        Const.TILE_ALLEY_UNWALKABLE => cols1[TEMP_ALLEY],
+        Const.TILE_PARKING_CAR => cols1[TEMP_ALLEY],
+        Const.TILE_PARKING_CAR_ORIGIN => cols1[TEMP_ALLEY],
         Const.TILE_WALKWAY => cols1[TEMP_BLOCK],
         Const.TILE_BUILDING => cols1[TEMP_ACTUAL_BUILDING],
       ];
@@ -257,7 +269,7 @@ class AreaGenerator
 // the camera and the player hides the player. it went in at 0.12 / 60% trees and that kept the actor
 // under a crown; 0.10 / 50% still reads as a wood against the plains' 0.025, and takes ~25% of the
 // triangles off with it
-  static function wildMix(band: _TerrainBand): _WildMix
+  public static function wildMix(band: _TerrainBand): _WildMix
     {
       if (band == TERRAIN_FOREST)
         return {
@@ -436,65 +448,6 @@ class AreaGenerator
     }
 
 
-// generate buildings
-  static function generateBuildings(game: Game, area: AreaGame, info: AreaInfo)
-    {
-      // buildings
-      for (y in 1...area.height)
-        for (x in 1...area.width)
-          {
-            if (Math.random() > info.buildingChance)
-              continue;
-
-            // size
-            var sx = 5 + Std.random(10);
-            var sy = 5 + Std.random(10);
-
-            if (x + sx > area.width - 1)
-              sx = area.width - 1 - x;
-            if (y + sy > area.height - 1)
-              sy = area.height - 1 - y;
-
-            if (sx < 2)
-              continue;
-            if (sy < 2)
-              continue;
-
-//            var cell = get(x,y);
-
-            // check for adjacent buildings
-            var ok = true;
-            for (dy in -2...sy + 3)
-              for (dx in -2...sx + 3)
-                {
-                  if (dx == 0 && dy == 0)
-                    continue;
-                  //var cell = get(x + dx, y + dy);
-                  var cellType = area.getCellType(x + dx, y + dy);
-                  if (cellType == Const.TILE_BUILDING)
-                    {
-                      ok = false;
-                      break;
-                    }
-                }
-
-            if (!ok)
-              continue;
-  
-            // draw a building rect
-            for (dy in 0...sy)
-              for (dx in 0...sx)
-                {
-                  var cellType = area.getCellType(x + dx, y + dy);
-                  if (cellType == -1)
-                    continue;
-
-                  area.setCellType(x + dx, y + dy, Const.TILE_BUILDING);
-                }
-          }
-    }
-
-
 // generate objects
   static function generateObjects(state: _GeneratorState, game: Game, area: AreaGame, info: AreaInfo)
     {
@@ -646,6 +599,54 @@ class AreaGenerator
           dir90: 0,
         },
       ];
+    }
+
+// EVERY cell of this room's wall ring a door could be cut into, nearest the middle of its own wall
+// first.
+//
+// getRoomDoorSpots above offers four candidates — one wall midpoint each — and that is four cells
+// out of a perimeter of 2(w+h). A room whose four midpoints all happen to be exterior masonry, or
+// all fail the triangle test, gets NO DOOR AT ALL: game.FacilityAreaGenerator.makeDoors traces
+// "bug, no door spots in room" and moves on, leaving a room that renders perfectly and cannot be
+// entered. The same four-cell limit makes makeDoorToCorridor report failure while some other cell
+// of the same wall faces the corridor it was looking for. Measured at 8% of compounds carrying at
+// least one sealed room.
+//
+// used as a FALLBACK and not as a replacement: the midpoints are tried first, so a door still lands
+// in the middle of its wall wherever one legally can, and this only widens the search for the rooms
+// that would otherwise have had nothing. Ordered centre-outwards so the fallback picks the most
+// central cell that works.
+//
+// `dir` points AWAY from the room, matching getRoomDoorSpots — callers step it with deltaMap to ask
+// what is on the far side of the wall. Corners are never emitted: each wall runs only alongside the
+// room's own floor cells, so the diagonal cells of the ring are not in the list
+  public static function getRoomWallSpots(room: _Room): Array<_Spot>
+    {
+      var out = [];
+      // one entry per wall: where it starts, which way it runs, how long, and which way is out
+      var walls = [
+        { x: room.x1 - 1, y: room.y1, dx: 0, dy: 1, len: room.h, dir: DIR_LEFT },
+        { x: room.x2 + 1, y: room.y1, dx: 0, dy: 1, len: room.h, dir: DIR_RIGHT },
+        { x: room.x1, y: room.y1 - 1, dx: 1, dy: 0, len: room.w, dir: DIR_UP },
+        { x: room.x1, y: room.y2 + 1, dx: 1, dy: 0, len: room.w, dir: DIR_DOWN },
+      ];
+      for (w in walls)
+        {
+          var mid = Std.int(w.len / 2);
+          for (i in 0...w.len)
+            out.push({
+              spot: {
+                x: w.x + w.dx * i,
+                y: w.y + w.dy * i,
+                dir: w.dir,
+                dir90: 0,
+              },
+              // distance from this wall's own midpoint, which is what the sort below orders on
+              d: (i > mid ? i - mid : mid - i),
+            });
+        }
+      out.sort(function(a, b) return a.d - b.d);
+      return [for (e in out) e.spot];
     }
 
 // mark room as sub-divided

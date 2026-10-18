@@ -82,6 +82,7 @@ class Shot {
       var sparkAtEnd = false;
       var wallCol = -1, wallRow = -1; // struck wall cell (for the bullet-hole decal), -1 = none
       var wallFromCol = -1, wallFromRow = -1; // last open cell before the hit = the exposed face
+      var endCol = tx, endRow = ty; // cell the tracer ends on (the target, or the miss endpoint)
       if (!hit)
         {
           // skew the aim 1-2 tiles sideways (perpendicular to the shot line) so the missed
@@ -93,6 +94,8 @@ class Shot {
           var e = c.game.area.rayToWall(sx, sy,
             Math.round(tx - pdy / pl * off), Math.round(ty + pdx / pl * off), kind.range);
           var ew = CityConfig.cellToWorld(e.col, e.row);
+          endCol = e.col;
+          endRow = e.row;
           baseX = ew.x; baseZ = ew.z;
           baseY = render.world.WorldCtx.floorY(e.col, e.row) + render.particles.Sprites.SIZE * 0.4;
           sparkAtEnd = e.wall;
@@ -120,6 +123,15 @@ class Shot {
                 { always: true, delay: Std.int(S.travelMs * kind.travelMult), x: e.col, y: e.row });
             }
         }
+      // a pane on the way rings once per shot (the pellets share the line), when the tracer crosses it
+      var glass = firstGlass(c, sx, sy, endCol, endRow);
+      if (glass != null)
+        c.game.scene.sounds.play('attack-bullet-glass', {
+          always: true,
+          delay: Std.int(S.travelMs * kind.travelMult * glass.t),
+          x: glass.col,
+          y: glass.row,
+        });
       for (i in 0...kind.pellets)
         {
           // spread jitters each pellet's visual impact (blood still lands on the true tile)
@@ -149,11 +161,80 @@ class Shot {
           // real bullets only — a stun bolt leaves no hole)
           if (sparkAtEnd && i == 0 && kind.bullet)
             spawnBulletHole(c, wallFromCol, wallFromRow, wallCol, wallRow, muz, impact);
+          // and a crack star where the same pellet crossed a pane (real bullets only, like the holes)
+          if (glass != null && i == 0 && kind.bullet)
+            spawnGlassHole(c, glass.col, glass.row, sx, sy, muz, impact);
         }
       // recoil: kick the camera back along the shot (player's own shots only)
       if (byPlayer)
         c.rig.kick(sx - tx, sy - ty);
       return true;
+    }
+
+// first window cell on the line (sx,sy)->(ex,ey), stepped like AreaGame.rayToWall with the shooter's
+// cell left out, and its fraction of the way along; null when the line crosses no glass
+  static function firstGlass(c:Choreo, sx:Int, sy:Int, ex:Int, ey:Int):{ col:Int, row:Int, t:Float }
+    {
+      var dx = ex - sx, dy = ey - sy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var i = 1;
+      while (i <= dist)
+        {
+          var col = Math.round(sx + dx / dist * i);
+          var row = Math.round(sy + dy / dist * i);
+          if (Const.isWindowTile(c.game.area.getCellType(col, row)))
+            return {
+              col: col,
+              row: row,
+              t: i / dist,
+            };
+          i++;
+        }
+      return null;
+    }
+
+// leave a persisted crack star on the window pane at (col,row), on the face toward the shooter at
+// (sx,sy), where the pellet-0 tracer (muz -> impact) crosses the pane's plane. a run is never one
+// cell, so the neighbour along x being glass says the pane runs along x and faces +-z
+  static function spawnGlassHole(c:Choreo, col:Int, row:Int, sx:Int, sy:Int, muz:Vector3, impact:Vector3):Void
+    {
+      var area = c.game.area;
+      var alongX = (Const.isWindowTile(area.getCellType(col - 1, row)) ||
+        Const.isWindowTile(area.getCellType(col + 1, row)));
+      var ds = (alongX ? sy - row : sx - col);
+      // a tracer running along the pane never crosses it
+      if (ds == 0)
+        return;
+      var dir = (alongX ? (ds > 0 ? 0 : 1) : (ds > 0 ? 2 : 3));
+      // the pane's plane through the cell centre, and where the tracer meets it
+      var cc = CityConfig.cellToWorld(col, row);
+      var n0 = (alongX ? muz.z : muz.x);
+      var n1 = (alongX ? impact.z : impact.x);
+      var t = (Math.abs(n1 - n0) > 0.001 ? ((alongX ? cc.z : cc.x) - n0) / (n1 - n0) : 0.5);
+      t = Math.max(0.0, Math.min(1.0, t));
+      // keep the star's centre on its own cell along the run
+      var half = CityConfig.CELL * 0.45;
+      var hx = Math.max(cc.x - half, Math.min(cc.x + half, muz.x + t * (impact.x - muz.x)));
+      var hz = Math.max(cc.z - half, Math.min(cc.z + half, muz.z + t * (impact.z - muz.z)));
+      // stored as a sub-cell offset like the wall holes (WallHole re-derives the normal axis itself)
+      var T = Const.TILE_SIZE;
+      var W = RenderConfig.WALLHOLE;
+      var scale = W.glassScale + (Math.random() - 0.5) * 2 * W.glassScaleVar;
+      // a chest-height crossing sits just over the sill: lift the star until its lower edge is on glass
+      var lowest = render.world.WorldCtx.floorY(col, row) + W.glassFloor +
+        scale * render.particles.Sprites.SIZE / 2;
+      area.addTileDecoration(col, row,
+        {
+          layerID: -1,
+          tag: 'WALLHOLE',
+          face: dir,
+          height: Math.max(muz.y + t * (impact.y - muz.y), lowest),
+          glass: true,
+          angle: Math.random() * Math.PI * 2,
+          scale: scale,
+          dx: Std.int((hx / CityConfig.CELL + CityConfig.GRID / 2 - 0.5 - col) * T),
+          dy: Std.int((hz / CityConfig.CELL + CityConfig.GRID / 2 - 0.5 - row) * T),
+        });
     }
 
 // facade material (0 concrete,1 brick,2 stone,3 metal) of the building owning wall cell (col,row);

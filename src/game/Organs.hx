@@ -540,23 +540,9 @@ class Organs extends _SaveObject
       var o = get(IMP_PANIC_GAS);
       o.timeout = params.timeout;
 
-      // spawn visual effects — the 3D view plays a single volumetric dome; else fall back to the
-      // flat 2D per-tile effect tiles (hidden under the 3D canvas when it is live)
-      var xo = game.playerArea.x;
-      var yo = game.playerArea.y;
-      if (game.scene.view3d == null ||
-          !game.scene.view3d.playGas('panic', xo, yo, params.range))
-        for (yy in yo - params.range...yo + params.range)
-          for (xx in xo - params.range...xo + params.range)
-            {
-              if (!game.area.isWalkable(xx, yy))
-                continue;
-
-              if (Const.distanceSquared(xo, yo, xx, yy) > params.range * params.range)
-                continue;
-
-              game.scene.area.addEffect(xx, yy, 2, Const.FRAME_PANIC_GAS);
-            }
+      // spawn visual effects: one volumetric gas dome
+      game.scene.view3d.playGas('panic', game.playerArea.x, game.playerArea.y,
+        params.range);
 
       // affect all AI in range
       for (ai in tmp)
@@ -596,24 +582,9 @@ class Organs extends _SaveObject
       var o = get(IMP_PARALYSIS_GAS);
       o.timeout = params.timeout;
 
-      // spawn visual effects — the 3D view plays a single volumetric dome; else fall back to the
-      // flat 2D per-tile effect tiles (hidden under the 3D canvas when it is live)
-      var xo = game.playerArea.x;
-      var yo = game.playerArea.y;
-      if (game.scene.view3d == null ||
-          !game.scene.view3d.playGas('paralysis', xo, yo, params.range))
-        for (yy in yo - params.range...yo + params.range)
-          for (xx in xo - params.range...xo + params.range)
-            {
-              if (!game.area.isWalkable(xx, yy))
-                continue;
-
-              if (Const.distanceSquared(xo, yo, xx, yy) >
-                  params.range * params.range)
-                continue;
-
-              game.scene.area.addEffect(xx, yy, 2, Const.FRAME_PARALYSIS_GAS);
-            }
+      // spawn visual effects: one volumetric gas dome
+      game.scene.view3d.playGas('paralysis', game.playerArea.x, game.playerArea.y,
+        params.range);
 
       // affect all AI in range
       for (ai in tmp)

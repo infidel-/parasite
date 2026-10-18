@@ -1,0 +1,3209 @@
+{
+  "_doc": "make sounds: sounds-src/<variant file> -> app/sound/<key><digit>.mp3. Entries are written by the fal-sfx MCP (generate_sfx) and carry every prompt; lufs overrides default_lufs per entry. last_* keys are bake state. A key that matches any mp3 the pipeline did not write is refused. Targets measured 2026-10-08 with ebur128: ambient-fire.mp3 (the positional loop peer) -26.4 LUFS, ambient-corp1.mp3 bed -42.1, object-elevator -29.6, attack-pistol1 -16.3.",
+  "style": "clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+  "default_lufs": -26,
+  "default_bitrate": "128k",
+  "seam_ms": 500,
+  "sounds": {
+    "corp/cctv": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/cctv-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "security room wall of monitors, thin high-pitched electrical whine with faint screen static hiss, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-08T22:58",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:21",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/cctv1.mp3"
+      ]
+    },
+    "corp/cooler": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/cooler-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "office water cooler, very quiet electrical hum with an occasional deep bubble glug from the water bottle, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-08T22:58",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:21",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/cooler1.mp3"
+      ]
+    },
+    "corp/elevator": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/elevator-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "elevator shaft heard through closed lift doors, deep mechanical hum, distant motor and steel cable creaks, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-08T22:59",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:22",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/elevator1.mp3"
+      ]
+    },
+    "corp/rack": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/rack-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "server room rack cabinets, steady cooling fan whir and air rush, faint hard drive seek chatter, low electrical hum, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-08T22:57",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:22",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/rack1.mp3"
+      ]
+    },
+    "corp/vending": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/vending-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "vending machine idling, steady refrigeration compressor hum with a faint fluorescent tube buzz behind the glass, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-08T22:58",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:23",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/vending1.mp3"
+      ]
+    },
+    "facility/vent": {
+      "area": "facility",
+      "loop": true,
+      "variants": [
+        {
+          "file": "facility/vent-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "air ventilation duct, hollow steady draft of moving air through a metal shaft, low rumble, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-08T22:59",
+          "bakeoff": "won over elevenlabs/sa3/cassette/sonilo/mirelo, 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:23",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/vent1.mp3"
+      ]
+    },
+    "corp/room": {
+      "area": "corp",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "corp/room-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "office room tone, steady HVAC air hum from ceiling vents, low electrical hum, constant, no events, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 22,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-09T19:40",
+          "bakeoff": "won over sonilo/cassette (the first elevenlabs take, prompted 'quiet... faint', came back silent), 2026-10-09"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:24",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/room1.mp3"
+      ]
+    },
+    "corp/cubicle": {
+      "area": "corp",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "corp/cubicle-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "open-plan office floor room tone, many desktop computer fans and faint hard drive hum blended into one steady drone, soft air conditioning, constant, no events, no typing, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 22,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:24",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/cubicle1.mp3"
+      ]
+    },
+    "corp/washroom": {
+      "area": "corp",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "corp/washroom-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "office washroom room tone, quiet trickle of water running through pipes inside the tiled walls, faint extractor fan, constant, no events, no flushing, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 29.953741,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:25",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/washroom1.mp3"
+      ]
+    },
+    "corp/window": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/window-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "high-rise office window, soft wind pressing on tall glass panes, very distant muffled city traffic far below, constant, no events, no sirens, no horns, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 22,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:25",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/window1.mp3"
+      ]
+    },
+    "corp/fridge": {
+      "area": "corp",
+      "loop": true,
+      "variants": [
+        {
+          "file": "corp/fridge-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "kitchen fridge-freezer running, steady low refrigeration compressor hum with faint coolant gurgle, constant, no events, no door, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 29.953741,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:26",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "corp/fridge1.mp3"
+      ]
+    },
+    "corp/flush": {
+      "area": "corp",
+      "loop": false,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "corp/flush-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a toilet flushing far away in another stall behind tiled walls, muffled distant whoosh of water then cistern refilling fading out, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 6.037188,
+          "seed": null,
+          "cost": 0.0108,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:26",
+      "last_sig": "-36/128k/False/500/hp40x2",
+      "last_outputs": [
+        "corp/flush1.mp3"
+      ]
+    },
+    "corp/drip": {
+      "area": "corp",
+      "loop": false,
+      "variants": [
+        {
+          "file": "corp/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single water drop falling from a tap into a stainless steel sink, one small clear drip, quiet, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 2,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "bake-off 2026-10-09: elevenlabs/sonilo/cassette, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:26",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "corp/drip1.mp3"
+      ]
+    },
+    "facility/washroom": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/washroom-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "office washroom room tone, quiet trickle of water running through pipes inside the tiled walls, faint extractor fan, constant, no events, no flushing, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 30.000181,
+          "seed": null,
+          "cost": 0.054,
+          "native_loop": false,
+          "generated": "2026-10-09T23:10",
+          "bakeoff": "the corp washroom bake-off's runner-up, kept for the facility washroom"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:27",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/washroom1.mp3"
+      ]
+    },
+    "corp/phone": {
+      "area": "corp",
+      "loop": false,
+      "variants": [
+        {
+          "file": "corp/phone-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an office desk telephone ringing in an empty room, gentle low-volume electronic warble ring, two or three rings with natural pauses, soft and clean, no distortion, unanswered, clean modern corporate office building interior, close-miked, dry, realistic field recording, no music, no voices",
+          "duration": 5,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-09T23:49",
+          "bakeoff": "third elevenlabs roll, take 3; the first roll clipped, losers in sounds-src/unused/corp"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:27",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "corp/phone1.mp3"
+      ]
+    },
+    "facility/lab": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/lab-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "laboratory room tone, steady hum of lab equipment, fume hood extraction air, fluorescent light buzz, constant, no events, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:28",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/lab1.mp3"
+      ]
+    },
+    "facility/hangar": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/hangar-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "large empty aircraft hangar interior room tone, wind pressing on huge steel bay doors, low rumble, big reverberant metal space, constant, no events, secret research compound, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:28",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/hangar1.mp3"
+      ]
+    },
+    "facility/park": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/park-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "small landscaped park, breeze in tree leaves, occasional distant birds, constant, no events, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:29",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/park1.mp3"
+      ]
+    },
+    "facility/exterior": {
+      "area": "facility",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "facility/exterior-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "open asphalt yard and parking lot, steady wind, distant city road traffic hum, constant, no events, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:29",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/exterior1.mp3"
+      ]
+    },
+    "facility/machine": {
+      "area": "facility",
+      "loop": true,
+      "variants": [
+        {
+          "file": "facility/machine-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "industrial laboratory machine running, steady electric motor whir and mechanical hum, constant, no events, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:30",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/machine1.mp3"
+      ]
+    },
+    "facility/generator": {
+      "area": "facility",
+      "loop": true,
+      "variants": [
+        {
+          "file": "facility/generator-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "diesel power generator running, steady engine drone and mechanical rumble, constant, no events, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:30",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "facility/generator1.mp3"
+      ]
+    },
+    "facility/drain": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/drain-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "floor drain gurgle, water glugging down a metal grate drain pipe, single event, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/drain-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "floor drain gurgle, water glugging down a metal grate drain pipe, single event, secret research laboratory compound interior, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:31",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "facility/drain1.mp3",
+        "facility/drain2.mp3"
+      ]
+    },
+    "facility/pa": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/pa-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "public address chime followed by a muffled unintelligible announcement over ceiling loudspeakers in a distant corridor, reverberant, words not understandable, secret research laboratory interior, realistic field recording, no music",
+          "duration": 6.965986,
+          "seed": null,
+          "cost": 0.0126,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:31",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "facility/pa1.mp3"
+      ]
+    },
+    "facility/car": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/car-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single car driving past on a road at a distance, passing by left to right, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/car-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single car driving past on a road at a distance, passing by left to right, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 6.037188,
+          "seed": null,
+          "cost": 0.0108,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        },
+        {
+          "file": "facility/car-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a single car driving past on a road at a distance, passing by left to right, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:32",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "facility/car1.mp3",
+        "facility/car2.mp3",
+        "facility/car3.mp3"
+      ]
+    },
+    "wild/coyote": {
+      "area": "wild",
+      "loop": false,
+      "variants": [
+        {
+          "file": "wild/coyote-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a distant coyote howling and yipping far across open plains, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:32",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "wild/coyote1.mp3"
+      ]
+    },
+    "wild/forest": {
+      "area": "wild",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "wild/forest-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "still forest at night, crickets and night insects chirping, soft leaf rustle, a branch creaking now and then, barely any wind, constant, no events, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10 (re-roll, \"too windy\"): elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "wild/forest1.mp3"
+      ],
+      "last_converted": "2026-10-10T18:06:32"
+    },
+    "wild/mountain": {
+      "area": "wild",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "wild/mountain-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "rocky mountain slope, thin cold wind blowing over bare rocks, sparse and empty, constant, no events, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, swapped in from unused for the elevenlabs take, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "wild/mountain1.mp3"
+      ],
+      "last_converted": "2026-10-10T17:40:33"
+    },
+    "wild/owl": {
+      "area": "wild",
+      "loop": false,
+      "variants": [
+        {
+          "file": "wild/owl-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an owl hooting in a tree, two or three hoots, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        },
+        {
+          "file": "wild/owl-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "an owl hooting in a tree, two or three hoots, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 3.993832,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:33",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "wild/owl1.mp3",
+        "wild/owl2.mp3"
+      ]
+    },
+    "wild/rockfall": {
+      "area": "wild",
+      "loop": false,
+      "variants": [
+        {
+          "file": "wild/rockfall-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "small pebbles and loose stones tumbling down a rocky slope, short trickle, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:34",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "wild/rockfall1.mp3"
+      ]
+    },
+    "wild/twig": {
+      "area": "wild",
+      "loop": false,
+      "variants": [
+        {
+          "file": "wild/twig-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a dry twig snapping in a forest, single crack, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        },
+        {
+          "file": "wild/twig-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a dry twig snapping in a forest, single crack, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 2.043356,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:34",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "wild/twig1.mp3",
+        "wild/twig2.mp3"
+      ]
+    },
+    "wild/plains": {
+      "area": "wild",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "wild/plains-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "open grassland, crickets chirping, gentle wind through tall grass, constant, no events, wilderness at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:35",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "wild/plains1.mp3"
+      ]
+    },
+    "facility/birds": {
+      "area": "facility",
+      "loop": false,
+      "variants": [
+        {
+          "file": "facility/birds-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a nightingale singing a short trill in a tree, a few soft night bird calls, outdoors at a fenced research compound at night, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/facility"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:35",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "facility/birds1.mp3"
+      ]
+    },
+    "city/diner": {
+      "area": "city",
+      "loop": true,
+      "variants": [
+        {
+          "file": "city/diner-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "small diner kitchen heard from the street outside, extractor fan running, fryer sizzling, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:35",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/diner1.mp3"
+      ]
+    },
+    "city/downtown-alley": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/downtown-alley-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "service alley between downtown skyscrapers, loud rooftop ventilation exhaust roar, echoing walls, distant traffic, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:36",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/downtown-alley1.mp3"
+      ]
+    },
+    "city/downtown-main": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/downtown-main-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "wide downtown boulevard among tall glass towers, dense heavy traffic passing close, big city roar, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:36",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/downtown-main1.mp3"
+      ]
+    },
+    "city/downtown-street": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/downtown-street-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "downtown side street among tall glass towers, steady traffic one block away, city roar echoing off the buildings, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:37",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/downtown-street1.mp3"
+      ]
+    },
+    "city/horn": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/horn-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a distant car horn honking twice in city traffic, city at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:37",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/horn1.mp3"
+      ]
+    },
+    "city/rats": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/rats-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "rats scurrying and squeaking in a pile of trash bags, short, city at night, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:37",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/rats1.mp3"
+      ]
+    },
+    "city/sewer": {
+      "area": "city",
+      "loop": true,
+      "variants": [
+        {
+          "file": "city/sewer-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "water running and trickling in a sewer below a street manhole grate, echoing underground, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:38",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/sewer1.mp3"
+      ]
+    },
+    "city/bottle": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/bottle-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a glass bottle smashing on asphalt in an alley, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/bottle-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a glass bottle smashing on asphalt in an alley, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:38",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/bottle1.mp3",
+        "city/bottle2.mp3"
+      ]
+    },
+    "city/can": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/can-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an empty tin can rolling and rattling across concrete in the wind, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/can-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "an empty tin can rolling and rattling across concrete in the wind, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:39",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/can1.mp3",
+        "city/can2.mp3"
+      ]
+    },
+    "city/garage": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/garage-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "auto repair garage, pneumatic impact wrench burst and a metal tool clanking, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/garage-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "auto repair garage, pneumatic impact wrench burst and a metal tool clanking, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 3.993832,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:39",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/garage1.mp3",
+        "city/garage2.mp3"
+      ]
+    },
+    "city/helicopter": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/helicopter-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a helicopter flying high over a city, approaching, passing overhead and fading away, city at night, realistic field recording, no music, no voices",
+          "duration": 10.0,
+          "seed": null,
+          "cost": 0.02,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/helicopter-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a helicopter flying high over a city, approaching, passing overhead and fading away, city at night, realistic field recording, no music, no voices",
+          "duration": 10.03102,
+          "seed": null,
+          "cost": 0.0181,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:40",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/helicopter1.mp3",
+        "city/helicopter2.mp3"
+      ]
+    },
+    "city/lampbuzz": {
+      "area": "city",
+      "loop": true,
+      "variants": [
+        {
+          "file": "city/lampbuzz-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "old failing sodium street lamp, electrical buzz and hum from the lamp head, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/lampbuzz-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "old failing sodium street lamp, electrical buzz and hum from the lamp head, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:41",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/lampbuzz1.mp3",
+        "city/lampbuzz2.mp3"
+      ]
+    },
+    "city/laundromat": {
+      "area": "city",
+      "loop": true,
+      "variants": [
+        {
+          "file": "city/laundromat-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "outside an open laundromat, several washing machines and tumble dryers running, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/laundromat-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "outside an open laundromat, several washing machines and tumble dryers running, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:42",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/laundromat1.mp3",
+        "city/laundromat2.mp3"
+      ]
+    },
+    "city/medium-alley": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/medium-alley-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "quiet back alley in an ordinary city neighbourhood, air conditioner units humming on the walls, distant traffic, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/medium-alley-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "quiet back alley in an ordinary city neighbourhood, air conditioner units humming on the walls, distant traffic, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:43",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/medium-alley1.mp3",
+        "city/medium-alley2.mp3"
+      ]
+    },
+    "city/medium-main": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/medium-main-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "busy four-lane avenue in an ordinary city neighbourhood, steady traffic passing close, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/medium-main-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "busy four-lane avenue in an ordinary city neighbourhood, steady traffic passing close, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:44",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/medium-main1.mp3",
+        "city/medium-main2.mp3"
+      ]
+    },
+    "city/screendoor": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/screendoor-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a screen door slamming shut on a run-down house, spring creak then bang, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/screendoor-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a screen door slamming shut on a run-down house, spring creak then bang, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:44",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/screendoor1.mp3",
+        "city/screendoor2.mp3"
+      ]
+    },
+    "city/shopbell": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/shopbell-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a shop entrance door bell jingling as the door opens and closes, heard from the street outside, city at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/shopbell-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a shop entrance door bell jingling as the door opens and closes, heard from the street outside, city at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:45",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/shopbell1.mp3",
+        "city/shopbell2.mp3"
+      ]
+    },
+    "city/slums-main": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/slums-main-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "wide road through a run-down poor neighbourhood, occasional old cars passing close, sparse traffic, wind, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/slums-main-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "wide road through a run-down poor neighbourhood, occasional old cars passing close, sparse traffic, wind, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:46",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/slums-main1.mp3",
+        "city/slums-main2.mp3"
+      ]
+    },
+    "city/slums-street": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/slums-street-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "narrow side street in a run-down poor neighbourhood, distant sparse traffic, wind, buzzing streetlights, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/slums-street-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "narrow side street in a run-down poor neighbourhood, distant sparse traffic, wind, buzzing streetlights, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:47",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/slums-street1.mp3",
+        "city/slums-street2.mp3"
+      ]
+    },
+    "city/store": {
+      "area": "city",
+      "loop": true,
+      "variants": [
+        {
+          "file": "city/store-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "outside a corner convenience store, refrigerator compressor hum and an electrically buzzing illuminated sign, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/store-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "outside a corner convenience store, refrigerator compressor hum and an electrically buzzing illuminated sign, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:48",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/store1.mp3",
+        "city/store2.mp3"
+      ]
+    },
+    "city/warehouse": {
+      "area": "city",
+      "loop": true,
+      "variants": [
+        {
+          "file": "city/warehouse-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "outside a corrugated metal warehouse, industrial machinery humming through the walls, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/warehouse-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "outside a corrugated metal warehouse, industrial machinery humming through the walls, steady, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:49",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/warehouse1.mp3",
+        "city/warehouse2.mp3"
+      ]
+    },
+    "city/crackle": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/crackle-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a fire in a metal barrel crackling, wood popping and snapping, short burst, city at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        },
+        {
+          "file": "city/crackle-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a fire in a metal barrel crackling, wood popping and snapping, short burst, city at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:50",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/crackle1.mp3",
+        "city/crackle2.mp3"
+      ]
+    },
+    "wild/road": {
+      "area": "wild",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "wild/road-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "open asphalt yard and parking lot, steady wind, distant city road traffic hum, constant, no events, outdoors at a fenced research compound on the edge of a city, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/wild"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:50",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "wild/road1.mp3"
+      ]
+    },
+    "city/slums-alley": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/slums-alley-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "narrow back alley between dilapidated crumbling brick buildings, wind blowing through, water dripping onto wet ground, old paper litter rustling, constant, no events, no metal, city at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10 (third roll): elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:51",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/slums-alley1.mp3"
+      ]
+    },
+    "city/medium-street": {
+      "area": "city",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "city/medium-street-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "side street in an ordinary city neighbourhood, steady traffic one block away, a car passing at a distance now and then, faint hum of the city, constant, no events, city at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:51",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "city/medium-street1.mp3"
+      ]
+    },
+    "sewer/chamber": {
+      "area": "sewer",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "sewer/chamber-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "large brick sewer chamber room tone, wide reverberant space, distant water running somewhere, deep hollow air, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:52",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/chamber1.mp3"
+      ]
+    },
+    "sewer/drip": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single water drop falling into a shallow puddle, echoing, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:52",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/drip1.mp3"
+      ]
+    },
+    "sewer/manhole": {
+      "area": "sewer",
+      "loop": true,
+      "variants": [
+        {
+          "file": "sewer/manhole-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "city street heard from below through a manhole cover, muffled traffic passing above, wind whistling through the cover slots, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:53",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/manhole1.mp3"
+      ]
+    },
+    "sewer/pipe": {
+      "area": "sewer",
+      "loop": true,
+      "variants": [
+        {
+          "file": "sewer/pipe-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "hollow hum of water flowing inside an old iron pipe along a wall, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:53",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/pipe1.mp3"
+      ]
+    },
+    "sewer/surge": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/surge-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a distant rush of water surging through a large pipe somewhere in the tunnels, then fading, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.014,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:53",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/surge1.mp3"
+      ]
+    },
+    "sewer/knock": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/knock-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an old iron pipe knocking from water hammer, then metal ticking as it settles, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/knock-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "an old iron pipe knocking from water hammer, then metal ticking as it settles, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 3.993832,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:54",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/knock1.mp3",
+        "sewer/knock2.mp3"
+      ]
+    },
+    "sewer/rats": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/rats-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a couple of rats squeaking and scurrying past, echoing, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/rats-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a couple of rats squeaking and scurrying past, echoing, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:54",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/rats1.mp3",
+        "sewer/rats2.mp3"
+      ]
+    },
+    "sewer/rumble": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/rumble-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a heavy truck passing overhead, low rumble through the ceiling, grit trickling down, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.014,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/rumble-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy truck passing overhead, low rumble through the ceiling, grit trickling down, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 6.965986,
+          "seed": null,
+          "cost": 0.0125,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:55",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/rumble1.mp3",
+        "sewer/rumble2.mp3"
+      ]
+    },
+    "sewer/trickle": {
+      "area": "sewer",
+      "loop": true,
+      "variants": [
+        {
+          "file": "sewer/trickle-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "water trickling steadily down a wet brick wall into a shallow puddle, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/trickle-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "water trickling steadily down a wet brick wall into a shallow puddle, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:56",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/trickle1.mp3",
+        "sewer/trickle2.mp3"
+      ]
+    },
+    "sewer/tunnel": {
+      "area": "sewer",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "sewer/tunnel-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "narrow brick sewer tunnel room tone, hollow low drone, distant running water, close stone echo, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/tunnel-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "narrow brick sewer tunnel room tone, hollow low drone, distant running water, close stone echo, constant, no events, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-10-10T17:40:57",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/tunnel1.mp3",
+        "sewer/tunnel2.mp3"
+      ]
+    },
+    "military/fence": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/fence-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "steady night breeze rattling a long chain-link fence, soft metallic jingle and faint creak of the wire mesh, constant, no distinct events, outdoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:08:58",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/fence1.mp3"
+      ]
+    },
+    "military/floodlight": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/floodlight-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "high-power floodlight on a watchtower, steady electrical ballast buzz and transformer hum, constant, no events, outdoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:08:58",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/floodlight1.mp3"
+      ]
+    },
+    "military/yard": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/yard-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "open yard inside a fenced military base at night, distant diesel generator hum, soft wind across the concrete, a far-off engine idling, steady and calm, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "lufs": -36,
+      "last_converted": "2026-10-10T20:08:58",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/yard1.mp3"
+      ]
+    },
+    "military/idle": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/idle-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "parked military utility vehicle with its diesel engine idling, steady low rumble and soft exhaust putter, constant, no revving, no door slams, outdoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:08:59",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/idle1.mp3"
+      ]
+    },
+    "military/indoor": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/indoor-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "inside a concrete military base building at night, room tone, steady fluorescent light hum, distant ventilation, empty corridor, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/indoor-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "inside a concrete military base building at night, room tone, steady fluorescent light hum, distant ventilation, empty corridor, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "lufs": -36,
+      "last_converted": "2026-10-10T20:09:00",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/indoor1.mp3",
+        "military/indoor2.mp3"
+      ]
+    },
+    "military/jet": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/jet-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a military jet passing high and far overhead at night, a distant muffled roar slowly rising and fading away, heard from the ground, realistic field recording, no music, no voices",
+          "duration": 10.0,
+          "seed": null,
+          "cost": 0.02,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/jet-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a military jet passing high and far overhead at night, a distant muffled roar slowly rising and fading away, heard from the ground, realistic field recording, no music, no voices",
+          "duration": 10.0,
+          "seed": null,
+          "cost": 0.018,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:09:01",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/jet1.mp3",
+        "military/jet2.mp3"
+      ]
+    },
+    "military/radio": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/radio-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a military field radio set left switched on in an empty office, steady soft static hiss with faint electronic crackle, constant, no speech, no beeps, indoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/radio-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a military field radio set left switched on in an empty office, steady soft static hiss with faint electronic crackle, constant, no speech, no beeps, indoors at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:09:01",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/radio1.mp3",
+        "military/radio2.mp3"
+      ]
+    },
+    "military/range": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/range-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a firing range very far away at night, a few muffled distant rifle shots with long echoes across open country, faint and remote, realistic field recording, no music, no voices",
+          "duration": 8.0,
+          "seed": null,
+          "cost": 0.016,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/range-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a firing range very far away at night, a few muffled distant rifle shots with long echoes across open country, faint and remote, realistic field recording, no music, no voices",
+          "duration": 8.0,
+          "seed": null,
+          "cost": 0.0144,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T20:09:02",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/range1.mp3",
+        "military/range2.mp3"
+      ]
+    },
+    "military/hangar": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/hangar-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "inside a large military aircraft hangar at night, cavernous reverberant steel shed room tone, wind pressing on the big bay doors, faint ticking of a cooling aircraft, a distant generator hum through the walls, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/hangar-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "inside a large military aircraft hangar at night, cavernous reverberant steel shed room tone, wind pressing on the big bay doors, faint ticking of a cooling aircraft, a distant generator hum through the walls, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "lufs": -36,
+      "last_converted": "2026-10-10T23:58:00",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/hangar1.mp3",
+        "military/hangar2.mp3"
+      ]
+    },
+    "military/generator": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/generator-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a trailer-mounted military diesel field generator running outdoors at night, heavy steady engine drone, rattling sheet-metal housing, exhaust chug, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T23:58:01",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/generator1.mp3"
+      ]
+    },
+    "military/vent": {
+      "area": "military",
+      "loop": true,
+      "variants": [
+        {
+          "file": "military/vent-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "old military barracks ventilation grille at night, steady low airflow through a dented sheet-steel duct, faint metallic rattle of a loose louvre, hollow concrete building, constant, no events, close-miked, realistic field recording, no music, no voices",
+          "duration": 20,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/vent-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "old military barracks ventilation grille at night, steady low airflow through a dented sheet-steel duct, faint metallic rattle of a loose louvre, hollow concrete building, constant, no events, close-miked, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T23:58:02",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/vent1.mp3",
+        "military/vent2.mp3"
+      ]
+    },
+    "military/truck": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/truck-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single heavy military cargo truck driving past on a road at a distance at night, diesel engine growl and gear whine passing by left to right, outdoors beside a fenced army base in the countryside, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.014,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/truck-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single heavy military cargo truck driving past on a road at a distance at night, diesel engine growl and gear whine passing by left to right, outdoors beside a fenced army base in the countryside, realistic field recording, no music, no voices",
+          "duration": 7.0,
+          "seed": null,
+          "cost": 0.0126,
+          "native_loop": false,
+          "generated": "2026-10-10T00:00",
+          "bakeoff": "bake-off 2026-10-10: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-10T23:58:02",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/truck1.mp3",
+        "military/truck2.mp3"
+      ]
+    },
+    "military/latrine": {
+      "area": "military",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/latrine-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "old military barracks latrine at night, tiled concrete washroom room tone, steady trickle of water through old pipes inside the walls, hollow echo off the tiles, faint fluorescent tube hum, constant, no flushing, no events, realistic field recording, no music, no voices",
+          "duration": 22.012517,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:44",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/latrine1.mp3"
+      ]
+    },
+    "military/comms": {
+      "area": "military",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/comms-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "military radio room at night, steady hum of racks of old radio equipment and their cooling fans, soft constant static hiss from receivers left on, faint electronic whine, concrete room, constant, no speech, no beeps, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:45",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/comms1.mp3"
+      ]
+    },
+    "military/flush": {
+      "area": "military",
+      "loop": false,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/flush-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an old high-cistern toilet flushing in a cubicle of a military barracks latrine, heard from behind the partition, a heavy rush of water then the cistern gurgling as it refills and fades out, tiled concrete room, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/flush-elevenlabs2.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an old high-cistern toilet flushing in a cubicle of a military barracks latrine, heard from behind the partition, a muffled rush of water then the cistern gurgling as it refills and fades out, soft and clean with no distortion, tiled concrete room, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:45",
+      "last_sig": "-36/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/flush1.mp3",
+        "military/flush2.mp3"
+      ]
+    },
+    "military/squelch": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/squelch-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a military radio receiver in an empty radio room breaking squelch, a short gentle burst of soft crackling static and a soft click as the squelch closes again, clean with no distortion, no speech, indoors at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/squelch-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a military radio receiver in an empty radio room breaking squelch, a short gentle burst of soft crackling static and a soft click as the squelch closes again, clean with no distortion, no speech, indoors at night, realistic field recording, no music, no voices",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0054,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:46",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/squelch1.mp3",
+        "military/squelch2.mp3"
+      ]
+    },
+    "military/drip": {
+      "area": "military",
+      "loop": false,
+      "variants": [
+        {
+          "file": "military/drip-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a single water drop falling from a leaky old tap into an enamel washbasin, one small clear drip with a faint echo in a tiled room, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        },
+        {
+          "file": "military/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single water drop falling from a leaky old tap into an enamel washbasin, one small clear drip with a faint echo in a tiled room, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-11T23:30",
+          "bakeoff": "bake-off 2026-10-11: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T00:28:46",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "military/drip1.mp3",
+        "military/drip2.mp3"
+      ]
+    },
+    "military/room": {
+      "area": "military",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "military/room-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "inside a small closed room of a concrete military base building at night, quiet still room tone, the corridor's ventilation heard only faintly and muffled through a closed door, a very soft low electrical hum, much quieter and more intimate than the corridor, constant, no events, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-12T23:40",
+          "bakeoff": "bake-off 2026-10-12: elevenlabs/sonilo/cassette, losers in sounds-src/unused/military"
+        }
+      ],
+      "last_converted": "2026-10-12T23:13:01",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "military/room1.mp3"
+      ]
+    },
+    "lab/arrive": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/arrive-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy freight lift platform descending a shaft and stopping, an electric motor whine and cable rattle that slows, then a heavy clunk as it lands, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 7.99,
+          "seed": null,
+          "cost": 0.0144,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:04",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/arrive1.mp3"
+      ]
+    },
+    "lab/buzz": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/buzz-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a failing fluorescent tube light, an unsteady electrical buzz with crackling flicker, close, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.01,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:04",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/buzz1.mp3"
+      ]
+    },
+    "lab/centrifuge": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/centrifuge-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a large laboratory centrifuge spinning steadily at speed, a smooth whirring whine over a low rotor hum, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.01,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:05",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/centrifuge1.mp3"
+      ]
+    },
+    "lab/dead": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/dead-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a cloning vat hall after its power has died, almost silent, a faint tick of cooling metal, water dripping far off in the dark, cold dead air, very quiet, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.01,
+          "seed": null,
+          "cost": 0.0396,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:05",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/dead1.mp3"
+      ]
+    },
+    "lab/depart": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/depart-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy freight lift platform starting to rise, the clunk of a brake releasing, then an electric motor whine and cable rattle as it climbs away, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.04,
+          "seed": null,
+          "cost": 0.0109,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:06",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/depart1.mp3"
+      ]
+    },
+    "lab/door-open": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/door-open-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy steel blast door sliding open on a pneumatic piston, a sharp hiss of air and a metallic slide ending in a thud, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.04,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:06",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/door-open1.mp3"
+      ]
+    },
+    "lab/door-close": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/door-close-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy steel blast door sliding shut on a pneumatic piston, a hiss of air, a metallic slide and a solid sealing clunk, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.04,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:06",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/door-close1.mp3"
+      ]
+    },
+    "lab/knock": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/knock-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single deep metallic knock in a steel pipe as pressure shifts, a hollow clank ringing briefly along the pipe, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.97,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:07",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/knock1.mp3"
+      ]
+    },
+    "lab/pa": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/pa-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a wordless public address chime from a cheap ceiling speaker, a three-note electronic tone and a soft click, no speech, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.99,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:07",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/pa1.mp3"
+      ]
+    },
+    "lab/purge": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/purge-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy industrial valve releasing, a loud clunk followed by a rushing hiss of fluid flushed out under pressure, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.99,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:07",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/purge1.mp3"
+      ]
+    },
+    "lab/bubble": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/bubble-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a glass cloning vat full of thick green fluid, slow steady bubbling of air rising through the liquid, a soft gloopy bubbling over a faint low pump hum, close, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:08",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/bubble1.mp3"
+      ]
+    },
+    "lab/console": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/console-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a bank of old computer consoles and monitoring screens, a steady soft electronic hum with quiet data-processing chirps blended into it, cooling fans, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:08",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/console1.mp3"
+      ]
+    },
+    "lab/corridor": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/corridor-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a long steel-walled service corridor of an underground laboratory, a steady low ventilation rush through ceiling ducts, a faint electrical hum from conduits along the walls, a slight hollow echo, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:09",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/corridor1.mp3"
+      ]
+    },
+    "lab/cryo": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/cryo-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a cryogenic storage cabinet, a steady cold hiss of venting coolant over the deep hum of a compressor, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:09",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/cryo1.mp3"
+      ]
+    },
+    "lab/drain": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/drain-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a large tank of thick fluid draining through a floor outlet, a deep glugging gurgle that slows and ends in a last sucking slurp, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:09",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/drain1.mp3"
+      ]
+    },
+    "lab/hiss": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/hiss-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a short hiss of a pressure relief valve venting, then stopping, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:10",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/hiss1.mp3"
+      ]
+    },
+    "lab/klaxon": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/klaxon-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a laboratory lockdown alarm, a repeating two-tone electronic klaxon whooping steadily over an industrial wall speaker, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:10",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/klaxon1.mp3"
+      ]
+    },
+    "lab/lift": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/lift-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a freight lift's electric motor idling at the top of its shaft, heard from the bottom of the shaft, a steady low motor hum with a faint cable creak, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:11",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/lift1.mp3"
+      ]
+    },
+    "lab/lobby": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/lobby-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "the lift lobby of an abandoned underground laboratory, cold still room tone, a distant ventilation drone through steel ducts, the faint creak of lift cables settling far above, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:11",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/lobby1.mp3"
+      ]
+    },
+    "lab/research": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/research-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a research laboratory room, a soft hum of computers and analysis equipment, faint instrument fans, a quiet clinical room, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:12",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/research1.mp3"
+      ]
+    },
+    "lab/storage": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/storage-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a cold storage room, the steady drone of refrigeration compressors and cold-room fans, a faint icy hiss of coolant, a closed steel room, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:12",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/storage1.mp3"
+      ]
+    },
+    "lab/thump": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/thump-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single heavy dull thump from inside a sealed steel containment unit, as if something struck it from within, a short metallic resonance, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:13",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/thump1.mp3"
+      ]
+    },
+    "lab/vat": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/vat-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a cloning vat hall, the deep steady hum of pumps and life-support machinery, a soft churn of thick fluid circulating through pipes, faint electronic tones of monitors, a large hard room, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:13",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/vat1.mp3"
+      ]
+    },
+    "lab/vent": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/vent-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an air vent in a steel wall, a steady breathy rush of air through a metal grille, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:14",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/vent1.mp3"
+      ]
+    },
+    "lab/workshop": {
+      "area": "lab",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "lab/workshop-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a machine workshop room, the low steady hum of an idling generator cabinet and a power distribution box, a faint electrical buzz, a hard room with steel benches, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.044,
+          "native_loop": true,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:14",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/workshop1.mp3"
+      ]
+    },
+    "lab/drip": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single drop of thick fluid dripping from a pipe onto a steel floor grate, one small wet drip with a faint echo, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        },
+        {
+          "file": "lab/drip-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a single drop of thick fluid dripping from a pipe onto a steel floor grate, one small wet drip with a faint echo, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 2.04,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:14",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/drip1.mp3",
+        "lab/drip2.mp3"
+      ]
+    },
+    "lab/powerdown": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/powerdown-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a laboratory losing power, a whole bank of machines spinning down together, the electrical hum dropping in pitch and fading to silence, a final relay clack, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        },
+        {
+          "file": "lab/powerdown-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a laboratory losing power, a whole bank of machines spinning down together, the electrical hum dropping in pitch and fading to silence, a final relay clack, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 6.04,
+          "seed": null,
+          "cost": 0.0109,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:15",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/powerdown1.mp3",
+        "lab/powerdown2.mp3"
+      ]
+    },
+    "lab/shaft": {
+      "area": "lab",
+      "loop": false,
+      "variants": [
+        {
+          "file": "lab/shaft-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a heavy steel cable clanking and settling far up a deep lift shaft, a distant echoing metallic clank, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        },
+        {
+          "file": "lab/shaft-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy steel cable clanking and settling far up a deep lift shaft, a distant echoing metallic clank, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 3.99,
+          "seed": null,
+          "cost": 0.0072,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:16",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "lab/shaft1.mp3",
+        "lab/shaft2.mp3"
+      ]
+    },
+    "lab/incubator": {
+      "area": "lab",
+      "loop": true,
+      "variants": [
+        {
+          "file": "lab/incubator-cassette1.wav",
+          "model": "cassette",
+          "endpoint": "cassetteai/sound-effects-generator",
+          "prompt": "a laboratory incubator cabinet, a soft steady fan hum and a faint electrical whir, gentle, constant, a steady state with no distinct events, deep underground in a sealed secret cloning laboratory cut into the bedrock, steel and concrete rooms, realistic field recording, no music, no voices",
+          "duration": 22.0,
+          "seed": null,
+          "cost": 0.01,
+          "native_loop": false,
+          "generated": "2026-10-13T00:00",
+          "bakeoff": "bake-off 2026-10-13: elevenlabs/sonilo/cassette, losers in sounds-src/unused/lab"
+        }
+      ],
+      "last_converted": "2026-10-14T22:35:16",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "lab/incubator1.mp3"
+      ]
+    },
+    "city/dumpster-open": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/dumpster-open-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy plastic lid of a steel street dumpster being lifted open, hinges creaking, the lid swinging back and knocking dully against the bin, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 2.507755,
+          "seed": null,
+          "cost": 0.0045,
+          "native_loop": false,
+          "generated": "2026-10-18T00:00",
+          "bakeoff": "bake-off 2026-10-18: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-18T17:21:38",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/dumpster-open1.mp3"
+      ]
+    },
+    "city/dumpster-close": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/dumpster-close-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy plastic lid of a steel street dumpster dropping shut, a short hinge creak then a hollow booming thud of the lid on the metal bin, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 2.043356,
+          "seed": null,
+          "cost": 0.0036,
+          "native_loop": false,
+          "generated": "2026-10-18T00:00",
+          "bakeoff": "bake-off 2026-10-18: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-18T17:21:38",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/dumpster-close1.mp3"
+      ]
+    }
+  }
+}

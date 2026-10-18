@@ -18,7 +18,7 @@ class Splat {
           dx = x - source.x;
           dz = y - source.y;
         }
-      var ic = particles.ParticleSplat.bloodIcon(type);
+      var ic = Const.bloodIcon(type);
       c.actors.burst(x, y, dx, dz, ic.row, ic.col, RenderConfig.BLOOD.dripDrops);
       c.game.scene.sounds.play('fx-splat', { x: x, y: y });
       return true;

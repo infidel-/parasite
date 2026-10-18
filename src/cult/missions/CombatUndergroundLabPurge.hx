@@ -80,8 +80,6 @@ class CombatUndergroundLabPurge extends Combat
 
       var missionArea = game.region.createArea(AREA_UNDERGROUND_LAB);
       missionArea.parentID = marker.id;
-      missionArea.width = 45;
-      missionArea.height = 35;
       areaID = missionArea.id;
 
       splitScientistsAndGuards();
@@ -220,8 +218,13 @@ class CombatUndergroundLabPurge extends Combat
         }
 
       if (vatObjectIDs.length == 0)
-        if (!spawnCloneVats(vatRoom, hints))
-          throw 'Underground lab purge mission failed to place ' + REQUIRED_VAT_COUNT + ' vats.';
+        {
+          if (!spawnCloneVats(vatRoom, hints))
+            throw 'Underground lab purge mission failed to place ' + REQUIRED_VAT_COUNT + ' vats.';
+          // the vats are drawn by the 3D view (render.lab.LabVats), which places them at build: one
+          // rebuild for the whole set rather than one per part
+          game.scene.updateObjects3D();
+        }
 
       isInitialized = true;
     }
@@ -327,9 +330,6 @@ class CombatUndergroundLabPurge extends Combat
         {
           if (vatObjectIDs.length >= REQUIRED_VAT_COUNT)
             break;
-          if (!canPlaceCloneVatAt(anchor.x, anchor.y))
-            continue;
-          clearFloorDecorationAroundVat(anchor.x, anchor.y, 1);
           if (!canPlaceCloneVatAt(anchor.x, anchor.y))
             continue;
           spawnCloneVatGroup(anchor.x, anchor.y);
@@ -566,13 +566,16 @@ class CombatUndergroundLabPurge extends Combat
 // check if a 2x3 vat can be placed at top-left tile x,y
   function canPlaceCloneVatAt(x: Int, y: Int): Bool
     {
-      var tileset = game.scene.images.getTileset(game.area.typeID);
       for (dy in 0...VAT_H)
         for (dx in 0...VAT_W)
           {
             var tx = x + dx;
             var ty = y + dy;
-            if (!tileset.isWalkable(game.area.getCellType(tx, ty)) ||
+            // a lab floor or pad and nothing standing on it: a wall-hugging shelf is walkable too
+            var t = game.area.getCellType(tx, ty);
+            if (t < Const.TILE_LAB_CORRIDOR ||
+                t > Const.TILE_LAB_VAT_PAD ||
+                !game.area.isWalkable(tx, ty) ||
                 game.area.hasObjectAt(tx, ty) ||
                 game.area.getAI(tx, ty) != null ||
                 (game.playerArea.x == tx &&
@@ -602,100 +605,6 @@ class CombatUndergroundLabPurge extends Combat
       for (vat in vats)
         vat.setVatGroup(rootObjectID, partObjectIDs);
       vatObjectIDs.push(rootObjectID);
-    }
-
-// clear blocking/object decoration around vat footprint and movement ring
-  function clearFloorDecorationAroundVat(x: Int, y: Int, padding: Int)
-    {
-      var tileset: tiles.UndergroundLab =
-        cast game.scene.images.getTileset(game.area.typeID);
-      var tiles = game.area.getTiles();
-      var didChange = false;
-      var tagsToRemove: Map<String, Bool> = new Map<String, Bool>();
-      var ringX1 = x - padding;
-      var ringY1 = y - padding;
-      var ringX2 = x + VAT_W - 1 + padding;
-      var ringY2 = y + VAT_H - 1 + padding;
-      var vatX2 = x + VAT_W - 1;
-      var vatY2 = y + VAT_H - 1;
-
-      // gather decoration object group tags intersecting vat footprint + ring
-      for (ty in ringY1...ringY2 + 1)
-        for (tx in ringX1...ringX2 + 1)
-          {
-            if (!isInAreaBounds(tx, ty))
-              continue;
-            var tile = tiles[tx][ty];
-            if (tile == null ||
-                tile.decoration == null ||
-                tile.decoration.length == 0)
-              continue;
-            for (decoration in tile.decoration)
-              if (tileset.isDecorationObjLayerID(decoration.layerID) &&
-                  decoration.tag != null)
-                tagsToRemove[decoration.tag] = true;
-          }
-
-      // remove all tagged decoration object tiles across the area
-      if (tagsToRemove.keys().hasNext())
-        for (ty in 0...game.area.height)
-          for (tx in 0...game.area.width)
-            {
-              var tile = tiles[tx][ty];
-              if (tile == null ||
-                  tile.decoration == null ||
-                  tile.decoration.length == 0)
-                continue;
-
-              var kept = [];
-              for (decoration in tile.decoration)
-                {
-                  if (tileset.isDecorationObjLayerID(decoration.layerID) &&
-                      decoration.tag != null &&
-                      tagsToRemove[decoration.tag])
-                    continue;
-                  kept.push(decoration);
-                }
-              if (kept.length == tile.decoration.length)
-                continue;
-              tile.decoration = kept;
-              game.area.recalcTile(tx, ty);
-              didChange = true;
-            }
-
-      // clear footprint decorations and blocking ring decorations
-      for (ty in ringY1...ringY2 + 1)
-        for (tx in ringX1...ringX2 + 1)
-          {
-            if (!isInAreaBounds(tx, ty))
-              continue;
-            var tile = tiles[tx][ty];
-            if (tile == null ||
-                tile.decoration == null ||
-                tile.decoration.length == 0)
-              continue;
-
-            var tileID = game.area.getCellType(tx, ty);
-            var inVatFootprint = (tx >= x &&
-              tx <= vatX2 &&
-              ty >= y &&
-              ty <= vatY2);
-            var kept = [];
-            for (decoration in tile.decoration)
-              {
-                if (inVatFootprint)
-                  continue;
-                if (tileset.isBlockingDecoration(tileID, decoration))
-                  continue;
-                kept.push(decoration);
-              }
-            if (kept.length != tile.decoration.length)
-              didChange = true;
-            tile.decoration = kept;
-            game.area.recalcTile(tx, ty);
-          }
-      if (didChange)
-        game.scene.areaLighting.invalidateArea(game.area);
     }
 
 // choose the largest room from generator metadata

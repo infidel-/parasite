@@ -30,6 +30,17 @@ class Pickup extends AreaObject
     }
 
 
+// key the 3D view looks a glb prop up by: WHAT the item is and not which atlas frame it was given.
+// everything else on the ground stays 'pickup' and so keeps its sprite — see
+// render.world.ObjModels.modelFor, which answers null for a key with no row
+  public override function getModelKey(): String
+    {
+      if (item != null &&
+          item.id == 'shipPart')
+        return 'pickup_shipPart';
+      return type;
+    }
+
 // can the player pick this up right now? (human host with inventory space)
   public function canGet(): Bool
     {

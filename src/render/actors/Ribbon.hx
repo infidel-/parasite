@@ -80,6 +80,7 @@ class Ribbon
     {
       geo = new BufferGeometry();
       mesh = new Mesh(geo, material());
+      mesh.name = 'fx ribbon';
       mesh.renderOrder = Sprites.ORD_ACTOR;
       mesh.visible = false;
       // rebuilt in WORLD coordinates every frame, so three must not frustum-test it against a

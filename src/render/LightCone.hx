@@ -11,6 +11,8 @@ typedef ConeSet = {
   var matrices:Array<Matrix4>; // every instance's transform, in build order
   var phases:Array<Float>;     // per-instance flicker phase; empty = a steady set
   var on:Array<Bool>;          // per-instance: was it packed into the draw last pulse()
+  @:optional var centres:Array<Vector3>; // per-instance mid-shaft point, for cull(); built by instanced()
+  @:optional var cullR:Float;            // the shaft's bounding radius about that point
 };
 
 // a cheap volumetric light shaft: a hollow additive cone shell hung under a lamp's bulb, outlining
@@ -57,17 +59,29 @@ class LightCone {
       var bulbs = o.bulbs;
       var bulbY = o.bulbY;
       var radius = o.radius;
-      var set:ConeSet = { mesh: null, matrices: [], phases: o.phases != null ? o.phases : [], on: [] };
+      var set:ConeSet = {
+        mesh: null,
+        matrices: [],
+        phases: o.phases != null ? o.phases : [],
+        on: [],
+        centres: [],
+        cullR: 0,
+      };
       if (bulbs.length == 0)
         return set;
       var C = RenderConfig.LAMP_CONE;
       // the shaft spans startFrac..1 of the bulb->ground axis; a top radius that follows the cone there
-      var s = C.startFrac;
+      var s = o.startFrac != null ? o.startFrac : C.startFrac;
       var h = bulbY * (1 - s);
       var rTop = radius * s;
       if (rTop < o.topR)
         rTop = o.topR;
-      var geo = new CylinderGeometry(rTop, radius, h, C.seg, 1, true);
+      // a PARTIAL shell is built centred on local +z (thetaStart = -arc/2) so the per-instance yaw
+      // below is just the outward heading and nothing has to know how three numbers its theta. still
+      // openEnded: the flat cut is left open on purpose, because a face there is a second additive
+      // surface stacked on the wall it is cut against and reads as a bright band up the masonry
+      var arc = (o.arc != null ? o.arc : Math.PI * 2);
+      var geo = new CylinderGeometry(rTop, radius, h, C.seg, 1, true, -arc / 2, arc);
       // fold the vertical placement into the geometry so an instance sitting at the bulb has its base
       // on the ground: center offset = -bulbY*(1+startFrac)/2 below the bulb
       geo.translate(0, -bulbY * (1 + s) / 2, 0);
@@ -79,6 +93,9 @@ class LightCone {
         opacity: C.opacity,
         depthWrite: false,
         side: THREE.DoubleSide,
+        // both faces in one draw: additive blending is order-free, and three's two-pass split also
+        // rebuilds the program key twice per frame per mesh
+        forceSinglePass: true,
         blending: untyped THREE.AdditiveBlending,
         alphaMap: gradient(),
       });
@@ -93,19 +110,38 @@ class LightCone {
       // avoids the decal-slot tie it had at the default 0, which flipped cone-over-blood on zoom
       untyped inst.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
       var q = new Quaternion(), pos = new Vector3(), one = new Vector3(1, 1, 1);
+      var up = new Vector3(0, 1, 0);
       for (i in 0...bulbs.length)
         {
           pos.set(bulbs[i].x, bulbY, bulbs[i].z);
+          // identity rotation for a full shell — a straight-down cone has no heading. a PARTIAL one
+          // does: its wedge is centred on +z, so this turns that at the surface it lights
+          if (o.yaws != null)
+            q.setFromAxisAngle(up, o.yaws[i]);
           var mtx = new Matrix4();
-          mtx.compose(pos, q, one); // identity rotation: straight-down shell
+          mtx.compose(pos, q, one);
           inst.setMatrixAt(i, mtx);
           set.matrices.push(mtx); // kept so pulse() can repack a subset of them
           set.on.push(true);
+          set.centres.push(new Vector3(bulbs[i].x, h / 2, bulbs[i].z));
         }
+      set.cullR = Math.sqrt(h * h / 4 + radius * radius);
       untyped inst.instanceMatrix.needsUpdate = true;
       o.group.add(inst);
       set.mesh = inst;
       return set;
+    }
+
+// per-frame frustum cull for a STEADY set, per instance: its mesh-wide cull is off (the batch spans
+// the area from the origin), so without this every shaft drew from everywhere. never on a set that
+// pulse() repacks — the two would fight over the packed prefix
+  public static function cull(set:ConeSet, camera:PerspectiveCamera):Void
+    {
+      Models.cull({
+        mesh: set.mesh,
+        matrices: set.matrices,
+        centres: set.centres,
+      }, camera, set.cullR);
     }
 
 // per-frame on/off for a FLICKERING set: an instance whose bulb is in its dark stretch is left out of

@@ -33,8 +33,6 @@ class Debug
             aiInfo();
           case 'sound':
             toggleSound();
-          case 'lights':
-            toggleLights();
           case 'colors':
             listColors();
           case 'difficulty' if (Const.isDebug):
@@ -48,7 +46,7 @@ class Debug
           case 'throw' if (Const.isDebug):
             throw 'test exception';
           case '':
-            log('Usage: debug [renderstats|ai|sound|lights|colors|difficulty|alert|demo|leave|throw]');
+            log('Usage: debug [renderstats|ai|sound|colors|difficulty|alert|demo|leave|throw]');
           default:
             log('Unknown debug command: ' + sub + '.');
         }
@@ -80,18 +78,15 @@ class Debug
         'spawnCells: ' + game.area.spawnCells +
         ' / AREA_AI_CELLS: ' + WorldConst.AREA_AI_CELLS + ', ' +
         game.area.getMaxAICoef() + ')]' +
-        '<br>Spawn region: ' + spawnRectText() +
-        ' (2D emptyScreenCells: ' + game.scene.area.emptyScreenCells + ')'
+        '<br>Spawn region: ' + spawnRectText()
       );
     }
 
-// describe the AI spawn region: its size and which viewport it came from (the 3D camera
-// footprint in city areas, the 2D screen rect everywhere else)
+// describe the AI spawn region: its size (the area kind's 3D camera footprint)
   function spawnRectText(): String
     {
       var r = game.area.getSpawnRect();
-      return (r.x2 - r.x1) + 'x' + (r.y2 - r.y1) +
-        (game.area.isCity() ? ' (3D camera footprint)' : ' (2D screen rect)');
+      return (r.x2 - r.x1) + 'x' + (r.y2 - r.y1);
     }
 
 // toggles debug sound info
@@ -99,14 +94,6 @@ class Debug
     {
       game.player.vars.debugSoundEnabled = !game.player.vars.debugSoundEnabled;
       game.debug('Sound debug toggled.');
-    }
-
-// toggles debug markers for area light sources
-  function toggleLights()
-    {
-      game.player.vars.debugLightsEnabled = !game.player.vars.debugLightsEnabled;
-      var state = (game.player.vars.debugLightsEnabled ? 'on' : 'off');
-      game.debug('Light marker debug toggled: ' + state + '.');
     }
 
 // finishes the demo with a lose result

@@ -13,6 +13,33 @@ typedef CoverDim = {
   matTile:Float,    // world units per material-swatch tile (never stretch the swatch)
 };
 
+// where a street ground prop may stand (render.world.StreetProps.ground)
+enum PropSpot
+{
+  KERB; // a walkway cell along exactly one road, at the kerb, facing the road
+  WALL; // an alley or walkway cell against exactly one building wall, its back to that wall
+  SERVICE; // as WALL, but an ALLEY cell only, and not at its mouth: kept off the street frontage
+  BIN;  // a cell beside a dumpster, against the same wall
+}
+
+// one street ground prop an area style scatters (AreaStyle.groundProps). each is ONE instanced batch
+// over the whole city, so `chance` is a count knob, not a cost one
+typedef GroundProp = {
+  path:String,   // the glb (RenderConfig.MODELS); null for a HEAP or STACK dealt wholly from `pile`
+  h:Float,       // world height it is drawn at
+  depth:Float,   // world depth back to front: how far a WALL/BIN prop's centre stands off its wall
+  spot:PropSpot, // where it may stand
+  chance:Float,  // odds an eligible cell takes it
+  turn:Float,    // radians of hashed yaw jitter either way (a free-standing prop); 0 = square on
+  ?block:Bool,   // KERB or SERVICE street furniture: where the area has it (game.CityAreaGenerator
+                 // .placeFurniture) it stands on a cell made impassable, never dealt by hash
+  ?apart:Bool,   // furniture never on a cell beside another of its own (a twin reads as one block)
+  ?width:Float,  // world width along its wall: a turned wall prop stands off it by the corner's swing
+  ?lean:Float,   // radians of hashed extra lean either way for a prop leant on its wall; it slides in
+                 // or out by its height so the top stays on the wall
+  ?pile:Pile,    // separate pieces dealt per cell (render.world.Pile): the heap itself, or a load in `path`
+};
+
 // per-area street-lamp prop: which lamp model to instance + where its bulb/post sit relative to the
 // cell (SceneSetup places the post at pdx/pdz within the cell, the bulb at dx/dz out from the post).
 // the bulb HEIGHT (LAMP_LIGHT.yMul), cone (angle) and the shared live-spotlight pool stay global —
@@ -109,6 +136,16 @@ class AreaStyle {
   public var helipadTex:String = null;   // top-down landing-deck marking; null = this area has no helipads
   public var helipadChance:Float = 0;    // odds an ELIGIBLE roof (tall + wide enough) gets one instead of its penthouse and detail decals
   public var helipadFacades:Array<Int> = null; // facade slots that may carry a pad; null = any (downtown limits it to the glass skyscrapers, not the mid-rises/sleek high-rise)
+  // --- the street wall kit (StreetProps.hx): fire escapes, downpipes, service conduit ---
+  public var wallKit:String = null;      // the kit glb; null = this area dresses no walls
+  public var fireEscapeChance:Float = 0; // odds a windowed building carries a fire escape over two of its window columns
+  public var downpipeChance:Float = 0;   // odds a windowed building carries a downpipe beside its end window column
+  public var downpipeBroken:Float = 0;   // odds a downpipe has lost its foot and one length
+  public var pipePuddle:Array<Int> = null; // the debrisPack cell [col, row] laid as a puddle at a broken downpipe's foot; null = none
+  public var serviceChance:Float = 0;    // odds an open service (worn) wall carries a conduit run, a riser and a louvre
+  public var groundProps:Array<GroundProp> = null; // the street's ground props (StreetProps.ground); null = none
+  public var debrisPack:String = null; // the street litter PACK64 (Images.getImage name); null = the shared entities64 rows
+  public var debrisSizes:Array<Array<Float>> = null; // each debrisPack cell's drawn longest side in world units, [row][col]; 0 = never laid
 
   public function new() {}
 

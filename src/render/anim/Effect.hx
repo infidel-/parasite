@@ -11,6 +11,8 @@ class Effect {
   public var offy:Float = 0.0;
   public var offz:Float = 0.0;
   public var scale:Float = 1.0;          // uniform scale multiplier over the resting scale
+  public var glow:Int = 0;               // self-glow color laid over the sprite, refreshed each frame
+  public var glowInt:Float = 0.0;        // self-glow intensity (0 = keep the sprite's own lighting)
 
   var t:Float = 0.0;                     // progress 0..1
   var ms:Float;                          // duration (multiple of BASE_MS)

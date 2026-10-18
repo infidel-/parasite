@@ -37,6 +37,16 @@ class Ground {
       { tile: Tile.Alley, tex: st.alley, kind: 'asphalt', tileW: RenderConfig.ALLEY_TILE, y: 0.0 },
       { tile: Tile.Walkway, tex: st.walkway, kind: 'wall', tileW: RenderConfig.WALKWAY_TILE, y: RenderConfig.CURB_H },
     ];
+    // a further boot-warm city: the uploads only. Lambert + map is one program in every style, and the
+    // first warm city compiled it
+    if (WorldCtx.pass == WARM_NO_GROUND)
+      {
+        for (t in types)
+          Textures.loadTexture(t.tex, t.kind, 1);
+        Textures.loadTexture(st.walkwayBorder, 'wall', 1);
+        Textures.loadTexture(st.roadPaint, 'asphalt', 1);
+        return;
+      }
     var bufs = [for (_ in types) MeshBufTools.make()];
     var borderBuf:GroundBuf = MeshBufTools.make(); // kerb-edging stripe on walkway tops (own mesh/tex)
     var markBuf:GroundBuf = MeshBufTools.make();   // road markings overlay (lane lines, crosswalks; own mesh/tex)
@@ -67,23 +77,13 @@ class Ground {
 
     var H = RenderConfig.CURB_H;
     var BW = RenderConfig.WALKWAY_BORDER_W, BT = RenderConfig.WALKWAY_BORDER_TILE;
-    // unit outward normal of segment a→b, flipped to point toward (tx,tz) (road side)
-    function outN(ax:Float, az:Float, bx:Float, bz:Float, tx:Float, tz:Float):{x:Float, z:Float} {
-      var nx = bz - az, nz = -(bx - ax);                       // perpendicular to a→b
-      if (nx * (tx - ax) + nz * (tz - az) < 0) { nx = -nx; nz = -nz; }
-      var nl = Math.sqrt(nx * nx + nz * nz);
-      return nl < 1e-6 ? { x: 0.0, z: 0.0 } : { x: nx / nl, z: nz / nl };
-    }
     // collect every curb segment (inner edge a→b + unit outward normal) here; the
     // kerb-edging strip is emitted in one mitered post-pass so adjacent segments meet
-    // exactly at shared vertices — no gaps at convex corners, no overlap at concave ones
-    var curbs:Array<{ax:Float, az:Float, bx:Float, bz:Float, nx:Float, nz:Float}> = [];
-    inline function lipN(ax:Float, az:Float, bx:Float, bz:Float, nx:Float, nz:Float):Void {
-      if ((bx - ax) * (bx - ax) + (bz - az) * (bz - az) > 1e-9) curbs.push({ax: ax, az: az, bx: bx, bz: bz, nx: nx, nz: nz});
-    }
-    function lipSeg(ax:Float, az:Float, bx:Float, bz:Float, tx:Float, tz:Float):Void {
-      var n = outN(ax, az, bx, bz, tx, tz); lipN(ax, az, bx, bz, n.x, n.z);
-    }
+    // exactly at shared vertices — no gaps at convex corners, no overlap at concave ones.
+    // both halves live in render.world.Kerb, shared with the facility compound's pavement
+    var curbs:Array<Kerb.KerbSeg> = [];
+    function lipSeg(ax:Float, az:Float, bx:Float, bz:Float, tx:Float, tz:Float):Void
+      Kerb.push(curbs, ax, az, bx, bz, tx, tz);
     // a road cell with exactly one convex walkway corner is beveled: a diagonal half-
     // tile of walkway is dropped into corner O, so its two O-adjacent edges become
     // raised walkway (continuous with the neighbours that triggered the bevel). returns
@@ -288,36 +288,9 @@ class Ground {
     }
 
     // --- emit the kerb-edging strip with mitered joins ----------------------
-    // each curb segment's inner edge stays on the walkway boundary; its outer edge is
-    // offset BW onto the road. at a shared boundary vertex the two segments' outer
-    // edges meet at the miter point V + BW·(n1+n2)/(1+n1·n2) — the intersection of
-    // their offset lines — so they abut exactly: no gap (convex) and no overlap (concave)
-    inline function vkey(x:Float, z:Float):String return Std.string(Math.round(x * 16)) + '_' + Std.string(Math.round(z * 16));
-    var vmap = new Map<String, Array<{s:Int, e:Int}>>();
-    inline function addV(k:String, s:Int, e:Int):Void {
-      var a = vmap.get(k); if (a == null) { a = []; vmap.set(k, a); } a.push({s: s, e: e});
-    }
-    for (i in 0...curbs.length) { var c = curbs[i]; addV(vkey(c.ax, c.az), i, 0); addV(vkey(c.bx, c.bz), i, 1); }
-    function outer(i:Int, e:Int):{x:Float, z:Float} {
-      var c = curbs[i];
-      var vx = e == 0 ? c.ax : c.bx, vz = e == 0 ? c.az : c.bz;
-      var list = vmap.get(vkey(vx, vz));
-      var oj = -1, cnt = 0;
-      if (list != null) for (it in list) if (!(it.s == i && it.e == e)) { oj = it.s; cnt++; }
-      if (cnt == 1 && oj >= 0) {
-        var nj = curbs[oj];
-        var denom = 1 + c.nx * nj.nx + c.nz * nj.nz;
-        if (denom > 0.25) return { x: vx + (c.nx + nj.nx) / denom * BW, z: vz + (c.nz + nj.nz) / denom * BW };
-      }
-      return { x: vx + c.nx * BW, z: vz + c.nz * BW }; // square end (dangling or >2-way junction)
-    }
-    for (i in 0...curbs.length) {
-      var c = curbs[i];
-      var oA = outer(i, 0), oB = outer(i, 1);
-      var ul = Math.sqrt((c.bx - c.ax) * (c.bx - c.ax) + (c.bz - c.az) * (c.bz - c.az)) / BT;
-      quad(borderBuf, [c.ax, H, c.az], [oA.x, H, oA.z], [oB.x, H, oB.z], [c.bx, H, c.bz], [0, 1, 0, 0, ul, 0, ul, 1]);
-      quad(borderBuf, [oA.x, 0, oA.z], [oB.x, 0, oB.z], [oB.x, H, oB.z], [oA.x, H, oA.z], [0, 0, ul, 0, ul, 1, 0, 1]);
-    }
+    // the walkway is the raised side here, so the band sits at H and its face drops to
+    // the road at 0 — the facility compound passes the same pair the other way up
+    Kerb.emit(borderBuf, curbs, BW, BT, H, 0);
 
     for (i in 0...types.length) {
       var b = bufs[i];

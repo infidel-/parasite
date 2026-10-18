@@ -17,17 +17,25 @@ import ai.AI;
 typedef ActorOpts = {
   @:optional var baseY:Float;       // lift above the cell ground (the parasite riding a host's head)
   @:optional var baseScale:Float;   // resting billboard scale, default 1
+  @:optional var texSat:Float;      // how much of its own chroma the sprite keeps, default 1 =
+                                    // untouched (see render.facility.FacilityDeco.spriteSat)
   @:optional var flat:Bool;         // lie the sprite flat as a ground decal instead of standing it up
   @:optional var yaw:Float;         // ground rotation of a flat sprite (a corpse's fallen pose)
   @:optional var offx:Float;        // world X offset from the cell centre (a corpse's fallen offset)
   @:optional var offz:Float;        // world Z offset from the cell centre
   @:optional var groundAnchor:Bool; // drop an upright item icon by its sprite's empty bottom margin
+  @:optional var tiltSink:Bool;     // and take the LEAN back out of it too (see the drop in drawActor)
   @:optional var mark:Bool;         // paint the object outline / through-wall marks (see paintObjMark)
   @:optional var iconOff:Bool;      // a 3D prop stands here (render.world.ObjModels): no icon and no
                                     // sprite marks at all — the prop is outlined from its own geometry
+  @:optional var walls:Array<render.world.WorldCtx.WallMount>; // the object is mounted IN a wall (a
+                                    // vent grille): hang it on the faces instead of standing it on
+                                    // the cell, one pass each (see WorldCtx.wallMounts)
+  @:optional var ring:Null<Int>;    // the cursor is on it: its hover outline in this colour
+                                    // (render.View.hover, RenderConfig.HOVER)
 }
 
-// what the Ctrl-hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
+// what the hover pick landed on: EXACTLY ONE of `ai` / `obj` is non-null, plus the projected
 // client px the tooltip beam anchors to. one result rather than two pick calls because the two
 // candidate sets compete for the same nearest-anchor slot — an AI standing in front of a prop has
 // to be able to win, which two independent searches could not decide between. see Actors.pickTarget
@@ -95,10 +103,14 @@ class Actors {
   var _pObj = 0.0; var _pAI = 0.0; var _pPass = 0.0;   // accumulated ms: objects, AI, my passes
 
   static final NO_OPTS:ActorOpts = {};                 // shared empty override set (read-only) for a bare drawActor
+  static final HOVER_AI:ActorOpts = {                    // the AI the cursor is on: its cyan ring (read-only)
+    ring: RenderConfig.HOVER.aiColor,
+  };
   static inline var FADE_SPEED = 0.5;                  // LOS opacity fade runs at this * base speed (slower)
   static inline var TURN_SPEED = 2.0;                  // facing flip eases at this * base speed (full turn ~1 BASE_MS)
   static inline var ATTACH_HEAD_Y = Sprites.SIZE * 0.1;  // attached parasite rides this far above the host's ground center (its head)
   static inline var ATTACH_SCALE = 1.0;                // attached parasite is drawn this much smaller (sits on the head)
+  static inline var DOC_YAW = 0.52;                    // a clue document lies up to this far off square (~30 deg), id-hashed
 
   public function new(game:Game, actorGroup:Group, camera:PerspectiveCamera)
     {
@@ -129,6 +141,11 @@ class Actors {
     }
 
 // receive the lamps lit this frame (the pool's active set) so actors cast fake shadows from them
+  public function setFlyLamps(lamps:Array<LampPost>):Void
+    {
+      propFX.setFlyLamps(lamps);
+    }
+
   public function setLamps(lamps:Array<LampPost>):Void
     {
       lampShadows.setLamps(lamps);
@@ -157,6 +174,10 @@ class Actors {
       a.fx = fx;
       return true;
     }
+
+// the always-on-top UI quads' own scene, drawn after the bloom (see Sprites.overlay)
+  public inline function overlay():Scene
+    return sprites.overlay;
 
 // rebuild all actor sprites from live game state; actors slide + fade, effects layer
 // on top. objects/AI gated on player fog/LOS to match the 2D view
@@ -187,6 +208,9 @@ class Actors {
       lastState = st;
 
       var tp = haxe.Timer.stamp();
+      // what the cursor is on (render.View.hover, picked ahead of this pass): it is outlined, and
+      // like every other mark it goes with the HUD
+      var hov = (uiOn ? game.scene.view3d.hover : null);
       // objects (sewer hatches etc.): static, but still fade. parasite keeps seeing
       // sensable objects outside LOS
       for (o in game.area.getObjects())
@@ -210,20 +234,74 @@ class Actors {
                 ox = p.ox;
                 oz = p.oz;
               }
+            // a clue document left on a worktop: a small stable turn off square, so a desk of them
+            // reads as papers put down rather than stamped. yaw only — an offset walks it off the bench
+            else if (Std.isOfType(o, objects.Document))
+              {
+                yaw = jitter(o.id, 1) * DOC_YAW;
+                // except on a military base, whose desks are narrower than their cell: there it lies
+                // where render.military.MilitaryClutter kept its top bare (WorldCtx.standOff)
+                var so = (game.area.typeID == AREA_MILITARY_BASE ? WorldCtx.standOff(o.x, o.y) : null);
+                if (so != null)
+                  {
+                    ox = so.x;
+                    oz = so.z;
+                  }
+              }
+            // a fitting the area kind stands OFF A WALL FACE rather than on its cell centre. the two
+            // cannot both fire — a corpse does not lie on an impassable fitting cell — and the hook
+            // answers null for every other cell and in every other area kind, so nothing is allocated
+            // in the common case. see WorldCtx.standOff
+            else if (WorldCtx.standOff != null)
+              {
+                var so = WorldCtx.standOff(o.x, o.y);
+                if (so != null)
+                  {
+                    ox = so.x;
+                    oz = so.z;
+                  }
+              }
             // player-noticeable objects (visible() drops decorations + doors) carry the green
             // outline/through-wall marks so they stay findable in tactical and behind buildings
+            // an object whose cell is a wall of this area kind's own making is mounted IN it — the
+            // generator writes a vent as a wall cell and stands the object on it. asked per object
+            // rather than per type: only the area kind knows which of its cells are masonry, and the
+            // hook answers null for every other one, so nothing is allocated in the common case
+            var walls = (WorldCtx.wallMounts != null ? WorldCtx.wallMounts(o.x, o.y) : null);
             drawActor(o.entity, vis, dtMs, {
-              flat: o.isGroundDecal(),
+              // a decoration stands up (objects.Decoration.isGroundDecal), with three frames of the
+              // bench family excepted: gloves and a calculator are drawn looking DOWN at a thing
+              // lying on a worktop, and stood upright they read as gloves balanced on one cuff
+              flat: o.isGroundDecal() ||
+                render.facility.FacilityDeco.spriteFlat(game.area, o),
+              walls: walls,
               yaw: yaw,
               offx: ox,
               offz: oz,
               groundAnchor: true,
+              // a bench decoration also sinks by what the lean lifted it — see the drop in drawActor
+              tiltSink: render.facility.FacilityDeco.spriteSinks(game.area, o),
+              // a facility bench decoration draws at a fraction of the full billboard — at full
+              // size a microscope stood a metre tall on a metre-high worktop. asked per object like
+              // the two gates below, and 1.0 for everything else
+              baseScale: render.facility.FacilityDeco.spriteScale(game.area, o),
+              // and it keeps half its chroma: the same 43 icons are flat-design vector art and read
+              // cheerful in a dark lab. asked the same way, 1.0 for everything else
+              texSat: render.facility.FacilityDeco.spriteSat(game.area, o),
               mark: o.visible() && uiOn,
-              iconOff: render.world.ObjModels.modelFor(o.getModelKey()) != null ||
-                render.facility.FacilityDoors.draws(game.area, o),
+              ring: (hov != null && hov.obj == o ? RenderConfig.OBJMARK.color : null),
+              iconOff: render.world.ObjModels.propFor(o.getModelKey()) != null ||
+                render.facility.FacilityDoors.draws(game.area, o) ||
+                render.facility.FacilityDeco.draws(game.area, o) ||
+                render.military.MilitaryGeom.draws(game.area, o) ||
+                render.corp.CorpDeco.draws(game.area, o) ||
+                render.lab.LabArea.draws(game.area, o),
             });
             if (vis && uiOn)
-              badges.drawObjTarget(o);
+              {
+                badges.drawObjTarget(o);
+                badges.drawObjBadges(o);
+              }
           }
       var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
@@ -235,7 +313,7 @@ class Actors {
             var vis =
               !game.player.vars.losEnabled ||
               game.playerArea.sees(ai.x, ai.y);
-            drawActor(ai.entity, vis, dtMs);
+            drawActor(ai.entity, vis, dtMs, (hov != null && hov.ai == ai ? HOVER_AI : null));
             if (vis &&
                 uiOn)
               {
@@ -254,9 +332,11 @@ class Actors {
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
       // the host's head (the host itself is still drawn by the AI loop above); once in a
-      // host the parasite is hidden inside it and only the ring marks the player
+      // host the parasite is hidden inside it and only the ring marks the player; hiding inside an
+      // object (objects.Dumpster) fades it out the same way
+      var hidden = game.playerArea.isHidden();
       if (st == _PlayerState.PLR_STATE_PARASITE)
-        drawActor(game.playerArea.entity, true, dtMs);
+        drawActor(game.playerArea.entity, !hidden, dtMs);
       else if (st == _PlayerState.PLR_STATE_ATTACHED)
         drawActor(game.playerArea.entity, true, dtMs, {
           baseY: ATTACH_HEAD_Y,
@@ -269,6 +349,13 @@ class Actors {
           baseY: ATTACH_HEAD_Y,
           baseScale: ATTACH_SCALE,
         });
+      // and the player's own silhouette through whatever wall hides it (not while riding a head: the
+      // host it is attaching to carries its own)
+      if (uiOn &&
+          st != _PlayerState.PLR_STATE_ATTACHED)
+        badges.drawPlayerXray();
+      if (uiOn)
+        badges.drawFormaCursor();
       // seed-derived street debris + persisted decals (ground blood + wall bullet holes), then the
       // barrel flame body/embers + fake cast shadows (barrels + lamps drawn after the decals so they
       // darken them), then the fire loop + transient FX (blood, death ghosts, gun shots)
@@ -280,14 +367,13 @@ class Actors {
       // green slime trail behind the free parasite (render-only ribbon): only while it crawls the
       // ground, not while riding on / hidden inside a host. head = its smoothed billboard pos
       slimeTrail.update(dtMs,
-        st == _PlayerState.PLR_STATE_PARASITE && pp != null,
+        st == _PlayerState.PLR_STATE_PARASITE && !hidden && pp != null,
         pp != null ? pp.x : pw.x,
         pp != null ? pp.z : pw.z);
       lampShadows.bodyAndShadows(dtMs);
       // the grown props' core + fireflies. its own pools, so it does not have to sit inside the
       // sprites/beams/sparks frame below — it is here for locality with the other world-anchored FX
       propFX.update(dtMs);
-      lampShadows.driveFireLoop();
       particles.update(dtMs, paint);
       // hide leftover pooled meshes
       sprites.end();
@@ -521,10 +607,24 @@ class Actors {
           // the top of the cell. the top is the object's own height — a prop's model height (it has
           // NO icon quad, see drawActor's iconOff), a sprite's full quad, and 0 for a ground decal,
           // which is drawn flat on the floor and so collapses the segment back to a point
-          var m = render.world.ObjModels.modelFor(o.getModelKey());
+          var m = render.world.ObjModels.propFor(o.getModelKey());
           var top = (m != null ? m.h : (o.isGroundDecal() ? 0.0 : Sprites.SIZE));
           var fy = WorldCtx.floorY(a.col, a.row);
-          var d = projSeg(a.x, a.z, fy, fy + top, rect, clientX, clientY);
+          // where it is DRAWN, which is not always its cell centre: the resting offset is part of the
+          // pose (a fitting off its wall face, a clue on a desk top — LampShadows reads it the same
+          // way), and a prop stands where its placement put it — a WALL-yawed one is pushed off the
+          // cell by its row's `off`, and a base's armory glb backs onto its wall, 2.4 off the centre
+          var ax = a.x + a.offx;
+          var az = a.z + a.offz;
+          var c = (render.military.MilitaryGeom.draws(game.area, o) ?
+            render.military.MilitaryGeom.standsAt(o.x, o.y) :
+            (m != null ? render.world.ObjModels.standsAt(o.x, o.y, m) : null));
+          if (c != null)
+            {
+              ax = c.x;
+              az = c.z;
+            }
+          var d = projSeg(ax, az, fy, fy + top, rect, clientX, clientY);
           if (d < bestD &&
               d <= rad * rad)
             {
@@ -771,7 +871,7 @@ class Actors {
         return;
       var w = CityConfig.cellToWorld(e.mx, e.my);
       actors.set(e, { col: e.mx, row: e.my, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1,
-                      op: 0.0, opTarget: 1.0, fx: null, face: 1.0 });
+                      op: 0.0, opTarget: 1.0, fx: null, face: 1.0, offx: 0.0, offz: 0.0 });
     }
 
 // stable pseudo-random in [-1,1) from an int key+salt (so a corpse keeps its fallen pose
@@ -806,6 +906,57 @@ class Actors {
         return;
       // resolve the overrides once; a caller that passes none reads the shared empty set
       var o = (opts != null ? opts : NO_OPTS);
+      // the resting offset goes ONTO THE POSE and not just onto this frame's quad, so every other
+      // reader of the pose lands where the thing is actually drawn — render.actors.LampShadows
+      // projects its fake cast shadow from here (see ActorAnim.Actor)
+      a.offx = (o.offx != null ? o.offx : 0.0);
+      a.offz = (o.offz != null ? o.offz : 0.0);
+      // an object mounted IN a wall hangs on the masonry and takes none of the cell-standing pose
+      // below — no floor height, no ground anchor, no corpse stacking. the faces come from
+      // WorldCtx.wallMounts, one per exposed side, and the wall carries the same grille on each
+      if (o.walls != null)
+        {
+          for (wm in o.walls)
+            {
+              // only the side looking AT the camera. the opposite face holds an identical quad that
+              // its own masonry hides, and a hidden quad is precisely what the through-wall mark
+              // draws — so painting both stamped a permanent dotted ghost of the vent on the roof
+              // above it while the real grille sat plainly visible on the near face
+              var dot = (camera.position.x - wm.x) * Math.sin(wm.rotY) +
+                (camera.position.z - wm.z) * Math.cos(wm.rotY);
+              if (dot <= 0)
+                continue;
+              if (o.mark == true &&
+                  o.iconOff != true)
+                paintObjMark({
+                  e: e,
+                  op: a.op,
+                  x: wm.x,
+                  y: wm.y,
+                  z: wm.z,
+                  scale: wm.scale,
+                  flat: false,
+                  yaw: 0.0,
+                  order: Sprites.ORD_ACTOR,
+                  faceRotY: wm.rotY,
+                  ring: o.ring,
+                  ringPx: hoverPx(wm.scale),
+                });
+              if (o.iconOff == true)
+                continue;
+              sprites.paint({
+                x: wm.x,
+                y: wm.y,
+                z: wm.z,
+                tex: texFor(e),
+                op: a.op,
+                scale: wm.scale,
+                order: Sprites.ORD_ACTOR,
+                faceRotY: wm.rotY,
+              });
+            }
+          return;
+        }
       var flat = (o.flat == true);
       var yaw = (o.yaw != null ? o.yaw : 0.0);
       var baseY = (o.baseY != null ? o.baseY : 0.0);
@@ -830,28 +981,54 @@ class Actors {
         }
       // upright ground item (e.g. a generic pickup box): actor art fills the frame feet-at-bottom,
       // but a small item icon sits mid-cell and would hang in the air — drop it by the sprite's
-      // empty bottom margin so its opaque content rests on the floor
+      // empty bottom margin so its opaque content rests on the floor.
+      //
+      // AND THE DROP CARRIES baseScale, which the centre above does not: `wy` was set to
+      // floor + SIZE / 2 for a full-size quad, so a scaled one has to come back down by the half it
+      // no longer spans as well as by its own (scaled) bottom margin. At scale 1 the whole
+      // correction collapses to the plain SIZE * by it has always been. The centre itself is left
+      // alone on purpose — the attached-parasite pose reads that line and has its own tuned baseY
       if (o.groundAnchor == true &&
           !flat)
         {
           var gs = sprites.texContent(e.imageName, e.ix, e.iy, e.isMaleAtlas, 1.0, e.skinColor);
           if (gs != null)
-            wy -= Sprites.SIZE * gs.by;
+            {
+              wy -= Sprites.SIZE * (0.5 * (1 - baseScale) + baseScale * gs.by);
+              // AND THE LEAN PUTS IT BACK UP, which is what "they all hang in the air" was. The quad
+              // leans back by Sprites.TILT about its own CENTRE, so every point below that centre
+              // swings toward the camera AND rises: the content bottom — the part that reads as
+              // resting on the surface — comes up by its own drop below the centre times
+              // (1 - cos TILT). On a bench decoration that is 3.0 * 0.81 * (0.5 - 0.031) * 0.1747 =
+              // 0.199 world units, a fifth of a tile of clear air under a flask.
+              //
+              // OPT-IN and not applied to every ground-anchored sprite: an actor's own art is posed
+              // against this same lean and was tuned with it, so sinking those would bury their feet
+              if (o.tiltSink == true)
+                wy -= Sprites.SIZE * baseScale * (0.5 - gs.by) * (1 - Math.cos(Sprites.TILT));
+            }
         }
       // flat objects sit in the ground-decal layer; upright icons ride above their own shadow + the
       // target ring. an upright actor within a barrel's light gets a warm flicker glow on its sprite
       var order = flat ? Sprites.ORD_CORPSE : Sprites.ORD_ACTOR;
       var emInt = flat ? 0.0 : lampShadows.litAt(a);
       // resolve the transient effect into the final pose; no effect running = the rest pose
-      var wx = a.x + (o.offx != null ? o.offx : 0.0);
-      var wz = a.z + (o.offz != null ? o.offz : 0.0);
+      var wx = a.x + a.offx;
+      var wz = a.z + a.offz;
       var sc = baseScale;
+      var em = RenderConfig.FLAME.litColor;
       if (a.fx != null)
         {
           wx += a.fx.offx;
           wy += a.fx.offy;
           wz += a.fx.offz;
           sc *= a.fx.scale;
+          // an effect's own glow (a hit flash) replaces the lamp flicker while it is lit
+          if (a.fx.glowInt > 0)
+            {
+              em = a.fx.glow;
+              emInt = Math.max(emInt, a.fx.glowInt);
+            }
         }
       // object marks ride the exact same pose, painted before the icon they frame. BOTH are carved
       // from the sprite's ATLAS CELL, so a prop-backed object gets neither: the outline would trace
@@ -870,7 +1047,25 @@ class Actors {
           flat: flat,
           yaw: yaw,
           order: order,
+          ring: o.ring,
+          ringPx: hoverPx(baseScale),
         });
+      // an AI the cursor is on carries no marks, so its outline is painted here, at the same resolved
+      // pose: it rides a shake or a lunge with the sprite, mirrored with it
+      else if (o.ring != null &&
+          o.iconOff != true)
+        paintRing({
+          e: e,
+          op: a.op,
+          x: wx,
+          y: wy,
+          z: wz,
+          scale: sc,
+          flat: flat,
+          yaw: yaw,
+          order: order,
+          faceX: a.face,
+        }, o.ring, hoverPx(baseScale), o.ring);
       // an object drawn as a real 3D prop has no icon quad — it would stand inside the prop
       if (o.iconOff == true)
         return;
@@ -884,15 +1079,17 @@ class Actors {
         scale: sc,
         flat: flat,
         order: order,
-        emissive: RenderConfig.FLAME.litColor,
+        emissive: em,
         emissiveInt: emInt,
         faceX: a.face,
         yaw: yaw,
+        sat: o.texSat,
       });
     }
 
 // paint the two teal marks over a world object's own sprite pose: the outline ring (only while the
-// tactical view is up — the icon art stays readable inside it) and the through-wall silhouette.
+// tactical view is up — the icon art stays readable inside it — or the cursor is on it) and the
+// through-wall silhouette.
 // NOT called for an object backed by a 3D prop — both marks are carved from the ATLAS CELL, so they
 // would trace the 2D art around a prop that looks nothing like it (see the call site),
 // which depthFunc = GreaterDepth restricts to wherever a building hides the object from the camera,
@@ -903,25 +1100,12 @@ class Actors {
     {
       var C = RenderConfig.OBJMARK;
       var e = o.e;
-      if (tactical)
-        {
-          var ring = sprites.outlineTex(e.imageName, e.ix, e.iy, e.isMaleAtlas, C.outlinePx, e.skinColor);
-          if (ring != null)
-            sprites.paint({
-              x: o.x,
-              y: o.y,
-              z: o.z,
-              tex: ring.tex,
-              op: o.op,
-              scale: o.scale * ring.scale,
-              flat: o.flat,
-              order: o.order,
-              emissive: C.color,
-              emissiveInt: C.emissive,
-              yaw: o.yaw,
-              shadow: false,
-            });
-        }
+      // the hover ring painted as the tactical one is, white glowing its green: filled with the green
+      // itself it read as a second, darker green
+      if (o.ring != null)
+        paintRing(o, o.ring, o.ringPx, 0xffffff);
+      else if (tactical)
+        paintRing(o, C.color, C.outlinePx, 0xffffff);
       var sil = sprites.silTex(e.imageName, e.ix, e.iy, e.isMaleAtlas,
         C.fill, C.hatchSpacing, C.hatchThick, e.skinColor);
       if (sil == null)
@@ -934,11 +1118,50 @@ class Actors {
         op: o.op,
         scale: o.scale,
         flat: o.flat,
+        faceRotY: o.faceRotY,
         order: o.order,
         emissive: C.color,
         emissiveInt: C.emissive,
         yaw: o.yaw,
         depthFunc: THREE.GreaterDepth,
+        shadow: false,
+      });
+    }
+
+// the hover ring's width for a sprite drawn at this scale, in the 64 px-cell pixels outlineTex takes:
+// HOVER.width is in world units, so a small item's ring is not thinner than an AI's. off the RESTING
+// scale and not an effect's, which would key a new ring texture every frame of a lunge
+  static inline function hoverPx(scale:Float):Float
+    {
+      return RenderConfig.HOVER.width * 64 / (Sprites.SIZE * scale);
+    }
+
+// the glowing band hugging a sprite's silhouette at its pose (Sprites.outlineTex): the tactical
+// view's object ring and the hover outline, `px` wide in a 64 px cell's pixels and glowing `color`.
+// `fill` is the band's own colour: the hover outline is filled with its glow, or the scene light
+// washed the cyan round an AI to white. a UI overlay like the rest of the marks, so it samples no
+// shadow, and it shares the sprite's renderOrder: the band lies only OUTSIDE the silhouette, so it
+// never covers the sprite it frames
+  function paintRing(o:ObjMarkOpts, color:Int, px:Float, fill:Int):Void
+    {
+      var e = o.e;
+      var ring = sprites.outlineTex(e.imageName, e.ix, e.iy, e.isMaleAtlas, px, e.skinColor, fill);
+      if (ring == null)
+        return;
+      sprites.paint({
+        x: o.x,
+        y: o.y,
+        z: o.z,
+        tex: ring.tex,
+        op: o.op,
+        scale: o.scale * ring.scale,
+        flat: o.flat,
+        faceRotY: o.faceRotY,
+        faceX: o.faceX,
+        order: o.order,
+        emissive: color,
+        emissiveInt: RenderConfig.OBJMARK.emissive,
+        yaw: o.yaw,
         shadow: false,
       });
     }
@@ -1002,7 +1225,8 @@ class Actors {
         {
           var w = CityConfig.cellToWorld(e.mx, e.my);
           a = { col: e.mx, row: e.my, fromX: w.x, fromZ: w.z, x: w.x, z: w.z, t: 1,
-                op: vis ? 1.0 : 0.0, opTarget: vis ? 1.0 : 0.0, fx: null, face: tf };
+                op: vis ? 1.0 : 0.0, opTarget: vis ? 1.0 : 0.0, fx: null, face: tf,
+                offx: 0.0, offz: 0.0 };
           actors.set(e, a);
           return a;
         }

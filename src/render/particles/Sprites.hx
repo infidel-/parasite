@@ -42,15 +42,19 @@ class Sprites {
   var shadowCache:Map<String, GroundSprite> = new Map();  // atlas-crop -> black soft-edged silhouette
   var rectCache:Map<String, AtlasRect> = new Map();       // atlas cell -> UV rect into the shared atlas texture
   var idx:Int = 0;                                      // next free pool slot this frame
-  // scratch reused by paintShadow so a shadow pass allocates nothing
-  var _sa:Vector3 = new Vector3();
-  var _sb:Vector3 = new Vector3();
-  var _sc:Vector3 = new Vector3();
-  var _smtx:Matrix4 = new Matrix4();
+  // the pool quad's own corners (x, y), the plane's order, for unbend
+  static var SQUARE = [ -SIZE / 2, SIZE / 2, SIZE / 2, SIZE / 2, -SIZE / 2, -SIZE / 2, SIZE / 2, -SIZE / 2 ];
+  var bent:Array<Bool> = [];                            // slots whose quad paintShadow reshaped, put
+                                                        // back square when another paint takes them
   // scratch reused by paintTopple (death topple) so it allocates nothing per frame
   var _te:Euler = new Euler();
   var _tq:Quaternion = new Quaternion();
   var _yAxis:Vector3 = new Vector3(0, 1, 0);
+
+  // the quads drawn AFTER the bloom pass (render.View): the always-on-top UI ones, whose white self-lit
+  // glyphs crossed the bloom threshold and haloed like a lamp. their own scene, so the pass draws them
+  // and nothing else, with no lights in it — they are self-lit
+  public var overlay(default, null):Scene = new Scene();
 
   public function new(game:Game, actorGroup:Group)
     {
@@ -58,24 +62,164 @@ class Sprites {
       this.actorGroup = actorGroup;
     }
 
+// one cached crop as a texture, UPLOADED PREMULTIPLIED. every texture builder in this file goes
+// through here and that is the whole point of the helper: a texture bound to the pool material
+// WITHOUT the flag is not merely unfixed, it is wrong — `unpremul` divides by the sampled alpha, and
+// a non-premultiplied edge texel blows up instead of settling. see `unpremul` for the rest
+  static function mkTex(cv:Dynamic):CanvasTexture
+    {
+      var tex = new CanvasTexture(cv);
+      // NoColorSpace IS THE FIX AND SRGBColorSpace WOULD BE THE BUG — the two lines below only make
+      // sense read together, and this one shipped the wrong way round for a build.
+      // UNPACK_PREMULTIPLY_ALPHA_WEBGL multiplies the sRGB-ENCODED bytes (three's WebGLTextures
+      // :883), while SRGBColorSpace makes three allocate SRGB8_ALPHA8 (same file, :214) so the GPU
+      // applies the sRGB EOTF AFTER that multiply and BEFORE filtering. `texture2D` then hands back
+      // c_linear * a^2.4, and dividing by a leaves c_linear * a^1.4 — a residual crush on every
+      // ANTIALIASED texel, which is 5.78% of this atlas and 97.8% of its silhouette band.
+      // Simulated on entities64 through this file's own crop, mip-1 silhouette, alpha-weighted mean
+      // back in sRGB: authored 175.8, the black bleed being fixed 161.7, and the sRGB-decoded
+      // divide 140.8 — WORSE THAN THE BUG. Per texel at mip 0 an authored 200 at alpha 0.5 lands
+      // at 138.
+      // NoColorSpace stores RGBA8, so nothing is decoded before filtering: the hardware filter is a
+      // straight weighted average of premultiplied encoded bytes, the divide is its exact inverse,
+      // and `unpremul` runs sRGBTransferEOTF once at the end instead. Same simulation: 176.0.
+      // it costs no program permutation either — texture.colorSpace reaches the shader only through
+      // three's decodeVideoTexture define, and nothing here is a video texture
+      tex.colorSpace = THREE.NoColorSpace;
+      tex.premultiplyAlpha = true;
+      return tex;
+    }
+
+// the other half of that upload, and the sprite saturation knob, folded into one patch on the pool
+// material.
+//
+// THE CROPS ARE UPLOADED PREMULTIPLIED BECAUSE THAT IS THE SPACE FILTERING IS CORRECT IN. The atlas
+// carries RGB (3,3,3) under every transparent texel, so a non-premultiplied crop interpolates a
+// sprite's own colour toward BLACK right across its silhouette — a dark outline on everything the
+// pool draws. Measured on the laboratory bench decorations: a 64 px cell drawn into 36 device px is
+// 1.78 texels per pixel, so the tap lands on MIP 1, where the whole outline has already been
+// averaged against that black. The art is innocent — its silhouette ring reads 181.8 against an
+// interior 183.9, and the 43 cells carry no authored outline at all.
+//
+// AND IT CANNOT BE FIXED IN THE CANVAS, which is the finding worth keeping. The obvious repair is to
+// bleed the edge colour outward into the transparent texels, and a Canvas2D backing store is
+// PREMULTIPLIED: RGB written under alpha 0 is gone before the texture ever uploads. `patternWhiten`
+// below writes 255s there and they have never once survived.
+//
+// THE DIVIDE IS ON THE SAMPLED TEXEL AND NEVER ON `diffuseColor`, which already carries
+// material.opacity — this pool fades quads with it constantly (the death fade, the decal radius
+// fade, an actor leaving LOS), and dividing there would make a fading sprite BRIGHTEN as it went.
+// material.premultipliedAlpha stays false for the mirror of that reason: three's own
+// <premultiplied_alpha_fragment> would multiply rgb by alpha a second time.
+//
+// THE NESTING ORDER AT THE TWO CALL SITES IS LOAD-BEARING. The cache key is a CONCATENATION —
+// IndoorMask.patch contributes 'indoor' and this wraps it into 'indoorunpremul' — so flipping the
+// nesting at ONE of the two sites and not the other stops the strings matching: the boot warm then
+// caches a program the game never asks for and the first actor drawn compiles one mid-frame. The
+// emitted GLSL is order-independent (that patch anchors at <lights_fragment_begin>, this one at
+// <map_fragment>), so nothing but the key would ever tell you. Note this is the OPPOSITE nesting to
+// the repo's other pairs, where the local patch goes innermost — matching the two sites to EACH
+// OTHER is what matters here, not matching them to anything else
+//
+// `spriteSat` rides along because the divide has the texel open anyway — two more instructions
+// against a second cached crop per saturation and a second entry in every cache. It is a UNIFORM per
+// material and the pool holds one material per quad, so `paint` sets it per sprite exactly as it
+// sets roughness and the emissive glow. 1.0 is a byte-exact no-op and is what `slot` resets to.
+//
+// the chaining is render.world.IndoorMask.patch's, whose header carries the trap (three's Material
+// has a DEFAULT customProgramCacheKey on the PROTOTYPE, so it must be taken as an OWN property or it
+// is called unbound every draw). That patch injects at <lights_fragment_begin> and this one at
+// <map_fragment>, so the two never touch the same chunk
+  static function unpremul(mat:Dynamic):Dynamic
+    {
+      if (mat.onBeforeCompile != null &&
+          mat.onBeforeCompile.spriteUnpremul == true)
+        return mat;
+      var uSat = { value: 1.0 };
+      var prev:Dynamic = mat.onBeforeCompile;
+      var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
+        mat.customProgramCacheKey : null;
+      var hook:Dynamic = function(shader:Dynamic, renderer:Dynamic)
+        {
+          if (prev != null)
+            prev(shader, renderer);
+          shader.uniforms.spriteSat = uSat;
+          // three r181's own two chunks, with the DECODE_VIDEO_TEXTURE branch of both dropped
+          // (nothing this pool draws is a video texture) and three lines added to each. THE ORDER
+          // IS THE WHOLE CONTENT OF THIS BLOCK: un-premultiply in the space the multiply happened
+          // in — ENCODED, because `mkTex` uploads NoColorSpace and so nothing has decoded it — then
+          // decode, then saturate. Rec. 709 weights are a linear-light instrument, so the mix
+          // cannot move above the EOTF, and the divide cannot move below it.
+          //
+          // `sRGBTransferEOTF` needs no declaring: three emits colorspace_pars_fragment into every
+          // fragment prefix, ahead of the material source, and it passes alpha through untouched.
+          //
+          // the clamp is for premultiplied BYTE quantisation, not for the guard: b/255 can exceed a
+          // by half a byte, which at alpha 1/255 is a ratio of 1.5 going into a 2.4 power — small
+          // in the blend, unbounded in shape, and it feeds the bloom pass
+          shader.fragmentShader = 'uniform float spriteSat;\n' +
+            StringTools.replace(shader.fragmentShader, '#include <map_fragment>',
+              '#ifdef USE_MAP\n' +
+              '  vec4 sampledDiffuseColor = texture2D( map, vMapUv );\n' +
+              '  sampledDiffuseColor.rgb = clamp( sampledDiffuseColor.rgb /\n' +
+              '    max( sampledDiffuseColor.a, 1e-4 ), 0.0, 1.0 );\n' +
+              '  sampledDiffuseColor = sRGBTransferEOTF( sampledDiffuseColor );\n' +
+              '  sampledDiffuseColor.rgb = mix(\n' +
+              '    vec3( dot( sampledDiffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ),\n' +
+              '    sampledDiffuseColor.rgb, spriteSat );\n' +
+              '  diffuseColor *= sampledDiffuseColor;\n' +
+              '#endif\n');
+          shader.fragmentShader = StringTools.replace(shader.fragmentShader,
+            '#include <emissivemap_fragment>',
+            '#ifdef USE_EMISSIVEMAP\n' +
+            '  vec4 emissiveColor = texture2D( emissiveMap, vEmissiveMapUv );\n' +
+            '  emissiveColor.rgb = clamp( emissiveColor.rgb /\n' +
+            '    max( emissiveColor.a, 1e-4 ), 0.0, 1.0 );\n' +
+            '  emissiveColor = sRGBTransferEOTF( emissiveColor );\n' +
+            '  totalEmissiveRadiance *= emissiveColor.rgb;\n' +
+            '#endif\n');
+        };
+      // carry forward the marks of whatever hook we just wrapped, so an "already patched" test that
+      // can only read the OUTERMOST hook still finds a marker that got chained over — IndoorMask's
+      // own note, and it is what stops the two re-patching each other every frame
+      if (prev != null)
+        for (f in Reflect.fields(prev))
+          Reflect.setField(hook, f, Reflect.field(prev, f));
+      hook.spriteUnpremul = true;
+      mat.onBeforeCompile = hook;
+      mat.customProgramCacheKey = function()
+        return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
+          'unpremul';
+      // and the uniform's box hung on the material, which is how `paint` reaches it: the pool holds
+      // one material per quad, so this is per-sprite state and not a shared clock
+      untyped mat.spriteSatU = uSat;
+      mat.needsUpdate = true;
+      return mat;
+    }
+
 // throwaway mesh carrying the exact actor-billboard material (MeshStandard, transparent, DoubleSide,
 // map + emissiveMap present), for the boot shader pre-warm (render.View.warmup): actor sprites spawn on
 // demand so their program is otherwise compiled mid-game on the first actor drawn. one DoubleSide mesh —
 // render.View's clone pass splits it into the FrontSide/BackSide programs three actually renders. a 1x1
-// placeholder texture is enough: the program key needs the map/emissiveMap DEFINES present, not pixels
+// placeholder texture is enough: the program key needs the map/emissiveMap DEFINES present, not pixels.
+//
+// `unpremul` is applied here for a THIRD reason beyond the two in its own header: it contributes a
+// customProgramCacheKey, so a warm material without it warms a key the game never asks for — the
+// exact failure render.facility.FacilityWarm's header records for the vision mask
   public static function warmupMeshes():Array<Mesh>
     {
       var tex = new Texture();
       var m = new Mesh(new PlaneGeometry(SIZE, SIZE),
-        new MeshStandardMaterial({
+        unpremul(render.world.IndoorMask.patch(new MeshStandardMaterial({
           transparent: true,
           depthWrite: false,
           side: THREE.DoubleSide,
+          forceSinglePass: true, // one quad, no self-overlap: the default back-then-front split is a second call
           roughness: 1,
           metalness: 0,
           map: tex,
           emissiveMap: tex,
-        }));
+        }))));
       return [ m ];
     }
 
@@ -97,10 +241,14 @@ class Sprites {
       if (o.faceX != null &&
           o.faceX != 1.0)
         m.scale.x = o.scale * o.faceX;
-      // decal: lie flat on the ground (normal up). else face the front (fixed yaw, no camera
+      // decal: lie flat on the ground (normal up). wall-mounted: stand in the face's own plane,
+      // normal outward along faceRotY — the pose paintWall gives a bullet hole, so a grille cut into
+      // masonry lies in the masonry and not across it. else face the front (fixed yaw, no camera
       // tracking) leaned back toward the overhead camera by TILT so it reads flatter
       if (o.flat)
         m.rotation.set(-Math.PI / 2, 0, yaw);
+      else if (o.faceRotY != null)
+        m.rotation.set(0, o.faceRotY, yaw);
       else
         m.rotation.set(-TILT, 0, yaw); // yaw doubles as in-plane roll for upright sprites (badge wiggle)
       m.renderOrder = (o.order != null ? o.order : 0);
@@ -114,9 +262,20 @@ class Sprites {
       // metal > 0 tints that glint by the (dark red) albedo for a stronger, wetter sheen
       mat.roughness = (o.rough != null ? o.rough : 1.0);
       mat.metalness = (o.metal != null ? o.metal : 0.0);
+      // and how much of its own chroma the sprite keeps. only a caller that wants LESS says so —
+      // slot() has already reset the uniform to the no-op 1.0 (see `unpremul`)
+      if (o.sat != null)
+        untyped mat.spriteSatU.value = o.sat;
       // depthTest off = always-on-top UI (entity badges): never occluded by walls in front.
       // depthFunc (when set) flips the compare — GreaterDepth draws only where occluded (x-ray)
       untyped mat.depthTest = (o.depthTest != false);
+      // an upright sprite marks itself for the AO blend (see slot); a decal, a wall-mounted quad and
+      // a fake shadow lie in a surface and take its AO
+      if (!o.flat &&
+          o.faceRotY == null)
+        untyped mat.blending = THREE.CustomBlending;
+      if (o.depthTest == false)
+        overlay.add(m);
       if (o.depthFunc != null)
         untyped mat.depthFunc = o.depthFunc;
       // UI overlays (badges, x-ray outline, target markers) stay out of the shadow maps — they must
@@ -164,6 +323,7 @@ class Sprites {
       m.quaternion.setFromAxisAngle(_yAxis, o.spinY);
       m.quaternion.multiply(_tq);
       m.renderOrder = ORD_ACTOR;
+      untyped m.material.blending = THREE.CustomBlending; // a falling body is still a body (see slot)
       m.visible = true;
       idx++;
     }
@@ -175,24 +335,59 @@ class Sprites {
   public function paintShadow(o:PaintShadowOpts):Void
     {
       if (o.gs == null || o.gs.tex == null) return;
-      // rooted at the feet: centre sits half the length out along the away direction
-      var cx = o.feetX + o.dirX * o.len * 0.5;
-      var cz = o.feetZ + o.dirZ * o.len * 0.5;
-      var m = slot(o.gs.tex, o.op, cx, o.floorY, cz, 1.0);
-      // basis: sprite local +Y (image up / head) -> length dir (so the silhouette lies head-away,
-      // feet-near), local +X (image width) -> perpendicular, local +Z (normal) -> world up
-      // right-handed basis (det +1) so setFromRotationMatrix stays a proper rotation and the quad
-      // lies FLAT: local +Y -> length dir, local +X -> width (mirrored, harmless), local +Z -> up
-      _sa.set(-o.dirZ, 0, o.dirX);
-      _sb.set(o.dirX, 0, o.dirZ);
-      _sc.set(0, 1, 0);
-      untyped _smtx.makeBasis(_sa, _sb, _sc);
-      untyped m.quaternion.setFromRotationMatrix(_smtx);
-      // geometry is SIZE square; scale each axis so the quad spans the world width/length
-      m.scale.set(o.wid / SIZE, o.len / SIZE, 1);
+      var m = slot(o.gs.tex, o.op, o.feetX, o.floorY, o.feetZ, 1.0);
+      m.rotation.set(0, 0, 0);
+      // THE NEAR EDGE IS THE ACTOR'S OWN: its two corners on the drawn sprite's bottom corners, which
+      // run along world x however the light stands (the billboard is frontal), so the shadow leaves
+      // the feet and never pokes out past them. The far edge is square across the away direction at
+      // the length, as the old rotated rectangle's was, so a side light still lays out a body's width
+      // and not a line. The far corner on the -x side takes the image's left, the near -x corner's
+      // partner, or the quad crosses itself
+      var hw = o.wid * 0.5;
+      var px = -o.dirZ * hw, pz = o.dirX * hw;
+      if (px > 0)
+        {
+          px = -px;
+          pz = -pz;
+        }
+      var fx = o.dirX * o.len, fz = o.dirZ * o.len;
+      // flat on the ground in the plane's own corner order: image top-left, top-right (the far edge),
+      // bottom-left, bottom-right (the feet), as x, z off the feet
+      var pos = m.geometry.getAttribute('position');
+      var a:Array<Float> = pos.array;
+      a[0] = fx + px;
+      a[1] = 0.0;
+      a[2] = fz + pz;
+      a[3] = fx - px;
+      a[4] = 0.0;
+      a[5] = fz - pz;
+      a[6] = -hw;
+      a[7] = 0.0;
+      a[8] = 0.0;
+      a[9] = hw;
+      a[10] = 0.0;
+      a[11] = 0.0;
+      pos.needsUpdate = true;
+      m.geometry.computeBoundingSphere();
+      bent[idx] = true;
       m.renderOrder = (o.order != null ? o.order : 0);
       m.visible = true;
       idx++;
+    }
+
+// a bent slot back to the SIZE square standing in its own plane, which every other paint expects
+  function unbend(m:Mesh):Void
+    {
+      var pos = m.geometry.getAttribute('position');
+      for (i in 0...4)
+        {
+          pos.array[i * 3] = SQUARE[i * 2];
+          pos.array[i * 3 + 1] = SQUARE[i * 2 + 1];
+          pos.array[i * 3 + 2] = 0.0;
+        }
+      pos.needsUpdate = true;
+      m.geometry.computeBoundingSphere();
+      bent[idx] = false;
     }
 
 // place/reuse a quad standing on a wall face: its normal points outward along faceRotY (see
@@ -208,6 +403,8 @@ class Sprites {
       var mat:Dynamic = m.material;
       mat.roughness = (o.rough != null ? o.rough : 1.0);
       mat.metalness = (o.metal != null ? o.metal : 0.0);
+      if (o.order != null)
+        m.renderOrder = o.order;
       m.visible = true;
       idx++;
     }
@@ -215,26 +412,72 @@ class Sprites {
 // get (or lazily create) the next pooled quad, set its texture/opacity/position/scale
   inline function slot(tex:Texture, op:Float, wx:Float, wy:Float, wz:Float, scale:Float):Mesh
     {
+      // ANY texture reaching this pool is uploaded premultiplied and decoded in the shader, and the
+      // invariant is enforced HERE, at the bind, rather than at each creation — `mkTex` covers this
+      // file's own six builders and structurally cannot reach the ones it did not make.
+      // render.decals.WallHole hands `paintWall` loader PNGs it owns, and a texture arriving without
+      // the flag is not merely unfixed but WRONG: `unpremul` divides by an alpha it was never
+      // multiplied by, so a hole's soft rim blows up instead of fading (measured on
+      // bullet-hole-1: an alpha-0.1 texel renders at 229 of an authored 79, and under 0.05 it clips
+      // to white and feeds the bloom).
+      // no needsUpdate: WallHole's arrive from render.Textures.loadPremultiplied with both flags
+      // already set, so this never fires for them. note a Textures map is uploaded when its image
+      // lands, so one arriving here WITHOUT the flags would also need needsUpdate to take them
+      if (untyped tex.premultiplyAlpha != true)
+        {
+          untyped tex.premultiplyAlpha = true;
+          untyped tex.colorSpace = THREE.NoColorSpace;
+        }
       var m = pool[idx];
       if (m == null)
         {
           // MeshStandard (not Basic) so sprites take the scene lights — ambient/moon/lamp glow —
-          // instead of rendering full-bright and reading pasted-on over the lit world
+          // instead of rendering full-bright and reading pasted-on over the lit world.
+          //
+          // and the indoor swap (render.world.IndoorMask) with them, or an actor standing in a lit
+          // laboratory keeps the moonlight the floor under it just lost. patched UNCONDITIONALLY,
+          // unlike every world surface, which VisionMask gates on the area having a mask: this pool
+          // fills lazily during play and its quads outlive nothing in particular, so a per-area
+          // decision here would either mislight the slots created before the player walked inside or
+          // compile a second program the boot warm never cached. the cost of always is one fetch of a
+          // single black texel on quads this small, against a program that recompiles mid-game
           m = new Mesh(new PlaneGeometry(SIZE, SIZE),
-            new MeshStandardMaterial({
+            unpremul(render.world.IndoorMask.patch(new MeshStandardMaterial({
               transparent: true,
               depthWrite: false,
-              side: THREE.DoubleSide,
+              side: THREE.DoubleSide, // faceX mirrors the quad by negative scale
+              forceSinglePass: true, // one quad, no self-overlap: the default back-then-front split is a second call
               roughness: 1,
               metalness: 0,
               // emissiveMap present from creation so the define is stable (no recompile when an
               // actor later flickers a warm emissive glow onto its own sprite — see paint())
               map: tex,
               emissiveMap: tex,
-            }));
+              // THE AO SKIPS THE UPRIGHT SPRITES, AND THE ALPHA CHANNEL CARRIES WHICH PIXELS THOSE
+              // ARE. GTAO's prepass leaves the billboards out (render.View: a quad would go in as a
+              // solid slab), so the AO under an actor is the shade of what stands BEHIND it, and the
+              // blend then multiplied that across the actor's face: the steps of a vat plinth drawn
+              // as bands over a scientist's cheek. An upright sprite adds its alpha to the target's
+              // instead of blending it (CustomBlending, alpha ONE + ONE). The composer's targets are
+              // half-float, so an opaque pixel under it goes past 1, which nothing else ever writes,
+              // and View's patched GTAO blend leaves out `alpha - 1`. render.StreetBlur reads alpha
+              // below 1 as its mask, and above 1 is still "untouched" there
+              // the colour blend is three's normal one either way; `paint` switches the alpha one on
+              // for an upright sprite by flipping `blending` alone, which is GL state, not a define
+              blendEquation: THREE.AddEquation,
+              blendSrc: THREE.SrcAlphaFactor,
+              blendDst: THREE.OneMinusSrcAlphaFactor,
+              blendSrcAlpha: THREE.OneFactor,
+              blendDstAlpha: THREE.OneFactor,
+            }))));
+          m.name = 'sprite pool ' + idx;
           pool[idx] = m;
           actorGroup.add(m);
         }
+      if (bent[idx] == true)
+        unbend(m);
+      if (m.parent != actorGroup)
+        actorGroup.add(m);
       var mat:Dynamic = m.material;
       // swap the crop texture + reset per-frame state. NO material.needsUpdate: the material is
       // created once with map+emissiveMap present (stable defines), so swapping to another cached
@@ -249,8 +492,11 @@ class Sprites {
       mat.emissiveIntensity = 0;
       untyped mat.depthTest = true;
       untyped mat.depthFunc = THREE.LessEqualDepth;
+      untyped mat.blending = THREE.NormalBlending;
       mat.roughness = 1;
       mat.metalness = 0;
+      // full saturation, the byte-exact no-op — a paint that wants less re-sets it (see `unpremul`)
+      untyped mat.spriteSatU.value = 1.0;
       m.renderOrder = 0;
       // world sprites/decals darken inside a building's moon/lamp shadow like the ground they stand
       // on. receiveShadow is a plain uniform in three (not a program define, and USE_SHADOWMAP is
@@ -262,14 +508,89 @@ class Sprites {
       return m;
     }
 
-// resolve an actor atlas to its source image + file tile px. male/female use the new 128px
-// skin-variant sheets (3D only); every other atlas stays on the 64px sheet the 2D view shares
-  function atlasFor(imageName:String, male:Bool, skin:Int):{ img:Dynamic, t:Int }
+// resolve an atlas cell to the image, cell size and coordinates its pixels actually come from.
+//
+// TWO REDIRECTIONS LIVE HERE AND BOTH ARE 3D-ONLY — the 2D view goes through Images.getImage and
+// keeps drawing the 64 px sheets in every case:
+//   male/female actors take the 128 px skin-variant atlases, at the same (ix, iy);
+//   a facility BENCH decoration takes its 256 px cell off a pack sheet (Const.FACILITY_DECO_HD).
+//
+// the second one is why this returns COORDINATES and not just an image: a pack cell is not at the
+// frame's own (col, row) — sixteen decorations sit on a 4x4 sheet in the table's own order — so the
+// caller cannot crop with the numbers it handed in. Every reader below takes its cell from the
+// returned record and its cache KEY from the arguments, which is what keeps one cache entry per
+// entities64 frame however its pixels are sourced
+  function atlasFor(imageName:String, ix:Int, iy:Int, male:Bool, skin:Int):AtlasSrc
     {
       if (imageName == 'male' ||
           imageName == 'female')
-        return { img: game.scene.images.getAtlas128(imageName, male, skin), t: 128 };
-      return { img: game.scene.images.getImage(imageName, male), t: Const.TILE_SIZE_CLEAN };
+        return {
+          img: game.scene.images.getAtlas128(imageName, male, skin),
+          t: 128,
+          ix: ix,
+          iy: iy,
+        };
+      if (imageName == 'entities')
+        {
+          // the 128 px redraw of the sprites, splats and FX that had no art of their own (Const.HD128)
+          var h = Const.hd128(iy, ix);
+          if (h >= 0)
+            return {
+              img: game.scene.images.entities128,
+              t: Const.HD128_CELL,
+              ix: h % Const.HD128_COLS,
+              iy: Std.int(h / Const.HD128_COLS),
+            };
+          var hd = Const.decoHD(iy, ix);
+          if (hd >= 0)
+            return {
+              img: game.scene.images.getDecoPack(Const.decoHDPack(hd)),
+              t: Const.DECO_PACK_CELL,
+              ix: Const.decoHDCol(hd),
+              iy: Const.decoHDRow(hd),
+            };
+          // and the clue documents, off a sheet of their own — a second table because its cells are
+          // 170 px where the bench packs' are 256 (Const.CLUE_PACK_CELL)
+          var clue = Const.clueHD(iy, ix);
+          if (clue >= 0)
+            return {
+              img: game.scene.images.cluePack,
+              t: Const.CLUE_PACK_CELL,
+              ix: Const.clueHDCol(clue),
+              iy: Const.clueHDRow(clue),
+            };
+          // and the sewer hatch lid, which needs NEITHER a table nor pack arithmetic: it is one 256
+          // image holding one cell, so the redirection is the frame's own coordinates and nothing
+          // else. A hatch lies FLAT on its cell (objects.AreaObject.isGroundDecal) and spans
+          // Sprites.SIZE world units, where 64 px is 21 texels per world unit against the asphalt's
+          // own 57 — see art/textures.json city/sewer-hatch
+          if (iy == Const.ROW_OBJECT &&
+              ix == Const.FRAME_SEWER_HATCH)
+            return {
+              img: game.scene.images.hatchHD,
+              t: Const.HATCH_HD_CELL,
+              ix: 0,
+              iy: 0,
+            };
+          // and the wall vent, the same single cell: its 64 px icon is 38 px of grille, 23 texels a
+          // unit on a 1.78 cover, and read as a flat dark plate ("vent is an old entities64 one").
+          // The 256 source fills its image edge to edge where the icon was inset in its cell, so
+          // FacilityStyle.MOUNT_SCALE is what keeps the grille its old size
+          if (iy == Const.ROW_OBJECT2 &&
+              ix == Const.FRAME_VENTILATION)
+            return {
+              img: game.scene.images.ventHD,
+              t: Const.VENT_HD_CELL,
+              ix: 0,
+              iy: 0,
+            };
+        }
+      return {
+        img: game.scene.images.getImage(imageName, male),
+        t: Const.TILE_SIZE_CLEAN,
+        ix: ix,
+        iy: iy,
+      };
     }
 
 // crop one atlas cell (imageName, ix, iy) into a cached texture; null until the image decodes.
@@ -278,7 +599,7 @@ class Sprites {
     {
       var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       // retry next frame if the atlas image isn't decoded yet
       if (img == null ||
@@ -288,13 +609,12 @@ class Sprites {
       var t = src.t;
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true }); // CPU-backed: every canvas here that gets read back (darkenCanvas, patternWhiten, boxOf) stalled ~34 ms per getImageData GPU-backed
       // mirror Entity.drawImage crop (the +1/-1 kludge avoids atlas bleed)
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       if (mul < 1.0)
         darkenCanvas(cx, t, t, mul);
-      var tex = new CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
+      var tex = mkTex(cv);
       texCache.set(key, tex);
       return tex;
     }
@@ -320,8 +640,7 @@ class Sprites {
       cv.width = px; cv.height = px;
       var cx = cv.getContext('2d');
       cx.drawImage(img, 0, 0, px, px);
-      var tex = new CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
+      var tex = mkTex(cv);
       texCache.set(key, tex);
       return tex;
     }
@@ -333,7 +652,7 @@ class Sprites {
     {
       var key = 'sil:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + fill + ':' + spacing + ':' + thick + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -342,12 +661,11 @@ class Sprites {
       var t = src.t;
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true });
       // same crop as tex() (the +1/-1 kludge avoids atlas bleed), then whiten + carve the pattern
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
       patternWhiten(cx, t, t, fill, spacing, thick);
-      var tex = new CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
+      var tex = mkTex(cv);
       texCache.set(key, tex);
       return tex;
     }
@@ -356,18 +674,24 @@ class Sprites {
 // its 8 neighbour offsets to dilate the alpha outward, then punched back out at the centre and
 // flooded white — what is left is a tintable band hugging the silhouette. the inset is what keeps
 // the ring inside the crop for art that fills the frame; the returned scale undoes it at paint
-// time. null until the atlas image decodes (retry next frame, like tex())
-  public function outlineTex(imageName:String, ix:Int, iy:Int, male:Bool, px:Float, skin:Int = 0):OutlineSprite
+// time. `px` is in pixels of a 64 px cell and grows with a bigger one, so a ring is as wide in the
+// world round a 128 px actor or a 256 px pack cell as round a 64 px item. `fill` is the band's own
+// colour: white leaves it all to the paint-time emissive tint, which the scene light then washes
+// toward white, so a ring that must read as its colour is filled with it. null until the atlas image
+// decodes (retry next frame, like tex())
+  public function outlineTex(imageName:String, ix:Int, iy:Int, male:Bool, px:Float, skin:Int = 0,
+      fill:Int = 0xffffff):OutlineSprite
     {
-      var key = 'out:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + px + ':' + skin;
+      var key = 'out:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + px + ':' + skin + ':' + fill;
       if (outlineCache.exists(key)) return outlineCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
       var t = src.t;
+      px *= t / 64;
       var dw = t - 2 * px;                                 // inset content edge (fractional px allowed)
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
@@ -380,19 +704,18 @@ class Sprites {
             if (dx == 0 &&
                 dy == 0)
               continue;
-            cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, px + dx * px, px + dy * px, dw, dw);
+            cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, px + dx * px, px + dy * px, dw, dw);
           }
       // punch the sprite itself back out, leaving only the band outside its silhouette
       cx.globalCompositeOperation = 'destination-out';
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, px, px, dw, dw);
-      // flood what remains white, so the paint-time emissive tint owns the color (the soft alpha
-      // edge survives — source-in multiplies the fill by the ring's own alpha)
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, px, px, dw, dw);
+      // flood what remains with the fill, white by default so the paint-time emissive tint owns the
+      // color (the soft alpha edge survives — source-in multiplies the fill by the ring's own alpha)
       cx.globalCompositeOperation = 'source-in';
-      cx.fillStyle = '#ffffff';
+      cx.fillStyle = '#' + StringTools.hex(fill, 6);
       cx.fillRect(0, 0, t, t);
       cx.globalCompositeOperation = 'source-over';
-      var tex = new CanvasTexture(cv);
-      tex.colorSpace = THREE.SRGBColorSpace;
+      var tex = mkTex(cv);
       var os = { tex: tex, scale: t / dw };
       outlineCache.set(key, os);
       return os;
@@ -455,7 +778,7 @@ class Sprites {
     {
       var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (contentCache.exists(key)) return contentCache.get(key);
-      var src = atlasFor(imageName, male, skin);
+      var src = atlasFor(imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -465,9 +788,52 @@ class Sprites {
       // draw the full cell to a scratch canvas, then scan its alpha for the opaque bounding box
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true });
+      cx.drawImage(img, src.ix * t, src.iy * t + 1, t, t - 1, 0, 0, t, t);
+      var b = boxOf(cx, t);
+      // tight-cropped texture holding just the content rect
+      var tc:Dynamic = Browser.document.createElement('canvas');
+      tc.width = b.w; tc.height = b.h;
+      var tcx = tc.getContext('2d', { willReadFrequently: true });
+      tcx.drawImage(cv, b.x, b.y, b.w, b.h, 0, 0, b.w, b.h);
+      if (mul < 1.0)
+        darkenCanvas(tcx, b.w, b.h, mul);
+      var tex = mkTex(tc);
+      // bottom margin: empty cell rows below the content (py grows downward), as a cell fraction —
+      // lets an upright sprite drop its content bottom onto the ground
+      var gs:GroundSprite = { tex: tex, fw: b.w / t, fh: b.h / t, by: bottomOf(b, t) };
+      contentCache.set(key, gs);
+      return gs;
+    }
+
+// the opaque bounding box of one atlas cell, drawn and scanned from scratch. null until the atlas
+// image decodes, like everything else that reads pixels here.
+//
+// STATIC AND IMAGE-IN, which is the whole point of it: render.facility.FacilityModel needs a bench
+// decoration's content box while an AREA is being derived, and at that moment the sprite pool does
+// not exist yet — render.View creates the actor layer inside `buildFrom`, a step AFTER the model it
+// is building the area from. Reaching for an instance there is a null dereference, which is exactly
+// how this shipped once
+  public static function cellBox(img:Dynamic, t:Int, ix:Int, iy:Int):AtlasBox
+    {
+      if (img == null ||
+          !img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var cv:Dynamic = Browser.document.createElement('canvas');
+      cv.width = t; cv.height = t;
+      var cx = cv.getContext('2d', { willReadFrequently: true });
+      // the same source box texContent crops (the +1/-1 kludge avoids atlas bleed), so a box scanned
+      // here and one scanned there are the same box
       cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
-      var data = cx.getImageData(0, 0, t, t).data;
+      return boxOf(cx, t);
+    }
+
+// scan a drawn t x t cell for its opaque bounds. ONE implementation, shared by texContent, cellBox
+// and contentRect — the three used to carry a byte-identical copy of this loop each
+  static function boxOf(ctx:Dynamic, t:Int):AtlasBox
+    {
+      var data = ctx.getImageData(0, 0, t, t).data;
       var minX = t, minY = t, maxX = -1, maxY = -1;
       for (py in 0...t)
         for (px in 0...t)
@@ -481,24 +847,16 @@ class Sprites {
           }
       // fully transparent cell: fall back to the whole cell so we still return something valid
       if (maxX < minX)
-        {
-          minX = 0; minY = 0; maxX = t - 1; maxY = t - 1;
-        }
-      var cw = maxX - minX + 1, ch = maxY - minY + 1;
-      // tight-cropped texture holding just the content rect
-      var tc:Dynamic = Browser.document.createElement('canvas');
-      tc.width = cw; tc.height = ch;
-      var tcx = tc.getContext('2d');
-      tcx.drawImage(cv, minX, minY, cw, ch, 0, 0, cw, ch);
-      if (mul < 1.0)
-        darkenCanvas(tcx, cw, ch, mul);
-      var tex = new CanvasTexture(tc);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      // bottom margin: empty cell rows below the content (py grows downward, so t-1-maxY),
-      // as a cell fraction — lets an upright sprite drop its content bottom onto the ground
-      var gs:GroundSprite = { tex: tex, fw: cw / t, fh: ch / t, by: (t - 1 - maxY) / t };
-      contentCache.set(key, gs);
-      return gs;
+        return { x: 0, y: 0, w: t, h: t, t: t };
+      return { x: minX, y: minY, w: maxX - minX + 1, h: maxY - minY + 1, t: t };
+    }
+
+// the empty space BELOW a content box as a cell fraction — 0 means the content reaches the cell's
+// bottom edge. what stands an upright sprite's feet on the ground, and what says how far the tilt
+// carries its drawn base off the cell (render.facility.FacilityDeco.poolOf)
+  public static inline function bottomOf(b:AtlasBox, t:Int):Float
+    {
+      return (t - 1 - (b.y + b.h - 1)) / t;
     }
 
 // the whole sprite atlas as ONE texture, darkened by mul — the shared map behind every batched
@@ -518,12 +876,19 @@ class Sprites {
       var cv:Dynamic = Browser.document.createElement('canvas');
       cv.width = img.naturalWidth;
       cv.height = img.naturalHeight;
-      var cx = cv.getContext('2d');
+      var cx = cv.getContext('2d', { willReadFrequently: true });
       cx.drawImage(img, 0, 0);
       if (mul < 1.0)
         darkenCanvas(cx, cv.width, cv.height, mul);
+      // NOT mkTex, and deliberately: this texture never touches the sprite-pool material. It is the
+      // shared map of the BATCHED decal mesh (render.decals.DecalBatch), whose material carries
+      // neither the premultiplied upload nor the un-premultiplying patch — handed one it would
+      // sample premultiplied and never divide, and every decal in the batch would go dark with its
+      // own alpha
       var tex = new CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;
+      // named for the image, so the polygon probe reports which atlas a batched decal is cut from
+      tex.name = imageName;
       // mipmaps OFF: cells sit edge-to-edge, so a coarse mip averages neighbouring cells into each
       // other and a decal would sample its neighbour's pixels at distance. the per-cell crops could
       // mip safely because each owned its own texture; an atlas cell cannot. decals radius-fade out
@@ -533,6 +898,25 @@ class Sprites {
       untyped tex.minFilter = THREE.LinearFilter;
       texCache.set(key, tex);
       return tex;
+    }
+
+// the image and cell a BATCHED ground decal cuts an entities64 frame from: atlasTex/cellRect take a
+// whole image, so they cannot follow atlasFor's per-cell redirect by themselves. the 128 redraw where
+// the frame has one (Const.HD128), the frame itself otherwise
+  public function batchCell(ix:Int, iy:Int):BatchCell
+    {
+      var h = Const.hd128(iy, ix);
+      if (h < 0)
+        return {
+          name: 'entities',
+          ix: ix,
+          iy: iy,
+        };
+      return {
+        name: 'entities128',
+        ix: h % Const.HD128_COLS,
+        iy: Std.int(h / Const.HD128_COLS),
+      };
     }
 
 // one whole atlas cell as a UV rect into atlasTex()
@@ -545,7 +929,7 @@ class Sprites {
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = Images.cellSize(imageName);
       // same source box tex() crops (the +1/-1 kludge avoids atlas bleed)
       var r = uvRect(img.naturalWidth, img.naturalHeight, ix * t, iy * t + 1, t, t - 1, 1.0, 1.0);
       rectCache.set(key, r);
@@ -564,35 +948,13 @@ class Sprites {
           !img.complete ||
           img.naturalWidth <= 0)
         return null;
-      var t = Const.TILE_SIZE_CLEAN;
-      // draw the full cell to a scratch canvas, then scan its alpha for the opaque bounding box
-      var cv:Dynamic = Browser.document.createElement('canvas');
-      cv.width = t; cv.height = t;
-      var cx = cv.getContext('2d');
-      cx.drawImage(img, ix * t, iy * t + 1, t, t - 1, 0, 0, t, t);
-      var data = cx.getImageData(0, 0, t, t).data;
-      var minX = t, minY = t, maxX = -1, maxY = -1;
-      for (py in 0...t)
-        for (px in 0...t)
-          {
-            if (data[(py * t + px) * 4 + 3] <= 8) // near-transparent -> not content
-              continue;
-            if (px < minX) minX = px;
-            if (px > maxX) maxX = px;
-            if (py < minY) minY = py;
-            if (py > maxY) maxY = py;
-          }
-      // fully transparent cell: fall back to the whole cell so we still return something valid
-      if (maxX < minX)
-        {
-          minX = 0; minY = 0; maxX = t - 1; maxY = t - 1;
-        }
-      var cw = maxX - minX + 1, ch = maxY - minY + 1;
+      var t = Images.cellSize(imageName);
+      var b = cellBox(img, t, ix, iy);
       // the scan canvas stretched t-1 source rows over t rows (that same bleed kludge), so undo the
       // scale on the way back to real atlas pixels
       var sy = (t - 1) / t;
       var r = uvRect(img.naturalWidth, img.naturalHeight,
-        ix * t + minX, iy * t + 1 + minY * sy, cw, ch * sy, cw / t, ch / t);
+        ix * t + b.x, iy * t + 1 + b.y * sy, b.w, b.h * sy, b.w / t, b.h / t);
       rectCache.set(key, r);
       return r;
     }
@@ -624,18 +986,23 @@ class Sprites {
       if (base == null)
         return null;
       var tx:Dynamic = base.tex;
-      var src:Dynamic = tx.image;                        // the tight crop canvas (cw x ch)
+      var img:Dynamic = tx.image;                        // the tight crop canvas (cw x ch)
       var pad = RenderConfig.FLAME.shadowSoftPx * 2;      // blur bleeds beyond the edge -> pad so it isn't clipped
       var bc:Dynamic = Browser.document.createElement('canvas');
-      bc.width = src.width + pad * 2;
-      bc.height = src.height + pad * 2;
+      bc.width = img.width + pad * 2;
+      bc.height = img.height + pad * 2;
       var bcx = bc.getContext('2d');
       bcx.filter = 'blur(' + RenderConfig.FLAME.shadowSoftPx + 'px)';
-      bcx.drawImage(src, pad, pad);
-      var tex = new CanvasTexture(bc);
-      tex.colorSpace = THREE.SRGBColorSpace;
-      var t = atlasFor(imageName, male, skin).t; // 128 for actor sheets, 64 otherwise
-      var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t, by: 0.0 };
+      bcx.drawImage(img, pad, pad);
+      var tex = mkTex(bc);
+      // 256 for a bench decoration pack cell, 128 for an actor sheet, 64 otherwise
+      var t = atlasFor(imageName, ix, iy, male, skin).t;
+      // `by` IS THE CONTENT BOTTOM AND NOT THE PAD'S, and it is carried through rather than zeroed
+      // because render.actors.LampShadows needs it: Sprites.paint leans the upright quad back about
+      // its own CENTRE, so the drawn base lands well in front of the cell and a shadow rooted on the
+      // cell is a shadow the actor stands clear of. the blur pad is symmetric, so it moves the
+      // content's bottom against the CANVAS and not against the atlas cell — `base.by` still holds
+      var gs:GroundSprite = { tex: tex, fw: bc.width / t, fh: bc.height / t, by: base.by };
       shadowCache.set(key, gs);
       return gs;
     }

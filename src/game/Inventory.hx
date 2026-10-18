@@ -31,15 +31,21 @@ class Inventory extends _SaveObject
   public function init()
     {
       _list = new List();
+      clothing = bare();
+      weaponID = null;
+    }
+
+// the placeholder a host wears when it wears nothing over its own clothes
+  function bare(): _Item
+    {
       var info = ItemsConst.getInfo('armorNone');
-      clothing = {
+      return {
         game: game,
         id: info.id,
         info: info,
         name: info.name,
         event: null,
       };
-      weaponID = null;
     }
 
 // called after load or creation
@@ -61,14 +67,7 @@ class Inventory extends _SaveObject
         {
           if (clothing != null && clothing.info == null)
             loadOrphanCount++;
-          var info = ItemsConst.getInfo('armorNone');
-          clothing = {
-            game: game,
-            id: info.id,
-            info: info,
-            name: info.name,
-            event: null,
-          };
+          clothing = bare();
         }
     }
 
@@ -89,9 +88,10 @@ class Inventory extends _SaveObject
       if (game.location == LOCATION_REGION)
         return tmp;
 
-      for (item in _list)
+      for (item in withWorn())
         {
           var itemName = item.getName();
+          var worn = (item == clothing);
           // add learning action
           if (!game.player.knowsItem(item.id))
             tmp.push({
@@ -110,19 +110,39 @@ class Inventory extends _SaveObject
               var itemActions = item.info.getInventoryActions(item);
               for (action in itemActions)
                 tmp.push(action);
+              // put clothing on, or take it off
+              if (item.info.type == 'clothing')
+                tmp.push({
+                  id: (worn ? 'takeOff.' : 'wear.') + item.id,
+                  type: ACTION_INVENTORY,
+                  name: (worn ? 'Take off ' : 'Wear ') + Const.col('inventory-item', itemName),
+                  nameClean: (worn ? 'Take off' : 'Wear'),
+                  energy: 5,
+                  item: item
+                });
             }
 
-          // drop item
-          tmp.push({
-            id: 'drop.' + item.id,
-            type: ACTION_INVENTORY,
-            name: 'Drop ' + Const.col('inventory-item', itemName),
-            nameClean: 'Drop',
-            energy: 0,
-            item: item
-          });
+          // drop item, once it is off
+          if (!worn)
+            tmp.push({
+              id: 'drop.' + item.id,
+              type: ACTION_INVENTORY,
+              name: 'Drop ' + Const.col('inventory-item', itemName),
+              nameClean: 'Drop',
+              energy: 0,
+              item: item
+            });
         }
       return tmp;
+    }
+
+// what the host carries, then what it wears over its own clothes: the body window's list
+  public function withWorn(): Array<_Item>
+    {
+      var ret = Lambda.array(_list);
+      if (clothing.id != 'armorNone')
+        ret.push(clothing);
+      return ret;
     }
 
 // update actions list (hud)
@@ -145,6 +165,11 @@ class Inventory extends _SaveObject
           // learn about item
           case 'learn':
             learnAction(action.item);
+          // put clothing on, or take it off
+          case 'wear':
+            wearAction(action.item);
+          case 'takeOff':
+            ret = takeOffAction();
           default:
             {
               if (action.who == null)
@@ -204,6 +229,31 @@ class Inventory extends _SaveObject
         item.name : item.info.unknown);
       game.player.log('You drop the ' + Const.col('inventory-item', itemName) + '.');
       game.scene.sounds.play('item-drop');
+    }
+
+// ACTION: put on clothing the host carries, in place of what it wore. one item out of the list and
+// at most one back in, so the swap always fits
+  function wearAction(item: _Item)
+    {
+      _list.remove(item);
+      if (clothing.id != 'armorNone')
+        _list.add(clothing);
+      clothing = item;
+      game.player.log('You put on the ' + Const.col('inventory-item', item.getName()) + '.');
+    }
+
+// ACTION: take off what the host wears, into its hands
+  function takeOffAction(): Bool
+    {
+      if (_list.length >= game.player.host.maxItems)
+        {
+          clothing.info.itemFailed('Your host cannot carry any more.');
+          return false;
+        }
+      game.player.log('You take off the ' + Const.col('inventory-item', clothing.getName()) + '.');
+      _list.add(clothing);
+      clothing = bare();
+      return true;
     }
 
 // list iterator

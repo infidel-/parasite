@@ -108,6 +108,25 @@ class Occlusion {
       attachDbg();
     }
 
+// bucket a mesh that joined the scene AFTER this fader was built (a glb that landed over a loader
+// callback): it fades with the building its userData.b names, from the next update on
+  public function adopt(m:Object3D):Void
+    {
+      var b:Building = m.userData.b;
+      for (o in occ)
+        if (o.b == b)
+          {
+            o.meshes.push({
+              mesh: m,
+              ghost: null,
+              ghostVisible: false,
+              realHidden: false,
+              rev: 0,
+            });
+            return;
+          }
+    }
+
 // console debug helpers (persistent) — what each building actually fades.
 //   __occ.stats()   -> { buildings, meshes, skipped }
 //   __occ.skipped() -> [{ cls, size:[x,z] }]  meshes pick() left unbucketed, so they never fade:
@@ -650,7 +669,7 @@ class Occlusion {
 
 // does segment a->b pass through the box (strictly between the endpoints)? slab clip. grow
 // inflates the XZ slabs, widening the corridor (used to fade near-line, not just strict, hits)
-  static function segHitsBox(ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float,
+  public static function segHitsBox(ax:Float, ay:Float, az:Float, bx:Float, by:Float, bz:Float,
     x0:Float, x1:Float, z0:Float, z1:Float, y1:Float, grow:Float = 0.0):Bool
     {
       var t = [0.0, 1.0];

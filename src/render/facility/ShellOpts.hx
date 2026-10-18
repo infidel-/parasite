@@ -1,0 +1,54 @@
+package render.facility;
+
+import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Surf;
+import render.facility.FacilityModel.Wall;
+
+// how one AREA KIND reads an indoor shell out of its saved cell grid.
+//
+// replaces the four things render.facility.FacilityModel.fromArea used to hardcode, so the same
+// derivation — structures, window runs, doors, decorations, room theming — serves both the
+// compound and the corp tower. Everything NOT here is genuinely generic and stays shared.
+typedef ShellOpts = {
+  // which area kind this is, carried onto the model so a shared pass can branch. 'facility' or
+  // 'corp'
+  var kind: String;
+  // the art every surface of this kind is dressed in
+  var tex: ShellTex;
+  // tile id -> the horizontal surface it paints
+  var surfOf: Int -> Surf;
+  // tile id -> what it blocks
+  var wallOf: Int -> Wall;
+  // and which piece of 3D FURNITURE a tile id stands, as a small per-kind code, 0 for none. it
+  // exists for the same reason `Facility.parking` does: the surface grid cannot answer it, because
+  // a cubicle spine, a server cabinet and a washroom fixture all paint their ROOM's own floor, and
+  // the raw tile id is the only thing that separates them. the codes are the kind's own — the
+  // compound returns 0 everywhere and render.corp.CorpFurniture owns the corp ones
+  var fitOf: Int -> Int;
+  // and which tile ids are a WORKTOP for this kind. the two answers are the two halves of the same
+  // four tileset rows — Const.isTableTile is the laboratory's columns 0-7 and isCorpTableTile the
+  // corp office's 8-15 — so neither kind may use the other's
+  var tableOf: Int -> Bool;
+  // how thick an INTERIOR wall's masonry is, in world units. FacilityStyle.WALL_T (2.0, half a
+  // cell) for a compound, whose walls really are masonry; a corp tower passes less, because a
+  // doorway's reveal is this deep and an office partition read as a one-metre tunnel. It applies
+  // ONLY to a wall with the building on all four hands — the perimeter keeps WALL_T, so the
+  // parapet's PARAPET_INSET, the window shoulders and the facade plane are all untouched
+  var wallIn: Float;
+  // may a structure come back flagged as a HANGAR — the concrete-majority test? A compound has one
+  // shed and needs it. A corp floor must not: its LIFT CAR is nine cells of concrete inside its own
+  // ring of posts and glazing, so the same test calls a lift a hangar and arches a barrel vault
+  // over it
+  var hangars: Bool;
+  // the wall head a hangar's vault springs from, world units. FacilityStyle.WALL_H for a compound,
+  // whose shed is a storey like its labs; a military base's is twice that, so its plane clears the
+  // doors, and everything over WALL_H fades with the vault (FacilityGeom.storey)
+  var hangarH: Float;
+  // does a structure get the FLAT CEILING deck over its floor? a compound's labs do; a corp floor's
+  // would be permanently faded (the player is always inside it), and an underground lab's would be a
+  // lid on a level whose bedrock is the ceiling
+  var deck: Bool;
+  // and the PARAPET ring standing PARAPET_H over the wall head along every outward wall. the read of
+  // "a storey" on a compound and a tower; in the lab it would stand up out of the bedrock
+  var parapet: Bool;
+}

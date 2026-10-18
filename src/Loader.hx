@@ -9,8 +9,12 @@ import game.*;
 
 class Loader
 {
-// load game from a slot and restore all runtime links
-  public static function load(game: Game, slotID: Int)
+// load game from a slot and restore all runtime links. returns whether the game graph came back
+// intact: a caller MUST NOT touch the game after a false, because restartPre() has already wiped it
+// and there is nothing valid to read. game.Game.applyLoaded used to run either way, so every failed
+// load threw a SECOND exception out of the HUD refresh (ui.HUD.update -> PlayerArea.updateActionList
+// on a null area) and that is the one the player saw — the real cause was only in the log
+  public static function load(game: Game, slotID: Int): Bool
     {
       // no game graph yet (booted straight to menu without generating a world):
       // build the scaffold init(true) used to create at boot, so the restore has a
@@ -41,15 +45,39 @@ class Loader
         // restore region and area pointers
         game.region = game.world.get(o.game.regionID);
         game.area = game.region.get(o.game.areaID);
+        // saves made in the region right after leaving a mission site name that site, which the
+        // region had already removed (fixed in RegionGame.removeArea). in region mode the area is
+        // only the cell under the player, so take that
+        if (game.area == null &&
+            game.region != null &&
+            game.location == LOCATION_REGION)
+          game.area = game.region.getXY(game.playerRegion.x, game.playerRegion.y);
       }
       catch (e: Dynamic)
         {
+          // isInited is a saved field, so a throw partway through loadObject has already set it back
+          // to true over a half-restored game whose region and area (not saved) still point at the
+          // old world. cleared here or Game.autosave's wiped-game guard passes and writes that mix
+          game.isInited = false;
           game.ui.onError('load game: ' + e, '', -1, -1, {
             stack: haxe.CallStack.toString(haxe.CallStack.exceptionStack()),
           });
-          return;
+          return false;
         }
 #end
+      // the two pointers above can come back null WITHOUT throwing, when the save names a region or
+      // an area the restored world does not hold — and the ENTER trace on the next line would then
+      // be the throw, outside the try and uncaught. checked here so a bad save fails the same way a
+      // corrupt one does
+      if (game.region == null ||
+          game.area == null)
+        {
+          game.isInited = false;
+          game.ui.onError('load game: save names region ' + Std.string(game.region) +
+            ' / area ' + Std.string(game.area) + ', which the loaded world does not hold',
+            '', -1, -1, null);
+          return false;
+        }
 
       // run post-load initialization chain
       trace('====== ENTER ' + game.area.id);
@@ -69,6 +97,17 @@ class Loader
       game.scene.sounds.loadPost();
       for (cult in game.cults)
         cult.loadPost();
+      // a save made standing in a military base from before the fenced base: walk out and back in so
+      // it is built anew and the player arrives outside the fence, the way the console's `area regen`
+      // does it. every other old base was thrown away in AreaGame.loadPost
+      if (game.location == LOCATION_AREA &&
+          game.area.isOldBase())
+        {
+          var area = game.area;
+          game.setLocation(LOCATION_REGION);
+          area.regenerate();
+          game.setLocation(LOCATION_AREA, area);
+        }
       rebuildAIDataMaxID(game);
       // camera + first render are deferred to applyLoaded (one tick later) so the
       // fader's cover transition can paint before the 3D city build stalls the thread
@@ -102,6 +141,7 @@ class Loader
               ' from this save because the mod that supplied them is no longer enabled.',
           });
         }
+      return true;
     }
 
 // join a list with commas and a final "and" — "a", "a and b", "a, b and c"

@@ -11,7 +11,8 @@ class WorldConst
       // *** wilderness around city
       AREA_GROUND => {
         id: AREA_GROUND,
-        ambient: AMBIENT_WILDERNESS,
+        // the beds are render.wild.WildSounds' own, per terrain band and on the highway
+        ambient: AMBIENT_NONE,
         type: 'wilderness',
         name: 'Uninhabited area',
         pediaArticle: 'areaUninhabited',
@@ -39,7 +40,8 @@ class WorldConst
       // *** low-class, low population - outskirts and suburbs
       AREA_CITY_LOW => {
         id: AREA_CITY_LOW,
-        ambient: AMBIENT_CITY,
+        // the beds are render.CitySounds' own, per tier and per street kind
+        ambient: AMBIENT_NONE,
         type: 'city',
         name: 'Low-density city area',
         pediaArticle: 'areaCity',
@@ -71,7 +73,8 @@ class WorldConst
       // *** mid-class, mid population - residential districts
       AREA_CITY_MEDIUM => {
         id: AREA_CITY_MEDIUM,
-        ambient: AMBIENT_CITY,
+        // the beds are render.CitySounds' own, per tier and per street kind
+        ambient: AMBIENT_NONE,
         type: 'city',
         name: 'Medium-density city area',
         pediaArticle: 'areaCity',
@@ -104,7 +107,8 @@ class WorldConst
       // *** high-class, high population - downtown and commercial district
       AREA_CITY_HIGH => {
         id: AREA_CITY_HIGH,
-        ambient: AMBIENT_CITY,
+        // the beds are render.CitySounds' own, per tier and per street kind
+        ambient: AMBIENT_NONE,
         type: 'city',
         name: 'Downtown district',
         pediaArticle: 'areaCity',
@@ -138,14 +142,14 @@ class WorldConst
       // *** military base
       AREA_MILITARY_BASE => {
         id: AREA_MILITARY_BASE,
-        ambient: AMBIENT_MILITARY,
+        ambient: AMBIENT_NONE,
         type: 'militaryBase',
         name: 'Military base',
         pediaArticle: 'areaMilitary',
-        exit: 'sewer_hatch',
+        exit: '-',
         alertnessMod: 1.5,
-        width: 50,
-        height: 50,
+        width: 100,
+        height: 80,
         canEnter: true,
         isInhabited: true,
         commonAI: 10,
@@ -159,17 +163,18 @@ class WorldConst
         isHighRisk: true,
         blocksRegionRoad1: true,
         ai: [
-          'soldier' => 100,
+          'soldier' => 90,
+          'officer' => 10,
         ],
-        objects: [
-          { id: 'sewer_hatch', amount: 5 }
-        ]
+        objects: []
       },
 
       // *** facility
       AREA_FACILITY => {
         id: AREA_FACILITY,
-        ambient: AMBIENT_FACILITY,
+        // the bed is render.facility.FacilitySounds' own: ambient-facility in corridors, a bed per
+        // room kind and two outdoors
+        ambient: AMBIENT_NONE,
         type: 'facility',
         name: 'Facility',
         pediaArticle: 'areaLab',
@@ -200,7 +205,8 @@ class WorldConst
       // *** mission sewers
       AREA_SEWERS => {
         id: AREA_SEWERS,
-        ambient: AMBIENT_HABITAT,
+        // the beds are render.sewer.SewerSounds'
+        ambient: AMBIENT_NONE,
         type: 'sewers',
         name: 'Sewers',
         pediaArticle: 'areaHabitat', // unused
@@ -227,14 +233,16 @@ class WorldConst
       // *** mission underground laboratory
       AREA_UNDERGROUND_LAB => {
         id: AREA_UNDERGROUND_LAB,
-        ambient: AMBIENT_FACILITY,
+        ambient: AMBIENT_NONE,
         type: 'undergroundLab',
         name: 'Underground Laboratory',
         pediaArticle: 'areaLab',
         exit: 'elevator',
         alertnessMod: 1.0,
-        width: 45,
-        height: 35,
+        // the size gen.lab is planned and checked against (tools/genrun.mjs --type lab), and an
+        // EXACT size: game.AreaGame.setType does not roll it down
+        width: 56,
+        height: 32,
         canEnter: true,
         isInhabited: true,
         commonAI: 0,
@@ -281,7 +289,8 @@ class WorldConst
       // *** corpo building floor
       AREA_CORP => {
         id: AREA_CORP,
-        ambient: AMBIENT_CORP,
+        // the bed is render.corp.CorpSounds' own: ambient-corp in corridors, corp/room in rooms
+        ambient: AMBIENT_NONE,
         type: 'corp',
         name: 'Corporate HQ',
         pediaArticle: 'areaCorp',

@@ -14,4 +14,5 @@ typedef PaintWallOpts = {
   var roll:Float;             // in-plane spin about the face normal
   @:optional var rough:Float; // material roughness (wet sheen < 1), default 1.0
   @:optional var metal:Float; // material metalness, default 0
+  @:optional var order:Float; // renderOrder (a Sprites.ORD_* layer), default 0
 }

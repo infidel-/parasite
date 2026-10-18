@@ -77,6 +77,7 @@ class SlimeTrail {
         side: THREE.DoubleSide,
       });
       mesh = new Mesh(geo, mat);
+      mesh.name = 'fx slime trail';
       mesh.renderOrder = Sprites.ORD_DECAL;
       // geometry is rebuilt every frame (stale bounding sphere) + always hugs the player, so skip
       // frustum culling on this one small mesh rather than recompute bounds each rebuild

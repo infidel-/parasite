@@ -4,17 +4,29 @@ import three.Three;
 import citygen.CityConfig;
 import render.Textures;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Look;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityModel.Wall;
+import render.world.ContactMask;
 import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
+import render.world.WorldCtx.WallMount;
 
 // what one structure's roof fades. ONLY the roof: the walls used to fade with it, and a wall face
 // was picked for that by its NORMAL, which cannot answer the question it was being asked. see the
 // header of render.facility.FacilityArea.ease
 typedef Shell = {
   roof:Array<Mesh>,
+  // the shared uniform this structure's window panes dim on, 0 lit from the lot .. 1 seen from
+  // inside — one object handed to both run lengths' materials, so FacilityArea writes ONE float per
+  // structure per frame and touches no material property at all. the panes are not in `roof` and
+  // must not be: a roof fades to nothing and glass only changes what it is
+  glaze:Dynamic,
+  // what the parapet ring emitted on this structure, for __facility().roof. a hangar's are both 0
+  // by construction — its roofline is a later job and `parapet` is not called on one at all
+  paraCells:Int,
+  paraQuads:Int,
 };
 
 // an axis-aligned footprint in world units, used for both a wall cell's slab and its roof band
@@ -58,10 +70,32 @@ class FacilityGeom
 {
   static inline var CELL = CityConfig.CELL;
 
+  // how many per-surface buffers `structure` allocates: one slot per Surf value, so a surface
+  // indexes its own buffer and most of them come back empty and emit no mesh at all. the number
+  // itself lives with the enum's art table (FacilityStyle.SURF_SLOTS), because a Surf added
+  // without growing BOTH is an index out of range at the flush
+  static inline var FLOOR_SURFS = FacilityStyle.SURF_SLOTS;
+
   // cell offsets of the neighbour each wall face looks at. 0 = north (-z), 1 = south (+z),
-  // 2 = west (-x), 3 = east (+x) — the same order render.sewer.SewerGeom winds
-  static var DC = [0, 0, -1, 1];
-  static var DR = [-1, 1, 0, 0];
+  // 2 = west (-x), 3 = east (+x) — the same order render.sewer.SewerGeom winds, and the order
+  // `ends` winds a face against. PUBLIC so a second pass over the same faces cannot get its own copy
+  // slightly wrong: render.world.Geom numbers its four directions differently, and a decal emitted
+  // on dir 2 when the emitter meant dir 3 lands inside the masonry with nothing to see
+  public static var DC = [0, 0, -1, 1];
+  public static var DR = [-1, 1, 0, 0];
+
+// how tall a window run of this many cells stands, world units. NOTHING is ever stretched, so the
+// height is the run's width over the ASPECT OF THE ART IT DRAWS — and there is one art per run
+// length, so the two lengths are two different numbers rather than one aspect and a fraction.
+//
+// they come out very nearly the same height (2-cell 4.08, 3-cell 4.14) where before the shorter one
+// was 2.76, a third of a storey lower than its neighbour on the same facade. that is the correct
+// answer and not a coincidence: a pane is a pane, so a shorter opening is fewer of them and not
+// smaller ones. read by BOTH passes over m.windows — the one that records the hole for the wall
+// emitter to leave, and the one that fills it — which is why it is a function and not a line in either
+  public static inline function paneTall(m:Facility, len:Int):Float
+    return len * CELL /
+      (len == 2 ? m.tex.aspect2 : m.tex.aspect);
 
 // build every structure's shell, and hand back what fades
   public static function build(scene:Scene, m:Facility):Array<Shell>
@@ -76,9 +110,11 @@ class FacilityGeom
         doorAt[m.doors[i].row][m.doors[i].col] = i;
       for (w in m.windows)
         {
-          var wide = w.len * CELL;
-          var tall = wide / FacilityStyle.WINDOW_ASPECT;
-          var lo = (FacilityStyle.WALL_H - tall) / 2;
+          // a LIGHT WELL is not sized off its art the way a ribbon is: it is one cell, one image maps
+          // 0..1 across it, and where it sits in the wall is the whole design (see WINDOW_HIGH_SILL)
+          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(m, w.len));
+          var lo = (w.high ? FacilityStyle.WINDOW_HIGH_SILL :
+            (FacilityStyle.WALL_H - tall) / 2);
           if (lo < 0)
             lo = 0;
           var hi = lo + tall;
@@ -97,10 +133,20 @@ class FacilityGeom
         sill: sill,
         head: head,
         doorAt: doorAt,
+        hood: MeshBufTools.make(),
       };
       var out = [];
       for (si in 0...m.structures.length)
         out.push(structure(scene, m, si, g));
+      // and the bulkhead hoods, merged across every structure at once — see the field's own comment.
+      // it does NOT cast, which is the one place it departs from the cladding it used to ride: a
+      // shadow-map draw is a real draw call, and MEASURED in a pinned frame at the hangar's side
+      // door, hiding the mesh took `calls` 68 -> 66 with castShadow on and 68 -> 67 with it off,
+      // for two screenshots that cannot be told apart. nothing here is between a caster and a
+      // surface — the compound's only spotlights that cast hang BELOW the hood's own top and aim
+      // straight down. the buffer is empty in a compound with no exterior door and `add` emits no
+      // mesh then
+      add(scene, g.hood, m.tex.hood, true, false);
       return out;
     }
 
@@ -114,11 +160,105 @@ class FacilityGeom
       return FacilityModel.isWall(m, col, row) || FacilityModel.isDoor(m, col, row);
     }
 
-// how thick a cell's masonry is: HALF a cell for solid wall and a QUARTER for glazing
-  public static inline function thick(m:Facility, col:Int, row:Int):Float
+// how thick a cell's masonry is: HALF a cell for solid wall, a QUARTER for glazing, and the kind's
+// own `wallIn` for a wall with the building on all four hands.
+//
+// THE INTERIOR SPLIT IS WHAT MAKES A CORP DOORWAY AN OPENING RATHER THAN A TUNNEL. A reveal is
+// exactly this deep (see `slab`), so at WALL_T the tower's partitions stood a full real metre of
+// masonry either side of every door — right for a compound built out of blockwork and wrong for
+// an office floor. Only the INTERIOR is thinned: the perimeter keeps WALL_T so that
+// FacilityStyle.PARAPET_INSET, the window shoulders `butt` caps and render.corp.CorpFacade's ring
+// plane all keep arguing about the same number they always did
+  public static function thick(m:Facility, col:Int, row:Int):Float
     {
-      return FacilityModel.inside(m, col, row) && m.wall[row][col] == Wall.WINDOW ?
-        FacilityStyle.GLASS_T : FacilityStyle.WALL_T;
+      if (FacilityModel.inside(m, col, row) && m.wall[row][col] == Wall.WINDOW)
+        return FacilityStyle.GLASS_T;
+      return (m.wallIn < FacilityStyle.WALL_T && inner(m, col, row) ?
+        m.wallIn : FacilityStyle.WALL_T);
+    }
+
+// is this cell's masonry surrounded by the building on all EIGHT hands — i.e. a partition and not a
+// piece of the perimeter.
+//
+// THE DIAGONALS COUNT, and leaving them out is what made the lift core's corner fit nothing. A cell
+// whose four hands are all indoors or all masonry can still have an OUTDOOR CORNER — it is the cell
+// on the inside of an L, the one parapet() emits a notch for and the one whose notch face is the
+// exterior cladding turning the corner. Counted as interior it was thinned to `wallIn` 1.2, so that
+// face stood at 0.4 off the run it had to merge into: reported from the game as two `wall-curtain`
+// faces, one at z -179.0 and one at z -178.6, that "should merge into one another"
+  static function inner(m:Facility, col:Int, row:Int):Bool
+    {
+      for (dc in -1...2)
+        for (dr in -1...2)
+          {
+            var c = col + dc;
+            var r = row + dr;
+            if (!FacilityModel.isIndoor(m, c, r) &&
+                !carries(m, c, r))
+              return false;
+          }
+      return true;
+    }
+
+// how far from a wall cell's CENTRE this compound draws that cell's face, or -1 where the cell is
+// not masonry at all. render.world.WorldCtx.wallFace's own contract, and the whole of what a decal
+// standing on a wall needs from the facility: a splat or a bullet hole is placed from the cell the
+// drop or the shot DIED in, and a cell turns solid at its BOUNDARY — two units out — while `thick`
+// says the slab reaches half that. Reported from the game as blood hanging in the air off an inner
+// wall, and it was 1.12 units of it
+  public static function wallFace(m:Facility, col:Int, row:Int, dir:Int):Float
+    {
+      if (FacilityModel.isWall(m, col, row))
+        return thick(m, col, row) / 2;
+      // AND THE WASHROOM DIVIDER, which is the one FITTING in the compound that is a wall rather
+      // than a thing standing against one — and the one that is not square in its cell: it spans the
+      // whole of it along its own run and stands PART_T 0.6 across, so a splat on its flank hung
+      // 1.82 units off it, worse than the masonry. Its box is the one FacilityDeco already derives
+      // for the emitter, so the two cannot disagree
+      var kind = (FacilityModel.inside(m, col, row) ? m.deco[row][col] - 1 : -1);
+      if (kind != _FittingKind.FIT_PARTITION)
+        return -1.0;
+      var r = FacilityDeco.rectOf(m, col, row, kind);
+      var c = CityConfig.cellToWorld(col, row);
+      return switch (dir)
+        {
+          case 0: r.z1 - c.z;
+          case 1: c.z - r.z0;
+          case 2: r.x1 - c.x;
+          default: c.x - r.x0;
+        }
+    }
+
+// where an object standing on a wall cell hangs: one pose per face the wall line does NOT carry
+// into, which for a straight run is its two sides. null for every other cell, so the actor layer
+// pays one grid lookup per object and allocates nothing in the common case.
+//
+// this exists because the generator writes a VENT as a TILE_BUILDING cell and stands an objects.Vent
+// on it. Drawn like any other object the grille lay FLAT on the floor inside two units of masonry,
+// where nothing but its through-wall mark could ever be seen — reported from the game as a dotted
+// mark on the ground that ought to be on the wall
+  public static function wallMounts(m:Facility, col:Int, row:Int):Array<WallMount>
+    {
+      if (!FacilityModel.isWall(m, col, row))
+        return null;
+      var c = CityConfig.cellToWorld(col, row);
+      var out = thick(m, col, row) / 2 + FacilityStyle.MOUNT_PROUD;
+      var mounts = [];
+      for (dir in 0...4)
+        {
+          if (carries(m, col + DC[dir], row + DR[dir]))
+            continue;
+          // the face's outward normal IS (DC,DR) read as (x,z), so its yaw is that vector's angle —
+          // no dir-to-rotation table, and none of render.world.Geom's opposite dir numbering to cross
+          mounts.push({
+            x: c.x + DC[dir] * out,
+            y: FacilityStyle.MOUNT_Y,
+            z: c.z + DR[dir] * out,
+            rotY: Math.atan2(DC[dir], DR[dir]),
+            scale: FacilityStyle.MOUNT_SCALE,
+          });
+        }
+      return mounts;
     }
 
 // the BOUNDING BOX of a wall cell's masonry, in world units — reaching the cell boundary only on the
@@ -146,6 +286,24 @@ class FacilityGeom
       };
     }
 
+// how far in from the cell boundary the run leaving this wall cell in `dir` has its faces: the cell's
+// own inset, or the NEIGHBOUR's when that is masonry and thinner.
+//
+// A PARTITION BUTTS INTO THE OUTER WALL, it does not thicken to meet it. With the cell's own inset a
+// 1.2 partition meeting the 2.0 tower wall carried on at 2.0 for the corner cell's last unit, a
+// 0.4 step standing into the room at every such corner — reported from the game as a bin pushed into
+// the corner going straight into the wall. MASONRY only: a window slab sits strictly INSIDE the
+// wall that bounds its run, and that wall's excess is the jamb reveal (see `structure`'s shoulders)
+  static function runInset(m:Facility, col:Int, row:Int, dir:Int):Float
+    {
+      var e = (CELL - thick(m, col, row)) / 2;
+      var nc = col + DC[dir];
+      var nr = row + DR[dir];
+      if (!FacilityModel.isSolidWall(m, nc, nr))
+        return e;
+      return Math.max(e, (CELL - thick(m, nc, nr)) / 2);
+    }
+
 // the corner squares a cell's slab box holds that its masonry does not: one per PAIR of adjacent
 // directions the wall line carries into.
 //
@@ -157,10 +315,17 @@ class FacilityGeom
 // the square belongs to the DIAGONAL cell: it is the last unit of that room's corner, and it takes
 // that room's floor, its fading ceiling and its paint, exactly as strips() hands a run's leftover to
 // the neighbour beside it
-  public static function notches(m:Facility, col:Int, row:Int):Array<Notch>
+//
+// `inset` OVERRIDES the cell's own masonry inset, and only the parapet ring passes it. Every other
+// caller wants the square the MASONRY leaves, which is what `thick` measures; the ring is drawn on
+// FacilityStyle.PARAPET_INSET whatever the cell is made of (see ringRect), so a notch taken at the
+// masonry inset lands beside it and not on it. Reported from the game as the lift core's roof
+// corner meeting neither the core's own parapet nor the block's: the corner cell was `inner`, so
+// thick gave it the 1.2 stud wall, e came out 1.4 against the ring's 1.0 and both of the notch's
+// two bands stood 0.4 proud of the band they were there to join
+  public static function notches(m:Facility, col:Int, row:Int, inset:Float = -1):Array<Notch>
     {
       var half = (CityConfig.GRID * CELL) / 2;
-      var e = (CELL - thick(m, col, row)) / 2;
       var x0 = col * CELL - half;
       var z0 = row * CELL - half;
       var out = [];
@@ -171,13 +336,17 @@ class FacilityGeom
             if (!carries(m, col + DC[dz], row + DR[dz]) ||
                 !carries(m, col + DC[dx], row + DR[dx]))
               continue;
-            var nx = (dx == 2 ? x0 : x0 + CELL - e);
-            var nz = (dz == 0 ? z0 : z0 + CELL - e);
+            // each side of the square is the face of the run it stands against, so it is sized by
+            // THAT run's inset and not the cell's own — see runInset
+            var ex = (inset >= 0 ? inset : runInset(m, col, row, dz));
+            var ez = (inset >= 0 ? inset : runInset(m, col, row, dx));
+            var nx = (dx == 2 ? x0 : x0 + CELL - ex);
+            var nz = (dz == 0 ? z0 : z0 + CELL - ez);
             out.push({
               x0: nx,
-              x1: nx + e,
+              x1: nx + ex,
               z0: nz,
-              z1: nz + e,
+              z1: nz + ez,
               dx: dx,
               dz: dz,
               col: col + DC[dx],
@@ -278,18 +447,32 @@ class FacilityGeom
     {
       var st = m.structures[si];
       var half = (CityConfig.GRID * CELL) / 2;
+      // does this structure's interior get a FLAT ceiling at ROOF_Y? a lab building does; a hangar's
+      // is the barrel vault render.facility.FacilityRoof.vault arches over it, and the flat deck
+      // under one would be dead geometry in a transparent buffer — hidden from outside by the vault
+      // and faded off with it from inside, paying overdraw in the sorted pass for neither. the RIM
+      // is unaffected: it caps the wall head, and the vault springs from the outer plane above it
+      // a CORP floor gets none either, and for the opposite reason: the player is always inside
+      // it, so a deck would be permanently faded out — dead geometry in the sorted pass. the read
+      // of "a storey" comes from the parapet band instead. Nor does the underground lab, whose
+      // ceiling is the bedrock (ShellOpts.deck)
+      var flatDeck = !st.hangar && m.deck;
       // floors, one buffer per surface. a hangar rolls no lab tile and a lab building no concrete,
       // so most of these come back empty and emit no mesh at all
-      var fTile = MeshBufTools.make();
-      var fLino = MeshBufTools.make();
-      var fConcrete = MeshBufTools.make();
+      //
+      // INDEXED BY Surf and not five named locals: the list grew with the room templates, and every
+      // call site passing the whole set positionally is the arg list this file does not want
+      var floors = [for (_ in 0...FLOOR_SURFS) MeshBufTools.make()];
       // walls. NOT split by facing any more — see the Shell header. the two INTERIOR buffers are
       // split by the SPACE a face looks into instead: a corridor is painted board and a lab room is
       // tiled, and they are 218 faces against 538 in a generated area, so the corridor is a real
       // third of what the player sees indoors rather than a detail
       var wOut = MeshBufTools.make();
-      var wRoom = MeshBufTools.make();
-      var wCorr = MeshBufTools.make();
+      // the INTERIOR faces, one buffer per surface they look INTO, exactly as the floors are one
+      // per surface they paint. It was four named locals while there were four finishes; a corp
+      // tower has eight and they are all different art, so the set is indexed like the floors and
+      // the art comes off m.tex.wallInto
+      var wIn = [for (_ in 0...FLOOR_SURFS) MeshBufTools.make()];
       // the hangar's roll-up shutter strips. their own buffer because they take their own texture:
       // painted in plain cladding they were a door you could not see
       var shut = MeshBufTools.make();
@@ -297,9 +480,20 @@ class FacilityGeom
       // rim is what keeps the building's outline on screen once you are inside it
       var roof = MeshBufTools.make();
       var rim = MeshBufTools.make();
-      // window panes, and the aluminium capping that tops a run and closes its reveal
+      // and the parapet's coping cap, which is the ONE piece of it that needs a buffer of its own:
+      // the cladding merges into wOut for free, but a coping in the wall's own art is invisible and
+      // the whole point of it is the line it draws along the roofline (see FacilityStyle.COPING)
+      var cope = MeshBufTools.make();
+      // window panes, and the aluminium capping that tops a run and closes its reveal. TWO pane
+      // buffers, one per run length, because each length draws its OWN art (see `addPane`)
       var panes = MeshBufTools.make();
+      var panes2 = MeshBufTools.make();
+      var panesHigh = MeshBufTools.make();
       var head = MeshBufTools.make();
+      // and the LIFT DOORWAY'S two details, which need buffers of their own for the shutter's own
+      // reason: painted in the reveal's circulation board they are not details, they are wall
+      var pocket = MeshBufTools.make();
+      var sill = MeshBufTools.make();
       // which wall buffer a face looking into (c,r) belongs in. the hangar wears its cladding on
       // both sides, so it never reaches the interior pair; a corridor is Surf.LINO, the surface the
       // generator floors every corridor and every door cell with, so the split needs no
@@ -308,7 +502,7 @@ class FacilityGeom
         {
           if (st.hangar || !FacilityModel.isIndoor(m, c, r))
             return wOut;
-          return m.surf[r][c] == Surf.LINO ? wCorr : wRoom;
+          return wIn[m.surf[r][c]];
         }
 
       for (row in st.oy1...st.oy2 + 1)
@@ -333,13 +527,14 @@ class FacilityGeom
                 // slab leaves, while under it there is no masonry at all and the floor runs right
                 // through (see floorStrips). identical at every other cell
                 for (sp in strips(m, col, row))
-                  if (FacilityModel.isIndoor(m, sp.col, sp.row))
+                  if (flatDeck &&
+                      FacilityModel.isIndoor(m, sp.col, sp.row))
                     cap(roof, sp.x0, sp.x1, sp.z0, sp.z1, FacilityStyle.ROOF_Y,
                       FacilityStyle.ROOF_TILE);
                 for (sp in floorStrips(m, col, row))
                   if (FacilityModel.isIndoor(m, sp.col, sp.row))
-                    cap(floorBuf(m, sp.col, sp.row, fTile, fLino, fConcrete),
-                      sp.x0, sp.x1, sp.z0, sp.z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
+                    cap(floorBuf(m, sp.col, sp.row, floors),
+                      sp.x0, sp.x1, sp.z0, sp.z1, 0.0, floorTile(m, sp.col, sp.row));
                 // a corner square is floor and ceiling like any other strip — the loop above has
                 // just laid both — and the two runs it sits in the angle of stand at its edges. one
                 // face each, looking the way that run's line carries, into the room the square is a
@@ -355,9 +550,18 @@ class FacilityGeom
               {
                 var s = slab(m, col, row);
                 var e = (CELL - thick(m, col, row)) / 2;
-                var glazed = (m.wall[row][col] == Wall.WINDOW);
+                var glazed = (m.wall[row][col] == Wall.WINDOW && m.tex.capRoof != true);
                 var shutter = (m.wall[row][col] == Wall.SHUTTER);
                 capTop(rim, head, m, col, row, glazed);
+                // and over glazing a SECOND band, the deck's own art in the FADING buffer, directly
+                // over the capping the line above just sank. the capping is right only once the roof
+                // has gone: from outside the coping covers just 0.22 of the 1.0-wide band and the
+                // rest reads as a strip of aluminium lying in the bitumen, at ~110 glazed cells an
+                // area. one quad each, merged into a mesh that already exists, so no draw call — and
+                // FacilityArea.apply drops the deck to visible false at full reveal, so nothing
+                // z-fights and nothing has to be told about the swap
+                if (glazed)
+                  capTop(roof, head, m, col, row, false);
                 for (dir in 0...4)
                   {
                     var nc = col + DC[dir];
@@ -367,7 +571,12 @@ class FacilityGeom
                         // the line carries on, so the two runs meet in the cell boundary plane and
                         // the only thing that can be exposed there is a difference in THICKNESS:
                         // glazing sits strictly inside the solid wall that bounds its run, and the
-                        // wall's excess either side is the run's JAMB REVEAL.
+                        // wall's excess either side is the SHOULDER on each face of it.
+                        //
+                        // AND THE SHOULDERS ARE NOT THE JAMB, which this note used to call them and
+                        // which cost a hole in every window run: they are the two strips OUTSIDE the
+                        // glazing band, and the jamb is the band itself over the opening's height.
+                        // `jamb`, from the window pass, is what closes that.
                         //
                         // the slabs' own extents used to be compared instead, and that answered a
                         // different question: at a corner the box reaches the boundary on the side
@@ -379,10 +588,19 @@ class FacilityGeom
                         var flat = (dir < 2);
                         var pl = flat ? (dir == 0 ? s.z0 : s.z1) : (dir == 2 ? s.x0 : s.x1);
                         var p0 = (flat ? col : row) * CELL - half;
-                        butt(look(diagCol(col, dir, -1), diagRow(row, dir, -1)),
-                          flat, pl, p0 + e, p0 + en, dir);
-                        butt(look(diagCol(col, dir, 1), diagRow(row, dir, 1)),
-                          flat, pl, p0 + CELL - en, p0 + CELL - e, dir);
+                        // AND NONE ON A SIDE A NOTCH HAS TAKEN: against a thinner MASONRY run the
+                        // notch there is cut to that run's face (runInset), so the shoulder would
+                        // stand across empty floor
+                        var solid = FacilityModel.isSolidWall(m, nc, nr);
+                        var lo = (flat ? 2 : 0);
+                        if (!solid ||
+                            !carries(m, col + DC[lo], row + DR[lo]))
+                          butt(look(diagCol(col, dir, -1), diagRow(row, dir, -1)),
+                            flat, pl, p0 + e, p0 + en, dir);
+                        if (!solid ||
+                            !carries(m, col + DC[lo + 1], row + DR[lo + 1]))
+                          butt(look(diagCol(col, dir, 1), diagRow(row, dir, 1)),
+                            flat, pl, p0 + CELL - en, p0 + CELL - e, dir);
                         continue;
                       }
                     // the shutter is chosen off THIS cell rather than off the neighbour, unlike
@@ -391,11 +609,13 @@ class FacilityGeom
                     var t = shutter ? FacilityStyle.SHUTTER_TILE : FacilityStyle.WALL_TILE;
                     if (g.sill[row][col] < 0)
                       {
-                        face(b, s.x0, s.x1, s.z0, s.z1, dir, 0.0, FacilityStyle.WALL_H, t);
+                        face(b, s.x0, s.x1, s.z0, s.z1, dir,
+                          FacilityStyle.WALL_BASE, FacilityStyle.WALL_H, t);
                         continue;
                       }
                     // a window run: leave the opening and carry the wall above and below it
-                    face(b, s.x0, s.x1, s.z0, s.z1, dir, 0.0, g.sill[row][col], t);
+                    face(b, s.x0, s.x1, s.z0, s.z1, dir,
+                      FacilityStyle.WALL_BASE, g.sill[row][col], t);
                     face(b, s.x0, s.x1, s.z0, s.z1, dir, g.head[row][col], FacilityStyle.WALL_H, t);
                   }
                 continue;
@@ -419,7 +639,7 @@ class FacilityGeom
                 // the time and an exterior one in the outside cladding. a doorway is a piece of the
                 // circulation and not of either space it joins, which is the same reason the
                 // generator floors every door cell in corridor lino
-                var soffit = (st.hangar ? wOut : wCorr);
+                var soffit = (st.hangar ? wOut : wIn[m.tex.circ]);
                 for (k in 0...2)
                   {
                     var dir = (m.doors[di].alongX ? k : 2 + k);
@@ -440,12 +660,66 @@ class FacilityGeom
                 // as two open slots you could see straight through. each jamb sits in a cell
                 // boundary plane looking INTO the cell, i.e. wound the opposite way from a wall
                 // face at the same place, which is what makes it `face` with one axis collapsed
-                jamb(soffit, m.doors[di].alongX, s);
+                //
+                // AND A LIFT REVEAL IS TWO FINISHES. The rule above is right for an office door and
+                // wrong for a lift: half of the opening is INSIDE THE CAR, which has a panel of its
+                // own in `wallInto[Surf.LIFT]` — painted through in the corridor's board it read as
+                // the lobby wrapping round into the car. So each jamb is emitted in two halves,
+                // split on the LEAF PLANE, which the pocket slot stands LIFT_POCKET_EPS proud of
+                // and hides
+                //
+                // A BASE'S ROOM DOOR IS TWO FINISHES THE SAME WAY: the half on the room's side of the
+                // leaf takes the room's wall, an office's paint and not the corridor's board ("inner
+                // part of the door wall should be" wall-office). Military only: the lab keeps its
+                // reveals one circulation finish
+                var lift = (m.doors[di].look == Look.LIFT);
+                var car = (lift &&
+                  m.tex.wallInto[Surf.LIFT] != null ?
+                  liftSide(m, col, row, m.doors[di].alongX) : -1);
+                var room = (!lift &&
+                  m.kind == 'military' ?
+                  roomSide(m, col, row, m.doors[di].alongX) : -1);
+                var side = (car >= 0 ? car : room);
+                // and NO JAMB WHERE THE OPENING CARRIES ON: the lab's doorways are two cells wide,
+                // and each cell's slab reaches the boundary it shares with its twin, so an
+                // unconditional pair stood a reveal across the middle of every lab doorway
+                var ax = m.doors[di].alongX;
+                var loEnd = !FacilityModel.isDoor(m, col - (ax ? 1 : 0), row - (ax ? 0 : 1));
+                var hiEnd = !FacilityModel.isDoor(m, col + (ax ? 1 : 0), row + (ax ? 0 : 1));
+                if (side < 0)
+                  jamb(soffit, m.doors[di].alongX, s, FacilityStyle.WALL_BASE,
+                    FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE, loEnd, hiEnd);
+                else
+                  for (k in 0...2)
+                    jamb((k == 0 ? soffit : (car >= 0 ? wIn[Surf.LIFT] :
+                      look(col + DC[side], row + DR[side]))), m.doors[di].alongX,
+                      leafHalf(s, m.doors[di].alongX, side, k == 1), FacilityStyle.WALL_BASE,
+                      FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
+                // A LIFT OPENING TAKES TWO DETAILS ON TOP OF THAT, and it is the one Look that
+                // does: the reveal had no track, no threshold, nothing saying a door slides there.
+                // So a near-black POCKET strip runs down each jamb where the leaves go, and a metal
+                // SILL plate lies in the opening
+                if (lift && m.tex.pocket != null)
+                  liftPocket(pocket, m.doors[di].alongX, s);
+                // and the threshold under them, for the surface the doorway opens onto being lower
+                // than the floor it leads to — see `threshold`
+                threshold(soffit, m.doors[di].alongX, s);
+                if (lift && m.tex.sill != null)
+                  liftSill(sill, m.doors[di].alongX, s);
+                // and the bulkhead lamp's hood, over an EXTERIOR doorway only. it rode wOut for a
+                // build — the exterior cladding's own buffer, for no draw call at all, the way the
+                // parapet ring and the gable crescents do — and a fitting painted in the wall's own
+                // art is not a fitting, it is a lump of wall. it takes its own now, in the ONE
+                // buffer `build` merges for the whole compound
+                doorLamp(g.hood, m, m.doors[di]);
                 continue;
               }
-            cap(roof, x0, x1, z0, z1, FacilityStyle.ROOF_Y, FacilityStyle.ROOF_TILE);
-            cap(floorBuf(m, col, row, fTile, fLino, fConcrete),
-              x0, x1, z0, z1, 0.0, FacilityStyle.FLOOR_TILE_SZ);
+            if (flatDeck)
+              cap(roof, x0, x1, z0, z1, FacilityStyle.ROOF_Y, FacilityStyle.ROOF_TILE);
+            // a stairwell's cell takes no floor: its model is the hole (FacilityModel.FIT_HOLE)
+            if (m.fit[row][col] != FacilityModel.FIT_HOLE)
+              cap(floorBuf(m, col, row, floors),
+                x0, x1, z0, z1, 0.0, floorTile(m, col, row));
           }
 
       // one pane per RUN and not per cell, so the art's three panes span the whole opening exactly
@@ -456,8 +730,9 @@ class FacilityGeom
           if (w.structure != si)
             continue;
           var wide = w.len * CELL;
-          var tall = wide / FacilityStyle.WINDOW_ASPECT;
-          var lo = (FacilityStyle.WALL_H - tall) / 2;
+          var tall = (w.high ? FacilityStyle.WINDOW_HIGH_H : paneTall(m, w.len));
+          var lo = (w.high ? FacilityStyle.WINDOW_HIGH_SILL :
+            (FacilityStyle.WALL_H - tall) / 2);
           if (lo < 0)
             lo = 0;
           // the run's own footprint: full length along its axis and the GLAZING slab's one unit
@@ -471,35 +746,135 @@ class FacilityGeom
           // the exterior face is the one AWAY from the interior, and the interior face its opposite
           var outDir = w.alongX ? (w.inDir > 0 ? 0 : 1) : (w.inDir > 0 ? 2 : 3);
           var inFace = w.alongX ? (w.inDir > 0 ? 1 : 0) : (w.inDir > 0 ? 3 : 2);
-          pane(panes, x0, x1, z0, z1, outDir, lo, lo + tall);
-          pane(panes, x0, x1, z0, z1, inFace, lo, lo + tall);
-          // the reveal, top and bottom. the jambs at the run's ends are already closed by the
-          // flanking wall cells' butt caps, because a glazing slab is thinner than the wall it sits
-          // in — these two are the only sides with nothing on the far end to cap them
+          // the run goes in the buffer for its OWN length, because that is what picks the art it
+          // draws — see `addPane` and FacilityStyle.WINDOW_LIT_2.
+          //
+          // and the pane is drawn a hair BIGGER than the opening it fills (WINDOW_OVERLAP), grown
+          // along the RUN's own axis and in height, so alphaTest eating the art's outermost texel row
+          // cannot open a slit. the head and sill caps below keep the opening's true size, so only
+          // the glass grows and the extra is buried in the masonry.
+          //
+          // ACROSS the run it SHRINKS instead, by WINDOW_INSET, and that is the glass being set into
+          // its opening rather than glazed onto the face of it. The masonry above and below is
+          // emitted on THIS cell's slab, i.e. the glazing plane, so a pane flush with that plane is
+          // coplanar with the spandrel it meets — z-fighting at best and, as reported from the game,
+          // a window that reads as painted ON the wall instead of in it. Narrowing the rect pulls
+          // BOTH faces off the plane at once, each toward the slab's centre, so each ends up inside
+          // its own side and the head and sill caps below — which keep the opening's TRUE size —
+          // stand proud of the glass as the reveal
+          // WHICH ENDS OF THIS RUN HAVE MASONRY PAST THEM. Read once and used twice — by the
+          // overlap below and by the jamb further down — because it is the same question both
+          // times: is this end the outside of an opening, or the seam where a CORP run was
+          // chopped into sub-runs the art exists for?
+          var eCol = w.alongX ? -1 : 0;
+          var eRow = w.alongX ? 0 : -1;
+          var glazedAt = function(c:Int, r:Int)
+            return FacilityModel.inside(m, c, r) && m.wall[r][c] == Wall.WINDOW;
+          var loEnd = !glazedAt(w.col + eCol, w.row + eRow);
+          var hiEnd = !glazedAt(w.col - eCol * w.len, w.row - eRow * w.len);
+          var pb = (w.high ? panesHigh : (w.len == 2 ? panes2 : panes));
+          var gr = wide * FacilityStyle.WINDOW_OVERLAP / 2;
+          var gy = tall * FacilityStyle.WINDOW_OVERLAP / 2;
+          var ge = FacilityStyle.WINDOW_INSET;
+          // AND AN END THAT ABUTS GLAZING DOES NOT GROW. WINDOW_OVERLAP exists so alphaTest
+          // eating the art's outermost texel row cannot open a slit against the masonry, and at a
+          // SPLIT boundary there is no masonry — both sub-runs grow into each other instead.
+          // MEASURED off the two faces reported from the game: a 3-bay on x -160.0..-148.0 draws
+          // -160.15..-147.85 and the 2-bay abutting it on -148.0..-140.0 draws -148.10..-139.90,
+          // so 0.25 units of coplanar glass in TWO DIFFERENT MESHES (`panes` and `panes2` are one
+          // material each). Held to zero the two meet edge to edge, where the art's own mullion is
+          var gr0 = (loEnd ? gr : 0.0);
+          var gr1 = (hiEnd ? gr : 0.0);
+          var px0 = w.alongX ? x0 - gr0 : x0 + ge;
+          var px1 = w.alongX ? x1 + gr1 : x1 - ge;
+          var pz0 = w.alongX ? z0 + ge : z0 - gr0;
+          var pz1 = w.alongX ? z1 - ge : z1 + gr1;
+          pane(pb, px0, px1, pz0, pz1, outDir, lo - gy, lo + tall + gy);
+          pane(pb, px0, px1, pz0, pz1, inFace, lo - gy, lo + tall + gy);
+          // THE REVEAL IS FOUR QUADS AND IT USED TO BE TWO. A hole cut in a wall has a soffit, a
+          // sill and two jambs, and the note that used to stand here claimed the flanking wall cells
+          // closed the jambs "by being thicker than it". They do not, and the arithmetic says so:
+          // `butt` caps the boundary plane only where the thick cell's cross-section stands PROUD of
+          // the thin one, i.e. the two 0.5 shoulder strips at (WALL_T - GLASS_T) / 2 either side of
+          // the glazing band. The band BETWEEN them is the glazing's own 1.0, and over the opening's
+          // height there is no masonry in it at all — so it was open, and a grazing view along the
+          // facade looked straight through the wall into the lit room. Reported from the game as a
+          // vertical hole at each end of every window run, and MEASURED on the run at col 20 row 3:
+          // the reveal volume held exactly four triangles of `window-head` (the soffit at y 5.04 and
+          // the sill at 0.96) plus the two panes, and nothing whatever in either end plane.
+          //
+          // `jamb` was already here and already correct — it was gated to LIGHT WELLS, on the same
+          // wrong belief. A ribbon needs it for exactly the same reason a well does.
           capDown(head, x0, x1, z0, z1, lo + tall, FacilityStyle.HEAD_TILE);
           if (lo >= 0.05)
             cap(head, x0, x1, z0, z1, lo, FacilityStyle.HEAD_TILE);
+          // AN END ONLY GETS A JAMB WHERE THERE IS MASONRY PAST IT, and this used to be
+          // unconditional on an invariant that a compound honours and a TOWER does not:
+          // FacilityModel.findWindows runs a compound run to the end of its contiguous strip, so
+          // two runs can never abut — but for kind 'corp' it CHOPS a strip into abutting 2- and
+          // 3-cell sub-runs, so every internal boundary got two coplanar inward-facing cap-alu
+          // quads standing inside the glazing band, where there is no masonry at all
+          jamb(head, w.alongX, { x0: x0, x1: x1, z0: z0, z1: z1 }, lo, lo + tall,
+            FacilityStyle.HEAD_TILE, loEnd, hiEnd);
         }
 
-      var wallTex = st.hangar ? FacilityStyle.WALL_HANGAR : FacilityStyle.WALL_EXTERIOR;
+      // the parapet ring, once the wall ring it stands on is complete — and the hangar's opposite
+      // number, which is the pair of gable crescents its barrel vault springs off. a parapet and a
+      // gable are the same object here: the exterior cladding carrying on ABOVE the wall head, in
+      // this same buffer, in this same course, staying put when the lid over the player's head
+      // fades. only the shape differs, a band round a box against a segment under an arch
+      var wallTex = st.hangar ? m.tex.hangarWall : m.tex.wallOut;
+      // a tall shed's second storey, gables included, in buffers of their own that fade with the
+      // vault (see `storey`)
+      var tall = (st.hangar && m.hangarH > FacilityStyle.WALL_H);
+      var bandClad = MeshBufTools.make();
+      var bandShut = MeshBufTools.make();
+      if (tall)
+        storey(m, si, g, bandClad, bandShut);
+      if (st.hangar)
+        FacilityRoof.crescents(m, si, (tall ? bandClad : wOut));
       var shell:Shell = {
         roof: [],
+        glaze: { value: 0.0 },
+        paraCells: st.hangar ? 0 : ringCells(m, si),
+        paraQuads: (st.hangar || !m.parapet) ? 0 : parapet(m, si, wOut, cope),
       };
-      add(scene, fTile, FacilityStyle.FLOOR_TILE, true, false);
-      add(scene, fLino, FacilityStyle.FLOOR_LINO, true, false);
-      add(scene, fConcrete, FacilityStyle.FLOOR_CONCRETE, true, false);
+      // one flush per SURFACE, off the model's own art table. a slot with no texture is a surface
+      // this kind does not have, and a slot with one whose buffer is empty emits no mesh — so the
+      // loop is the whole of what used to be nine hand-written lines and two kinds' worth of them
+      for (i in 0...FLOOR_SURFS)
+        {
+          if (m.tex.floor[i] != null)
+            addFloor(scene, floors[i], m.tex.floor[i]);
+          if (m.tex.wallInto[i] != null)
+            add(scene, wIn[i], m.tex.wallInto[i], true, false);
+        }
       add(scene, wOut, wallTex, true, true);
-      add(scene, wRoom, FacilityStyle.WALL_ROOM, true, false);
-      add(scene, wCorr, FacilityStyle.WALL_CORRIDOR, true, false);
-      add(scene, shut, FacilityStyle.DOOR_SHUTTER, true, true);
-      add(scene, head, FacilityStyle.WINDOW_HEAD, true, false);
-      addPane(scene, panes);
+      if (m.tex.shutter != null)
+        add(scene, shut, m.tex.shutter, true, true);
+      // the band in the walls' own material, vision mask and casting included, so nothing changes at
+      // WALL_H from the lot but the fade
+      fades(add(scene, bandClad, wallTex, true, true), shell);
+      if (m.tex.shutter != null)
+        fades(add(scene, bandShut, m.tex.shutter, true, true), shell);
+      if (m.tex.pocket != null)
+        add(scene, pocket, m.tex.pocket, true, false);
+      if (m.tex.sill != null)
+        add(scene, sill, m.tex.sill, true, false);
+      add(scene, head, m.tex.head, true, false);
+      // the coping does not cast: the cladding under it is in wOut, which does, and at the moon
+      // box's 0.088 units per shadow texel a 0.25-tall band overhanging 0.12 adds at most three
+      // texels to a silhouette that is already thrown
+      add(scene, cope, m.tex.coping, true, false);
+      addPane(scene, panes, m.tex.pane, shell);
+      addPane(scene, panes2, m.tex.pane2, shell);
+      addPane(scene, panesHigh, m.tex.paneHigh, shell);
       // the roof takes NO vision mask. it is the one surface whose visibility is decided by where the
       // player STANDS rather than by what they can see: masked, a roof over cells the sweep never
       // reached would sink to the fog colour and the building would read as a hole in its own lot
       // from every angle outside it
-      addRoof(scene, rim, false, shell);
-      addRoof(scene, roof, true, shell);
+      addDeck(scene, rim, m.tex.roof, false, shell);
+      addDeck(scene, roof, m.tex.roof, true, shell);
       return shell;
     }
 
@@ -508,20 +883,52 @@ class FacilityGeom
 // objects.FloorDrain standing on the cell that paints it, one centred decal — see the atlas note on
 // `facility/floor-grate` in textures.json. Painted as a cell-wide surface here instead, a 2 m square
 // of grating read as a vehicle pit, and tiled down it read as four of them
-  static function floorBuf(m:Facility, col:Int, row:Int, tile:MeshBuf, lino:MeshBuf,
-      concrete:MeshBuf):MeshBuf
+  static function floorBuf(m:Facility, col:Int, row:Int, floors:Array<MeshBuf>):MeshBuf
     {
-      return switch (m.surf[row][col])
+      // INDEXED and no longer a switch: a surface with no art of its own has a null in
+      // `m.tex.floor` and its buffer is never flushed, so the fallback has to be a surface this
+      // kind really paints rather than Surf.TILE, which a corp floor has none of
+      var s = surfUnder(m, col, row);
+      if (m.tex.floor[s] == null)
+        s = (m.tex.floor[Surf.TILE] != null ? Surf.TILE : m.tex.circ);
+      return floors[s];
+    }
+
+// the world size a cell's floor art tiles at: its surface's own where the kind names one
+  static function floorTile(m:Facility, col:Int, row:Int):Float
+    {
+      var t = m.tex.floorTile;
+      if (t == null)
+        return FacilityStyle.FLOOR_TILE_SZ;
+      var v = t[surfUnder(m, col, row)];
+      return (v != null ? v : FacilityStyle.FLOOR_TILE_SZ);
+    }
+
+// the surface a cell's floor is drawn in — its own, except that a DRAIN inherits its neighbours'.
+//
+// `Surf.GRATE` is a final tile id the generator writes under a floor drain, and FacilityRooms
+// .paintRoomFloor steps over final ids — so a washroom's drain cell kept the laboratory's own tile
+// and rendered as one square of lab floor in the middle of the marble. The drain's art is a centred
+// decal of its own (FacilityDeco.drain), so what belongs UNDER it is simply the room's floor
+  static function surfUnder(m:Facility, col:Int, row:Int):Int
+    {
+      var s = m.surf[row][col];
+      if (s != Surf.GRATE)
+        return s;
+      for (d in 0...4)
         {
-          case Surf.LINO: lino;
-          case Surf.CONCRETE: concrete;
-          default: tile;
-        };
+          var c = col + DC[d], r = row + DR[d];
+          if (FacilityModel.inside(m, c, r) &&
+              m.surf[r][c] != Surf.GRATE &&
+              FacilityModel.isIndoor(m, c, r))
+            return m.surf[r][c];
+        }
+      return Surf.TILE;
     }
 
 // the top of one wall or door cell's masonry — permanent roof, and over glazing the aluminium
-// capping instead of it, because a window run capped in plain roof read as a strip of bitumen and
-// gravel lying on the glass.
+// capping UNDER it, because a window run capped in plain roof read as a strip of bitumen and gravel
+// lying on the glass, and one capped in aluminium read as a strip of window head lying in the roof.
 //
 // emitted as the UNION OF THE RUNS and not as the slab box: the run along x across the middle band,
 // and the run along z's two arms, each degenerate and self-skipping where that line does not carry.
@@ -531,8 +938,13 @@ class FacilityGeom
 // the band no longer overhangs on an OUTDOOR side either. it used to stop at WALL_T's inset rather
 // than the cell's own, which was a no-op on solid wall and left half a unit of roof out over the
 // glass at every window run: the straight roof line it bought was not worth the bitumen sitting on
-// the outside of the pane, and the run now notches in with the glazing
-  static function capTop(rim:MeshBuf, head:MeshBuf, m:Facility, col:Int, row:Int,
+// the outside of the pane, and the run now notches in with the glazing.
+//
+// a GLAZED band sinks HEAD_DROP out of the deck plane, because it is not the only thing there: the
+// caller lays the same band again in the FADING deck buffer, so the capping is what the player sees
+// once the roof has gone and plain roof is what they see while it is up. `deck` is a parameter and
+// not the rim for exactly that second call — it takes the fading buffer with glazed false
+  static function capTop(deck:MeshBuf, capping:MeshBuf, m:Facility, col:Int, row:Int,
       glazed:Bool):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
@@ -540,35 +952,583 @@ class FacilityGeom
       var e = (CELL - thick(m, col, row)) / 2;
       var xa = col * CELL - half + e, xb = xa + CELL - 2 * e;
       var za = row * CELL - half + e, zb = za + CELL - 2 * e;
-      var b = glazed ? head : rim;
-      var t = glazed ? FacilityStyle.HEAD_TILE : FacilityStyle.ROOF_TILE;
+      var b = glazed ? capping : deck;
+      // ONE LABEL, ONE PERIOD. HEAD_TILE is 3.0 against ROOF_TILE's 9.0, which is right where the
+      // capping is its OWN art — the compound's head is a different label from its roof. The corp
+      // tower gives both slots `textures/corp/cap-alu` (render.corp.CorpStyle.shell), and the lift
+      // core alternates the two cell by cell: three-cell glazed runs on three sides between four
+      // solid corner posts (gen.blocks.ElevatorBlock), so the same brushed aluminium jumped 3x in
+      // course all the way round the core. Reported twice as the elevator edge not lining up with
+      // the roof. Same label => same period, and the facility is untouched because its two differ
+      var t = (glazed && m.tex.head != m.tex.roof ?
+        FacilityStyle.HEAD_TILE : FacilityStyle.ROOF_TILE);
+      var y = FacilityStyle.ROOF_Y - (glazed ? FacilityStyle.HEAD_DROP : 0.0);
       // with no run along x there is nothing to split around, and the run along z is one rect. worth
       // the branch: without it every cell of every vertical wall in the area emitted its band as
       // three quads that abut, ~900 triangles of roof for no pixel's difference
       if (!carries(m, col - 1, row) &&
           !carries(m, col + 1, row))
         {
-          cap(b, xa, xb, s.z0, s.z1, FacilityStyle.ROOF_Y, t);
+          cap(b, xa, xb, s.z0, s.z1, y, t);
           return;
         }
-      cap(b, s.x0, s.x1, za, zb, FacilityStyle.ROOF_Y, t);
-      cap(b, xa, xb, s.z0, za, FacilityStyle.ROOF_Y, t);
-      cap(b, xa, xb, zb, s.z1, FacilityStyle.ROOF_Y, t);
+      // A TURN OR A BRANCH IS THE BOX LESS ITS NOTCHES, which stopped being four equal squares when
+      // runInset sized each one off the run it meets. So the box is cut on every notch edge and
+      // each piece outside a notch is capped — a handful of quads, on corner cells only
+      var ns = notches(m, col, row);
+      if (ns.length > 0)
+        {
+          var xs = [s.x0, s.x1];
+          var zs = [s.z0, s.z1];
+          for (n in ns)
+            {
+              xs.push(n.x0);
+              xs.push(n.x1);
+              zs.push(n.z0);
+              zs.push(n.z1);
+            }
+          xs.sort(Reflect.compare);
+          zs.sort(Reflect.compare);
+          for (i in 0...xs.length - 1)
+            for (j in 0...zs.length - 1)
+              {
+                if (xs[i + 1] - xs[i] < 0.01 ||
+                    zs[j + 1] - zs[j] < 0.01)
+                  continue;
+                var mx = (xs[i] + xs[i + 1]) / 2;
+                var mz = (zs[j] + zs[j + 1]) / 2;
+                var hole = false;
+                for (n in ns)
+                  if (mx > n.x0 &&
+                      mx < n.x1 &&
+                      mz > n.z0 &&
+                      mz < n.z1)
+                    hole = true;
+                if (!hole)
+                  cap(b, xs[i], xs[i + 1], zs[j], zs[j + 1], y, t);
+              }
+          return;
+        }
+      cap(b, s.x0, s.x1, za, zb, y, t);
+      cap(b, xa, xb, s.z0, za, y, t);
+      cap(b, xa, xb, zb, s.z1, y, t);
     }
 
-// the two side reveals of a door opening, from the floor up to the lintel. both lie in the cell
-// boundary planes the wall line runs through, and both look INWARD — the opposite way round from a
-// wall face at the same place — so each is emitted for the direction pointing at the other jamb
-  static function jamb(b:MeshBuf, alongX:Bool, s:Rect):Void
+// does this cell stand a length of OUTWARD parapet in `dir`? the wall LINE has to carry through the
+// cell and the neighbour it looks at has to be outdoors.
+//
+// PUBLIC, AND THAT IS THE POINT OF IT. render.corp.CorpFacade hangs the tower's 114-unit cladding
+// drop off the same perimeter this bands, and it used to re-derive these three lines locally
+// "cheaper than widening that file's surface". Then a `roofed` was grown here — indoor AND not a
+// LIFT car — and the copy did not follow, so round the lift core the two disagreed in both
+// directions at once: a parapet and a coping across the tower's car-facing hand with no cladding
+// under them, and a facade skipping exactly the reentrant corners the parapet emitted. Reported
+// from the game as the lift's walls not merging with the static ones. The exception is gone with
+// it — A LIFT CAR IS PART OF THE BUILDING, its ring is the envelope turning round the car rather
+// than cutting across behind it, and the corner squares the turn leaves are the notch loop's,
+// which has handled a reentrant corner since it was written.
+//
+// `carries` and not `isWall`, which is the whole difference between a roofline and a roofline with
+// holes in it: a DOOR cell is a hole in the wall line, not the end of it, and it never enters the
+// `for (dir in 0...4)` loop in structure() at all — its outward face comes from the `di >= 0` branch
+// instead. keyed on isWall the parapet opens a 4-unit gap over every one of the area's 7 exterior
+// doors. slab() on a door cell returns the lintel planes, already inset by exactly PARAPET_INSET,
+// so the band runs dead straight over the opening with no case of its own
+  public static inline function outward(m:Facility, col:Int, row:Int, dir:Int):Bool
+    {
+      return carries(m, col, row) &&
+        !carries(m, col + DC[dir], row + DR[dir]) &&
+        !FacilityModel.isIndoor(m, col + DC[dir], row + DR[dir]);
+    }
+
+// slab() with the SOLID wall's inset FORCED, whatever this cell's own masonry is.
+//
+// it is a near-copy rather than an optional argument on slab(), because slab is public and its
+// contract — the bounding box of a cell's MASONRY — is load-bearing for strips, floorStrips, capTop
+// and the window-run loop, and a second inset would make its header a lie.
+//
+// the forcing is the point: a glazed cell's slab is GLASS_T where its neighbours' are WALL_T, so a
+// parapet following the slab would jog half a unit in and out at every window run's two ends. what
+// that costs is one soffit quad per glazed band (the ring stands 0.5 proud of the glass, with air
+// under it); what it buys is a dead straight roofline and, less obviously, a joint test that never
+// has to compare planes — two bands meeting at a cell boundary are always collinear
+  static function ringRect(m:Facility, col:Int, row:Int):Rect
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var e = FacilityStyle.PARAPET_INSET;
+      var x0 = col * CELL - half;
+      var z0 = row * CELL - half;
+      return {
+        x0: x0 + (carries(m, col - 1, row) ? 0.0 : e),
+        x1: x0 + CELL - (carries(m, col + 1, row) ? 0.0 : e),
+        z0: z0 + (carries(m, col, row - 1) ? 0.0 : e),
+        z1: z0 + CELL - (carries(m, col, row + 1) ? 0.0 : e),
+      };
+    }
+
+// how the perimeter behaves past one end of a band, where `q` is the run direction leaving it.
+// 0 = the line carries on (or the band simply ends), 1 = CONVEX — the perpendicular band on THIS
+// cell overlaps it in a T x T square, 2 = CONCAVE — the perimeter steps and the two leave one empty.
+//
+// the fourth combination cannot happen and needs no branch: if the neighbour along the run is
+// outdoors then this cell's own face in `q` looks at it, so `outward` there is true by construction
+  static function endCase(m:Facility, col:Int, row:Int, dir:Int, q:Int):Int
+    {
+      var c = col + DC[q];
+      var r = row + DR[q];
+      if (carries(m, c, r))
+        {
+          if (outward(m, c, r, dir))
+            return 0;
+          // THE THIRD COMBINATION IS A NOTCH AND NOT A STEP. The neighbour carries but does not
+          // face `dir`, and there are two ways that happens: its own `dir` hand is INDOORS, which
+          // is the perimeter stepping in, or its `dir` hand CARRIES — and then what stands between
+          // the two of us is that cell's reentrant corner, a band on this very line (see the notch
+          // loop in parapet()). Retracting for it left the coping 0.12 short of a run that simply
+          // carried on, and overlapped the two inner fascias by 0.72
+          return carries(m, c + DC[dir], r + DR[dir]) ? 0 : 2;
+        }
+      return outward(m, col, row, q) ? 1 : 0;
+    }
+
+// the five parts of a band, which do NOT share a run extent — see grow()
+  static inline var P_OUT = 0;    // cladding, outer face
+  static inline var P_IN = 1;     // cladding, inner face
+  static inline var P_COPE = 2;   // the coping's top
+  static inline var P_CO_OUT = 3; // its outer fascia
+  static inline var P_CO_IN = 4;  // its inner fascia
+
+// how far one PART of a band grows OUTWARD past the rect it came from at one end — negative
+// retracts. five parts and not one number, which is the whole of getting a corner right:
+//
+// a joint between two perpendicular bands is a MITRE. both OUTER faces run all the way to the
+// corner and meet there in a line; both INNER faces stop one thickness short of it, so the T x T
+// corner square is enclosed by the two outer faces and solid. retracting the outer face with the
+// inner one is what a single growth number does, and it leaves the corner square's own outward face
+// unemitted: photographed from the game camera as a slot at every building corner that you can see
+// straight through onto the roof deck. the coping's two fascias mitre the same way, one thickness
+// wider.
+//
+// the coping's TOP is the exception and the reason `alongX` is here at all. it is the one part that
+// is HORIZONTAL, so two of them meeting cannot simply share a line — they would overlap and
+// z-fight. z-bands own every corner square and x-bands yield, which is render.world.roofs.Parapets'
+// always-emitted corner post transposed to an axis rule (there is no post here to be one)
+  static inline function grow(kase:Int, alongX:Bool, part:Int):Float
+    {
+      var t = FacilityStyle.PARAPET_T;
+      var co = FacilityStyle.COPING_OUT;
+      if (kase == 0)
+        return 0.0;
+      var sgn = (kase == 1 ? -1.0 : 1.0); // convex retracts, concave extends
+      return switch (part)
+        {
+          case P_OUT: 0.0;
+          case P_IN: sgn * t;
+          case P_CO_OUT: co;
+          case P_CO_IN: sgn * (t + co);
+          default: alongX ? -(kase == 1 ? t + co : co) : (kase == 1 ? co : t + co);
+        };
+    }
+
+// one length of parapet: two faces of cladding standing on the roof deck and a four-quad coping over
+// them, plus the soffit a band over GLAZING needs because it oversails the thinner slab.
+//
+// the coping's UNDERSIDE is one of those four, and it was left out of the first build on the rule
+// that nothing downward-facing at the roofline is ever seen. That rule is about the DECK, which is
+// enclosed; the coping oversails the cladding by COPING_OUT on both sides and its underside is the
+// only thing there to see from below the parapet — reported from the game as the cap having no
+// bottom. It is emitted as ONE quad on the coping's own footprint rather than as the two 0.12
+// overhang strips it is visible along: the middle 0.6 is buried inside the parapet either way, and
+// one quad is cheaper than two. Taking the P_COPE extents also hands it the corner mitre for free
+//
+// `p` is the outer plane and `b0/b1` the run ends of the rect it came from; every part works out
+// its own two ends off those and the end cases `k0/k1`. a degenerate rect is how a plane gets
+// handed to `face`, the same trick butt() uses
+  static function band(wOut:MeshBuf, cope:MeshBuf, dir:Int, p:Float, b0:Float, b1:Float,
+      k0:Int, k1:Int, soffit:Bool):Void
+    {
+      var alongX = (dir < 2);
+      var inw = -(alongX ? DR[dir] : DC[dir]);
+      var pi = p + inw * FacilityStyle.PARAPET_T;
+      var o0 = p - inw * FacilityStyle.COPING_OUT;
+      var o1 = pi + inw * FacilityStyle.COPING_OUT;
+      var lo = o0 < o1 ? o0 : o1;
+      var hi = o0 < o1 ? o1 : o0;
+      var y0 = FacilityStyle.ROOF_Y;
+      var y1 = y0 + FacilityStyle.PARAPET_H;
+      var y2 = y1 + FacilityStyle.COPING_H;
+      var wt = FacilityStyle.WALL_TILE;
+      var ct = FacilityStyle.COPING_TILE;
+      inline function a0(part:Int):Float
+        return b0 - grow(k0, alongX, part);
+      inline function a1(part:Int):Float
+        return b1 + grow(k1, alongX, part);
+      if (alongX)
+        {
+          face(wOut, a0(P_OUT), a1(P_OUT), p, p, dir, y0, y1, wt);
+          face(wOut, a0(P_IN), a1(P_IN), pi, pi, dir ^ 1, y0, y1, wt);
+          face(cope, a0(P_CO_OUT), a1(P_CO_OUT), o0, o0, dir, y1, y2, ct);
+          face(cope, a0(P_CO_IN), a1(P_CO_IN), o1, o1, dir ^ 1, y1, y2, ct);
+          cap(cope, a0(P_COPE), a1(P_COPE), lo, hi, y2, ct);
+          capDown(cope, a0(P_COPE), a1(P_COPE), lo, hi, y1, ct);
+          if (soffit)
+            capDown(wOut, a0(P_OUT), a1(P_OUT), p < pi ? p : pi, p < pi ? pi : p, y0, wt);
+          return;
+        }
+      face(wOut, p, p, a0(P_OUT), a1(P_OUT), dir, y0, y1, wt);
+      face(wOut, pi, pi, a0(P_IN), a1(P_IN), dir ^ 1, y0, y1, wt);
+      face(cope, o0, o0, a0(P_CO_OUT), a1(P_CO_OUT), dir, y1, y2, ct);
+      face(cope, o1, o1, a0(P_CO_IN), a1(P_CO_IN), dir ^ 1, y1, y2, ct);
+      cap(cope, lo, hi, a0(P_COPE), a1(P_COPE), y2, ct);
+      capDown(cope, lo, hi, a0(P_COPE), a1(P_COPE), y1, ct);
+      if (soffit)
+        capDown(wOut, p < pi ? p : pi, p < pi ? pi : p, a0(P_OUT), a1(P_OUT), y0, wt);
+    }
+
+// a tall shed's second storey (Facility.hangarH over WALL_H, the base's hangar): the outward faces of
+// its wall ring, roll-up doors and side door between WALL_H and hangarH, the shutter cells into
+// `shut` and the rest into `clad`.
+//
+// THEY ARE ROOF AND NOT WALL: the caller fades both with the vault, so inside the shed is a storey
+// tall as it always was ("we don't really need to see them while inside") and from the lot it stands
+// two, its shutters over the plane's tail. OUTWARD only: from outside the vault covers the inside of
+// the ring, and from inside the band has faded. No cap either — the vault springs from the outer
+// plane at hangarH and covers it — and the rim at WALL_H stays where it was, for the inside.
+// The courses carry straight on: both textures are world-aligned, and WALL_TILE is WALL_H
+  static function storey(m:Facility, si:Int, g:FacilityShellOpts, clad:MeshBuf, shut:MeshBuf):Void
+    {
+      var st = m.structures[si];
+      for (row in st.oy1...st.oy2 + 1)
+        for (col in st.ox1...st.ox2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.owner[row][col] != si ||
+                !FacilityModel.isWall(m, col, row) &&
+                g.doorAt[row][col] < 0)
+              continue;
+            var s = slab(m, col, row);
+            var shutter = (m.wall[row][col] == Wall.SHUTTER);
+            for (dir in 0...4)
+              {
+                var nc = col + DC[dir];
+                var nr = row + DR[dir];
+                if (FacilityModel.inside(m, nc, nr) &&
+                    m.owner[nr][nc] == si)
+                  continue;
+                face(shutter ? shut : clad, s.x0, s.x1, s.z0, s.z1, dir, FacilityStyle.WALL_H,
+                  m.hangarH, shutter ? FacilityStyle.SHUTTER_TILE : FacilityStyle.WALL_TILE);
+              }
+          }
+    }
+
+// hand a mesh `add` built to the structure's fading buffer, so FacilityArea.apply eases it with the
+// roof. null (an empty buffer) is nothing to fade
+  static function fades(mesh:Mesh, shell:Shell):Void
+    {
+      if (mesh == null)
+        return;
+      mesh.material.transparent = true;
+      mesh.material.opacity = 1.0;
+      shell.roof.push(mesh);
+    }
+
+// the parapet ring for one structure: the exterior cladding continuing PARAPET_H above the roof
+// deck and a coping band capping it. it is what gives the compound a ROOFLINE — without it the wall
+// stops dead at ROOF_Y and a single-storey building reads as a flat lid from a camera pitched 51
+// degrees down.
+//
+// it costs NO draw call. the cladding merges into wOut, which is already the exterior wall's own
+// buffer at the same texture and the same world-aligned UVs (so the panel course simply carries up
+// past the roofline), already casts and receives, and is already VisionMask-patched at the same XZ
+// as the wall under it. the coping merges into `head`, the window capping — measured, and the
+// obvious city/coping.png is the wrong answer: it sits within 1% of facility/wall-exterior's own
+// linear luminance and produces a coping nobody can see, where window-head is 1.43x the wall, which
+// is a capping band rather than a white outline round every building. it is also what a coping IS,
+// the same flashing system the window heads already wear
+//
+// returns the quad count, read straight off the buffers so it cannot drift from what was emitted
+  static function parapet(m:Facility, si:Int, wOut:MeshBuf, cope:MeshBuf):Int
+    {
+      var st = m.structures[si];
+      var before = wOut.idx.length + cope.idx.length;
+      for (row in st.oy1...st.oy2 + 1)
+        for (col in st.ox1...st.ox2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.owner[row][col] != si ||
+                !carries(m, col, row))
+              continue;
+            var r = ringRect(m, col, row);
+            var glazed = FacilityModel.isWall(m, col, row) &&
+              m.wall[row][col] == Wall.WINDOW;
+            for (dir in 0...4)
+              {
+                if (!outward(m, col, row, dir))
+                  continue;
+                var alongX = (dir < 2);
+                var p = alongX ? (dir == 0 ? r.z0 : r.z1) : (dir == 2 ? r.x0 : r.x1);
+                var b0 = alongX ? r.x0 : r.z0;
+                var b1 = alongX ? r.x1 : r.z1;
+                band(wOut, cope, dir, p, b0, b1,
+                  endCase(m, col, row, dir, alongX ? 2 : 0),
+                  endCase(m, col, row, dir, alongX ? 3 : 1), glazed);
+              }
+            // the reentrant corners. a notch's two faces are the only thing that carries the
+            // perimeter round the inside of an L, and they are stated here rather than left out
+            // because the generator draws rectangular rings TODAY and a flood fill that ever merged
+            // two touching footprints would leave a T x T hole in the ring at every turn. the corner
+            // is the notch's own inner corner, which is the CONCAVE case at exactly one end of each
+            // band while the other end carries on into the neighbouring cell's
+            for (n in notches(m, col, row, FacilityStyle.PARAPET_INSET))
+              {
+                if (FacilityModel.isIndoor(m, n.col, n.row))
+                  continue;
+                var zc = (n.dz == 1);
+                var xc = (n.dx == 3);
+                band(wOut, cope, n.dx, xc ? n.x0 : n.x1, n.z0, n.z1,
+                  zc ? 2 : 0, zc ? 0 : 2, false);
+                band(wOut, cope, n.dz, zc ? n.z0 : n.z1, n.x0, n.x1,
+                  xc ? 2 : 0, xc ? 0 : 2, false);
+              }
+          }
+      return Std.int((wOut.idx.length + cope.idx.length - before) / 6);
+    }
+
+// how many cells of this structure stand a length of parapet — the ring's own cell count, for
+// __facility().roof beside the quad count parapet() returns
+  static function ringCells(m:Facility, si:Int):Int
+    {
+      var st = m.structures[si];
+      var n = 0;
+      for (row in st.oy1...st.oy2 + 1)
+        for (col in st.ox1...st.ox2 + 1)
+          {
+            if (!FacilityModel.inside(m, col, row) ||
+                m.owner[row][col] != si)
+              continue;
+            for (dir in 0...4)
+              if (outward(m, col, row, dir))
+                {
+                  n++;
+                  break;
+                }
+          }
+      return n;
+    }
+
+// the two side reveals of an opening, from `y0` to `y1`. both lie in the cell boundary planes the
+// wall line runs through, and both look INWARD — the opposite way round from a wall face at the same
+// place — so each is emitted for the direction pointing at the other jamb.
+//
+// THREE CALLERS AND THEY ARE WHY THE HEIGHTS ARE PARAMETERS: a doorway (floor to lintel), a ribbon
+// window and a washroom LIGHT WELL (each sill to head).
+//
+// THE RIBBON WAS THE ONE LEFT OUT, on the belief that "the flanking cells' butt caps close its ends
+// for free". They do not: `butt` caps the boundary plane only where the thick cell stands PROUD of
+// the thin one, which is the two (WALL_T - GLASS_T) / 2 shoulders either side of the glazing band
+// and never the band itself. See the reveal block in `structure` for the measurement. A light well
+// reaches the same hole from the other end — it is punched in a cell of FULL WALL THICKNESS (`thick`
+// reads Wall.WINDOW and a well is Wall.WINDOW_HIGH), so its neighbours take the equal-thickness
+// branch and emit nothing at all.
+  static function jamb(b:MeshBuf, alongX:Bool, s:Rect, y0:Float, y1:Float, t:Float,
+      loEnd:Bool = true, hiEnd:Bool = true):Void
     {
       if (alongX)
         {
-          face(b, s.x0, s.x0, s.z0, s.z1, 3, 0.0, FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
-          face(b, s.x1, s.x1, s.z0, s.z1, 2, 0.0, FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
+          if (loEnd)
+            face(b, s.x0, s.x0, s.z0, s.z1, 3, y0, y1, t);
+          if (hiEnd)
+            face(b, s.x1, s.x1, s.z0, s.z1, 2, y0, y1, t);
           return;
         }
-      face(b, s.x0, s.x1, s.z0, s.z0, 1, 0.0, FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
-      face(b, s.x0, s.x1, s.z1, s.z1, 0, 0.0, FacilityStyle.DOOR_H, FacilityStyle.WALL_TILE);
+      if (loEnd)
+        face(b, s.x0, s.x1, s.z0, s.z0, 1, y0, y1, t);
+      if (hiEnd)
+        face(b, s.x0, s.x1, s.z1, s.z1, 0, y0, y1, t);
+    }
+
+// the strip of masonry closing a doorway's own threshold, WALL_BASE up to the floor. every OTHER
+// cell gets this from its wall face, which now starts at WALL_BASE — but under a lintel there is no
+// masonry at all, so the outdoor half of the cell is laid at the neighbouring surface's height by
+// floorStrips and the indoor half at 0, and on a dropped surface the two meet with nothing between.
+// the hangar's side door opens straight onto the lot and is where it shows.
+//
+// BOTH planes, wound OUTWARD, and no test of which one faces out: the indoor one is buried under
+// that cell's own floor cap, whose top edge is this quad's top edge, and a camera pitched 51 degrees
+// down cannot see under a step. the same thing that makes the skirt free everywhere else
+// the hood of the bulkhead lamp over an exterior door, as FOUR QUADS in the compound's one hood
+// buffer — its own art, so it can no longer ride the cladding (see FacilityShellOpts.hood).
+//
+// NOT A GLB — see FacilityStyle.DOOR_LAMP_W's header for why, and render.facility.FacilityEntry's
+// for the general rule. no BACK face (it is against the masonry) and no UNDERSIDE: this camera
+// pitches 51 degrees DOWN, so the soffit of a thing standing off a wall is never in frame, which is
+// the same reason FacilityRoof.box has no bottom either.
+//
+// the position comes from FacilityGlow.lamp and is not recomputed here, because the lens quad and
+// the spotlight are hung off that same point and a hood that drifted from its own light is the one
+// error none of the three files could see alone
+  static function doorLamp(b:MeshBuf, m:Facility, d:FacilityModel.DoorCell):Void
+    {
+      var l = FacilityGlow.lamp(m, d);
+      if (l == null)
+        return;
+      // the box: half the hood's width along the wall line, and its depth reaching BACK from the
+      // shared point to the masonry. that point is the LENS PLANE, i.e. the hood's front face and
+      // not its centre, so the box hangs behind it — centred on it, the hood floated 0.3 off the
+      // wall with daylight behind it
+      var hw = FacilityStyle.DOOR_LAMP_W / 2;
+      var hd = FacilityStyle.DOOR_LAMP_D / 2;
+      var cx = l.x - l.nx * hd;
+      var cz = l.z - l.nz * hd;
+      var x0 = cx - (l.nx != 0 ? hd : hw), x1 = cx + (l.nx != 0 ? hd : hw);
+      var z0 = cz - (l.nz != 0 ? hd : hw), z1 = cz + (l.nz != 0 ? hd : hw);
+      var y0 = FacilityStyle.DOOR_LAMP_Y;
+      var y1 = y0 + FacilityStyle.DOOR_LAMP_H;
+      for (dir in 0...4)
+        if (dir != (l.dir ^ 1))
+          face(b, x0, x1, z0, z1, dir, y0, y1, FacilityStyle.DOOR_LAMP_TILE);
+      cap(b, x0, x1, z0, z1, y1, FacilityStyle.DOOR_LAMP_TILE);
+    }
+
+// which hand of a door cell the LIFT CAR is on, as a dir across the opening, or -1 where neither
+// side is a car — every door but one Look, and a lift shaft the model happens not to have floored
+  static function liftSide(m:Facility, col:Int, row:Int, alongX:Bool):Int
+    {
+      for (k in 0...2)
+        {
+          var dir = (alongX ? k : 2 + k);
+          var c = col + DC[dir];
+          var r = row + DR[dir];
+          if (FacilityModel.inside(m, c, r) &&
+              m.surf[r][c] == Surf.LIFT)
+            return dir;
+        }
+      return -1;
+    }
+
+// which hand of a door cell is a ROOM wearing a wall finish other than the circulation's, as a dir
+// across the opening, or -1: a corridor's door onto the yard, or onto a room in the corridor's own board
+  static function roomSide(m:Facility, col:Int, row:Int, alongX:Bool):Int
+    {
+      for (k in 0...2)
+        {
+          var dir = (alongX ? k : 2 + k);
+          var c = col + DC[dir];
+          var r = row + DR[dir];
+          if (FacilityModel.isIndoor(m, c, r) &&
+              m.tex.wallInto[m.surf[r][c]] != m.tex.wallInto[m.tex.circ])
+            return dir;
+        }
+      return -1;
+    }
+
+// one half of a doorway's reveal, cut on the leaf plane. `far` is the half the `car` dir points at
+  static function leafHalf(s:Rect, alongX:Bool, car:Int, far:Bool):Rect
+    {
+      var lo = ((car == (alongX ? 0 : 2)) == far);
+      if (alongX)
+        {
+          var c = (s.z0 + s.z1) / 2;
+          return { x0: s.x0, x1: s.x1, z0: lo ? s.z0 : c, z1: lo ? c : s.z1 };
+        }
+      var c = (s.x0 + s.x1) / 2;
+      return { x0: lo ? s.x0 : c, x1: lo ? c : s.x1, z0: s.z0, z1: s.z1 };
+    }
+
+// the lift doorway's door pocket: ONE near-black slot down each jamb, standing a hair proud of the
+// reveal so it draws over it rather than z-fighting with it — FacilityGeom.plane's own trick, and
+// the same MIRROR_EPS-shaped offset render.corp.CorpFurniture hangs a mirror on.
+//
+// IT IS CENTRED ON THE LEAF PLANE, which is the cell's own centre line (render.facility
+// .FacilityDoors places every leaf there), so the slot is the gap the leaf slides into and the
+// 0.16 of DOOR_T sits inside the 0.3 of it. The first build put a strip at BOTH edges of the
+// reveal instead, all four of them, and a 1.2-deep corp reveal is wide enough to show the
+// corridor's own board between: reported from the game as "three black parts and normal wall seen
+// in the center".
+//
+// AND ITS u IS THE STRIP, NOT THE WORLD. The art is a CROSS-SECTION — a metal highlight, a band of
+// shadow, a highlight, all running the full height (see art/textures.json on corp/lift-pocket) —
+// so u maps 0..1 across the 0.3 of width, the whole slot exactly once, and only v tiles, at the
+// wall's own period, which the art is uniform along. Tiled on both axes by `face` it sampled a
+// 0.05 x 0.7 window of the sheet at whatever offset the doorway's world position landed on, which
+// is the "all wrong u,v" report
+  static function liftPocket(b:MeshBuf, alongX:Bool, s:Rect):Void
+    {
+      var w = FacilityStyle.LIFT_POCKET_W / 2;
+      var e = FacilityStyle.LIFT_POCKET_EPS;
+      var y0 = FacilityStyle.WALL_BASE;
+      var y1 = FacilityStyle.DOOR_H;
+      if (alongX)
+        {
+          var c = (s.z0 + s.z1) / 2;
+          slot(b, s.x0 + e, s.x0 + e, c - w, c + w, 3, y0, y1, FacilityStyle.WALL_TILE);
+          slot(b, s.x1 - e, s.x1 - e, c - w, c + w, 2, y0, y1, FacilityStyle.WALL_TILE);
+          return;
+        }
+      var c = (s.x0 + s.x1) / 2;
+      slot(b, c - w, c + w, s.z0 + e, s.z0 + e, 1, y0, y1, FacilityStyle.WALL_TILE);
+      slot(b, c - w, c + w, s.z1 - e, s.z1 - e, 0, y0, y1, FacilityStyle.WALL_TILE);
+    }
+
+// one upright quad wound like `face`, but with u taken ACROSS it 0..1 instead of off the world —
+// the mapping a strip whose art is its own cross-section needs. `vt` is the v period: WALL_TILE for
+// a jamb slot, whose art is uniform up its height, so a run of these carries the masonry's own
+// vertical course beside it
+  static function slot(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, dir:Int, y0:Float,
+      y1:Float, vt:Float):Void
+    {
+      var e = ends(x0, x1, z0, z1, dir);
+      MeshBufTools.quad(b, [e[0], y0, e[1]], [e[2], y0, e[3]], [e[2], y1, e[3]], [e[0], y1, e[1]],
+        [0, y0 / vt, 1, y0 / vt, 1, y1 / vt, 0, y1 / vt]);
+    }
+
+  static function threshold(b:MeshBuf, alongX:Bool, s:Rect):Void
+    {
+      var y0 = FacilityStyle.WALL_BASE;
+      var t = FacilityStyle.WALL_TILE;
+      if (alongX)
+        {
+          face(b, s.x0, s.x0, s.z0, s.z1, 2, y0, 0.0, t);
+          face(b, s.x1, s.x1, s.z0, s.z1, 3, y0, 0.0, t);
+          return;
+        }
+      face(b, s.x0, s.x1, s.z0, s.z0, 0, y0, 0.0, t);
+      face(b, s.x0, s.x1, s.z1, s.z1, 1, y0, 0.0, t);
+    }
+
+// the lift doorway's SILL: the saddle plate lying IN the opening, where the corridor's floor meets
+// the car's.
+//
+// it is what `threshold` cannot be, and that is why it is a second emitter and not a flag on it.
+// The riser stands in the two JAMB planes, so on a wall that carries on either side it is inside
+// the neighbouring masonry and under that cell's own floor cap: it reads at the compound's dropped
+// kerb and at nothing else. The ask was "a thin gray sliver to the bottom of the elevator door
+// where the floor textures meet", and that is a plate in the FLOOR.
+//
+// 0..1 BOTH WAYS, one plate per doorway: the art's brush lines and its two grooves run across the
+// image, so with u along the opening they run parallel to the leaves, which is where a real saddle
+// puts them. Nothing is stretched that can be seen — a brushed plate is uniform along its grain
+  static function liftSill(b:MeshBuf, alongX:Bool, s:Rect):Void
+    {
+      var d = FacilityStyle.LIFT_SILL_D / 2;
+      var y = FacilityStyle.LIFT_POCKET_EPS;
+      if (alongX)
+        {
+          var c = (s.z0 + s.z1) / 2;
+          plate(b, s.x0, s.x1, c - d, c + d, y, false);
+          return;
+        }
+      var c = (s.x0 + s.x1) / 2;
+      plate(b, c - d, c + d, s.z0, s.z1, y, true);
+    }
+
+// one horizontal quad wearing its art 0..1 rather than tiling it, `swap` turning the uv 90 degrees
+// the way cap() does — u off z instead of off x
+  static function plate(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float,
+      swap:Bool):Void
+    {
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+        swap ? [1, 0, 1, 1, 0, 1, 0, 0] : [0, 1, 1, 1, 1, 0, 0, 0]);
     }
 
 // one exposed end of a slab where its neighbour's cross-section falls short of it. the quad lives
@@ -576,23 +1536,37 @@ class FacilityGeom
   static function butt(b:MeshBuf, flat:Bool, plane:Float, a0:Float, a1:Float, dir:Int):Void
     {
       if (flat)
-        face(b, a0, a1, plane, plane, dir, 0.0, FacilityStyle.WALL_H, FacilityStyle.WALL_TILE);
+        face(b, a0, a1, plane, plane, dir, FacilityStyle.WALL_BASE, FacilityStyle.WALL_H,
+          FacilityStyle.WALL_TILE);
       else
-        face(b, plane, plane, a0, a1, dir, 0.0, FacilityStyle.WALL_H, FacilityStyle.WALL_TILE);
+        face(b, plane, plane, a0, a1, dir, FacilityStyle.WALL_BASE, FacilityStyle.WALL_H,
+          FacilityStyle.WALL_TILE);
     }
 
-// one horizontal cell quad at height y, world-aligned UVs (never stretched)
-  static function cap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
+// one horizontal cell quad at height y, world-aligned UVs (never stretched). public because
+// render.facility.FacilityTables emits its worktops with it — a bench is the same kind of surface as
+// a floor or a roof, and duplicating the winding is how one of them ends up facing the wrong way.
+//
+// `swap` TURNS THE UV 90 DEGREES (u off z, v off x) and exists because not every top-down texture
+// is isotropic: a PARAPET COPING is authored as a straight-on strip that tiles left to right, so
+// the two rims of a ring that run along z sample its 0.6-unit width across the strip and its length
+// along it — measured on render.corp.CorpStreet.roof as du 0.15 against dv 8.7. Default false, and
+// world-aligned either way, so nothing is stretched in either setting
+  public static function cap(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float,
+      swap:Bool = false):Void
     {
       if (x1 - x0 < 0.01 ||
           z1 - z0 < 0.01)
         return;
-      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0],
+      var uv = (swap ?
+        [z1 / t, x0 / t, z1 / t, x1 / t, z0 / t, x1 / t, z0 / t, x0 / t] :
         [x0 / t, z1 / t, x1 / t, z1 / t, x1 / t, z0 / t, x0 / t, z0 / t]);
+      MeshBufTools.quad(b, [x0, y, z1], [x1, y, z1], [x1, y, z0], [x0, y, z0], uv);
     }
 
-// the same quad wound the other way, so it is seen from BELOW — a door head's soffit
-  static function capDown(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
+// the same quad wound the other way, so it is seen from BELOW — a door head's soffit. public for
+// render.facility.FacilityEntry, whose booth roof is a free-standing slab and so needs its own
+  public static function capDown(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float, y:Float, t:Float):Void
     {
       if (x1 - x0 < 0.01 ||
           z1 - z0 < 0.01)
@@ -604,8 +1578,10 @@ class FacilityGeom
 // the run endpoints of a cell-edge face, wound so the FRONT face looks at the neighbour in `dir`.
 // derived rather than hand-cased: for a run direction d the quad's normal is (-dz, 0, dx), so each
 // direction fixes which end of the edge is wound first. getting this backwards is invisible until a
-// whole axis of faces disappears — the failure render.wild.WildRoad's dashes recorded
-  static inline function ends(x0:Float, x1:Float, z0:Float, z1:Float, dir:Int):Array<Float>
+// whole axis of faces disappears — the failure render.wild.WildRoad's dashes recorded.
+// public alongside `face` for render.facility.FacilityTables, which has to emit its cabinet fronts
+// with a different period on each axis and so cannot call `face` — but must not re-derive THIS
+  public static inline function ends(x0:Float, x1:Float, z0:Float, z1:Float, dir:Int):Array<Float>
     {
       return switch (dir)
         {
@@ -616,10 +1592,30 @@ class FacilityGeom
         };
     }
 
+// a rect's face in `dir`, collapsed to the plane that face lies on and pushed `eps` out of the
+// masonry — the degenerate rect the wall-decal passes wind a quad against.
+//
+// the four cases are the one thing here that is invisible when they are wrong: a quad emitted
+// against dir 2 where the caller meant dir 3 lands INSIDE the wall and simply never appears. two
+// passes need it (render.facility.FacilityGrime's damp band, FacilityDetail's corner strips) and a
+// third would have copied it, so it lives here with `ends`, which is the other half of the same job
+  public static inline function plane(s:Rect, dir:Int, eps:Float):Rect
+    {
+      return switch (dir)
+        {
+          case 0: { x0: s.x0, x1: s.x1, z0: s.z0 - eps, z1: s.z0 - eps };
+          case 1: { x0: s.x0, x1: s.x1, z0: s.z1 + eps, z1: s.z1 + eps };
+          case 2: { x0: s.x0 - eps, x1: s.x0 - eps, z0: s.z0, z1: s.z1 };
+          default: { x0: s.x1 + eps, x1: s.x1 + eps, z0: s.z0, z1: s.z1 };
+        };
+    }
+
 // one vertical wall face spanning y0..y1, UVs world-aligned along the run and up the wall so
 // neighbouring faces of one long wall carry a continuous course. `t` is the repeat period, which the
-// shutter runs take at their own value so their slat pitch is independent of the wall course
-  static function face(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
+// shutter runs take at their own value so their slat pitch is independent of the wall course.
+// public for render.facility.FacilityTables, which emits a bench's sides with it: the `dir` winding
+// is the one thing here that is invisible until a whole axis of faces disappears
+  public static function face(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
       dir:Int, y0:Float, y1:Float, t:Float):Void
     {
       if (y1 - y0 < 0.01)
@@ -634,14 +1630,15 @@ class FacilityGeom
     }
 
 // one window pane over a whole run: the same face winding, but the texture maps 0..1 across it
-// rather than tiling.
+// rather than tiling. public for render.facility.FacilityEntry, whose booth is glazed on all four
+// sides and so wants the same 0..1 mapping over a face that is not part of any wall run
 //
 // FLUSH with the wall plane. it used to stand a hundredth of a unit proud of it "so nothing depends
 // on polygonOffset" — but the emitter cuts the opening OUT of the wall rather than painting the pane
 // over it, so the two are never coplanar-and-overlapping and there was nothing to fight with. All
 // the offset bought was a seam of open air along the head and the sill, where the reveal's own caps
 // stop at the masonry and the glass no longer did
-  static function pane(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
+  public static function pane(b:MeshBuf, x0:Float, x1:Float, z0:Float, z1:Float,
       dir:Int, y0:Float, y1:Float):Void
     {
       var e = ends(x0, x1, z0, z1, dir);
@@ -651,18 +1648,47 @@ class FacilityGeom
     }
 
 // merge a buffer into one lit mesh. every one of these is OPAQUE now: the walls stopped fading with
-// the roof, so nothing here needs `transparent` and nothing here pays for the sorted pass
-  static function add(scene:Scene, b:MeshBuf, tex:String, recv:Bool, casts:Bool):Void
+// the roof, so nothing here needs `transparent` and nothing here pays for the sorted pass.
+// public for render.facility.FacilityEntry, whose booth is a shell like any other — walls in the
+// same cladding, a roof in the same felt, and no reason to carry a second copy of this. returns the
+// mesh (null for an empty buffer), which `fades` turns transparent for a tall shed's second storey
+  public static function add(scene:Scene, b:MeshBuf, tex:String, recv:Bool, casts:Bool):Mesh
     {
       if (b.idx.length == 0)
-        return;
+        return null;
       var mat = VisionMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         side: THREE.FrontSide,
       }));
       var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'shell ' + tex;
       mesh.receiveShadow = recv;
       mesh.castShadow = casts;
+      scene.add(mesh);
+      return mesh;
+    }
+
+// the same merge as `add`, for a surface the contact shadow lies ON — the three interior floors and
+// nothing else. it is a separate entry point rather than a sixth argument to `add` because that is
+// the arg count this repo's style guide says to stop appending at, and because the answer is not a
+// caller's taste: a WALL cannot take this patch at all. render.world.ContactMask is top-down, so
+// every fragment of a 6-unit wall face samples the same xz and the whole column would darken by one
+// flat amount. the mask darkens the ground a wall stands on, never the wall
+  static function addFloor(scene:Scene, b:MeshBuf, tex:String):Void
+    {
+      if (b.idx.length == 0)
+        return;
+      // CONTACT FIRST, VISION SECOND, and the order is load-bearing in both directions. both hooks
+      // replace <fog_fragment> with itself plus their code, so whoever patches first lands LAST in
+      // main() — and the contact term reads `visMaskRaw`, which VisionMask assigns. Swap these and
+      // the shader either fails to compile or reads an unassigned global
+      var mat = VisionMask.patch(ContactMask.patch(new MeshLambertMaterial({
+        map: Textures.loadTexture(tex, 'wall', 1),
+        side: THREE.FrontSide,
+      })));
+      var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'floor ' + tex;
+      mesh.receiveShadow = true;
       scene.add(mesh);
     }
 
@@ -683,35 +1709,143 @@ class FacilityGeom
 // `transparent` is set AFTER VisionMask.patch on purpose: the mask reads that flag to choose which
 // branch it compiles, and set first it would pick the alpha-scaling branch and fade a hidden window
 // OUT instead of sinking it toward the fog (see render.wild.WildRoad)
-  static function addPane(scene:Scene, b:MeshBuf):Void
+//
+// `tex` is the art for ONE RUN LENGTH, which is why the caller keeps two buffers and calls this
+// twice. `pane` maps one unit of u across a whole run, so the number of panes a run shows is a
+// property of the IMAGE and not of the geometry: the three-pane art drawn on a 2-cell opening is that
+// window at two thirds scale. It costs one extra mesh per structure carrying both lengths — measured
+// on a generated compound, the two structures with windows both do, so 2 pane meshes became 4
+  static function addPane(scene:Scene, b:MeshBuf, path:String, shell:Shell):Void
     {
       if (b.idx.length == 0)
         return;
-      var tex = Textures.loadAlphaCropped(FacilityStyle.WINDOW_LIT);
-      var mat = VisionMask.patch(new MeshLambertMaterial({
+      var tex = Textures.loadAlphaCropped(path);
+      // held as its own typed local rather than as `patch`'s Dynamic return, because `glaze` below
+      // hooks it before the mask does. `patch` folds the mask into this same object and hands it back
+      var mat = new MeshLambertMaterial({
         map: tex,
         emissiveMap: tex,
         emissive: new Color(0xffffff),
         emissiveIntensity: FacilityStyle.WINDOW_EMISSIVE,
         alphaTest: 0.02,
+        // the glass must not write depth: the actor billboards are depthWrite:false but still
+        // depth-TESTED and draw after it (Sprites.ORD_ACTOR), so a pane that wrote depth rejected
+        // every AI standing behind it — the lift car's glazing showed an empty box. the FRAME's
+        // depth comes from the colourless twin below
+        depthWrite: false,
         side: THREE.FrontSide,
-      }));
+      });
+      // BEFORE the mask, so the mask chains onto this hook rather than the other way round. the two
+      // use different anchors (<map_fragment> / <emissivemap_fragment> against <fog_fragment>) and
+      // VisionMask carries a chained hook's cache key forward, which is the whole contract here
+      glaze(mat, shell.glaze);
+      VisionMask.patch(mat);
       mat.transparent = true;
       var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'pane ' + path;
       mesh.receiveShadow = false;
-      mesh.castShadow = false;
+      // the pane CASTS, and it is the only thing that can: the run's opening is cut OUT of the wall
+      // (see the sill/head pair in `structure`) and the exterior wall is the shell's one caster, so a
+      // non-casting pane left a real hole in the masonry for the moon — one clean parallelogram of
+      // moonlight per window run, lying on the floor inside the wall's own shadow. the depth material
+      // carries alphaTest so the glass casts solid, and shadowSide flips FrontSide to BackSide, which
+      // picks exactly the one of the run's two coplanar faces that looks away from the moon
+      mesh.castShadow = true;
       scene.add(mesh);
+      // and the frame's depth, which the glass cannot give: depthWrite is per material, so this is
+      // a second, colourless draw of the same geometry in the OPAQUE pass with the glass (alpha
+      // 128) cut away by alphaTest — the members hide an actor behind them and the glass does not
+      var frame = new Mesh(mesh.geometry, new MeshBasicMaterial({
+        map: tex,
+        alphaTest: 0.75,
+        colorWrite: false,
+        side: THREE.FrontSide,
+      }));
+      frame.name = 'pane frame ' + path;
+      scene.add(frame);
     }
 
-// the roof. no vision mask (see the call site) and no shadow casting: the moon box follows the
-// player, so a roof casting over its own lot would put the whole building in shadow the moment the
-// player walked past it
-  static function addRoof(scene:Scene, b:MeshBuf, fades:Bool, shell:Shell):Void
+// the tint every pane's GLASS takes when the player is inside, as one shared uniform — the value is
+// a constant and every pane in the game wants the same one
+  static var uPaneTint:Dynamic = null;
+
+// fold the "player is inside this building" dimmer into one pane material's own shader. `u` is the
+// structure's amount, 0 lit .. 1 seen from inside, and it is the ONLY thing that moves per frame.
+//
+// IT HAS TO BE A SHADER, and the frames are why. This was `material.color` for a build, which
+// multiplies the whole map, and the art's frame members are already sRGB 16-127 — tinted, they
+// crushed into the glass and an opening read as one flat black rectangle. Reported from the game as
+// exactly that. The only thing that separates frame from glass is the ALPHA the art already carries
+// (tools/textures.py's `glass_alpha`: bright half to 128, frame left at 255, which the source's own
+// luma histogram splits outright), and nothing but a fragment can read it. See
+// FacilityStyle.WINDOW_TINT_IN.
+//
+// the two anchors are chosen and not interchangeable: <map_fragment> is where `diffuseColor` has
+// just taken the map and so is the only point the alpha means the art's alpha, and it runs BEFORE
+// <alphatest_fragment>, which this must not disturb — only `.rgb` is touched. <emissivemap_fragment>
+// is where `totalEmissiveRadiance` exists at all
+  static function glaze(mat:MeshLambertMaterial, u:Dynamic):Void
+    {
+      // three's shader hooks are an untyped API — `onBeforeCompile` and `customProgramCacheKey` are
+      // on no extern and cannot be, being a compiler callback and a cache-key method. Same boundary
+      // render.world.VisionMask.patch crosses, in the same way
+      var d:Dynamic = mat;
+      if (uPaneTint == null)
+        uPaneTint = { value: new Color(FacilityStyle.WINDOW_TINT_IN) };
+      d.onBeforeCompile = function(shader:Dynamic, renderer:Dynamic)
+        {
+          shader.uniforms.paneGlaze = u;
+          shader.uniforms.paneTint = uPaneTint;
+          // the mask is DILATED before it is thresholded — see FacilityStyle.WINDOW_TINT_GROW. min
+          // of a plus-shaped tap, which is a morphological grow: a fragment counts as glass if
+          // anything within GROW texels of it is. Four taps and not eight because the members this
+          // has to reach under are a mullion and a rail, both axis-aligned; a corner nick two texels
+          // across is not visible. `textureSize` rather than a uniform: the art is cropped to its own
+          // alpha bbox at LOAD, so its size is not known when this material is built.
+          //
+          // smoothstep and not step on the result: the ramp is what keeps the grown edge from
+          // drawing a hard line of its own one texel further out
+          shader.fragmentShader = 'uniform float paneGlaze;\n' +
+            'uniform vec3 paneTint;\n' +
+            StringTools.replace(shader.fragmentShader, '#include <map_fragment>',
+              '#include <map_fragment>\n' +
+              // `float( .. )` around the constant on purpose: Haxe prints 2.0 as "2", and a bare
+              // integer literal divided by a vec2 leans on ESSL 3.00's implicit conversion
+              '  vec2 paneTx = float( ' + FacilityStyle.WINDOW_TINT_GROW +
+                ' ) / vec2( textureSize( map, 0 ) );\n' +
+              '  float paneA = diffuseColor.a;\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv + vec2( paneTx.x, 0.0 ) ).a );\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv - vec2( paneTx.x, 0.0 ) ).a );\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv + vec2( 0.0, paneTx.y ) ).a );\n' +
+              '  paneA = min( paneA, texture2D( map, vMapUv - vec2( 0.0, paneTx.y ) ).a );\n' +
+              '  float paneGlass = smoothstep( 0.90, 0.70, paneA );\n' +
+              '  diffuseColor.rgb *= mix( vec3( 1.0 ), paneTint, paneGlaze * paneGlass );');
+          // the glow goes with the WHOLE pane, frame included — it is what carries the glass over
+          // BLOOM_THRESHOLD, and the frame never crossed it at any intensity anyway
+          shader.fragmentShader = StringTools.replace(shader.fragmentShader,
+            '#include <emissivemap_fragment>',
+            '#include <emissivemap_fragment>\n' +
+            '  totalEmissiveRadiance *= 1.0 - paneGlaze;');
+        };
+      // an own key, or three hands this program to any other material the mask keys the same way —
+      // the trap VisionMask documents. It reads `hasOwnProperty` here and chains what it finds
+      d.customProgramCacheKey = function() return 'paneGlaze';
+    }
+
+// the roof, and anything STANDING on it that has to fade with it. no vision mask (see the call
+// site) and no shadow casting: the moon box follows the player, so a roof casting over its own lot
+// would put the whole building in shadow the moment the player walked past it.
+//
+// `tex` is a parameter because render.facility.FacilityRoof's access hatches come through here too:
+// they stand on the fading deck, so a hatch that did not fade with it would be left hanging in the
+// air the moment the player stepped inside, and `Shell.roof` is what FacilityArea.apply eases.
+// returns the mesh, null for an empty buffer
+  public static function addDeck(scene:Scene, b:MeshBuf, tex:String, fades:Bool, shell:Shell):Mesh
     {
       if (b.idx.length == 0)
-        return;
+        return null;
       var mat = new MeshLambertMaterial({
-        map: Textures.loadTexture(FacilityStyle.ROOF, 'roof', 1),
+        map: Textures.loadTexture(tex, 'roof', 1),
         side: THREE.FrontSide,
       });
       if (fades)
@@ -720,19 +1854,28 @@ class FacilityGeom
           mat.opacity = 1.0;
         }
       var mesh = new Mesh(geom(b), mat);
+      mesh.name = 'deck ' + tex;
       mesh.receiveShadow = true;
       mesh.castShadow = false;
       scene.add(mesh);
       if (fades)
         shell.roof.push(mesh);
+      return mesh;
     }
 
-// one merged buffer as a BufferGeometry
-  static function geom(b:MeshBuf):BufferGeometry
+// one merged buffer as a BufferGeometry.
+//
+// `col` is an OPT-IN channel (render.world.MeshBuf's own word for it): only the quadC/quadRGB
+// emitters fill it, so the attribute is attached when it is filled and every buffer built with plain
+// `quad` comes out exactly as it did. DERIVED and not a flag, so the geometry and the material that
+// reads it cannot disagree — the caller sets `vertexColors` off the same test
+  public static function geom(b:MeshBuf):BufferGeometry
     {
       var g = new BufferGeometry();
       g.setAttribute('position', new Float32BufferAttribute(b.pos, 3));
       g.setAttribute('uv', new Float32BufferAttribute(b.uv, 2));
+      if (b.col.length == b.pos.length)
+        g.setAttribute('color', new Float32BufferAttribute(b.col, 3));
       g.setIndex(b.idx);
       g.computeVertexNormals();
       return g;

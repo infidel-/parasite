@@ -24,6 +24,14 @@ class Poly {
     return mat;
   }
 
+// forget the textures the build being torn down tagged: the UV editor only ever shifts the live
+// build's, and every Texture tagged here otherwise stayed referenced for the whole session.
+// `info` stays — its labels are first-write-wins across areas on purpose
+  public static function reset():Void {
+    tex.clear();
+    baseOff.clear();
+  }
+
   public static function applyClassOffset(cls:String, u:Float, v:Float):Void {
     var arr = tex.get(cls);
     if (arr == null) return;
@@ -106,14 +114,13 @@ class Poly {
       var out:Array<Dynamic> = [];
       for (i in 0...srcs.length)
         {
-          var base:Dynamic = repMap[i].clone();
+          var base:Dynamic = Textures.share(repMap[i]);
           base.center.set(0, 0);
           base.repeat.set(1, 1);
           base.rotation = 0;
           base.offset.set(0, 0);
           base.wrapS = untyped THREE.RepeatWrapping;
           base.wrapT = untyped THREE.RepeatWrapping;
-          base.needsUpdate = true;
           out.push(tag(new MeshLambertMaterial({ map: base }),
             cls, name, texPath));
         }

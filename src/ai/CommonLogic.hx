@@ -2,7 +2,7 @@
 package ai;
 
 import game.Game;
-import particles.*;
+import particles.Particle;
 import _PlayerAction;
 import __Math;
 
@@ -194,7 +194,7 @@ class CommonLogic
       var atkE = (attacker.ai != null ? attacker.ai.entity : null);
       // target entity for the hit shake: an AI, or the player's visible body (host or parasite)
       var tgtE = target.entity();
-      var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
+      var bloodIc = Const.bloodIcon(targetBloodType);
 
       // draw attack effects
       var handledShot = false;
@@ -206,10 +206,9 @@ class CommonLogic
               roll, targetBloodType);
           else
             {
-              // 3D gun-shot choreography; when the view handles it, skip the 2D tracer (it is
-              // hidden under the 3D view) so blood/impact aren't doubled
-              handledShot = game.scene.view3d != null &&
-                game.scene.view3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
+              // 3D gun-shot choreography; when the view cannot play it, only the impact sound is
+              // left (Particle.createShot) and the blood below is written here
+              handledShot = game.scene.view3d.playShot(atkE, attacker.x, attacker.y, target.x, target.y,
                   roll, weapon.spawnBlood, bloodIc.row, bloodIc.col,
                   weapon.sound.file, attacker.isPlayer);
               if (!handledShot)
@@ -223,8 +222,7 @@ class CommonLogic
       // now). blood/shake are added on a hit below. handled => the view took over the audio
       inline function melee(sound: AISound, hit: Bool): Bool
         {
-          if (weapon.isRanged ||
-              game.scene.view3d == null)
+          if (weapon.isRanged)
             return false;
           return game.scene.view3d.playMelee(atkE, hit ? tgtE : null,
             attacker.x, attacker.y, target.x, target.y,

@@ -67,13 +67,12 @@ class MainMenu extends UIWindow
       // main-process push (renderer blur/visibilitychange don't fire reliably here)
       HostBridge.onFocusChange(function(focused) setMenuActive(focused));
 #end
-      setBackground(currentBackground, game.config.aiArtEnabled);
-      // randomize background
+      // randomize background, picked BEFORE the one setBackground call: each call decodes and
+      // uploads a 2688x896 jpeg, and the first one used to be thrown away (and its texture leaked)
+      var bgIndex = currentBackground;
       if (!game.firstEverRun)
-        {
-          var bgIndex = 1 + Std.random(22);
-          setBackground(bgIndex, game.config.aiArtEnabled);
-        }
+        bgIndex = 1 + Std.random(22);
+      setBackground(bgIndex, game.config.aiArtEnabled);
       // add class for initial fade-in animation
       if (game.firstEverRun)
         bg.classList.add('mainmenu-first-show');

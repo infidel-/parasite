@@ -95,12 +95,14 @@ class TopbarHud
       else if (now - fpsSample >= 500)
         {
           var txt = Math.round(fpsFrames * 1000 / (now - fpsSample)) + ' FPS';
-          // in the 3D street view, append the live draw-call / triangle load,
-          // and a red badge when the post-gen checklist found issues
+          // in the 3D street view, append the live draw-call / triangle load, the lamp pool's lit
+          // slots of its size, and a red badge when the post-gen checklist found issues
           if (game.location == LOCATION_AREA)
             {
-              txt += ' | ' + render.StreetPerf.lastCalls + 'dc | ' +
-                (Math.round(render.StreetPerf.lastTris / 100) / 10) + 'k tri';
+              txt += ' | ' + render.StreetPerf.lastCalls + ' dc | ' +
+                (Math.round(render.StreetPerf.lastTris / 100) / 10) + 'k tri | ' +
+                render.particles.LampLights.lastLit + '/' + render.particles.LampLights.lastPool +
+                ' lights';
               // GPU-resource counts (no byte API) — watch these climb on area re-entry == leak
               txt += ' | ' + render.StreetPerf.lastGeo + ' geom | ' +
                 render.StreetPerf.lastTex + ' tex | ' +

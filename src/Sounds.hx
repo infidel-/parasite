@@ -18,7 +18,10 @@ class Sounds
   var aboutMusic: SMSound;
   var ambient: _SoundInfo;
   var ambientNext: _SoundInfo;
-  var fireLoop: SMSound; // looping positional fire sound near burning barrels (volume set per frame)
+  var loops: Map<String, SMSound>; // looping positional sounds by key (barrel fire, corp machines), volume set per frame
+  var shots: Map<String, SMSound>; // the area's ambient one-shots still playing (a far jet), stopped when a menu comes up
+  var previewSound: SMSound; // sound mode's play button: the one play it started, and its kind
+  var previewKey: String;
   var ambientLocation: _SoundAmbientLocation;
   var initDone: Bool;
 
@@ -44,12 +47,7 @@ class Sounds
       Browser.window.setInterval(function () {
         if (!initDone)
           return;
-        if (game.ui.state == UISTATE_MAINMENU ||
-            game.ui.state == UISTATE_NEWGAME ||
-            game.ui.state == UISTATE_OPTIONS ||
-            game.ui.state == UISTATE_PEDIA ||
-            game.ui.state == UISTATE_PRESETS ||
-            game.ui.state == UISTATE_MODS)
+        if (inMenu())
           {
             if (menuMusic.playState == 0)
               menuMusic.play();
@@ -66,9 +64,10 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 !ambientNext.sound.muted)
               ambientNext.sound.mute();
-            if (fireLoop != null &&
-                !fireLoop.muted)
-              fireLoop.mute();
+            for (l in loops)
+              if (!l.muted)
+                l.mute();
+            stopShots();
             return;
           }
         else if (game.ui.state == UISTATE_ABOUT)
@@ -82,6 +81,29 @@ class Sounds
               aboutMusic.play();
             else if (aboutMusic.paused)
               aboutMusic.resume();
+            return;
+          }
+        // not started yet (boot warmup, autosave prompt, a load in progress): silence
+        else if (!game.isStarted)
+          {
+            if (menuMusic.playState == 1 &&
+                !menuMusic.paused)
+              menuMusic.pause();
+            if (aboutMusic.playState == 1 &&
+                !aboutMusic.paused)
+              aboutMusic.pause();
+            if (music.playState == 1 && !music.paused)
+              music.pause();
+            if (ambient.state != SOUND_STOPPED &&
+                !ambient.sound.muted)
+              ambient.sound.mute();
+            if (ambientNext.state != SOUND_STOPPED &&
+                !ambientNext.sound.muted)
+              ambientNext.sound.mute();
+            for (l in loops)
+              if (!l.muted)
+                l.mute();
+            stopShots();
             return;
           }
         else
@@ -102,9 +124,9 @@ class Sounds
             if (ambientNext.state != SOUND_STOPPED &&
                 ambientNext.sound.muted)
               ambientNext.sound.unmute();
-            if (fireLoop != null &&
-                fireLoop.muted)
-              fireLoop.unmute();
+            for (l in loops)
+              if (l.muted)
+                l.unmute();
           }
         ambientTick(ambient);
         ambientTick(ambientNext);
@@ -113,13 +135,26 @@ class Sounds
       music = null;
       menuMusic = null;
       aboutMusic = null;
-      fireLoop = null;
+      loops = new Map();
+      shots = new Map();
       SoundManager.setup({
         debugMode: false,
         waitForWindowLoad: true,
         useHTML5Audio: true,
         onready: init,
       });
+    }
+
+// is a menu up over the game: the menu music plays and the world's loops are muted
+  public function inMenu():Bool
+    {
+      return game.ui.state == UISTATE_MAINMENU ||
+        game.ui.state == UISTATE_NEWGAME ||
+        game.ui.state == UISTATE_OPTIONS ||
+        game.ui.state == UISTATE_PEDIA ||
+        game.ui.state == UISTATE_PRESETS ||
+        game.ui.state == UISTATE_MODS ||
+        game.ui.state == UISTATE_SAVES;
     }
 
 // init sounds and music
@@ -313,9 +348,9 @@ class Sounds
 // after entering area
   public function onEnterArea()
     {
-      // barrels are per-area; silence any fire loop so it does not bleed into the next area/region
-      if (fireLoop != null)
-        fireLoop.setVolume(0);
+      // sources are per-area; silence every loop so none bleeds into the next area/region
+      for (l in loops)
+        l.setVolume(0);
       var oldType = locationType;
       // check for area-specific music
       if (game.location == LOCATION_AREA)
@@ -387,6 +422,11 @@ class Sounds
           ambient.state = SOUND_STOPPED;
         }
 
+      // an area with no bed of its own drives its own (render.corp.CorpSounds): fade out and stop
+      // here, or the fallback below starts the city's street under the tower
+      if (st == AMBIENT_NONE)
+        return;
+
       // start playing next with fade in
       var key = null;
       if (st == AMBIENT_CITY)
@@ -453,28 +493,82 @@ class Sounds
         }
     }
 
-// drive the looping fire sound from the render loop: frac is 0 (silent, out of range) .. 1 (full,
-// on top of a barrel); lazy-creates the loop on first audible frame, keeps it looping silently
-// otherwise so there is no start/stop thrash as the player crosses the radius
-  public function updateFireLoop(frac: Float)
+// drive one looping positional sound from the render loop: frac is 0 (silent, out of range) .. 1
+// (full) of the base volume, times the kind's tuned gain (render.SoundSources). lazy-creates the
+// loop on its first audible frame, then keeps it looping silently so there is no start/stop thrash
+// as the player crosses the edge of its range
+  public function updateLoop(key: String, frac: Float, base: Int)
     {
 #if !free
-      if (fireLoop == null)
+      var loop = loops[key];
+      if (loop == null)
         {
-          if (frac <= 0)
-            return;
-          fireLoop = SoundManager.createSound({
-            id: 'ambient-fire',
-            url: AssetPath.resolve('sound/ambient-fire.mp3'),
+          // a random variant, kept for the session since the loop is only ever silenced, never
+          // dropped: ambient-fire.mp3 has none, city/store1/2.mp3 have two
+          var v = sounds[key];
+          if (frac <= 0 ||
+              v == null)
+            {
+              render.SoundSources.vol[key] = 0;
+              return;
+            }
+          var pick = v[Std.random(v.length)];
+          lastVariant[key] = pick;
+          loop = SoundManager.createSound({
+            id: key,
+            url: AssetPath.resolve('sound/' + key + (pick >= 0 ? '' + pick : '') + '.mp3'),
             volume: 0,
             loops: 10000,
           });
-          fireLoop.play();
+          loops[key] = loop;
+          loop.play();
         }
-      var vol = frac <= 0 ? 0 : Std.int(game.config.effectsVolume * frac);
-      if (fireLoop.volume != vol)
-        fireLoop.setVolume(vol);
+      // a gain above 0 dB can push past the manager's 100 ceiling
+      var vol = (frac <= 0 ? 0 : Math.min(100, base * frac * render.SoundSources.gain(key)));
+      render.SoundSources.vol[key] = vol;
+      if (loop.volume != vol)
+        loop.setVolume(vol);
 #end
+    }
+
+// sound mode's play button: one play of a kind's current variant — the one its loop runs or the
+// last one-shot played, else its first — at the ambient slider and the kind's tuned gain. pressed
+// again while that kind still plays, it stops it
+  public function preview(key: String)
+    {
+#if !free
+      var playing = previewing();
+      if (playing != null)
+        previewSound.stop();
+      if (playing == key)
+        return;
+      var v = sounds[key];
+      if (v == null)
+        return;
+      var pick = (lastVariant[key] != null ? lastVariant[key] : v[0]);
+      SoundManager.destroySound('preview');
+      previewKey = key;
+      previewSound = SoundManager.createSound({
+        id: 'preview',
+        url: AssetPath.resolve('sound/' + key + (pick >= 0 ? '' + pick : '') + '.mp3'),
+        volume: Math.min(100, game.config.ambientVolume * render.SoundSources.gain(key)),
+      });
+      previewSound.play();
+#end
+    }
+
+// sound mode's wheel moved a kind's dB: the preview playing it follows
+  public function previewRetune(key: String)
+    {
+      if (previewing() == key)
+        previewSound.setVolume(Math.min(100, game.config.ambientVolume * render.SoundSources.gain(key)));
+    }
+
+// the kind the play button is playing now, or null
+  public function previewing(): String
+    {
+      return (previewSound != null &&
+        previewSound.playState == 1 ? previewKey : null);
     }
 
 // play given sound from the library
@@ -538,26 +632,49 @@ class Sounds
           return;
         }
       lastPlayedTS[key] = haxe.Timer.stamp();
-      var volume = game.config.effectsVolume;
-      if (opts.x != null && opts.y != null)
+      var volume:Float = (opts.volume != null ? opts.volume : game.config.effectsVolume);
+      var how = '';
+      if (opts.volume == null &&
+          opts.x != null &&
+          opts.y != null)
         {
-          var dist = game.playerArea.distance(opts.x, opts.y);
-          var radius = game.player.vars.listenRadius;// / 2;
-          if (dist < radius)
-            volume = Std.int(volume * (radius - dist) / radius);
-          else volume = Std.int(volume * 0.1); // make silent instead?
+          // the way round within the listen radius, else muffled through the wall (SoundPath); past
+          // the radius only an alert cue — police arriving, a call, a radio — is still faintly heard
+          var path = new SoundPath(game.player.vars.listenRadius);
+          path.search(game.area, SoundPath.doorsOf(game.area), game.playerArea.x, game.playerArea.y);
+          var frac = path.level(opts.x, opts.y);
+          if (frac <= 0 &&
+              (StringTools.startsWith(key, 'ai-arrive-') ||
+              StringTools.startsWith(key, 'ai-phone') ||
+              StringTools.startsWith(key, 'ai-radio')))
+            frac = 0.1;
+          volume *= frac;
+          how = ', path ' + Math.round(path.reach(opts.x, opts.y) * 10) / 10 + ', frac ' + Math.round(frac * 1000) / 1000;
+          if (volume <= 0)
+            return;
         }
       var id = key + '|' + Std.random(4); // make it so sounds can repeat
       if (game.player != null && game.player.vars.debugSoundEnabled)
-        game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')');
+        game.debug('Playing sound ' + id + ' (opts: ' + opts + '), vol:' + volume + ' (of ' + game.config.effectsVolume + ')' + how);
       SoundManager.destroySound(id); // clear previous sound
       var sound = SoundManager.createSound({
         id: id,
         url: AssetPath.resolve('sound/' + key + '.mp3'),
         volume: volume,
+        onfinish: (opts.ambient ? function () shots.remove(id) : null),
       });
+      if (opts.ambient)
+        shots[id] = sound;
       sound.play();
 #end
+    }
+
+// stop the area's ambient one-shots still playing
+  function stopShots()
+    {
+      for (s in shots)
+        s.stop();
+      shots.clear();
     }
 
 /**
@@ -643,7 +760,7 @@ typedef SMSoundOptions = {
   @:optional var id: String;
   @:optional var loops: Int;
   var url: String;
-  @:optional var volume: Int; // self-explanatory. 0-100, the latter being the max.
+  @:optional var volume: Float; // 0-100, the latter being the max; the HTML5 path takes a fraction
   @:optional var onfinish: Void -> Void; // callback function for "sound finished playing"
   @:optional var whileplaying: Void -> Void; // callback during play (position update)
 /**
@@ -672,11 +789,11 @@ typedef SMSoundOptions = {
 typedef SMSound = {
   var id: String;
   var url: String;
-  var volume(default, null): Int;
+  var volume(default, null): Float; // 0-100; the HTML5 path takes a fraction, so no rounding
   var paused(default, null): Bool;
   var muted(default, null): Bool;
   var playState: Int; // 0 - stopped, 1 - playing
-  public function setVolume(vol: Int): Void;
+  public function setVolume(vol: Float): Void;
   public function stop(): Void;
   public function play(): Void;
   public function mute(): Void;

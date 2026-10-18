@@ -18,4 +18,16 @@ typedef LampPost = {
   phase:Float, // flicker phase; 0 = a healthy bulb, burns steady and never sputters
   flick:Float, // this frame's flicker multiplier (1 = steady), published by LampLights for the fake ground shadows
   mul:Float,   // intensity multiplier on the pooled spotlight; 1 = a full street lamp, < 1 = a weak fixture
+  // never takes a shadow-casting slot: routed after every casting post and, if one still lands in a
+  // caster slot, its shadow is off and its map never re-renders. a facility room fixture throws no
+  // shadow anyone can see (0.000-0.006% of pixels) and cost 1.7-1.9 spot-map renders a frame on a walk
+  ?noCast:Bool,
+  // its light or what it lights MOVES (the lab's turning beacon, a lamp over a turning fan): a caster
+  // slot serving it re-renders its map every frame instead of only on a hand-off (LampLights.update)
+  ?moving:Bool,
+  // an AIMED beam's fake actor shadows (the lab's turning beacon): their reach in world units, and
+  // only an actor inside the cone's ground half-angle (LAMP_LIGHT.angle) round x/z -> tx/tz casts one.
+  // null = the round pool about x/z every other post throws, which for a beam high on a wall stopped
+  // well short of the floor its light lands on
+  ?beam:Float,
 };

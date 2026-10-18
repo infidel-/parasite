@@ -49,12 +49,13 @@ class Buildings {
     // area override: one dark image per type, no lit pair (slums shops are all boarded up)
     var styleFront   = st.shopFronts != null ? [for (p in st.shopFronts) Textures.loadTexture(p, 'wall')] : null;
     var styleFrontNd = st.shopFrontsNd != null ? [for (p in st.shopFrontsNd) Textures.loadTexture(p, 'wall')] : null;
-    var grimeTex = [for (p in TEXTURES.grime) Textures.loadTexture(p, 'wall')]; // near-ground street grime (alpha hand-painted into the source)
     // premultiplied alpha: the hand-painted grime sources carry saturated junk RGB under
     // near-transparent texels (paint-editor leftover); with straight alpha, bilinear/minified
     // filtering bleeds that colour in as vivid cyan/magenta specks on dark walls at distance.
     // premultiply zeroes a transparent texel's colour contribution, killing the bleed.
-    for (g in grimeTex) { g.premultiplyAlpha = true; g.wrapT = THREE.ClampToEdgeWrapping; g.needsUpdate = true; }
+    var grimeTex = [for (p in TEXTURES.grime) Textures.loadPremultiplied(p, 'wall')]; // near-ground street grime (alpha hand-painted into the source)
+    for (g in grimeTex)
+      g.wrapT = THREE.ClampToEdgeWrapping;
     // ONE shared material per grime variant (no per-face texture clone). Horizontal tiling is
     // baked into each quad's UVs instead of texture.repeat.
     var grimeMat = [for (gv in 0...grimeTex.length)
@@ -96,8 +97,7 @@ class Buildings {
       var dWorld = b.d * CELL;
       var center = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
 
-      var roof = roofBases[b.facade % roofBases.length].clone();
-      roof.needsUpdate = true;
+      var roof = Textures.share(roofBases[b.facade % roofBases.length]);
       // world-aligned roof tiling: a global ROOF_TILE grid with world-position phase,
       // so abutting same-height strips of a T/L building share one continuous grid
       // instead of each tiling from its own corner at its own rounded tile size
@@ -135,7 +135,7 @@ class Buildings {
       function faceMat(dir:Int, faceLen:Float):MeshLambertMaterial {
         var isWorn = Geom.isWornFace(b, dir);
         var base = isWorn ? worn : clean;
-        var t = base.clone(); t.needsUpdate = true;
+        var t = Textures.share(base);
         // cell-lock: repeat = (whole cells on this face) × windows-per-cell → always integer, whole windows
         var rh = cellLock ? Math.round(faceLen / CELL) * wpc : imax(1, Math.round(faceLen / RenderConfig.WALL_TILE));
         t.repeat.set(rh, wallH);
@@ -148,7 +148,7 @@ class Buildings {
       // (per-cell nd tiling + per-cell door overlay are dormant for this test)
       var shop = b.shop >= 0;
       function shopFace(dir:Int, faceLen:Float):MeshLambertMaterial {
-        var t = shopWornTex.clone(); t.needsUpdate = true;
+        var t = Textures.share(shopWornTex);
         t.repeat.set(imax(1, Math.round(faceLen / RenderConfig.WALL_TILE)), wallH);
         return tag(new MeshLambertMaterial({ map: t }),
           'shop-worn', 'shop wall (worn)', TEXTURES.shopWorn);
@@ -253,8 +253,12 @@ class Buildings {
             'door-metal', 'metal door', TEXTURES.doorMetal);
           var mesh = new Mesh(new PlaneGeometry(doorW, doorH), mat);
           mesh.rotation.y = f.rotY;
-          mesh.position.set(f.fx, doorH / 2, f.fz);
+          // a hair off the wall, as Entrances' doors: flush, a ray hit the wall and the door at one
+          // distance and the probe could never pick the door
+          mesh.position.set(f.fx + Math.sin(f.rotY) * 0.01, doorH / 2, f.fz + Math.cos(f.rotY) * 0.01);
           scene.add(mesh);
+          // published like a pedestrian door, so the street props and the wall decals keep off it
+          WorldCtx.doorSpans.push({ b: b, dir: f.dir, lo: -doorW / 2, hi: doorW / 2 });
         }
       }
 

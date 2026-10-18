@@ -5,6 +5,7 @@ import citygen.CityConfig.cellToWorld;
 import citygen.CityModel.Building;
 import render.RenderConfig;
 import render.Poly.tag;
+import render.Textures;
 import render.world.Geom;
 import render.world.WorldCtx;
 
@@ -106,8 +107,7 @@ class Parapets {
       var slice = (w < d ? w : d) / tileW;
       var VTILE = 1.5;
       inline function mat(ru:Float, rv:Float, rot:Float = 0, offX:Float = 0, offY:Float = 0, cy:Float = 0.5):MeshLambertMaterial {
-        var t = tex.clone();
-        t.needsUpdate = true;
+        var t = Textures.share(tex);
         t.center.set(0.5, cy);
         t.repeat.set(ru, rv);
         t.rotation = rot;
@@ -117,8 +117,7 @@ class Parapets {
       var VR = rimH / VTILE;
       var CT = RenderConfig.TEXTURES.coping;
       inline function sideMat(worldStart:Float, len:Float, uDir:Int, cls:String, name:String):MeshLambertMaterial {
-        var t = tex.clone();
-        t.needsUpdate = true;
+        var t = Textures.share(tex);
         t.wrapS = t.wrapT = THREE.RepeatWrapping;
         t.center.set(0, 1);
         if (uDir > 0) { t.repeat.set(len / tileW, VR); t.offset.set(worldStart / tileW, vOffset); }
@@ -135,8 +134,7 @@ class Parapets {
       }
       var isX = w >= d;
       var end = tag(mat(slice, 1), '$prefix-end', '$label end', CT);
-      var flatT = tex.clone();
-      flatT.needsUpdate = true;
+      var flatT = Textures.share(tex);
       flatT.wrapS = flatT.wrapT = THREE.RepeatWrapping;
       if (isX) {
         var x0 = role.cx - w / 2;
@@ -174,8 +172,7 @@ class Parapets {
       inline function rep(m:Float):Float { var r = m / RenderConfig.WALL_TILE; return r >= 1 ? Math.round(r) : r; }
       inline function faceMat(dir:Int, ru:Float, rv:Float):MeshLambertMaterial {
         var wn = dir >= 0 && Geom.isWornFace(b, dir);
-        var t = (wn ? worn : clean).clone();
-        t.needsUpdate = true;
+        var t = Textures.share(wn ? worn : clean);
         t.repeat.set(ru, rv);
         // style-driven, and wrapped: a style may declare more facade slots than the residential
         // naming/texture arrays hold, and these were indexing both of them raw

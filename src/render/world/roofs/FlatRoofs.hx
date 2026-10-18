@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import citygen.CityModel.Building;
 import render.RenderConfig;
 import render.Poly.tag;
+import render.Textures;
 import render.world.Geom;
 import render.world.WorldCtx;
 
@@ -86,8 +87,7 @@ class FlatRoofs {
     var ph = CityConfig.FLOOR_H * (1.4 + ((b.col * 53 + b.row * 131) % 2) * 0.6);
     var px = r.x, pz = r.z, py = b.h + ph / 2;
     var geo = new BoxGeometry(pw, ph, pd);
-    var t = penthouseTex.clone();
-    t.needsUpdate = true;
+    var t = Textures.share(penthouseTex);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.repeat.set(Geom.imax(1, Math.round(pw / RenderConfig.WALL_TILE)), Geom.imax(1, Math.round(ph / RenderConfig.WALL_TILE)));
     var mat = tag(new MeshLambertMaterial({ map: t }),

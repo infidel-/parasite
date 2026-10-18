@@ -84,8 +84,27 @@ class Elevator extends AreaObject
       if (!game.playerArea.cultLeavePre(action))
         return false;
 
+      // the underground lab's freight lift has its own departure, and in 3D the car carries the
+      // player up the shaft first: the leave and the action's energy and turn then run at the top,
+      // and the action reports itself interrupted so PlayerArea spends nothing now
+      var lab = (game.area.typeID == AREA_UNDERGROUND_LAB);
+      game.scene.sounds.play(lab ? 'lab/depart' : 'object-elevator');
+      if (lab &&
+          game.scene.view3d.liftDepart(function()
+            {
+              leave();
+              game.player.actionEnergy(action);
+              game.playerArea.actionPost();
+            }))
+        return false;
+      leave();
+      return true;
+    }
+
+// leave the area for the region
+  function leave()
+    {
       var leavingAreaID = game.area.id;
-      game.scene.sounds.play('object-elevator');
       if (missionID >= 0)
         game.log("You leave the mission site.");
       else
@@ -97,8 +116,6 @@ class Elevator extends AreaObject
         game.goals.complete(GOAL_ENTER_SEWERS);
       else
         game.region.removeArea(leavingAreaID);
-
-      return true;
     }
 
   public override function known() :Bool

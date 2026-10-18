@@ -28,8 +28,9 @@ class PolyProbe {
     // showing the clicked triangle's UVs over the texel grid, plus a caption strip
     var box = Browser.document.createElement('div');
     box.style.cssText = 'position:fixed;top:8px;right:8px;z-index:320;display:none;pointer-events:none;font:11px monospace';
-    // one labeled pixelated canvas pane; returns its 2d ctx + canvas + label (hidden when unused)
-    function mkPane(title:String, border:String):{ x:Dynamic, c:Dynamic, lbl:Dynamic } {
+    // one labeled pixelated canvas pane; returns its 2d ctx + canvas + label + the source-path strip
+    // UNDER the canvas (all three hidden together when the material has no such map)
+    function mkPane(title:String, border:String):{ x:Dynamic, c:Dynamic, lbl:Dynamic, src:Dynamic } {
       var lbl = Browser.document.createElement('div');
       lbl.textContent = title;
       lbl.style.cssText = 'background:#000c;color:#cde;padding:2px 6px';
@@ -39,9 +40,25 @@ class PolyProbe {
       c.style.cssText = 'display:block;border:1px solid ${border};background:#111;image-rendering:pixelated';
       var x:Dynamic = c.getContext('2d');
       x.imageSmoothingEnabled = false; // show raw texels, not a blurred interpolation
+      var src = Browser.document.createElement('div');
+      src.style.cssText = 'background:#000c;color:#8ab;padding:2px 6px;max-width:${TEX}px;word-break:break-all';
       box.appendChild(lbl);
       box.appendChild(c);
-      return { x: x, c: c, lbl: lbl };
+      box.appendChild(src);
+      return { x: x, c: c, lbl: lbl, src: src };
+    }
+
+// which art a texture is, for the strip under its pane. `name` is what render.Textures stamps at
+// load and render.Models stamps on every map a glb carries, and it is the only thing that survives
+// the pipeline: a cropped or chroma-keyed variant hands three.js a CANVAS, so image.src is gone. the
+// src fallback is for anything neither of those two built
+    function texName(t:Dynamic):String {
+      if (t == null)
+        return '(no map)';
+      if (t.name != null && t.name != '')
+        return t.name;
+      var s:String = t.image != null && t.image.src != null ? t.image.src : '';
+      return s == '' ? '(canvas)' : s.substr(s.lastIndexOf('/') + 1);
     }
     var basePane = mkPane('base map', '#6cf');
     var emisPane = mkPane('emissive map', '#fc6');
@@ -51,6 +68,10 @@ class PolyProbe {
     Browser.document.body.appendChild(box);
 
     inline function active() return Tools.mode == 'poly';
+    Tools.legend('poly',
+      'P  leave the polygon probe        T  paint this prop\'s emissive map\n' +
+      'LMB  pick a face -> 3D highlight + base/emissive UV panes, report -> clipboard\n' +
+      'G  classify EVERY face of the picked mesh by emissive footprint (red emits)');
 
 // drop the current 3D highlight + hide the texture view
     function clear():Void {
@@ -308,6 +329,13 @@ class PolyProbe {
       ndc.x = ((ev.clientX - r.left) / r.width) * 2 - 1;
       ndc.y = -((ev.clientY - r.top) / r.height) * 2 + 1;
       ray.setFromCamera(ndc, camera);
+      // an instanced batch caches the sphere its raycast tests first off the instances packed at the
+      // FIRST pick, and render.Models.cull repacks them every frame, so once the camera moved a batch
+      // missed every later pick and the ground behind it answered instead: rebuild it on every pick
+      getScene().traverse(function(o) {
+        if ((cast o).isInstancedMesh)
+          (cast o : InstancedMesh).boundingSphere = null;
+      });
       for (h in ray.intersectObjects(getScene().children, true)) {
         var face:Dynamic = h.face;
         var obj = h.object;
@@ -334,27 +362,49 @@ class PolyProbe {
         // one shared flipY (from whichever map exists) so an absent base map can't mirror the
         // emissive pane against it — maps + emissive of a material share a vertical convention
         var bmap:Dynamic = mat != null ? mat.map : null;
+        // a render.corp.CorpMerge mesh samples a texture array by a per-vertex `layer`, so its real
+        // map is that layer's source and not the material's own
+        var lm:Array<Dynamic> = (cast obj).userData.layerMaps;
+        if (lm != null)
+          bmap = lm[Std.int(g.attributes.layer.getX(a))];
         var emap:Dynamic = mat != null ? mat.emissiveMap : null;
         var refTex:Dynamic = bmap != null ? bmap : emap;
         var flipY:Bool = refTex != null && refTex.flipY == false ? false : true;
         paintTex(basePane.x, bmap, flipY, a, b, c, g.attributes.uv);
         paintTex(emisPane.x, emap, flipY, a, b, c, g.attributes.uv);
+        basePane.src.textContent = texName(bmap);
+        emisPane.src.textContent = texName(emap);
         emisPane.c.style.display = emap != null ? 'block' : 'none';
         emisPane.lbl.style.display = emap != null ? 'block' : 'none';
+        emisPane.src.style.display = emap != null ? 'block' : 'none';
         // caption: mesh + face (+ instance) + base/emissive texture facts + the 3 raw UVs
-        var tex:Dynamic = mat != null ? mat.map : null;
+        var tex:Dynamic = bmap;
         inline function dimOf(t:Dynamic, none:String)
           return t != null && t.image != null ? (t.image.width + 'x' + t.image.height) : none;
         var flip = tex != null ? (tex.flipY == false ? 'flipY=0' : 'flipY=1') : '';
         inline function uvs(i:Int) return round3(g.attributes.uv.getX(i)) + ',' + round3(g.attributes.uv.getY(i));
-        cap.textContent =
+        // the face's centroid in the MESH's own coordinates, which is what the glb and the build
+        // script that made it are written in — a face index alone says which triangle, this says
+        // which PART
+        var p:Dynamic = g.attributes.position;
+        inline function mid(f:Dynamic->Int->Float) return round3((f(p, a) + f(p, b) + f(p, c)) / 3);
+        var local = mid(function(q, i) return q.getX(i)) + ',' +
+          mid(function(q, i) return q.getY(i)) + ',' +
+          mid(function(q, i) return q.getZ(i));
+        var report =
           'mesh: ' + (obj.name != '' ? obj.name : '(unnamed)') + '   face #' + h.faceIndex +
           (instanceId >= 0 ? '   inst#' + instanceId : '') + '\n' +
-          'base: ' + dimOf(tex, 'no map') + ' ' + flip + '\n' +
-          'emis: ' + dimOf(emap, 'none') + '\n' +
+          'local xyz ' + local + '\n' +
+          'base: ' + texName(bmap) + ' ' + dimOf(tex, 'no map') + ' ' + flip + '\n' +
+          'emis: ' + texName(emap) + ' ' + dimOf(emap, 'none') + '\n' +
           'uv a ' + uvs(a) + '\n' +
           'uv b ' + uvs(b) + '\n' +
           'uv c ' + uvs(c);
+        // a click is a user gesture, so the async clipboard API is allowed here — the whole point
+        // of the probe is to be able to hand a face to someone else, and retyping it off the screen
+        // is where that falls down
+        StreetPerf.copyText(report);
+        cap.textContent = report + '\n(copied)';
         box.style.display = 'block';
         return;
       }

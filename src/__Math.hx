@@ -7,6 +7,16 @@ import ai.AI;
 class __Math
 {
   public static var game: Game; // game link (set on init)
+  public static inline var HOST_LOW_TURNS = 10; // host survival turns at or under which it reads as dying
+
+
+// turns the host survives at its current full drain plus `extra` per turn (a process not yet
+// running, priced by the window that would start it); -1 when the host is not losing energy
+  public static function hostSurvivalTurns(extra: Int): Int
+    {
+      var drain = extra - fullHostEnergyPerTurn(1);
+      return (drain > 0 ? Std.int(game.player.host.energy / drain) : -1);
+    }
 
 
 // parasite energy per turn (spent or acquired)
@@ -22,6 +32,11 @@ class __Math
       // but is restored when free habitat energy is available
       else if (game.location == LOCATION_AREA && game.area.isHabitat)
         energy = game.area.habitat.parasiteEnergyRestored * time;
+
+      // barely any while hiding inside an object (objects.Dumpster), still and out of sight
+      else if (game.location == LOCATION_AREA &&
+          game.playerArea.isHidden())
+        energy = -1;
 
       // lose some energy
       // do not multiple by time since we account for that in the player vars

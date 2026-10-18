@@ -3,7 +3,6 @@
 package objects;
 
 import game.Game;
-import lighting.AtmosphereLightProfiles;
 
 class Biomineral extends HabitatObject
 {
@@ -44,7 +43,7 @@ class Biomineral extends HabitatObject
 
 // the habitat's whole balance sheet, which this organ is the source of. it used to be an onMoveTo
 // log line, and blocking the tile above is what took that away — there is no longer any moving onto
-// it. the Ctrl-hover tooltip is a better home anyway: these are numbers you check, not an event
+// it. the hover tooltip is a better home anyway: these are numbers you check, not an event
   public override function getTooltipRows(): Array<objects.AreaObject.TooltipRow>
     {
       var h = game.area.habitat;
@@ -66,18 +65,6 @@ class Biomineral extends HabitatObject
           value: '+' + h.parasiteHealthRestored + ' / turn',
         },
       ];
-    }
-
-// get static atmosphere light emitted by this object
-  public override function getAtmosphereLight(): _AtmosphereLightMeta
-    {
-      return AtmosphereLightProfiles.HABITAT_BIOMINERAL;
-    }
-
-// get atmosphere light stamp kind used by this object
-  public override function getAtmosphereLightKind(): String
-    {
-      return 'habitat-biomineral';
     }
 
 /*

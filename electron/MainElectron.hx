@@ -267,6 +267,26 @@ class MainElectron
       return null;
     }
 
+// every .mp3 under the sound dir as a rel forward-slash path: the shipped flat files plus the
+// per-area folders `make sounds` writes (sound/corp/vent1.mp3 -> 'corp/vent1.mp3')
+  static function listSoundFiles(dir: String, prefix: String): Array<String>
+    {
+      var out: Array<String> = [];
+      var entries: Array<String>;
+      try { entries = Fs.readdirSync(dir); }
+      catch (e: Dynamic) { return out; }
+      for (name in entries)
+        {
+          var rel = (prefix.length == 0) ? name : (prefix + '/' + name);
+          if (StringTools.endsWith(name, '.mp3'))
+            out.push(rel);
+          else if (name.indexOf('.') < 0 &&
+              Fs.statSync(Path.join(dir, name)).isDirectory())
+            out = out.concat(listSoundFiles(Path.join(dir, name), rel));
+        }
+      return out;
+    }
+
 // recursively walk <rootDir>/assets/ and collect rel forward-slash paths
 // for files with mod-allowed extensions (.png, .mp3). returns [] if no assets dir
   static function walkAssets(rootDir: String): Array<String>
@@ -434,9 +454,15 @@ class MainElectron
 
 // best-effort require of steamworks.js native module. failure = log + null.
 // expected misses: dep not installed, ABI mismatch with current Electron build.
-// caller must check steamworks != null before steamInit()
+// caller must check steamworks != null before steamInit(). a .steam-disabled sentinel in cwd (game
+// install dir, like .debug) skips it outright: no overlay, no init, no workshop, no steam_appid.txt
   static function loadSteamworks()
     {
+      if (Fs.existsSync(Path.join(Node.process.cwd(), '.steam-disabled')))
+        {
+          mlog('[steam] .steam-disabled found, steam not initialised');
+          return;
+        }
       try {
         steamworks = js.Syntax.code("require('steamworks.js')");
         mlog('[steam] steamworks.js loaded');
@@ -451,6 +477,7 @@ class MainElectron
 // Steam client launching the binary (per mod-design.md §12 dev-build note)
   static function writeSteamAppidFile()
     {
+      if (steamworks == null) return;
       try {
         var exeDir = Path.dirname(App.getPath('exe'));
         var p = Path.join(exeDir, 'steam_appid.txt');
@@ -870,14 +897,7 @@ class MainElectron
 
       // sound asset listing
       IpcMain.on('host:assets:listSounds', function(e) {
-        try
-          {
-            untyped e.returnValue = Fs.readdirSync(soundDir());
-          }
-        catch (err: Dynamic)
-          {
-            untyped e.returnValue = [];
-          }
+        untyped e.returnValue = listSoundFiles(soundDir(), '');
       });
 
       // window control
@@ -889,6 +909,23 @@ class MainElectron
       });
       IpcMain.handle('host:fullscreen:off', function(e) {
         win.fullScreen = false;
+      });
+      // minimise/restore, for driving the game over CDP: a minimised window stops compositing, so
+      // every PAGE call (evaluate_script, take_screenshot) hangs until the debugger's own timeout
+      // while browser-level calls still answer. That makes it useful — the window can be parked out
+      // of the way through a build and woken for the next measurement — and makes it a trap, so
+      // docs/debug-surface.md carries the rule: raise BEFORE touching the page, never poke it down
+      IpcMain.handle('host:window:minimize', function(e) {
+        win.minimize();
+      });
+      // restore() alone leaves the window unfocused on some window managers, and an unfocused window
+      // throttles to ~1fps — which silently corrupts any timing measured right after the wake
+      IpcMain.handle('host:window:restore', function(e) {
+        win.restore();
+        win.focus();
+      });
+      IpcMain.handle('host:window:isMinimized', function(e) {
+        return win.isMinimized();
       });
 
       // debug-only writes: handlers always registered, gated at runtime.
@@ -973,11 +1010,11 @@ class MainElectron
             {
               trace(e);
             }
-          var isFullscreen = false;
-          if (obj != null)
-            {
-              isFullscreen = (obj.fullscreen != null && obj.fullscreen != '0');
-            }
+          // fullscreen by default; only an explicit saved '0' opens windowed
+          var isFullscreen = true;
+          if (obj != null &&
+              obj.fullscreen != null)
+            isFullscreen = (obj.fullscreen != '0');
 
           // create main window
 //          var isClassic = App.commandLine.hasSwitch('classic');
@@ -1051,5 +1088,16 @@ class MainElectron
       App.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
       App.commandLine.appendSwitch('disable-renderer-backgrounding');
       App.commandLine.appendSwitch('disable-background-timer-throttling');
+      // persist compileAsync-warmed shader programs to userData/GPUCache. without it a link that
+      // finishes in the background is resolved by the decoder's MakeCurrent before chromium scopes
+      // the disk-write callback, so most warm programs land in GPU memory only and recompile next
+      // launch (measured: cold boot warm 8.4s vs 3.9s fully cached)
+      App.commandLine.appendSwitch('enable-features', 'ANGLEPerContextBlobCache');
+      // both shader caches 6 MB by default, and the disk one was full: it evicts by last WRITE and a
+      // hit never writes, so the boot set (written once, read every launch) went first and the next
+      // boot compiled cold (12s vs 6s to the menu). the memory cache is filled from disk at launch,
+      // so it has to be at least as big
+      App.commandLine.appendSwitch('gpu-disk-cache-size-kb', '65536');
+      App.commandLine.appendSwitch('gpu-program-cache-size-kb', '65536');
     }
 }

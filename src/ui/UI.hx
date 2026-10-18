@@ -160,14 +160,6 @@ class UI
 // key releases
   function onKeyUp(e: KeyboardEvent)
     {
-      if (e.key == 'Control' &&
-          game.scene.controlPressed)
-        {
-          game.scene.controlPressed = false;
-          game.scene.mouse.update(true);
-          hud.updateAreaTooltip();
-        }
-
       if (hud.consoleVisible())
         return;
 
@@ -211,23 +203,22 @@ class UI
     {
       // street-debug mode owns the keyboard (fly cam / editor / inspector, on their own window
       // listeners) — suppress ALL game input while it is active. backtick toggles it off via
-      // render.View's own listener, so exiting still works
+      // render.View's own listener, so exiting still works. sound mode is the exception: its levels
+      // follow the player, so the player has to be able to walk while it is up — all but X, which
+      // toggles the mode and would otherwise leave the host, and S, which flies the camera and would
+      // otherwise shoot the target
       if (game.location == LOCATION_AREA &&
-          game.scene.view3d != null &&
-          game.scene.view3d.debugActive())
+          game.scene.view3d.debugActive() &&
+          (!render.SoundDebug.active() ||
+          e.code == 'KeyS' ||
+          e.code == 'KeyX'))
         return;
 
-      // ctrl enters AI-inspect (magnifier) mode, but not while the console is open
-      if (e.key == 'Control' &&
-          !game.scene.controlPressed &&
-          !hud.consoleVisible())
-        {
-          game.scene.controlPressed = true;
-          game.scene.mouse.update(true);
-          hud.updateAreaTooltip();
-        }
-
       if (hud.consoleVisible())
+        return;
+      // the lab's lift is carrying the player out
+      if (game.location == LOCATION_AREA &&
+          game.scene.view3d.departing())
         return;
 //      trace('code:' + e.code + ' alt:' + e.altKey + ' ctrl:' + e.ctrlKey + ' shift:' + e.shiftKey + ' key:' + e.key);
 
@@ -291,7 +282,6 @@ class UI
             {
               if (!e.shiftKey &&
                   game.location == LOCATION_AREA &&
-                  game.scene.view3d != null &&
                   game.scene.view3d.running)
                 game.scene.view3d.toggleTactical();
               else hud.toggle();
@@ -744,10 +734,10 @@ class UI
       if (cannotMove())
         return false;
 
-      // street-debug mode owns numpad/arrows for the 3D fly camera
+      // street-debug mode owns numpad/arrows for the 3D fly camera (not in sound mode: see onKey)
       if (game.location == LOCATION_AREA &&
-          game.scene.view3d != null &&
-          game.scene.view3d.debugActive())
+          game.scene.view3d.debugActive() &&
+          !render.SoundDebug.active())
         return false;
 
       // area mode
@@ -826,6 +816,12 @@ class UI
       var stateChanged = (_state != vstate);
       if (stateChanged)
         game.scene.clearPath();
+      // a window stops a repeating action too, or it keeps passing turns behind the window
+      // (no playerArea yet at the boot menu: it is built on the first restart)
+      if (stateChanged &&
+          vstate != UISTATE_DEFAULT &&
+          game.playerArea != null)
+        game.playerArea.clearAction();
       var wasWindowOpen = (_state != UISTATE_DEFAULT);
       if (_state != UISTATE_DEFAULT)
         {
@@ -868,8 +864,27 @@ class UI
         return;*/
       uiQueue.add(ev);
 
-      // no windows open, work on event immediately
-      if (state == UISTATE_DEFAULT)
+      // no windows open, work on event immediately (unless held for an area entry)
+      if (state == UISTATE_DEFAULT &&
+          !uiQueuePaused)
+        closeWindow();
+    }
+
+// hold queued windows (area entry: they wait for the 3D reveal instead of popping under the fade
+// and the warmup screen)
+  public function pauseQueue()
+    {
+      uiQueuePaused = true;
+    }
+
+// release held windows, opening the first one if the UI is idle
+  public function resumeQueue()
+    {
+      if (!uiQueuePaused)
+        return;
+      uiQueuePaused = false;
+      if (state == UISTATE_DEFAULT &&
+          uiQueue.length > 0)
         closeWindow();
     }
 

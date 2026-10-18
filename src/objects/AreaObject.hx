@@ -3,12 +3,11 @@
 package objects;
 
 import ai.AI;
-import _AtmosphereLightMeta;
 import entities.ObjectEntity;
 import game.Game;
 import game._Item;
 
-// one key/value row of an object's Ctrl-hover tooltip (see ui.AreaTooltip). plain strings and not
+// one key/value row of an object's hover tooltip (see ui.AreaTooltip). plain strings and not
 // numbers: a row is whatever that object wants to say about itself, and the panel only lays it out
 typedef TooltipRow = {
   name: String,  // left-hand key
@@ -84,18 +83,10 @@ class AreaObject extends _SaveObject
     {
       if (entity != null)
         return;
-      entity = new ObjectEntity(this, game, x, y);
+      entity = new ObjectEntity(game, x, y);
       entity.setIcon(imageName, imageCol, imageRow);
-      if (type == 'decorationExt')
-        {
-          var o: DecorationExt = cast this;
-          entity.scale = o.scale;
-          entity.angle = o.angle;
-          entity.dx = o.dx;
-          entity.dy = o.dy;
-        }
       // a loaded body crops the dead actor's atlas cell, so restore its gender atlas and skin tone
-      else if (type == 'body')
+      if (type == 'body')
         {
           var b: BodyObject = cast this;
           entity.isMaleAtlas = b.isMaleAtlas;
@@ -155,7 +146,7 @@ class AreaObject extends _SaveObject
   public dynamic function getLinkedAI(): Array<AI>
     { return []; }
 
-// dynamic: extra rows for this object's Ctrl-hover tooltip, beneath its name. only asked when the
+// dynamic: extra rows for this object's hover tooltip, beneath its name. only asked when the
 // player knows what the object is — an unknown one has nothing to say about itself
   public dynamic function getTooltipRows(): Array<TooltipRow>
     { return []; }
@@ -233,18 +224,6 @@ class AreaObject extends _SaveObject
 // collected across the tile and grouped into the pickup submenu when several exist. default none
   public dynamic function getItemActions(): Array<_PlayerAction>
     { return []; }
-
-// get static atmosphere light emitted by this object
-  public dynamic function getAtmosphereLight(): _AtmosphereLightMeta
-    { return null; }
-
-// get atmosphere light stamp kind used by this object
-  public dynamic function getAtmosphereLightKind(): String
-    { return type; }
-
-// check whether this object light drives projected shadows
-  public function isProjectedShadowEmitter(): Bool
-    { return getAtmosphereLight() != null; }
 
 // dynamic: called when the object decays by timer
   public dynamic function onDecay()

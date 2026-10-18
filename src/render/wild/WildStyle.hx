@@ -60,6 +60,10 @@ class WildStyle
   // makes the extra polygons pay: dry patches and damp hollows drift across the surface with no
   // second texture, no splat shader and no extra draw call
   public static inline var TINT_AMP = 0.18;
+  // the hollow shade (render.wild.WildHeight.shade): how dark the very bottom of a trough goes against
+  // the crest, as a fraction taken off. on the same vertex colour channel as the mottle and multiplied
+  // into it
+  public static inline var SHADE_DEPTH = 0.6;
 
   // --- the grass layer (render.wild.WildGrass) ---
   // the tuft COUNT per cell and the tuft HEIGHT are per-band (render.wild.WildBand): open plains grow
@@ -78,11 +82,12 @@ class WildStyle
 
   // --- the props (render.wild.WildProps) ---
   // `h` IS NOT A FREE NUMBER: render.Models.instanced scales a prop by HEIGHT ALONE, so a row's world
-  // WIDTH is `h * (widest / height)` of the glb's own bbox. measured, in that order: conifer 0.34,
-  // broadleaf 0.84, broadleaf-full 0.71, dead 0.47, boulder 3.67, cluster 1.31, bush 1.91,
-  // bramble 2.86. the boulder is the reason this is written down — at the 1.5 it went in with, a 3.67
-  // aspect made it 5.5 units across, well over a cell, and the bush's first mesh came back at 25
-  // (see its models.json note).
+  // WIDTH is `h * (widest / height)` of the glb's own bbox. measured on the hand-modelled set, in
+  // table order: conifer 0.44, bare broadleaf 0.91, broadleaf 0.71, dead 0.52, boulder 3.74, cluster
+  // 1.34, dome shrub 1.82, bramble 2.86, log 3.80, outcrop 2.05, large 1.69, rail 2.50, upright shrub
+  // 1.65. each rebuild was sized to the aspect of the TRELLIS glb it replaced, so no `h` or `r` moved.
+  // the boulder is the reason this is written down — at the 1.5 it went in with, a 3.67 aspect made
+  // it 5.5 units across, well over a cell.
   //
   // the trees are 25% taller than they went in at (6.0 / 5.2), by request. that puts the conifer 4.8
   // world units across and the broadleaf 5.5, both over the 4-unit cell — which is CORRECT for a
@@ -94,11 +99,12 @@ class WildStyle
   // that 3 units is also a CLEARANCE the canopies have to respect, which the first pass missed: a
   // crown that skirts down the trunk puts leaves at head height however tall the tree is, and the
   // player walks into the green. the fix belongs in the MODEL — a crown confined to the top of its
-  // own bbox — and `h` then scales the clearance with it. see the broadleaf-full row below, which is
+  // own bbox — and `h` then scales the clearance with it. see the in-leaf broadleaf row below, which is
   // the only `h` here set by that number rather than by look
+
   public static var PROPS:Array<WildProp> = [
     {
-      path: RenderConfig.MODELS.wildTreeConifer,
+      path: RenderConfig.MODELS.wildTreeConiferHand,
       h: 7.5,
       r: 0.30,
       jitter: 0.20,
@@ -110,18 +116,15 @@ class WildStyle
       jitter: 0.22,
     },
     // the only prop out here whose `h` is set by CLEARANCE rather than by look, and the tallest thing
-    // in the area because of it. measured on the glb by binning vertices along Y: a bare trunk holding
-    // 13-16% of the max radius up to 0.30 of the height, then the crown flares to 59% at 0.35 and is
-    // at 90% by 0.45. so the height an actor walks under is 0.35 * h, and 3.0 of that is spoken for by
-    // the actor billboard — 9.5 leaves 3.32. the original mesh had no such number at all: its canopy
-    // skirted down to ~22% of its height and the player walked head-first into the foliage.
+    // in the area because of it. the hand-modelled crown closes in a cap 3.33 units up
+    // (models-src/wild/broadleaf_build.py: the bole is bare through the bottom 0.35 of the height), so
+    // 9.5 leaves the 3.0 actor billboard clear. the first generated mesh had no such number at all:
+    // its canopy skirted down to ~22% of its height and the player walked head-first into the foliage.
     //
     // being TALL is not what costs footprint here, the bbox is: at aspect 0.71 this is the narrowest
-    // tree of the four for its height, so 9.5 draws 6.7 world units across — LESS than the 7.15 the
-    // first replacement took at h 6.5, and less than the 6.3 of the original at 5.8 is close to.
-    // models.json carries the whole record, including the two retired meshes in Unused/
+    // tree of the four for its height, so 9.5 draws 6.7 world units across
     {
-      path: RenderConfig.MODELS.wildTreeBroadleafFull,
+      path: RenderConfig.MODELS.wildTreeBroadleafHand,
       h: 9.5,
       r: 0.37,
       jitter: 0.22,
@@ -145,12 +148,12 @@ class WildStyle
       jitter: 0.25,
     },
     {
-      path: RenderConfig.MODELS.wildBushLow,
+      path: RenderConfig.MODELS.wildBushDomeHand,
       h: 1.1,
       r: 0.80,
       jitter: 0.28,
     },
-    // the second bush, and the widest prop out here: aspect 2.86 against bush-low's 1.91, so a lower
+    // the second bush, and the widest prop out here: aspect 2.86 against the dome's 1.82, so a lower
     // `h` still draws WIDER — 2.9 world units across at 1.0. that is the shape difference doing the
     // work, a sprawling bramble beside a rounded scrub, rather than two domes at two sizes
     {
@@ -219,6 +222,14 @@ class WildStyle
       r: 1.25,
       jitter: 0.0,
     },
+    // the park's second hand-modelled shrub, three canes each with a crown — the dome's partner on a
+    // bush tile, as it is in render.facility.FacilityGround.BUSHES. appended so no index above moves
+    {
+      path: RenderConfig.MODELS.wildBushUprightHand,
+      h: 1.13,
+      r: 0.80,
+      jitter: 0.28,
+    },
   ];
   // indices into PROPS, named where the model builder picks them. the four trees are FIRST and in
   // order, because render.wild.WildModel maps Const.TILE_TREE1 + 0..3 straight onto them
@@ -228,7 +239,7 @@ class WildStyle
   public static inline var TREE_DEAD = 3;
   public static inline var ROCK_BOULDER = 4;
   public static inline var ROCK_CLUSTER = 5;
-  public static inline var BUSH_LOW = 6;
+  public static inline var BUSH_DOME = 6;
   public static inline var BUSH_BRAMBLE = 7;
   public static inline var ROCK_BOULDER_SMALL = 8;
   public static inline var ROCK_CLUSTER_SMALL = 9;
@@ -236,6 +247,7 @@ class WildStyle
   public static inline var ROCK_OUTCROP = 11;
   public static inline var ROCK_LARGE = 12;
   public static inline var GUARD_RAIL = 13;
+  public static inline var BUSH_UPRIGHT = 14;
   // WHICH of these a bush, rock or tree tile means is per-band (render.wild.WildBand) — the band holds
   // weighted lists of these indices rather than a chance constant per pair
   // the small rocks are the full-size ones at a tenth of their height, and the number is literal —
@@ -246,7 +258,7 @@ class WildStyle
   // is made of them, a forest floor mostly is not
   // instance cull radius, in world units: a margin around a prop's centre so nothing pops at the
   // frame edge. sized to the tallest prop, since render.Models.cull tests ONE sphere radius for every
-  // batch. it went 7.0 -> 9.0 with the broadleaf-full's h, which is the standing tie: raise the
+  // batch. it went 7.0 -> 9.0 with the in-leaf broadleaf's h, which is the standing tie: raise the
   // tallest prop and this has to follow it or that prop pops in at the frame edge
   public static inline var PROP_CULL_R = 9.0;
 
@@ -535,6 +547,9 @@ class WildStyle
     px: 8,
     blur: 0.5,
     wallFade: 0.5,
+    // 0: out here a blocker is a boulder or a thicket stamped on a whole cell, with no thin wall line
+    // running through it, so its reveal has nothing to be pulled back off
+    blockerInset: 0.0,
     // the wilderness has no always-solid border ring the way a tunnel does — the turf is walkable right
     // to the edge — so this does dim the outermost cell of real ground. kept anyway: past that cell the
     // area simply stops, and a lit rim meeting the background on a hard line is exactly the failure this

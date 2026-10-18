@@ -10,22 +10,29 @@ import render.particles.LampLights;
 // it, not an enclosed level.
 //
 // CRITICAL, and the same note render.wild.WildScene carries: the live spotlight pool is built at the
-// SAME size every other kind uses even though nothing claims a bulb yet. NUM_SPOT_LIGHTS is baked
-// into every lit material's program key, and the actor billboards, particles and ground decals are
-// shared across every area kind, so a facility that skipped the pool would recompile all of them on
-// entry and again on the way out. the ceiling fixtures that will claim those slots arrive with the
-// lighting pass; the pool has to exist before them or that pass changes the key
+// SAME size every other kind uses. NUM_SPOT_LIGHTS is baked into every lit material's program key,
+// and the actor billboards, particles and ground decals are shared across every area kind, so a
+// facility that sized its pool to its own needs would recompile all of them on entry and again on
+// the way out. it was built here and left EMPTY for three phases for exactly that reason, which is
+// why render.facility.FacilityLamps now costs nothing to add: the 12 spotlights were already in
+// every program key and already running their per-fragment loop with no bulbs to show for it
 class FacilityScene
 {
-// build the facility scene bundle (the contract render.SceneSetup.buildScene returns for a city)
-  public static function build(renderer:WebGLRenderer, lampPool:Int):SceneSetup.SceneBundle
+// build the facility scene bundle (the contract render.SceneSetup.buildScene returns for a city),
+// lit by one area kind's rig: the compound's FacilityStyle.rig(), the corp tower's sky and fog over
+// that same fill, the military base's own
+  public static function build(renderer:WebGLRenderer, lampPool:Int,
+      rig:FacilityRigOpts):SceneSetup.SceneBundle
     {
+      var sky = rig.sky;
+      var near = rig.near;
+      var far = rig.far;
       var scene = new Scene();
-      scene.background = new Color(FacilityStyle.SKY);
+      scene.background = new Color(sky);
       // background and fog are the SAME colour, which render.world.VisionMask depends on: its blue
       // rim channel takes visibility to a true zero at the area border, and zero only stops being a
       // silhouette if the surface it fades toward is what is behind it
-      scene.fog = new Fog(FacilityStyle.SKY, FacilityStyle.FOG_NEAR, FacilityStyle.FOG_FAR);
+      scene.fog = new Fog(sky, near, far);
 
       var lights:Array<Object3D> = [];
       function add(l:Object3D):Object3D
@@ -34,15 +41,12 @@ class FacilityScene
           scene.add(l);
           return l;
         }
-      // fill. the facility runs DARKER than the wilderness because its art is brighter: the lab
-      // floor measures 0.0607 linear and the corridor lino 0.0750, against the wilderness turf's
-      // 0.0503, and the interior is what fills the frame the moment the roof fades. the outdoor
-      // surfaces are the city's own asphalt and pavement, which were painted for the city's fill
-      var ambient = add(new AmbientLight(0x46536b, 1.35));
-      var hemi = add(new HemisphereLight(0x56668c, 0x18211c, 1.1));
+      // fill, in the rig's colours (FacilityStyle.rig says why the compound's runs dark)
+      var ambient = add(new AmbientLight(rig.ambient, 1.35));
+      var hemi = add(new HemisphereLight(rig.hemiSky, rig.hemiGround, 1.1));
       // the moon is the only directional term, so it is the whole of what gives a wall a lit side
       // and a shadow — the one cue that a building is standing on the lot rather than printed on it
-      var moon = cast(add(new DirectionalLight(0x8294c0, 1.6)), DirectionalLight);
+      var moon = cast(add(new DirectionalLight(rig.moon, 1.6)), DirectionalLight);
       moon.position.set(-1, 2, 1.5);
       var MS = RenderConfig.MOON_SHADOW;
       moon.castShadow = true;
@@ -84,8 +88,14 @@ class FacilityScene
         pointLights: pts,
         coneGroup: coneGroup,
         lampLights: lampLights,
-        lampPosts: [],           // no lamps yet, so the pool never claims a bulb
-        lampCorners: new Map(),  // and no posts for the actor/camera slide to bend around
+        // the bulbs are NOT placed here. every other kind's scene() knows its own lamps, but a
+        // facility's come off the tile grid and out of the room list, which is the model the
+        // BUILDERS hold — so render.facility.FacilityArea keeps its own post list and hands it to
+        // the pool per frame, and this map is filled by render.facility.FacilityLamps during
+        // build(). handing it over empty is safe: render.View passes the reference to the camera rig
+        // and the actor layer, and both re-query it every frame
+        lampPosts: [],
+        lampCorners: new Map(),
         lampProp: null,
         lampPropDead: null,
         coneFlick: null,         // nothing flickers: render.LightCone.pulse is never called

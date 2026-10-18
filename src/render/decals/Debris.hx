@@ -34,24 +34,31 @@ class Debris {
     {
       if (list == null)
         return;
-      var atlas = d.sprites.atlasTex('entities', false, RenderConfig.DECAL.debrisMul);
+      // a scatter is cut from ONE atlas: a tier's litter pack, whose value its manifest cap already
+      // fitted to the ground (no darkening on top), or the alpha-capped entities64 rows
+      var img = (list.length > 0 ? list[0].img : null);
+      var name = (img != null ? img : 'entities');
+      var atlas = d.sprites.atlasTex(name, false, (img != null ? 1.0 : RenderConfig.DECAL.debrisMul));
       if (atlas == null)
         return;
       for (s in list)
         {
-          var r = d.sprites.contentRect('entities', s.ix, s.iy, false);
+          var r = d.sprites.contentRect(name, s.ix, s.iy, false);
           if (r == null)
             continue;
           var w = CityConfig.cellToWorld(s.col + s.dx, s.row + s.dy);
           var op = d.radiusOp(w.x, w.z);
           if (op <= 0.001)
             continue;
-          // geometry is a unit quad, so bake the content footprint (SIZE * fw/fh) into the size.
+          // geometry is a unit quad, so bake the content footprint (SIZE * fw/fh) into the size. a pack
+          // fragment's scale is its drawn longest side in world units (render.world.Debris.build), an
+          // entities64 one's a factor on SIZE.
           // height off floorYAt and not floorY: the quad sits at s.col + s.dx, up to a quarter cell
           // off centre, and floorY answers about the CENTRE — see RenderConfig.DECAL.groundLift for
           // what that cost on the highway
+          var k = (img != null ? s.scale / (Sprites.SIZE * Math.max(r.fw, r.fh)) : s.scale);
           d.batch.add(atlas, r, w.x, WorldCtx.floorYAt(w.x, w.z) + RenderConfig.DECAL.groundLift, w.z,
-            Sprites.SIZE * r.fw * s.scale, Sprites.SIZE * r.fh * s.scale, s.angle, op, 1.0, 0.0);
+            Sprites.SIZE * r.fw * k, Sprites.SIZE * r.fh * k, s.angle, op, 1.0, 0.0);
         }
     }
 }

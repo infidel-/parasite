@@ -3,7 +3,6 @@
 package objects;
 
 import game.Game;
-import lighting.AtmosphereLightProfiles;
 
 class Watcher extends HabitatObject
 {
@@ -39,16 +38,4 @@ class Watcher extends HabitatObject
 // is not an oversight: that one is a DOORWAY, and stepping through the arch is what it is for
   public override function isWalkable(): Bool
     { return false; }
-
-// get static atmosphere light emitted by this object
-  public override function getAtmosphereLight(): _AtmosphereLightMeta
-    {
-      return AtmosphereLightProfiles.HABITAT_WATCHER;
-    }
-
-// get atmosphere light stamp kind used by this object
-  public override function getAtmosphereLightKind(): String
-    {
-      return 'habitat-watcher';
-    }
 }

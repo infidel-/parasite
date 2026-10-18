@@ -98,6 +98,23 @@ class WildHeight
       return f + w * (centreline(x, z) - f);
     }
 
+// the hollow shade at a world point, as a grey multiplier for every surface laid on the ground — the
+// corp stairwell's depth bake turned onto a landform. the height is normalised by the field's own
+// peak (1.9 * reliefAmp), so a plains dip and a mountain valley shade over the same fraction of their
+// range, and falls quadratically from the crest to 1 - SHADE_DEPTH at the trough, like the stairs.
+// unlike the stairs it is then DIVIDED by its own mid-height value, so the field's mean level holds
+// and only the contrast moves: crests lift a little and hollows sink. every drape (ground, patches,
+// verge, asphalt, paint, grass) takes THIS value at its own vertex, so a layer can never sit brighter
+// than the ground under it
+  public static function shade(x:Float, z:Float):Float
+    {
+      // flat (a military base's margin zeroes the relief) is mid-range, which shades exactly 1
+      var amp = (A_AMP + B_AMP) * WildBand.reliefAmp;
+      var hn = (amp > 0 ? at(x, z) / amp : 0.0);
+      var s = Math.min(1.0, Math.max(0.0, (hn + 1.0) / 2.0));
+      return (1.0 - WildStyle.SHADE_DEPTH * (1.0 - s) * (1.0 - s)) / (1.0 - WildStyle.SHADE_DEPTH * 0.25);
+    }
+
 // d(height)/dx at a world point
   public static function gradX(x:Float, z:Float):Float
     {

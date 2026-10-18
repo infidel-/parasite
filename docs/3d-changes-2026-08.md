@@ -2435,7 +2435,7 @@ per sprite per frame. Nothing new is allocated and no new material or draw call 
 
 Adding `arc` pushed `Actors.projectile` / the `Projectile3D` ctor to 10 positional args, so both took
 the `PaintOpts` treatment: a `render.particles.ProjectileOpts` typedef, all fields required (one
-caller, and it reads every one off a `PROJECTILE` kind). The AGENTS.md style rules now carry this as a
+caller, and it reads every one off a `PROJECTILE` kind). The CLAUDE.md style rules now carry this as a
 standing instruction — past ~5 args, convert rather than append.
 
 ## `vidBrightness` — 3D view brightness as a video option — LANDED

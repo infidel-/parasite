@@ -58,22 +58,8 @@ class Money extends ItemInfo
 
       var xo = game.playerArea.x;
       var yo = game.playerArea.y;
-      // 3D money fountain; when the view takes over, skip the per-tile 2D particles
-      var handled = game.scene.view3d != null &&
-        game.scene.view3d.playMoney(xo, yo, range);
-      if (!handled)
-        for (yy in yo - range...yo + range)
-          for (xx in xo - range...xo + range)
-            {
-              if (!game.area.isWalkable(xx, yy))
-                continue;
-
-              if (Const.distanceSquared(xo, yo, xx, yy) > range * range)
-                continue;
-
-              new particles.ParticleMoney(game.scene,
-                { x: xx, y: yy });
-            }
+      // 3D money fountain
+      game.scene.view3d.playMoney(xo, yo, range);
 
       for (ai in targets)
         {

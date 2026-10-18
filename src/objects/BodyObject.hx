@@ -56,8 +56,7 @@ class BodyObject extends AreaObject
       super.initPost(onLoad);
     }
 
-// adopt a dead actor's own sprite cell so the corpse shows the actor, not a generic body tile.
-// 3D ONLY: this overwrites the shared icon fields, so the 2D tiled view reads icon2D() instead
+// adopt a dead actor's own sprite cell so the corpse shows the actor, not a generic body tile
   public function setActorSprite(img: String, ix: Int, iy: Int, male: Bool,
       skin: _SkinColor)
     {
@@ -72,12 +71,6 @@ class BodyObject extends AreaObject
           entity.isMaleAtlas = male;
           entity.skinColor = skin;
         }
-    }
-
-// generic body tile for the 2D tiled view (the shared icon fields carry the 3D actor sprite)
-  public inline function icon2D(): _Icon
-    {
-      return iconByType(parentType);
     }
 
 // check if this body can be searched for loot

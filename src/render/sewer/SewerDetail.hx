@@ -9,6 +9,18 @@ import render.world.MeshBuf.MeshBuf;
 import render.world.MeshBuf.MeshBufTools;
 import render.world.VisionMask;
 
+// the decal one wall face rolled: which category, and where on the face it sits
+typedef SewerFaceDecal = {
+  // index into SewerDetail.CATS
+  ci:Int,
+  // offset along the face from its centre (x on a N/S face, z on a W/E face)
+  off:Float,
+  // centre height above the floor
+  y:Float,
+  // square size, world units
+  s:Float,
+};
+
 // dressing laid over the SewerGeom shell, and the reason the shell can get away with a single wall
 // texture: a damp grime band at the foot of every wall, and fake contact shadows where wall meets
 // floor. all of it is derived from the cell grid, deterministic, and persisted nowhere.
@@ -19,6 +31,18 @@ import render.world.VisionMask;
 class SewerDetail
 {
   static inline var CELL = CityConfig.CELL;
+  // the seepage row of CATS — what render.sewer.SewerWater starts a trickle under
+  public static inline var SEEP = 1;
+  // size band (lo..hi), height off the floor, and albedo tint per category. seepage alone is
+  // tinted: it is chalky off-white while every wall texture is authored dark for the night
+  // palette, so untinted it reads as lit from nowhere — the same reason WallDecals tints its
+  // posters and graffiti but leaves cracks alone. the rest already sit in the wall's range
+  static var CATS = [
+    { tex: SewerStyle.CRACK, lo: 1.4, hi: 2.2, baseY: 0.4, tint: 0xffffff },
+    { tex: SewerStyle.SEEPAGE, lo: 1.4, hi: 2.2, baseY: 0.7, tint: RenderConfig.WALLDECAL_TINT },
+    { tex: SewerStyle.MOSS, lo: 1.2, hi: 2.0, baseY: 0.2, tint: 0xffffff },
+    { tex: SewerStyle.BROKEN, lo: 1.2, hi: 2.0, baseY: 0.5, tint: 0xffffff },
+  ];
 
 // all sewer dressing into the scene
   public static function build(scene:Scene, m:Sewer):Void
@@ -45,17 +69,7 @@ class SewerDetail
   static function decals(scene:Scene, m:Sewer):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
-      // size band (lo..hi), height off the floor, and albedo tint per category. seepage alone is
-      // tinted: it is chalky off-white while every wall texture is authored dark for the night
-      // palette, so untinted it reads as lit from nowhere — the same reason WallDecals tints its
-      // posters and graffiti but leaves cracks alone. the rest already sit in the wall's range
-      var cats = [
-        { tex: SewerStyle.CRACK, lo: 1.4, hi: 2.2, baseY: 0.4, tint: 0xffffff },
-        { tex: SewerStyle.SEEPAGE, lo: 1.4, hi: 2.2, baseY: 0.7, tint: RenderConfig.WALLDECAL_TINT },
-        { tex: SewerStyle.MOSS, lo: 1.2, hi: 2.0, baseY: 0.2, tint: 0xffffff },
-        { tex: SewerStyle.BROKEN, lo: 1.2, hi: 2.0, baseY: 0.5, tint: 0xffffff },
-      ];
-      var bufs = [for (_ in cats) MeshBufTools.make()];
+      var bufs = [for (_ in CATS) MeshBufTools.make()];
       var eps = SewerStyle.DECAL_EPS;
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -70,40 +84,13 @@ class SewerDetail
                 var dr = (dir == 0 ? -1 : (dir == 1 ? 1 : 0));
                 if (SewerModel.isFloor(m, col + dc, row + dr))
                   continue;
-                // decision hash off this FACE (cell + dir), the WallDecals idiom with its own
-                // multipliers. deterministic, so a tunnel is decorated identically every reload.
-                // mixed, and not optional: raw, this hash combs the area border — on row 0 the row
-                // term vanishes and it reduces to col * 92821, which at 18% placed decals on cols
-                // 0, 5, 10, 15, 24, 29, 34 (see SewerModel.mix, where the ledge case is measured)
-                var hh = SewerModel.mix((col * 92821) ^ (row * 68917) ^ (dir * 40503));
-                if (hh % 100 >= SewerStyle.DECAL_PCT)
+                var d = roll(col, row, dir);
+                if (d == null)
                   continue;
-                var ci = (hh >> 3) % cats.length;
-                var cat = cats[ci];
-                var s = cat.lo + ((hh >> 11) % 1000) / 1000.0 * (cat.hi - cat.lo);
-                // the flat part of THIS face only: above it the wall recedes into the CAP_CHAMFER
-                // bevel and a decal set DECAL_EPS proud of the face plane would hang off it. per
-                // face rather than one constant, because the top edge now tilts with the sagging
-                // cap (SewerGeom.capY) — faceH takes the LOW end, which is the one that clamps
-                var H = SewerGeom.faceH(x0, x1, z0, z1, dir);
-                // a face is only CELL wide and WALL_H tall, so clamp hard: the quad must clear the
-                // cell's side edges (or it would cut into the neighbouring face at a right angle)
-                // and stay off the floor and the ledge cap
-                var span = CELL - 2 * SewerStyle.DECAL_MARGIN;
-                if (s > span)
-                  s = span;
-                if (s > H)
-                  s = H;
-                var off = (((hh >> 14) % 1000) / 1000.0 - 0.5) * (span - s);
-                var y = cat.baseY + s / 2 + ((hh >> 18) % 100) / 100.0 * 0.5;
-                if (y + s / 2 > H)
-                  y = H - s / 2;
-                if (y - s / 2 < 0)
-                  y = s / 2;
-                face(bufs[ci], dir, x0, x1, z0, z1, off, y, s, eps);
+                face(bufs[d.ci], dir, x0, x1, z0, z1, d.off, d.y, d.s, eps);
               }
           }
-      for (i in 0...cats.length)
+      for (i in 0...CATS.length)
         {
           if (bufs[i].idx.length == 0)
             continue;
@@ -113,8 +100,8 @@ class SewerDetail
           geo.setIndex(bufs[i].idx);
           geo.computeVertexNormals();
           var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
-            map: Textures.loadTexture(cats[i].tex, 'wall'),
-            color: cats[i].tint,
+            map: Textures.loadTexture(CATS[i].tex, 'wall'),
+            color: CATS[i].tint,
             transparent: true,
             alphaTest: 0.35,
             depthWrite: false,
@@ -126,6 +113,64 @@ class SewerDetail
           mesh.receiveShadow = true;
           scene.add(mesh);
         }
+    }
+
+// the decal one wall face carries, or null for a bare face. the ONLY place this roll lives, so the
+// trickles render.sewer.SewerWater runs across the floor start under the very stains drawn here
+  static function roll(col:Int, row:Int, dir:Int):Null<SewerFaceDecal>
+    {
+      var half = (CityConfig.GRID * CELL) / 2;
+      var x0 = col * CELL - half, x1 = x0 + CELL;
+      var z0 = row * CELL - half, z1 = z0 + CELL;
+      // decision hash off this FACE (cell + dir), the WallDecals idiom with its own
+      // multipliers. deterministic, so a tunnel is decorated identically every reload.
+      // mixed, and not optional: raw, this hash combs the area border — on row 0 the row
+      // term vanishes and it reduces to col * 92821, which at 18% placed decals on cols
+      // 0, 5, 10, 15, 24, 29, 34 (see SewerModel.mix, where the ledge case is measured)
+      var hh = SewerModel.mix((col * 92821) ^ (row * 68917) ^ (dir * 40503));
+      if (hh % 100 >= SewerStyle.DECAL_PCT)
+        return null;
+      var ci = (hh >> 3) % CATS.length;
+      var cat = CATS[ci];
+      var s = cat.lo + ((hh >> 11) % 1000) / 1000.0 * (cat.hi - cat.lo);
+      // the flat part of THIS face only: above it the wall recedes into the CAP_CHAMFER
+      // bevel and a decal set DECAL_EPS proud of the face plane would hang off it. per
+      // face rather than one constant, because the top edge now tilts with the sagging
+      // cap (SewerGeom.capY) — faceH takes the LOW end, which is the one that clamps
+      var H = SewerGeom.faceH(x0, x1, z0, z1, dir);
+      // a face is only CELL wide and WALL_H tall, so clamp hard: the quad must clear the
+      // cell's side edges (or it would cut into the neighbouring face at a right angle)
+      // and stay off the floor and the ledge cap
+      var span = CELL - 2 * SewerStyle.DECAL_MARGIN;
+      if (s > span)
+        s = span;
+      if (s > H)
+        s = H;
+      var off = (((hh >> 14) % 1000) / 1000.0 - 0.5) * (span - s);
+      var y = cat.baseY + s / 2 + ((hh >> 18) % 100) / 100.0 * 0.5;
+      if (y + s / 2 > H)
+        y = H - s / 2;
+      if (y - s / 2 < 0)
+        y = s / 2;
+      return {
+        ci: ci,
+        off: off,
+        y: y,
+        s: s,
+      };
+    }
+
+// lateral offset of the seepage stain on this face (along x for a N/S face, z for W/E), or null
+// when the face is open floor or carries something else
+  public static function seepAt(m:Sewer, col:Int, row:Int, dir:Int):Null<Float>
+    {
+      var dc = (dir == 2 ? -1 : (dir == 3 ? 1 : 0));
+      var dr = (dir == 0 ? -1 : (dir == 1 ? 1 : 0));
+      if (!SewerModel.isFloor(m, col, row) ||
+          SewerModel.isFloor(m, col + dc, row + dr))
+        return null;
+      var d = roll(col, row, dir);
+      return d != null && d.ci == SEEP ? d.off : null;
     }
 
 // one decal quad on a cell's wall face, `off` along the face and centred at height `y`, set `eps`
@@ -202,10 +247,8 @@ class SewerDetail
       geo.setAttribute('uv', new Float32BufferAttribute(b.uv, 2));
       geo.setIndex(b.idx);
       geo.computeVertexNormals();
-      var tex = Textures.loadTexture(SewerStyle.GRIME, 'wall');
-      tex.premultiplyAlpha = true;
+      var tex = Textures.loadPremultiplied(SewerStyle.GRIME, 'wall');
       tex.wrapT = THREE.ClampToEdgeWrapping;
-      tex.needsUpdate = true;
       // every band in the level on ONE material and ONE mesh: one draw call however big the sewer
       var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
         map: tex,

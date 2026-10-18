@@ -84,6 +84,7 @@ class WildRoad
         // the edge lives HERE and not in the vertices — see WildStyle.ROAD_EDGE_MARGIN
         alphaMap: edgeMask(m, areaID, o),
         alphaTest: WildStyle.ROAD_ALPHA_TEST,
+        vertexColors: true,
       }),
         o.cls, o.label, o.tex));
       // AFTER the patch, never in the literal above — see WildStyle.ROAD_ALPHA_TEST. patch() reads
@@ -218,6 +219,7 @@ class WildRoad
       var pos = [];
       var nor = [];
       var uv = [];
+      var colr = [];
       var idx = [];
       for (row in 0...m.h)
         for (col in 0...m.w)
@@ -257,6 +259,11 @@ class WildRoad
                       // the corridor instead of to the area
                       uv.push(p[0] / o.tile);
                       uv.push(p[1] / o.tile);
+                      // the hollow shade, so a road through a dip darkens with the turf beside it
+                      var k = WildHeight.shade(p[0], p[1]);
+                      colr.push(k);
+                      colr.push(k);
+                      colr.push(k);
                     }
                   idx.push(base);
                   idx.push(base + 2);
@@ -272,6 +279,7 @@ class WildRoad
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
       geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+      geo.setAttribute('color', new Float32BufferAttribute(colr, 3));
       geo.setIndex(idx);
       var mesh = new Mesh(geo, mat);
       // between the patch overlays (ORD_DECAL - 1) and the decals (ORD_DECAL), and the fractional
@@ -303,6 +311,7 @@ class WildRoad
       var mat = render.world.VisionMask.patch(tag(new MeshLambertMaterial({
         map: Textures.loadTexture(WildStyle.ROAD_PAINT, 'asphalt', 1),
         side: THREE.FrontSide,
+        vertexColors: true,
       }),
         'wild-road-paint', 'wilderness highway centre line', WildStyle.ROAD_PAINT));
       var half = (CityConfig.GRID * CELL) / 2;
@@ -312,6 +321,7 @@ class WildRoad
       var pos = [];
       var nor = [];
       var uv = [];
+      var colr = [];
       var idx = [];
       // the across-axis is MIRRORED for a north-south road, and it is not cosmetic: swapping which
       // world axis carries `along` reverses the triangle winding, so the same corner order that faces
@@ -335,6 +345,10 @@ class WildRoad
               WildHeight.pushNormal(nor, x, z);
               uv.push(x / WildStyle.ROAD_PAINT_TILE);
               uv.push(z / WildStyle.ROAD_PAINT_TILE);
+              var k = WildHeight.shade(x, z);
+              colr.push(k);
+              colr.push(k);
+              colr.push(k);
             }
           idx.push(base);
           idx.push(base + 2);
@@ -350,6 +364,7 @@ class WildRoad
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
       geo.setAttribute('normal', new Float32BufferAttribute(nor, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+      geo.setAttribute('color', new Float32BufferAttribute(colr, 3));
       geo.setIndex(idx);
       var mesh = new Mesh(geo, mat);
       mesh.renderOrder = render.particles.Sprites.ORD_DECAL - 1;

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Prop acceptance gate: measure a TRELLIS reference or the glb it produced.
 
-Every rule in AGENTS.md's "3D models" section is written in these numbers, and each one
+Every rule in docs/3d-models.md is written in these numbers, and each one
 was learned by shipping a prop that was wrong in a way nothing already measured could see.
 So this reports all of them at once, before a prop is wired in.
 
   python3 tools/propstat.py models-src/wild/bush-bramble.glb      mesh + bake
   python3 tools/propstat.py models-src/wild/bush-bramble-src.png  the reference
-  python3 tools/propstat.py ref.png --lift 70 -o lifted.png       correct a reference
+  python3 tools/propstat.py ref.png --lift 70 -o lifted.png       correct a reference's VALUE
+  python3 tools/propstat.py ref.png --fit 80 -o fitted.png        pull it off the frame edge
 
 What a .glb reports and why each number is there:
 
@@ -26,6 +27,14 @@ What a .glb reports and why each number is there:
   albedo mean sRGB against the prop family's 46-52, whole-atlas and sampled at triangle UV
     CENTROIDS (a vertex UV sits on a chart corner, which is the gutter). The two disagreeing
     means the atlas is mostly padding.
+  UV SMEARS: triangles whose three UVs enclose ZERO AREA, so the face samples a LINE of the
+    atlas and stretches it. This is a HAND-MODELLING fault, not a bake one: buildlib's
+    `unwrap` maps a face over its bbox in the two axes it measures widest, which is
+    unambiguous on an axis-aligned box and degenerate on a swept bar or a wheel, where a
+    face can project to a line in those two axes. The count in brackets is zero-area
+    triangles ON PURPOSE -- a 1-texel rect is how a flat colour is stated here -- so read
+    the first number only. Fix by mapping those faces by axis (lathe_uv for a turned piece,
+    flat_uv for a flat one) or by collapsing their rect to one texel.
   the MR map: glTF packs G = roughness, B = metalness. Pure green is a rough dielectric and
     is fine; cyan is metalness ~1 across the whole prop, which underground with no env map
     renders BLACK rather than chrome, and needs dropMR. Re-read it after every regeneration
@@ -33,7 +42,8 @@ What a .glb reports and why each number is there:
 
 What a .png reports: subject value against the p50 69-77 the references that bake correctly
 sit at, the frame margin (a subject touching the edge comes back a blob), and the bbox
-aspect, which is the w/h the mesh will land near.
+aspect, which is the w/h the mesh will land near. The backdrop is read off the frame's border,
+so a reference on black (the rule) and an old one on grey both measure.
 """
 import io
 import json
@@ -43,12 +53,37 @@ import sys
 import numpy as np
 from PIL import Image
 
+
+# the sRGB transfer both ways, on 0..255 bytes. here because `baseColor` multiplies in LINEAR light
+# and a factor applied to the bytes is a different picture -- 0.4 on 185 is 74 in bytes and 122 in
+# light, and the second one is what the frame shows
+def lin(v):
+    c = np.asarray(v, dtype=np.float64) / 255.0
+    return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+
+
+def srgb(v):
+    c = np.clip(np.asarray(v, dtype=np.float64), 0, 1)
+    return 255 * np.where(c <= 0.0031308, c * 12.92, 1.055 * c ** (1 / 2.4) - 0.055)
+
 # glTF component type -> numpy dtype, and element type -> component count
 CT = {5120: 'i1', 5121: 'u1', 5122: 'i2', 5123: 'u2', 5125: 'u4', 5126: 'f4'}
 NC = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4, 'MAT4': 16}
-# the flat grey both pipelines generate on, and the tolerance that separates subject from it
-BG = np.array([0x5a, 0x5d, 0x63], np.float64)
+# the tolerance that separates the subject from its backdrop, and the border ring that backdrop is
+# read off. A reference goes on flat BLACK now (it was #5a5d63 grey, and an olive-grey vehicle on grey
+# gave the generator nothing to segment on), and gpt never paints exactly what it is asked for, so the
+# backdrop is MEASURED per image rather than assumed: whatever colour it is, a centred subject clear
+# of the edges leaves the outer ring pure backdrop
 BG_TOL = 60.0
+BG_RING = 16
+
+
+# the backdrop this reference was actually painted on: the median of its outer BG_RING pixels
+def bg_of(im):
+    r = BG_RING
+    ring = np.concatenate([im[:r].reshape(-1, 3), im[-r:].reshape(-1, 3),
+                           im[:, :r].reshape(-1, 3), im[:, -r:].reshape(-1, 3)])
+    return np.median(ring, axis=0)
 
 
 # split a .glb into its JSON and BIN chunks
@@ -112,12 +147,53 @@ def components(uidx, tri):
     return np.sort(counts)[::-1]
 
 
-# subject mask + luminance for a reference painted on the flat grey
+# subject mask + luminance for a reference painted on a flat backdrop
 def subject(im):
-    d = np.abs(im - BG).sum(axis=2)
+    d = np.abs(im - bg_of(im)).sum(axis=2)
     m = d > BG_TOL
     lum = 0.2126 * im[..., 0] + 0.7152 * im[..., 1] + 0.0722 * im[..., 2]
     return m, lum
+
+
+# the SHIPPED albedo of one glb: the base map sampled at every triangle's UV centre, taken through
+# the material's own baseColorFactor in linear light. Returns (sampled rgb, atlas rgb, factor), all
+# sRGB bytes, or None for a prop with no base map
+def albedo(path):
+    g, bin_ = load(path)
+    prim = g['meshes'][0]['primitives'][0]
+    pbr = g['materials'][prim.get('material', 0)].get('pbrMetallicRoughness', {})
+    if 'baseColorTexture' not in pbr:
+        return None
+    im = np.asarray(image(g, bin_, pbr['baseColorTexture']['index']).convert('RGB'))
+    tri = acc(g, bin_, prim['indices']).reshape(-1, 3).astype(np.int64)
+    uv = acc(g, bin_, prim['attributes']['TEXCOORD_0']).astype(np.float64)
+    c = uv[tri].mean(axis=1)
+    px = np.clip((c * [im.shape[1], im.shape[0]]).astype(int), 0,
+                 [im.shape[1] - 1, im.shape[0] - 1])
+    f = np.asarray(pbr.get('baseColorFactor', [1, 1, 1, 1]))[:3]
+    s_ = im[px[:, 1], px[:, 0]].mean(axis=0)
+    rgb = im.reshape(-1, 3).mean(axis=0)
+    return srgb(lin(s_) * f), srgb(lin(rgb) * f), f
+
+
+# THE PROP ALBEDO REGISTER, sorted, one line per glb. The whole point is that a prop's level is only
+# ever judged against its NEIGHBOURS -- the two family bands are 46-52 outdoors and ~78 indoors, and
+# every one of the four reports that produced this tool was a prop that had drifted off the props
+# beside it rather than off an absolute. A doc table would go stale in a session; this cannot.
+def audit(paths):
+    rows = []
+    for f in paths:
+        a = albedo(f)
+        if a is None:
+            continue
+        s_, _, fa = a
+        rows.append((s_.mean(), s_.max() - s_.min(), f, fa))
+    for luma, ch, f, fa in sorted(rows):
+        print('  %6.1f  chroma %5.1f  %-40s%s' % (
+            luma, ch, f.split('models/')[-1],
+            '' if (fa == 1).all() else '  bc %g/%g/%g' % tuple(fa)))
+    print('  -- bands: 46-52 OUTDOORS, ~78 INDOORS (floor 95, wall 111). Judge against the '
+          'NEIGHBOURS, not the number')
 
 
 def stat_glb(path):
@@ -152,8 +228,45 @@ def stat_glb(path):
         px = np.clip((c * [im.shape[1], im.shape[0]]).astype(int), 0,
                      [im.shape[1] - 1, im.shape[0] - 1])
         s = im[px[:, 1], px[:, 0]].mean(axis=0)
-        print('  albedo %-6s  atlas %d/%d/%d   sampled %d/%d/%d   (family 46-52)' % (
-            '%dpx' % im.shape[0], *im.reshape(-1, 3).mean(axis=0).round(), *s.round()))
+        # the family band is a LUMA band and says nothing about chroma -- lot-cone ships at luma 47
+        # with a channel spread of 45, so a prop can be dead on the family and vividly coloured. the
+        # spread is printed beside it because that is the number nobody was looking at: 9 of 38 props
+        # shipped with a per-channel factor and every one of them came out neutral
+        rgb = im.reshape(-1, 3).mean(axis=0)
+        # AND THROUGH THE FACTOR, which this tool ignored for its whole life and which is why every
+        # value fit in art/models.json had to be recomputed by hand off the entry: `baseColor` is a
+        # LINEAR multiply applied at render, so the atlas is not the shipped pixel on any of the 9
+        # props that carry one -- facility/desk-mug read 185 here while shipping 122, and the entry
+        # that fitted it quoted its own arithmetic because the tool would not. `sat` and `lift` need
+        # no such treatment: both are baked into the built map, so they are already in these bytes.
+        f = np.asarray(pbr.get('baseColorFactor', [1, 1, 1, 1]))[:3]
+        s, rgb = srgb(lin(s) * f), srgb(lin(rgb) * f)
+        print('  albedo %-6s  atlas %d/%d/%d   sampled %d/%d/%d   (family luma 46-52 OUTDOORS%s)' % (
+            '%dpx' % im.shape[0], *rgb.round(), *s.round(),
+            '' if (f == 1).all() else ', THROUGH baseColor %g/%g/%g' % tuple(f)))
+        print('  chroma         atlas %.1f   sampled %.1f   (max-min; a coloured prop wants > 25)'
+              % (rgb.max() - rgb.min(), s.max() - s.min()))
+        # UV SMEARS. A triangle whose three UVs enclose ZERO AREA samples a LINE of the atlas and
+        # stretches it across the whole face. buildlib's `unwrap` makes them on CURVED geometry:
+        # it maps a face over its bbox in the two axes it measures widest, which is unambiguous on
+        # an axis-aligned box and DEGENERATE on a swept bar or a wheel, where a face can project to
+        # a line in those two axes and every vertex lands on one corner of the rect. Found first by
+        # clicking three office-chair faces with the poly probe (debug `P`); this counts them.
+        #
+        # A ONE-TEXEL RECT IS DEGENERATE ON PURPOSE -- it is how a flat colour is stated here, and it
+        # renders as that colour -- so zero area alone over-reports wildly (the bench has 136 and not
+        # one of them is wrong). Only a degenerate triangle whose UVs span more than TWO TEXELS is
+        # actually smearing something.
+        ua, ub, uc = uv[tri[:, 0]], uv[tri[:, 1]], uv[tri[:, 2]]
+        flat = np.where(np.abs((ub[:, 0] - ua[:, 0]) * (uc[:, 1] - ua[:, 1])
+                               - (uc[:, 0] - ua[:, 0]) * (ub[:, 1] - ua[:, 1])) < 1e-9)[0]
+        smear = 0
+        if len(flat):
+            t = uv[tri[flat]]
+            smear = int(((t.max(axis=1) - t.min(axis=1)).max(axis=1) > 2.0 / im.shape[0]).sum())
+        print('  uv smears      %d  (of %d zero-area tris; a 1-texel rect is zero-area ON PURPOSE)'
+              '  -> %s' % (smear, len(flat), 'ok' if smear == 0 else
+                           'SMEARED: map those faces by axis (lathe_uv/flat_uv) or give them 1 texel'))
         # texels per triangle, and the `tex` that holds it near what the source was authored at.
         # this is only meaningful against the BAKED tex -- on a models-src source it is just the
         # 2048 export over a small tri count, which is why the recommendation is what gets printed
@@ -162,14 +275,27 @@ def stat_glb(path):
         print('  texels/tri     %d at %dpx  ->  tex %d gives %d  (hold near the ~43-55 band)' % (
             im.shape[0] * im.shape[1] / len(tri), im.shape[0], edge, edge * edge / len(tri)))
         # baseColor multiplies DOWN, lift gammas UP -- name whichever one this bake needs. a
-        # STARTING POINT only: it solves for a flat 49, where a fit by hand usually keeps some of
-        # the prop's own lean (bush-low is deliberately left at 44/50/44, greener than neutral)
+        # STARTING POINT only, and a FLAT one on purpose: a flat scalar is linear, so it moves the
+        # level and holds the hue and the channel ratios, where the per-channel solve below is by
+        # construction a NEUTRALISER -- it drives every channel onto one number. That form shipped 9
+        # of 38 props grey, wild/tree-broadleaf-full losing a 41.5-chroma green canopy to 3.8 and
+        # facility/trash-bin a bottle-green body to 0.1, and on a strongly coloured bake it does not
+        # even return a legal factor (facility/gas-cylinders' amber asks for a BLUE factor of 2.7).
+        # So it is offered only where there is almost no chroma to lose.
+        #
+        # `want` is the OUTDOOR family. An indoor prop stands against a floor of albedo ~95 and a
+        # wall of ~111 and wants ~78, which is a per-prop call the tool cannot make -- read the
+        # target off the surface the prop stands on, not off this number.
         want = 49.0
         if abs(s.mean() - want) > 6:
             if s.mean() > want:
-                f = [round(((want / 255) ** 2.2) / max((v / 255) ** 2.2, 1e-6), 2) for v in s]
-                print('  -> baseColor   [%s, %s, %s, 1]  (LINEAR, per-channel, darkens; start here)'
-                      % tuple(f))
+                flat = round(((want / 255) ** 2.2) / max((s.mean() / 255) ** 2.2, 1e-6), 2)
+                print('  -> baseColor   %.2f  (LINEAR, FLAT, darkens; holds hue -- start here)'
+                      % flat)
+                if s.max() - s.min() < 8:
+                    f = [round(((want / 255) ** 2.2) / max((v / 255) ** 2.2, 1e-6), 2) for v in s]
+                    print('     per-channel [%s, %s, %s, 1] neutralises the mean -- ONLY for a cast '
+                          'over the WHOLE surface, never on a prop with a colour' % tuple(f))
             else:
                 print('  -> lift        %.2f  (gamma on the MAP; baseColor cannot brighten)'
                       % (np.log(want / 255) / np.log(max(s.mean(), 1) / 255)))
@@ -203,8 +329,21 @@ def stat_png(path):
     print('  frame margin   l %d r %d t %d b %d   -> %s' % (
         *mar, 'ok' if min(mar) > 20 else 'TOUCHING THE EDGE, comes back a blob'))
     bg = im[~m]
-    print('  backdrop       mean %d/%d/%d  (asked for 90/93/99)   subject margin %.0f' % (
-        *bg.mean(axis=0).round(), bg.mean() - p50))
+    print('  backdrop       mean %d/%d/%d  (measured off the border; ask for flat black)   subject margin %.0f' % (
+        *bg.mean(axis=0).round(), abs(bg.mean() - p50)))
+
+
+# soft subject coverage, ramped across the antialiased edge so a composite leaves no halo.
+#
+# keyed against the backdrop gpt ACTUALLY PAINTED (bg_of), not against the one it was asked for. gpt
+# vignettes: asked for grey 90/93/99 it delivered ~76/80/84, which is 42 away in this metric -- past
+# the ramp's foot, so keying on the nominal colour left the whole backdrop ~24% opaque. Uniform, that
+# residue is invisible and `lift` shipped four props with it; `fit` pastes a SUB-RECT and the same
+# residue draws a hard rectangle border round the pasted region, which is a segmentation edge that is
+# not on the object. ON BLACK the ramp's foot is the risk the other way: a subject part within ~30 of
+# the backdrop (a tyre, an intake) keys out, so a reference keeps its darks above ~40
+def key(im):
+    return np.clip((np.abs(im - bg_of(im)).sum(axis=2) - 30.0) / 50.0, 0, 1)
 
 
 # gamma the subject to a target median and re-lay it on a truly flat backdrop. holds the
@@ -212,26 +351,55 @@ def stat_png(path):
 # scrubs the vignette gpt paints instead of the flat grey it was asked for
 def lift(path, out, target):
     im = np.asarray(Image.open(path).convert('RGB')).astype(np.float64)
-    d = np.abs(im - BG).sum(axis=2)
-    # soft coverage, ramped across the antialiased edge so the composite leaves no halo
-    alpha = np.clip((d - 30.0) / 50.0, 0, 1)[..., None]
+    alpha = key(im)[..., None]
     lum = 0.2126 * im[..., 0] + 0.7152 * im[..., 1] + 0.0722 * im[..., 2]
     p50 = np.percentile(lum[alpha[..., 0] > 0.9], 50)
     # a gamma rather than a scale: it lifts the darks hardest and leaves the few light texels
     # alone, so the subject keeps its own value range instead of flattening
     gam = np.log(target / 255.0) / np.log(p50 / 255.0)
-    px = 255.0 * np.power(np.clip(im, 0, 255) / 255.0, gam) * alpha + BG * (1 - alpha)
+    px = 255.0 * np.power(np.clip(im, 0, 255) / 255.0, gam) * alpha + bg_of(im) * (1 - alpha)
     Image.fromarray(np.clip(px, 0, 255).astype(np.uint8)).save(out)
     print('  subject p50 %.0f -> %.0f  (gamma %.3f), backdrop flattened -> %s' % (
         p50, target, gam, out))
 
 
+# shrink the subject about the frame centre until it clears every edge by `margin` px, and re-lay it
+# on the flat backdrop. THE COMPOSITION IS UNTOUCHED -- only its size in the frame -- which is what
+# makes this cheaper and safer than a re-prompt: gpt lays a long diagonal object corner to corner
+# however loudly the prompt asks for a margin, and re-rolling gives a DIFFERENT composition where
+# this gives the same one, smaller. It flattens the vignette on the way through, exactly as lift does
+def fit(path, out, margin):
+    im = np.asarray(Image.open(path).convert('RGB')).astype(np.float64)
+    alpha = key(im)
+    h, w = im.shape[:2]
+    ys, xs = np.where(alpha > 0.5)
+    cx, cy = w / 2.0, h / 2.0
+    # scale about the CENTRE, so the worst-reaching corner of the subject is what sets it
+    reach = max(cx - xs.min(), xs.max() - cx, cy - ys.min(), ys.max() - cy)
+    s = min(1.0, (min(cx, cy) - margin) / reach)
+    sw, sh = int(round(w * s)), int(round(h * s))
+    rgba = Image.fromarray(np.dstack([im, alpha * 255.0]).astype(np.uint8), 'RGBA')
+    small = rgba.resize((sw, sh), Image.LANCZOS)
+    canvas = Image.new('RGB', (w, h), tuple(int(v) for v in bg_of(im)))
+    canvas.paste(small, ((w - sw) // 2, (h - sh) // 2), small)
+    canvas.save(out)
+    print('  scaled %.3f about the centre for a %dpx margin, backdrop flattened -> %s'
+          % (s, margin, out))
+
+
 args = sys.argv[1:]
 if not args:
     sys.exit(__doc__)
+if args[0] == '--audit':
+    audit(sorted(args[1:]))
+    sys.exit(0)
 path = args[0]
 print(path.split('/')[-1])
-if '--lift' in args:
+if '--fit' in args:
+    i = args.index('--fit')
+    o = args[args.index('-o') + 1] if '-o' in args else path.replace('.png', '-fitted.png')
+    fit(path, o, float(args[i + 1]))
+elif '--lift' in args:
     i = args.index('--lift')
     o = args[args.index('-o') + 1] if '-o' in args else path.replace('.png', '-lifted.png')
     lift(path, o, float(args[i + 1]))
