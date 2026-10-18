@@ -82,6 +82,7 @@ class Shot {
       var sparkAtEnd = false;
       var wallCol = -1, wallRow = -1; // struck wall cell (for the bullet-hole decal), -1 = none
       var wallFromCol = -1, wallFromRow = -1; // last open cell before the hit = the exposed face
+      var endCol = tx, endRow = ty; // cell the tracer ends on (the target, or the miss endpoint)
       if (!hit)
         {
           // skew the aim 1-2 tiles sideways (perpendicular to the shot line) so the missed
@@ -93,6 +94,8 @@ class Shot {
           var e = c.game.area.rayToWall(sx, sy,
             Math.round(tx - pdy / pl * off), Math.round(ty + pdx / pl * off), kind.range);
           var ew = CityConfig.cellToWorld(e.col, e.row);
+          endCol = e.col;
+          endRow = e.row;
           baseX = ew.x; baseZ = ew.z;
           baseY = render.world.WorldCtx.floorY(e.col, e.row) + render.particles.Sprites.SIZE * 0.4;
           sparkAtEnd = e.wall;
@@ -120,6 +123,15 @@ class Shot {
                 { always: true, delay: Std.int(S.travelMs * kind.travelMult), x: e.col, y: e.row });
             }
         }
+      // a pane on the way rings once per shot (the pellets share the line), when the tracer crosses it
+      var glass = firstGlass(c, sx, sy, endCol, endRow);
+      if (glass != null)
+        c.game.scene.sounds.play('attack-bullet-glass', {
+          always: true,
+          delay: Std.int(S.travelMs * kind.travelMult * glass.t),
+          x: glass.col,
+          y: glass.row,
+        });
       for (i in 0...kind.pellets)
         {
           // spread jitters each pellet's visual impact (blood still lands on the true tile)
@@ -154,6 +166,28 @@ class Shot {
       if (byPlayer)
         c.rig.kick(sx - tx, sy - ty);
       return true;
+    }
+
+// first window cell on the line (sx,sy)->(ex,ey), stepped like AreaGame.rayToWall with the shooter's
+// cell left out, and its fraction of the way along; null when the line crosses no glass
+  static function firstGlass(c:Choreo, sx:Int, sy:Int, ex:Int, ey:Int):{ col:Int, row:Int, t:Float }
+    {
+      var dx = ex - sx, dy = ey - sy;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var i = 1;
+      while (i <= dist)
+        {
+          var col = Math.round(sx + dx / dist * i);
+          var row = Math.round(sy + dy / dist * i);
+          if (Const.isWindowTile(c.game.area.getCellType(col, row)))
+            return {
+              col: col,
+              row: row,
+              t: i / dist,
+            };
+          i++;
+        }
+      return null;
     }
 
 // facade material (0 concrete,1 brick,2 stone,3 metal) of the building owning wall cell (col,row);
