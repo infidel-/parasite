@@ -1381,6 +1381,8 @@ class PlayerArea extends _SaveObject
           return false;
         }
       log('You climb out of the ' + game.area.getObject(hiddenIn).getName() + '.');
+      // the dumpster is the only hiding place
+      game.scene.sounds.play('city/dumpster-close');
       hiddenIn = -1;
       return moveTo(nx, ny, doPost);
     }

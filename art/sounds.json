@@ -3158,6 +3158,52 @@
       "last_outputs": [
         "lab/incubator1.mp3"
       ]
+    },
+    "city/dumpster-open": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/dumpster-open-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy plastic lid of a steel street dumpster being lifted open, hinges creaking, the lid swinging back and knocking dully against the bin, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 2.507755,
+          "seed": null,
+          "cost": 0.0045,
+          "native_loop": false,
+          "generated": "2026-10-18T00:00",
+          "bakeoff": "bake-off 2026-10-18: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-18T17:21:38",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/dumpster-open1.mp3"
+      ]
+    },
+    "city/dumpster-close": {
+      "area": "city",
+      "loop": false,
+      "variants": [
+        {
+          "file": "city/dumpster-close-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a heavy plastic lid of a steel street dumpster dropping shut, a short hinge creak then a hollow booming thud of the lid on the metal bin, single event, city at night, realistic field recording, no music, no voices",
+          "duration": 2.043356,
+          "seed": null,
+          "cost": 0.0036,
+          "native_loop": false,
+          "generated": "2026-10-18T00:00",
+          "bakeoff": "bake-off 2026-10-18: elevenlabs/sonilo/cassette, losers in sounds-src/unused/city"
+        }
+      ],
+      "last_converted": "2026-10-18T17:21:38",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "city/dumpster-close1.mp3"
+      ]
     }
   }
 }

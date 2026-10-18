@@ -61,6 +61,7 @@ class Dumpster extends AreaObject
           pa.leaveHostAction('default');
         }
       pa.hideIn(this);
+      game.scene.sounds.play('city/dumpster-open');
       game.log('You slither into the dumpster and go still under the refuse.');
       return true;
     }
