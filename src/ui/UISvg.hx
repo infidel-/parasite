@@ -565,12 +565,42 @@ class UISvg
             return badgeNpc('#d98a10');            // timeline npc — saturated timeline amber (bloom desaturates toward accent #f7af46)
           case 'missiontarget':
             return badgeNpc('#e84fe0');            // mission target — saturated cult magenta (bloom desaturates toward cult pink #fd97ff)
+          case 'regionlead':
+            return regionLead();
+          case 'regionmission':
+            return regionMission();
+          case 'regionhabitat':
+            return regionHabitat();
           case 'cultist':
             return badgeCultistImage('#ff8fc4');   // player cult — pink disc
           case 'cultistx':
             return badgeCultistImage('#c0c0c0');   // enemy cult — neutral gray disc
         }
       return badgeWarn();
+    }
+
+// torn note (region border: timeline lead with notes still unknown)
+  public static function regionLead(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M6.5 3h7.5l4 4v14H6.5z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 16h3.5"/></svg>';
+    }
+
+// flame with an inner tongue (region border: open cult mission, the map's mission flame)
+  public static function regionMission(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true">' +
+        '<path d="M12 2C13 5.5 18 8 18 14a6 6 0 0 1-12 0c0-2.6 1.3-4.4 2.6-5.6.1 1.5.8 2.6 1.9 3.2C10.3 8.2 11 5 12 2Z' + // outer flame
+        'M12 19c-1.6 0-2.7-1.1-2.7-2.6 0-1.3.9-2.3 1.7-3 .2.8.7 1.3 1.3 1.6.1-1.3.5-2.4 1.3-3.2.5 1.3 1.2 2.4 1.2 4.4 0 1.6-1.2 2.8-2.8 2.8Z"/></svg>'; // inner tongue (void)
+    }
+
+// single tentacle sweeping up from a thick root into a curled tip (region border: player habitat).
+// a solid tapered silhouette, outlined in its own color to stay thick at edge-icon size; a stroked
+// hook-and-stem version read as a question mark there
+  public static function regionHabitat(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">' +
+        '<path transform="translate(-2.6 0) scale(1.25 1)" d="M4 22c.6-4.4 3.4-6.2 6.2-8.2 2.1-1.5 2.6-3.4 1-5-1.7-1.6-1.6-4.3.6-5.4 2-1 4.4.3 4.2 2.6-.1 1.4-1.4 2-2.2 1.3.9-.2 1.1-1.3.4-1.8-.8-.6-2.1 0-2 1.1.1 1 1.4 1.6 2.1 2.9 1.2 2.4.1 5-2.3 6.9-2.3 1.8-3.8 3.2-4.4 5.6Z"/></svg>';
     }
 
 // question mark (rising alertness — suspicious)

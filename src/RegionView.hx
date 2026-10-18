@@ -7,6 +7,16 @@ import js.Browser;
 import game.*;
 import tiles.Tileset;
 import map.Image;
+import render.Viewport;
+
+// one region-border marker: a point of interest pinned to the screen edge while it is off-screen
+typedef RegionMarker = {
+  x: Int,           // region tile
+  y: Int,
+  key: String,      // UISvg.badge glyph key
+  color: String,    // ring + glyph css color
+  scale: Float,     // icon scale (habitats draw 25% larger)
+}
 
 class RegionView
 {
@@ -30,6 +40,7 @@ class RegionView
   var slideStart: Float; // slide start timestamp, ms
   var revealStart: IntMap<Float>; // area id -> fade-in start timestamp, ms
   var ticking: Bool; // animation frame requested
+  var markers: Array<RegionMarker>; // region-border markers, rebuilt per turn
 
   public var width: Int; // width, height in cells
   public var height: Int;
@@ -48,6 +59,7 @@ class RegionView
       slideStart = 0;
       revealStart = new IntMap();
       ticking = false;
+      markers = [];
     }
 
 
@@ -56,8 +68,42 @@ class RegionView
     {
       width = game.region.width;
       height = game.region.height;
+      updateMarkers();
 
       scene.updateCamera(); // center camera on player
+    }
+
+// collect the region-border markers: timeline leads with notes still unknown, NPCs with unread
+// memories, open cult missions and habitats. rebuilt per turn, projected on every draw
+  function updateMarkers()
+    {
+      markers = [];
+      function add(a: AreaGame, key: String, color: String, scale: Float)
+        markers.push({
+          x: a.x,
+          y: a.y,
+          key: key,
+          color: color,
+          scale: scale,
+        });
+      var cells = game.region.getCells();
+      for (y in 0...height)
+        for (x in 0...width)
+          {
+            var a = cells[x][y];
+            var ev = getEventIcon(a);
+            if (ev != null &&
+                ev.col == Const.FRAME_EVENT_UNKNOWN)
+              add(a, 'regionlead', '#f7af46', 1);
+            if (getNPCIcon(a) != null)
+              add(a, 'npc', '#f7af46', 1);
+            if (drawAreaCultMission(a) != null)
+              add(a, 'regionmission', '#fd97ff', 1);
+            var hab = drawAreaHabitat(a);
+            if (hab != null)
+              add(a, 'regionhabitat',
+                (hab.col == Const.FRAME_HABITAT_AMBUSHED ? '#ff5b45' : '#c9a8ef'), 1.25);
+          }
     }
 
 // update alertness icon for this area
@@ -262,12 +308,34 @@ class RegionView
             Const.TILE_SIZE,
             Const.TILE_SIZE);
       ctx.restore();
+      drawMarkers(camFromX * k, camFromY * k);
       scene.endRenderSampleRegion(renderTS);
 
       // keep redrawing while the slide or a reveal is still moving
       if (k > 0 ||
           revealStart.keys().hasNext())
         kick();
+    }
+
+// pin the off-screen markers to the screen edge (offX/offY: the camera slide offset, device px)
+  function drawMarkers(offX: Float, offY: Float)
+    {
+      var hud = game.ui.hud.offscreen;
+      var ts = Const.TILE_SIZE;
+      var ratio = Browser.window.devicePixelRatio;
+      hud.begin();
+      for (m in markers)
+        {
+          var cx = (m.x * ts + ts / 2 - scene.cameraX + offX) / ratio;
+          var cy = (m.y * ts + ts / 2 - scene.cameraY + offY) / ratio;
+          if (cx >= 0 &&
+              cx <= Viewport.w &&
+              cy >= 0 &&
+              cy <= Viewport.h)
+            continue;
+          hud.show(m.key, m.color, cx / Viewport.w * 2 - 1, 1 - cy / Viewport.h * 2, m.scale);
+        }
+      hud.end();
     }
 
 // a move since the last draw starts a slide from where the player and camera were drawn; a jump
@@ -683,6 +751,8 @@ class RegionView
     {
       // clear path
       clearPath();
+      // the border markers would otherwise sit over the transition fade
+      game.ui.hud.offscreen.clear();
     }
 
 

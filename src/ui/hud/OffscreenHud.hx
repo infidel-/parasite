@@ -1,7 +1,8 @@
 // hud off-screen AI block: screen-edge indicators for AI the player sees (game LOS) but the
 // 3D camera crops out of frame: the AI's alert badge glyph inside a circle, both tinted by the
 // alert-rating color (same ramp as the 3D outlines/badges, see Badges.outlineColor). pooled DOM
-// divs under #hud (so the Space HUD-toggle hides them), driven per-frame from render.Actors
+// divs under #hud (so the Space HUD-toggle hides them), driven per-frame from render.Actors.
+// the region map drives the same block for its off-screen leads, missions and habitats (RegionView)
 package ui.hud;
 
 import js.Browser.document;
@@ -32,6 +33,8 @@ class OffscreenHud
       container = document.createDivElement();
       container.id = 'offscreen-ai';
       hud.container.appendChild(container);
+      // a session that starts on the region map never builds the 3D actors, which init it too
+      Viewport.init();
     }
 
 // start a frame: reset the pool cursor
