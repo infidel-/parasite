@@ -1611,3 +1611,29 @@ cells. The 3D view reads the game's tiles, never its own hash.
 
 **Verdict:** landed. Areas generated before this have no alley furniture, and in them the compactor is
 neither drawn nor dealt.
+
+## Downtown recycling stations impassable; the planter's corners and its concrete level
+
+**Changed:** the recycling station is a `block` SERVICE prop beside the compactor, so the generator
+deals both from one summed chance (0.03 + 0.03) on the same dumpster-safe, off-the-mouth alley cells,
+and `StreetProps` picks between them by weighted cell hash. Only bollards remain walk-past dressing.
+The planter (`models-src/city/kit/planter.py`) had two faults. Its four upright arrises (the box's
+0.035 chamfer) wore the `loose` plain-concrete swatch laid SIDEWAYS, so each corner was a strip of a
+different tone with no formwork joint, between two faces that carry one. Each arris now wears the
+sides' own edge column (sheet x 3..14, y 36..292) whole and upright. The rows match the faces'
+rows, because both span the same chamfered height, so the joint line runs round the corner. Its
+concrete was also too bright: the flat `baseColor` 0.47 had been fitted to the WHOLE map's mean
+(luma 73), and the dark boxwood half dragged that mean down.
+
+**Measured:** the sides are linear 0.29 on the sheet and the rim 0.37, so they drew at 0.137
+(srgb ~103), against downtown paving at 0.038. A `gradeRect` at scale 0.40 on the concrete rows
+(x 0..512, y 0..720) leaves the soil and leaves untouched and takes the sides to ~66 and the rim to
+~75; in game the planter now sits just over the paving. New downtown (11,7): 32 alley cells =
+17 compactors + 15 recycling stations, 112 kerb = 86 trees + 26 planters, every instance on an
+unwalkable tile, `__check` pass with 0 doorless.
+
+**Trap:** a flat `baseColor` fitted to a two-material sheet's mean leaves the bright half bright.
+Read the surfaces apart, and grade the rect.
+
+**Verdict:** landed. Downtowns generated earlier draw recycling on some of their compactor cells,
+since those cells now pick from both.

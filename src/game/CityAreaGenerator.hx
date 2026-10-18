@@ -117,7 +117,7 @@ class CityAreaGenerator
 
 // deal downtown's street furniture (the style's `block` ground props): the kerb row of its two-cell
 // pavement takes the trees and planters, so the row against the buildings stays the clear walk, and
-// the service alleys the compactors. each is a tile flip to the unwalkable twin that
+// the service alleys the compactors and recycling stations. each is a tile flip to the unwalkable twin that
 // render.world.StreetProps draws the furniture over, taken off its spot's summed chances: a kerb
 // whose road runs straight past and is no hatch, lamp or crosswalk's end; an alley cell a dumpster
 // could take (one wall, cuts no route) off the alley's mouth. a downtown generated before the
@@ -153,7 +153,7 @@ class CityAreaGenerator
             gen.makeTileUnwalkable(area, x, y);
     }
 
-// can a compactor stand here: a dumpster's spot kept off the alley's mouth, where its length along
+// can alley furniture stand here: a dumpster's spot kept off the alley's mouth, where its length along
 // the wall would stand out over the pavement
   function isServiceSpot(area: AreaGame, x: Int, y: Int): Bool
     {

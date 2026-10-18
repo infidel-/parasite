@@ -78,7 +78,7 @@ class CityArea implements Area3D
           if (game.area.getCellType(col, row) == Const.TILE_WALKWAY_UNWALKABLE ||
               game.area.getCellType(col, row) == Const.TILE_ALLEY_UNWALKABLE)
             row * CityConfig.GRID + col];
-      // a back door must not open onto a dumpster standing against its wall, nor onto a compactor
+      // a back door must not open onto a dumpster standing against its wall, nor onto alley furniture
       var bins = new Map<Int, Bool>();
       for (o in game.area.getObjects())
         if (o.type == 'dumpster')

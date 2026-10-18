@@ -4392,14 +4392,25 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the DOWNTOWN concrete planter with a clipped boxwood, at the kerb. Hand-modelled in Blender (models-src/city/kit/planter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-planter.png painted by edit_image off its reference models-src/city/ref/planter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.47: it sampled luma ~73 against the outdoor family's 46-52.",
-      "last_converted": "2026-10-17T19:20:43Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.47,0.47,0.47,1/rf1",
+      "note": "the DOWNTOWN concrete planter with a clipped boxwood, at the kerb. Hand-modelled in Blender (models-src/city/kit/planter.py through kit_build.py, half-metre units), its own pack4 sheet textures-src/city/prop-planter.png painted by edit_image off its reference models-src/city/ref/planter-src.png. A street ground prop: render.world.StreetProps.ground scatters it per AreaStyle.groundProps, one instanced batch per city.  baseColor a FLAT 0.47: it sampled luma ~73 against the outdoor family's 46-52. THE CONCRETE IS GRADED, NOT THE PLANT, reported from the game as wanting to be darker: the flat baseColor was fitted to the WHOLE map, whose dark boxwood half dragged the mean to luma 73, so the concrete itself (the sides linear 0.29, the rim 0.37) drew at 0.137 / srgb ~103 under 0.47 against downtown paving at 0.038. gradeRect scale 0.40 on the concrete rows (x 0..512, y 0..720: TL the sides and BL the rim, the soil under 724 left alone) takes the sides to ~66 and the rim to ~75. The four upright arrises wear the sides' own edge column whole now (planter.py), so the formwork joint runs round each corner instead of a plain swatch laid sideways.",
+      "last_converted": "2026-10-18T10:23:21Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.47,0.47,0.47,1/gr[{\"rect\":[0,512,0,720],\"scale\":0.4}]/rf1",
       "baseColor": [
         0.47,
         0.47,
         0.47,
         1
+      ],
+      "gradeRect": [
+        {
+          "rect": [
+            0,
+            512,
+            0,
+            720
+          ],
+          "scale": 0.4
+        }
       ]
     }
   }
