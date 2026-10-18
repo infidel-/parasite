@@ -929,6 +929,11 @@ public function show()
   public function onDamage(damage: Int, ?attacker: Attacker,
       ?skipHostDetach: Bool = false)
     {
+      // floating damage number (0 is a stun/alert event, not a hit)
+      if (damage > 0 &&
+          entity != null)
+        game.scene.view3d.playDamage(entity, damage,
+          game.player.state == PLR_STATE_HOST && game.player.host == this);
       organs.onDamage(damage); // propagate event to organs
       health -= damage;
       if (health == 0) // AI death

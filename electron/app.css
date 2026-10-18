@@ -988,6 +988,40 @@ hr {
   from { opacity: 1; transform: translate(-50%, -100%) scale(1); }
   to   { opacity: 0; transform: translate(-50%, calc(-100% + 4px)) scale(0.8); }
 }
+/* floating damage number (render.Actors.drawDamage): the bubble without its shell or tail, a bold
+   outlined number that pops in over the struck actor, rises (driven per frame), then fades */
+.chat-bubble.dmg {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 1.4);
+  font-weight: bold;
+  color: #f2ede4;
+  text-shadow: 0 0 2px #000, 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+.chat-bubble.dmg::after {
+  display: none;
+}
+.chat-bubble.dmg.player {
+  color: var(--text-color-red);
+}
+.chat-bubble.dmg.in {
+  animation: dmg-in 0.18s cubic-bezier(0.2, 1.8, 0.5, 1) both;
+}
+.chat-bubble.dmg.out {
+  animation: dmg-out 0.26s ease-in both;
+}
+@keyframes dmg-in {
+  from { opacity: 0; transform: translate(-50%, -100%) scale(0.5); }
+  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+@keyframes dmg-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
 
 /* panels sit above the region tooltip beam/panel (which use z-index ≤ 25) */
 .hud-panel {

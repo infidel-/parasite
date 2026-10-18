@@ -34,7 +34,10 @@ class Melee {
         if (soundFile != null)
           c.game.scene.sounds.play(soundFile, { x: tgtCol, y: tgtRow });
         if (tgtE != null)
-          c.actors.hitShake(tgtE);
+          {
+            c.actors.hitShake(tgtE);
+            c.actors.releaseDamage(tgtCol, tgtRow);
+          }
         if (spawnBlood)
           c.actors.burst(tgtCol, tgtRow, dx, dz, bloodRow, bloodFirstCol);
         // the attack arc for the swing attacker->target, at each end's chest height. the attacker

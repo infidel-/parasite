@@ -642,6 +642,16 @@ class RenderConfig {
   // lift as the badges, but clear of them — see Actors.drawBubble)
   public static inline var BUBBLE_LIFT = 0.95;
 
+  // floating damage numbers (Actors.drawDamage, drawn as .chat-bubble.dmg): timing in BASE_MS
+  // multiples, lift/rise in Sprites.SIZE fractions along the same screen-up axis as the bubbles
+  public static var DAMAGE_NUMBER = {
+    wait: 2.0,           // fallback hold before showing when no impact beat releases it (BASE_MS multiples)
+    life: 5.0,           // rise duration once shown, before the bubble layer fades it out (BASE_MS multiples)
+    lift: 0.75,          // start height above the head centre (Sprites.SIZE fractions)
+    rise: 0.45,          // extra height gained over the life (Sprites.SIZE fractions)
+    side: 0.55,          // screen-right offset so a bark bubble over the same head stays readable (Sprites.SIZE fractions)
+  };
+
   // chat-mode talking bubbles (render.actors.ChatConvo): the ... bubbles alternating over the two
   // conversers; turn/jump timing in BASE_MS multiples, hop height in screen px
   public static var CHAT_BUBBLE = {

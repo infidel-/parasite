@@ -44,6 +44,7 @@ class Shot {
       var onImpact = function() {
         if (hit)
           {
+            c.actors.releaseDamage(tx, ty);
             var ai = c.game.area.getAI(tx, ty);
             if (ai != null &&
                 ai.entity != null)

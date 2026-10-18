@@ -1612,6 +1612,8 @@ class PlayerArea extends _SaveObject
   function onDamagePlayer(damage: Int)
     {
       // not attached to host
+      if (damage > 0)
+        game.scene.view3d.playDamage(entity, damage, true);
       player.health -= damage;
 
       if (player.health <= 0)

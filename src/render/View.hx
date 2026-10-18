@@ -1131,6 +1131,13 @@ void main() {
         render.choreo.Reactions.deathFade(choreo, e);
     }
 
+// float a damage number over a struck entity (call before a kill nulls it) — see Actors.damage
+  public function playDamage(e:Entity, amount:Int, isPlayer:Bool):Void
+    {
+      if (running)
+        actors.damage(e, amount, isPlayer);
+    }
+
 // fade a freshly-spawned corpse body in, bound to the death ghost's landing — see render.choreo.Reactions
   public function bindBodyFadeIn(e:Entity, id:Int, ground:Bool):Void
     {

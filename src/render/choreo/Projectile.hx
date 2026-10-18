@@ -71,6 +71,7 @@ class Projectile {
         if (hit &&
             type != 'blood')
           {
+            c.actors.releaseDamage(tx, ty);
             var ai = c.game.area.getAI(tx, ty);
             if (ai != null &&
                 ai.entity != null)

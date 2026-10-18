@@ -39,6 +39,20 @@ typedef ActorOpts = {
 // client px the tooltip beam anchors to. one result rather than two pick calls because the two
 // candidate sets compete for the same nearest-anchor slot — an AI standing in front of a prop has
 // to be able to win, which two independent searches could not decide between. see Actors.pickTarget
+// one floating damage number: holds until its hit visibly lands, then rises above the struck actor
+typedef DamageNumber = {
+  key:String,             // chat-bubble key ('dmg:N')
+  text:String,            // shown amount
+  kind:String,            // bubble variant: 'dmg', or 'dmg player' for damage to the player
+  x:Float,                // world head point, captured at damage time (a kill removes the actor)
+  y:Float,
+  z:Float,
+  col:Int,                // struck cell, matched by releaseDamage from the impact beat
+  row:Int,
+  wait:Float,             // BASE_MS multiples left before it shows
+  t:Float,                // rise progress 0..1 once shown
+}
+
 typedef PickHit = {
   ai:AI,                  // the AI under the cursor, or null
   obj:objects.AreaObject, // the object under it, or null
@@ -76,8 +90,11 @@ class Actors {
   var offscreen:ui.hud.OffscreenHud;                     // screen-edge indicators for seen-but-cropped AI (HUD-owned)
   var bubbles:ui.hud.ChatBubbles;                        // speech bubbles over speaking AI (HUD-owned)
   var convo:ChatConvo;                                   // chat-mode "talking" bubbles over the two conversers
+  var damageNumbers:Array<DamageNumber> = [];            // floating damage numbers, waiting or rising
+  var damageCount = 0;                                   // running id for damage number bubble keys
   var _ov = new Vector3();                               // scratch projection vector (off-screen test)
   var _up = new Vector3();                               // scratch: world dir that reads as "up" on screen
+  var _side = new Vector3();                             // scratch: world dir that reads as "right" on screen
   var _pjx = 0.0;                                        // last projDist result in client px, for
   var _pjy = 0.0;                                        // the pickTarget candidate that wins
   var _pa = new Vector3();                               // scratch: the two ends of the world
@@ -328,6 +345,7 @@ class Actors {
       offscreen.end();
       // chat-mode talking bubbles over the two conversers (queued after the barks, before end())
       convo.drive(dtMs);
+      drawDamage(dtMs);
       bubbles.end();
       var tAI = haxe.Timer.stamp();
       // player billboard: free parasite draws its own sprite; while attached it rides on
@@ -492,6 +510,76 @@ class Actors {
         (-_ov.y * 0.5 + 0.5) * Viewport.h);
     }
 
+// queue a floating damage number over a struck entity the player can see. it holds until the hit
+// visibly lands (releaseDamage from the impact beat), or a short fallback for damage that has no
+// choreography (bleeding, organ ticks, a shot at the free parasite)
+  public function damage(e:Entity, amount:Int, isPlayer:Bool):Void
+    {
+      var a = actors.get(e);
+      if (a == null ||
+          a.op < 0.3)
+        return;
+      headPoint(a, _ov);
+      damageNumbers.push({
+        key: 'dmg:' + (damageCount++),
+        text: '-' + amount,
+        kind: (isPlayer ? 'dmg player' : 'dmg'),
+        x: _ov.x,
+        y: _ov.y,
+        z: _ov.z,
+        col: a.col,
+        row: a.row,
+        wait: RenderConfig.DAMAGE_NUMBER.wait,
+        t: 0,
+      });
+    }
+
+// the impact beat on cell (col,row) landed: show its waiting damage numbers now
+  public function releaseDamage(col:Int, row:Int):Void
+    {
+      for (d in damageNumbers)
+        if (d.col == col &&
+            d.row == row)
+          d.wait = 0;
+    }
+
+// advance the damage numbers and queue the shown ones as chat-bubble variants, rising along the
+// camera's screen-up axis, off to the side of a bark bubble over the same head. one that stops
+// being queued is faded out by the bubble layer
+  function drawDamage(dtMs:Float):Void
+    {
+      var cfg = RenderConfig.DAMAGE_NUMBER;
+      var step = dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      _up.set(0, 1, 0).applyQuaternion(camera.quaternion);
+      _side.set(1, 0, 0).applyQuaternion(camera.quaternion);
+      var side = Sprites.SIZE * cfg.side;
+      for (d in damageNumbers.copy())
+        {
+          if (d.wait > 0)
+            {
+              d.wait -= step;
+              continue;
+            }
+          d.t += step / cfg.life;
+          if (d.t >= 1)
+            {
+              damageNumbers.remove(d);
+              continue;
+            }
+          var e = 1 - (1 - d.t) * (1 - d.t);
+          var lift = Sprites.SIZE * (cfg.lift + cfg.rise * e);
+          _ov.set(d.x + _up.x * lift + _side.x * side,
+            d.y + _up.y * lift + _side.y * side,
+            d.z + _up.z * lift + _side.z * side);
+          _ov.project(camera);
+          if (_ov.z > 1)
+            continue;
+          bubbles.show(d.key, 0, d.text, null, d.kind,
+            (_ov.x * 0.5 + 0.5) * Viewport.w,
+            (-_ov.y * 0.5 + 0.5) * Viewport.h);
+        }
+    }
+
 // queue a screen-edge indicator for a seen AI whose head projects outside the viewport: the
 // alert badge glyph (dot when calm) tinted by the same ramp as the 3D outlines
   function markOffscreen(ai:AI, bs:Array<_Badge>):Void
@@ -531,6 +619,7 @@ class Actors {
     {
       offscreen.clear();
       bubbles.clear();
+      damageNumbers = [];
       decals.dispose();
       slimeTrail.dispose();
     }
