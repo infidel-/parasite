@@ -467,12 +467,9 @@ public function onMouseLeave()
         ', team timeout: ' + game.group.teamTimeout + '<br/>');
       if (game.group.team != null)
         buf.add('Team: ' + game.group.team + '<br/>');
-      // render stats for the active view only: region timing in region mode,
-      // 2D area timing in area mode unless the 3D street view is rendering
+      // region render timing (areas render through the 3D view, timed by `perf street`)
       if (game.location == LOCATION_REGION)
         buf.add('<br/>' + game.scene.getRegionRenderStatsText() + '<br/>');
-      else if (!game.scene.view3d.running)
-        buf.add('<br/>' + game.scene.getAreaRenderStatsText() + '<br/>');
       if (game.location == LOCATION_AREA)
         game.managerArea.debugInfo(buf);
       debugBody.innerHTML = buf.toString();

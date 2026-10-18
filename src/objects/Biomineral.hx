@@ -3,7 +3,6 @@
 package objects;
 
 import game.Game;
-import lighting.AtmosphereLightProfiles;
 
 class Biomineral extends HabitatObject
 {
@@ -66,18 +65,6 @@ class Biomineral extends HabitatObject
           value: '+' + h.parasiteHealthRestored + ' / turn',
         },
       ];
-    }
-
-// get static atmosphere light emitted by this object
-  public override function getAtmosphereLight(): _AtmosphereLightMeta
-    {
-      return AtmosphereLightProfiles.HABITAT_BIOMINERAL;
-    }
-
-// get atmosphere light stamp kind used by this object
-  public override function getAtmosphereLightKind(): String
-    {
-      return 'habitat-biomineral';
     }
 
 /*

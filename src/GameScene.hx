@@ -12,7 +12,6 @@ class GameScene
 {
   public var game: Game; // game state link
   public var area: AreaView; // area view
-  public var areaLighting: AreaLighting;
   public var region: RegionView; // region view
   public var view3d: render.View; // 3D area view (city streets + the underground tunnels)
   public var mouse: Mouse; // mouse cursor entity
@@ -43,7 +42,6 @@ class GameScene
   var _enter3D: Bool = false; // a 3D-view enter fade+build is in flight (guard re-entry)
   static inline var FADE_MS = 150; // transition fade duration (1x BASE_MS)
   var _inputState: Int; // action input state (0 - 1..9, 1 - 10..19, etc)
-  var _renderStatsArea: _RenderStats;
   var _renderStatsRegion: _RenderStats;
 
 
@@ -72,7 +70,6 @@ class GameScene
         {
           resize();
         };
-      _renderStatsArea = createRenderStats();
       _renderStatsRegion = createRenderStats();
     }
 
@@ -89,7 +86,6 @@ class GameScene
       images = new Images(this);
       mouse = new Mouse(game);
       area = new AreaView(this);
-      areaLighting = new AreaLighting(this);
       region = new RegionView(this);
       view3d = new render.View(game);
       fader = new Fader();
@@ -206,13 +202,6 @@ class GameScene
 
       if (game.location == LOCATION_AREA && is3DArea())
         draw3D();
-
-      else if (game.location == LOCATION_AREA)
-        {
-          game.ui.resumeQueue();
-          hide3D();
-          game.scene.area.draw();
-        }
 
       else if (game.location == LOCATION_REGION)
         {
@@ -402,13 +391,6 @@ class GameScene
       return Timer.stamp() * 1000;
     }
 
-// add area render timing sample
-  public inline function endRenderSampleArea(startTS: Float)
-    {
-      updateRenderStats(_renderStatsArea,
-        Timer.stamp() * 1000 - startTS);
-    }
-
 // add region render timing sample
   public inline function endRenderSampleRegion(startTS: Float)
     {
@@ -416,42 +398,17 @@ class GameScene
         Timer.stamp() * 1000 - startTS);
     }
 
-// get formatted area render stats text
-  public inline function getAreaRenderStatsText(): String
-    {
-      return formatRenderStats('Area', _renderStatsArea);
-    }
-
-// get formatted area smooth los overlay render stats text
-  public inline function getAreaSmoothLOSRenderStatsText(): String
-    {
-      if (area == null)
-        return Const.small('Area smooth LOS overlay render time (ms): N/A<br/>' +
-          'Area smooth LOS overlay counts: N/A');
-      return area.getSmoothLOSRenderStatsText();
-    }
-
 // get plain render profile text for browser console copy-paste
   public function getRenderStatsConsoleText(): String
     {
       return 'Parasite render profile\n' +
-        formatRenderStatsConsole('Region', _renderStatsRegion) + '\n' +
-        formatRenderStatsConsole('Area', _renderStatsArea) + '\n' +
-        getAreaSmoothLOSRenderStatsConsoleText();
+        formatRenderStatsConsole('Region', _renderStatsRegion);
     }
 
 // log render profile to browser console
   public inline function logRenderStatsToConsole()
     {
       Browser.console.log(getRenderStatsConsoleText());
-    }
-
-// get plain area smooth los overlay profile for browser console copy-paste
-  public inline function getAreaSmoothLOSRenderStatsConsoleText(): String
-    {
-      if (area == null)
-        return 'Area smooth LOS overlay: no samples';
-      return area.getSmoothLOSRenderStatsConsoleText();
     }
 
 // get formatted region render stats text

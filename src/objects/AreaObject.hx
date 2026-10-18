@@ -3,7 +3,6 @@
 package objects;
 
 import ai.AI;
-import _AtmosphereLightMeta;
 import entities.ObjectEntity;
 import game.Game;
 import game._Item;
@@ -233,18 +232,6 @@ class AreaObject extends _SaveObject
 // collected across the tile and grouped into the pickup submenu when several exist. default none
   public dynamic function getItemActions(): Array<_PlayerAction>
     { return []; }
-
-// get static atmosphere light emitted by this object
-  public dynamic function getAtmosphereLight(): _AtmosphereLightMeta
-    { return null; }
-
-// get atmosphere light stamp kind used by this object
-  public dynamic function getAtmosphereLightKind(): String
-    { return type; }
-
-// check whether this object light drives projected shadows
-  public function isProjectedShadowEmitter(): Bool
-    { return getAtmosphereLight() != null; }
 
 // dynamic: called when the object decays by timer
   public dynamic function onDecay()

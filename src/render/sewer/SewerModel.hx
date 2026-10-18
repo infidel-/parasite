@@ -130,9 +130,8 @@ class SewerModel
 // standing water is render.sewer.SewerWater now: pools, and short trickles off a wall seepage stain
 // into them — never a corridor-long centreline, which is what read as a stripe
 
-// lights at 3x3 corridor corners and intersections — the same placement rule the 2D atmosphere
-// lighting uses (lighting.SewerAreaLighting.addSewerCorridorLayoutSources), so a tunnel lights up
-// in the same places it always did
+// lights at 3x3 corridor corners and intersections — the placement rule the retired 2D atmosphere
+// lighting used, so a tunnel lights up in the same places it always did
   static function addNodeLamps(m:Sewer, room:Array<Array<Bool>>, door:Array<Array<Bool>>):Void
     {
       inline function corridor(col:Int, row:Int):Bool

@@ -33,8 +33,6 @@ class Debug
             aiInfo();
           case 'sound':
             toggleSound();
-          case 'lights':
-            toggleLights();
           case 'colors':
             listColors();
           case 'difficulty' if (Const.isDebug):
@@ -48,7 +46,7 @@ class Debug
           case 'throw' if (Const.isDebug):
             throw 'test exception';
           case '':
-            log('Usage: debug [renderstats|ai|sound|lights|colors|difficulty|alert|demo|leave|throw]');
+            log('Usage: debug [renderstats|ai|sound|colors|difficulty|alert|demo|leave|throw]');
           default:
             log('Unknown debug command: ' + sub + '.');
         }
@@ -99,14 +97,6 @@ class Debug
     {
       game.player.vars.debugSoundEnabled = !game.player.vars.debugSoundEnabled;
       game.debug('Sound debug toggled.');
-    }
-
-// toggles debug markers for area light sources
-  function toggleLights()
-    {
-      game.player.vars.debugLightsEnabled = !game.player.vars.debugLightsEnabled;
-      var state = (game.player.vars.debugLightsEnabled ? 'on' : 'off');
-      game.debug('Light marker debug toggled: ' + state + '.');
     }
 
 // finishes the demo with a lose result

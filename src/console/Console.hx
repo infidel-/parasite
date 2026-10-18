@@ -130,7 +130,6 @@ class Console
               'debug renderstats, ' +
               'debug ai, ' +
               'debug sound, ' +
-              'debug lights, ' +
               'debug colors, ' +
               'debug alert, ' +
               'debug demo, ' +
@@ -171,7 +170,6 @@ class Console
               'debug renderstats, ' +
               'debug ai, ' +
               'debug sound, ' +
-              'debug lights, ' +
               'debug colors, ' +
               'load - load game, ' +
               'mods [list|enable <id>|disable <id>|errors|rescan], ' +

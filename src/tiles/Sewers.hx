@@ -21,9 +21,7 @@ class Sewers extends Tileset
     width: 2,
     height: 2,
   };
-  public static var FLOOR_DECOR_LAYER_ID = 0;
-  public static var FLOOR_DECOR_EXTRA_LAYER_ID = 1;
-  public static var DEBRIS_LAYER_ID = 2;
+  public static var DEBRIS_LAYER_ID = 2; // splat layer id persisted in sewer saves
   public static var TILE_FLOOR = 901;
   public static var TILE_FLOOR_ALT = 900;
   public static var TILE_WALL_UPPER = 910;
@@ -58,18 +56,12 @@ class Sewers extends Tileset
         tileID == TILE_WALL_OUTER_BOTTOM_RIGHT);
     }
 
-  // no FLOOR_DECOR_META here: the weighted floor-decor table it fed was the 2D generator's
-  // (SewerAreaGenerator.decorateFloors), which is gone — a 3D tunnel is dressed by
-  // render.sewer.SewerGround and render.sewer.SewerDebris instead. UndergroundLab keeps its own
-  public static var FLOOR_DECOR_EXTRA_ICONS(get, never): Array<_Icon>;
-  static var floorDecorExtraIconsCache: Array<_Icon>;
-
   public var floor: StringMap<_Icon>;
   public var walls: _WallMap;
   public var wallID: _WallMapID;
   var iconByTileID: Map<Int, _Icon>;
 
-// load sewer tileset image and minimal sewer decoration layers
+// load sewer tileset image
   public function new()
     {
       super('img/sewers.png');
@@ -81,36 +73,7 @@ class Sewers extends Tileset
       iconByTileID = new Map<Int, _Icon>();
       initFloor();
       initWalls();
-      addFloorDecorationLayer('img/sewers-deco-floor1.png', []);
-      addFloorDecorationLayer('img/sewers.png', FLOOR_DECOR_EXTRA_ICONS);
-      addFloorDecorationLayer('img/entities64.png', []);
       splatLayerID = DEBRIS_LAYER_ID;
-    }
-
-// build sewer floor decoration icon list from sewer base tileset rows
-  static function get_FLOOR_DECOR_EXTRA_ICONS(): Array<_Icon>
-    {
-      if (floorDecorExtraIconsCache == null)
-        floorDecorExtraIconsCache = buildFloorDecorExtraIcons();
-      return floorDecorExtraIconsCache;
-    }
-
-// collect extra sewer floor decoration icons from sewer base image rows
-  static function buildFloorDecorExtraIcons(): Array<_Icon>
-    {
-      var icons = [];
-      for (row in 3...6)
-        for (col in 0...8)
-          icons.push({
-            row: row,
-            col: col,
-          });
-      for (col in 0...7)
-        icons.push({
-          row: 6,
-          col: col,
-        });
-      return icons;
     }
 
 // initialize sewer floor icon map
@@ -210,25 +173,5 @@ class Sewers extends Tileset
         tileID == TILE_WALL_OUTER_TOP_RIGHT ||
         tileID == TILE_WALL_OUTER_BOTTOM_LEFT ||
         tileID == TILE_WALL_OUTER_BOTTOM_RIGHT);
-    }
-
-// check if sewer wall tile is horizontal
-  public override function isHorizontalWallTile(tileID: Int): Bool
-    {
-      return (tileID == TILE_WALL_UPPER ||
-        tileID == TILE_WALL_LOWER);
-    }
-
-// check if sewer wall tile is vertical
-  public override function isVerticalWallTile(tileID: Int): Bool
-    {
-      return (tileID == TILE_WALL_LEFT ||
-        tileID == TILE_WALL_RIGHT);
-    }
-
-// sewer floor decorations and debris never block movement
-  public override function isBlockingDecoration(tileID: Int, decoration: tiles.Decoration): Bool
-    {
-      return false;
     }
 }

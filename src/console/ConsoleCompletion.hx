@@ -74,7 +74,6 @@ class ConsoleCompletion
         { lit: 'renderstats' },
         { lit: 'ai' },
         { lit: 'sound' },
-        { lit: 'lights' },
         { lit: 'colors' },
       ];
       if (Const.isDebug)

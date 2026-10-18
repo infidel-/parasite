@@ -4,8 +4,6 @@ package tiles;
 
 class Default extends Tileset
 {
-  public static var STREET_DEBRIS_LAYER_ID = 0;
-
   public static var TILE_WALKABLE = [
     // row 0. TILE_ROCK (3) is UNWALKABLE, matching the four tree tiles (5-8) beside it: it is written
     // only by game.AreaGenerator.generateWilderness, and render.wild.WildProps stands a boulder or a
@@ -163,8 +161,7 @@ class Default extends Tileset
   public function new()
     {
       super('img/tileset64.png');
-      addFloorDecorationLayer('img/entities64.png', []);
-      splatLayerID = floorDecorationLayers.length - 1;
+      splatLayerID = 0; // persisted in SPLAT decorations: the one floor layer the 2D view had
     }
 
 // map tile id to icon coordinates.

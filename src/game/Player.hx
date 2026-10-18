@@ -72,7 +72,6 @@ class Player extends _SaveObject
         godmodeEnabled: false,
         isSpoonGame: game.config.isSpoonMode(),
         debugSoundEnabled: false,
-        debugLightsEnabled: false,
       };
 
       state = PLR_STATE_PARASITE;

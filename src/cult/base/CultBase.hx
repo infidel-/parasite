@@ -875,21 +875,8 @@ class CultBase extends _SaveObject
 
       var tileID = area.getCellType(x, y);
       var tileset = game.scene.images.getTileset(area.getTilesetTypeID());
-      if (tileset == null ||
-          !tileset.isWalkable(tileID))
-        return false;
-
-      if (area.tiles == null ||
-          area.tiles.length == 0)
-        area.initTilesFromCells();
-      var tile = area.getTiles()[x][y];
-      if (tile == null ||
-          tile.decoration == null)
-        return true;
-      for (decoration in tile.decoration)
-        if (tileset.isBlockingDecoration(tileID, decoration))
-          return false;
-      return true;
+      return (tileset != null &&
+        tileset.isWalkable(tileID));
     }
 
 // removes ribwall record/object for gate replacement

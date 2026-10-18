@@ -98,12 +98,6 @@ class Particle
   public function draw(ctx: CanvasRenderingContext2D, dt: Float)
     {}
 
-// provide optional light pulses for this particle
-  public function getLightPulses(): Array<_ParticleLightPulse>
-    {
-      return [];
-    }
-
 // on death hook
   public function onDeath()
     {}

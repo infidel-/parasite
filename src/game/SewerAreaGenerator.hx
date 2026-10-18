@@ -9,7 +9,6 @@ import game.AreaGenerator;
 import objects.mission.HabitatExit;
 import objects.mission.SewerExit;
 import tiles.Sewers;
-import tiles._FloorDecorMeta;
 
 typedef SewerAreaGeneratorOptions = {
   @:optional var blockWidth: Int;

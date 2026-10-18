@@ -189,17 +189,6 @@ class Mouse
         game.area.isVisible(game.playerArea.x,
           game.playerArea.y, pos.x, pos.y, true) +
         ' walk: ' + game.area.isWalkable(pos.x, pos.y));
-      if (game.scene.areaLighting != null)
-        {
-          for (line in AreaLightingDebug.getTileLightDebugLines(
-              game.scene.areaLighting,
-              game.area, pos.x, pos.y))
-            trace(line);
-          for (line in AreaLightingDebug.getTileDynamicShadowDebugLines(
-              game.scene.areaLighting,
-              game.area, pos.x, pos.y))
-            trace(line);
-        }
     }
 
 
