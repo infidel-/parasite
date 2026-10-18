@@ -56,10 +56,10 @@ class Chainsaw extends items.Weapon
         }
 
       // 3 blood spurts arc out radially from the target, landing in a red splat.
-      // in a 3D area the engine throws them (playProjectile 'blood' lobs the same
-      // sine arc and bursts on landing); everywhere else the mod-side 2D particle
-      // subclass draws it, since #view covers #canvas and a 2D particle would be
-      // hidden under it. same first-refusal shape the engine uses in Particle.hx
+      // the 3D view throws them (playProjectile 'blood' lobs a sine arc and
+      // bursts on landing); it declines while it is still building on area
+      // entry, and then only the splat is laid. same first-refusal shape the
+      // engine uses in Particle.hx
       for (i in 0...3)
         {
           var angle = Math.random() * Math.PI * 2;
@@ -68,12 +68,10 @@ class Chainsaw extends items.Weapon
           var landY = ty + Math.round(Math.sin(angle) * dist);
           var delay = i * 70;
           js.Browser.window.setTimeout(function() {
-            if (scene.view3d.running)
-              scene.view3d.playProjectile('blood', tx, ty, landX, landY, true, 'red');
-            else
-              new ParticleBloodSpurt(scene,
-                { x: tx, y: ty },
-                { x: landX, y: landY });
+            if (!scene.view3d.playProjectile('blood', tx, ty, landX, landY, true, 'red'))
+              particles.Particle.createSplat('red', scene,
+                { x: landX, y: landY },
+                { x: tx, y: ty });
           }, delay);
         }
 

@@ -47,7 +47,7 @@ Limitations baked into the generator:
 - **Module sub-types** (a type whose file name differs from its path) and
   **enum-abstracts** are skipped, so they resolve to `Dynamic`.
 - A **blacklist** drops internal machinery mods never reference (pathfinding,
-  console internals, lighting, map internals, mod-loader internals, the host
+  console internals, map internals, mod-loader internals, the host
   bridge, version, and a few cult subsystems) — these also resolve to
   `Dynamic`.
 

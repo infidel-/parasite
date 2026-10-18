@@ -1693,3 +1693,34 @@ painted onto the masonry. `glassFloor` 1.0 keeps the star's lower edge on the gl
 
 **Verdict:** landed. The cracks stay faint in an unlit room, and `lift` is the wrong knob for that: it
 is a gamma that greys the dark puncture and leaves the pale cracks where they are.
+
+**Follow-up:** the puncture drew as an opaque black disc where the pane should show through. The
+pack's dark pixels are their own band (luma mode 16-31, almost nothing at 32-39, the crushed rim from
+40), so `tools/textures.py` gained `hole_alpha` (the dark mirror of `glass_alpha`) and the four labels
+key luma < 36 to alpha 0. Checked on the built textures over a flat backdrop, not yet in game.
+
+## The 2D area renderer retired: AreaView is a shim, the lighting stack is gone
+
+**Changed:** every area kind draws through `render.View`, so the 2D area canvas never painted, yet
+its code still compiled and part of it still ran every turn. Deleted: the `AreaView` draw body, tile
+pass, smooth-LOS overlays and visibility cache (1,262 lines → 79: camera update, the 3D path preview
+feed, the legacy particle list), the whole atmosphere lighting stack (`AreaLighting`,
+`AreaLightingDebug`, `lighting/`, `debug lights`), the built-in 2D particle subclasses, the 2D entity
+draw family and the sewer 2D atlas. `particles.Particle` stays for mods, marked LEGACY: `draw` is
+never called, `onDeath` still fires off a 10 ms reaper. The `Particle.create*` factories hand off to
+`view3d.play*` and, when the view declines, keep only the lasting part (the persisted splat, the
+sound). The five readouts that lived only in the 2D draw were ported: the badge-pass readouts (entry
+above), the minimap (a HUD canvas, `ui.hud.MinimapHud`, cropped to the walkable bounds) and the
+glass-hit sound (`Shot.firstGlass`, timed to the tracer, once per shot).
+
+**Measured:** phases 1-5, five commits: 6,771 lines deleted, 203 added.
+
+**Trap:** nothing errored when areas went 3D. The readouts sat inside a draw body that a 3D area
+early-outs, so they vanished silently, and the code that fed them kept running. Three live bugs were
+hiding there: transient lights were pruned only in the 2D lighting draw, so in a 3D sewer or habitat
+the 100 Hz redraw interval never stopped; `getSpawnRect` had no `corp`/`undergroundLab` case and
+spawned over the 2D canvas rect; and `AreaView.turn` ran twice per turn.
+
+**Verdict:** landed. The region map stays 2D and keeps `Entity`/`PawnEntity`/`Tileset.draw`. The mod
+SDK docs call 2D particles legacy, and `examples/chainsaw` dropped its two 2D particle classes for
+the engine's splat fallback.

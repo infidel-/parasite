@@ -47,62 +47,32 @@ the method you want to patch is present even if vanilla code never calls it.
 Most engine externs are emitted as `@:native('window.parasiteHx[...]')` —
 typed views onto live engine classes. You can `extends` them from mod code; Haxe
 emits real prototype-chain inheritance against the engine's class object. The
-engine's loops (item construction, particle draw loop, etc.) virtual-dispatch
-through the prototype, so your overrides run without the engine needing to know
-about your subclass.
+engine's loops (item construction, etc.) virtual-dispatch through the prototype,
+so your overrides run without the engine needing to know about your subclass.
 
-Two patterns ship in `examples/chainsaw/`:
+`examples/chainsaw/` ships one: `Chainsaw extends items.Weapon` — the engine
+constructs it via `Type.createInstance` during `ItemsConst.init` (driven by
+`parasite.api.registerItem`).
 
-- `Chainsaw extends items.Weapon` — engine constructs it via `Type.createInstance`
-  during `ItemsConst.init` (driven by `parasite.api.registerItem`).
-- `ParticleBloodSpurt extends particles.Particle` — mod constructs it directly
-  with `new`; the engine's `AreaView.drawParticles` loop picks up `draw` /
-  `onDeath` overrides by virtual dispatch.
+### Legacy 2D particles
 
-```haxe
-class ParticleBloodSpurt extends particles.Particle
-{
-  public function new(s: GameScene, from: _Point, to: _Point)
-    {
-      super(s);
-      time = 220;
-      // ... precompute trajectory ...
-      s.area.addParticle(this);
-    }
+Every area renders in the 3D view (`render.View`), on an opaque full-viewport
+`#view` canvas that covers the 2D `#canvas`; only the region map still draws on
+`#canvas`. **Nothing draws a `particles.Particle` any more.** The class,
+`Particle.draw` and `area.addParticle` are kept so older mods still compile and
+load, but `draw` is never called. Only `onDeath()` still fires, once `isDead()`
+turns true, so a subclass is a timer for its landing effect and nothing else.
 
-  // engine calls this every ~10ms with dt ∈ [0..1]
-  public override function draw(ctx: Dynamic, dt: Float) { /* draw blob */ }
-
-  // engine calls this once when isDead() returns true
-  public override function onDeath()
-    {
-      Particle.createSplat('red', scene, dstTile, srcTile);
-    }
-}
-```
-
-### 2D particles are invisible in a 3D area
-
-A `particles.Particle` subclass paints onto the 2D `#canvas`. Some areas — every
-`type: 'city'` area today — render in the 3D view instead, on an opaque
-full-viewport `#view` canvas that **completely covers `#canvas`**, and the engine
-skips the 2D area draw for them entirely. Anything your particle draws there is
-hidden. Worse, `area.addParticle` starts a 100Hz full 2D redraw for the
-particle's lifetime, so you pay for frames nobody sees.
-
-The engine solves this for its own particles by offering the 3D view first
-refusal (see `particles/Particle.hx`), and mods should use the same shape:
+For anything the player should see, use the 3D view, and `parasite.fx` (below)
+for screen-space effects. `game.scene.view3d` exposes the choreography the
+engine drives its own effects through. Each call returns `false` when the view
+cannot play it (it is still building on area entry), so the engine's helpers and
+mods use a first-refusal shape that falls back to the lasting part alone:
 
 ```haxe
-if (scene.view3d.running)
-  scene.view3d.playProjectile('blood', tx, ty, landX, landY, true, 'red');
-else
-  new ParticleBloodSpurt(scene, { x: tx, y: ty }, { x: landX, y: landY });
+if (!scene.view3d.playProjectile('blood', tx, ty, landX, landY, true, 'red'))
+  particles.Particle.createSplat('red', scene, { x: landX, y: landY }, { x: tx, y: ty });
 ```
-
-`game.scene.view3d` (`render.View`) exposes the 3D choreography the engine drives
-its own effects through. Each returns `false` when the view is not running, so a
-`play* || fallback` shape works too:
 
 | call | effect |
 |---|---|
@@ -114,10 +84,14 @@ its own effects through. Each returns `false` when the view is not running, so a
 | `playMelee(...)` / `playShot(...)` | full attack choreography (lunge/tracer → impact beat) |
 
 `playProjectile` types are `'acidSpit'`, `'slimeSpit'`, `'paralysisSpit'`,
-`'needle'` and `'blood'`. **`'blood'` is 3D-only** — it lobs a blood clot over an
-arc and bursts on landing, but `Particle.createProjectile` has no 2D
-counterpart, so shipping the 2D fallback for that one stays your job (which is
-exactly what `ParticleBloodSpurt` above is for).
+`'needle'` and `'blood'`. **`'blood'` has no fallback** in
+`Particle.createProjectile` — it lobs a blood clot over an arc and bursts on
+landing, so laying the splat when the view declines is your job (the snippet
+above, from `examples/chainsaw/`).
+
+`Particle.createSplat` / `createShot` / `createProjectile` already do the
+first-refusal themselves: the 3D effect when the view plays it, else the
+persisted splat and the sound.
 
 ### Override signatures must match the *extern*, not the engine source
 
@@ -238,8 +212,8 @@ fx by id (cross-mod reuse) without poking `Browser.document` directly.
 | `parasite.fx.play(id, params)`                                    | look up and run the fx. Unknown id warns once and is a no-op. `params` is `Dynamic`; the impl decides its shape. |
 | `parasite.fx.stop(id)`                                            | call the registered `stop()` hook, if any. Mods that compose with `tick` can use the optional channel to also cancel in-flight frames. |
 | `parasite.fx.tick(durationMS, frameFn, ?onDone, ?channelID)`      | RAF-based scheduler. `frameFn(t)` runs each frame with `t` in `[0..1]`; `onDone()` fires once after `frameFn(1.0)`. If `channelID` is set, a re-play on the same channel cancels the in-flight tick. RAF pauses on tab blur and resumes on return. |
-| `parasite.fx.canvas()`                                            | `Element` — the **2D** `#canvas` specifically (may be `null` before the scene exists). In a 3D area it is completely covered by `#view`, so anything anchored on it is invisible there — use `viewport()` for that. |
-| `parasite.fx.viewport()`                                          | `Element` — whichever canvas the game is currently drawing into: the 3D view canvas (`#view`) while a 3D area is shown, else the 2D `#canvas`. This is the one for viewport-anchored fx (camera shake). |
+| `parasite.fx.canvas()`                                            | `Element` — the **2D** `#canvas` specifically (may be `null` before the scene exists). Only the region map draws on it; in an area it is completely covered by `#view`, so anything anchored on it is invisible there — use `viewport()` for that. |
+| `parasite.fx.viewport()`                                          | `Element` — whichever canvas the game is currently drawing into: the 3D view canvas (`#view`) while an area is shown, else the 2D `#canvas` (the region map). This is the one for viewport-anchored fx (camera shake). |
 | `parasite.fx.overlay()`                                           | `Element` — the engine-owned reusable fullscreen overlay div. Fixed-position, `pointer-events: none`, `z-index: 9999`, initial `opacity: 0`. Mods set their own styles each play; concurrent flashes from different mods stomp each other. |
 
 ### Pattern
@@ -248,7 +222,7 @@ Register at boot, fire later (from a weapon hook, an event, anywhere). The
 `channelID` lets a re-play interrupt an in-flight tick instead of running
 parallel frame loops, which is what you want for shake / flash / juice fx.
 Note `viewport()`, not `canvas()` — a shake anchored on the 2D canvas does
-nothing in a 3D area, where `#view` covers it:
+nothing in an area, where `#view` covers it:
 
 ```haxe
 parasite.fx.register('mod-mymod-shake', {

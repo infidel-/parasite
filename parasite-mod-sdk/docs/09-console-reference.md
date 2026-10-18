@@ -39,7 +39,6 @@ Ctrl-F5 to reload the renderer — that re-runs the mod loader and re-reads
 | `debug renderstats`             | all           | toggle render stats                                 |
 | `debug ai`                      | all           | AI debug                                            |
 | `debug sound`                   | all           | sound debug                                         |
-| `debug lights`                  | all           | lighting debug                                      |
 | `debug alert` / `demo` / `leave` / `throw` | debug | misc debug subcommands                          |
 | `save` (`sa`, `sav`)            | all           | save game (slot 1)                                  |
 | `r` / `restart`                 | all           | restart game                                        |

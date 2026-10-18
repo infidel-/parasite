@@ -1693,6 +1693,7 @@ back) — grep the change text.
 | **Actor hit flash: `Effect` got a GLOW channel** (host breaking: red flash + shake) | `Effect.glow`/`glowInt`, read by `Actors.drawActor` into the sprite's existing `emissive`/`emissiveInt` in place of the lamp flicker. Emissive is `color x the sprite's own texels`, so `#f26a6a` read orange on a yellow face; `#ff2a2a` at peak 2.0 reads red. No new material, program or call | **landed. Trap: a CDP screenshot lands SECONDS late — a 450ms flash is never in it; stretch `RenderConfig.BREAKING.ms` live to see one** |
 | **2D-only readouts onto the badge pass: padlock, organ health bar + broken X, forma cursor** (`Badges.drawObjBadges`/`drawFormaCursor`, tactical camera in forma) | retiring the 2D renderer took four readouts nothing in 3D drew | **landed. +1 call per quad shown, +0 programs** |
 | **Glass bullet holes: a crack star where a bullet crosses a facility/corp window pane** (`Shot.spawnGlassHole`, `WALLHOLE` + `glass`, `decals/bullet-hole-glass-1..4`) | +1 call per star; the pane batch sorted over the stars until they drew at `ORD_FIXTURE` | **landed. scale 0.6 + `glassFloor` keep it legible and off the spandrel** |
+| **The 2D area renderer retired: AreaView is a shim, the lighting stack is gone** (`AreaView` 1,262 → 79 lines, `AreaLighting`/`lighting/` deleted, `Particle` LEGACY) | the 2D draw early-out hid five readouts and three live bugs (100 Hz redraw leak, corp/lab spawn rect, double `turn`) | **landed. -6,771/+203 lines; minimap, glass sound, badge readouts ported** |
 
 ## Standing notes
 
