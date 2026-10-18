@@ -15,6 +15,8 @@ class MinimapHud
   var canvas: CanvasElement; // what the HUD shows, in device pixels
   var base: CanvasElement; // the layout, 1px per cell
   var cells: Array<Array<Int>>; // cell grid the base was built from (a new area or a load swaps it)
+  var ox: Int; // area cell at the base's top-left corner (the base is cropped to the walkable bounds)
+  var oy: Int;
 
   // cell class colors: solid, floor, road. no see-through class: facility wall tiles answer
   // canSeeThrough true, so one painted the whole corp compound as glass
@@ -68,21 +70,25 @@ class MinimapHud
       ctx.drawImage(base, 0, 0, w, h);
       ctx.fillStyle = '#c441c4';
       ctx.beginPath();
-      ctx.arc((game.playerArea.x + 0.5) * scale, (game.playerArea.y + 0.5) * scale,
+      ctx.arc((game.playerArea.x - ox + 0.5) * scale, (game.playerArea.y - oy + 0.5) * scale,
         2 * scale, 0, Math.PI * 2, false);
       ctx.fill();
     }
 
-// rebuild the 1px-per-cell layout from the area's tiles (objects left out, a door would go stale)
+// rebuild the 1px-per-cell layout from the area's tiles (objects left out, a door would go stale),
+// cropped to the walkable bounds plus one cell: every area has a solid rim of its own width on each
+// side, and drawn whole it framed the map in uneven dark margins
   function build()
     {
       var area = game.area;
       var tileset = area.getTileset();
       cells = area.getCells();
-      base.width = area.width;
-      base.height = area.height;
-      var ctx = base.getContext2d();
-      var img = ctx.createImageData(area.width, area.height);
+      // classify every cell and find the walkable bounds
+      var classes = [];
+      var x1 = area.width;
+      var y1 = area.height;
+      var x2 = -1;
+      var y2 = -1;
       for (y in 0...area.height)
         for (x in 0...area.width)
           {
@@ -91,7 +97,29 @@ class MinimapHud
               tileID == Const.TILE_CROSSWALKV ||
               tileID == Const.TILE_CROSSWALKH ? 2 :
               tileset.isWalkable(tileID) ? 1 : 0);
-            var i = (y * area.width + x) * 4;
+            classes.push(cls);
+            if (cls == 0)
+              continue;
+            x1 = Std.int(Math.min(x1, x));
+            y1 = Std.int(Math.min(y1, y));
+            x2 = Std.int(Math.max(x2, x));
+            y2 = Std.int(Math.max(y2, y));
+          }
+      ox = Std.int(Math.max(x1 - 1, 0));
+      oy = Std.int(Math.max(y1 - 1, 0));
+      var w = Std.int(Math.min(x2 + 2, area.width)) - ox;
+      var h = Std.int(Math.min(y2 + 2, area.height)) - oy;
+
+      // paint the cropped rect
+      base.width = w;
+      base.height = h;
+      var ctx = base.getContext2d();
+      var img = ctx.createImageData(w, h);
+      for (y in 0...h)
+        for (x in 0...w)
+          {
+            var cls = classes[(y + oy) * area.width + x + ox];
+            var i = (y * w + x) * 4;
             img.data[i] = COLORS[cls][0];
             img.data[i + 1] = COLORS[cls][1];
             img.data[i + 2] = COLORS[cls][2];
