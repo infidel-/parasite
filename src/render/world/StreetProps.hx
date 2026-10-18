@@ -282,8 +282,8 @@ class StreetProps
 // list order taking its `chance` off a hash of the cell. `blocked` cells (objects) and the lamps' cells
 // stay clear, and nothing stands on a cell in front of a door, kerb props included, nor at a kerb
 // where its road turns. a prop with a `pile` deals its pieces there (deal). `furniture` is the kerb
-// row the generator made impassable (grid keys), null where the area has none: its `block` props
-// stand there and only there. one instanced batch per glb
+// and alley cells the generator made impassable (grid keys), null where the area has none: its
+// `block` props stand there and only there. one instanced batch per glb
   public static function ground(scene:Scene, city:City, blocked:Map<Int, Bool>, bins:Array<Int>,
       furniture:Array<Int>):Array<InstancedProp>
     {
@@ -390,36 +390,57 @@ class StreetProps
               return;
             }
         }
-      // the furniture row: one `block` prop centred on each cell, square to its road, picked off the
-      // cell's hash by the props' chances
+      // the furniture: one `block` prop of its spot on each cell, picked off the cell's hash by the
+      // props' chances, an `apart` one swapped for one that is not where a neighbour already holds
+      // it. on the kerb it stands centred and square to its road, in an alley against its wall
       if (furniture != null)
         {
-          var total = 0.0;
-          for (gp in props)
-            if (gp.block == true)
-              total += gp.chance;
+          var placed = new Map<Int, String>();
           for (k in furniture)
             {
               var col = k % GRID;
               var row = Std.int(k / GRID);
               taken.set(k, true);
+              var kerb = WorldCtx.tiles[row][col] == Tile.Walkway;
+              var cands = [for (gp in props) if (gp.block == true && gp.spot == (kerb ? KERB : SERVICE)) gp];
+              if (cands.length == 0)
+                continue;
+              var total = 0.0;
+              for (gp in cands)
+                total += gp.chance;
               var u = cellHash(col, row, -2) % 10000 / 10000 * total;
-              for (gp in props)
+              var gp = cands[cands.length - 1];
+              for (o in cands)
                 {
-                  if (gp.block != true)
-                    continue;
-                  u -= gp.chance;
-                  if (u >= 0)
-                    continue;
-                  var c = cellToWorld(col, row);
-                  put(gp.path, gp.h, {
-                    x: c.x,
-                    z: c.z,
-                    y: RenderConfig.CURB_H,
-                    yaw: Geom.faceRotY(roadDir(col, row)),
-                  });
-                  break;
+                  u -= o.chance;
+                  if (u < 0)
+                    {
+                      gp = o;
+                      break;
+                    }
                 }
+              var near = false;
+              for (d in 0...4)
+                if (placed.get(k + Std.int(DZ[d]) * GRID + Std.int(DX[d])) == gp.path)
+                  near = true;
+              if (gp.apart == true &&
+                  near)
+                for (o in cands)
+                  if (o.apart != true)
+                    {
+                      gp = o;
+                      break;
+                    }
+              placed.set(k, gp.path);
+              var c = cellToWorld(col, row);
+              var d = (kerb ? roadDir(col, row) : wallDir(col, row));
+              var out = (kerb ? 0.0 : CELL / 2 - gp.depth / 2 - WALL_GAP);
+              put(gp.path, gp.h, {
+                x: c.x + DX[d] * out,
+                z: c.z + DZ[d] * out,
+                y: (kerb ? RenderConfig.CURB_H : 0.0),
+                yaw: Geom.faceRotY(kerb ? d : OPP[d]),
+              });
             }
         }
       // the cells either side of a dumpster along its wall

@@ -1400,9 +1400,10 @@ tiles rather than being handed them:
   `AreaGame.cityGenVersion` (bump `CityProfile.Profiles.VERSION`, hand the old layout to areas below
   it, as `DowntownProfile.LEGACY` does) or the saved cells and the 3D city disagree. Lamps are the
   exception: they are render-only and may move freely
-- downtown's kerb-row furniture is `TILE_WALKWAY_UNWALKABLE` (`CityAreaGenerator.placeFurniture`), and
-  `render.CityArea` reads EVERY such cell in a version-1 city as furniture. Nothing else may flip
-  downtown walkway to that tile
+- downtown's street furniture is a tile flip (`CityAreaGenerator.placeFurniture`): kerb-row trees and
+  planters `TILE_WALKWAY_UNWALKABLE`, alley compactors `TILE_ALLEY_UNWALKABLE`. `render.CityArea`
+  reads EVERY such cell in a version-1 city as furniture (and keeps back doors off it). Nothing else
+  may flip downtown walkway or alley to those tiles
 
 ## Known, not fixed
 

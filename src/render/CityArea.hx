@@ -70,12 +70,24 @@ class CityArea implements Area3D
       // chunk pass only ever touches static geometry the world builder adds below
       var pre = scene.children.copy();
       sceneRef = scene;
-      // a back door must not open onto a dumpster standing against its wall
+      // the street furniture, where the area was generated with it (game.CityAreaGenerator
+      // .placeFurniture): its cells are the walkway and alley it flipped unwalkable
+      var furniture:Array<Int> = null;
+      if (game.area.cityGenVersion >= 1)
+        furniture = [for (row in 0...CityConfig.GRID) for (col in 0...CityConfig.GRID)
+          if (game.area.getCellType(col, row) == Const.TILE_WALKWAY_UNWALKABLE ||
+              game.area.getCellType(col, row) == Const.TILE_ALLEY_UNWALKABLE)
+            row * CityConfig.GRID + col];
+      // a back door must not open onto a dumpster standing against its wall, nor onto a compactor
       var bins = new Map<Int, Bool>();
       for (o in game.area.getObjects())
         if (o.type == 'dumpster')
           bins.set(o.y * CityConfig.GRID + o.x, true);
-      render.world.WorldCtx.doorBlocked = function(col, row) return bins.exists(row * CityConfig.GRID + col);
+      var solid = bins.copy();
+      if (furniture != null)
+        for (k in furniture)
+          solid.set(k, true);
+      render.world.WorldCtx.doorBlocked = function(col, row) return solid.exists(row * CityConfig.GRID + col);
       World.build(scene, cityModel, seed, style);
       render.world.WorldCtx.doorBlocked = null;
       // the wall kit, merged per building and tagged with it. a cached glb (the boot warm loads it)
@@ -106,17 +118,6 @@ class CityArea implements Area3D
               var w = CityConfig.cellToWorld(o.x, o.y);
               vents.push(new Vector3(w.x, (cityModel.tiles[o.y][o.x] == Tile.Walkway ? RenderConfig.CURB_H : 0.0), w.z));
             }
-        }
-      // the kerb row's furniture, where the area was generated with one (game.CityAreaGenerator
-      // .placeFurniture): its cells are the walkway it flipped unwalkable
-      var furniture = null;
-      if (game.area.cityGenVersion >= 1)
-        {
-          furniture = [];
-          for (row in 0...CityConfig.GRID)
-            for (col in 0...CityConfig.GRID)
-              if (game.area.getCellType(col, row) == Const.TILE_WALKWAY_UNWALKABLE)
-                furniture.push(row * CityConfig.GRID + col);
         }
       groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k], furniture);
       groundProps.push(render.world.StreetProps.wrecks(scene, game.area));

@@ -1591,3 +1591,23 @@ and a one-cell walkway: the second ring touches no road. And a city's 3D view co
 alone, so a layout change without a version gate splits every saved city from its own picture.
 
 **Verdict:** landed.
+
+## Downtown compactors impassable, and no two planters side by side
+
+**Changed:** the compactor is a `block` SERVICE prop. `CityAreaGenerator.placeFurniture` deals it on
+a cell a dumpster could take (`isDumpsterSpot`: one wall, its eight neighbours stay one group, so it
+cuts no route) that is off the alley's mouth (`isServiceSpot`). It flips that cell to
+`TILE_ALLEY_UNWALKABLE`. `StreetProps.ground` stands it against that wall, unslid. `render.CityArea`
+reads alley furniture as well as kerb furniture, and adds both to `WorldCtx.doorBlocked`, so no back
+door opens onto a compactor. A new `apart` flag (the planter) swaps a pick for the spot's other
+furniture (the tree) where an orthogonal neighbour already holds it. Recycling stations and bollards
+stay walk-past dressing.
+
+**Measured:** new downtown (10,7): 129 kerb furniture cells = 93 trees + 36 planters, 15 alley cells
+= 15 compactors, 0 planters orthogonally adjacent, `__check` pass with 0 doorless.
+
+**Trap:** the furniture cells are drawn as well as walled off, so both sides must read the same
+cells. The 3D view reads the game's tiles, never its own hash.
+
+**Verdict:** landed. Areas generated before this have no alley furniture, and in them the compactor is
+neither drawn nor dealt.

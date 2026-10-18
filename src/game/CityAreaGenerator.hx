@@ -110,35 +110,71 @@ class CityAreaGenerator
       // and the slums' car wrecks, abandoned at the kerb
       placeCars(area);
 
-      // and downtown's street furniture down the kerb row, clear of the hatches above
+      // and downtown's street furniture down the kerb row and the service alleys, clear of the
+      // hatches above
       placeFurniture(area);
     }
 
-// line the kerb row of downtown's two-cell pavement with its street furniture (the style's `block`
-// ground props: trees, planters), each a tile flip to the unwalkable twin that
-// render.world.StreetProps draws the furniture over, so the row against the buildings stays the
-// clear walk. a cell takes it off the props' summed chances, on a kerb whose road runs straight past
-// and never on a hatch, a lamp or a crosswalk's end. a downtown generated before the two-cell
-// pavement (cityGenVersion 0) has no such row and keeps its walk-through dressing
+// deal downtown's street furniture (the style's `block` ground props): the kerb row of its two-cell
+// pavement takes the trees and planters, so the row against the buildings stays the clear walk, and
+// the service alleys the compactors. each is a tile flip to the unwalkable twin that
+// render.world.StreetProps draws the furniture over, taken off its spot's summed chances: a kerb
+// whose road runs straight past and is no hatch, lamp or crosswalk's end; an alley cell a dumpster
+// could take (one wall, cuts no route) off the alley's mouth. a downtown generated before the
+// two-cell pavement (cityGenVersion 0) keeps its walk-through dressing
   function placeFurniture(area: AreaGame)
     {
       if (area.typeID != AREA_CITY_HIGH ||
           area.cityGenVersion < 1)
         return;
-      var chance = 0.0;
+      var kerb = 0.0;
+      var service = 0.0;
       for (gp in render.world.AreaStyle.forArea(area.typeID).groundProps)
         if (gp.block == true)
-          chance += gp.chance;
+          switch (gp.spot)
+            {
+              case KERB:
+                kerb += gp.chance;
+              case SERVICE:
+                service += gp.chance;
+              default:
+            }
       var lit = new Map<Int, Bool>();
       for (l in lamps)
         lit.set(l.row * area.width + l.col, true);
       for (y in 0...area.height)
         for (x in 0...area.width)
-          if (kerbRoad(area, x, y) >= 0 &&
+          if ((kerbRoad(area, x, y) >= 0 &&
               !area.hasObjectAt(x, y) &&
               !lit.exists(y * area.width + x) &&
-              Std.random(10000) < chance * 10000)
+              Std.random(10000) < kerb * 10000) ||
+              (isServiceSpot(area, x, y) &&
+              Std.random(10000) < service * 10000))
             gen.makeTileUnwalkable(area, x, y);
+    }
+
+// can a compactor stand here: a dumpster's spot kept off the alley's mouth, where its length along
+// the wall would stand out over the pavement
+  function isServiceSpot(area: AreaGame, x: Int, y: Int): Bool
+    {
+      if (!isDumpsterSpot(area, x, y))
+        return false;
+      var w = 0;
+      while (area.getCellType(x + Const.dir4x[w], y + Const.dir4y[w]) != Const.TILE_BUILDING)
+        w++;
+      var ax = Const.dir4y[w] * Const.dir4y[w];
+      var ay = Const.dir4x[w] * Const.dir4x[w];
+      return !isStreet(area.getCellType(x + ax, y + ay)) &&
+        !isStreet(area.getCellType(x - ax, y - ay));
+    }
+
+// is this tile the street: pavement, road or a crossing
+  static inline function isStreet(c: Int): Bool
+    {
+      return c == Const.TILE_WALKWAY ||
+        c == Const.TILE_ROAD ||
+        c == Const.TILE_CROSSWALKV ||
+        c == Const.TILE_CROSSWALKH;
     }
 
 // the one Const.dir4x/dir4y direction from a walkway cell that holds road (a crosswalk included, so
