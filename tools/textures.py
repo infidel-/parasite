@@ -10,6 +10,8 @@ Driven by art/textures.json (tracked; the sources it points at are not). For eac
      dark for the surface it lands on (see lift_gamma; alpha is left alone),
   3c. for an entry with "glass_alpha": drops the alpha of the BRIGHT half of a glazing
      texture so the panes go see-through and the dark frame stays solid (see glass_cut),
+  3c'. for an entry with "hole_alpha": the reverse, drops the alpha of the DARK pixels, for a
+     decal whose hole has to show what is behind it (see hole_cut),
   3d. for an entry with "sat": mixes it toward its own luminance, for art painted in a
      chroma the room's palette cannot take (see sat_mix; luma is preserved),
   3e. for an entry with "cells": scales any cell of a PACK sheet that is brighter than the
@@ -325,6 +327,22 @@ def glass_cut(im, thr, a):
     return Image.fromarray(px, "RGBA")
 
 
+def hole_cut(im, thr, a):
+    """Take every opaque pixel darker than `thr` down to alpha `a`: glass_cut the other way round.
+
+    For a bullet hole in GLASS, which gpt paints as a black disc: a hole through a pane shows what
+    is behind it, and black reads as a blot stuck on the glass. Measured on
+    decals/bullet-hole-glass-pack: the puncture is its own luma mode at 16-31 (3,820 px), a valley at
+    32-39 (376), and the crushed rim starts at 40, so a threshold in the valley takes the hole and
+    leaves the rim. Full-res, before the downscale, for glass_cut's reason."""
+    im = im.convert("RGBA")
+    px = np.asarray(im).copy()
+    rgb = px[:, :, :3].astype(int)
+    luma = (rgb[:, :, 0] * 299 + rgb[:, :, 1] * 587 + rgb[:, :, 2] * 114) // 1000
+    px[(luma < thr) & (px[:, :, 3] > 128), 3] = a
+    return Image.fromarray(px, "RGBA")
+
+
 def bleed_alpha(im, iters=20):
     """Overwrite (near-)transparent texels' RGB with their nearest opaque colour.
     Run AFTER the LANCZOS downscale: PIL resizes RGBA without premultiplying, so the
@@ -366,6 +384,7 @@ def convert(label, e, default_res):
     last = e.get("last_converted")
     lift = e.get("lift")
     glass = e.get("glass_alpha")
+    hole = e.get("hole_alpha")
     sat = e.get("sat")
     cells = e.get("cells")
     grid = e.get("regrid")
@@ -375,6 +394,7 @@ def convert(label, e, default_res):
         or src_mtime > datetime.fromisoformat(last)
         or lift != e.get("last_lift")  # retuning the lift must rebuild; the source never changed
         or glass != e.get("last_glass_alpha")  # and the same for the glazing cut
+        or hole != e.get("last_hole_alpha")  # and the hole cut
         or sat != e.get("last_sat")  # and the desaturation
         or cells != e.get("last_cells")  # and the per-cell cap
         or grid != e.get("last_regrid")  # and the pack re-grid
@@ -411,6 +431,8 @@ def convert(label, e, default_res):
             im = lift_gamma(im, lift)
         if glass:
             im = glass_cut(im, int(glass[0]), int(glass[1]))
+        if hole:
+            im = hole_cut(im, int(hole[0]), int(hole[1]))
         # chroma first and then level, which is an order and not a preference: `sat_mix` preserves
         # luminance, so the cap below measures the same number either way, while a cap taken first
         # would still be correct only by that same accident. Both run on the FULL-RES source, ahead of
@@ -433,6 +455,10 @@ def convert(label, e, default_res):
             e.pop("last_glass_alpha", None)
         else:
             e["last_glass_alpha"] = glass
+        if hole is None:
+            e.pop("last_hole_alpha", None)
+        else:
+            e["last_hole_alpha"] = hole
         if sat is None:
             e.pop("last_sat", None)
         else:
@@ -446,6 +472,7 @@ def convert(label, e, default_res):
         else:
             e["last_regrid"] = grid
         extra = ("  lift " + str(lift) if lift else "") + ("  glass " + str(glass) if glass else "")
+        extra += ("  hole " + str(hole) if hole else "")
         extra += ("  sat " + str(sat) if sat is not None else "")
         extra += (f"  regrid {moved}/{int(grid['grid']) ** 2}" if grid else "")
         extra += (f"  cap {cells['cap']} on {capped}/{cells['grid'] ** 2}"
