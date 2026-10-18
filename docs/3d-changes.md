@@ -1664,3 +1664,32 @@ and the gate is the object loop's own `vis`, not `mark`.
 
 **Verdict:** landed. Not ported: 2D forma mode also drew the whole habitat through line of sight; the
 3D view keeps its fog.
+
+## Glass bullet holes: a crack star where a bullet crosses a facility/corp window pane
+
+**Changed:** a bullet that crosses a window cell (`Const.isWindowTile`; corp and compound ribbon
+windows, the city grid has none) now leaves a crack star on the pane, next to the glass-hit sound
+`Shot.firstGlass` already plays. It reuses the `WALLHOLE` decoration: same FIFO cap, same area-exit
+clear, same radius fade. A `glass` flag picks a third texture set in `render.decals.WallHole`. The save
+tuple's slot 10 was the 0/1 metal flag and is now a material index (0 masonry, 1 metal, 2 glass), so
+the tuple stays at 11 and old saves decode unchanged. `Shot.spawnGlassHole` meets pellet 0's tracer
+with the pane plane through the cell centre and stands the star on the face toward the shooter. It
+places nothing when the tracer runs along the pane, and nothing for a stun bolt. The art is one
+gpt-image-2.5-sunburst pack ($0.055), four labels `decals/bullet-hole-glass-1..4`. Each crop is square
+and centred on the puncture, since the quad is centred on the crossing.
+
+**Measured:** `renderer.info.render.calls` 63 → 67 with four stars on screen, A/B/A/B identical:
++1 call per star, the same as a masonry hole.
+
+**Trap:** the first stars were invisible. The pane batch is transparent at `renderOrder` 0 like the
+sprite pool, and three sorts it by its bounding sphere's centre, which is mid-plate. It often sorted
+after a star on the north wall and blended its dark glass over it, even though the star is in front.
+Glass stars now draw at `Sprites.ORD_FIXTURE` through a new `PaintWallOpts.order`.
+
+**Trap:** at the gameplay camera a wall face is steeply foreshortened. At scale 0.2 a star was an
+8 px dot and at 0.45 only the hole showed, so `glassScale` is 0.6. A chest-height crossing (1.2)
+then hangs below the ~0.95 sill. The spandrel under the sill is coplanar with the decal, so the star
+painted onto the masonry. `glassFloor` 1.0 keeps the star's lower edge on the glass.
+
+**Verdict:** landed. The cracks stay faint in an unlit room, and `lift` is the wrong knob for that: it
+is a gamma that greys the dark puncture and leaves the pale cracks where they are.

@@ -7,11 +7,12 @@ import render.particles.Sprites;
 import render.world.WorldCtx;
 
 // WALLHOLE bullet holes: stood upright on their struck wall face, nudged proud of it, radius-faded
-// around the player. owns the lazy per-material hole-texture caches (masonry vs metal warehouse)
+// around the player. owns the lazy per-material hole-texture caches (masonry, metal warehouse, glass)
 class WallHole {
   var d:Decals;                                          // coordinator back-ref (sprites, radiusOp)
   var holeTex:Array<Texture> = null;                     // masonry bullet-hole wall textures (lazy-loaded once)
   var holeTexMetal:Array<Texture> = null;                // metal-wall bullet-hole textures (lazy-loaded once)
+  var holeTexGlass:Array<Texture> = null;                // window-pane crack-star textures (lazy-loaded once)
 
   public function new(d:Decals)
     {
@@ -23,7 +24,7 @@ class WallHole {
     {
       if (dec.face == null)
         return false;
-      var hts = holeTextures(dec.metal == true);
+      var hts = holeTextures(dec);
       if (hts.length == 0)
         return false;
       var fdir:Int = dec.face;
@@ -44,6 +45,10 @@ class WallHole {
       // offset — see WorldCtx.faceOff and the note beside WorldCtx.wallFace
       var cc = CityConfig.cellToWorld(x, y);
       var off = WorldCtx.faceOff(x, y, fdir, RenderConfig.DECAL.wallProud);
+      // a pane is set WINDOW_INSET into its glazing slab, and the slab face is what faceOff measures
+      var isGlass = (dec.glass == true);
+      if (isGlass)
+        off -= render.facility.FacilityStyle.WINDOW_INSET;
       d.sprites.paintWall({
         x: (fdir >= 2 ? cc.x + dv[0] * off : w.x),
         y: wy,
@@ -53,14 +58,23 @@ class WallHole {
         scale: sc,
         faceRotY: render.world.Geom.faceRotY(fdir),
         roll: roll,
+        // over the glass: the pane batch is transparent at order 0 too and sorts by its bounding
+        // sphere's centre, mid-plate, so it often drew after the star and blended its dark glass over it
+        order: (isGlass ? Sprites.ORD_FIXTURE : null),
       });
       return true;
     }
 
-// lazily load the bullet-hole wall textures once, per material (masonry vs metal-warehouse)
-  function holeTextures(metal:Bool):Array<Texture>
+// lazily load the bullet-hole wall textures once, per material (masonry, metal warehouse, glass)
+  function holeTextures(dec:tiles.Decoration):Array<Texture>
     {
-      if (metal)
+      if (dec.glass == true)
+        {
+          if (holeTexGlass == null)
+            holeTexGlass = loadHoleTex(RenderConfig.TEXTURES.bulletHolesGlass);
+          return holeTexGlass;
+        }
+      if (dec.metal == true)
         {
           if (holeTexMetal == null)
             holeTexMetal = loadHoleTex(RenderConfig.TEXTURES.bulletHolesMetal);

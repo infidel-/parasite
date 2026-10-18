@@ -580,10 +580,17 @@ class RenderConfig {
 
   // bullet holes: a missed shot that strikes a BARE (worn/windowless) wall leaves a small
   // rotated decal, persisted as a WALLHOLE tile-decoration + re-painted on the wall each frame
-  // (fog-gated, cleared on area exit, capped like blood splats). glass/window faces get none
+  // (fog-gated, cleared on area exit, capped like blood splats). a city storefront gets none; a
+  // facility/corp window pane the tracer crosses gets a crack star from the glass set
   public static final WALLHOLE = {
     scale: 0.13,       // hole quad scale (of Sprites.SIZE)
     scaleVar: 0.04,    // +/- random scale spread
+    glassScale: 0.6,   // crack star quad scale (of Sprites.SIZE). the star fills its frame; under 0.45 the
+                       // gameplay camera's tilt leaves the hole alone, the cracks go sub-pixel
+    glassScaleVar: 0.08, // +/- random crack star scale spread
+    glassFloor: 1.0,   // lowest a crack star's lower edge sits over the floor: a ribbon pane's sill stands
+                       // ~0.95 (FacilityGeom.paneTall centres a ~4.1 pane in WALL_H 6), and below it the
+                       // spandrel is coplanar with the decal, so a star hanging past it painted the masonry
     spread: 0.35,      // horizontal wall-miss scatter (cells): tracer end + spark + hole SHARE it,
                        // so repeated shots at one wall spread out (and stay aligned) instead of stacking
     vspread: 0.12,     // vertical scatter (cells): kept small so holes cluster near aim height
@@ -1357,6 +1364,9 @@ class RenderConfig {
     bulletHoles: ['textures/decals/bullet-hole-1.png', 'textures/decals/bullet-hole-2.png'],
     // corrugated-steel dents/punctures for hits on metal-warehouse walls (facade 3)
     bulletHolesMetal: ['textures/decals/bullet-hole-metal-1.png', 'textures/decals/bullet-hole-metal-2.png'],
+    // crack stars for a shot crossing a facility/corp window pane (one packed sheet, four cells)
+    bulletHolesGlass: ['textures/decals/bullet-hole-glass-1.png', 'textures/decals/bullet-hole-glass-2.png',
+      'textures/decals/bullet-hole-glass-3.png', 'textures/decals/bullet-hole-glass-4.png'],
     graffiti: ['textures/decals/graffiti-1.png', 'textures/decals/graffiti-2.png'],
     posters: ['textures/decals/poster-1.png', 'textures/decals/poster-2.png'],
     cracks: ['textures/decals/wall-crack-1.png', 'textures/decals/wall-crack-2.png'],

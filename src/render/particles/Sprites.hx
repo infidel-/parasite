@@ -403,6 +403,8 @@ class Sprites {
       var mat:Dynamic = m.material;
       mat.roughness = (o.rough != null ? o.rough : 1.0);
       mat.metalness = (o.metal != null ? o.metal : 0.0);
+      if (o.order != null)
+        m.renderOrder = o.order;
       m.visible = true;
       idx++;
     }

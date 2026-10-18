@@ -975,6 +975,75 @@
       "built_linear": 0.1012,
       "built_srgb": 82.0
     },
+    "decals/bullet-hole-glass-1": {
+      "src": "decals/bullet-hole-glass-pack.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "crop": [
+        118,
+        106,
+        280,
+        280
+      ],
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT: a 2x2 grid of FOUR separate bullet-hole crack patterns, one centred in each quadrant of the square image, each one filling about 65 percent of its quadrant and kept well clear of the quadrant edges, with an EMPTY gutter of at least 15 percent of the image width between neighbours. No crack line may cross from one quadrant into another. Each pattern is the mark a bullet leaves when it punches through a window, seen dead straight on: a small dark round puncture at the centre, ringed by a pale frosted halo of crushed glass, long thin straight radial cracks spreading outward like a star, and two or three broken concentric ring cracks joining them into a spiderweb. The crack lines are pale cold grey-white, thin and crisp. Vary the four: TOP-LEFT a tight small star with short cracks; TOP-RIGHT a larger spiderweb with more rings; BOTTOM-LEFT an off-round puncture with long uneven radial cracks running mostly to one side; BOTTOM-RIGHT a double hit, two small punctures close together sharing one web. The glass itself is invisible: ONLY the crack lines, the frosted halo and the puncture are drawn. No window frame, no pane edge, no reflection, no text, nothing else. [gpt-image-2.5-sunburst high, background transparent] [append textures.json style]",
+      "prompt_exact": true,
+      "note": "WALLHOLE glass set (render.decals.WallHole, decoration flag glass): a bullet crossing a facility/corp window pane. ONE 1k pack, four labels. the gutters came back clean (alpha>24 empty over cols 463-572, rows 455-536). each crop is SQUARE and CENTRED ON THE PUNCTURE (dark AND opaque px mean), because the decal quad is centred on the tracer crossing; its half-size is the pattern radius clamped short of the nearest neighbour bbox, so the long left cracks of cell 3 lose ~50 px of tip (rmax 345, half 257). alpha came back as a faint haze: 84% of px at 1-7, only 7% at 0",
+      "last_converted": "2026-10-18T19:53:52",
+      "built_linear": 0.1333,
+      "built_srgb": 93.1
+    },
+    "decals/bullet-hole-glass-2": {
+      "src": "decals/bullet-hole-glass-pack.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "crop": [
+        539,
+        4,
+        484,
+        484
+      ],
+      "prompt": "[TOP-RIGHT cell of decals/bullet-hole-glass-pack.png, same generation as decals/bullet-hole-glass-1]",
+      "prompt_exact": true,
+      "last_converted": "2026-10-18T19:53:52",
+      "built_linear": 0.1375,
+      "built_srgb": 96.7
+    },
+    "decals/bullet-hole-glass-3": {
+      "src": "decals/bullet-hole-glass-pack.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "crop": [
+        95,
+        483,
+        514,
+        514
+      ],
+      "prompt": "[BOTTOM-LEFT cell of decals/bullet-hole-glass-pack.png, same generation as decals/bullet-hole-glass-1]",
+      "prompt_exact": true,
+      "last_converted": "2026-10-18T19:53:52",
+      "built_linear": 0.1319,
+      "built_srgb": 94.5
+    },
+    "decals/bullet-hole-glass-4": {
+      "src": "decals/bullet-hole-glass-pack.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "crop": [
+        571,
+        536,
+        436,
+        436
+      ],
+      "prompt": "[BOTTOM-RIGHT cell of decals/bullet-hole-glass-pack.png, same generation as decals/bullet-hole-glass-1]",
+      "prompt_exact": true,
+      "last_converted": "2026-10-18T19:53:52",
+      "built_linear": 0.1321,
+      "built_srgb": 94.1
+    },
     "decals/graffiti-1": {
       "src": "decals/graffiti-1.png",
       "class": "sprite",
