@@ -1295,6 +1295,12 @@ hr {
   padding: 8px 11px;
   background-color: var(--hud-panel);
 }
+/* top follows the log's bottom edge (ui.hud.MinimapHud); one canvas pixel per cell, kept crisp */
+#hud-minimap {
+  left: 26px;
+  box-sizing: content-box;
+  image-rendering: pixelated;
+}
 #hud-log .hud-row {
   display: flex;
   gap: 9px;

@@ -292,7 +292,7 @@ class SewerStyle
     // how far a hidden fragment sinks toward the fog colour. 0.0 is the 2D view's flat black, and this
     // is deliberately NOT that: underground the whole screen is tunnel, so blacking out everything past
     // a corner leaves a mostly-empty frame. at 0.18 the masonry still reads as a silhouette — the
-    // LAYOUT stays legible, which the minimap gives away anyway (AreaView.generateMinimap is not
+    // LAYOUT stays legible, which the minimap gives away anyway (ui.hud.MinimapHud is not
     // fog-aware) — while nothing standing in it does, since render.Actors already hides the AI and the
     // objects outright on the same predicate
     hidden: 0.18,

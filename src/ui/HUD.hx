@@ -33,6 +33,7 @@ class HUD
   // per-block sub-classes (each owns its DOM, appended to container)
   public var topbar: TopbarHud;
   var log: LogHud;
+  public var minimap: MinimapHud;
   public var goals: GoalsHud;
   public var infoHud: InfoHud;
   var navbar: NavbarHud;
@@ -106,6 +107,7 @@ class HUD
       console = new ConsoleHud(game, this);
       topbar = new TopbarHud(game, this);
       log = new LogHud(game, this);
+      minimap = new MinimapHud(game, this);
       goals = new GoalsHud(game, this);
       infoHud = new InfoHud(game, this);
 
@@ -355,6 +357,7 @@ public function onMouseLeave()
     {
       container.style.visibility = 'visible';
       navbar.show();
+      minimap.update();
     }
 
   public function hide()
@@ -363,6 +366,8 @@ public function onMouseLeave()
       areaTooltip.hide();
       container.style.visibility = 'hidden';
       navbar.hide();
+      // the minimap shows through while the options window is up
+      minimap.update();
     }
 
 // position the navbar for a UI state (delegates to the navbar block)
@@ -398,6 +403,7 @@ public function onMouseLeave()
       actions.updateActions();
       infoHud.update();
       log.update();
+      minimap.update();
       navbar.update();
       goals.update();
       topbar.update();

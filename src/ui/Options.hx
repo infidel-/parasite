@@ -141,6 +141,7 @@ class Options extends UIWindow
       addOptSlider('Minimap scale', game.config.minimapScale * 100, 60, 1000, 20, 'round', '%',
         function (v) {
           game.config.set('minimapScale', '' + Const.round(v / 100.0), false);
+          game.ui.hud.minimap.update();
         });
 
       // title font selector
