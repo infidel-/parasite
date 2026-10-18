@@ -12,9 +12,9 @@ class DowntownProfile {
     // larger blocks + more spacing between buildings
     minBlock: 12,
     maxBlock: 26,
-    // 1, like residential: a wider setback puts a dead alley strip between the building and
-    // the walkway (a cell 2 out from a road is not road-adjacent, so it classifies as alley)
-    setback: 1,
+    // a two-cell pavement: the kerb row carries the street furniture (trees, planters), which the
+    // game makes impassable, and the row against the buildings stays clear to walk
+    setback: 2,
     subdivDepth: 5,
     // bigger acreage per building. maxBuilding/earlyLeafChance are what actually decide how
     // many leaves come out square enough (min side >= 5 + 2*TOWER_CLEAR) to be glass towers:
@@ -59,5 +59,13 @@ class DowntownProfile {
     // no single-floor houses downtown
     houseSlots: [],
     houseMaxSide: 0,
+  };
+
+  // the downtown of a save made before the two-cell pavement (CityProfile.Profiles.VERSION 1): one
+  // cell, otherwise the same, so its saved cells and the 3D city rebuilt off its seed still agree
+  public static final LEGACY:CityProfile = {
+    var p = Reflect.copy(INSTANCE);
+    p.setback = 1;
+    p;
   };
 }

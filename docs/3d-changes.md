@@ -1567,3 +1567,27 @@ lands on. Check the destination, not the source.
 
 **Verdict:** landed. Lamps are render-only (the slums wrecks read them once, at generation), so
 existing saves only see lamps move.
+
+## Downtown's two-cell pavement: a furniture row at the kerb, a clear row behind it
+
+**Changed:** `CityGen` classifies a cell as walkway when a road lies within `profile.setback` of it
+(the square round it, so the pavement still wraps convex corners), where before it had to touch a
+road. Downtown's setback goes 1 -> 2. The rule is identical at setback 1, so the other tiers are
+byte-identical. Trees and planters are `block` ground props. `CityAreaGenerator.placeFurniture` rolls
+their summed chance (0.11) on every kerb-row cell whose road runs straight past it. It skips hatches,
+lamps and crosswalk ends, and flips the cell to `TILE_WALKWAY_UNWALKABLE`. `StreetProps.ground` draws
+one `block` prop centred and square on each such cell, picked off the cell hash by chance. Bollards
+stay hash-dealt walk-past decoration. `AreaGame.cityGenVersion` (0 by `init`, `Profiles.VERSION` 1 at
+generation) gates all of it: a downtown saved before this gets `DowntownProfile.LEGACY` (setback 1)
+and its old hash-dealt props.
+
+**Measured:** new downtown (10,6): 136 furniture cells, drawn as 95 trees and 41 planters, matching
+one for one, plus 75 bollards. The 3D tiles match the game cells (0 of 10,000 differ), and both
+survive a save and reload unchanged. `__check` on (9,7): pass, 110 buildings. Old downtown (9,8),
+from a save without the field: version 0, 0 mismatches, 77 trees and 27 planters hash-dealt as before.
+
+**Trap:** `setback: 2` alone (the old profile comment) puts a dead alley strip between the buildings
+and a one-cell walkway: the second ring touches no road. And a city's 3D view comes from its seed
+alone, so a layout change without a version gate splits every saved city from its own picture.
+
+**Verdict:** landed.

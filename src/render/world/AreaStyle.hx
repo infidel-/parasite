@@ -31,6 +31,8 @@ typedef GroundProp = {
   spot:PropSpot, // where it may stand
   chance:Float,  // odds an eligible cell takes it
   turn:Float,    // radians of hashed yaw jitter either way (a free-standing prop); 0 = square on
+  ?block:Bool,   // KERB street furniture: where the area has a furniture row (game.CityAreaGenerator
+                 // .placeFurniture) it stands centred on a cell made impassable, never dealt by hash
   ?width:Float,  // world width along its wall: a turned wall prop stands off it by the corner's swing
   ?lean:Float,   // radians of hashed extra lean either way for a prop leant on its wall; it slides in
                  // or out by its height so the top stays on the wall

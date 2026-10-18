@@ -196,7 +196,8 @@ class DowntownStyle {
       // no fire escapes on a tower: its service walls carry conduit, junction boxes and intakes instead
       s.wallKit = render.RenderConfig.MODELS.cityWallKitDowntown;
       s.serviceChance = 0.6;
-      // a managed street: trees in grates, bollards, planters at the kerb; the compactors and the
+      // a managed street: trees in grates and planters as the kerb row's furniture (impassable, see
+      // game.CityAreaGenerator.placeFurniture), bollards at the kerb; the compactors and the
       // recycling stations kept back in the service alleys
       s.groundProps = [
         {
@@ -223,6 +224,7 @@ class DowntownStyle {
           chance: 0.08,
           // square on: its grate lies in the paving's joints
           turn: 0.0,
+          block: true,
         },
         {
           path: render.RenderConfig.MODELS.cityBollard,
@@ -239,6 +241,7 @@ class DowntownStyle {
           spot: KERB,
           chance: 0.03,
           turn: 0.0,
+          block: true,
         },
       ];
       _s = s;

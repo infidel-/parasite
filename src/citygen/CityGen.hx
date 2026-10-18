@@ -735,13 +735,15 @@ class CityGen {
       }
     }
 
-    // tile grid: roads, then buildings, then WALKWAY if touching a road else ALLEY
+    // tile grid: roads, then buildings, then WALKWAY if within the setback of a road else ALLEY
     var tiles:Array<Array<Tile>> = [for (r in 0...GRID) [for (c in 0...GRID) isRoad(c, r) ? Tile.Road : Tile.Walkway]];
     for (b in buildings) fillRect(tiles, b.col, b.row, b.w, b.d, Tile.Building);
-    // 8-neighbour: diagonals included so the pavement wraps convex road corners
-    // (an L-turn / dead-end tip outer corner touches its road only diagonally)
+    // the square of the setback round the cell: diagonals included so the pavement wraps convex road
+    // corners (an L-turn / dead-end tip outer corner touches its road only diagonally), and every
+    // ring of a wider setback is pavement rather than a dead alley strip against the buildings
+    var sb = profile.setback;
     function touchesRoad(c:Int, r:Int):Bool {
-      for (dr in -1...2) for (dc in -1...2) {
+      for (dr in -sb...sb + 1) for (dc in -sb...sb + 1) {
         var cc = c + dc, rr = r + dr;
         if ((dc != 0 || dr != 0) && cc >= 0 && rr >= 0 && cc < GRID && rr < GRID && isRoad(cc, rr)) return true;
       }

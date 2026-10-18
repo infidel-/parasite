@@ -12,7 +12,7 @@ typedef CityProfile = {
   // --- block layout / spacing ---
   minBlock:Int,             // block-size range low (road pitch = ROAD_W + this)
   maxBlock:Int,             // block-size range high
-  setback:Int,              // pavement gap between buildings and roads
+  setback:Int,              // pavement gap between buildings and roads: every cell within it of a road is walkway
   subdivDepth:Int,          // block subdivision recursion depth
   splitOver:Int,            // blocks bigger than this MUST split
   maxBuilding:Int,          // hard per-axis cap on a building/shape piece
@@ -52,6 +52,10 @@ typedef CityProfile = {
 
 // profile registry: DEFAULT (residential, verbatim from CityConfig) + downtown factory
 class Profiles {
+  // the city layout's version, saved on each area it generates (game.AreaGame.cityGenVersion) so a
+  // save keeps the layout it was made with: 1 laid downtown's pavement two cells wide
+  public static inline var VERSION = 1;
+
   // residential default — every field equals the corresponding CityConfig inline, so
   // the default generation stream is unchanged
   public static final DEFAULT:CityProfile = {
@@ -89,10 +93,11 @@ class Profiles {
   };
 
   // pick the generation profile for an area type: downtown for the high-density district,
-  // slums for the low-density outskirts, the residential default for everything else
-  public static function forArea(t:_AreaType):CityProfile {
+  // slums for the low-density outskirts, the residential default for everything else. `version`
+  // is the area's own (AreaGame.cityGenVersion); a downtown made before 1 keeps its one-cell pavement
+  public static function forArea(t:_AreaType, version:Int = VERSION):CityProfile {
     return switch (t) {
-      case AREA_CITY_HIGH: DowntownProfile.INSTANCE;
+      case AREA_CITY_HIGH: (version >= 1 ? DowntownProfile.INSTANCE : DowntownProfile.LEGACY);
       case AREA_CITY_LOW: SlumsProfile.INSTANCE;
       default: DEFAULT;
     };

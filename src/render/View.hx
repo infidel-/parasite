@@ -561,7 +561,7 @@ class View {
     // ~2s after the build, and a repeat show() in that window would rebuild — disposing the very
     // materials the warm is still polling (three then throws from its poll timer, see buildFrom)
     if ((running || warming) && shownKey == seed) return;
-    var c = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(game.area.typeID));
+    var c = CityGen.generate(seed, citygen.CityProfile.Profiles.forArea(game.area.typeID, game.area.cityGenVersion));
     buildFrom(new CityArea(game, c, seed), seed);
   }
 

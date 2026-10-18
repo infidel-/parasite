@@ -107,7 +107,18 @@ class CityArea implements Area3D
               vents.push(new Vector3(w.x, (cityModel.tiles[o.y][o.x] == Tile.Walkway ? RenderConfig.CURB_H : 0.0), w.z));
             }
         }
-      groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k]);
+      // the kerb row's furniture, where the area was generated with one (game.CityAreaGenerator
+      // .placeFurniture): its cells are the walkway it flipped unwalkable
+      var furniture = null;
+      if (game.area.cityGenVersion >= 1)
+        {
+          furniture = [];
+          for (row in 0...CityConfig.GRID)
+            for (col in 0...CityConfig.GRID)
+              if (game.area.getCellType(col, row) == Const.TILE_WALKWAY_UNWALKABLE)
+                furniture.push(row * CityConfig.GRID + col);
+        }
+      groundProps = render.world.StreetProps.ground(scene, cityModel, blocked, [for (k in bins.keys()) k], furniture);
       groundProps.push(render.world.StreetProps.wrecks(scene, game.area));
       chunks.build(scene, pre);
       // AFTER the chunk pass: one mesh at the origin holding every plume, so bucketed it went dark

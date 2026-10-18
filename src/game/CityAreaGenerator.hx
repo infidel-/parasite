@@ -46,6 +46,7 @@ class CityAreaGenerator
       // pick and store the seed so the 3D renderer regenerates identical geometry; both the
       // logic tiles here and the render pick their profile/style from the same area type
       area.cityGenSeed = Std.random(0x7FFFFFFF);
+      area.cityGenVersion = Profiles.VERSION;
       var city = CityGen.generate(area.cityGenSeed, Profiles.forArea(area.typeID));
       // keep the carved inner courtyards for the object pass (barrel placement), and the street lamps
       // (car wrecks under the lit ones)
@@ -108,6 +109,69 @@ class CityAreaGenerator
 
       // and the slums' car wrecks, abandoned at the kerb
       placeCars(area);
+
+      // and downtown's street furniture down the kerb row, clear of the hatches above
+      placeFurniture(area);
+    }
+
+// line the kerb row of downtown's two-cell pavement with its street furniture (the style's `block`
+// ground props: trees, planters), each a tile flip to the unwalkable twin that
+// render.world.StreetProps draws the furniture over, so the row against the buildings stays the
+// clear walk. a cell takes it off the props' summed chances, on a kerb whose road runs straight past
+// and never on a hatch, a lamp or a crosswalk's end. a downtown generated before the two-cell
+// pavement (cityGenVersion 0) has no such row and keeps its walk-through dressing
+  function placeFurniture(area: AreaGame)
+    {
+      if (area.typeID != AREA_CITY_HIGH ||
+          area.cityGenVersion < 1)
+        return;
+      var chance = 0.0;
+      for (gp in render.world.AreaStyle.forArea(area.typeID).groundProps)
+        if (gp.block == true)
+          chance += gp.chance;
+      var lit = new Map<Int, Bool>();
+      for (l in lamps)
+        lit.set(l.row * area.width + l.col, true);
+      for (y in 0...area.height)
+        for (x in 0...area.width)
+          if (kerbRoad(area, x, y) >= 0 &&
+              !area.hasObjectAt(x, y) &&
+              !lit.exists(y * area.width + x) &&
+              Std.random(10000) < chance * 10000)
+            gen.makeTileUnwalkable(area, x, y);
+    }
+
+// the one Const.dir4x/dir4y direction from a walkway cell that holds road (a crosswalk included, so
+// a corner with two stays out), or -1. -1 as well where that road cell is a crosswalk, whose end
+// stays clear, or has walkway either side of it along the kerb: the road turns or ends there, and
+// render.world.Ground bevels it into a diagonal kerb
+  function kerbRoad(area: AreaGame, x: Int, y: Int): Int
+    {
+      if (area.getCellType(x, y) != Const.TILE_WALKWAY)
+        return -1;
+      var found = -1;
+      for (i in 0...Const.dir4x.length)
+        {
+          var c = area.getCellType(x + Const.dir4x[i], y + Const.dir4y[i]);
+          if (c != Const.TILE_ROAD &&
+              c != Const.TILE_CROSSWALKV &&
+              c != Const.TILE_CROSSWALKH)
+            continue;
+          if (found >= 0)
+            return -1;
+          found = i;
+        }
+      if (found < 0)
+        return -1;
+      var fx = x + Const.dir4x[found];
+      var fy = y + Const.dir4y[found];
+      var ax = Const.dir4y[found] * Const.dir4y[found];
+      var ay = Const.dir4x[found] * Const.dir4x[found];
+      if (area.getCellType(fx, fy) != Const.TILE_ROAD ||
+          area.getCellType(fx + ax, fy + ay) == Const.TILE_WALKWAY ||
+          area.getCellType(fx - ax, fy - ay) == Const.TILE_WALKWAY)
+        return -1;
+      return found;
     }
 
 // park car wrecks along slum kerbs, spaced apart: two road cells each, end to end along the kerb, both
@@ -393,7 +457,7 @@ class CityAreaGenerator
 // streets visible but unreachable. objects (sewer hatches, etc) are left untouched
   public function rebuildCells(area: AreaGame)
     {
-      var city = CityGen.generate(area.cityGenSeed, Profiles.forArea(area.typeID));
+      var city = CityGen.generate(area.cityGenSeed, Profiles.forArea(area.typeID, area.cityGenVersion));
       var cells = area.getCells();
       for (x in 0...area.width)
         if (cells[x] == null)

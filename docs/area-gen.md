@@ -1395,6 +1395,14 @@ tiles rather than being handed them:
 - pass order matters: `FacilityRooms.assignRoomThemes` before `FacilityBuilding.makeWindows`;
   `ParkBlock`'s clumps last in the park; `generateRoomContents` writes final ids that
   `FacilityGen.finalizeTiles` must skip
+- **a CITY's 3D view is rebuilt from `cityGenSeed`, never from the saved cells**, so any change to
+  what `citygen.CityGen` lays out moves the streets under every saved city. Gate it on
+  `AreaGame.cityGenVersion` (bump `CityProfile.Profiles.VERSION`, hand the old layout to areas below
+  it, as `DowntownProfile.LEGACY` does) or the saved cells and the 3D city disagree. Lamps are the
+  exception: they are render-only and may move freely
+- downtown's kerb-row furniture is `TILE_WALKWAY_UNWALKABLE` (`CityAreaGenerator.placeFurniture`), and
+  `render.CityArea` reads EVERY such cell in a version-1 city as furniture. Nothing else may flip
+  downtown walkway to that tile
 
 ## Known, not fixed
 
