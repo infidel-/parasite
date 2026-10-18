@@ -1,6 +1,7 @@
 package render.actors;
 
 import three.Three;
+import citygen.CityConfig;
 import render.RenderConfig;
 import render.ActorAnim;
 import render.world.WorldCtx;
@@ -20,6 +21,11 @@ typedef BadgeAnim = { sig:String, pop:render.anim.Effect };
 // owns only the per-AI badge change-pop state + the looping badge-pulse clock
 class Badges {
   static inline var TARGET_SCALE = 1.15;               // targeting frame/reticle ground-quad scale (~one cell)
+  static inline var PADLOCK_SCALE = 0.4;               // locked-door padlock quad scale (of Sprites.SIZE)
+  // broken base organ: a red X, round-capped, over the whole square
+  static inline var BROKEN_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" ' +
+    'viewBox="0 0 128 128"><path d="M16 16 L112 112 M112 16 L16 112" stroke="#d21414" ' +
+    'stroke-opacity="0.9" stroke-width="10" stroke-linecap="round" fill="none"/></svg>';
 
   var game:Game;
   var camera:PerspectiveCamera;                          // read live for the screen-space badge anchor
@@ -74,6 +80,155 @@ class Badges {
       paintTargetMarker(obj.entity,
         tg.isTargetedObject(obj),
         game.ui.hud.state == HUD_TARGETING && tg.isTargetingObject(obj));
+    }
+
+// object readouts nothing else in 3D carries: a padlock on a locked door, and a damaged base
+// organ's health bar (with a red X once it breaks). re-read every frame, like the AI badges
+  public function drawObjBadges(o:AreaObject):Void
+    {
+      if (o.type == 'door')
+        {
+          var d:objects.Door = cast o;
+          if (d.isLocked &&
+              !d.isOpen)
+            drawPadlock(o);
+        }
+      else if (o.type == 'base_organ')
+        drawOrganHealth(cast o);
+    }
+
+// the entities-atlas lock icon at the doorway's mid-height, self-lit and always on top.
+// ponytail: a linked lab pair would wear two; only a single corp door is ever locked
+// (scenario.AlienMissionCommon), add a midpoint if the lab ever locks one
+  function drawPadlock(o:AreaObject):Void
+    {
+      var a = actors.get(o.entity);
+      if (a == null ||
+          a.op < 0.05)
+        return;
+      var tex = sprites.tex('entities', Const.FRAME_LOCKED_ICON, Const.ROW_OBJECT, false);
+      if (tex == null)
+        return;
+      sprites.paint({
+        x: a.x + a.offx,
+        y: WorldCtx.floorY(a.col, a.row) + render.facility.FacilityStyle.DOOR_H * 0.5,
+        z: a.z + a.offz,
+        tex: tex,
+        op: a.op,
+        scale: PADLOCK_SCALE,
+        order: Sprites.ORD_ACTOR,
+        emissive: 0xffffff,
+        emissiveInt: 1.0,
+        depthTest: false,
+        shadow: false,
+      });
+    }
+
+// a damaged organ's health bar spanning its footprint, lifted screen-up above the sprite tops like
+// the AI badge row, and a red X across the footprint once it breaks. drawn off the organ's first
+// part only; the bar texture is bucketed to 5% so at most 21 are ever cached
+  function drawOrganHealth(obj:objects.base.BaseOrganObject):Void
+    {
+      if (obj.basePartIndex != 0)
+        return;
+      var organ = obj.getOrgan();
+      if (organ == null ||
+          (organ.health >= organ.maxHealth() &&
+           !organ.broken))
+        return;
+      var a = actors.get(obj.entity);
+      if (a == null ||
+          a.op < 0.05)
+        return;
+      var minX = organ.x;
+      var maxX = organ.x;
+      var minY = organ.y;
+      var maxY = organ.y;
+      for (pt in organ.footprint())
+        {
+          minX = Std.int(Math.min(minX, pt.x));
+          maxX = Std.int(Math.max(maxX, pt.x));
+          minY = Std.int(Math.min(minY, pt.y));
+          maxY = Std.int(Math.max(maxY, pt.y));
+        }
+      var w = CityConfig.cellToWorld((minX + maxX) / 2, (minY + maxY) / 2);
+      var mid = WorldCtx.floorY(organ.x, organ.y) + Sprites.SIZE * 0.5;
+      var scale = (maxX - minX + 1) * CityConfig.CELL * 0.8 / Sprites.SIZE;
+      var ratio = (organ.maxHealth() > 0 ? organ.health / organ.maxHealth() : 0.0);
+      var bucket = Std.int(Math.max(0, Math.min(20, Math.round(ratio * 20))));
+      var bar = sprites.svgTex('svg:organbar:' + bucket, organBarSvg(bucket / 20), 128);
+      var up = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+      var lift = Sprites.SIZE * RenderConfig.BADGE_LIFT;
+      if (bar != null)
+        sprites.paint({
+          x: w.x + up.x * lift,
+          y: mid + up.y * lift,
+          z: w.z + up.z * lift,
+          tex: bar,
+          op: a.op,
+          scale: scale,
+          order: Sprites.ORD_ACTOR,
+          emissive: 0xffffff,
+          emissiveInt: 1.0,
+          depthTest: false,
+          shadow: false,
+        });
+      if (!organ.broken)
+        return;
+      var cross = sprites.svgTex('svg:organbroken', BROKEN_SVG, 128);
+      if (cross != null)
+        sprites.paint({
+          x: w.x,
+          y: mid,
+          z: w.z,
+          tex: cross,
+          op: a.op,
+          scale: scale,
+          order: Sprites.ORD_ACTOR,
+          emissive: 0xffffff,
+          emissiveInt: 1.0,
+          depthTest: false,
+          shadow: false,
+        });
+    }
+
+// a thin health strip inside a transparent square: dark backing, light border, green fill to ratio
+  static function organBarSvg(ratio:Float):String
+    {
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">' +
+        '<rect x="2" y="57" width="124" height="14" fill="#000" fill-opacity="0.75" ' +
+        'stroke="#dcdcdc" stroke-opacity="0.9" stroke-width="2"/>' +
+        '<rect x="4" y="59" width="' + Std.int(120 * ratio) + '" height="10" fill="#28d246"/></svg>';
+    }
+
+// the forma cursor: the targeting reticle laid flat on the base-building cursor's cell, self-lit
+// and always on top so a grown organ or a wall never hides it
+  public function drawFormaCursor():Void
+    {
+      if (game.ui.hud.state != HUD_BASE_BUILDING ||
+          game.cults.length == 0 ||
+          game.cults[0].base == null ||
+          game.cults[0].base.areaID != game.area.id)
+        return;
+      var tex = sprites.tex('entities', Const.FRAME_TARGET_RETICLE, Const.ROW_REGION_ICON, false);
+      if (tex == null)
+        return;
+      var base = game.cults[0].base;
+      var w = CityConfig.cellToWorld(base.cursorX, base.cursorY);
+      sprites.paint({
+        x: w.x,
+        y: WorldCtx.floorY(base.cursorX, base.cursorY) + 0.06,
+        z: w.z,
+        tex: tex,
+        op: 1.0,
+        scale: TARGET_SCALE,
+        flat: true,
+        order: Sprites.ORD_MARK,
+        emissive: 0xffffff,
+        emissiveInt: 1.0,
+        depthTest: false,
+        shadow: false,
+      });
     }
 
 // lay the target frame (framed) and/or targeting reticle (cursor) as flat ground quads under

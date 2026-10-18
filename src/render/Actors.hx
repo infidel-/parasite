@@ -298,7 +298,10 @@ class Actors {
                 render.lab.LabArea.draws(game.area, o),
             });
             if (vis && uiOn)
-              badges.drawObjTarget(o);
+              {
+                badges.drawObjTarget(o);
+                badges.drawObjBadges(o);
+              }
           }
       var tObj = haxe.Timer.stamp();
       // AI: gated on player fog/LOS so the 3D view can't reveal enemies 2D hides
@@ -351,6 +354,8 @@ class Actors {
       if (uiOn &&
           st != _PlayerState.PLR_STATE_ATTACHED)
         badges.drawPlayerXray();
+      if (uiOn)
+        badges.drawFormaCursor();
       // seed-derived street debris + persisted decals (ground blood + wall bullet holes), then the
       // barrel flame body/embers + fake cast shadows (barrels + lamps drawn after the decals so they
       // darken them), then the fire loop + transient FX (blood, death ghosts, gun shots)

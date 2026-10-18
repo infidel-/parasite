@@ -412,6 +412,8 @@ class PlayerArea extends _SaveObject
           base.cursorX = x;
           base.cursorY = y;
           game.ui.hud.state = HUD_BASE_BUILDING;
+          // the far camera frames the whole habitat, so the cursor cannot walk off screen
+          game.scene.view3d.setTactical(true);
           game.updateHUD();
           game.scene.mouse.update(true);
         }

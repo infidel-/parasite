@@ -1637,3 +1637,30 @@ Read the surfaces apart, and grade the rect.
 
 **Verdict:** landed. Downtowns generated earlier draw recycling on some of their compactor cells,
 since those cells now pick from both.
+
+## 2D-only readouts onto the badge pass: padlock, organ health bar + broken X, forma cursor
+
+**Changed:** retiring the 2D area renderer took four readouts that nothing in 3D drew: the padlock on
+a locked door, a damaged base organ's health bar, the red X on a broken one, and the forma
+(base-building) cursor. All four are now quads in `render.actors.Badges`, painted from
+`Actors.update` beside the target marker (`drawObjBadges`) and after the player x-ray
+(`drawFormaCursor`), so Shift+Space hides them with the rest of the UI. The padlock is the entities64
+`FRAME_LOCKED_ICON` cell at the doorway's mid-height (`FacilityStyle.DOOR_H * 0.5`). The bar and the X
+are inline SVGs through `Sprites.svgTex`, centred on the footprint, the bar lifted screen-up by
+`BADGE_LIFT` like the AI badge row; the bar texture is bucketed to 5%, so at most 21 are cached. The
+forma cursor is the targeting reticle laid flat on the cursor cell, the way `paintTargetMarker` lays
+it under a target. All four are `depthTest:false` and emissive white, i.e. `Sprites.overlay` after the
+bloom, like the badges. Entering forma also turns the tactical camera on (the `forma` action in
+`PlayerArea`) and Exit Forma turns it off: at the close sewer camera the cursor walked off screen in a
+21x14 habitat.
+
+**Measured:** topbar `dc`, single frames in a habitat with the heart at 60%: 66 with no readout, 67
+with the bar, 68 with the bar and the X. One call per quad shown and +0 programs: the overlay program
+is the one `Warmup.overlay` compiles at boot.
+
+**Trap:** a door is `iconOff` in every 3D kind that has doors, and `Door.visible()` is false, so it
+carries no mark. The padlock still finds it: `drawActor` writes the pose before its `iconOff` return,
+and the gate is the object loop's own `vis`, not `mark`.
+
+**Verdict:** landed. Not ported: 2D forma mode also drew the whole habitat through line of sight; the
+3D view keeps its fog.

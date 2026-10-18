@@ -400,6 +400,7 @@ class CultBase extends _SaveObject
     {
       game.ui.hud.addKeyAction(action('baseExit', 'Exit Forma', function() {
         game.ui.hud.state = HUD_DEFAULT;
+        game.scene.view3d.setTactical(false);
         game.updateHUD();
         game.scene.mouse.update(true);
         return true;
