@@ -1760,6 +1760,29 @@ class AreaGame extends _SaveObject
         }
     }
 
+// persist one blood splat on a floor cell: what a splat leaves when the 3D view cannot play the
+// burst (Particle.createSplat). render.particles.BloodDrop3D writes the same decoration on landing
+  public function addSplat(type: String, x: Int, y: Int)
+    {
+      if (!isWalkable(x, y) ||
+          hasObjectAt(x, y))
+        return;
+      var ic = Const.bloodIcon(type);
+      var half = Std.int(Const.TILE_SIZE / 2);
+      addTileDecoration(x, y, {
+        layerID: getTileset().splatLayerID,
+        icon: {
+          row: ic.row,
+          col: ic.col + Std.random(Const.SPLAT_VARIANTS),
+        },
+        dx: Std.random(half * 2 + 1) - half,
+        dy: Std.random(half * 2 + 1) - half,
+        scale: Const.round2(0.1 + 0.9 * Math.random()),
+        angle: Const.round2(2 * Math.PI * Math.random()),
+        tag: 'SPLAT',
+      });
+    }
+
 // add one decoration descriptor to a tile
   public function addTileDecoration(x: Int, y: Int,
       decoration: tiles.Decoration)

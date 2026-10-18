@@ -2,7 +2,7 @@
 package ai;
 
 import game.Game;
-import particles.*;
+import particles.Particle;
 import _PlayerAction;
 import __Math;
 
@@ -194,7 +194,7 @@ class CommonLogic
       var atkE = (attacker.ai != null ? attacker.ai.entity : null);
       // target entity for the hit shake: an AI, or the player's visible body (host or parasite)
       var tgtE = target.entity();
-      var bloodIc = ParticleSplat.bloodIcon(targetBloodType);
+      var bloodIc = Const.bloodIcon(targetBloodType);
 
       // draw attack effects
       var handledShot = false;

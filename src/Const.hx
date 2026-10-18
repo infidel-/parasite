@@ -1060,6 +1060,20 @@ class Const
   public static var ROW_BLOOD = 40;
   public static var BLOOD_LARGE = 0;
   public static var BLACK_BLOOD_LARGE = 5;
+  public static var SPLAT_VARIANTS = 5; // splat cells per blood type, from bloodIcon's col
+
+// blood atlas cell (row + first variant col) for a blood type: the flying drop, the landed splat
+// and the persisted SPLAT decoration all draw from it
+  public static function bloodIcon(type: String): _Icon
+    {
+      return switch (type)
+        {
+          case 'black': { row: ROW_BLOOD, col: BLACK_BLOOD_LARGE };
+          case 'acid': { row: ROW_SPACESHIP1, col: ACID_LARGE };
+          case 'slime': { row: ROW_SPACESHIP2, col: SLIME_LARGE };
+          default: { row: ROW_BLOOD, col: BLOOD_LARGE };
+        };
+    }
 
   public static var STREET_DEBRIS_TRANSFORMABLE = [
     { row: 41, col: 0, amount: 12 },

@@ -36,9 +36,9 @@ class Projectile {
           case 'acidSpit': Const.FRAME_PARTICLE_ACID_SPIT;
           case 'slimeSpit': Const.FRAME_PARTICLE_SLIME_SPIT;
           case 'blood':
-            var ic = particles.ParticleSplat.bloodIcon(bloodType);
+            var ic = Const.bloodIcon(bloodType);
             row = ic.row;
-            ic.col + Std.random(particles.ParticleSplat.SPLAT_NUM);
+            ic.col + Std.random(Const.SPLAT_VARIANTS);
           default: Const.FRAME_PARTICLE_PARALYSIS_SPIT;
         };
       // source/impact at chest height (the blood-burst convention)
@@ -81,7 +81,7 @@ class Projectile {
           }
         if (splat != null)
           {
-            var ic = particles.ParticleSplat.bloodIcon(splat);
+            var ic = Const.bloodIcon(splat);
             c.actors.burst(tx, ty, tx - sx, ty - sy, ic.row, ic.col);
             c.game.scene.sounds.play('fx-splat', { x: tx, y: ty });
           }
