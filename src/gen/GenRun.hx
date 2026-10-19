@@ -84,6 +84,8 @@ class GenRun
             checkMilitaryArea(seed, check, verbose);
           else if (type == 'lab')
             checkLabArea(seed, check, verbose);
+          else if (type == 'cave')
+            checkCaveArea(seed, check, verbose);
           else
             {
               log('[gen] unknown --type: ' + type);
@@ -831,6 +833,93 @@ class GenRun
             }
           log(line);
         }
+    }
+
+// generate and check one mountain cave habitat. its size is gen.cave.CaveGen's own, which
+// game.AreaGame.generate sets before the generator runs
+  static function checkCaveArea(seed: Int, check: GenCheck, verbose: Bool)
+    {
+      var w = (forceW > 0 ? forceW : gen.cave.CaveGen.WIDTH);
+      var h = (forceH > 0 ? forceH : gen.cave.CaveGen.HEIGHT);
+      var ctx = new GenCtx(w, h, seed);
+      var state = gen.cave.CaveGen.build(ctx);
+      if (has('--digest'))
+        log('seed ' + seed + ' ' + w + 'x' + h + ' ' + caveDigest(ctx, state));
+
+      check.roomsSane(ctx, state.rooms);
+      check.spawnsSane(ctx);
+      check.caveSane(ctx, state);
+
+      var floor = 0;
+      for (x in 0...w)
+        for (y in 0...h)
+          if (ctx.cells[x][y] == tiles.Sewers.TILE_FLOOR)
+            floor++;
+      add('tries', state.tries);
+      if (state.tries >= gen.cave.CaveGen.MAX_TRIES)
+        add('triesExhausted', 1);
+      add('floorCells', floor);
+      add('chambers', state.rooms.length);
+      for (r in state.rooms)
+        add('chamberCells', r.w * r.h);
+      if (verbose)
+        {
+          log('[gen] seed ' + seed + ' ' + w + 'x' + h + ' tries=' + state.tries + ' floor=' + floor);
+          for (r in state.rooms)
+            log('   chamber ' + r.x1 + ',' + r.y1 + '..' + r.x2 + ',' + r.y2);
+          printCave(ctx, state);
+        }
+    }
+
+// dump one cave: '#' rock shell, ' ' buried rock, '.' floor, 'c' chamber floor, 'M' a mouth
+  static function printCave(ctx: GenCtx, state: gen.cave._CaveState)
+    {
+      for (y in 0...ctx.height)
+        {
+          var line = '';
+          for (x in 0...ctx.width)
+            {
+              var t = ctx.cells[x][y];
+              var inRoom = false;
+              for (r in state.rooms)
+                if (x >= r.x1 &&
+                    x <= r.x2 &&
+                    y >= r.y1 &&
+                    y <= r.y2)
+                  inRoom = true;
+              line += (ctx.hasObjectAt(x, y) ? 'M' :
+                t == tiles.Sewers.TILE_FLOOR ? (inRoom ? 'c' : '.') :
+                t == Const.TILE_HIDDEN ? ' ' : '#');
+            }
+          log(line);
+        }
+    }
+
+// one cave in one line, the same FNV-1a over the grid, the spawns and the chambers
+  static function caveDigest(ctx: GenCtx, state: gen.cave._CaveState): String
+    {
+      var h = -2128831035;
+      inline function eat(v: Int)
+        {
+          h = h ^ v;
+          h = (h + (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24)) | 0;
+        }
+      for (y in 0...ctx.height)
+        for (x in 0...ctx.width)
+          eat(ctx.cells[x][y]);
+      for (s in ctx.spawns)
+        {
+          eat(s.x);
+          eat(s.y);
+        }
+      for (r in state.rooms)
+        {
+          eat(r.x1);
+          eat(r.y1);
+          eat(r.x2);
+          eat(r.y2);
+        }
+      return StringTools.hex(h >>> 0, 8);
     }
 
 // one lab in one line, the same FNV-1a over the same things as the compound's digest

@@ -44,6 +44,12 @@ class GenSpawner
                   });
               case 'vent':
                 new Vent(game, area.id, s.x, s.y);
+              // a mountain cave habitat's exit, gen.cave.CaveGen. the same habitat_exit object the
+              // sewer habitat leaves by; the name is what the renderer and the HUD tell it apart by
+              case 'caveMouth':
+                var exit = new objects.mission.HabitatExit(game, area.id, s.x, s.y);
+                exit.name = 'cave mouth';
+                exit;
               case 'sewerHatch':
                 new SewerHatch(game, area.id, s.x, s.y);
               case 'floorDrain':

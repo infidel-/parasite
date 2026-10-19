@@ -20,6 +20,7 @@ class AreaGenerator
   public var corp: CorpAreaGenerator;
   public var sewers: SewerAreaGenerator;
   public var undergroundLab: UndergroundLabAreaGenerator;
+  public var cave: CaveAreaGenerator;
 
   public static inline var DIR_UP = 8;
   public static inline var DIR_LEFT = 4;
@@ -55,6 +56,7 @@ class AreaGenerator
       corp = new CorpAreaGenerator(game);
       sewers = new SewerAreaGenerator(game, this);
       undergroundLab = new UndergroundLabAreaGenerator(game);
+      cave = new CaveAreaGenerator(game);
     }
 
 // generate area
@@ -74,6 +76,10 @@ class AreaGenerator
         facility.generate(area, info);
       else if (info.type == 'wilderness')
         generateWilderness(game, area, info);
+      // a habitat on a mountain is a natural cave, everywhere else a microhabitat in the sewers
+      else if (info.type == 'habitat' &&
+          area.isCave())
+        cave.generate(area, info);
       else if (info.type == 'habitat')
         sewers.generate(area, info, getHabitatSewerOptions());
       else if (info.type == 'corp')

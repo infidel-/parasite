@@ -954,6 +954,13 @@ class AreaGame extends _SaveObject
           width = info.width;
           height = info.height;
         }
+      // a habitat is created at the sewer microhabitat's size; one on a mountain is a cave, which
+      // gets its own grid the first time it is generated (the parent is known by then)
+      if (isCave())
+        {
+          width = gen.cave.CaveGen.WIDTH;
+          height = gen.cave.CaveGen.HEIGHT;
+        }
 
       // clear map
       _cells = [];
@@ -1977,6 +1984,15 @@ class AreaGame extends _SaveObject
           usesSewerTileset())
         return AREA_SEWERS;
       return typeID;
+    }
+
+// is this a habitat built on a mountain, a natural cave? derived from the parent tile rather than
+// stored: wilderness habitats were impossible before caves, so every one there is a cave
+  public function isCave(): Bool
+    {
+      return (isHabitat &&
+        parent != null &&
+        parent.typeID == AREA_GROUND);
     }
 
 // check whether this area should use the sewer tileset

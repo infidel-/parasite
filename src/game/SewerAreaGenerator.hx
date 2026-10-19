@@ -6,9 +6,9 @@ import Const;
 import const.WorldConst;
 import game.AreaGame;
 import game.AreaGenerator;
+import gen.SewerShell;
 import objects.mission.HabitatExit;
 import objects.mission.SewerExit;
-import tiles.Sewers;
 
 typedef SewerAreaGeneratorOptions = {
   @:optional var blockWidth: Int;
@@ -87,7 +87,7 @@ class SewerAreaGenerator
       placeExits(area, rooms, options);
 
       // convert carved walkway markers to sewer floor and wall tiles
-      finalizeTiles(area);
+      SewerShell.finalize(area.getCells(), area.width, area.height);
       // initialize tile metadata
       area.initTilesFromCells();
       // NOTE: floor decoration and debris used to be placed here as persisted tile decorations.
@@ -630,171 +630,6 @@ class SewerAreaGenerator
       for (y in yy1...yy2 + 1)
         for (xx in x1 - 1...x1 + 2)
           area.setCellType(xx, y, Const.TILE_WALKWAY);
-    }
-
-// convert walkway markers into sewer floor and wall shell tiles
-  function finalizeTiles(area: AreaGame)
-    {
-      var floorMap: Array<Array<Bool>> = [];
-      for (x in 0...area.width)
-        {
-          floorMap[x] = [];
-          for (y in 0...area.height)
-            floorMap[x][y] = isFloorMarker(area.getCellType(x, y));
-        }
-
-      for (y in 0...area.height)
-        for (x in 0...area.width)
-          {
-            if (floorMap[x][y])
-              {
-                area.setCellType(x, y, Sewers.TILE_FLOOR);
-                continue;
-              }
-            if (isWallShell(floorMap, x, y))
-              area.setCellType(x, y, getWallTileID(floorMap, x, y));
-            else
-              {
-                var tileID = getDiagonalCornerTileID(floorMap, x, y);
-                if (tileID == Const.TILE_HIDDEN)
-                  area.setCellType(x, y, Const.TILE_HIDDEN);
-                else area.setCellType(x, y, tileID);
-              }
-          }
-    }
-
-// check whether current tile is still a pre-finalize floor marker
-  inline function isFloorMarker(tile: Int): Bool
-    {
-      return tile == Const.TILE_WALKWAY;
-    }
-
-// check whether this cell should become a visible wall shell tile
-  inline function isWallShell(floorMap: Array<Array<Bool>>, x: Int, y: Int): Bool
-    {
-      return (getFloor(floorMap, x, y - 1) ||
-        getFloor(floorMap, x, y + 1) ||
-        getFloor(floorMap, x - 1, y) ||
-        getFloor(floorMap, x + 1, y));
-    }
-
-// safely read floor-map occupancy
-  inline function getFloor(floorMap: Array<Array<Bool>>, x: Int, y: Int): Bool
-    {
-      if (x < 0 ||
-          y < 0 ||
-          x >= floorMap.length ||
-          y >= floorMap[x].length)
-        return false;
-      return floorMap[x][y];
-    }
-
-// map wall shell shape to one sewer wall tile id
-  function getWallTileID(floorMap: Array<Array<Bool>>, x: Int, y: Int): Int
-    {
-      var n = getFloor(floorMap, x, y - 1);
-      var s = getFloor(floorMap, x, y + 1);
-      var w = getFloor(floorMap, x - 1, y);
-      var e = getFloor(floorMap, x + 1, y);
-
-      if (e &&
-          s &&
-          !n &&
-          !w)
-        return Sewers.TILE_WALL_INNER_TOP_LEFT;
-      if (w &&
-          s &&
-          !n &&
-          !e)
-        return Sewers.TILE_WALL_INNER_TOP_RIGHT;
-      if (e &&
-          n &&
-          !s &&
-          !w)
-        return Sewers.TILE_WALL_INNER_BOTTOM_LEFT;
-      if (w &&
-          n &&
-          !s &&
-          !e)
-        return Sewers.TILE_WALL_INNER_BOTTOM_RIGHT;
-
-      if (n &&
-          w &&
-          !s &&
-          !e)
-        return Sewers.TILE_WALL_OUTER_TOP_LEFT;
-      if (n &&
-          e &&
-          !s &&
-          !w)
-        return Sewers.TILE_WALL_OUTER_TOP_RIGHT;
-      if (s &&
-          w &&
-          !n &&
-          !e)
-        return Sewers.TILE_WALL_OUTER_BOTTOM_LEFT;
-      if (s &&
-          e &&
-          !n &&
-          !w)
-        return Sewers.TILE_WALL_OUTER_BOTTOM_RIGHT;
-
-      if (s && !n)
-        return Sewers.TILE_WALL_UPPER;
-      if (n && !s)
-        return Sewers.TILE_WALL_LOWER;
-      if (e && !w)
-        return Sewers.TILE_WALL_LEFT;
-      if (w && !e)
-        return Sewers.TILE_WALL_RIGHT;
-
-      if (s)
-        return Sewers.TILE_WALL_UPPER;
-      if (n)
-        return Sewers.TILE_WALL_LOWER;
-      if (e)
-        return Sewers.TILE_WALL_LEFT;
-      if (w)
-        return Sewers.TILE_WALL_RIGHT;
-      return Const.TILE_HIDDEN;
-    }
-
-// map single diagonal floor adjacency to an outer-corner wall tile
-  inline function getDiagonalCornerTileID(
-      floorMap: Array<Array<Bool>>, x: Int, y: Int): Int
-    {
-      var n = getFloor(floorMap, x, y - 1);
-      var s = getFloor(floorMap, x, y + 1);
-      var w = getFloor(floorMap, x - 1, y);
-      var e = getFloor(floorMap, x + 1, y);
-      if (n || s || w || e)
-        return Const.TILE_HIDDEN;
-
-      var nw = getFloor(floorMap, x - 1, y - 1);
-      var ne = getFloor(floorMap, x + 1, y - 1);
-      var sw = getFloor(floorMap, x - 1, y + 1);
-      var se = getFloor(floorMap, x + 1, y + 1);
-      var diagonalFloors = 0;
-      if (nw)
-        diagonalFloors++;
-      if (ne)
-        diagonalFloors++;
-      if (sw)
-        diagonalFloors++;
-      if (se)
-        diagonalFloors++;
-      if (diagonalFloors != 1)
-        return Const.TILE_HIDDEN;
-
-      if (nw)
-        return Sewers.TILE_WALL_OUTER_TOP_LEFT;
-      if (ne)
-        return Sewers.TILE_WALL_OUTER_TOP_RIGHT;
-      if (sw)
-        return Sewers.TILE_WALL_OUTER_BOTTOM_LEFT;
-      if (se)
-        return Sewers.TILE_WALL_OUTER_BOTTOM_RIGHT;
-      return Const.TILE_HIDDEN;
     }
 
 // place sewer exits against a room wall (see wallSpot)

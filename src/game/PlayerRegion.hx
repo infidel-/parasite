@@ -83,7 +83,7 @@ class PlayerRegion extends _SaveObject
       // NOTE: maybe add regionActions to ImprovInfo later?
       if (player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0 &&
           !currentArea.hasHabitat &&
-          currentArea.info.isInhabited)
+          canHaveHabitat(currentArea))
         {
           // count total number of habitats
           var params = player.evolutionManager.getParams(IMP_MICROHABITAT);
@@ -265,10 +265,21 @@ class PlayerRegion extends _SaveObject
     }
 
 
+// can a habitat be built here: a microhabitat in the sewers under any inhabited area, or a natural
+// cave in the mountains. plains and forest have neither
+  function canHaveHabitat(area: AreaGame): Bool
+    {
+      return (area.info.isInhabited ||
+        (area.typeID == AREA_GROUND &&
+         map.Terrain.bandAtArea(game.region.mapSeed, area.x, area.y) == TERRAIN_MOUNTAIN));
+    }
+
 // action: create habitat
   function createHabitatAction()
     {
-      game.log("You have created a habitat in this area.");
+      game.log(currentArea.typeID == AREA_GROUND ?
+        "You have created a habitat in a mountain cave." :
+        "You have created a habitat in this area.");
       var area = game.region.createArea(AREA_HABITAT);
       area.isHabitat = true;
       area.habitat = new Habitat(game, area);

@@ -1476,6 +1476,79 @@ class GenCheck
       return false;
     }
 
+// the mountain cave: what the habitat code and the 3D cave shell read back off its grid. only sewer
+// ids (gen.SewerShell; tiles.Default's walkable table cannot read them, so the generic checks above do
+// not apply), a solid border, one walkable region, none of the shapes the shell cannot draw (a floor
+// nub with rock on three sides, two floor cells touching only at a corner), the floor share in its
+// band, exactly two cave mouths that can stand where they are, far enough apart, and chambers that
+// are all floor, big enough and apart
+  public function caveSane(ctx: GenCtx, state: gen.cave._CaveState)
+    {
+      var w = ctx.width;
+      var h = ctx.height;
+      var floor = [for (x in 0...w) [for (y in 0...h) ctx.cells[x][y] == tiles.Sewers.TILE_FLOOR]];
+      for (x in 0...w)
+        for (y in 0...h)
+          {
+            var t = ctx.cells[x][y];
+            ok(tiles.Sewers.isSewerTileID(t) ||
+              t == Const.TILE_HIDDEN, 'cave cell ' + x + ',' + y + ' holds non-sewer id ' + t);
+            if (x == 0 ||
+                y == 0 ||
+                x == w - 1 ||
+                y == h - 1)
+              ok(!floor[x][y], 'cave floor on the border at ' + x + ',' + y);
+            else if (floor[x][y])
+              ok(gen.cave.CaveGen.rockSides(floor, x, y) < 3,
+                'cave floor nub with rock on three sides at ' + x + ',' + y);
+          }
+      for (x in 0...w - 1)
+        for (y in 0...h - 1)
+          ok(!((floor[x][y] && floor[x + 1][y + 1] && !floor[x + 1][y] && !floor[x][y + 1]) ||
+            (floor[x + 1][y] && floor[x][y + 1] && !floor[x][y] && !floor[x + 1][y + 1])),
+            'cave floor touching only at a corner at ' + x + ',' + y);
+      var regions = gen.cave.CaveGen.regions(floor, w, h);
+      ok(regions.length == 1, 'cave has ' + regions.length + ' walkable regions');
+      var pct = gen.cave.CaveGen.floorPct(floor, w, h);
+      ok(pct >= gen.cave.CaveGen.FLOOR_MIN &&
+        pct <= gen.cave.CaveGen.FLOOR_MAX, 'cave floor share ' + pct + '% out of band');
+
+      // the mouths
+      var mouths = [for (s in ctx.spawns) if (s.type == 'caveMouth') s];
+      ok(mouths.length == 2, 'cave has ' + mouths.length + ' mouths');
+      for (m in mouths)
+        ok(gen.cave.CaveGen.mouthSide(floor, m.x, m.y) >= 0,
+          'cave mouth at ' + m.x + ',' + m.y + ' has no straight rock run north, west or east');
+      if (mouths.length == 2)
+        {
+          var d = gen.cave.CaveGen.walkDistances(floor, w, h, mouths[0].x, mouths[0].y);
+          ok(d[mouths[1].x][mouths[1].y] >= gen.cave.CaveGen.MOUTH_APART,
+            'cave mouths only ' + d[mouths[1].x][mouths[1].y] + ' apart on foot');
+        }
+
+      // the chambers
+      ok(state.rooms.length > 0 &&
+        state.rooms.length <= gen.cave.CaveGen.MAX_CHAMBERS, 'cave has ' + state.rooms.length +
+        ' chambers');
+      for (i in 0...state.rooms.length)
+        {
+          var r = state.rooms[i];
+          ok(r.w >= gen.cave.CaveGen.CHAMBER_MIN &&
+            r.h >= gen.cave.CaveGen.CHAMBER_MIN, 'cave chamber ' + r.id + ' only ' + r.w + 'x' + r.h);
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
+              ok(floor[x][y], 'cave chamber ' + r.id + ' has rock at ' + x + ',' + y);
+          for (j in i + 1...state.rooms.length)
+            {
+              var o = state.rooms[j];
+              ok(r.x1 > o.x2 ||
+                r.x2 < o.x1 ||
+                r.y1 > o.y2 ||
+                r.y2 < o.y1, 'cave chambers ' + r.id + ' and ' + o.id + ' overlap');
+            }
+        }
+    }
+
   static function rect(b: _GenNode): String
     return b.x1 + ',' + b.y1 + '..' + b.x2 + ',' + b.y2;
 }
