@@ -567,6 +567,8 @@ class UISvg
             return badgeNpc('#e84fe0');            // mission target — saturated cult magenta (bloom desaturates toward cult pink #fd97ff)
           case 'regionlead':
             return regionLead();
+          case 'regionnpc':
+            return regionNPC();
           case 'regionmission':
             return regionMission();
           case 'regionhabitat':
@@ -586,6 +588,20 @@ class UISvg
         '<path d="M6.5 3h7.5l4 4v14H6.5z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 16h3.5"/></svg>';
     }
 
+// the torn note with a tick for lines (region tile: timeline location with every note known)
+  public static function regionLeadDone(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M6.5 3h7.5l4 4v14H6.5z"/><path d="M14 3v4h4"/><path d="M9.3 14.3l2.1 2.1 3.8-4.2"/></svg>';
+    }
+
+// head and shoulders (region border and tile: timeline NPC with an unread memory)
+  public static function regionNPC(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="12" cy="8" r="3.6"/><path d="M4.8 20.5c0-4.2 3.2-6.6 7.2-6.6s7.2 2.4 7.2 6.6"/></svg>';
+    }
+
 // flame with an inner tongue (region border: open cult mission, the map's mission flame)
   public static function regionMission(): String
     {
@@ -594,13 +610,13 @@ class UISvg
         'M12 19c-1.6 0-2.7-1.1-2.7-2.6 0-1.3.9-2.3 1.7-3 .2.8.7 1.3 1.3 1.6.1-1.3.5-2.4 1.3-3.2.5 1.3 1.2 2.4 1.2 4.4 0 1.6-1.2 2.8-2.8 2.8Z"/></svg>'; // inner tongue (void)
     }
 
-// single tentacle sweeping up from a thick root into a curled tip (region border: player habitat).
-// a solid tapered silhouette, outlined in its own color to stay thick at edge-icon size; a stroked
-// hook-and-stem version read as a question mark there
+// single tentacle rising from a fat root to a thin curled tip (region border: player habitat). a
+// filled taper, its width falling along the curve; a stroked hook-and-stem version read as a
+// question mark at edge-icon size
   public static function regionHabitat(): String
     {
-      return '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true">' +
-        '<path transform="translate(-2.6 0) scale(1.25 1)" d="M4 22c.6-4.4 3.4-6.2 6.2-8.2 2.1-1.5 2.6-3.4 1-5-1.7-1.6-1.6-4.3.6-5.4 2-1 4.4.3 4.2 2.6-.1 1.4-1.4 2-2.2 1.3.9-.2 1.1-1.3.4-1.8-.8-.6-2.1 0-2 1.1.1 1 1.4 1.6 2.1 2.9 1.2 2.4.1 5-2.3 6.9-2.3 1.8-3.8 3.2-4.4 5.6Z"/></svg>';
+      return '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="0.5" stroke-linejoin="round" aria-hidden="true">' +
+        '<path d="M13.3 22.5 13.1 22.3 12.9 22.2 12.7 22.0 12.7 21.7 12.8 21.3 13.0 20.8 13.3 20.3 13.7 19.7 14.2 19.0 14.8 18.4 15.4 17.7 16.0 16.9 16.7 16.2 17.3 15.3 17.8 14.4 18.3 13.5 18.6 12.5 18.8 11.4 18.8 10.2 18.6 9.2 18.3 8.2 17.9 7.3 17.5 6.6 16.9 5.9 16.3 5.3 15.7 4.8 15.0 4.4 14.2 4.1 13.5 3.8 12.8 3.6 12.1 3.6 11.3 3.6 10.7 3.6 10.0 3.8 9.4 4.1 8.8 4.5 8.4 5.0 8.0 5.6 7.7 6.2 7.6 6.8 7.6 7.3 7.7 7.8 7.8 8.3 8.0 8.7 8.2 9.1 8.5 9.4 8.8 9.7 9.1 9.9 9.4 10.1 9.8 10.2 10.2 10.3 10.6 10.4 11.0 10.3 11.4 10.2 11.7 10.1 12.1 9.9 12.4 9.6 12.6 9.2 12.8 8.8 12.8 8.8 12.8 8.5 12.8 8.3 12.6 8.2 12.3 8.2 12.1 8.2 12.0 8.4 11.8 8.7 11.7 9.0 11.5 9.2 11.3 9.3 11.1 9.4 10.8 9.4 10.6 9.4 10.4 9.4 10.1 9.4 9.9 9.3 9.6 9.1 9.4 8.9 9.2 8.7 9.0 8.5 8.9 8.2 8.8 8.0 8.7 7.6 8.7 7.3 8.7 7.0 8.8 6.6 9.0 6.1 9.3 5.7 9.6 5.5 10.0 5.2 10.4 5.1 10.9 5.0 11.4 5.0 11.9 5.1 12.4 5.2 13.0 5.4 13.5 5.7 14.0 6.0 14.4 6.4 14.8 6.8 15.2 7.3 15.4 7.8 15.6 8.3 15.7 8.9 15.7 9.5 15.7 10.2 15.5 10.8 15.3 11.3 15.0 11.7 14.6 12.1 14.1 12.6 13.5 13.0 12.9 13.4 12.2 13.7 11.4 14.2 10.6 14.6 9.8 15.0 8.9 15.6 8.1 16.2 7.2 16.9 6.4 17.8 5.6 18.9 4.9 20.2 4.5 21.6 4.3 23.1Z"/></svg>';
     }
 
 // question mark (rising alertness — suspicious)

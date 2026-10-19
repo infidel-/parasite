@@ -106,31 +106,37 @@ class AreaTooltip extends BeamTooltip
           ai.isPlayerCultist())
         return;
       function row(k: String, v: String)
-        buf.add('<div class="area-tip-row"><span class="area-tip-rk">' + k + '</span>' + v + '</div>');
+        buf.add('<tr><td>' + k + '</td><td>' + v + '</td></tr>');
+      function signed(n: Int): String
+        return (n >= 0 ? '+' : '') + n;
+      buf.add('<div class="area-tip-row"><span class="area-tip-rk">notice</span>');
 
       // not noticing at all
       if (ai.isAgreeable())
         {
-          row('notice', Const.smallgray('ignores you'));
+          buf.add(Const.smallgray('ignores you') + '</div>');
           return;
         }
       var v = DefaultLogic.playerVisibility(ai);
       if (!v.sees)
         {
-          row('notice', Const.smallgray(game.player.invisibleToAI() ?
-            'you are hidden' : 'does not see you'));
+          buf.add(Const.smallgray(game.player.invisibleToAI() ?
+            'you are hidden' : 'does not see you') + '</div>');
           return;
         }
 
-      // multiplier x distance factor, flat bonuses, total per turn
-      row('notice', v.base + ' &times; ' + v.distMul + ' ' + Const.smallgray('dist ' + v.distance));
+      // name -> number table: multiplier x distance factor, flat bonuses, total per turn
+      buf.add('</div><table class="area-tip-vision small">');
+      row('base', '' + v.base);
+      row('distance ' + v.distance, '&times;' + v.distMul);
       if (v.military)
         row('outsider', '&times;' + DefaultLogic.MILITARY_SUSPICION);
       if (v.cover != 0)
-        row('cover', '+' + v.cover);
+        row('cover', signed(v.cover));
       if (v.weapon != 0)
-        row('weapon', '+' + v.weapon);
-      row('alertness', (v.total >= 0 ? '+' : '') + v.total + '/turn');
+        row('weapon', signed(v.weapon));
+      row('total', signed(v.total) + '/turn');
+      buf.add('</table>');
     }
 
 // get tooltip HTML for a hovered object (public: the 3D view's hover driver reuses it verbatim).

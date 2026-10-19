@@ -173,6 +173,9 @@ class Difficulty extends UIWindow
 
       game.system('Difficulty selected for ' + currentChoice.title + ': ' + d);
 
+      // the HUD reads some of these (the group mark waits on the group's), and closing the window
+      // does not redraw it
+      game.updateHUD();
       game.ui.closeWindow();
     }
 

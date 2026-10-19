@@ -92,8 +92,7 @@ class PawnEntity extends Entity
 // draw pawn entity on the region map: mask image, then the entity image
   public override function draw(ctx: CanvasRenderingContext2D)
     {
-      drawImage(ctx, game.scene.images.entities,
-        maskx, Const.ROW_PARASITE);
+      drawCell(ctx, 'entities', maskx, Const.ROW_PARASITE);
       super.draw(ctx);
     }
 

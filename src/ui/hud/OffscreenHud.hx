@@ -2,7 +2,7 @@
 // 3D camera crops out of frame: the AI's alert badge glyph inside a circle, both tinted by the
 // alert-rating color (same ramp as the 3D outlines/badges, see Badges.outlineColor). pooled DOM
 // divs under #hud (so the Space HUD-toggle hides them), driven per-frame from render.Actors.
-// the region map drives the same block for its off-screen leads, missions and habitats (RegionView)
+// the region map drives the same block for its off-screen leads, NPCs, missions and habitats (RegionView)
 package ui.hud;
 
 import js.Browser.document;
@@ -19,8 +19,11 @@ class OffscreenHud
   var pool: Array<DivElement> = [];
   var keys: Array<String> = [];                           // cached glyph key per pooled div (skip innerHTML rewrites)
   var used = 0;
+  var placed: Array<Float> = [];                          // this frame's pinned spots, x/y pairs
+  var spread = false;                                     // this frame's indicators step apart instead of overlapping
 
   static inline var MARGIN = 24;                          // min px from the screen sides
+  static inline var STEP = 28;                            // px an overlapping indicator steps along the edge (spread frames)
 
 // calm AI (no alert badge) show a plain center dot inside the circle
   static inline var CALM_DOT = '<svg viewBox="0 0 24 24" aria-hidden="true">' +
@@ -37,10 +40,12 @@ class OffscreenHud
       Viewport.init();
     }
 
-// start a frame: reset the pool cursor
-  public function begin():Void
+// start a frame: reset the pool cursor; spread steps overlapping indicators apart
+  public function begin(?spread: Bool = false):Void
     {
       used = 0;
+      this.spread = spread;
+      placed.resize(0);
     }
 
 // queue one indicator this frame: badge glyph key ('' = calm, dot in circle), css color, the
@@ -80,6 +85,27 @@ class OffscreenHud
         y = MARGIN;
       if (y > Viewport.h - MARGIN)
         y = Viewport.h - MARGIN;
+      // a spread frame (the region map's markers) steps an indicator along its edge off any it
+      // would overlap; AI indicators keep their true direction and may stack
+      var alongX = (y <= MARGIN ||
+        y >= Viewport.h - MARGIN);
+      var i = 0;
+      while (spread &&
+          i < placed.length)
+        if (Math.abs(placed[i] - x) < STEP &&
+            Math.abs(placed[i + 1] - y) < STEP)
+          {
+            if (alongX)
+              x += STEP;
+            else y += STEP;
+            i = 0;
+          }
+        else i += 2;
+      if (spread)
+        {
+          placed.push(x);
+          placed.push(y);
+        }
       el.style.left = x + 'px';
       el.style.top = y + 'px';
       el.style.transform = (scale == 1 ? '' : 'scale(' + scale + ')');

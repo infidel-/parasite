@@ -246,19 +246,22 @@ hr {
    the pulse sits on the svg so its filter does not glow the tip bubble too */
 .icon-breaking {
   color: var(--text-color-alert);
-  pointer-events: auto; /* #hud is pointer-events:none; re-enable for the tip */
 }
 .icon-breaking svg {
   width: 1.5em;
   height: 1.5em;
   animation: hud-bar-warn 1.1s ease-in-out infinite;
 }
-/* the info panel hugs the screen's left edge: hang the bubble off the left */
-.icon-breaking.evolution-tip::after {
+/* #hud is pointer-events:none; re-enable the host badges for their tips */
+.hud-hostname-badges .evolution-tip {
+  pointer-events: auto;
+}
+/* the info panel hugs the screen's left edge: hang the host badges' bubbles off the left */
+.hud-hostname-badges .evolution-tip::after {
   left: 0;
   right: auto;
 }
-.icon-breaking.evolution-tip::before {
+.hud-hostname-badges .evolution-tip::before {
   left: 6px;
   right: auto;
 }
@@ -723,6 +726,20 @@ hr {
   color: #cdb6ef;
   font-weight: 600;
   margin-left: 5px;
+}
+/* the vision helper's name -> number table (extended info): names left, numbers right, no rules */
+.area-tip-vision {
+  width: 100%;
+  border-collapse: collapse;
+  color: #aeb3bd;
+}
+.area-tip-vision td {
+  padding: 0;
+}
+.area-tip-vision td + td {
+  text-align: right;
+  padding-left: 2ch;
+  white-space: nowrap;
 }
 /* active effects block: rows reuse the body window's effect-row style */
 .area-tip-effects {

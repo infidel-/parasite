@@ -41,6 +41,7 @@ class RegionView
   var revealStart: IntMap<Float>; // area id -> fade-in start timestamp, ms
   var ticking: Bool; // animation frame requested
   var markers: Array<RegionMarker>; // region-border markers, rebuilt per turn
+  var tileMarks: IntMap<js.html.Image>; // the SVG timeline tile marks by ROW_REGION_ICON frame
 
   public var width: Int; // width, height in cells
   public var height: Int;
@@ -60,6 +61,7 @@ class RegionView
       revealStart = new IntMap();
       ticking = false;
       markers = [];
+      tileMarks = new IntMap();
     }
 
 
@@ -96,7 +98,7 @@ class RegionView
                 ev.col == Const.FRAME_EVENT_UNKNOWN)
               add(a, 'regionlead', '#f7af46', 1);
             if (getNPCIcon(a) != null)
-              add(a, 'npc', '#f7af46', 1);
+              add(a, 'regionnpc', '#f7af46', 1);
             if (drawAreaCultMission(a) != null)
               add(a, 'regionmission', '#fd97ff', 1);
             var hab = drawAreaHabitat(a);
@@ -228,6 +230,7 @@ class RegionView
       if (game.player.host != null)
         {
           var ai = game.player.host;
+          ple.skinColor = ai.skinColor;
           ple.setIcon(
             (ai.isMale ? 'male' : 'female'),
             ai.tileAtlasX,
@@ -323,7 +326,7 @@ class RegionView
       var hud = game.ui.hud.offscreen;
       var ts = Const.TILE_SIZE;
       var ratio = Browser.window.devicePixelRatio;
-      hud.begin();
+      hud.begin(true);
       for (m in markers)
         {
           var cx = (m.x * ts + ts / 2 - scene.cameraX + offX) / ratio;
@@ -638,11 +641,18 @@ class RegionView
       ctx.restore();
     }
 
-// draw one area icon from the entities sprite sheet
+// draw one area icon: a timeline mark from its SVG, the rest from the entities sprite sheet
   function drawIcon(ctx: CanvasRenderingContext2D, icon: _Icon, ax: Int, ay: Int)
     {
       if (icon == null)
         return;
+      var mark = tileMark(icon);
+      if (mark != null)
+        {
+          if (mark.complete)
+            ctx.drawImage(mark, ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
+          return;
+        }
       ctx.drawImage(scene.images.entities,
         icon.col * Const.TILE_SIZE_CLEAN,
         icon.row * Const.TILE_SIZE_CLEAN,
@@ -651,6 +661,43 @@ class RegionView
         ax, ay,
         Const.TILE_SIZE,
         Const.TILE_SIZE);
+    }
+
+// the timeline tile marks (lead, finished lead, NPC) as full-tile images built from SVG, each where
+// the sheet's flat disc sat; null for every other frame. the first draw starts the decode and the
+// load redraws the map
+  function tileMark(icon: _Icon): js.html.Image
+    {
+      if (icon.row != Const.ROW_REGION_ICON)
+        return null;
+      var img = tileMarks.get(icon.col);
+      if (img != null)
+        return img;
+      var svg = null;
+      if (icon.col == Const.FRAME_EVENT_UNKNOWN)
+        svg = tileMarkSvg(32, 31, 15, '#f7af46', ui.UISvg.regionLead());
+      else if (icon.col == Const.FRAME_EVENT_KNOWN)
+        svg = tileMarkSvg(32, 31, 15, '#9aa0aa', ui.UISvg.regionLeadDone());
+      else if (icon.col == Const.FRAME_EVENT_NPC)
+        svg = tileMarkSvg(14, 14, 12, '#f7af46', ui.UISvg.regionNPC());
+      else return null;
+      img = new js.html.Image();
+      img.onload = function() scene.draw();
+      img.src = 'data:image/svg+xml;charset=utf-8,' + StringTools.urlEncode(svg);
+      tileMarks.set(icon.col, img);
+      return img;
+    }
+
+// one tile mark on the 64 px tile grid: a glass disc ringed in its colour around a UISvg glyph,
+// rasterised at 2x so a raised map scale stays sharp
+  static function tileMarkSvg(cx: Float, cy: Float, r: Float, color: String, glyph: String): String
+    {
+      var g = r * 1.45;
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 64 64" color="' + color + '">' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="rgba(12,14,20,0.82)" stroke="currentColor" stroke-width="2"/>' +
+        StringTools.replace(glyph, '<svg ',
+          '<svg x="' + (cx - g / 2) + '" y="' + (cy - g / 2) + '" width="' + g + '" height="' + g + '" ') +
+        '</svg>';
     }
 
 // draw one entity icon with a small black outline
