@@ -51,7 +51,7 @@ class PediaConst
           id: 'hostAffinity',
           name: 'Host: Affinity',
           img: 'event/goal_tutorial_affinity_complete',
-          text: "Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green <span class=icon style='color:var(--text-color-symbiosis)'>&#127280;</span> icon after it in the HUD in case of the maximum affinity. Leaving a host with full affinity will result in parasite losing some maximum energy. That reduction is small enough. However, if such host dies while the parasite is on it, the loss will be much higher. Therefore if you intend to lose the host, do not kill it. Note also, that hosts that have both full affinity and consent do not get alerted when they see the parasite. In fact, you can quickly hop onto such a host again after leaving them.",
+          text: "Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green icon of two interlocking rings after it in the HUD in case of the maximum affinity. Leaving a host with full affinity will result in parasite losing some maximum energy. That reduction is small enough. However, if such host dies while the parasite is on it, the loss will be much higher. Therefore if you intend to lose the host, do not kill it. Note also, that hosts that have both full affinity and consent do not get alerted when they see the parasite. In fact, you can quickly hop onto such a host again after leaving them.",
         },
         {
           id: 'hostAssimilation',
@@ -137,7 +137,9 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           id: 'npcAlertness',
           name: 'NPCs: Alertness',
           img: 'event/goal_tutorial_alert_complete',
-          text: "No humans or animals react particularly well when they see the parasite. A ? icon appears on top of them that can be either white, yellow or become a red !. This signifies the alertness status of an NPC. They have a limited vision and hearing and will react when their alertness rises. Once it reaches maximum (the red !), the NPC becomes fully aware that they're witnessing something weird and reacts accordingly by running away, calling the police or attacking you.",
+          text: "<p>No humans or animals react particularly well when they see the parasite. A ? icon appears on top of them that can be either white, yellow or become a red !. This signifies the alertness status of an NPC. They have a limited vision and hearing and will react when their alertness rises. Once it reaches maximum (the red !), the NPC becomes fully aware that they're witnessing something weird and reacts accordingly by running away, calling the police or attacking you.</p>
+
+<p>While a calm NPC keeps you in sight, its alertness rises every turn. The closer you are, the faster it grows, and from more than ten tiles away the distance alone no longer raises it. A camouflage layer on the host slows the growth down, while the armor plates of a protective cover and a large weapon carried in plain sight speed it up. Soldiers on a military base are more suspicious of anyone out of uniform. With the extended gameplay information turned on in the options, hovering over an NPC shows this breakdown under NOTICE, ending with the alertness it gains per turn.</p>",
         },
         {
           id: 'npcInteraction',
@@ -155,7 +157,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           id: 'eventTimeline',
           name: 'Event Timeline',
           img: 'pedia/timeline',
-          text: "<p>Once you complete the tutorial, you get to the meat of the game - collecting clues to open up the timeline of events that have led to the present state. You can see the currently known events list in the Timeline window. Each event has a location, a text and NPC participants attached to it. Researching the more recent events through the clues allows you to open up earlier events until you get to the key event which will allow you to progress further into the final part of the game. Note that the events are numbered relatively to the first one known. Every event location is marked with a ? or + icon in the center on the regional map. In the first case, there are clues that you can gather in that area. The + icon means that you have already gathered everything you could.</p>
+          text: "<p>Once you complete the tutorial, you get to the meat of the game - collecting clues to open up the timeline of events that have led to the present state. You can see the currently known events list in the Timeline window. Each event has a location, a text and NPC participants attached to it. Researching the more recent events through the clues allows you to open up earlier events until you get to the key event which will allow you to progress further into the final part of the game. Note that the events are numbered relatively to the first one known. Every event location is marked with an icon in the center of its tile on the regional map. An orange torn note means that there are clues you can gather in that area. A gray note with a tick means that you have already gathered everything you could. When a location with clues left is off-screen, its torn note waits at the edge of the screen in its direction.</p>
 
 <p>There are two types of readable clues - short ones like documents and notes, and long ones like journals and books. The first type can be read anywhere while the second one requires being in a habitat but gives you more clues.</p>
 
@@ -251,7 +253,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           img: 'pedia/region',
           text: "<p>After you first get into the sewers through the sewers hatch, the game switches into the region mode. Every area you can visit becomes a single tile on a grid. Time passes much faster in this mode, so your host can die quickly leaving you bare. In that case get out of the sewers with the \"Enter Area\" action and find another one. The movement is done the same way as in the area mode, with mouse and keyboard. Note that some areas have a colored ? symbol in the corner (or red ! in some cases). This shows the area alertness. High alertness increases police activity and the amount of armed civilians. If the alertness is close to maximum, you cannot enter this area until it subsides. Every turn the alertness lowers until the area is completely calm.</p>
 
-<p>Some areas might be marked with a ? icon in a gray circle in the middle. This means that the area has clues to the event timeline that you can find. When you gather all the clues in the area, this icon changes to +. If the area has a smiley icon in the upper left corner, it means that there are one or more event NPCs there.</p>",
+<p>Some areas might be marked with an orange torn note in a dark circle in the middle. This means that the area has clues to the event timeline that you can find. When you gather all the clues in the area, the note turns gray and gets a tick. If the area has a head and shoulders icon in the upper left corner, it means that there are one or more event NPCs there.</p>",
         },
         {
           id: 'sandboxMode',
@@ -281,7 +283,9 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           id: 'areaCity',
           name: 'City Area',
           img: 'pedia/area_city',
-          text: "The city is divided into three distinct area types based on density: low, medium, and downtown. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. Downtown districts are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering downtown will give the parasite an idea...",
+          text: "<p>The city is divided into three distinct area types based on density: low, medium, and downtown. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. Downtown districts are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering downtown will give the parasite an idea...</p>
+
+<p>Some city blocks have their alley entrances fenced off, leaving only one way in. Fences cannot be crossed. Downtown uses chain-link fences that you can see through, while the residential streets and the slums use wooden board fences that also block sight. The slum blocks are only partly boarded up.</p>",
         },
         {
           id: 'areaHighCrime',
@@ -339,12 +343,12 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
         {
           id: 'hudInfoParasite',
           name: 'Info: Parasite',
-          text: "When the parasite is running around without a host, the information window is shortened to display the common information and its stats. The first line has the following information: turns passed since game start, current sub-turn number in square brackets (1 or 2 since parasite is always twice as fast as the NPCs), and x, y position in the area or region, depending on the current mode. The next line in the region mode shows the name of the area. After the separator the parasite stats begin: energy line, which shows the current and max energy and energy spend/increase per turn in square brackets. The next line shows the current and maximum parasite health. When the parasite is attached to a host but have not yet invaded it, the next line shows the current and maximum grip values.",
+          text: "When the parasite is running around without a host, the information window is shortened to display the common information and its stats. The first line has the following information: turns passed since game start, current sub-turn number in square brackets (1 or 2 since parasite is always twice as fast as the NPCs), and x, y position in the area or region, depending on the current mode. The next line in the region mode shows the name of the area. After the separator the parasite stats begin: energy line, which shows the current and max energy and energy spend/increase per turn in square brackets. The next line shows the current and maximum parasite health. When the parasite is attached to a host but have not yet invaded it, the next line shows the current and maximum grip values. Once you know about the Group, its mark (a triangle over a bar) sits on top of the information window. Hover over it to see the Group information. Its color tells how close the Group team is, and a red TEAM IS VERY CLOSE! warning appears in the window when the team is almost on you.",
         },
         {
           id: 'hudInfoHost',
           name: 'Info: Host',
-          text: "When the parasite is controlling a host, the information window becomes bigger and adds the following information after another separator: the host type or name if it is known, host attributes (if they were brain probed by the maximum level probe), current and maximum host health values, current and maximum control values, and energy values. The energy line has host energy increase or spend and turns left to live with the current spending in the square brackets. If you're currently evolving, the evolution direction and turns left will be shown next. If you're growing a body feature, it will be shown next with turns left to completion.",
+          text: "When the parasite is controlling a host, the information window becomes bigger and adds the following information after another separator: the host type or name if it is known, host attributes (if they were brain probed by the maximum level probe), current and maximum host health values, current and maximum control values, and energy values. The energy line has host energy increase or spend and turns left to live with the current spending in the square brackets. If you're currently evolving, the evolution direction and turns left will be shown next. If you're growing a body feature, it will be shown next with turns left to completion. The icons after the host name mark full affinity, full consent, a cultist host or a breaking host. Hover over one to see what it means.",
         },
         {
           id: 'hudLog',
@@ -363,7 +367,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           groupAddFlag: true,
           name: 'Group: Basics',
           img: 'pedia/group',
-          text: "So, you've just found out about the existence of the group of humans that are actively trying to destroy you. For the simplicity's sake we're gonna call them the Group onwards. This concept requires some explanation since the mechanic is complex enough and mostly hidden. Selecting the difficulty level will change the amount of information available to the player in the skills and knowledges section of the Body window. Choosing easy difficulty will show concrete numbers, normal difficulty will use word descriptions and hard difficulty will not show anything at all.",
+          text: "So, you've just found out about the existence of the group of humans that are actively trying to destroy you. For the simplicity's sake we're gonna call them the Group onwards. This concept requires some explanation since the mechanic is complex enough and mostly hidden. Once you know about the Group, its mark appears on top of the HUD information window. Hover over it to see the Group information. Selecting the difficulty level will change the amount of that information. Choosing easy difficulty will show concrete numbers, normal difficulty will use word descriptions and hard difficulty will not show anything at all.",
         },
         {
           id: 'groupPriority',
@@ -388,7 +392,9 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           img: 'pedia/team_basics',
           text: "<p>The priority determines the level of the team of agents that the Group will task with the parasite problem. At the beginning of the game the player has some downtime until the team is spawned and each team wipe will also result in downtime. Once the team is activated, its members will start investigating the weird phenomena and occurences, and instead of raising the Group priority, the described player actions will count towards decreasing the distance between the team and the player. The longer the time the player spends in a given area, the more is the chance of one of the team members spawning around.</p>
 
-<p>Once the team member sees the player, the following message will be shown in a log: \"You feel someone is watching.\" This means that one of the NPCs currently visible on screen is a team member. At this point the best thing to do is to leave the area. If the team member is not alerted after seeing the player and despawns, this counts as evasion. Evading team members raises the distance to the team a little.</p>",
+<p>Once the team member sees the player, the following message will be shown in a log: \"You feel someone is watching.\" This means that one of the NPCs currently visible on screen is a team member. At this point the best thing to do is to leave the area. If the team member is not alerted after seeing the player and despawns, this counts as evasion. Evading team members raises the distance to the team a little.</p>
+
+<p>The Group mark on top of the HUD information window follows the team. It is gray while there is no team, then green when the team is far away, yellow at medium distance, orange when it is close and red when it is very close. When the team is almost on you, the mark pulses and a TEAM IS VERY CLOSE! warning appears. During a fight with the team, or once a habitat watcher spots an ambush, the mark flashes rapidly. On hard difficulty the mark stays dim and tells nothing.</p>",
         },
         {
           id: 'teamDeactivation',

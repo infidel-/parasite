@@ -101,7 +101,7 @@ class Group extends _SaveObject
       row('Group priority', (difficulty == EASY ? '' + Const.round(priority) :
         numToWord(Std.int(priority), 0, 100)));
       if (team == null)
-        row('Team timeout', (difficulty == EASY ? teamTimeout + ' turns' :
+        row('Team timeout', (difficulty == EASY ? teamTimeout + 't' :
           numToWord(teamTimeout, 0, 100)));
       else
         {
