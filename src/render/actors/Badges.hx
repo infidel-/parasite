@@ -516,7 +516,9 @@ class Badges {
       if (key == 'bleeding') return '#f26a6a';    // red — blood
       if (key == 'blacknoise') return '#a45fe0';  // parasite purple — black noise
       if (key == 'breaking') return '#f26a6a';    // danger-red — host close to collapsing (--text-color-alert)
-      if (key == 'cultist') return '#fd97ff';     // cult pink — the player's own cult (--text-color-cultist)
+      // cult pink — the player's own cult. pushed past --text-color-cultist (#fd97ff): lit + full glow +
+      // tone mapping washed that to (252,183,240) on screen, this lands on the info hud's (254,154,250)
+      if (key == 'cultist') return '#ff58ff';
       if (key == 'cultistx') return '#c0c0c0';    // neutral gray — an enemy cult
       if (key == 'multieffect') return '#eaebed'; // white — generic multiple
       return '#eaebed';
