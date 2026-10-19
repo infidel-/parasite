@@ -689,7 +689,7 @@ class EvolutionConst
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Team timeout/distance increase: " + l.distanceBonus +
             (l2 != null ? ' &rarr; ' + l2.distanceBonus : '') +
-            '<br/>Double bonus from blackops';
+            '<br/>Blackops: team deactivated, group priority -25';
         },
         organ: {
           name: 'Pseudocampus',
@@ -721,7 +721,7 @@ class EvolutionConst
           'Highly-nuanced and detailed memory design leading to best believability',
         ],
         levelParams: [
-          // NOTE: double bonus from blackops
+          // NOTE: blackops deactivate the team instead (PlayerArea.plantMemoriesAction)
           // distance decrease per turn (team level): 0.1, 0.2, 0.5, 1.0
           // bonus turns (imp level 1): 50, 25, 10, 5
           // bonus turns (imp level 2): 100, 50, 20, 10

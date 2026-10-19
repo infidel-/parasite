@@ -1185,19 +1185,33 @@ class PlayerArea extends _SaveObject
           return false;
         }
       var msg = 'You release the host triggering the pseudocampus.';
+      var deactivated = false;
       if (player.host.isGroup() &&
           !player.host.hasFalseMemories)
         {
-          var params: { distanceBonus: Int } =
-            player.host.organs.getParams(IMP_FALSE_MEMORIES);
-          var distanceBonus = params.distanceBonus;
-          if (player.host.type == 'blackops')
-            distanceBonus *= 2;
-          game.group.raiseTeamDistance(params.distanceBonus);
+          // a blackops agent reports the false trail back to the whole team
+          // (priority -25 is one team level, see Team.new)
+          if (player.host.type == 'blackops' &&
+              game.group.team != null)
+            {
+              game.group.deactivateTeam(25);
+              deactivated = true;
+            }
+          else
+            {
+              var params: { distanceBonus: Int } =
+                player.host.organs.getParams(IMP_FALSE_MEMORIES);
+              game.group.raiseTeamDistance(params.distanceBonus);
+            }
           msg += ' A set of implanted false memories about the encounter will help your survival.';
         }
       player.host.hasFalseMemories = true;
       game.log(msg);
+      if (deactivated)
+        game.message({
+          text: "The agent will report a false trail. It will be some time before they get on my trail again.",
+          img: 'pedia/team_deactivation'
+        });
       leaveHostAction('memories');
       return true;
     }

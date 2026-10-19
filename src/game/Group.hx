@@ -222,8 +222,15 @@ class Group extends _SaveObject
       if (team.distance < 150)
         return;
 
-      // team completely evaded, deactivate and lower priority
-      changeOnlyPriority(-20);
+      // team completely evaded
+      deactivateTeam(20);
+    }
+
+// deactivate the active team and lower group priority by the given amount
+// (team evaded completely, or false memories planted into a blackops agent)
+  public function deactivateTeam(priorityDrop: Float)
+    {
+      changeOnlyPriority(-priorityDrop);
 
       // larger timeout and reset starting distance
       teamStartDistance = 100.0;
