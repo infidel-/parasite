@@ -779,7 +779,7 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_BIOMINERAL,
         name: 'Biomineral formation',
-        note: 'Habitat growth. Gives the parasite an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated hosts.',
+        note: 'Habitat growth. Gives the parasite an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated and consenting hosts.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return
@@ -788,7 +788,7 @@ class EvolutionConst
             "<br/>Bonus organ and evolution points per turn: +" +
               l.evolutionBonus + "%" +
               (l2 != null ? ' &rarr; ' + l2.evolutionBonus + '%' : '') +
-            "<br/>Assimilated host energy restored per turn: +" + l.hostEnergyRestored +
+            "<br/>Assimilated or consenting host energy restored per turn: +" + l.hostEnergyRestored +
             (l2 != null ? ' &rarr; +' + l2.hostEnergyRestored : '') +
             "<br/>Parasite energy restored per turn: +" +
             l.parasiteEnergyRestored +

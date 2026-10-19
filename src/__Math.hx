@@ -68,26 +68,26 @@ class __Math
   public static inline function hostEnergyPerTurn(time: Int)
     {
       var energy = 0;
+      var consented = (game.player.host.chat.consent >= 100);
 
-      // assimilated hosts checks
-      if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
-        {
-          // energy bonus if there is free biomineral energy and in habitat
-          if (game.location == LOCATION_AREA &&
-              game.area.isHabitat)
-            energy = game.area.habitat.hostEnergyRestored * time;
+      // assimilated and consented hosts gain energy if there is free biomineral energy in habitat
+      if ((consented ||
+          game.player.host.hasTrait(TRAIT_ASSIMILATED)) &&
+          game.location == LOCATION_AREA &&
+          game.area.isHabitat)
+        energy = game.area.habitat.hostEnergyRestored * time;
 
-          // assimilated hosts do not lose energy by default
-          else 1;
-        }
+      // assimilated hosts do not lose energy by default
+      else if (game.player.host.hasTrait(TRAIT_ASSIMILATED))
+        1;
 
       // consented hosts only lose a little energy in region mode
-      else if (game.player.host.chat.consent >= 100 &&
+      else if (consented &&
           game.location == LOCATION_REGION)
         energy -= 1;
 
       // in area mode no loss
-      else if (game.player.host.chat.consent >= 100)
+      else if (consented)
         1;
 
       // lose energy by default
