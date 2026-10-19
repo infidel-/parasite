@@ -497,8 +497,8 @@ public function show()
           row: Const.ROW_REGION_ICON,
           svg: 'npc',
         });
-      // cultist mark: the full-color medallion, disc tinted by allegiance — pink for the player's
-      // own cult, gray for an enemy cult
+      // cultist mark: the hooded figure, tinted by allegiance — pink for the player's own cult, gray
+      // for an enemy cult (render.actors.Badges.badgeColor)
       if (isPlayerCultist())
         out.push({
           col: Const.FRAME_CULTIST0,

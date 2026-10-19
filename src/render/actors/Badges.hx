@@ -340,8 +340,9 @@ class Badges {
     }
 
 // paint the AI's status badges (alert / npc / cultist / effect) as a small row of upright quads
-// just above its head. alert + npc render from scalable SVG (color-coded by state), effect +
-// cultist from the PNG atlas. mirrors the 2D AIEntity.draw badge stack. see ai.AI.getBadges
+// just above its head. every badge with an svg key renders from scalable SVG (UISvg.badge, tinted by
+// badgeColor), the rest from the PNG atlas. mirrors the 2D AIEntity.draw badge stack. see
+// ai.AI.getBadges
   public function drawBadges(ai:AI, badges:Array<_Badge>, dtMs:Float):Void
     {
       var a = actors.get(ai.entity);
@@ -515,6 +516,8 @@ class Badges {
       if (key == 'bleeding') return '#f26a6a';    // red — blood
       if (key == 'blacknoise') return '#a45fe0';  // parasite purple — black noise
       if (key == 'breaking') return '#f26a6a';    // danger-red — host close to collapsing (--text-color-alert)
+      if (key == 'cultist') return '#fd97ff';     // cult pink — the player's own cult (--text-color-cultist)
+      if (key == 'cultistx') return '#c0c0c0';    // neutral gray — an enemy cult
       if (key == 'multieffect') return '#eaebed'; // white — generic multiple
       return '#eaebed';
     }
