@@ -242,6 +242,8 @@ class StreetProps
           b.h < RUN_Y + 1.0)
         return;
       var c = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
+      // the building corners a run reaches (index +x 1, +z 2): bit 1 from a run along x, 2 along z
+      var reach = [0, 0, 0, 0];
       for (f in Geom.buildingFaces(c, b.w * CELL, b.d * CELL, 0.06))
         {
           var h = hash(b, 3 + f.dir);
@@ -267,6 +269,12 @@ class StreetProps
                 return !onDoor(b, f.dir, (run.lo + i + 0.5 - GRID / 2) * CELL, half);
               for (i in 0...n)
                 pos(i, RUN_Y, 'conduit');
+              var side = (f.dir == 0 ? 2 : (f.dir == 2 ? 1 : 0));
+              var step = (f.dir < 2 ? 1 : 2);
+              if (run.lo == (f.dir < 2 ? b.col : b.row))
+                reach[side] |= step;
+              if (run.hi == (f.dir < 2 ? b.col + b.w : b.row + b.d) - 1)
+                reach[side + step] |= step;
               var ri = (h >> 8) % n;
               var li = (ri + 1 + (h >> 12) % (n - 1)) % n;
               if (clear(ri, RISER_HALF))
@@ -275,6 +283,17 @@ class StreetProps
                 pos(li, 0, 'louvre');
             }
         }
+      // a bend round every corner two runs meet at, set on the corner edge itself
+      // (models-src/city/kit/wallkit-downtown.py `corner`), turned so its runs leave along the two faces
+      var turn = [Math.PI, Math.PI / 2, -Math.PI / 2, 0];
+      for (k in 0...4)
+        if (reach[k] == 3)
+          list.push({
+            b: b,
+            key: 'corner',
+            m: at(c.x + ((k & 1) > 0 ? 1 : -1) * b.w * CELL / 2, RUN_Y,
+              c.z + ((k & 2) > 0 ? 1 : -1) * b.d * CELL / 2, turn[k]),
+          });
     }
 
 // scatter the style's ground props (AreaStyle.groundProps): one per cell at most, first the cells

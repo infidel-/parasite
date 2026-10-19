@@ -61,7 +61,7 @@ class RenderConfig {
   public static inline var BACK_ENTRANCE_CLEAN_PCT = 8;  // rare side door on a clean non-street wall
   public static inline var DOOR_SIZE = 3.9;         // door quad side (world); SQUARE to match the square door texture (no stretch); capped to face/wall
   public static inline var DOOR_EDGE_CLEAR = 1.2;   // side doors keep this much clear of any corner / T-junction (end of the open wall run)
-  public static inline var DOOR_MIN = 1.6;          // smallest side door worth placing; a narrower open run gets no side door
+  public static inline var DOOR_MIN = 3.0;          // smallest side door worth placing; a narrower open run gets no side door (at 1.6 a one-cell run got a knee-high door)
   public static inline var DOOR_PATH_MAX_DEPTH = 5;  // a windowed wall with a clear straight path (≤ this many non-building tiles) to a road earns an extra door, even off the street
 
   // --- front-door entrance covers (thin per-facade lintel/canopy over each FRONT door) ----

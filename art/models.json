@@ -3993,8 +3993,8 @@
         0.09,
         1
       ],
-      "note": "the DOWNTOWN service-wall kit: galvanised conduit runs, a riser into a junction box, a louvred intake (conduit / riser / louvre), models-src/city/kit/wallkit-downtown.py, sheet textures-src/city/Unused/wallkit-downtown.png. baseColor is a FLAT scalar: the sheet came back bright galvanised (luma 97-144), against an outdoor family of 46-52. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair.",
-      "last_converted": "2026-10-17T20:20:41Z",
+      "note": "the DOWNTOWN service-wall kit: galvanised conduit runs, a riser into a junction box, a louvred intake, and the bend that carries a run round an outer corner where the next face has one too (conduit / riser / louvre / corner), models-src/city/kit/wallkit-downtown.py, sheet textures-src/city/Unused/wallkit-downtown.png. baseColor is a FLAT scalar: the sheet came back bright galvanised (luma 97-144), against an outdoor family of 46-52. Hand-modelled in Blender, kit_build.py `pack` (one mesh per module, all at the origin, ONE material): render.world.StreetProps picks the modules out by name and merges each building's set into one mesh. Authored in GAME WORLD UNITS on the facade grid (FLOOR_H 3.6, GROUND_H 4, WIN_PITCH_X 2.6), the wall the plane z 0 (glTF), so it is never scaled or recentred in the game. tex 1024 and whole-cell swatches: the 0.2-cell swatches it shipped with at 512 spread the iron to 10 texels a unit against the ground's 57, reported as a blurry stair.",
+      "last_converted": "2026-10-19T18:06:47Z",
       "last_sig": "n1/-1/1024/0.01/-/-/bc0.09,0.09,0.09,1/rf1"
     },
     "city/sack-burlap": {
