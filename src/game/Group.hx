@@ -14,7 +14,7 @@ class Group extends _SaveObject
 
   public var priority: Float; // group priority (0-100%)
   public var difficulty: _Difficulty; // difficulty setting
-  static inline var TEAM_VERY_CLOSE = 10.0; // team distance under which the hud group mark pulses
+  static inline var TEAM_VERY_CLOSE = 10.0; // team distance under which the hud group mark pulses and warns
 
   public function new(g: Game)
     {
@@ -68,7 +68,20 @@ class Group extends _SaveObject
         (team.distance < TEAM_VERY_CLOSE ? ' pulse' : '');
     }
 
-// get group and team info according to difficulty
+// add team distance to hud if close
+  public function hudInfo(buf: StringBuf): Bool
+    {
+      if (difficulty == HARD ||
+          difficulty == UNSET ||
+          team == null ||
+          team.distance > TEAM_VERY_CLOSE)
+        return false;
+      buf.add('<div class=hud-team>TEAM IS VERY CLOSE!</div>');
+      return true;
+    }
+
+// get group and team info according to difficulty: a title over a name -> value table
+// (the hud group mark's tip)
   public function getInfo(buf: StringBuf)
     {
       // group existence not discovered yet
@@ -76,33 +89,30 @@ class Group extends _SaveObject
         return;
 
       // group info
-      buf.add('<br/>');
-      buf.add(Const.col('group-title', 'Group info [' + difficulty + ']') +
-        '<br/>');
+      buf.add(Const.col('group-title', 'Group info [' + difficulty + ']'));
       if (difficulty == HARD)
         {
-          buf.add('  --- hidden ---<br/>');
+          buf.add('<br/>  --- hidden ---');
           return;
         }
-      buf.add(Const.col('group-note', 'Group priority: ') +
-        (difficulty == EASY ? '' + Const.round(priority) :
-         numToWord(Std.int(priority), 0, 100)) + '<br/>');
+      function row(k: String, v: String)
+        buf.add('<tr><td>' + Const.col('group-note', k) + '</td><td>' + v + '</td></tr>');
+      buf.add('<table class="tip-table">');
+      row('Group priority', (difficulty == EASY ? '' + Const.round(priority) :
+        numToWord(Std.int(priority), 0, 100)));
       if (team == null)
-        buf.add(Const.col('group-note', 'Team timeout: ') +
-          (difficulty == EASY ? teamTimeout + ' turns' :
-           numToWord(teamTimeout, 0, 100)) + '<br/>');
+        row('Team timeout', (difficulty == EASY ? teamTimeout + ' turns' :
+          numToWord(teamTimeout, 0, 100)));
       else
         {
-          buf.add(Const.col('group-note', 'Team level: ') +
-            (difficulty == EASY ? team.level + '' :
-             numToWord(team.level, 1, 4)) + '<br/>');
-          buf.add(Const.col('group-note', 'Team size: ') +
-            (difficulty == EASY ? team.size + '' :
-             numToWord(team.size, 1, team.maxSize)) + '<br/>');
-          buf.add(Const.col('group-note', 'Team distance: ') +
-            (difficulty == EASY ? Std.int(team.distance) + '' :
-             numToWordDistance(team.distance)) + '<br/>');
+          row('Team level', (difficulty == EASY ? team.level + '' :
+            numToWord(team.level, 1, 4)));
+          row('Team size', (difficulty == EASY ? team.size + '' :
+            numToWord(team.size, 1, team.maxSize)));
+          row('Team distance', (difficulty == EASY ? Std.int(team.distance) + '' :
+            numToWordDistance(team.distance)));
         }
+      buf.add('</table>');
     }
 
 // convert number to word description

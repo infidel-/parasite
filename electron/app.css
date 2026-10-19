@@ -727,19 +727,21 @@ hr {
   font-weight: 600;
   margin-left: 5px;
 }
-/* the vision helper's name -> number table (extended info): names left, numbers right, no rules */
-.area-tip-vision {
-  width: 100%;
+/* name -> number table (the vision helper, the hud group tip): names left, numbers right, no
+   rules, as narrow as its widest row */
+.tip-table {
   border-collapse: collapse;
-  color: #aeb3bd;
 }
-.area-tip-vision td {
+.tip-table td {
   padding: 0;
 }
-.area-tip-vision td + td {
+.tip-table td + td {
   text-align: right;
   padding-left: 1ch;
   white-space: nowrap;
+}
+.area-tip-vision {
+  color: #aeb3bd;
 }
 /* active effects block: rows reuse the body window's effect-row style */
 .area-tip-effects {
@@ -1014,16 +1016,16 @@ hr {
   box-shadow: none;
   backdrop-filter: none;
   font-family: var(--text-font-title), sans-serif;
-  font-size: calc(var(--text-font-size) * 1.4);
+  font-size: calc(var(--text-font-size) * 0.98);
   font-weight: bold;
-  color: #f2ede4;
+  color: #bdb7ad;
   text-shadow: 0 0 2px #000, 0 1px 3px rgba(0, 0, 0, 0.9);
 }
 .chat-bubble.dmg::after {
   display: none;
 }
 .chat-bubble.dmg.player {
-  color: var(--text-color-red);
+  color: #c94a3a;
 }
 .chat-bubble.dmg.in {
   animation: dmg-in 0.18s cubic-bezier(0.2, 1.8, 0.5, 1) both;
@@ -1517,9 +1519,6 @@ hr {
 }
 .hud-team-mark:hover + .hud-team-tip {
   display: block;
-}
-.hud-team-tip > br:first-child {
-  display: none;
 }
 .hud-eyebrow {
   display: flex;
@@ -2821,6 +2820,30 @@ hr {
 
 .hud-name {
   color: #9eceff;
+}
+
+.hud-team {
+  animation: 2.5s infinite team-hud;
+  text-align: center;
+  font-size: 50%;
+  font-weight: bold;
+  color: var(--text-color-red);
+  height: var(--text-font-size);
+  padding-top: 8px;
+}
+@keyframes team-hud {
+  from {
+    font-size: 50%;
+    opacity:0.8;
+  }
+  50% {
+    font-size: 55%;
+    opacity:1.0;
+  }
+  to {
+    font-size: 50%;
+    opacity:0.8;
+  }
 }
 
 .window-bg {

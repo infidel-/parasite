@@ -126,7 +126,7 @@ class AreaTooltip extends BeamTooltip
         }
 
       // name -> number table: multiplier x distance factor, flat bonuses, total per turn
-      buf.add('</div><table class="area-tip-vision small">');
+      buf.add('</div><table class="tip-table area-tip-vision small">');
       row('base', '' + v.base);
       row('dist ' + v.distance, '&times;' + v.distMul);
       if (v.military)
@@ -134,7 +134,7 @@ class AreaTooltip extends BeamTooltip
       if (v.cover != 0)
         row('cover', signed(v.cover));
       if (v.weapon != 0)
-        row('weapon', signed(v.weapon));
+        row('large weapon', signed(v.weapon));
       row('per turn', signed(v.total));
       buf.add('</table>');
     }

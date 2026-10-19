@@ -194,7 +194,7 @@ class Difficulty extends UIWindow
       id: 'group',
       title: 'The Group',
       notes: [
-        'Shows the exact numerical group and team information in the skills section. Limited shock and energy loss from habitat destruction.',
+        'Shows the exact numerical group and team information on the HUD group mark. Limited shock and energy loss from habitat destruction.',
         'Shows group and team information described vaguely. Habitat destruction shock and energy loss is more severe.',
         'No group or team information available. Habitat destruction shock is harsh.',
       ]

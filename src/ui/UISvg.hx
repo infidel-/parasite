@@ -325,11 +325,11 @@ class UISvg
         '<circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/></svg>';
     }
 
-// delta over two bars (hud group mark)
+// delta over a bar (hud group mark)
   public static function groupMark(): String
     {
       return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-        '<path d="M12 3 19.5 15.5H4.5Z"/><path d="M4 18.6h16M6.6 21.6h10.8"/></svg>';
+        '<path d="M12 3.5 19.5 16H4.5Z"/><path d="M4 20.5h16"/></svg>';
     }
 
 // lightning glyph (energy bars)

@@ -230,13 +230,6 @@ class Body extends UIWindow
         buf.add('<div class="body-kn-line hab gray">' + UISvg.bodyHabitat() +
           ' Habitats left: ' + game.player.vars.habitatsLeft + '</div>');
 
-      // group/team info
-      var gbuf = new StringBuf();
-      game.group.getInfo(gbuf);
-      var gstr = gbuf.toString();
-      if (gstr != '')
-        buf.add('<div class="body-kn-line">' + gstr + '</div>');
-
       parScroll.innerHTML = buf.toString();
     }
 

@@ -28,6 +28,8 @@ class CityAreaGenerator
   static inline var FENCE_CHANCE_HIGH = 30; // % of downtown alley groups fenced at their mouths
   static inline var FENCE_CHANCE_MEDIUM = 30; // and of residential ones
   static inline var FENCE_CHANCE_LOW = 40; // and of slums ones
+  static inline var FENCE_SLUMS_MIN = 30; // % of a fenced slums block's mouth cells boarded up, at least
+  static inline var FENCE_SLUMS_MAX = 50; // and at most
   static var checked = false;
   var game: Game;
   var gen: AreaGenerator;
@@ -123,7 +125,8 @@ class CityAreaGenerator
 
 // fence off the alley mouths of some blocks: each 4-connected alley group rolls its tier's chance,
 // and its mouth runs (alley cells with exactly one street neighbour, grouped straight along the
-// kerb) all take a fence tile but one random run, which stays the way in. a group whose fences
+// kerb) all take a fence tile but one random run, which stays the way in. the slums board up
+// only part of a block: whole runs at random until 30-50% of its mouth cells. a group whose fences
 // would cut anything else off from the street (a dumpster narrowing it, a pocket behind) keeps its
 // mouths open. downtown fences in chain-link, the residential streets and the slums in boards that
 // block sight. tile flips saved in the cells, drawn by render.world.CityFences
@@ -160,10 +163,17 @@ class CityAreaGenerator
             var runs = mouthRuns(area, group);
             if (runs.length < 2)
               continue;
+            var cap = 0;
+            for (run in runs)
+              cap += run.length;
+            if (area.typeID == AREA_CITY_LOW)
+              cap = Math.ceil(cap * (FENCE_SLUMS_MIN +
+                Std.random(FENCE_SLUMS_MAX - FENCE_SLUMS_MIN + 1)) / 100);
             runs.splice(Std.random(runs.length), 1);
             var fenced = [];
-            for (run in runs)
-              for (pt in run)
+            while (runs.length > 0 &&
+                fenced.length < cap)
+              for (pt in runs.splice(Std.random(runs.length), 1)[0])
                 {
                   area.setCellType(pt.x, pt.y, tile);
                   fenced.push(pt);

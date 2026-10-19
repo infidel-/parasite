@@ -40,7 +40,7 @@ class InfoHud
   var hostnameBadges: SpanElement;
   var badgesHTML: String = null; // last badge row written (skip identical rewrites)
   var extraWrap: DivElement;
-  var regionContext: DivElement; // area notes
+  var regionContext: DivElement; // area notes + team info
   var evoStrip: DivElement; // evolution direction + organs
   var cultLine: DivElement; // cult resources
   var spoonMark: DivElement; // SPOONED marker
@@ -556,7 +556,7 @@ class InfoHud
       // free parasite: no host section
       else setShown(hostSection, false);
 
-      // area notes
+      // area notes + team info
       var ctx = '';
       if (game.location == LOCATION_AREA)
         {
@@ -572,13 +572,16 @@ class InfoHud
               game.cults[0].ordeals.getMarkerMission(area) != null)
             ctx += '<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>';
         }
+      var gbuf = new StringBuf();
+      game.group.hudInfo(gbuf);
+      ctx += gbuf.toString();
       var shownCtx = setRegion(regionContext, 'ctx', ctx);
 
       // group mark: same class string keeps the pulse running, tip holds the group info
       var mark = game.group.hudMarkClass();
       setShown(teamMark, mark != '');
       teamMark.className = 'hud-team-mark ' + mark;
-      var gbuf = new StringBuf();
+      gbuf = new StringBuf();
       game.group.getInfo(gbuf);
       setRegion(teamTip, 'team', gbuf.toString());
 
