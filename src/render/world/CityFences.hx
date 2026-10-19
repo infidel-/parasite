@@ -37,9 +37,9 @@ class CityFences
       for (row in 0...area.height)
         for (col in 0...area.width)
           if (isFence(area.getCellType(col, row)))
-            panel(fences, area, col, row, tall, false);
+            panel(fences, area, col, row, tall);
           else if (open.exists(row * area.width + col))
-            panel(holes, area, col, row, tall, true);
+            panel(holes, area, col, row, tall);
       var tex = (chain ? TEX_CHAIN :
         (area.typeID == AREA_CITY_LOW ? TEX_WOOD_BROKEN : TEX_WOOD));
       add(scene, fences, tex, 'city fences');
@@ -69,11 +69,10 @@ class CityFences
       scene.add(mesh);
     }
 
-// one fence cell's panel: across the cell's middle, parallel to its one street side. a fence's u
-// runs one image per cell in world space, offset half an image so the painted centre post stands
-// on the cell boundary; a hole's art is drawn with its posts on its edges, so it maps 0..1 across
-// the cell. v maps the image's height onto the fence's
-  static function panel(b:MeshBuf, area:AreaGame, col:Int, row:Int, tall:Float, hole:Bool):Void
+// one fence cell's panel: across the cell's middle, parallel to its one street side, the image
+// mapped 0..1 across the cell: a fence's painted post stands mid-panel and its lattice wraps into the
+// next cell's, a hole's posts stand on the cell edges. v maps the image's height onto the fence's
+  static function panel(b:MeshBuf, area:AreaGame, col:Int, row:Int, tall:Float):Void
     {
       var c = CityConfig.cellToWorld(col, row);
       var h = CELL / 2;
@@ -86,14 +85,12 @@ class CityFences
       var a0 = (alongX ? c.x : c.z) - h;
       var a1 = a0 + CELL;
       var p = (alongX ? c.z : c.x);
-      var u0 = (hole ? 0 : a0 / CELL + 0.5);
-      var u1 = u0 + 1;
       if (alongX)
         MeshBufTools.quad(b, [a0, 0, p], [a1, 0, p], [a1, tall, p], [a0, tall, p],
-          [u0, 0, u1, 0, u1, 1, u0, 1]);
+          [0, 0, 1, 0, 1, 1, 0, 1]);
       else
         MeshBufTools.quad(b, [p, 0, a1], [p, 0, a0], [p, tall, a0], [p, tall, a1],
-          [u1, 0, u0, 0, u0, 1, u1, 1]);
+          [1, 0, 0, 0, 0, 1, 1, 1]);
     }
 
 // the mouth cells a fenced alley left open, keyed row * width + col: the plain alley cells of every

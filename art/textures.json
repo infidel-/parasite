@@ -5542,12 +5542,12 @@
       "needs_alpha": true,
       "prompt": "ONE square panel of a modern city CHAIN-LINK security fence, seen dead straight on, filling the whole image: a regular diamond grid of BLACK vinyl-coated steel wire, exactly SIX diamonds across and SIX down, the wire THICK (about one fortieth of the image width), small twisted knuckles where the wires cross. A thick horizontal round steel TOP RAIL tube runs along the very top edge, edge to edge, and a thinner tension wire along the very bottom edge. ONE thick vertical round steel POST stands exactly at the horizontal centre, from the bottom edge to the top rail, with a small dome cap. Dark charcoal coating, dull matte grey steel where it is scuffed. The mesh and rails run off the left and right edges and must tile seamlessly left-right. ONLY the wire, rails and post are drawn. [gpt-image-2.5-flare high, background transparent; came back UNCUT (alpha min 33) and near-black, so one edit_image re-cut + recolour: 'Keep this chain-link fence panel EXACTLY ... Remove EVERYTHING that is not wire, rail or post ... Recolour the wire, rail and post to a dull MID-GREY galvanised steel, clearly lighter than before, neutral grey with no blue tint'] [append textures.json style]",
       "prompt_exact": false,
-      "note": "downtown alley-mouth fences (render.world.CityFences), alphaTest, one panel per cell: u tiles one image per CELL (offset half an image so the painted centre post lands on the cell boundary), v maps 0..1 over the one-cell height. Opaque fraction 0.185 at the drop.",
+      "note": "downtown alley-mouth fences (render.world.CityFences), alphaTest, one panel per cell mapped 0..1, so the painted post stands mid-panel and the lattice wraps into the next cell. Opaque fraction 0.185 at the drop. LATTICE REPAIRED: the drop's diamond period is 164.65 px (shift correlation), 6.22 to the width, so its wrap showed a column of half diamonds, and the post hid a second phase break. Every column left of the post (x < 489 of 1024; post 489-534) was rebuilt as the right half's lattice carried on past the image edge, src(x + 1024 - m * 164.65) interpolated, so the wrap is continuous and the one break sits under the post. Pristine drop parked in textures-src/downtown/Unused/.",
       "res": 512,
       "lift": 1.1,
-      "last_converted": "2026-10-19T01:42:17",
-      "built_linear": 0.0863,
-      "built_srgb": 81.5,
+      "last_converted": "2026-10-19T23:31:27",
+      "built_linear": 0.0866,
+      "built_srgb": 81.8,
       "last_lift": 1.1
     },
     "downtown/fence-chainlink-hole": {
