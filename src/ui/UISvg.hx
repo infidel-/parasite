@@ -564,6 +564,8 @@ class UISvg
             return regionHabitat();
           case 'cultist', 'cultistx':
             return badgeCultist();
+          case 'padlock':
+            return badgePadlock();
         }
       return badgeWarn();
     }
@@ -639,6 +641,15 @@ class UISvg
       return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.9" stroke-linecap="round" aria-hidden="true">' +
         '<circle cx="10.5" cy="10.5" r="6"/>' +
         '<line x1="15" y1="15" x2="20.5" y2="20.5"/></svg>';
+    }
+
+// padlock (locked door): round shackle over a rounded body, keyhole cut as an evenodd void
+  public static function badgePadlock(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="currentColor" fill-rule="evenodd" aria-hidden="true">' +
+        '<path d="M8 10.5V7.6a4 4 0 0 1 8 0v2.9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>' + // shackle
+        '<path d="M6.6 10H17.4A2.1 2.1 0 0 1 19.5 12.1V19.4A2.1 2.1 0 0 1 17.4 21.5H6.6A2.1 2.1 0 0 1 4.5 19.4V12.1A2.1 2.1 0 0 1 6.6 10Z' + // body
+        'M12 12.8A1.8 1.8 0 0 1 13 16.1L13.5 18.7H10.5L11 16.1A1.8 1.8 0 0 1 12 12.8Z"/></svg>'; // keyhole (void)
     }
 
 // disc with a neutral face (npc / mission target). self-colored (not currentColor) — the

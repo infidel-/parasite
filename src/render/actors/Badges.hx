@@ -97,7 +97,7 @@ class Badges {
         drawOrganHealth(cast o);
     }
 
-// the entities-atlas lock icon at the doorway's mid-height, self-lit and always on top.
+// the padlock badge glyph (UISvg.badgePadlock) at the doorway's mid-height, self-lit and always on top.
 // ponytail: a linked lab pair would wear two; only a single corp door is ever locked
 // (scenario.AlienMissionCommon), add a midpoint if the lab ever locks one
   function drawPadlock(o:AreaObject):Void
@@ -106,7 +106,7 @@ class Badges {
       if (a == null ||
           a.op < 0.05)
         return;
-      var tex = sprites.tex('entities', Const.FRAME_LOCKED_ICON, Const.ROW_OBJECT, false);
+      var tex = badgeSvgTex('padlock', null);
       if (tex == null)
         return;
       sprites.paint({
@@ -520,6 +520,7 @@ class Badges {
       // tone mapping washed that to (252,183,240) on screen, this lands on the info hud's (254,154,250)
       if (key == 'cultist') return '#ff58ff';
       if (key == 'cultistx') return '#c0c0c0';    // neutral gray — an enemy cult
+      if (key == 'padlock') return '#e0b34a';     // amber — locked door (--text-color-time)
       if (key == 'multieffect') return '#eaebed'; // white — generic multiple
       return '#eaebed';
     }
