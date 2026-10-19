@@ -93,20 +93,6 @@ class GameScene
       // init sound
       sounds = new Sounds(this);
 
-      // update AI hear, view distance
-      // clamp so that 4k players do not have it hard
-      // derive visible span from canvas (no area yet: world builds on New Game/Load)
-      var xmin = Std.int(canvas.width / Const.TILE_SIZE);
-      var ymin = Std.int(canvas.height / Const.TILE_SIZE);
-      ai.AI.VIEW_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) / 2.5);
-      ai.AI.HEAR_DISTANCE = Std.int((xmin < ymin ? xmin : ymin) * 1.5 / 2.5);
-      if (ai.AI.VIEW_DISTANCE > 6)
-        ai.AI.VIEW_DISTANCE = 6;
-      if (ai.AI.HEAR_DISTANCE > 10)
-        ai.AI.HEAR_DISTANCE = 10;
-      game.info('AI view: ' + ai.AI.VIEW_DISTANCE +
-        ', AI hear: ' + ai.AI.HEAR_DISTANCE);
-
       // hack: bugs out otherwise
       game.scene.mouse.setCursor(Mouse.CURSOR_MOVE);
 

@@ -19,6 +19,7 @@ class AreaGame extends _SaveObject
     'info', 'clueSpawnPoints', '_decalCells',
     'spawnCells', '_boothX', '_boothY',
     'genTree', 'genSeed', '_baseFence',
+    'viewRect',
   ];
   var game: Game;
   var region: RegionGame;
@@ -99,6 +100,9 @@ class AreaGame extends _SaveObject
   // walkable cells inside the AI spawn region (see getSpawnRect) - drives the AI budget.
   // transient: recomputed on every visibility update, never saved
   public var spawnCells: Int;
+  // the player's on-screen region (see getViewRect), refreshed with spawnCells so the hot
+  // inVisibleRect checks do not redo the camera maths. transient, never saved
+  public var viewRect: { x1: Int, y1: Int, x2: Int, y2: Int };
   // bumped by every updateVisibility() call. the 3D layer polls rather than listens (see
   // render.View's rAF loop), so this is what tells render.world.VisionMask that a sightline changed
   // without the player moving - opening a door is the case that needs it. transient, never saved
@@ -155,6 +159,12 @@ class AreaGame extends _SaveObject
       _tileset = null;
       _decalCells = [];
       spawnCells = 0;
+      viewRect = {
+        x1: 0,
+        y1: 0,
+        x2: 0,
+        y2: 0,
+      };
     }
 
 // called after load or creation
@@ -2883,12 +2893,19 @@ class Test {
     }
 
 
-// get the region AI spawn into, and whose walkable cells size the AI budget.
+// get the region AI spawn into, and whose walkable cells size the AI budget: the player's view,
+// clipped to the inside of a military base's fence
+  public function getSpawnRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
+    {
+      return insideBase(getViewRect());
+    }
+
+// get the player's on-screen region.
 // a 3D area's ground footprint is fixed by its camera preset (fov is constant, only aspect moves) -
 // so the 2D canvas rect it used to use is wrong there: it grows with pixel count while the player's
 // actual viewport does not, which diluted AI over up to 3.6x the ground on a 4k screen. keyed on the
 // area KIND and NOT view3d.running, because enter() spawns its arrival burst before the scene is built
-  public function getSpawnRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
+  public function getViewRect(): { x1: Int, y1: Int, x2: Int, y2: Int }
     {
       // every 3D kind brings its own preset: the tunnels look near straight down and cover far less
       // ground than a street, so they must not be sized off the city camera
@@ -2935,7 +2952,7 @@ class Test {
         rect.x2 = width;
       if (rect.y2 > height)
         rect.y2 = height;
-      return insideBase(rect);
+      return rect;
     }
 
 // a military base's soldiers spawn INSIDE the fence, so the spawn rect is clipped to it: the margin
@@ -2965,11 +2982,12 @@ class Test {
       return r;
     }
 
-// recount the walkable cells in the spawn region (the AI budget input). called on every
-// visibility update and once in enter() before the arrival burst
+// recount the walkable cells in the spawn region (the AI budget input) and refresh the cached view
+// rect. called on every visibility update and once in enter() before the arrival burst
   public function updateSpawnCells()
     {
-      var rect = getSpawnRect();
+      viewRect = getViewRect();
+      var rect = insideBase(viewRect);
       spawnCells = 0;
       for (y in rect.y1...rect.y2)
         for (x in rect.x1...rect.x2)
@@ -2977,13 +2995,13 @@ class Test {
             spawnCells++;
     }
 
-// checks if this x,y is on screen
+// checks if this x,y is on screen (the 3D camera footprint, see getViewRect)
   public inline function inVisibleRect(x: Int, y: Int): Bool
     {
-      return (x >= game.scene.cameraTileX1 &&
-        y >= game.scene.cameraTileY1 &&
-        x < game.scene.cameraTileX2 &&
-        y < game.scene.cameraTileY2);
+      return (x >= viewRect.x1 &&
+        y >= viewRect.y1 &&
+        x < viewRect.x2 &&
+        y < viewRect.y2);
     }
 
 

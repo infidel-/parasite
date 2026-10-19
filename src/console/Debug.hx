@@ -64,13 +64,7 @@ class Debug
   function aiInfo()
     {
       log(
-        'Window resolution: ' +
-        game.scene.canvas.width + 'x' + game.scene.canvas.height +
-        ', scale: ' + (game.config.mapScale * 100) +
-        '%, tile resolution: ' +
-        Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
-        Std.int(game.scene.canvas.height / Const.TILE_SIZE) +
-        ', AI view distance: ' + ai.AI.VIEW_DISTANCE +
+        'AI view distance: ' + ai.AI.VIEW_DISTANCE +
         ', AI hear distance: ' + ai.AI.HEAR_DISTANCE +
         '<br>Current area, max AI: ' + game.area.getMaxAI() +
         ' = [common AI: ' + game.area.info.commonAI +

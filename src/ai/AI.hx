@@ -1695,10 +1695,11 @@ public function show()
     }
 
 // =================================================================================
-  // AI view and hear distance
-  // recalculated in GameScene.begin() at game start
-  public static var VIEW_DISTANCE = 10;
-  public static var HEAR_DISTANCE = 15;
+  // AI view and hear distance: the numbers the 2D game derived from a 1080p screen (16 tile rows
+  // / 2.5 and * 1.5 / 2.5). they used to be re-derived from the window height at startup, which in
+  // 3D made a windowed game see only 4 tiles: the 3D camera footprint does not grow with the window
+  public static var VIEW_DISTANCE = 6;
+  public static var HEAR_DISTANCE = 9;
 
   // number of turns AI stays alerted
   public static var ALERTED_TIMER = 10;

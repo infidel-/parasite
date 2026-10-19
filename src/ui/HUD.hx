@@ -460,9 +460,9 @@ public function onMouseLeave()
         return;
       var buf = new StringBuf();
       buf.add(
-        'Tile resolution: ' +
-        Std.int(game.scene.canvas.width / Const.TILE_SIZE) + 'x' +
-        Std.int(game.scene.canvas.height / Const.TILE_SIZE) +
+        'View rect: ' +
+        (game.area.viewRect.x2 - game.area.viewRect.x1) + 'x' +
+        (game.area.viewRect.y2 - game.area.viewRect.y1) +
         '<br>spawnCells: ' + game.area.spawnCells +
         ', maxAI: ' + game.area.getMaxAI() + '<br>');
       if (!game.group.isKnown)
