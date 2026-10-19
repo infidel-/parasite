@@ -2,8 +2,8 @@
 // cell, across its middle and parallel to the kerb it faces, spanning the cell so it meets the
 // buildings either side. downtown is chain-link, the residential streets boards, the slums broken
 // boards. the art carries its own post and top rail, so a fence is one quad per cell and one mesh
-// per area. the mouths a fenced alley leaves open (its way in, the slums' unboarded runs) take the
-// same panel with a hole broken through it, a second mesh. built AFTER the chunk pass: one merged
+// per area. the mouth cells a fenced alley leaves open (one per open run) take the same panel with
+// a hole broken through it, a second mesh. built AFTER the chunk pass: one merged
 // mesh bucketed by its origin would cull whenever that chunk left the frustum (the steam's trap),
 // while at the scene root three culls it by its bounding sphere
 package render.world;

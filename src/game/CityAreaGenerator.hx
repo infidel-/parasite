@@ -126,7 +126,8 @@ class CityAreaGenerator
 // fence off the alley mouths of some blocks: each 4-connected alley group rolls its tier's chance,
 // and its mouth runs (alley cells with exactly one street neighbour, grouped straight along the
 // kerb) all take a fence tile but one random run, which stays the way in. the slums board up
-// only part of a block: whole runs at random until 30-50% of its mouth cells. a group whose fences
+// only part of a block: whole runs at random until 30-50% of its mouth cells. every run left open
+// is still fenced but for one random cell, the hole in it. a group whose fences
 // would cut anything else off from the street (a dumpster narrowing it, a pocket behind) keeps its
 // mouths open. downtown fences in chain-link, the residential streets and the slums in boards that
 // block sight. tile flips saved in the cells, drawn by render.world.CityFences
@@ -169,15 +170,20 @@ class CityAreaGenerator
             if (area.typeID == AREA_CITY_LOW)
               cap = Math.ceil(cap * (FENCE_SLUMS_MIN +
                 Std.random(FENCE_SLUMS_MAX - FENCE_SLUMS_MIN + 1)) / 100);
-            runs.splice(Std.random(runs.length), 1);
+            var open = runs.splice(Std.random(runs.length), 1);
             var fenced = [];
             while (runs.length > 0 &&
                 fenced.length < cap)
-              for (pt in runs.splice(Std.random(runs.length), 1)[0])
-                {
-                  area.setCellType(pt.x, pt.y, tile);
-                  fenced.push(pt);
-                }
+              fenced = fenced.concat(runs.splice(Std.random(runs.length), 1)[0]);
+            // every run left open (the way in, whatever the slums' cap left over) is fenced but for
+            // one random cell, which render.world.CityFences draws as a holed panel
+            for (run in open.concat(runs))
+              {
+                run.splice(Std.random(run.length), 1);
+                fenced = fenced.concat(run);
+              }
+            for (pt in fenced)
+              area.setCellType(pt.x, pt.y, tile);
             // every cell that was reachable still is, but for the fences themselves
             var after = streetReach(area, solid);
             if (after == reach - fenced.length)

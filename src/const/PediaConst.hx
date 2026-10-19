@@ -285,7 +285,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           img: 'pedia/area_city',
           text: "<p>The city is divided into three distinct area types based on density: low, medium, and downtown. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. Downtown districts are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering downtown will give the parasite an idea...</p>
 
-<p>Some city blocks have their alley entrances fenced off, leaving only one way in. Fences cannot be crossed. Downtown uses chain-link fences that you can see through, while the residential streets and the slums use wooden board fences that also block sight. The slum blocks are only partly boarded up.</p>",
+<p>Some city blocks have their alley entrances fenced off, leaving only a hole broken through one fence to get in. Fences cannot be crossed, but the holes can. Downtown uses chain-link fences that you can see through, while the residential streets and the slums use wooden board fences that also block sight. The slum fences are in worse repair and have several holes.</p>",
         },
         {
           id: 'areaHighCrime',
