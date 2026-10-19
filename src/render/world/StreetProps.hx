@@ -24,6 +24,13 @@ typedef KitPlace = {
   m:Matrix4,  // where it stands
 };
 
+// one end of a downtown conduit run, before the ends something carries on are dropped
+typedef KitTip = {
+  key:String,     // its face direction, face plane and the boundary it stops on: shared by a run butting onto it
+  corner:Int,     // the building corner it stops on (StreetProps.service's index), -1 = none
+  place:KitPlace, // the bend into the wall it takes where nothing carries it on
+};
+
 // the street wall kit: fire escapes and downpipes on the residential facades, conduit, junction
 // boxes and intake louvres on downtown's service walls (AreaStyle.wallKit). one glb per kit, every
 // module a mesh of its own authored in world units against the wall (models-src/city/kit/wallkit.py),
@@ -89,6 +96,7 @@ class StreetProps
       if (st.wallKit == null)
         return puddles;
       var list:Array<KitPlace> = [];
+      var tips:Array<KitTip> = [];
       for (b in WorldCtx.buildings)
         {
           // a setback tier stands on the deck of the one below, so nothing of it reaches the street
@@ -101,8 +109,15 @@ class StreetProps
                 puddles.push(pool);
             }
           if (st.serviceChance > 0)
-            service(b, st, list);
+            service(b, st, list, tips);
         }
+      // a run end nothing carries on turns into the wall; two runs butting end to end read as one
+      var ends = new Map<String, Int>();
+      for (t in tips)
+        ends.set(t.key, (ends.exists(t.key) ? ends.get(t.key) + 1 : 1));
+      for (t in tips)
+        if (ends.get(t.key) == 1)
+          list.push(t.place);
       Models.get(st.wallKit, function(t)
         {
           done(merge(scene, t, list));
@@ -235,8 +250,9 @@ class StreetProps
 
 // a downtown service wall: on each open run of a worn face, a conduit run the run's whole length
 // hung over the doors, a riser into a junction box at one cell and an intake louvre at another, each
-// left out where it would land on a door
-  static function service(b:Building, st:AreaStyle, list:Array<KitPlace>):Void
+// left out where it would land on a door. a bend carries the conduit round a corner two runs meet at,
+// and every other run end goes to `tips` for build to turn into the wall
+  static function service(b:Building, st:AreaStyle, list:Array<KitPlace>, tips:Array<KitTip>):Void
     {
       if (b.buriedH > 0 ||
           b.h < RUN_Y + 1.0)
@@ -244,6 +260,7 @@ class StreetProps
       var c = cellToWorld(b.col + (b.w - 1) / 2, b.row + (b.d - 1) / 2);
       // the building corners a run reaches (index +x 1, +z 2): bit 1 from a run along x, 2 along z
       var reach = [0, 0, 0, 0];
+      var mine:Array<KitTip> = [];
       for (f in Geom.buildingFaces(c, b.w * CELL, b.d * CELL, 0.06))
         {
           var h = hash(b, 3 + f.dir);
@@ -269,12 +286,31 @@ class StreetProps
                 return !onDoor(b, f.dir, (run.lo + i + 0.5 - GRID / 2) * CELL, half);
               for (i in 0...n)
                 pos(i, RUN_Y, 'conduit');
+              // one end of the run, on the cell boundary it stops at: endr bends at the module's +x
+              // end, which is the run's high end on the +z and -x faces
+              function tip(hiEnd:Bool, corner:Int):Void
+                {
+                  var a = ((hiEnd ? run.hi + 1 : run.lo) - GRID / 2) * CELL;
+                  mine.push({
+                    key: f.dir + ':' + Math.round(a * 10) + ':' + Math.round((f.dir < 2 ? f.fz : f.fx) * 10),
+                    corner: corner,
+                    place: {
+                      b: b,
+                      key: (hiEnd == (f.dir == 0 || f.dir == 3) ? 'endr' : 'endl'),
+                      m: at((f.dir < 2 ? a : f.fx), RUN_Y, (f.dir < 2 ? f.fz : a), f.rotY),
+                    },
+                  });
+                }
               var side = (f.dir == 0 ? 2 : (f.dir == 2 ? 1 : 0));
               var step = (f.dir < 2 ? 1 : 2);
-              if (run.lo == (f.dir < 2 ? b.col : b.row))
+              var lo = (run.lo == (f.dir < 2 ? b.col : b.row));
+              var hi = (run.hi == (f.dir < 2 ? b.col + b.w : b.row + b.d) - 1);
+              if (lo)
                 reach[side] |= step;
-              if (run.hi == (f.dir < 2 ? b.col + b.w : b.row + b.d) - 1)
+              if (hi)
                 reach[side + step] |= step;
+              tip(false, (lo ? side : -1));
+              tip(true, (hi ? side + step : -1));
               var ri = (h >> 8) % n;
               var li = (ri + 1 + (h >> 12) % (n - 1)) % n;
               if (clear(ri, RISER_HALF))
@@ -294,6 +330,10 @@ class StreetProps
             m: at(c.x + ((k & 1) > 0 ? 1 : -1) * b.w * CELL / 2, RUN_Y,
               c.z + ((k & 2) > 0 ? 1 : -1) * b.d * CELL / 2, turn[k]),
           });
+      for (t in mine)
+        if (t.corner < 0 ||
+            reach[t.corner] != 3)
+          tips.push(t);
     }
 
 // scatter the style's ground props (AreaStyle.groundProps): one per cell at most, first the cells
