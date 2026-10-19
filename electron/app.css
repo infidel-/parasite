@@ -738,7 +738,7 @@ hr {
 }
 .area-tip-vision td + td {
   text-align: right;
-  padding-left: 2ch;
+  padding-left: 1ch;
   white-space: nowrap;
 }
 /* active effects block: rows reuse the body window's effect-row style */
