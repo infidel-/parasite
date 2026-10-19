@@ -15,7 +15,7 @@ typedef RegionMarker = {
   y: Int,
   key: String,      // UISvg.badge glyph key
   color: String,    // ring + glyph css color
-  scale: Float,     // icon scale (habitats draw 25% larger)
+  scale: Float,     // icon scale (habitats and the spaceship draw 25% larger)
 }
 
 class RegionView
@@ -105,6 +105,8 @@ class RegionView
             if (hab != null)
               add(a, 'regionhabitat',
                 (hab.col == Const.FRAME_HABITAT_AMBUSHED ? '#ff5b45' : '#c9a8ef'), 1.25);
+            if (getShipIcon(a) != null)
+              add(a, 'regionship', '#92b9ff', 1.25);
           }
     }
 
@@ -595,7 +597,7 @@ class RegionView
         }
 
       // area icons
-      for (i in 0...6)
+      for (i in 0...7)
         {
           var icon = null;
           switch (i)
@@ -620,6 +622,9 @@ class RegionView
               // cult mission
               case 5:
                 icon = drawAreaCultMission(area);
+              // crashed spaceship
+              case 6:
+                icon = getShipIcon(area);
             }
           drawIcon(ctx, icon, ax, ay);
         }
@@ -680,6 +685,8 @@ class RegionView
         svg = tileMarkSvg(32, 31, 15, '#9aa0aa', ui.UISvg.regionLeadDone());
       else if (icon.col == Const.FRAME_EVENT_NPC)
         svg = tileMarkSvg(14, 14, 12, '#f7af46', ui.UISvg.regionNPC());
+      else if (icon.col == Const.FRAME_SPACESHIP)
+        svg = tileMarkSvg(32, 32, 19, '#92b9ff', ui.UISvg.regionShip()); // 25% over a lead, like the habitat
       else return null;
       img = new js.html.Image();
       img.onload = function() scene.draw();
@@ -824,6 +831,18 @@ class RegionView
           col: Const.FRAME_CULT_MISSION,
         };
       return null;
+    }
+
+// the crashed spaceship's tile mark, on the wilderness area it hides in (GoalsAlienCrashLanding
+// repaints that area's tileID)
+  function getShipIcon(area: AreaGame): _Icon
+    {
+      if (area.tileID != Const.TILE_SPACESHIP)
+        return null;
+      return {
+        row: Const.ROW_REGION_ICON,
+        col: Const.FRAME_SPACESHIP,
+      };
     }
 
   // draw habitat icon for area

@@ -60,6 +60,7 @@ class Const
   public static var FRAME_CULT_MISSION = 9;
   public static var FRAME_TARGET_RETICLE = 10;
   public static var FRAME_TARGET_FRAME = 11;
+  public static var FRAME_SPACESHIP = 12; // SVG tile mark only (RegionView.tileMark), no atlas cell
 
   // object row frames
   public static var ROW_OBJECT = 2;
