@@ -98,10 +98,11 @@ class CityArea implements Area3D
         solid.set(k, true);
       render.world.WorldCtx.doorBlocked = function(col, row) return solid.exists(row * CityConfig.GRID + col);
       World.build(scene, cityModel, seed, style);
-      render.world.WorldCtx.doorBlocked = null;
       // the wall kit, merged per building and tagged with it. a cached glb (the boot warm loads it)
       // lands right here, before the occlusion pass below buckets the scene; a late one is handed to
-      // the fader. the puddles under its broken downpipes join the street litter (debris)
+      // the fader. the puddles under its broken downpipes join the street litter (debris). laid out
+      // while doorBlocked still stands, so downtown's service runs (Geom.doorRuns) stop short of a
+      // fence or a holed panel instead of hanging a louvre through it
       puddles = render.world.StreetProps.build(scene, function(kc)
         {
           kits = kc;
@@ -110,6 +111,7 @@ class CityArea implements Area3D
               for (p in k.parts)
                 occlusion.adopt(p.proxy);
         });
+      render.world.WorldCtx.doorBlocked = null;
       // the object props: the dumpsters, and only the rows the city may draw unpatched (see
       // render.world.ObjModels.unmasked) — every other object keeps its sprite out here. their glbs
       // land over a loader callback after the chunk pass below, which leaves the batches at the scene
