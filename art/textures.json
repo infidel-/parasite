@@ -5544,11 +5544,25 @@
       "prompt_exact": false,
       "note": "downtown alley-mouth fences (render.world.CityFences), alphaTest, one panel per cell: u tiles one image per CELL (offset half an image so the painted centre post lands on the cell boundary), v maps 0..1 over the one-cell height. Opaque fraction 0.185 at the drop.",
       "res": 512,
-      "lift": 0.85,
+      "lift": 1.1,
       "last_converted": "2026-10-19T01:42:17",
-      "built_linear": 0.1444,
-      "built_srgb": 104.9,
-      "last_lift": 0.85
+      "built_linear": 0.0863,
+      "built_srgb": 81.5,
+      "last_lift": 1.1
+    },
+    "downtown/fence-chainlink-hole": {
+      "src": "downtown/fence-chainlink-hole.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "Made by edit_image (gpt-image-2.5-sunburst high, background transparent) from the parent's SOURCE rolled half a width (np.roll), so its post sits split on both edges and the seam in the middle under the hole: 'Keep this chain-link fence panel EXACTLY as it is ... Change ONLY the middle: cut a large ragged HOLE through the mesh, centred horizontally, from the bottom edge up to about two thirds of the height and about half the image width ... cut wire ends bent outward and curl back around the hole's rim; the bottom tension wire is snapped in the hole. The top rail stays intact. The left and right quarters of the image must stay unchanged so the panel still tiles left-right. The hole and every gap between wires are EMPTY and fully transparent; ONLY the wire, rails and posts are drawn.' [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the open mouths of a fenced downtown alley (render.world.CityFences), alphaTest, mapped u 0..1 over one cell so its edge posts land on the cell boundaries. lift 1.02 fitted to the parent's built sRGB 81.5.",
+      "res": 512,
+      "lift": 1.02,
+      "last_converted": "2026-10-19T22:39:14",
+      "last_lift": 1.02,
+      "built_linear": 0.0907,
+      "built_srgb": 82.3
     },
     "city/fence-wood": {
       "src": "city/fence-wood.png",
@@ -5561,11 +5575,28 @@
         512,
         384
       ],
-      "lift": 0.55,
+      "lift": 0.7,
       "last_converted": "2026-10-19T01:40:44",
-      "built_linear": 0.1316,
-      "built_srgb": 100.3,
-      "last_lift": 0.55
+      "built_linear": 0.0788,
+      "built_srgb": 78.0,
+      "last_lift": 0.7
+    },
+    "city/fence-wood-hole": {
+      "src": "city/fence-wood-hole.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "Made by edit_image (gpt-image-2.5-sunburst high, background transparent) from the parent's SOURCE rolled half a width (np.roll), so its post sits split on both edges and the seam in the middle under the hole: 'Keep this wooden privacy fence panel EXACTLY as it is ... Change ONLY the middle: several boards in the centre are KICKED IN and broken out, leaving a large ragged HOLE through the fence, centred horizontally, from the bottom edge up to about two thirds of the height and about a third of the image width ... splintered board stubs ... one loose board dangling at an angle on a single nail. The cap board stays intact. The left and right quarters of the image must stay unchanged so the panel still tiles left-right. The hole is EMPTY and fully transparent, nothing seen through it; ONLY the fence is drawn.' [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the open mouths of a fenced residential alley (render.world.CityFences), alphaTest, u 0..1 over one cell, v 0..1 over CityFences.WOOD_H. lift 0.71 fitted to the parent's built sRGB 78.0.",
+      "res": [
+        512,
+        384
+      ],
+      "lift": 0.71,
+      "last_converted": "2026-10-19T22:39:59",
+      "last_lift": 0.71,
+      "built_linear": 0.0809,
+      "built_srgb": 78.5
     },
     "slums/fence-wood": {
       "src": "slums/fence-wood.png",
@@ -5578,11 +5609,28 @@
         512,
         384
       ],
-      "lift": 0.55,
+      "lift": 0.7,
       "last_converted": "2026-10-19T01:41:04",
-      "built_linear": 0.1192,
-      "built_srgb": 95.3,
-      "last_lift": 0.55
+      "built_linear": 0.0697,
+      "built_srgb": 72.8,
+      "last_lift": 0.7
+    },
+    "slums/fence-wood-hole": {
+      "src": "slums/fence-wood-hole.png",
+      "class": "sprite",
+      "needs_alpha": true,
+      "prompt": "Made by edit_image (gpt-image-2.5-sunburst high, background transparent) from the parent's SOURCE rolled half a width (np.roll), so its post sits split on both edges and the seam in the middle under the hole: 'Keep this run-down slum wooden plank fence EXACTLY as it is ... Change ONLY the middle: the planks in the centre are SMASHED THROUGH, leaving a large ragged HOLE through the fence, centred horizontally, from the bottom edge up to about two thirds of the fence's height and about a third of the image width ... snapped plank stubs ... one broken plank dangling askew on a nail, the rails cut through in the hole. The left and right quarters of the image must stay unchanged so the panel still tiles left-right. The hole, the gaps and everything above the ragged top are EMPTY and fully transparent; ONLY the fence is drawn.' [append textures.json style]",
+      "prompt_exact": false,
+      "note": "the unboarded mouths of a fenced slums alley (render.world.CityFences), alphaTest, u 0..1 over one cell, v 0..1 over CityFences.WOOD_H. lift 0.77 fitted to the parent's built sRGB 72.8.",
+      "res": [
+        512,
+        384
+      ],
+      "lift": 0.77,
+      "last_converted": "2026-10-19T22:41:03",
+      "last_lift": 0.77,
+      "built_linear": 0.0715,
+      "built_srgb": 72.9
     },
     "military/camo-net": {
       "src": "military/camo-net.png",

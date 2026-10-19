@@ -87,11 +87,14 @@ class CityArea implements Area3D
       if (furniture != null)
         for (k in furniture)
           solid.set(k, true);
-      // nor onto an alley-mouth fence (game.CityAreaGenerator.placeFences)
+      // nor onto an alley-mouth fence (game.CityAreaGenerator.placeFences) or the holed panel in a
+      // mouth it left open
       var fences = [for (row in 0...CityConfig.GRID) for (col in 0...CityConfig.GRID)
         if (render.world.CityFences.isFence(game.area.getCellType(col, row)))
           row * CityConfig.GRID + col];
       for (k in fences)
+        solid.set(k, true);
+      for (k in render.world.CityFences.openMouths(game.area).keys())
         solid.set(k, true);
       render.world.WorldCtx.doorBlocked = function(col, row) return solid.exists(row * CityConfig.GRID + col);
       World.build(scene, cityModel, seed, style);
