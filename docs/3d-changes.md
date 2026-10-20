@@ -1971,6 +1971,7 @@ with a bright seam down each corner. Fading each face to 0 at its long edges mad
 **Verdict:** landed.
 
 ## entities128 from the original art
+> the blood and money SUPERSEDED by entities128: blood and money regenerated in the game's style
 
 Asked for: entities128 "to use original art instead of the upscales". The gpt redraw (`fx/entities128`)
 is replaced by `img/entities128.png`, next to `entities64`, built by `tools/entities128.py` from the asset
@@ -1995,5 +1996,30 @@ a darkened copy); splats 1.02-1.18; fits 79-100% per axis. Loads at 1024x1024 fr
 `trim` ignores isolated pixels. **Trap 2:** a gpt sheet cut on a grid gives a neighbour's droplet a
 sliver in the next cell, and the faint haze round the art touches every edge: parts are labelled on
 solid alpha, and only a SMALL one touching the edge is dropped (black's wide puddle reaches the line).
+
+**Verdict:** landed.
+
+## entities128: blood and money regenerated in the game's style
+
+Asked for: the splats and dollars "closer to our game style" - the first cut was an edit off the old flat
+`Effects/blood.png` splats and the `dollar.kra` vectors, so it kept their flat bright look. That cut is
+parked in `textures-src/img/entities128/v1/` (the four sheets and the built sheet).
+
+- **Generated from the canonical `style` string alone, no image reference** (user's pick): four splat
+  sheets (dark red blood, black ichor, sickly yellow acid, green slime; 3x2 of six, five used) plus
+  `money-bill.png` and `money-scatter.png`, gpt-image-2.5 sunburst high, transparent. ~$0.21, plus
+  ~$0.11 re-cutting.
+- **Generated cells keep their painted colours** (`GENERATED` in the tool; user's pick): no saturation
+  or luminance match. The originals are still matched.
+- The `dollar.kra` vector render and the five-bill layout code are gone: the scatter is its own gen,
+  fitted like any cell.
+
+**Measured:** fits 79-100% per axis. In game the blood reads dark maroon on the cave floor and the slime
+keeps its glow; the decal multipliers were fitted to the old bright cells and are untouched.
+
+**Trap:** three of the four splat gens came back UNCUT under `background:"transparent"` (alpha min 12-53,
+0% at zero: a dark painted backdrop with a glow round every splat) though no surface was named; the black
+one, the bill and the scatter cut clean. One `edit_image` re-cut each ("keep the splats exactly, remove
+everything else") gave 76-82% at zero. The uncut drops are in `uncut/`.
 
 **Verdict:** landed.

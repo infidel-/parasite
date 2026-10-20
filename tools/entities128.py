@@ -1,13 +1,14 @@
 """Build app/img/entities128.png, the 3D view's 128 px redraw of the entities64 cells in Const.HD128,
 from the ORIGINAL art under the asset store (the Krita files and pngs the 64 px cells were made from)
-instead of the gpt upscale it first shipped as. The blood family has no originals left (the black, acid
-and slime ones were recoloured and reshaped by hand), so it is four generated sheets of six splats,
-textures-src/img/entities128/blood-<colour>.png, five of each used.
+instead of the gpt upscale it first shipped as. The blood family and the money are GENERATED in the
+game's own style instead (asked for: "closer to our game style" than the old flat art): four sheets of
+six splats, textures-src/img/entities128/blood-<colour>.png, five of each used, and money-bill.png and
+money-scatter.png. The first cut, off the old flat splats and the dollar.kra vectors, is parked in v1/.
 
 Each source is fitted ASPECT-LOCKED onto its old 64 px cell's content box at 2x, bottom-aligned for the
-upright sprites, so every anchor, content rect and shadow root lands where the 64 px cell put it. Then
-each cell's saturation and mean linear luminance are matched to the old cell's, because the decal
-multipliers, the spit glow and the gas blend were all fitted to the old values.
+upright sprites, so every anchor, content rect and shadow root lands where the 64 px cell put it. An
+original then has its saturation and mean linear luminance matched to the old cell's (it lands within
+0.92-1.00: it IS that cell's source, bar the darkened barrel); a generated cell keeps its painted colours.
 
 usage: python3 tools/entities128.py [out.png]      (default app/img/entities128.png)
 """
@@ -18,13 +19,12 @@ import re
 import sys
 import zipfile
 
-import cairosvg
 import numpy as np
 from PIL import Image
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.realpath(os.path.join(ROOT, 'textures-src', '..'))
-BLOOD = os.path.join(ROOT, 'textures-src', 'img', 'entities128', 'blood-%s.png')
+GEN = os.path.join(ROOT, 'textures-src', 'img', 'entities128', '%s.png')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'app', 'img', 'entities128.png')
 CELL = 128
 COLS = 8
@@ -34,6 +34,8 @@ CELLS = [(4, 0), (4, 1), (2, 4), (2, 7), (4, 6), (4, 7), (16, 2), (3, 2), (3, 3)
         [(22, c) for c in range(3, 8)]
 # the first seven stand on their foot: bottom-aligned in their box
 UPRIGHT = 7
+# the generated cells, which keep their own colours: the money and every splat
+GENERATED = {7, 8} | set(range(14, 34))
 
 
 def lzf(src, n):
@@ -92,20 +94,6 @@ def kra(path, layer=None):
             img.paste(tile, (int(x) + ox, int(y) + oy), tile)
         return img
     raise KeyError(path + ': no layer ' + layer)
-
-
-def vectors(path, px):
-    # a Krita file's vector layers, bottom first, rendered without its backdrop
-    z = zipfile.ZipFile(os.path.join(ASSETS, path))
-    doc = z.read('maindoc.xml').decode()
-    root = re.search(r'<IMAGE [^>]*\sname="([^"]*)"', doc).group(1)
-    files = [dict(re.findall(r'(\w+)="([^"]*)"', m.group(1)))['filename']
-             for m in re.finditer(r'<layer ([^>]*nodetype="shapelayer"[^>]*)/?>', doc)]
-    img = Image.new('RGBA', (px, px))
-    for f in reversed(files):
-        svg = z.read(root + '/layers/' + f + '.shapelayer/content.svg')
-        img.alpha_composite(Image.open(io.BytesIO(cairosvg.svg2png(bytestring=svg, output_width=px))).convert('RGBA'))
-    return img
 
 
 def trim(im):
@@ -215,28 +203,6 @@ def label(m):
     return lab, n
 
 
-def scatter(old, bill):
-    # the five small bills: each of the old cell's bills found as a blob, its centre, long side and
-    # turn taken off its pixels, and the original bill laid there at 2x
-    lab, n = label(old[..., 3] > 8)
-    cell = Image.new('RGBA', (CELL, CELL))
-    for k in range(1, n + 1):
-        ys, xs = np.nonzero(lab == k)
-        if len(xs) < 6:
-            continue
-        pts = np.stack([xs, ys], 1).astype(float) + 0.5
-        c = pts.mean(0)
-        ev, vec = np.linalg.eigh(np.cov((pts - c).T))
-        ax = vec[:, 1]
-        along = (pts - c) @ ax
-        long = (along.max() - along.min() + 1) * 2
-        ang = np.degrees(np.arctan2(ax[1], ax[0]))
-        b = shrink(bill, round(long), max(1, round(long * bill.height / bill.width)))
-        b = b.rotate(-ang, resample=Image.BICUBIC, expand=True)
-        cell.alpha_composite(b, (round(c[0] * 2 - b.width / 2), round(c[1] * 2 - b.height / 2)))
-    return cell, n
-
-
 def lin(px):
     rgb = px[..., :3] / 255
     l = np.where(rgb <= 0.04045, rgb / 12.92, ((rgb + 0.055) / 1.055) ** 2.4)
@@ -280,9 +246,8 @@ def match(n, o):
 
 atlas = np.asarray(Image.open(os.path.join(ROOT, 'app', 'img', 'entities64.png')).convert('RGBA'))
 olds = [atlas[r * 64:r * 64 + 64, c * 64:c * 64 + 64] for r, c in CELLS]
-bill = trim(vectors('Chem Lab/dollar.kra', 1024))
 spits = split(kra('Effects/spit.kra'), 3)
-# every cell's source, in CELLS order; None = composed below
+# every cell's source, in CELLS order
 src = [
     kra('parasite-icon3.kra'),
     kra('AI/dog.kra'),
@@ -291,8 +256,8 @@ src = [
     kra('Sewers/choir.kra', 'choir 3'),
     kra('Sewers/choir.kra', 'choir dead'),
     kra('Street/burning barrel.kra', 'Background'),
-    bill,
-    None,
+    Image.open(GEN % 'money-bill').convert('RGBA'),
+    Image.open(GEN % 'money-scatter').convert('RGBA'),
     spits[0],
     spits[1],
     spits[2],
@@ -301,7 +266,7 @@ src = [
 ]
 # the splats: each sheet a 3 x 2 of six, five of them dealt to the old five shapes by best fit
 for colour in ('red', 'black', 'acid', 'slime'):
-    sheet = Image.open(BLOOD % colour).convert('RGBA')
+    sheet = Image.open(GEN % ('blood-' + colour)).convert('RGBA')
     w, h = sheet.width // 3, sheet.height // 2
     six = [trim(inside(sheet.crop((x * w, y * h, x * w + w, y * h + h)))) for y in range(2) for x in range(3)]
     boxes = [box(olds[len(src) + k])[0] for k in range(5)]
@@ -310,19 +275,17 @@ for colour in ('red', 'black', 'acid', 'slime'):
     src += [six[k] for k in best]
 
 out = Image.new('RGBA', (COLS * CELL, COLS * CELL))
-cells = []
 for i, (r, c) in enumerate(CELLS):
     b, amax = box(olds[i])
-    if src[i] is None:
-        cell, n = scatter(olds[i], bill)
-        note = '%d bills' % n
-    else:
-        cell, fx, fy = place(trim(src[i]), b, i < UPRIGHT, amax, crop_top=(i == 6))
-        note = 'fit %3.0f%% x %3.0f%%' % (100 * fx, 100 * fy)
-    n = np.asarray(cell).astype(float).copy()
-    gain, f = match(n, olds[i].astype(float))
-    out.alpha_composite(Image.fromarray(n.round().astype(np.uint8)), ((i % COLS) * CELL, (i // COLS) * CELL))
-    print('%2d %2d/%-2d %s  gain %.2f  sat f %.2f' % (i, r, c, note, gain, f))
+    cell, fx, fy = place(trim(src[i]), b, i < UPRIGHT, amax, crop_top=(i == 6))
+    note = 'fit %3.0f%% x %3.0f%%' % (100 * fx, 100 * fy)
+    if i not in GENERATED:
+        n = np.asarray(cell).astype(float).copy()
+        gain, f = match(n, olds[i].astype(float))
+        cell = Image.fromarray(n.round().astype(np.uint8))
+        note += '  gain %.2f  sat f %.2f' % (gain, f)
+    out.alpha_composite(cell, ((i % COLS) * CELL, (i // COLS) * CELL))
+    print('%2d %2d/%-2d %s' % (i, r, c, note))
 # through a temp file: overwriting in place fails with EINVAL while the game on the Windows host holds
 # the sheet open
 out.save(OUT + '.tmp.png')
