@@ -366,6 +366,9 @@ class Goals
         return Const.col('gray', Const.small(
           'Intel: ' + game.group.intel + '/' + game.group.intelNeeded()));
       },
+      onReceive: function (game, player) {
+        game.profile.addPediaArticle('groupNeutralize');
+      },
       onComplete: function (game, player) {
         if (!game.group.isNeutralized)
           GroupDirector.start(game);

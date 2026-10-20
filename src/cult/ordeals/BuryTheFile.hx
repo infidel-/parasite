@@ -46,7 +46,7 @@ class BuryTheFile extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Bury the file';
+      name = 'Bury the File';
       type = ORDEAL_COMMUNAL;
       requiredMembers = 3;
       requiredMemberLevels = 2;
@@ -119,7 +119,7 @@ class BuryTheFile extends Ordeal
       actions.push({
         id: 'buryTheFile',
         type: ACTION_CULT,
-        name: 'Bury the file' + priceHint(),
+        name: 'Bury the File' + priceHint(),
         energy: 0,
         obj: {}
       });
