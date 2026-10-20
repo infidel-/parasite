@@ -205,7 +205,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           id: 'habitatPreservator',
           name: 'Habitat: Preservator',
           img: 'imp/imp_preservator',
-          text: "The preservator growth is used to preserve the hosts in a habitat. The amount of hosts depends on the growth level. To preserve the host, move to any free spot near the growth and use the \"Preserve Host\" action that appears in the action list. Note that re-attaching to preserved hosts is much more smooth than to free ones. In addition, if the host is assimilated, the initial control value will be much higher.",
+          text: "The preservator growth is used to preserve the hosts in a habitat. The amount of hosts depends on the growth level. To preserve the host, move to any free side of the growth (not a corner) and use the \"Preserve Host\" action that appears in the action list. Note that re-attaching to preserved hosts is much more smooth than to free ones. In addition, if the host is assimilated, the initial control value will be much higher.",
         },
         {
           id: 'hostOrgans',

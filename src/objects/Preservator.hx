@@ -98,8 +98,9 @@ class Preservator extends HabitatObject
       // preserve host
       if (action.id == 'preserveHost')
         {
-          if (x == game.playerArea.x &&
-              y == game.playerArea.y)
+          // only from a side: the action is offered from all eight neighbours, and a host left on a
+          // diagonal was preserved but never held (getLinkedAI), so no tether, no tooltip, no capacity
+          if (Math.abs(x - game.playerArea.x) + Math.abs(y - game.playerArea.y) != 1)
             {
               game.actionFailed('Move to any free side of the preservator first.');
               return true;
