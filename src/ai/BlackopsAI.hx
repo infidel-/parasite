@@ -77,6 +77,11 @@ class BlackopsAI extends HumanAI
       intellect = 4 + bonusStat + Std.random(6 - bonusStat);
       psyche = 4 + bonusStat + Std.random(6 - bonusStat);
 
+      // senior teams carry the parasite case file
+      if (game.group.team != null &&
+          level >= 3)
+        inventory.addID('dossier');
+
       if (inventory.clothing.id == 'fullBodyArmor')
         {
           var tmp = game.scene.images.getSpecialAI('blackops-heavy', isMale);
@@ -116,6 +121,7 @@ class BlackopsAI extends HumanAI
     {
       // knowledge about group and false memories
       game.group.brainProbe();
+      game.group.probeIntel(this, 2);
       game.goals.receive(GOAL_LEARN_FALSE_MEMORIES);
     }
 

@@ -35,6 +35,7 @@ class ItemsConst
     // misc
     Paper,
     Book,
+    Dossier,
     MobilePhone,
     Smartphone,
     Laptop,

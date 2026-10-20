@@ -134,6 +134,7 @@ class TeamMemberAI extends HumanAI
     {
       // knowledge about group and false memories
       game.group.brainProbe();
+      game.group.probeIntel(this, 1);
       game.goals.receive(GOAL_LEARN_FALSE_MEMORIES);
     }
 

@@ -65,7 +65,7 @@ class ConsoleCompletion
       var setVars = function() return [
         'area.alertness',
         'host.energy', 'host.maxEnergy', 'host.health', 'host.maxHealth',
-        'group.knownCount', 'group.priority',
+        'group.intel', 'group.knownCount', 'group.priority',
         'player.habitats', 'player.health', 'player.godmode', 'player.invisible', 'player.los',
         'team.distance', 'team.level', 'team.size', 'team.timeout', 'team.timer',
       ];

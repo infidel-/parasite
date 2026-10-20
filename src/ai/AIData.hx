@@ -37,6 +37,7 @@ class AIData extends _SaveObject
   public var isTeamMember: Bool; // is this AI a group team member?
   public var isGuard: Bool; // is it a guard? (guards do not despawn when unseen)
   public var hasFalseMemories: Bool; // was this AI given false memories?
+  public var intelTaken: Bool; // did probing this group member yield group intel already?
   public var helpAvailable: Bool; // can this AI call for help?
   public var affinity: Int; // affinity to parasite (number of turns spent together)
   // cult-related
@@ -122,6 +123,7 @@ class AIData extends _SaveObject
       isHuman = false;
       isTeamMember = false;
       hasFalseMemories = false;
+      intelTaken = false;
       isGuard = false;
       isCultist = false;
       isCustos = false;

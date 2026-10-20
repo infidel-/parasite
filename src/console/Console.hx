@@ -555,7 +555,7 @@ class Console
           log(
             'area.alertness, ' +
             'host., h. - energy (e), maxEnergy, health (h), maxHealth, ' +
-            'group. - knownCount, priority, ' +
+            'group. - intel, knownCount, priority, ' +
             'player. - godmode (p.god), habitats (p.hab), health (h), invisible (p.invis), los (p.los), ' +
             'team. - distance, level, size, timeout, timer');
           return;
@@ -594,6 +594,8 @@ class Console
             game.player.host.maxHealth = valInt;
         }
 
+      else if (key == 'group.intel')
+        game.group.intel = valInt;
       else if (key == 'group.knownCount')
         game.group.knownCount = valInt;
       else if (key == 'group.priority')

@@ -353,6 +353,19 @@ class Goals
       },
     },
 
+    // ========================= group neutralization (any scenario)
+
+    GOAL_GROUP_INTEL => {
+      id: GOAL_GROUP_INTEL,
+      isOptional: true,
+      name: 'Gather intel on the Group',
+      note: 'Probe the brains of Group agents and read their dossiers in a habitat to find out who directs the hunt.',
+      noteFunc: function (game) {
+        return Const.col('gray', Const.small(
+          'Intel: ' + game.group.intel + '/' + game.group.intelNeeded()));
+      },
+    },
+
     // fake goal
     GOAL_LEARN_ENGRAM => {
       id: GOAL_LEARN_ENGRAM,

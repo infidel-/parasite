@@ -15,6 +15,7 @@ class Group extends _SaveObject
   public var priority: Float; // group priority (0-100%)
   public var difficulty: _Difficulty; // difficulty setting
   public var isNeutralized: Bool; // parasite file closed: no new teams until the priority climbs back
+  public var intel: Int; // intel gathered towards finding the regional director
   static inline var TEAM_VERY_CLOSE = 10.0; // team distance under which the hud group mark pulses and warns
   static inline var REOPEN_PRIORITY = 100.0; // priority at which a neutralized group reopens the file
 
@@ -36,6 +37,7 @@ class Group extends _SaveObject
       isKnown = false;
       difficulty = UNSET;
       isNeutralized = false;
+      intel = 0;
     }
 
 // called after loading
@@ -324,11 +326,48 @@ class Group extends _SaveObject
     {
       isNeutralized = false;
       teamTimeout = 50;
+      intel = 0;
+      game.goals.reset(GOAL_GROUP_INTEL);
       game.message({
         text: 'They have reopened my file. The Group is hunting me again.',
         img: 'pedia/group',
         col: 'alert'
       });
+    }
+
+// intel needed to find the regional director, by group difficulty
+  public function intelNeeded(): Int
+    {
+      return switch (difficulty)
+        {
+          case EASY: 3;
+          case HARD: 10;
+          default: 6;
+        };
+    }
+
+// brain probe of a group member: the first probe of each one yields intel
+  public function probeIntel(ai: ai.AI, amount: Int)
+    {
+      if (!isKnown ||
+          ai.intelTaken)
+        return;
+      ai.intelTaken = true;
+      addIntel(amount);
+    }
+
+// add intel on the group; enough of it reveals the regional director
+  public function addIntel(amount: Int)
+    {
+      if (isNeutralized ||
+          game.goals.completed(GOAL_GROUP_INTEL))
+        return;
+      intel += amount;
+      game.goals.receive(GOAL_GROUP_INTEL);
+      game.log('I piece together more about the Group (intel: ' +
+        intel + '/' + intelNeeded() + ').');
+      if (intel >= intelNeeded())
+        game.goals.complete(GOAL_GROUP_INTEL);
     }
 
 // blackops loadout level when there is no team to take it from (director guards)

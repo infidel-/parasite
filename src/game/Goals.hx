@@ -218,6 +218,14 @@ class Goals extends _SaveObject
     }
 
 
+// forget a finished goal so it can be received again (the group reopening the parasite file)
+  public function reset(id: _Goal)
+    {
+      _listCompleted.remove(id);
+      _listFailed.remove(id);
+    }
+
+
 // does player has this goal?
   public inline function has(id: _Goal): Bool
     {
