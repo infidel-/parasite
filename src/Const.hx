@@ -661,9 +661,9 @@ class Const
   ];
 
   // ---- the 128 px redraw: the entities64 cells the 3D view still drew at 64 ----------------------
-  // index = the cell of textures/fx/entities128 (an 8 x 8 of 128 px, reading order); value = the
-  // entities64 frame it redraws, registered onto that frame's own content box at 2x so every anchor
-  // lands where the 64 px cell put it (art/textures.json fx/entities128). 3D-ONLY like the packs above:
+  // index = the cell of img/entities128 (an 8 x 8 of 128 px, reading order); value = the entities64
+  // frame it redraws, from that frame's original art, registered onto its own content box at 2x so
+  // every anchor lands where the 64 px cell put it (tools/entities128.py). 3D-ONLY like the packs above:
   // render.particles.Sprites.atlasFor redirects the sprite pool, Sprites.batchCell the batched decals
   public static inline var HD128_CELL = 128;
   public static inline var HD128_COLS = 8;

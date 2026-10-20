@@ -31,7 +31,7 @@ class Images
   public var cluePack: Image; // 3D 170px clue document/book sheet (Const.CLUE_HD)
   public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
   public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
-  public var entities128: Image; // 3D 128px redraw of the entities64 cells in Const.HD128
+  public var entities128: Image; // 3D 128px redraw of the entities64 cells in Const.HD128 (tools/entities128.py)
   var debrisPacks = new Map<String, Image>(); // the per-tier street litter PACK64s, loaded on first ask
   var defaultTileset: Default;
   var sewerTileset: Sewers;
@@ -66,7 +66,7 @@ class Images
       cluePack.src = AssetPath.resolve('textures/facility/clue-pack.png');
       // and the 128 px redraw of the sprites, splats and FX the 3D view drew at 64
       entities128 = new Image();
-      entities128.src = AssetPath.resolve('textures/fx/entities128.png');
+      entities128.src = AssetPath.resolve('img/entities128.png');
       // and the sewer hatch lid, the same route again for a single cell
       hatchHD = loadHatchHD();
       // and the wall vent's grille, the same again

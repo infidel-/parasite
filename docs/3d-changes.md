@@ -1217,6 +1217,7 @@ new sheet. Close-up A/B: splats gain clean edges and droplets, the money reads a
 **Verdict:** landed. Reticle and frame came back more saturated (chroma 133 -> 180), kept: UI.
 
 ## entities128: the redraw's saturation, matched back to the old cells
+> SUPERSEDED by entities128 from the original art
 
 **Changed:** one more step in the registration of `fx/entities128`, before the luminance gain: each
 cell is blended toward its own per-pixel luminance in LINEAR light (so luminance does not move) by a
@@ -1966,5 +1967,33 @@ misread ("like coming from a lamp", perpendicular to the entrance "not 90 degree
 
 **Trap:** the first shell drew its faces at full width: from the front, both sides read as glass panels
 with a bright seam down each corner. Fading each face to 0 at its long edges made three soft bands.
+
+**Verdict:** landed.
+
+## entities128 from the original art
+
+Asked for: entities128 "to use original art instead of the upscales". The gpt redraw (`fx/entities128`)
+is replaced by `img/entities128.png`, next to `entities64`, built by `tools/entities128.py` from the asset
+store, not the texture pipeline (its `textures.json` entry is gone).
+
+- **Sources, all 512-1024 px:** `parasite-icon3.kra`, `AI/dog.kra`, `Objects/item.kra`, `nutrient.kra`,
+  `Sewers/choir.kra` layers "choir 3" (standing) and "choir dead" (hidden layers, decoded from the kra's
+  LZF tiles), `Street/burning barrel.kra` layer "Background" cut at the rim, `Chem Lab/dollar.kra`'s two
+  vector layers (cairosvg, no white backdrop), the money scatter laid from that bill at each old bill's
+  centre, length and turn, `Effects/spit.kra` split at its two widest gaps, `UI Elements/targeting-*.kra`.
+- **Blood has no originals** (the black/acid/slime ones were hand recoloured and reshaped): four
+  generated sheets, `textures-src/img/entities128/blood-<colour>.png`, gpt-image-2.5 sunburst high,
+  transparent, an edit off `Effects/blood.png` + `blood2.png`, six splats on a 3x2 each; the five that best
+  fill the old boxes are dealt to them. $0.20.
+- **Registration as before:** aspect-locked onto the old content box at 2x (bottom-aligned for the seven
+  upright sprites), then saturation and mean linear luminance matched to the old cell.
+
+**Measured:** originals' gain 0.92-1.00 (they are the cells' sources); the barrel 0.23 (the 64 px cell is
+a darkened copy); splats 1.02-1.18; fits 79-100% per axis. Loads at 1024x1024 from `img/`.
+
+**Trap 1:** `item.kra` has one stray opaque pixel at its far corner, which made the box half size;
+`trim` ignores isolated pixels. **Trap 2:** a gpt sheet cut on a grid gives a neighbour's droplet a
+sliver in the next cell, and the faint haze round the art touches every edge: parts are labelled on
+solid alpha, and only a SMALL one touching the edge is dropped (black's wide puddle reaches the line).
 
 **Verdict:** landed.
