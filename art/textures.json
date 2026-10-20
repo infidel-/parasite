@@ -8702,6 +8702,36 @@
       "last_converted": "2026-10-17T22:19:51",
       "built_linear": 0.2922,
       "built_srgb": 114.9
+    },
+    "cave/wall": {
+      "src": "cave/wall.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "Seamless tileable texture of a NATURAL CAVE ROCK WALL seen straight on, painted like a 2D game tileset. STRUCTURE: rough uneven limestone bedrock face with soft irregular horizontal STRATA bands of slightly different tone running across the whole tile, broken by a few jagged vertical and diagonal fractures, rounded knobbly lumps and shallow pits, thin dark wet streaks running DOWN the face, and a few faint pale mineral (calcite) drips. NO bricks, NO blocks, NO masonry, NO mortar lines, no man-made shapes. PALETTE (match closely): muted ochre-tan and buff limestone #8a7a63, #7d6e58, #96866d with darker umber recesses #4f4538 and dark wet streaks #3e3830, faint pale calcite #a89e88 in a few thin drips. Mid-dark warm earthy tone, NOT near-black, NOT grey, NOT pink. Even across the tile, no focal point, no light source. ABSOLUTELY NO moss, no plants, no text, no borders, no objects. Edges tile seamlessly on all four sides. [append textures.json style]",
+      "note": "mountain cave habitat wall face (render.cave.CaveGeom), u = arc length along the contour, v = height. gpt-image-2.5 flare high.",
+      "last_converted": "2026-10-20T01:51:30",
+      "built_linear": 0.0929,
+      "built_srgb": 80.6
+    },
+    "cave/floor": {
+      "src": "cave/floor.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "Seamless tileable TOP-DOWN texture of a natural CAVE FLOOR seen from directly above, painted like a 2D game tileset. SURFACE: packed damp silt and clay ground with scattered small rounded pebbles and angular rock chips of varied size, a few flat patches of smoother wet-darkened mud, faint shallow drip pits, fine grit everywhere. Organic and uneven, no straight lines. PALETTE (match closely): dark muted umber and brown-grey silt #5e5446, #54493c, #6a5f50 with pebbles in buff and ochre #857761, #77695a and wet patches #433b31. Mid-dark, slightly darker than the cave walls, NOT near-black. Even across the tile, no focal point. ABSOLUTELY NO concrete, no tiles, no crack network, no shiny water, no plants, no bones, no text, no objects, no borders. Edges tile seamlessly on all four sides. [append textures.json style]",
+      "note": "mountain cave habitat floor (render.cave.CaveGeom), world-xz tiled. gpt-image-2.5 flare high.",
+      "last_converted": "2026-10-20T01:51:55",
+      "built_linear": 0.0445,
+      "built_srgb": 56.8
+    },
+    "cave/rocktop": {
+      "src": "cave/rocktop.png",
+      "class": "tile",
+      "needs_alpha": false,
+      "prompt": "Seamless tileable TOP-DOWN texture of the top surface of a mass of natural cave bedrock seen from directly above, painted like a 2D game tileset. STRUCTURE: solid fractured bedrock \u2014 a few LARGE irregular weathered plates of limestone of very different sizes (some four times bigger than others), gently undulating, broken by thin branching hairline cracks and two or three wider dark fissures that wander across the tile, a few shallow pitted hollows, fine grit and pale mineral dust gathered in the cracks. The rock reads as ONE continuous mass that has cracked, not as separate stones. Organic, no straight lines, no grid. ABSOLUTELY NO cobbles, NO rounded stones, NO pebbles, NO boulders, NO paving, NO flagstones, NO repeated similar-sized shapes. PALETTE (match closely): muted buff and ochre-tan #9a8a70, #8c7c63, #a39478 on the plates, dark umber cracks and fissures #4a4134, pale dusty crust #b0a68e in hollows. Mid-tone, a little lighter than the walls, NOT near-black, NOT grey. Even across the tile, no focal point. ABSOLUTELY NO moss, no plants, no masonry, no text, no objects, no borders. Edges tile seamlessly on all four sides. [append textures.json style]",
+      "note": "mountain cave habitat rock top seen from the overhead camera (render.cave.CaveGeom), world-xz tiled. gpt-image-2.5 flare high. second roll: the first asked for packed rounded domes and read as laid cobbles.",
+      "last_converted": "2026-10-20T05:11:20",
+      "built_linear": 0.1341,
+      "built_srgb": 96.2
     }
   }
 }

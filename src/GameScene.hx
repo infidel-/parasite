@@ -254,13 +254,17 @@ class GameScene
           // was added for (docs/3d-changes.md, "the boot warm gets a SCREEN"). asked of `needsWarm`
           // rather than shown unconditionally, because a kind already warmed is a straight
           // call-through and a screen for it would be a flash
-          var warmEl = (view3d.needsWarm(game.area.info.type)
+          // a habitat on a mountain is its own kind to the renderer: a cave, not a tunnel
+          var kind = (game.area.isCave() ? 'cave' : game.area.info.type);
+          var warmEl = (view3d.needsWarm(kind)
             ? Browser.document.getElementById('warmup') : null);
           if (warmEl != null)
             warmEl.classList.remove('off');
-          view3d.warmKind(game.area.info.type, function()
+          view3d.warmKind(kind, function()
             {
-              if (game.area.info.type == 'wilderness')
+              if (kind == 'cave')
+                view3d.showCave(game.area);
+              else if (game.area.info.type == 'wilderness')
                 view3d.showWild(game.area);
               else if (game.area.info.type == 'facility' ||
                   game.area.info.type == 'militaryBase')

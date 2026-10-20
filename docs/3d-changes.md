@@ -1755,3 +1755,37 @@ labels (~48 → ~102 built) and 0.85 on the chain-link (~89 → ~105).
 default camera and reads as a thin top line. Same as the military perimeter. Accepted.
 
 **Verdict:** landed. An old city save loads with no fences and plays on.
+
+## Mountain cave habitat shell: marching squares over a blurred floor field, no 90 degree walls
+
+**Changed:** new `render/cave/` (`CaveArea`/`CaveScene`/`CaveGeom`/`CaveModel`/`CaveStyle`/`CaveWarm`),
+a sibling of the tunnels that keeps their pipeline (`VisionMask`, `ObjModels`, `LampLights`,
+`PropLights`, `CAMERA_SEWER`) and none of their art. The floor grid is box-blurred into a field
+(`gen.cave.CaveField`, half-width 0.35 cell) with smooth noise added, then cut at ISO 0.17 by
+marching squares on a lattice of 4 samples per cell. Three welded indexed meshes come out of it, one
+call each. The floor is flat, darkened along the walls by vertex colour off the field. The rock top
+is WALL_H 3.0 less a smooth sag, less a rounded lip near the outline, and only ever lower. The wall is
+a 5-row strip stood up along each walked iso loop, with u = arc length and the middle rows bulging by
+noise. Its foot and lip lie exactly on the outline, so it welds to both the floor and the top. Saddle
+cells are resolved by the cell centre. Three separate gens: `cave/wall`, `cave/floor`, `cave/rocktop`.
+
+**Measured:** shell **16.8k tris in 3 calls** (floor 5,500 / rock top 8,928 / wall 2,416) at 24x18.
+The frame is **21 calls / 18.0k tris**. Warm 101 programs, live 106. The tunnels' warm is 109 → 116
+on a fresh boot into a sewer habitat, the same five generic programs (ladder glow, basic, depth x2,
+indoor physical), so the cave adds no entry compile of its own.
+
+**Trap 1:** the invariant is that no walkable cell is ever drawn under rock. With the blur box at
+0.35, a floor cell's own quarter alone reads 0.25 at its corner, so noise pulling toward the floor is
+capped at 0.06 (0.25 − 0.06 > 0.17). Pushing into the rock is free (0.18), faded by the coverage so a
+lone pillar keeps its core. `GenCheck.caveSane` asserts the invariant headless over every walkable
+cell's lattice and every rock cell's centre. LUMP_OUT 0.14 fails 658 cells over 200 seeds.
+
+**Trap 2:** the tunnels' fill (3.95 / 1.89, blue pair) left the floor near black and turned the warm
+silt purple. Swept live: ambient `0x4e4d4a` 7.0, hemi `0x5c6272`/`0x1c1814` 3.0.
+
+**Trap 3:** the first rock-top roll asked for "rounded knobs and domes packed together" and read as
+laid cobbles from the overhead camera. The second roll asks for fractured bedrock plates and bans
+rounded stones, and it reads as one mass.
+
+**Verdict:** landed. The floor is flat (no `WorldCtx.ground`); bumps were skipped as invisible under
+CAMERA_SEWER.

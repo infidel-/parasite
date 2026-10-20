@@ -1513,6 +1513,33 @@ class GenCheck
       ok(pct >= gen.cave.CaveGen.FLOOR_MIN &&
         pct <= gen.cave.CaveGen.FLOOR_MAX, 'cave floor share ' + pct + '% out of band');
 
+      // the 3D shell's invariant (gen.cave.CaveField): the field stays above ISO everywhere on a walkable
+      // cell, so nobody is drawn standing under rock, and under it at every rock cell's centre, so no
+      // cell the player cannot enter is drawn as open floor
+      var isFloor = function(col:Int, row:Int) return col >= 0 && row >= 0 && col < w && row < h &&
+        floor[col][row];
+      var S = gen.cave.CaveField.SAMPLES;
+      for (x in 0...w)
+        for (y in 0...h)
+          {
+            if (!floor[x][y])
+              {
+                ok(gen.cave.CaveField.field(isFloor, x + 0.5, y + 0.5) < gen.cave.CaveField.ISO,
+                  'cave rock cell ' + x + ',' + y + ' drawn as open floor');
+                continue;
+              }
+            var low = 1.0;
+            for (a in 0...S + 1)
+              for (b in 0...S + 1)
+                {
+                  var f = gen.cave.CaveField.field(isFloor, x + a / S, y + b / S);
+                  if (f < low)
+                    low = f;
+                }
+            ok(low > gen.cave.CaveField.ISO, 'cave floor cell ' + x + ',' + y + ' drawn under rock (field ' +
+              low + ')');
+          }
+
       // the mouths
       var mouths = [for (s in ctx.spawns) if (s.type == 'caveMouth') s];
       ok(mouths.length == 2, 'cave has ' + mouths.length + ' mouths');

@@ -468,7 +468,7 @@ class View {
 // corp tower renders through the tunnel view and warms as one
   static inline function warmKey(kind:String):String
     return (kind == 'facility' || kind == 'corp' || kind == 'militaryBase' ||
-      kind == 'undergroundLab' ? kind : 'sewer');
+      kind == 'undergroundLab' || kind == 'cave' ? kind : 'sewer');
 
 // would `warmKind` actually have work to do for this area kind? asked by GameScene.draw3D BEFORE it
 // commits to putting the warmup screen back up — a kind already warmed is a call-through and a
@@ -537,6 +537,8 @@ class View {
             ]));
           case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
           case 'undergroundLab': render.lab.LabWarm.build(renderer, camera, game.config.vidLampLights);
+          // a mountain habitat: GameScene passes 'cave' as the kind, not the habitat's info.type
+          case 'cave': render.cave.CaveWarm.build(renderer, camera, game.config.vidLampLights);
           default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
         };
       chain.then(function(_)
@@ -588,6 +590,15 @@ class View {
       if ((running || warming) && shownKey == key)
         return;
       buildFrom(new render.sewer.SewerArea(game, render.sewer.SewerModel.fromArea(area)), key);
+    }
+
+// show the 3D mountain cave for a habitat built on a mountain, from its saved tile grid like the tunnels
+  public function showCave(area:game.AreaGame):Void
+    {
+      var key = gridKey(area.id, 5);
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.cave.CaveArea(game, render.cave.CaveModel.fromArea(area)), key);
     }
 
 // show the 3D facility compound for an area, built from its saved tile grid for the same reason the
@@ -1560,6 +1571,7 @@ void main() {
     // both kinds that carry a mask are listed: the tunnels, and the wilderness since its large
     // obstacles became the first open-area tiles that block sight
     if (Std.isOfType(area3d, render.sewer.SewerArea) ||
+        Std.isOfType(area3d, render.cave.CaveArea) ||
         Std.isOfType(area3d, render.wild.WildArea))
       for (m in actors.decalMaterials())
         render.world.VisionMask.patch(m);
