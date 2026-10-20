@@ -1,4 +1,5 @@
 // AI for blackops agents
+// NOTE: game.group.team can become null after creation!
 
 package ai;
 
