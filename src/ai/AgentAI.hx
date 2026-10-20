@@ -48,4 +48,14 @@ class AgentAI extends HumanAI
     {
       super.initPost(onLoad);
     }
+
+// event hook: on AI death
+// NOTE: called after the AI is removed from the area list!
+  public override function onDeath()
+    {
+      // the group regional controller
+      if (id == game.group.directorID &&
+          game.goals.has(GOAL_GROUP_DIRECTOR))
+        game.group.onDirectorDeath();
+    }
 }

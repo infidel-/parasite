@@ -45,6 +45,7 @@ enum abstract _Goal(String) to String from String
   var GOAL_LEARN_FALSE_MEMORIES = 'GOAL_LEARN_FALSE_MEMORIES';
   var GOAL_LEARN_ENGRAM = 'GOAL_LEARN_ENGRAM';
   var GOAL_GROUP_INTEL = 'GOAL_GROUP_INTEL';
+  var GOAL_GROUP_DIRECTOR = 'GOAL_GROUP_DIRECTOR';
 
   // scenario: alien crash landing
   var SCENARIO_ALIEN_FIND_SHIP = 'SCENARIO_ALIEN_FIND_SHIP';

@@ -1205,6 +1205,10 @@ class PlayerArea extends _SaveObject
             }
           msg += ' A set of implanted false memories about the encounter will help your survival.';
         }
+      // false memories in the group regional controller close the parasite file
+      if (player.host.id == game.group.directorID &&
+          game.goals.has(GOAL_GROUP_DIRECTOR))
+        game.group.onDirectorMemories();
       player.host.hasFalseMemories = true;
       game.log(msg);
       if (deactivated)

@@ -2,6 +2,8 @@
 
 package const;
 
+import game.GroupDirector;
+
 class Goals
 {
 // append a goal info; id collision = last-wins + log. used by
@@ -364,6 +366,22 @@ class Goals
         return Const.col('gray', Const.small(
           'Intel: ' + game.group.intel + '/' + game.group.intelNeeded()));
       },
+      onComplete: function (game, player) {
+        if (!game.group.isNeutralized)
+          GroupDirector.start(game);
+      },
+    },
+
+    GOAL_GROUP_DIRECTOR => {
+      id: GOAL_GROUP_DIRECTOR,
+      isOptional: true,
+      name: 'Deal with the regional controller',
+      note: 'A Group regional controller directs the hunt from a military base. Planting false memories into them will close my file. Killing them will too, but only after their people make a last attempt on me.',
+      noteFunc: GroupDirector.noteFunc,
+      onEnter: GroupDirector.onEnter,
+      onTurn: GroupDirector.onTurn,
+      leaveAreaPre: GroupDirector.leaveAreaPre,
+      aiInit: GroupDirector.aiInit,
     },
 
     // fake goal

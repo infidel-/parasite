@@ -21,6 +21,7 @@ class OfficerAI extends HumanAI
         skills.addID(SKILL_DECEPTION, 25 + Std.random(15));
       if (Std.random(100) < 40)
         skills.addID(SKILL_COAXING, 25 + Std.random(15));
+      game.goals.aiInit(this);
       initPost(false);
     }
 

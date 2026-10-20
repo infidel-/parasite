@@ -16,6 +16,11 @@ class Group extends _SaveObject
   public var difficulty: _Difficulty; // difficulty setting
   public var isNeutralized: Bool; // parasite file closed: no new teams until the priority climbs back
   public var intel: Int; // intel gathered towards finding the regional director
+  public var directorAreaID: Int; // military base of the regional director (-1: not found yet)
+  public var directorX: Int; // director spot on that base (0,0: not picked yet)
+  public var directorY: Int;
+  public var directorID: Int; // AI id of the director spawned on the current visit
+  public var directorAlert: Bool; // alarm raised on the director's base: leaving is blocked
   static inline var TEAM_VERY_CLOSE = 10.0; // team distance under which the hud group mark pulses and warns
   static inline var REOPEN_PRIORITY = 100.0; // priority at which a neutralized group reopens the file
 
@@ -38,6 +43,11 @@ class Group extends _SaveObject
       difficulty = UNSET;
       isNeutralized = false;
       intel = 0;
+      directorAreaID = -1;
+      directorX = 0;
+      directorY = 0;
+      directorID = -1;
+      directorAlert = false;
     }
 
 // called after loading
@@ -318,7 +328,41 @@ class Group extends _SaveObject
           (team.state == TEAM_SEARCH ||
            team.state == TEAM_AMBUSH))
         team = null;
+      // the hunt is over: close the director goals still open
+      if (game.goals.has(GOAL_GROUP_INTEL))
+        game.goals.complete(GOAL_GROUP_INTEL);
+      if (game.goals.has(GOAL_GROUP_DIRECTOR))
+        game.goals.complete(GOAL_GROUP_DIRECTOR);
       game.info('Group neutralized');
+    }
+
+// false memories planted in the regional controller close the parasite file
+  public function onDirectorMemories()
+    {
+      game.goals.complete(GOAL_GROUP_DIRECTOR);
+      neutralize();
+      game.message({
+        text: 'The controller will remember closing my file themselves. The Group has stopped hunting me.',
+        img: 'pedia/team_deactivation'
+      });
+    }
+
+// the regional controller is dead: the file closes, but a final team comes first
+  public function onDirectorDeath()
+    {
+      game.goals.complete(GOAL_GROUP_DIRECTOR);
+      neutralize();
+      if (team == null)
+        {
+          team = new Team(game);
+          team.level = 4;
+          team.distance = 30;
+        }
+      game.message({
+        text: 'The controller is dead. Their people will throw everything they have left at me before the file closes.',
+        img: 'pedia/team_basics',
+        col: 'alert'
+      });
     }
 
 // the priority climbed back: the group reopens the parasite file
@@ -327,7 +371,13 @@ class Group extends _SaveObject
       isNeutralized = false;
       teamTimeout = 50;
       intel = 0;
+      directorAreaID = -1;
+      directorX = 0;
+      directorY = 0;
+      directorID = -1;
+      directorAlert = false;
       game.goals.reset(GOAL_GROUP_INTEL);
+      game.goals.reset(GOAL_GROUP_DIRECTOR);
       game.message({
         text: 'They have reopened my file. The Group is hunting me again.',
         img: 'pedia/group',

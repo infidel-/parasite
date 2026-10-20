@@ -215,6 +215,14 @@ class Door extends AreaObject
           });
     }
 
+// lock this door and its linked half to a keycard
+  public function lock(id: String)
+    {
+      isLocked = true;
+      lockID = id;
+      syncLinkedLockState();
+    }
+
 // copy lock fields to the linked door half
   function syncLinkedLockState()
     {
