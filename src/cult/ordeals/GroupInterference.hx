@@ -113,9 +113,10 @@ class GroupInterference extends Ordeal
 // static method to add groupInterference action to actions array
   public static function initiateAction(game: Game, cult: Cult, actions: Array<_PlayerAction>): Void
     {
-      // check if there are 3 free level 2 members
+      // check if there are 3 free level 2 members (and a group to interfere with)
       var free = cult.getFreeMembers(2, true);
-      if (free.length < 3)
+      if (free.length < 3 ||
+          game.group.isNeutralized)
         return;
 
       actions.push({
