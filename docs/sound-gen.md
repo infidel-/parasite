@@ -386,8 +386,9 @@ The `SewerSounds` clone for the habitat in a mountain tile (`AreaGame.isCave`). 
 - **`cave/exit` was cut** ("bad"), so the cave mouth plays no sound on leaving (`HabitatExit.onAction`
   skips `object-sewers` for it).
 - The ElevenLabs hum came back at **-59.5 LUFS** raw and was picked by ear; the bake lifted it to -26.5.
-- Measured at slider 100 on habitat 3843: each bed 63 in its own zone; mouth 40.4 at the mouth;
-  hum 63.1 on the crystals; seep 63.1 at a pool.
+- Measured at slider 100 on habitat 3843 at the first DB (-4 on every loop): each bed 63 in its own
+  zone; mouth 40.4 at the mouth; hum 63.1 on the crystals; seep 63.1 at a pool. Then tuned by ear
+  in sound mode: hum -13, mouth -10, seep -27.
 
 ## Levels (measured with ebur128, 2026-10-08)
 

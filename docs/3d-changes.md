@@ -1823,3 +1823,48 @@ gpt-image-2.5 paint that surface in, opaque, even with `background: transparent`
 flat navy twice and is chroma-keyed instead.
 
 **Verdict:** landed.
+
+## Mountain cave feedback pass: floor patches, pool water, prop fits, darker dressing
+
+The user's eye pass on the dressing, item by item.
+- **Floor patches:** `render.cave.CavePatches` lays three ragged overlays over the floor: wet clay,
+  bedrock showing through, and loose gravel. It uses `WildPatches`' idiom on `CoverageMask`, with
+  one mesh per layer, each cell split on the field lattice. Every vertex takes the floor's own
+  wall-foot darkening (`CaveGeom.floorShade`, now shared).
+- **Mouth blend:** gravel also rings both mouths. The mouth sheet's scree cell was desaturated to
+  0.45 (it was a saturated orange), and its foot was faded into a crop of the cave floor at the
+  ramp's texel scale.
+- **Pool water:** `render.cave.CaveWater` folds a surface into the rimstone's OWN material, keyed
+  on uv (the bottom row of its sheet), so there is no second mesh.
+- **Rubble:** one cell per stone; the slab is pale, the boulders dark.
+- **Crystals:** the facet cell was re-laid as three solid bands, one band per prism. Five bands per
+  facet had read as purple stripes.
+- **Fungus:** the cap-top glow was brought up to the gills' (x1.6 on the emissive map).
+- **Root curtains:** they hang only on a north run of 2+ cells, clamped inside it, clear of its
+  rounded ends (`HANG_END`). The back sits on the frontmost foot across the curtain's width, or the
+  curtain is dropped (`HANG_FLUSH`).
+- **Floor props:** they step out until a footprint ellipse, `w`/`r` x `h` x scale plus `PROP_CLEAR`,
+  clears the rock, or they are dropped.
+- **Darker dressing:** every piece is at `baseColor` 0.55. The decals take `lift` 1.11-1.65.
+
+**Measured:** patches built at 0.75x / 1.82x / 1.53x the floor's linear value. They add 3 calls,
+and the frame is now 31-40 calls with 50-53k tris. Warm cached 105 against 110 live, the same five
+as before, so the patch and water programs both warm. The habitat 3843 corner curtain at 13,4 is
+gone; 2 curtains remain. Crystal emissive went 1.2 → 1.8.
+
+**Trap 1:** the water's virtual light first hung at a fixed WORLD direction 15 degrees off the
+mirror, so a flat pool sat inside the glint and went a pale sticker blue. The light now hangs off
+the mirror by a VIEW-space offset of ~20 degrees, through a `smoothstep(0.996, 1)` edge, so only a
+ripple's steep side sparks.
+
+**Trap 2:** a 3-cell north run left two candidate cells in a twisty cave and **zero** curtains.
+Two cells plus the clamp is enough.
+
+**Trap 3:** both transparent patch gens came back with a painted halo, alpha never reaching 0
+(min 31 and 54). A linear alpha remap (200-240, 215-245) cut it, with no re-roll.
+
+**Trap 4:** crystal emissive x2.4 blew every prism to white under ACES. At 1.8 the cyan prisms
+bloom and keep their hue. A blue or violet prism never crosses the 0.9 luminance threshold at
+any strength that keeps its colour.
+
+**Verdict:** landed.

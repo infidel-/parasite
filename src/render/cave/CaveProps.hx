@@ -16,7 +16,8 @@ import render.world.VisionMask;
 // eligible wall face, dealt from a deck so a run cannot repeat, never the camera-side face, never next
 // to an exit) with one difference that is the cave's: the wall is not on the cell edge. the outline
 // sits wherever gen.cave.CaveField crosses ISO, a lumpy distance into the rock, so each prop finds its
-// own wall by walking the field and stands off THAT.
+// own wall by walking the field and stands off THAT, then steps out until its whole footprint clears
+// the rock (a corner rounds off, a lumpy wall comes forward across a wide prop) or is dropped.
 //
 // pure decoration, like the sewer's: no AreaObject behind it, one instanced batch per glb
 class CaveProps
@@ -31,6 +32,8 @@ class CaveProps
   static inline var CAM_DIR = 1;
   // see render.sewer.SewerProps.PICK_ODD: a deck index reduced through an odd modulus, not a bit
   static inline var PICK_ODD = 997;
+  // points round a footprint ellipse that clear() tests against the rock
+  static inline var FOOT_SAMPLES = 16;
 
 // scatter, then batch: one InstancedMesh per glb
   public static function build(scene:Scene, m:Sewer):Void
@@ -40,9 +43,19 @@ class CaveProps
       // ponytail: no per-frame cull, for render.sewer.SewerProps' reason (a static level's handful)
       for (i in 0...models.length)
         {
-          var prop = Models.instanced(scene, models[i].path, places[i], models[i].h, SOLID);
-          Models.get(models[i].path, function(_) VisionMask.patchMesh(prop.mesh));
+          var path = models[i].path;
+          var prop = Models.instanced(scene, path, places[i], models[i].h, SOLID);
+          Models.get(path, function(_) patch(path, prop.mesh));
         }
+    }
+
+// the patches a dressing batch draws with: the pools' water surface first, then the vision mask over
+// it. shared with render.cave.CaveWarm, so the warm compiles the same programs
+  public static function patch(path:String, mesh:InstancedMesh):Void
+    {
+      if (path == render.RenderConfig.MODELS.caveRimstone)
+        CaveWater.patch(mesh.material);
+      VisionMask.patchMesh(mesh);
     }
 
 // the scatter itself: one placement list per PROP_MODELS entry, readable without a scene —
@@ -80,7 +93,9 @@ class CaveProps
                           dir: dir,
                         };
                         faces.push(face);
-                        if (dir == 0)
+                        if (dir == 0 &&
+                            (northFace(m, col - 1, row) ||
+                            northFace(m, col + 1, row)))
                           north.push(face);
                       }
                 }
@@ -101,7 +116,9 @@ class CaveProps
                     }
                 var h2 = SewerModel.mix(hh ^ 0x85EBCA6B);
                 var mi = deal(decks, perp >= 0 ? CORNER : FLAT, h2);
-                places[mi].push(place(m, f.col, f.row, f.dir, perp, models[mi], h2));
+                var p = place(m, f.col, f.row, f.dir, perp, models[mi], h2);
+                if (p != null)
+                  places[mi].push(p);
               }
 
             // a root curtain, down a north face only
@@ -111,10 +128,21 @@ class CaveProps
                 var f = north[(hang >> 7) % north.length];
                 var h2 = SewerModel.mix(hang ^ 0xC2B2AE35);
                 var mi = deal(decks, HANG, h2);
-                places[mi].push(place(m, f.col, f.row, f.dir, -1, models[mi], h2));
+                var p = place(m, f.col, f.row, f.dir, -1, models[mi], h2);
+                if (p != null)
+                  places[mi].push(p);
               }
           }
       return places;
+    }
+
+// is this a floor cell with rock to its north and no exit beside it — a cell a root curtain may hang
+// over? a curtain is wider than its cell, so it is dealt only where the face runs on into a neighbour
+  static function northFace(m:Sewer, col:Int, row:Int):Bool
+    {
+      return SewerModel.isFloor(m, col, row) &&
+        !SewerModel.isFloor(m, col, row - 1) &&
+        !SewerProps.nearExit(m, col, row);
     }
 
 // the next model index off the spot's deck, refilled and Fisher-Yates shuffled off the hash chain
@@ -145,7 +173,9 @@ class CaveProps
 
 // stand one prop off the wall foot of face `dir` of a cell (and of `perp` too, for a corner): find
 // where the field crosses ISO along the face normal, step back toward the floor by the prop's own
-// standoff, less the tuck. a hung prop is lifted so its top sits just under the rock top's lip there
+// standoff, less the tuck, then clear its footprint. a hung prop is set flush on the foot nearest the
+// floor across its width and lifted so its top sits just under the rock top's lip there. null when it
+// does not fit: a floor prop the far wall blocks, a curtain on a wall that wanders too much
   static function place(m:Sewer, col:Int, row:Int, dir:Int, perp:Int, mdl:CaveProp,
       h:Int):Models.PropPlace
     {
@@ -157,6 +187,23 @@ class CaveProps
       var slide = (perp < 0 ? (((h >> 11) % 2001) / 1000.0 - 1.0) * CaveStyle.PROP_SLIDE / CELL : 0.0);
       var u = col + 0.5 + (dir < 2 ? slide : 0.0);
       var v = row + 0.5 + (dir < 2 ? 0.0 : slide);
+      // a curtain hangs inside its run of north face, clear of the rounded corners at both ends: one
+      // hung at the end of a wall ran on past it and stuck out of the rock beside it (asked for)
+      var hw = mdl.w * mdl.h * scale / CELL;
+      if (mdl.spot == HANG)
+        {
+          var c0 = col;
+          while (northFace(m, c0 - 1, row))
+            c0--;
+          var c1 = col;
+          while (northFace(m, c1 + 1, row))
+            c1++;
+          var lo = c0 + CaveStyle.HANG_END + hw;
+          var hi = c1 + 1 - CaveStyle.HANG_END - hw;
+          if (lo > hi)
+            return null;
+          u = Math.max(lo, Math.min(hi, u));
+        }
       var nx = 0.0;
       var nz = 0.0;
       var footU = u;
@@ -183,6 +230,22 @@ class CaveProps
               default:
             }
         }
+      // a curtain's back on the foot nearest the floor across its whole width, so no part of it is
+      // buried, and none if the wall wanders more than HANG_FLUSH behind it
+      if (mdl.spot == HANG)
+        {
+          var lo = footV;
+          var hi = footV;
+          for (e in [u - hw, u + hw])
+            {
+              var f = foot(m, col, row, 0, e, footV);
+              lo = Math.min(lo, f);
+              hi = Math.max(hi, f);
+            }
+          if (hi - lo > CaveStyle.HANG_FLUSH)
+            return null;
+          v += hi - footV;
+        }
       var jit = (((h >> 3) % 2001) / 1000.0 - 1.0) * CaveStyle.PROP_YAW_JITTER;
       var p:Models.PropPlace = {
         x: u * CELL - half,
@@ -191,8 +254,50 @@ class CaveProps
         scale: scale,
       };
       if (mdl.spot == HANG)
-        p.y = CaveGeom.topY(footU, footV, 0) - mdl.h * scale - CaveStyle.HANG_TUCK;
-      return p;
+        {
+          p.y = CaveGeom.topY(footU, footV, 0) - mdl.h * scale - CaveStyle.HANG_TUCK;
+          return p;
+        }
+      return (clear(m, p, mdl, nx, nz) ? p : null);
+    }
+
+// step a floor prop out along its facing until its footprint clears the rock: an ellipse of its own
+// half width and half depth at its scale plus PROP_CLEAR, turned with it, every sample of which has
+// to be on the floor side of the outline. false when PROP_PUSH_MAX runs out first
+  static function clear(m:Sewer, p:Models.PropPlace, mdl:CaveProp, nx:Float, nz:Float):Bool
+    {
+      var isFloor = function(c:Int, r:Int) return SewerModel.isFloor(m, c, r);
+      var half = (CityConfig.GRID * CELL) / 2;
+      var a = mdl.w * mdl.h * p.scale + CaveStyle.PROP_CLEAR;
+      var b = mdl.r * mdl.h * p.scale + CaveStyle.PROP_CLEAR;
+      var nl = Math.sqrt(nx * nx + nz * nz);
+      var cs = Math.cos(p.yaw);
+      var sn = Math.sin(p.yaw);
+      var pushed = 0.0;
+      while (pushed <= CaveStyle.PROP_PUSH_MAX)
+        {
+          var hit = false;
+          for (k in 0...FOOT_SAMPLES)
+            {
+              var t = 2 * Math.PI * k / FOOT_SAMPLES;
+              var lx = Math.cos(t) * a;
+              var lz = Math.sin(t) * b;
+              // the prop's local x and z turned by its yaw, as three turns it (local +z faces (nx, nz))
+              var x = p.x + lx * cs + lz * sn;
+              var z = p.z - lx * sn + lz * cs;
+              if (CaveField.field(isFloor, (x + half) / CELL, (z + half) / CELL) < CaveField.ISO)
+                {
+                  hit = true;
+                  break;
+                }
+            }
+          if (!hit)
+            return true;
+          p.x += nx / nl * CaveStyle.PROP_PUSH;
+          p.z += nz / nl * CaveStyle.PROP_PUSH;
+          pushed += CaveStyle.PROP_PUSH;
+        }
+      return false;
     }
 
 // the wall foot behind face `d` of a cell, in cells along that face's axis: walk from the cell edge

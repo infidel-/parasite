@@ -144,6 +144,7 @@ class CaveGeom
       add(scene, floor, CaveStyle.FLOOR, false);
       add(scene, top, CaveStyle.ROCKTOP, false);
       add(scene, walls, CaveStyle.WALL, true);
+      CavePatches.build(scene, m);
       decals(scene, m);
     }
 
@@ -217,6 +218,15 @@ class CaveGeom
       return CaveStyle.WALL_H - sag - CaveStyle.RIM * lip;
     }
 
+// the floor's baked value at (u, v) in cells, given the field less ISO there: the shared tint, darkened
+// along the walls. public for render.cave.CavePatches, whose overlays take the same value or glow at
+// the wall foot
+  public static function floorShade(u:Float, v:Float, fd:Float):Float
+    {
+      return tint(u, v) *
+        (CaveStyle.SHADOW + (1 - CaveStyle.SHADOW) * CaveField.smooth(0, CaveStyle.SHADOW_W, fd));
+    }
+
 // the value tint every surface shares: smooth noise either side of 1, keyed off world position so
 // the floor, the wall foot and the rock lip agree where they meet
   static inline function tint(u:Float, v:Float):Float
@@ -268,10 +278,9 @@ class CaveGeom
               var x = p.u * CELL - half;
               var z = p.v * CELL - half;
               var y = 0.0;
-              var c = tint(p.u, p.v);
-              if (isFloor)
-                c *= CaveStyle.SHADOW + (1 - CaveStyle.SHADOW) * CaveField.smooth(0, CaveStyle.SHADOW_W, p.d);
-              else y = topY(p.u, p.v, p.d);
+              var c = (isFloor ? floorShade(p.u, p.v, p.d) : tint(p.u, p.v));
+              if (!isFloor)
+                y = topY(p.u, p.v, p.d);
               var t = (isFloor ? CaveStyle.FLOOR_TILE : CaveStyle.TOP_TILE);
               id = vertex(b, x, y, z, x / t, z / t, c);
               b.keys.set(p.key, id);

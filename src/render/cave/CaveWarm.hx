@@ -46,14 +46,13 @@ class CaveWarm
                 });
             }
           // the dressing (render.cave.CaveProps): decoration, so the SOLID variant only, patched as
-          // the real build patches it
+          // the real build patches it (the pools' water surface included)
           for (i in 0...wallProps.length)
             {
               var p = wallProps[i];
               render.Models.get(p.path, function(_)
                 {
-                  render.world.VisionMask.patchMesh(render.Models.instanced(sc, p.path, place, p.h,
-                    SOLID).mesh);
+                  CaveProps.patch(p.path, render.Models.instanced(sc, p.path, place, p.h, SOLID).mesh);
                   done();
                 });
             }

@@ -3889,10 +3889,10 @@
         1
       ],
       "emissiveSrc": "lab/lab-mach-liftshaft-emissive.png",
-      "emissiveStrength": 2.4,
+      "emissiveStrength": 1.8,
       "note": "hand-modelled in Blender, models-src/lab/mach/liftshaft.py beacon() (the second object), on the shaft's own atlas: the lift beacon's turning reflector, seven mirror panels round the back of the bulb (inner faces and bulb on the lit caged-lamp glass, so they glow off the shaft's emissive map) on a turntable disc that keeps the bbox centred on the axis. 288 tris, 0.34 x 0.34 x 0.38. render.lab.LabSpin turns it to face the beam it throws, inside lab/lift-dome.",
       "last_converted": "2026-10-16T15:50:13Z",
-      "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-liftshaft-emissive.png@2.4/noMR/bc0.63,0.63,0.63,1"
+      "last_sig": "n1/-1/512/0.005/-/lab/lab-mach-liftshaft-emissive.png@1.8/noMR/bc0.63,0.63,0.63,1"
     },
     "lab/lift-dome": {
       "src": "lab/lab-mach-liftdome.glb",
@@ -4418,76 +4418,124 @@
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "five drip-ringed cones off two lumpy flowstone blobs, the rings real geometry (groove then lip), one broken stump. 1,380 tris, 1.901 x 1.546 x 2.400. Cells: cone flank with drip rings, flowstone crust (base tops), fresh calcite (stump top), streaked calcite (base sides). Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "five drip-ringed cones off two lumpy flowstone blobs, the rings real geometry (groove then lip), one broken stump. 1,380 tris, 1.901 x 1.546 x 2.400. Cells: cone flank with drip rings, flowstone crust (base tops), fresh calcite (stump top), streaked calcite (base sides). Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
       "last_converted": "2026-10-20T00:48:23Z",
-      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/flowstone": {
       "src": "cave/cave-flowstone.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "a fluted column: a 14-fold draped skirt, a 10-fold waist with three collars, a flared flat top, eight drips under its lip, the folds twisting ring to ring. 1,852 tris, 1.689 x 1.659 x 2.900. Cells: flutes (waist), draped folds (skirt), growth rings (top), plain crust (flare, drips). Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "a fluted column: a 14-fold draped skirt, a 10-fold waist with three collars, a flared flat top, eight drips under its lip, the folds twisting ring to ring. 1,852 tris, 1.689 x 1.659 x 2.900. Cells: flutes (waist), draped folds (skirt), growth rings (top), plain crust (flare, drips). Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
       "last_converted": "2026-10-20T00:48:23Z",
-      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/rubble": {
       "src": "cave/cave-rubble.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "a tabular slab fallen across two rounded boulders, four angular chunks round them; chipped blobs, every chip face on the pale fracture cell whichever way it faces. 682 tris, 2.527 x 1.396 x 1.084. Cells: weathered slab top, fracture stone, boulder skin (smooth-shaded), chunk stone. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
-      "last_converted": "2026-10-20T00:48:23Z",
-      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "a tabular slab fallen across two rounded boulders, four angular chunks round them; chipped blobs, ONE CELL PER STONE (the slab pale, the boulders dark, the chunks mixed): the first cut put every chip face on a pale fracture cell and read as a face-by-face patchwork. 682 tris, 2.527 x 1.396 x 1.084. Cells: weathered orange, pale cream, dark rust, mid amber stone. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T13:40:09Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/rimstone": {
       "src": "cave/cave-rimstone.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "two calcite basins over wavy outlines, each one closed vessel (outer wall, overhanging lip, inner wall, shallow band, deep-water cap sharing edges, so nothing z-fights). 1,336 tris, 2.657 x 1.905 x 0.345. Cells: crust (lip, inner wall), drip curtain (outer wall, at 1.6x density), deep teal water (raised to 55 so it does not read as a hole on the ~57 floor), shallow teal band. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "two calcite basins over wavy outlines, each one closed vessel (outer wall, overhanging lip, inner wall, shallow band, deep-water cap sharing edges, so nothing z-fights). 1,336 tris, 2.657 x 1.905 x 0.345. Cells: crust (lip, inner wall), drip curtain (outer wall, at 1.6x density), deep teal water (raised to 55 so it does not read as a hole on the ~57 floor), shallow teal band. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
       "last_converted": "2026-10-20T00:48:23Z",
-      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/crystals": {
       "src": "cave/cave-crystals.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
       "emissiveSrc": "cave/cave-crystals-emissive.png",
-      "emissiveStrength": 1.2,
-      "note": "seven flat-shaded hexagonal prisms with pyramid tips fanned off four chipped rock lumps. 560 tris, 1.112 x 0.878 x 1.436. Cells: prism facet bands cyan|blue|violet|blue|cyan (re-laid in code to ~22% cyan a side), tip planes (each facet its own window, so a tip's six planes shade apart), dark rock (base flanks), violet-grained dust (base faces turned up). GLOWS: cave-crystals-emissive.png is the two crystal cells as-is, the rock black. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
-      "last_converted": "2026-10-20T00:51:38Z",
-      "last_sig": "n1/-1/512/0.01/-/cave/cave-crystals-emissive.png@1.2/rf1"
+      "emissiveStrength": 1.8,
+      "note": "seven flat-shaded hexagonal prisms with pyramid tips fanned off four chipped rock lumps. 560 tris, 1.112 x 0.878 x 1.436. Cells: three solid facet bands cyan|blue|violet, a third of the cell each, one band per prism (re-laid in code: five bands across every facet read as purple stripes), tip planes (each facet its own window, so a tip's six planes shade apart), dark rock (base flanks), violet-grained dust (base faces turned up). GLOWS: cave-crystals-emissive.png is the two crystal cells as-is, the rock black. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T13:40:09Z",
+      "last_sig": "n1/-1/512/0.01/-/cave/cave-crystals-emissive.png@1.8/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/fungus": {
       "src": "cave/cave-fungus.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
       "emissiveSrc": "cave/cave-fungus-emissive.png",
-      "emissiveStrength": 1.5,
-      "note": "ten hand-UV'd lathe caps on curved tapered stems over a two-blob root lump, three roots trailing off it; each cap's gill edge is its widest ring, so the rim band leans in and faces the steep camera. 1,396 tris, 1.363 x 1.219 x 0.790. Cells: cap tops (mapped from above, a window each), radial gill stripes, bone stem, rotting root. GLOWS: cave-fungus-emissive.png is the cap and gill cells, the rest black. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
-      "last_converted": "2026-10-20T00:52:32Z",
-      "last_sig": "n1/-1/512/0.01/-/cave/cave-fungus-emissive.png@1.5/rf1"
+      "emissiveStrength": 1.8,
+      "note": "ten hand-UV'd lathe caps on curved tapered stems over a two-blob root lump, three roots trailing off it; each cap's gill edge is its widest ring, so the rim band leans in and faces the steep camera. 1,396 tris, 1.363 x 1.219 x 0.790. Cells: cap tops (mapped from above, a window each), radial gill stripes, bone stem, rotting root. GLOWS: cave-fungus-emissive.png is the cap and gill cells, the rest black; the cap-top cell x1.6 so the tops glow like the gills. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T13:38:35Z",
+      "last_sig": "n1/-1/512/0.01/-/cave/cave-fungus-emissive.png@1.8/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/roots": {
       "src": "cave/cave-roots.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "a wall-backed root curtain: a ledge of ten clods cut at staggered back planes (so no two backs share one), twenty tapered roots in two rows with forks and hair rootlets, and a ragged root-mat ribbon against the wall behind them for the density. 2,456 tris, 2.898 x 0.476 x 2.190, back at +y. Cells: bark fading pale to the tips (each root mapped from its tip up), rootlet fibre, ochre clod tops, dark earth (ledge flanks, back, underside). Hung by render.cave.CaveProps with its top under the rock lip. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "a wall-backed root curtain: a ledge of ten clods cut at staggered back planes (so no two backs share one), twenty tapered roots in two rows with forks and hair rootlets, and a ragged root-mat ribbon against the wall behind them for the density. 2,456 tris, 2.898 x 0.476 x 2.190, back at +y. Cells: bark fading pale to the tips (each root mapped from its tip up), rootlet fibre, ochre clod tops, dark earth (ledge flanks, back, underside). Hung by render.cave.CaveProps with its top under the rock lip. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
       "last_converted": "2026-10-20T00:51:38Z",
-      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/mouth": {
       "src": "cave/cave-mouth.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
-      "note": "the cave-mouth exit: fifteen boulders (two stacked pillars, a lintel set back, two corbels rounding the arch, shoulder, flank and lip stones) and eight scree stones, each cut at the floor and at its own back plane; a closed near-black navy plate for the opening and a wedge ramp with a ragged lip running up into it. Lintel back and plate forward so the hole shows at the game camera's pitch. 2,436 tris, 3.717 x 1.552 x 2.919, back at +y. Cells: ochre limestone, weathered limestone (faces turned up), scree fading brown to slate blue up the ramp, the opening's navy (left at 16.6 so it stays a hole). Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. No baseColor/lift/sat; roughness 1 keeps it on the Lambert path.",
-      "last_converted": "2026-10-20T00:51:38Z",
-      "last_sig": "n1/-1/512/0.01/-/-/rf1"
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "the cave-mouth exit: fifteen boulders (two stacked pillars, a lintel set back, two corbels rounding the arch, shoulder, flank and lip stones) and eight scree stones, each cut at the floor and at its own back plane; a closed near-black navy plate for the opening and a wedge ramp with a ragged lip running up into it. Lintel back and plate forward so the hole shows at the game camera's pitch. 2,436 tris, 3.717 x 1.552 x 2.919, back at +y. Cells: ochre limestone, weathered limestone (faces turned up), scree desaturated to 0.45 fading to slate blue up the ramp, its foot faded into a crop of textures-src/cave/floor.png at the ramp's texel scale so the slope runs out onto the floor, the opening's navy (left at 16.6 so it stays a hole). Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T13:40:09Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     }
   }
 }
