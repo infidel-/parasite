@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds
+.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -45,6 +45,11 @@ tex:
 # sounds-src is a symlink; the wavs are NOT committed, art/sounds.json IS
 sounds:
 	python3 tools/sounds.py
+
+# the 3D view's 128 px entities sheet: the original kra/png art under the asset store (and the
+# generated blood sheets in textures-src/img/entities128/) -> app/img/entities128.png
+entities:
+	python3 tools/entities128.py
 
 # adopt freshly generated gpt drops into textures-src/ without baking
 adopt:

@@ -323,5 +323,8 @@ for i, (r, c) in enumerate(CELLS):
     gain, f = match(n, olds[i].astype(float))
     out.alpha_composite(Image.fromarray(n.round().astype(np.uint8)), ((i % COLS) * CELL, (i // COLS) * CELL))
     print('%2d %2d/%-2d %s  gain %.2f  sat f %.2f' % (i, r, c, note, gain, f))
-out.save(OUT)
+# through a temp file: overwriting in place fails with EINVAL while the game on the Windows host holds
+# the sheet open
+out.save(OUT + '.tmp.png')
+os.replace(OUT + '.tmp.png', OUT)
 print('wrote', OUT)
