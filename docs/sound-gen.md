@@ -362,6 +362,33 @@ mission map, off the region grid: to test one, `region.createArea('AREA_SEWERS')
   buzz eased 0.43 → 0 through an outage and back to 1.
 - `sewer/cover` (a car over the manhole cover) was baked and dropped.
 
+### Mountain cave: `render/cave/CaveSounds.hx`, driven from `CaveArea.tick`
+
+The `SewerSounds` clone for the habitat in a mountain tile (`AreaGame.isCave`). It plays ON TOP of
+`ambient-habitat`, which the habitat keeps through `setAmbient` (asked for). Sources are read off
+`CaveProps.places`, the same deal the dressing is built from.
+
+| key | sources | type | range (path cells) |
+|---|---|---|---|
+| `cave/passage` / `cave/chamber` | beds, one-hot on `model.room` (the generator's chambers) | bed | — |
+| `cave/mouth` | `habitat_exit` objects (the two cave mouths), 2 variants | loop | 5 |
+| `cave/seep` | rimstone pool and flowstone column props | loop | 2 |
+| `cave/hum` | glowing crystal props | loop | 3 |
+| `cave/drip` | stalagmite, rimstone and flowstone props | event, gap 12 s | 4 |
+| `cave/scree` | fallen rock props and the mouths (their scree slopes) | event, gap 60 s | 8 |
+| `cave/bats` | none | event, gap 90 s | — |
+
+- **The chamber bed is the crystal hum's sonilo take** ("good for room bed actually"); all three
+  chamber takes lost. Its manifest prompt is the hum's.
+- **Seep, by what the water does**: the sonilo take is a small trickle onto stone out of a hole, and
+  won for the pools and flowstone. The elevenlabs take is a running brook, and is kept as
+  `unused/cave/seep-elevenlabs1-brook.wav` for a cave stream if one is ever drawn.
+- **`cave/exit` was cut** ("bad"), so the cave mouth plays no sound on leaving (`HabitatExit.onAction`
+  skips `object-sewers` for it).
+- The ElevenLabs hum came back at **-59.5 LUFS** raw and was picked by ear; the bake lifted it to -26.5.
+- Measured at slider 100 on habitat 3843: each bed 63 in its own zone; mouth 40.4 at the mouth;
+  hum 63.1 on the crystals; seep 63.1 at a pool.
+
 ## Levels (measured with ebur128, 2026-10-08)
 
 | file | LUFS | role |
@@ -426,3 +453,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-11 | military | latrine, comms (beds) · drip, flush, squelch (one-shots) | latrine: sonilo · comms: elevenlabs · flush: elevenlabs ×2, both screened CLIPPED (16 and 8.5 peaks, the second a "no distortion" re-roll) and picked by ear ("both 11labs are ok") · squelch: elevenlabs (re-roll) + sonilo (re-roll, 3 peaks at 0 dBFS); both first takes CLIPPED (15.5, 5) · drip: cassette + elevenlabs · flush cassette CLIPPED (36), re-rolled clean, lost | $0.29 |
 | 2026-10-13 | lab | lobby, corridor, vat, workshop, storage, research, dead (beds) · bubble, pump, cryo, centrifuge, incubator, console, buzz, vent, lift, incinerator, klaxon (loops) · drip, knock, hiss, thump, shaft, pa, purge, drain, powerdown, arrive, depart, door-open, door-close (one-shots) | arrive, buzz, centrifuge, dead, depart, door-open, door-close, knock, pa, purge: sonilo · bubble, console, corridor (sonilo "fine but not so horror"), cryo, drain, hiss, klaxon, lift, lobby, research, storage, thump, vat, vent, workshop: elevenlabs · drip, powerdown, shaft: elevenlabs + sonilo · incubator: cassette · incinerator, pump: cut | $2.02 |
 | 2026-10-18 | city | dumpster-open, dumpster-close (one-shots, the player hiding in and climbing out of `objects.Dumpster`) | both: sonilo (open screened 12 clipped samples, picked by ear anyway) · open cassette CLIPPED (134), close cassette came back -44.6 LUFS, close elevenlabs CLIPPED (27) | $0.04 |
+| 2026-10-20 | cave | passage, chamber (beds) · mouth, seep, hum (loops) · drip, scree, bats, exit (one-shots) | passage, scree, bats, seep: sonilo (scree and bats had screened as possibly clipped, picked by ear) · drip, hum: elevenlabs (hum raw -59.5 LUFS) · mouth: elevenlabs + sonilo · chamber: the hum sonilo take, all chamber takes cut · exit: cut · seep elevenlabs kept as a brook | $0.53 |

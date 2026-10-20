@@ -27,6 +27,7 @@ class CaveArea implements Area3D
   var sceneRef:Scene;                    // held for refreshObjects, which rebuilds the prop batches
   var props:Array<render.world.ObjModels.PropBatch>; // object props: solid / ghost / outline batches
   var tactical = false;                  // tactical view up: the props draw their outline shells
+  var sounds:CaveSounds;                 // the cave's beds, loops and one-shots
 
   public function new(game:Game, model:Sewer)
     {
@@ -65,6 +66,7 @@ class CaveArea implements Area3D
       // the blocker predicate is the floor grid, not area.canSeeThrough (see SewerArea)
       VisionMask.attach(CaveStyle.MASK, model.w, model.h,
         function(col, row) return !SewerModel.isFloor(model, col, row));
+      sounds = new CaveSounds(game, model);
     }
 
 // which way a prop faces from its cell (render.world.ObjModels.PropYaw). WALL turns a cave mouth's back
@@ -132,6 +134,7 @@ class CaveArea implements Area3D
         render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       if (opts.outro)
         return;
+      sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);
       VisionMask.update(game, opts.player.x, opts.player.z);
       lampLights.update(lampPosts, opts.lightCol, opts.lightRow, opts.dtMs);
       propLights.update(game, opts.lightCol, opts.lightRow, opts.dtMs);

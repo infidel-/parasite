@@ -3204,6 +3204,205 @@
       "last_outputs": [
         "city/dumpster-close1.mp3"
       ]
+    },
+    "cave/passage": {
+      "area": "cave",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "cave/passage-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "narrow natural rock cave passage room tone, close hollow stone air, faint distant dripping water deep in the rock, a very soft draught, constant, no events, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 19.969161,
+          "seed": null,
+          "cost": 0.0359,
+          "native_loop": false,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:21",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "cave/passage1.mp3"
+      ]
+    },
+    "cave/chamber": {
+      "area": "cave",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "cave/chamber-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a faint eerie resonant hum from a cluster of glowing crystals, soft glassy shimmering drone with slow beating overtones, constant, no events, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 19.969161,
+          "seed": null,
+          "cost": 0.0359,
+          "native_loop": false,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave; the crystal hum's sonilo take, picked as the chamber bed (the chamber takes all lost)"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:21",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "cave/chamber1.mp3"
+      ]
+    },
+    "cave/mouth": {
+      "area": "cave",
+      "loop": true,
+      "variants": [
+        {
+          "file": "cave/mouth-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "cold night wind blowing across a cave entrance, a low hollow whistle through the rock opening, soft gusts rising and falling, constant, no events, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave"
+        },
+        {
+          "file": "cave/mouth-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "cold night wind blowing across a cave entrance, a low hollow whistle through the rock opening, soft gusts rising and falling, constant, no events, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 19.969161,
+          "seed": null,
+          "cost": 0.0359,
+          "native_loop": false,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:22",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "cave/mouth1.mp3",
+        "cave/mouth2.mp3"
+      ]
+    },
+    "cave/seep": {
+      "area": "cave",
+      "loop": true,
+      "variants": [
+        {
+          "file": "cave/seep-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a thin stream of water seeping over stone terraces into a shallow still pool, soft steady trickle and gentle lapping, constant, no events, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 19.969161,
+          "seed": null,
+          "cost": 0.0359,
+          "native_loop": false,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave; a small trickle onto stone, from a hole in the rock (the elevenlabs take is a running brook, kept as unused/cave/seep-elevenlabs1-brook.wav)"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:23",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "cave/seep1.mp3"
+      ]
+    },
+    "cave/hum": {
+      "area": "cave",
+      "loop": true,
+      "variants": [
+        {
+          "file": "cave/hum-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a faint eerie resonant hum from a cluster of glowing crystals, soft glassy shimmering drone with slow beating overtones, constant, no events, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:23",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "cave/hum1.mp3"
+      ]
+    },
+    "cave/drip": {
+      "area": "cave",
+      "loop": false,
+      "variants": [
+        {
+          "file": "cave/drip-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a single water drop falling from the cave roof into a still pool, a bright plop with a long stony echo, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:23",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "cave/drip1.mp3"
+      ]
+    },
+    "cave/scree": {
+      "area": "cave",
+      "loop": false,
+      "variants": [
+        {
+          "file": "cave/scree-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "small stones and grit sliding and trickling down a rock slope somewhere in the cave, then settling, echoing, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 5.01551,
+          "seed": null,
+          "cost": 0.009,
+          "native_loop": false,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:24",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "cave/scree1.mp3"
+      ]
+    },
+    "cave/bats": {
+      "area": "cave",
+      "loop": false,
+      "variants": [
+        {
+          "file": "cave/bats-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a few bats waking and fluttering their wings past overhead, soft leathery flapping and faint high chirps, echoing, natural limestone cave deep inside a mountain at night, realistic field recording, no music, no voices",
+          "duration": 5.01551,
+          "seed": null,
+          "cost": 0.009,
+          "native_loop": false,
+          "generated": "2026-10-20T00:00",
+          "bakeoff": "bake-off 2026-10-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/cave"
+        }
+      ],
+      "last_converted": "2026-10-20T14:47:24",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "cave/bats1.mp3"
+      ]
     }
   }
 }

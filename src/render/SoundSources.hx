@@ -138,6 +138,14 @@ class SoundSources
     'sewer/knock' => -10.0,
     'sewer/rumble' => -10.0,
     'sewer/surge' => -10.0,
+    'cave/passage' => -4.0,
+    'cave/chamber' => -4.0,
+    'cave/mouth' => -4.0,
+    'cave/seep' => -4.0,
+    'cave/hum' => -4.0,
+    'cave/drip' => -10.0,
+    'cave/scree' => -10.0,
+    'cave/bats' => -10.0,
   ];
   // the volume each kind played last frame, 0..100 of the sound manager's scale
   public static var vol:Map<String, Float> = [];

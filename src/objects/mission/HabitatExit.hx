@@ -47,7 +47,9 @@ class HabitatExit extends AreaObject
   override function onAction(action: _PlayerAction): Bool
     {
       var ret = game.playerArea.leaveAreaAction(action);
-      if (ret)
+      // a cave mouth plays nothing: its takes were cut on the user's ear (docs/sound-gen.md)
+      if (ret &&
+          name != 'cave mouth')
         game.scene.sounds.play('object-sewers');
       return ret;
     }
