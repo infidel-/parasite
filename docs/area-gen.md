@@ -656,6 +656,38 @@ area                       bedrock (TILE_LAB_ROCK), generated at exactly 56x32
 3000 seeds: 34.7 machines and 31.7 kinds a level, rooms used entrance 17 / research 24 / storage 31 /
 vat 29 (of 224, the pads' kept ring being most of it) / workshop 21 cells.
 
+### The mountain cave, a habitat that is not a sewer
+
+`make gen args="--type cave"`. A habitat built on a MOUNTAIN region tile (`PlayerRegion.canHaveHabitat`:
+inhabited areas as before, plus `AREA_GROUND` in `Terrain.TERRAIN_MOUNTAIN`; plains and forest never) is
+`AreaGame.isCave()` — derived from the parent, nothing saved — and is generated as a natural cave
+instead of a tunnel. Every other habitat is unchanged.
+
+```
+area                       24x18 (CaveGen.WIDTH/HEIGHT; AreaGame.generate resizes caves first)
+└ cave                     cellular automata: 46% rock, 4 passes "rock if >=5 in 3x3 or <=2 in 5x5",
+  │                        2 passes ">=5 in 3x3"; regions under 6 cells filled, the rest joined to
+  │                        the main one by 2-wide L carves; nubs filled, diagonal-only contacts opened
+  ├ chamber x<=4           3x3 all-floor seeds scored by 5x5 floor, grown to <=7 -> generatorInfo.rooms
+  └ caveMouth x2           backed by a 3-rock run on N/W/E (never S), floor both sides; the second
+                           farthest from the first by walk, >= 6 apart -> HabitatExit 'cave mouth'
+```
+
+| file | what it is |
+|---|---|
+| `gen/cave/CaveGen.hx` | `build()`, every roll through `ctx`, up to 40 tries for a floor band of 38-58% |
+| `gen/cave/CaveField.hx` | the blurred floor field the 3D outline is cut from (render.cave.CaveGeom), here so the oracle can assert it |
+| `gen/SewerShell.hx` | the sewer tile finalize, shared: a cave keeps the sewer ids (floor 901, walls 910-921), so walkability, the minimap and the 2D tileset read it unchanged |
+| `game/CaveAreaGenerator.hx` | the live adapter |
+
+- **`GenCheck.caveSane`**: sewer ids only, border solid, no nubs, no diagonal-only contacts, one
+  region, floor band, two valid mouths at least `MOUTH_APART` apart, chambers valid and unoverlapping —
+  and the 3D shell's invariant: the field stays above ISO everywhere on a walkable cell (nobody is
+  drawn under rock) and under it at every rock cell's centre. That check is a MUTATION-tested one:
+  `CaveField.LUMP_OUT` 0.14 fails 658 cells over 200 seeds.
+
+3000 seeds OK, 1.51 tries a level.
+
 ### The one permitted `gen/` → `game/` edge
 
 `gen/facility/` imports `game.AreaGenerator`'s pure static grid helpers — `drawBlock`, `drawChunk`,

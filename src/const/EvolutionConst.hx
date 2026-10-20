@@ -742,7 +742,7 @@ class EvolutionConst
         type: TYPE_SPECIAL,
         id: IMP_MICROHABITAT,
         name: 'Microhabitat',
-        note: 'Knowledge. Better understanding of the urban sewage system gives the parasite an ability to build microhabitats.',
+        note: 'Knowledge. Better understanding of the urban sewage system gives the parasite an ability to build microhabitats. The natural caves of the mountains will serve as well.',
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
           return "Maximum number of microhabitats: " + l.numHabitats +
