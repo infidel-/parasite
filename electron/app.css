@@ -1488,6 +1488,10 @@ hr {
   color: var(--dim);
   opacity: 0.6;
 }
+.hud-team-mark.neutral {
+  color: var(--dim);
+  opacity: 0.3;
+}
 .hud-team-mark.pulse svg {
   animation: hud-team-pulse 2.2s ease-in-out infinite;
 }

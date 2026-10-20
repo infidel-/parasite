@@ -14,7 +14,9 @@ class Group extends _SaveObject
 
   public var priority: Float; // group priority (0-100%)
   public var difficulty: _Difficulty; // difficulty setting
+  public var isNeutralized: Bool; // parasite file closed: no new teams until the priority climbs back
   static inline var TEAM_VERY_CLOSE = 10.0; // team distance under which the hud group mark pulses and warns
+  static inline var REOPEN_PRIORITY = 100.0; // priority at which a neutralized group reopens the file
 
   public function new(g: Game)
     {
@@ -33,6 +35,7 @@ class Group extends _SaveObject
       knownCount = 1 + Std.random(3); // randomized slightly
       isKnown = false;
       difficulty = UNSET;
+      isNeutralized = false;
     }
 
 // called after loading
@@ -53,7 +56,7 @@ class Group extends _SaveObject
       if (difficulty == HARD)
         return 'hard';
       if (team == null)
-        return 'idle';
+        return (isNeutralized ? 'neutral' : 'idle');
       switch (team.state)
         {
           case TEAM_FIGHT, TEAM_BASE_DEFENSE:
@@ -100,7 +103,10 @@ class Group extends _SaveObject
       buf.add('<table class="tip-table">');
       row('Group priority', (difficulty == EASY ? '' + Const.round(priority) :
         numToWord(Std.int(priority), 0, 100)));
-      if (team == null)
+      if (team == null &&
+          isNeutralized)
+        row('Team', Const.col('white', 'file closed'));
+      else if (team == null)
         row('Team timeout', (difficulty == EASY ? teamTimeout + 't' :
           numToWord(teamTimeout, 0, 100)));
       else
@@ -156,10 +162,18 @@ class Group extends _SaveObject
       if (game.player.inMissionArea())
         return;
 
-      // team already spawned
+      // team already spawned (a team mid-fight plays out even when neutralized)
       if (team != null)
         {
           team.turn();
+          return;
+        }
+
+      // file closed: no new teams until the priority climbs back
+      if (isNeutralized)
+        {
+          if (priority >= REOPEN_PRIORITY)
+            reopen();
           return;
         }
 
@@ -291,6 +305,42 @@ class Group extends _SaveObject
       game.info('Team destroyed in ambush, timeout: ' + teamTimeout + ' turns');
     }
 
+
+// close the parasite file: no new teams until the priority climbs back to REOPEN_PRIORITY.
+// a team that is fighting or attacking the cult base plays out first (turn() keeps running it)
+  public function neutralize()
+    {
+      isNeutralized = true;
+      changeOnlyPriority(-priority);
+      if (team != null &&
+          (team.state == TEAM_SEARCH ||
+           team.state == TEAM_AMBUSH))
+        team = null;
+      game.info('Group neutralized');
+    }
+
+// the priority climbed back: the group reopens the parasite file
+  function reopen()
+    {
+      isNeutralized = false;
+      teamTimeout = 50;
+      game.message({
+        text: 'They have reopened my file. The Group is hunting me again.',
+        img: 'pedia/group',
+        col: 'alert'
+      });
+    }
+
+// blackops loadout level when there is no team to take it from (director guards)
+  public function guardLevel(): Int
+    {
+      return switch (difficulty)
+        {
+          case EASY: 2;
+          case HARD: 4;
+          default: 3;
+        };
+    }
 
 // on brain probing the event NPC
   public function brainProbe()

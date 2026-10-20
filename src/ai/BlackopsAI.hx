@@ -19,8 +19,10 @@ class BlackopsAI extends HumanAI
       if (Std.random(100) < 50)
         addTraitFromGroup('skill');
       var bonusStat = 1;
-      // team level changes loadout
-      if (game.group.team.level == 1)
+      // team level changes loadout (director guards spawn with no team)
+      var level = (game.group.team != null ? game.group.team.level :
+        game.group.guardLevel());
+      if (level == 1)
         {
           inventory.addID(
             Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
@@ -30,7 +32,7 @@ class BlackopsAI extends HumanAI
           inventory.addID('kevlarArmor', true);
         }
 
-      else if (game.group.team.level == 2)
+      else if (level == 2)
         {
           inventory.addID(
             Std.random(100) < 75 ? 'assaultRifle' : 'combatShotgun');
@@ -42,7 +44,7 @@ class BlackopsAI extends HumanAI
             true);
         }
 
-      else if (game.group.team.level == 3)
+      else if (level == 3)
         {
           bonusStat = 2;
           if (Std.random(100) < 75)
@@ -57,7 +59,7 @@ class BlackopsAI extends HumanAI
             true);
         }
 
-      else if (game.group.team.level == 4)
+      else if (level == 4)
         {
           bonusStat = 3;
           if (Std.random(100) < 50)
