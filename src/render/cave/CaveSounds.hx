@@ -57,7 +57,7 @@ class CaveSounds
           key: 'cave/scree',
           range: 8,
           gap: 60,
-          cells: cells[mdl.caveRubble].concat(exits),
+          cells: cells[CaveStyle.RUBBLE].concat(exits),
         },
       ]);
       far = [

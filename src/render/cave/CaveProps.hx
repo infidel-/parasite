@@ -7,6 +7,7 @@ import render.Models;
 import render.cave.CaveStyle.CaveLight;
 import render.cave.CaveStyle.CaveProp;
 import render.cave.CaveStyle.CavePropSpot;
+import render.cave.CaveStyle.CaveStoneKind;
 import render.sewer.SewerModel;
 import render.sewer.SewerModel.Sewer;
 import render.sewer.SewerProps;
@@ -33,7 +34,8 @@ typedef CaveGlow = {
 // own wall by walking the field and stands off THAT, then steps out until its whole footprint clears
 // the rock (a corner rounds off, a lumpy wall comes forward across a wide prop) or is dropped.
 //
-// pure decoration, like the sewer's: no AreaObject behind it, one instanced batch per glb
+// pure decoration, like the sewer's: no AreaObject behind it, one instanced batch per glb (a rubble
+// pile is dealt as one prop and drawn as a random heap of separate stones, batched per stone)
 class CaveProps
 {
   static inline var CELL = CityConfig.CELL;
@@ -49,36 +51,124 @@ class CaveProps
   // points round a footprint ellipse that clear() tests against the rock
   static inline var FOOT_SAMPLES = 16;
 
-// scatter, then batch: one InstancedMesh per glb
+// scatter, then batch: one InstancedMesh per glb, and one per stone for every pile's heap
   public static function build(scene:Scene, m:Sewer):Void
     {
       var models = CaveStyle.PROP_MODELS;
       var places = places(m);
+      var stones:Array<Array<Models.PropPlace>> = [for (_ in CaveStyle.STONES) []];
       // ponytail: no per-frame cull, for render.sewer.SewerProps' reason (a static level's handful)
       for (i in 0...models.length)
         {
+          if (models[i].pile == true)
+            {
+              for (p in places[i])
+                pile(p, models[i], stones);
+              continue;
+            }
           // a cave dealt none of a piece builds no batch (a cave from before the pools has no basin)
           if (places[i].length == 0)
             continue;
-          var path = models[i].path;
-          var prop = Models.instanced(scene, path, places[i], models[i].h, SOLID);
-          Models.get(path, function(_) patch(path, prop.mesh));
+          batch(scene, models[i].path, places[i], models[i].h);
         }
+      for (i in 0...stones.length)
+        if (stones[i].length > 0)
+          batch(scene, CaveStyle.STONES[i].path, stones[i], CaveStyle.STONES[i].h);
+    }
+
+// one glb's InstancedMesh, patched once it lands
+  static function batch(scene:Scene, path:String, places:Array<Models.PropPlace>, h:Float):Void
+    {
+      var prop = Models.instanced(scene, path, places, h, SOLID);
+      Models.get(path, function(_) patch(path, h, prop.mesh));
     }
 
 // the patches a dressing batch draws with: the pools' water surface first, then the shading (the
-// crystals' shimmer and glints with it), then the vision mask over both. shared with
-// render.cave.CaveWarm, so the warm compiles the same programs
-  public static function patch(path:String, mesh:InstancedMesh):Void
+// crystals' shimmer and glints with it; `h` is the height it is drawn at), then the vision mask over
+// both. shared with render.cave.CaveWarm, so the warm compiles the same programs
+  public static function patch(path:String, h:Float, mesh:InstancedMesh):Void
     {
       if (path == render.RenderConfig.MODELS.caveRimstone)
         CaveWater.patch(mesh.material);
-      var h = 0.0;
-      for (mdl in CaveStyle.PROP_MODELS)
-        if (mdl.path == path)
-          h = mdl.h;
       CaveShade.patch(mesh.material, h, path == render.RenderConfig.MODELS.caveCrystals);
       VisionMask.patchMesh(mesh);
+    }
+
+// heap one rubble pile's stones off its placement (asked for: the one baked pile "looks repetitive,
+// split up into separate stones and use them in random combinations"): one to three big stones along
+// the wall, often a slab laid across two of them or tipped flat in front of a lone one, and chunks
+// strewn round their feet, every stone its own yaw and scale (and render.cave.CaveShade its own value,
+// off its own position). all of it inside the footprint place() cleared, rolled off the pile's
+// position, so a cave heaps the same piles on every entry
+  static function pile(p:Models.PropPlace, mdl:CaveProp, out:Array<Array<Models.PropPlace>>):Void
+    {
+      var hw = mdl.w * mdl.h * p.scale;
+      var hd = mdl.r * mdl.h * p.scale;
+      var cs = Math.cos(p.yaw);
+      var sn = Math.sin(p.yaw);
+      var r = SewerModel.mix((Std.int(p.x * 64) * 73856093) ^ (Std.int(p.z * 64) * 19349663));
+      function roll():Float
+        {
+          r = SewerModel.mix(r);
+          return (r % 10007) / 10007.0;
+        }
+      // a roll across a scale band
+      function band(lo:Float, hi:Float):Float
+        return lo + (hi - lo) * roll();
+      // one stone of `kind` at (lx, lz) in the pile's frame, local +z out from the wall as place()
+      // turns it; answers its top's height
+      function put(kind:CaveStoneKind, lx:Float, lz:Float, y:Float, scale:Float, pitch:Float,
+          yaw:Float):Float
+        {
+          var pick = [for (i in 0...CaveStyle.STONES.length) if (CaveStyle.STONES[i].kind == kind) i];
+          var i = pick[Std.int(roll() * pick.length)];
+          out[i].push({
+            x: p.x + lx * cs + lz * sn,
+            z: p.z - lx * sn + lz * cs,
+            y: y,
+            yaw: yaw,
+            scale: scale,
+            pitch: pitch,
+          });
+          return CaveStyle.STONES[i].h * scale;
+        }
+
+      // the big stones, each in its own share of the width, set back toward the wall
+      var n = 1 + Std.int(roll() * CaveStyle.PILE_BIG_MAX);
+      var xs = [];
+      var tops = [];
+      for (k in 0...n)
+        {
+          var lx = ((2 * k + 1) / n - 1 + (roll() - 0.5) * 0.5 / n) * CaveStyle.PILE_BIG_X * hw;
+          var s = p.scale * band(CaveStyle.PILE_BIG_LO, CaveStyle.PILE_BIG_HI);
+          xs.push(lx);
+          tops.push(put(BIG, lx, CaveStyle.PILE_BIG_Z * hd, 0, s, 0, roll() * 2 * Math.PI));
+        }
+
+      // a slab: across the first two big stones (its long axis is its own x, laid along the wall's),
+      // or tipped flat in front of a lone one
+      if (roll() * 100 < CaveStyle.PILE_SLAB_PCT)
+        {
+          var s = p.scale * band(CaveStyle.PILE_SLAB_LO, CaveStyle.PILE_SLAB_HI);
+          var tip = (roll() * 2 - 1) * CaveStyle.PILE_TIP;
+          if (n >= 2)
+            put(SLAB, (xs[0] + xs[1]) / 2, CaveStyle.PILE_BIG_Z * hd,
+              Math.min(tops[0], tops[1]) * CaveStyle.PILE_SLAB_LIFT, s, tip, p.yaw + tip);
+          else
+            put(SLAB, (roll() - 0.5) * 0.6 * hw, 0.35 * hd, 0, s, tip, roll() * 2 * Math.PI);
+        }
+
+      // the chunks, round the front of the heap and tucked in at its ends, outside the big stones
+      var c = CaveStyle.PILE_CHUNK_MIN +
+        Std.int(roll() * (CaveStyle.PILE_CHUNK_MAX - CaveStyle.PILE_CHUNK_MIN + 1));
+      for (_ in 0...c)
+        {
+          var a = -0.3 + roll() * (Math.PI + 0.6);
+          var d = 0.45 + 0.45 * Math.sqrt(roll());
+          var s = p.scale * band(CaveStyle.PILE_CHUNK_LO, CaveStyle.PILE_CHUNK_HI);
+          put(CHUNK, Math.cos(a) * d * hw, Math.sin(a) * d * hd, -CaveStyle.PILE_SINK, s,
+            (roll() * 2 - 1) * CaveStyle.PILE_CHUNK_TIP, roll() * 2 * Math.PI);
+        }
     }
 
 // the glowing pieces, off the same deal build() draws: one per crystal cluster and fungus patch
@@ -391,11 +481,25 @@ class CaveProps
       return false;
     }
 
+// how far the cave-mouth arch on an exit cell stands off the cell centre along the way into the cave
+// (negative: toward the rock), so its back meets the wall foot, which lies a lumpy distance past the
+// cell edge (foot()), in the wall render.cave.CaveArea.objYaw turns it to. render.world.ObjModels
+// stands it there and render.cave.CaveMouthGlow lights its opening
+  public static function mouthOff(m:Sewer, col:Int, row:Int):Float
+    {
+      if (!SewerModel.exitWalled(m, col, row))
+        return 0.0;
+      var d = (!SewerModel.isFloor(m, col, row - 1) ? 0 :
+        !SewerModel.isFloor(m, col - 1, row) ? 2 : 3);
+      var f = foot(m, col, row, d, col + 0.5, row + 0.5);
+      var reach = Math.abs(f - (d == 0 ? row + 0.5 : col + 0.5)) * CELL;
+      return -(reach - CaveStyle.MOUTH_DEPTH / 2);
+    }
+
 // the wall foot behind face `d` of a cell, in cells along that face's axis: walk from the cell edge
 // into the neighbour until the field falls under ISO. the oracle (gen.GenCheck.caveSane) asserts a
-// rock cell's centre is always under it, so the walk ends within half a cell. public for
-// render.cave.CaveArea.objWall, which stands the exit arch off the same foot
-  public static function foot(m:Sewer, col:Int, row:Int, d:Int, u:Float, v:Float):Float
+// rock cell's centre is always under it, so the walk ends within half a cell
+  static function foot(m:Sewer, col:Int, row:Int, d:Int, u:Float, v:Float):Float
     {
       var isFloor = function(c:Int, r:Int) return SewerModel.isFloor(m, c, r);
       var t = 0.0;

@@ -4443,8 +4443,8 @@
       "last_converted": "2026-10-20T00:48:23Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
-    "cave/rubble": {
-      "src": "cave/cave-rubble.glb",
+    "cave/rubble-boulder": {
+      "src": "cave/cave-rubble-boulder.glb",
       "tris": -1,
       "tex": 512,
       "roughness": 1,
@@ -4454,8 +4454,53 @@
         0.55,
         1
       ],
-      "note": "a tabular slab fallen across two rounded boulders, four angular chunks round them; chipped blobs, ONE CELL PER STONE (the slab pale, the boulders dark, the chunks mixed): the first cut put every chip face on a pale fracture cell and read as a face-by-face patchwork. 682 tris, 2.527 x 1.396 x 1.084. Cells: weathered orange, pale cream, dark rust, mid amber stone. Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py (shared helpers kit/_calcite.py), its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
-      "last_converted": "2026-10-20T13:40:09Z",
+      "note": "a rounded boulder, a near-sphere chipped once and shaded smooth, cut flat at the floor. 176 tris, 0.914 x 0.854 x 0.687. Cell BL, dark rust stone. Hand-modelled off models-src/cave/cave_build.py + kit/rubble.py (shared helpers kit/_calcite.py), one of the four stones kit/rubble.py builds, all on rubble's PACK4 sheet textures-src/cave/props/rubble.png painted by edit_image off rubble-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). They were one baked pile (a slab across two boulders, four chunks) that repeated stone for stone; render.cave.CaveProps.pile now heaps them at random (asked for). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T15:25:30Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
+    },
+    "cave/rubble-block": {
+      "src": "cave/cave-rubble-block.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "an angular block, a squared blob chipped three times and flat-shaded, cut flat at the floor. 150 tris, 0.994 x 0.850 x 0.611. Cell BR, mid amber stone. Hand-modelled off models-src/cave/cave_build.py + kit/rubble.py (shared helpers kit/_calcite.py), one of the four stones kit/rubble.py builds, all on rubble's PACK4 sheet textures-src/cave/props/rubble.png painted by edit_image off rubble-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). They were one baked pile (a slab across two boulders, four chunks) that repeated stone for stone; render.cave.CaveProps.pile now heaps them at random (asked for). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T15:25:30Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
+    },
+    "cave/rubble-slab": {
+      "src": "cave/cave-rubble-slab.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "a tabular slab, a squared tablet chipped round its edges. 110 tris, 2.067 x 0.820 x 0.258. Cell TR, pale cream stone. Hand-modelled off models-src/cave/cave_build.py + kit/rubble.py (shared helpers kit/_calcite.py), one of the four stones kit/rubble.py builds, all on rubble's PACK4 sheet textures-src/cave/props/rubble.png painted by edit_image off rubble-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). They were one baked pile (a slab across two boulders, four chunks) that repeated stone for stone; render.cave.CaveProps.pile now heaps them at random (asked for). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T15:25:30Z",
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
+    },
+    "cave/rubble-chunk": {
+      "src": "cave/cave-rubble-chunk.glb",
+      "tris": -1,
+      "tex": 512,
+      "roughness": 1,
+      "baseColor": [
+        0.55,
+        0.55,
+        0.55,
+        1
+      ],
+      "note": "a small angular chunk, flat-shaded. 70 tris, 0.339 x 0.280 x 0.202. Cell TL, weathered orange stone. Hand-modelled off models-src/cave/cave_build.py + kit/rubble.py (shared helpers kit/_calcite.py), one of the four stones kit/rubble.py builds, all on rubble's PACK4 sheet textures-src/cave/props/rubble.png painted by edit_image off rubble-ref.png and levelled per cell onto the cave shell's values (floor ~57 / wall ~81 / rock top ~96 sRGB). They were one baked pile (a slab across two boulders, four chunks) that repeated stone for stone; render.cave.CaveProps.pile now heaps them at random (asked for). buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
+      "last_converted": "2026-10-20T15:25:30Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cave/rimstone": {
@@ -4534,7 +4579,7 @@
         1
       ],
       "note": "the cave-mouth exit: fifteen boulders (two stacked pillars, a lintel set back, two corbels rounding the arch, shoulder, flank and lip stones) and eight scree stones, each cut at the floor and at its own back plane; a closed near-black navy plate for the opening and a wedge ramp with a ragged lip running up into it. Lintel back and plate forward so the hole shows at the game camera's pitch. 2,436 tris, 3.717 x 1.552 x 2.919, back at +y. Cells: ochre limestone, weathered limestone (faces turned up), scree desaturated to 0.45 fading to slate blue up the ramp, its foot faded into a crop of textures-src/cave/floor.png at the ramp's texel scale so the slope runs out onto the floor, the opening's navy (left at 16.6 so it stays a hole). Hand-modelled off models-src/cave/cave_build.py + kit/<name>.py, its own PACK4 sheet textures-src/cave/props/<name>.png painted by edit_image off <name>-ref.png and levelled per cell (flat RGB scalar, then a saturation pull about luma) onto the cave shell's values. Every face UV'd at one density: buildlib.check 0 holes / 0 coplanar / 1 island, texel_off 0, every closed shell's signed volume positive. baseColor 0.55 (asked for: all the dressing darker); no lift/sat; roughness 1 keeps it on the Lambert path.",
-      "last_converted": "2026-10-20T13:40:09Z",
+      "last_converted": "2026-10-20T15:36:13Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     }
   }

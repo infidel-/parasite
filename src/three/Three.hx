@@ -411,7 +411,7 @@ typedef RendererInfo = {
 @:native("THREE.Mesh") extern class Mesh extends Object3D {
   public function new(geo:Dynamic, mat:Dynamic);
 }
-// one screen-facing square per vertex, size in world units with sizeAttenuation: render.cave.CaveBeams'
+// one screen-facing square per vertex, size in world units with sizeAttenuation: render.cave.CaveMouthGlow's
 // dust in the moonlight
 @:native("THREE.Points") extern class Points extends Object3D {
   public function new(geo:Dynamic, mat:Dynamic);

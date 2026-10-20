@@ -25,7 +25,9 @@ class CaveWarm
           var place = [{ x: 0.0, z: 0.0, yaw: 0.0 }];
           var C = RenderConfig.OBJMARK;
           var objModels = [for (m in render.world.ObjModels.MODELS) if (m.unmasked != true) m];
-          var wallProps = CaveStyle.PROP_MODELS;
+          // every dressing glb at the height it is drawn at: the pieces, and a pile's stones for it
+          var wallProps = [for (p in CaveStyle.PROP_MODELS) if (p.pile != true) { path: p.path, h: p.h }]
+            .concat([for (s in CaveStyle.STONES) { path: s.path, h: s.h }]);
           var left = objModels.length + wallProps.length;
           var done = function()
             {
@@ -52,7 +54,7 @@ class CaveWarm
               var p = wallProps[i];
               render.Models.get(p.path, function(_)
                 {
-                  CaveProps.patch(p.path, render.Models.instanced(sc, p.path, place, p.h, SOLID).mesh);
+                  CaveProps.patch(p.path, p.h, render.Models.instanced(sc, p.path, place, p.h, SOLID).mesh);
                   done();
                 });
             }

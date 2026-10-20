@@ -1,7 +1,6 @@
 package render.cave;
 
 import three.Three;
-import citygen.CityConfig;
 import game.Game;
 import render.Area3D;
 import render.Area3DTickOpts;
@@ -91,18 +90,11 @@ class CaveArea implements Area3D
         }
     }
 
-// how far a WALL-yawed prop steps back from its cell centre toward the rock: the cave-mouth arch,
-// whose back has to meet the wall foot, which lies a lumpy distance past the cell edge
-// (render.cave.CaveProps.foot), in the wall objYaw turned it to
+// how far a WALL-yawed prop steps back from its cell centre toward the rock: the cave-mouth arch
+// (render.cave.CaveProps.mouthOff)
   function objWall(col:Int, row:Int):Float
     {
-      if (!SewerModel.exitWalled(model, col, row))
-        return 0.0;
-      var d = (!SewerModel.isFloor(model, col, row - 1) ? 0 :
-        !SewerModel.isFloor(model, col - 1, row) ? 2 : 3);
-      var f = CaveProps.foot(model, col, row, d, col + 0.5, row + 0.5);
-      var reach = Math.abs(f - (d == 0 ? row + 0.5 : col + 0.5)) * CityConfig.CELL;
-      return -(reach - CaveStyle.MOUTH_DEPTH / 2);
+      return CaveProps.mouthOff(model, col, row);
     }
 
 // rebuild the prop batches after an object was added to or removed from the cave being shown (an
@@ -134,7 +126,7 @@ class CaveArea implements Area3D
       // the same reason
       CaveWater.tick(opts.dtMs);
       CaveShade.tick(opts.dtMs);
-      CaveBeams.tick(opts.dtMs);
+      CaveMouthGlow.tick(opts.dtMs);
       for (b in props)
         render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       if (opts.outro)

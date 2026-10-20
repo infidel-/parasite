@@ -753,7 +753,10 @@ class RenderConfig {
     caveExit: 'models/cave/mouth.glb',              // the cave mouth: boulder arch over a scree slope
     caveStalagmites: 'models/cave/stalagmites.glb', // drip-ringed cones off one calcite base
     caveFlowstone: 'models/cave/flowstone.glb',     // fluted floor-to-roof column
-    caveRubble: 'models/cave/rubble.glb',           // a slab fallen onto two boulders
+    caveBoulder: 'models/cave/rubble-boulder.glb',  // a rubble pile's rounded boulder (CaveProps.pile)
+    caveBlock: 'models/cave/rubble-block.glb',      // its angular block
+    caveSlab: 'models/cave/rubble-slab.glb',        // its tabular slab
+    caveChunk: 'models/cave/rubble-chunk.glb',      // and its small broken chunks
     caveRimstone: 'models/cave/rimstone.glb',       // two-terrace calcite basin of still water
     caveCrystals: 'models/cave/crystals.glb',       // glowing prisms off a rock base
     caveFungus: 'models/cave/fungus.glb',           // glowing cap mushrooms off a root lump

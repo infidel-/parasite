@@ -1871,6 +1871,8 @@ any strength that keeps its colour.
 
 ## Mountain cave lighting pass: glow lights in the idle spot slots, baked glow, moonbeams, per-piece shading, crystal glints, blocked pools
 
+> the moonbeams SUPERSEDED by Mountain cave rubble piles, mouth glow and the arch fade order
+
 Asked for as "we lack any interesting lighting... the stones are all uniform", plus four fixes.
 
 - **Why uniform, computed off the rig:** ambient 0x4e4d4a x7.0 is 0.52 on every face; hemi x3.0 adds 0.37 up,
@@ -1903,5 +1905,37 @@ the brightest texels hit 214/243/253, white. The diffuse cut plus emissive 0.9-1
 patch hit null and blanked the area. Empty batches are skipped.
 **Trap 6:** the cave scene holds TWO ambients (the debug full-bright one at pi, hidden); a fill A/B by
 `isAmbientLight` alone edited the wrong one.
+
+**Verdict:** landed.
+
+## Mountain cave rubble piles, mouth glow and the arch fade order
+
+Four asks: rubble "looks repetitive", moss under a crust decal, the moonbeam "detached from the actual
+mouth" (make the mouth the source: glow quads on its edges, dust, fake actor shadows), and the arch going
+see-through "in stages" with a bare dark rectangle.
+
+- **Rubble piles** (`CaveProps.pile`, `kit/rubble.py`): the baked pile is now four stone glbs on its sheet
+  (boulder 176, block 150, slab 110, chunk 70 tris). The rubble entry is dealt as before (`pile: true`, its
+  old r/w as the footprint) and heaped from a hash of its position: 1-3 big stones along the wall at -0.5
+  depth, 65% a slab (across two big ones at 0.85 of the lower top, else tipped in front), 2-6 chunks round
+  the front at random pitch. `CaveShade` values each stone off its own origin. This cave: 9 boulders, 4
+  blocks, 3 slabs, 26 chunks over 6 piles.
+- **Moss under crust** (`CaveGeom.decals`): the two `SewerGround.scatter` passes roll the SAME block hash,
+  so where both reach a block they lay on one spot. The first pass now skips cells within MOSS_REACH + 1
+  of a mouth (an organic decal spills half a cell). Quad-bbox overlaps with moss, live: 0.
+- **Mouth glow** (`CaveMouthGlow`, was `CaveBeams`): an additive card across the hole, rim band 1.0,
+  middle 0.3, a 0.6 halo fading out, `GLOW_ALPHA` 0.16; dust leaves the hole and fans/sinks 3.5 into the
+  cave. The mouth `LampPost` gets `beam` 16: long fake shadows into the cave, cone-gated.
+- **Arch fade** (`kit/mouth.py`): GHOST draws with `depthWrite` off, so triangles blend in index order,
+  and the plate and ramp were appended last. Now sorted first; at t 0.16 the boulders stay over the hole.
+
+**Measured:** +3 calls bound (4 stone batches for 1; card for shell); HUD 37-41 calls; warm 109 vs
+live 114, the same five.
+
+**Trap 1:** sorting on the face tag `== -1` changed nothing: `tile_uv` marks the rocks' faces -1 too.
+Sort on membership in the set of faces made before `plate()`.
+**Trap 2:** behind the boulders (0.1 behind the arch centre) the card lit only the cut-out hole and read
+as a flat blue panel. In front of them (-0.25) the halo lies on their faces. A side view still shows it as a sheet.
+**Trap 3:** `beam` 10 reaches from the post, 2 units behind the mouth, so the shadows died a cell out.
 
 **Verdict:** landed.

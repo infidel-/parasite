@@ -150,7 +150,7 @@ class CaveGeom
       add(scene, walls, CaveStyle.WALL, true, glows);
       CavePatches.build(scene, m, glows);
       decals(scene, m);
-      CaveBeams.build(scene, m);
+      CaveMouthGlow.build(scene, m);
     }
 
 // push one vertex's colour: its value `c`, lit by every glowing piece in reach (asked for: "we lack any
@@ -192,10 +192,22 @@ class CaveGeom
     }
 
 // the floor decals, here rather than in CaveArea so the warm (render.cave.CaveWarm, which runs this
-// builder) compiles their program too: grime, crust and fungus over the whole floor, moss only near
-// the mouths. the sewer floor's scatter, which reads nothing but the floor/room grid
+// builder) compiles their program too: guano, crust and fungus over the floor, moss near the mouths.
+// the sewer floor's scatter, which reads nothing but the floor/room grid
   static function decals(scene:Scene, m:Sewer):Void
     {
+      // is (col, row) within `reach` cells of a mouth, either axis?
+      function mouth(col:Int, row:Int, reach:Int):Bool
+        {
+          for (l in m.lamps)
+            if (Math.abs(l.col - col) <= reach &&
+                Math.abs(l.row - row) <= reach)
+              return true;
+          return false;
+        }
+      // the two scatters roll the SAME block hash, so wherever both reach a block they lay their decal
+      // on the same spot, the crust stacked on the moss (asked for). the first keeps a cell clear of
+      // the moss's reach, and of the half cell an organic decal spills past its own cell
       render.sewer.SewerGround.scatter(scene, m, {
         types: [
           {
@@ -225,6 +237,7 @@ class CaveGeom
         margin: 0.2,
         solid: false,
         cross: true,
+        near: function(col, row) return !mouth(col, row, CaveStyle.MOSS_REACH + 1),
       });
       render.sewer.SewerGround.scatter(scene, m, {
         types: [
@@ -241,14 +254,7 @@ class CaveGeom
         margin: 0.2,
         solid: false,
         cross: true,
-        near: function(col, row)
-          {
-            for (l in m.lamps)
-              if (Math.abs(l.col - col) <= CaveStyle.MOSS_REACH &&
-                  Math.abs(l.row - row) <= CaveStyle.MOSS_REACH)
-                return true;
-            return false;
-          },
+        near: function(col, row) return mouth(col, row, CaveStyle.MOSS_REACH),
       });
     }
 
