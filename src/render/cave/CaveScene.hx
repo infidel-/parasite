@@ -11,8 +11,8 @@ import render.sewer.SewerModel.Sewer;
 
 // the scene + light rig for the mountain cave. like the tunnels, no sky, no moon and no shadow box:
 // a near-black background, fog that closes in within a few cells and fill that IS the frame. unlike
-// them there are no manholes and no wall brackets — the only shaped light is the night coming in at
-// each cave mouth, plus whatever the habitat's grown organs give off.
+// them there are no manholes and no wall brackets — the shaped light is the night coming in at each
+// cave mouth, the glowing crystals and fungus, and whatever the habitat's grown organs give off.
 //
 // CRITICAL, as in render.sewer.SewerScene: the spotlight pool and the point-light pools must match
 // the city's counts exactly, because NUM_SPOT_LIGHTS / NUM_POINT_LIGHTS are in every lit material's
@@ -34,13 +34,11 @@ class CaveScene
           scene.add(l);
           return l;
         }
-      // the fill carries the frame down here, normal-blind ambient first so the walls stay legible
-      // against the floor. swept live in a generated cave against the cave art's built values (floor
-      // 0.0445, wall 0.0929, rock top 0.1286 linear): the tunnels' 3.95 / 1.89 left the floor near
-      // black, and their blue pair turned the warm silt purple — a neutral ambient and a barely cool
-      // sky keep it earth-coloured
-      var ambient = add(new AmbientLight(0x4e4d4a, 7.0));
-      var hemi = add(new HemisphereLight(0x5c6272, 0x1c1814, 3.0));
+      // the fill, normal-blind ambient first so the walls stay legible against the floor. the tunnels'
+      // 3.95 / 1.89 left the floor near black and their blue pair turned the warm silt purple — a
+      // neutral ambient and a barely cool sky keep it earth-coloured. the levels are CaveStyle's
+      var ambient = add(new AmbientLight(CaveStyle.AMBIENT, CaveStyle.AMBIENT_I));
+      var hemi = add(new HemisphereLight(CaveStyle.HEMI_SKY, CaveStyle.HEMI_GROUND, CaveStyle.HEMI_I));
 
       // one light per cave mouth: moonlight from behind the mouth, over the rock, aimed a few metres
       // into the cave so it pools on the floor in front of the opening
@@ -63,6 +61,31 @@ class CaveScene
             phase: 0.0,
             flick: 1.0,
             mul: CaveStyle.MOUTH_MUL,
+          });
+        }
+      // and one per glowing piece, hung over and in front of it and aimed back down at its foot, so
+      // its light pools round it, climbs the rock behind and throws the piece's own shadow up that
+      // rock (asked for: "we lack any interesting lighting"). aimed OUT from the crown, the first
+      // cut, it landed as a disc of light two units off the piece, a torch beam and not a glow. the
+      // pool's idle slots: no new light, nothing recompiles
+      for (g in CaveProps.glows(m))
+        {
+          var x = g.x + g.dx * CaveStyle.LIGHT_OUT;
+          var z = g.z + g.dz * CaveStyle.LIGHT_OUT;
+          var c = CityConfig.worldToCell(x, z);
+          lampPosts.push({
+            x: x,
+            z: z,
+            y: g.top * CaveStyle.LIGHT_Y,
+            tx: g.x + g.dx * CaveStyle.LIGHT_AIM,
+            tz: g.z + g.dz * CaveStyle.LIGHT_AIM,
+            color: g.light.color,
+            col: c.col,
+            row: c.row,
+            phase: 0.0,
+            flick: 1.0,
+            mul: g.light.mul,
+            penumbra: CaveStyle.LIGHT_PENUMBRA,
           });
         }
       // no visible light cones down here (nothing hangs overhead), but the bundle carries a steady

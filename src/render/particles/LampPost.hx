@@ -30,4 +30,8 @@ typedef LampPost = {
   // null = the round pool about x/z every other post throws, which for a beam high on a wall stopped
   // well short of the floor its light lands on
   ?beam:Float,
+  // the spotlight's soft edge, 0..1, over RenderConfig.LAMP_LIGHT.penumbra. null = the pool's. a glow
+  // with no fixture (render.cave.CaveScene's crystals and fungus) wants nearly all edge, or its light
+  // lands as a torch's disc
+  ?penumbra:Float,
 };

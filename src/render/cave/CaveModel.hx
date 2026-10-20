@@ -17,7 +17,16 @@ class CaveModel
       var m = blank(area.width, area.height);
       for (y in 0...area.height)
         for (x in 0...area.width)
-          m.floor[y][x] = (area.getCellType(x, y) == Sewers.TILE_FLOOR);
+          {
+            var t = area.getCellType(x, y);
+            m.floor[y][x] = (t == Sewers.TILE_FLOOR ||
+              t == Sewers.TILE_FLOOR_POOL);
+            if (t == Sewers.TILE_FLOOR_POOL)
+              m.pools.push({
+                col: x,
+                row: y,
+              });
+          }
       if (area.generatorInfo != null &&
           area.generatorInfo.rooms != null)
         for (r in area.generatorInfo.rooms)
@@ -46,12 +55,13 @@ class CaveModel
         floor: [for (_ in 0...h) [for (_ in 0...w) false]],
         room: [for (_ in 0...h) [for (_ in 0...w) false]],
         lamps: [],
+        pools: [],
       };
     }
 
 // a throwaway cave for the shader pre-warm (render.cave.CaveWarm): a chamber, a passage off it and a
 // pillar, so every surface the real builder makes — floor, wall, rock top — gets built once, with one
-// mouth so the mouth light is in the pool
+// mouth so the mouth light is in the pool and one pool cell so the basin is dressed
   public static function demo():Sewer
     {
       var m = blank(16, 12);
@@ -62,6 +72,10 @@ class CaveModel
         for (y in 5...7)
           m.floor[y][x] = true;
       m.floor[5][5] = false;
+      m.pools.push({
+        col: 7,
+        row: 2,
+      });
       m.lamps.push({
         col: 5,
         row: 2,

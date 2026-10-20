@@ -3,6 +3,7 @@ package render.cave;
 import three.Three;
 import citygen.CityConfig;
 import render.Textures;
+import render.cave.CaveProps.CaveGlow;
 import render.sewer.SewerModel;
 import render.sewer.SewerModel.Sewer;
 import render.world.VisionMask;
@@ -39,6 +40,8 @@ private typedef CavePt = {
 class CaveGeom
 {
   static inline var CELL = CityConfig.CELL;
+  // each glow colour in linear light, once (glow() runs per vertex)
+  static var linear = new Map<Int, Color>();
 
 // build every cave surface into the scene
   public static function build(scene:Scene, m:Sewer):Void
@@ -141,11 +144,51 @@ class CaveGeom
       for (loop in loops(next, at))
         wall(walls, loop, half);
 
-      add(scene, floor, CaveStyle.FLOOR, false);
-      add(scene, top, CaveStyle.ROCKTOP, false);
-      add(scene, walls, CaveStyle.WALL, true);
-      CavePatches.build(scene, m);
+      var glows = CaveProps.glows(m);
+      add(scene, floor, CaveStyle.FLOOR, false, glows);
+      add(scene, top, CaveStyle.ROCKTOP, false, glows);
+      add(scene, walls, CaveStyle.WALL, true, glows);
+      CavePatches.build(scene, m, glows);
       decals(scene, m);
+      CaveBeams.build(scene, m);
+    }
+
+// push one vertex's colour: its value `c`, lit by every glowing piece in reach (asked for: "we lack any
+// interesting lighting"). the pooled spotlights (render.cave.CaveScene) give the near light, its
+// direction and its shadows, but only while the player is near and the pool is on; this is the wide,
+// soft spill, baked: a falloff over GLOW_R, keyed on the face's normal (wrapped, so a face turned away
+// still takes a little), in the light's own colour. no draw call, no program, every light setting
+  public static function glow(glows:Array<CaveGlow>, x:Float, y:Float, z:Float, nx:Float, ny:Float,
+      nz:Float, c:Float, col:Array<Float>):Void
+    {
+      var r = 1.0;
+      var g = 1.0;
+      var b = 1.0;
+      for (s in glows)
+        {
+          var lx = s.x - x;
+          var ly = s.top * CaveStyle.GLOW_Y - y;
+          var lz = s.z - z;
+          var d = Math.sqrt(lx * lx + ly * ly + lz * lz);
+          if (d >= CaveStyle.GLOW_R)
+            continue;
+          var ndl = (d > 0 ? (nx * lx + ny * ly + nz * lz) / d : 1.0);
+          var wrap = Math.max(0, (ndl + CaveStyle.GLOW_WRAP) / (1 + CaveStyle.GLOW_WRAP));
+          var fall = (1 - d / CaveStyle.GLOW_R) * (1 - d / CaveStyle.GLOW_R);
+          var k = s.light.glow * fall * wrap;
+          var lc = linear.get(s.light.color);
+          if (lc == null)
+            {
+              lc = new Color(s.light.color);
+              linear.set(s.light.color, lc);
+            }
+          r += lc.r * k;
+          g += lc.g * k;
+          b += lc.b * k;
+        }
+      col.push(c * r);
+      col.push(c * g);
+      col.push(c * b);
     }
 
 // the floor decals, here rather than in CaveArea so the warm (render.cave.CaveWarm, which runs this
@@ -419,18 +462,24 @@ class CaveGeom
       };
     }
 
-// turn one buffer into a single lit mesh: Lambert with the vertex tint, FrontSide (every face is wound
-// toward the camera side it is seen from), vision-masked
-  static function add(scene:Scene, b:CaveBuf, tex:String, casts:Bool):Void
+// turn one buffer into a single lit mesh: Lambert with the vertex tint and the baked glow over it,
+// FrontSide (every face is wound toward the camera side it is seen from), vision-masked
+  static function add(scene:Scene, b:CaveBuf, tex:String, casts:Bool, glows:Array<CaveGlow>):Void
     {
       if (b.idx.length == 0)
         return;
       var geo = new BufferGeometry();
       geo.setAttribute('position', new Float32BufferAttribute(b.pos, 3));
       geo.setAttribute('uv', new Float32BufferAttribute(b.uv, 2));
-      geo.setAttribute('color', new Float32BufferAttribute(b.col, 3));
       geo.setIndex(b.idx);
       geo.computeVertexNormals();
+      // the glow wants the welded normals, so the colour goes on after them
+      var nor:Array<Float> = untyped geo.getAttribute('normal').array;
+      var col = [];
+      for (i in 0...Std.int(b.pos.length / 3))
+        glow(glows, b.pos[i * 3], b.pos[i * 3 + 1], b.pos[i * 3 + 2], nor[i * 3], nor[i * 3 + 1],
+          nor[i * 3 + 2], b.col[i * 3], col);
+      geo.setAttribute('color', new Float32BufferAttribute(col, 3));
       var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         side: THREE.FrontSide,

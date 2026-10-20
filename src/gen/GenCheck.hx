@@ -1480,13 +1480,17 @@ class GenCheck
 // ids (gen.SewerShell; tiles.Default's walkable table cannot read them, so the generic checks above do
 // not apply), a solid border, one walkable region, none of the shapes the shell cannot draw (a floor
 // nub with rock on three sides, two floor cells touching only at a corner), the floor share in its
-// band, exactly two cave mouths that can stand where they are, far enough apart, and chambers that
-// are all floor, big enough and apart
+// band, exactly two cave mouths that can stand where they are, far enough apart, pools against a
+// straight wall and clear of the mouths (the walkable region is counted with them blocked), and
+// chambers that are all floor, big enough and apart
   public function caveSane(ctx: GenCtx, state: gen.cave._CaveState)
     {
       var w = ctx.width;
       var h = ctx.height;
-      var floor = [for (x in 0...w) [for (y in 0...h) ctx.cells[x][y] == tiles.Sewers.TILE_FLOOR]];
+      // the shell's floor takes the pools in; walking does not
+      var floor = [for (x in 0...w) [for (y in 0...h) ctx.cells[x][y] == tiles.Sewers.TILE_FLOOR ||
+        ctx.cells[x][y] == tiles.Sewers.TILE_FLOOR_POOL]];
+      var walk = [for (x in 0...w) [for (y in 0...h) ctx.cells[x][y] == tiles.Sewers.TILE_FLOOR]];
       for (x in 0...w)
         for (y in 0...h)
           {
@@ -1507,7 +1511,7 @@ class GenCheck
           ok(!((floor[x][y] && floor[x + 1][y + 1] && !floor[x + 1][y] && !floor[x][y + 1]) ||
             (floor[x + 1][y] && floor[x][y + 1] && !floor[x][y] && !floor[x + 1][y + 1])),
             'cave floor touching only at a corner at ' + x + ',' + y);
-      var regions = gen.cave.CaveGen.regions(floor, w, h);
+      var regions = gen.cave.CaveGen.regions(walk, w, h);
       ok(regions.length == 1, 'cave has ' + regions.length + ' walkable regions');
       var pct = gen.cave.CaveGen.floorPct(floor, w, h);
       ok(pct >= gen.cave.CaveGen.FLOOR_MIN &&
@@ -1551,6 +1555,22 @@ class GenCheck
           var d = gen.cave.CaveGen.walkDistances(floor, w, h, mouths[0].x, mouths[0].y);
           ok(d[mouths[1].x][mouths[1].y] >= gen.cave.CaveGen.MOUTH_APART,
             'cave mouths only ' + d[mouths[1].x][mouths[1].y] + ' apart on foot');
+        }
+
+      // the pools: each against a straight rock run north, west or east, clear of both mouths
+      var pools = [for (x in 0...w) for (y in 0...h) if (ctx.cells[x][y] == tiles.Sewers.TILE_FLOOR_POOL) {
+        x: x,
+        y: y,
+      }];
+      ok(pools.length <= gen.cave.CaveGen.POOLS, 'cave has ' + pools.length + ' pools');
+      for (p in pools)
+        {
+          ok(gen.cave.CaveGen.mouthSide(floor, p.x, p.y) >= 0,
+            'cave pool at ' + p.x + ',' + p.y + ' has no straight rock run north, west or east');
+          ok(!gen.cave.CaveGen.nearMouth([for (m in mouths) {
+            x: m.x,
+            y: m.y,
+          }], p.x, p.y), 'cave pool at ' + p.x + ',' + p.y + ' beside a mouth');
         }
 
       // the chambers

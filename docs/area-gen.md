@@ -669,24 +669,32 @@ area                       24x18 (CaveGen.WIDTH/HEIGHT; AreaGame.generate resize
   │                        2 passes ">=5 in 3x3"; regions under 6 cells filled, the rest joined to
   │                        the main one by 2-wide L carves; nubs filled, diagonal-only contacts opened
   ├ chamber x<=4           3x3 all-floor seeds scored by 5x5 floor, grown to <=7 -> generatorInfo.rooms
-  └ caveMouth x2           backed by a 3-rock run on N/W/E (never S), floor both sides; the second
-                           farthest from the first by walk, >= 6 apart -> HabitatExit 'cave mouth'
+  ├ caveMouth x2           backed by a 3-rock run on N/W/E (never S), floor both sides; the second
+  │                        farthest from the first by walk, >= 6 apart -> HabitatExit 'cave mouth'
+  └ pool x<=2              a mouth's own spot test, >1 cell from either mouth, >= 5 apart, kept only
+                           if the walkable floor stays one region -> Sewers.TILE_FLOOR_POOL (902)
 ```
+
+A pool cell is floor to the 3D shell and to sight but not walkable: the rimstone basin the renderer lays
+on it (`render.cave.CaveProps`, never dealt off the deck) fills most of the cell, and an actor stood in
+it when it was decoration on open floor. It is the one gameplay fact a cave's dressing has, so it is
+the generator's call and persists in the cells; a cave generated before the pools has none.
 
 | file | what it is |
 |---|---|
 | `gen/cave/CaveGen.hx` | `build()`, every roll through `ctx`, up to 40 tries for a floor band of 38-58% |
 | `gen/cave/CaveField.hx` | the blurred floor field the 3D outline is cut from (render.cave.CaveGeom), here so the oracle can assert it |
-| `gen/SewerShell.hx` | the sewer tile finalize, shared: a cave keeps the sewer ids (floor 901, walls 910-921), so walkability, the minimap and the 2D tileset read it unchanged |
+| `gen/SewerShell.hx` | the sewer tile finalize, shared: a cave keeps the sewer ids (floor 901, walls 910-921, plus its own pool 902), so walkability, the minimap and the 2D tileset read it unchanged |
 | `game/CaveAreaGenerator.hx` | the live adapter |
 
 - **`GenCheck.caveSane`**: sewer ids only, border solid, no nubs, no diagonal-only contacts, one
-  region, floor band, two valid mouths at least `MOUTH_APART` apart, chambers valid and unoverlapping —
+  region with the pools blocked, floor band, two valid mouths at least `MOUTH_APART` apart, pools on a
+  mouth-valid spot and clear of the mouths, chambers valid and unoverlapping —
   and the 3D shell's invariant: the field stays above ISO everywhere on a walkable cell (nobody is
   drawn under rock) and under it at every rock cell's centre. That check is a MUTATION-tested one:
   `CaveField.LUMP_OUT` 0.14 fails 658 cells over 200 seeds.
 
-3000 seeds OK, 1.51 tries a level.
+3000 seeds OK, 1.51 tries a level; with the pools, 2000 seeds OK and every cave gets both.
 
 ### The one permitted `gen/` → `game/` edge
 

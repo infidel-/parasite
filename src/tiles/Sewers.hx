@@ -23,6 +23,9 @@ class Sewers extends Tileset
   public static var DEBRIS_LAYER_ID = 2; // splat layer id persisted in sewer saves
   public static var TILE_FLOOR = 901;
   public static var TILE_FLOOR_ALT = 900;
+  // a mountain cave's rimstone pool (gen.cave.CaveGen.pools): floor to the shell and to sight, but the
+  // basin fills most of the cell, so nobody walks it
+  public static var TILE_FLOOR_POOL = 902;
   public static var TILE_WALL_UPPER = 910;
   public static var TILE_WALL_LOWER = 911;
   public static var TILE_WALL_LEFT = 912;
@@ -41,6 +44,7 @@ class Sewers extends Tileset
     {
       return (tileID == TILE_FLOOR ||
         tileID == TILE_FLOOR_ALT ||
+        tileID == TILE_FLOOR_POOL ||
         tileID == TILE_WALL_UPPER ||
         tileID == TILE_WALL_LOWER ||
         tileID == TILE_WALL_LEFT ||
@@ -73,7 +77,8 @@ class Sewers extends Tileset
   public override function canSeeThrough(tileID: Int): Bool
     {
       return (tileID == TILE_FLOOR ||
-        tileID == TILE_FLOOR_ALT);
+        tileID == TILE_FLOOR_ALT ||
+        tileID == TILE_FLOOR_POOL);
     }
 
 // check if sewer tile id is a wall tile

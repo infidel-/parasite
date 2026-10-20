@@ -5,6 +5,7 @@ import citygen.CityConfig;
 import gen.cave.CaveField;
 import render.Textures;
 import render.Poly.tag;
+import render.cave.CaveProps.CaveGlow;
 import render.cave.CaveStyle.CavePatch;
 import render.sewer.SewerModel;
 import render.sewer.SewerModel.Sewer;
@@ -26,19 +27,19 @@ class CavePatches
   // the baked masks, freed by the next build (render.wild.WildPatches.masks' reason)
   static var masks:Array<Texture> = [];
 
-// emit every patch layer, bottom first
-  public static function build(scene:Scene, m:Sewer):Void
+// emit every patch layer, bottom first, lit by the glows the floor under it takes
+  public static function build(scene:Scene, m:Sewer, glows:Array<CaveGlow>):Void
     {
       for (t in masks)
         t.dispose();
       masks = [];
       var layers = CaveStyle.PATCHES;
       for (i in 0...layers.length)
-        layer(scene, m, layers[i], i);
+        layer(scene, m, layers[i], i, glows);
     }
 
 // one layer: pick its floor cells, bake its mask, emit its quads
-  static function layer(scene:Scene, m:Sewer, p:CavePatch, i:Int):Void
+  static function layer(scene:Scene, m:Sewer, p:CavePatch, i:Int, glows:Array<CaveGlow>):Void
     {
       // a seed marks itself plus whichever of its four neighbours the spare bits of its hash pick, so
       // it grows into a 1-5 cell clump (render.wild.WildPatches' pass 1)
@@ -82,14 +83,14 @@ class CavePatches
         side: THREE.FrontSide,
       }),
         'cave-patch', 'cave floor patch', p.tex));
-      emit(scene, mat, m, taken, CaveStyle.PATCH_Y * (i + 1));
+      emit(scene, mat, m, taken, CaveStyle.PATCH_Y * (i + 1), glows);
     }
 
 // the layer's quads over every cell that is marked OR touches a marked one (the apron the blob rounds
 // off into; the part of it under the rock is hidden by the rock), each cell split on the field lattice
-// so the wall-foot darkening is sampled where the floor itself samples it
+// so the wall-foot darkening and the glow are sampled where the floor itself samples them
   static function emit(scene:Scene, mat:MeshLambertMaterial, m:Sewer, taken:Array<Array<Bool>>,
-      y:Float):Void
+      y:Float, glows:Array<CaveGlow>):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var s = CaveField.SAMPLES;
@@ -124,9 +125,7 @@ class CavePatches
                       uv.push(x / CaveStyle.PATCH_TILE);
                       uv.push(z / CaveStyle.PATCH_TILE);
                       var c = CaveGeom.floorShade(u, v, CaveField.field(isFloor, u, v) - CaveField.ISO);
-                      colr.push(c);
-                      colr.push(c);
-                      colr.push(c);
+                      CaveGeom.glow(glows, x, y, z, 0, 1, 0, c, colr);
                     }
                   idx.push(base);
                   idx.push(base + 2);

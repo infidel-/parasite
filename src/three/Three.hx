@@ -58,6 +58,9 @@ package three;
   public function unproject(cam:Object3D):Vector3; // NDC -> world (inverse of project); used for cursor->ground picking
   public function lerp(v:Vector3, a:Float):Vector3;
   public function lerpVectors(a:Vector3, b:Vector3, t:Float):Vector3;
+  public function clone():Vector3;           // a new vector with this one's components
+  public function sub(v:Vector3):Vector3;    // subtract v in place, returns this
+  public function cross(v:Vector3):Vector3;  // this = this x v in place, returns this
 }
 
 // a 4-component vector. here for UNIFORM ARRAYS more than for maths: three binds an array of these
@@ -407,6 +410,14 @@ typedef RendererInfo = {
 
 @:native("THREE.Mesh") extern class Mesh extends Object3D {
   public function new(geo:Dynamic, mat:Dynamic);
+}
+// one screen-facing square per vertex, size in world units with sizeAttenuation: render.cave.CaveBeams'
+// dust in the moonlight
+@:native("THREE.Points") extern class Points extends Object3D {
+  public function new(geo:Dynamic, mat:Dynamic);
+}
+@:native("THREE.PointsMaterial") extern class PointsMaterial {
+  public function new(params:Dynamic);
 }
 @:native("THREE.InstancedMesh") extern class InstancedMesh extends Object3D {
   public function new(geo:Dynamic, mat:Dynamic, count:Int);

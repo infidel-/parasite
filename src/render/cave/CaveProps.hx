@@ -4,6 +4,7 @@ import three.Three;
 import citygen.CityConfig;
 import gen.cave.CaveField;
 import render.Models;
+import render.cave.CaveStyle.CaveLight;
 import render.cave.CaveStyle.CaveProp;
 import render.cave.CaveStyle.CavePropSpot;
 import render.sewer.SewerModel;
@@ -11,8 +12,21 @@ import render.sewer.SewerModel.Sewer;
 import render.sewer.SewerProps;
 import render.world.VisionMask;
 
+// one glowing piece: what render.cave.CaveScene hangs its pooled spotlight off and render.cave.CaveGeom
+// bakes its glow from
+typedef CaveGlow = {
+  x:Float,          // world position of the piece
+  z:Float,
+  top:Float,        // its crown, world units over the floor
+  dx:Float,         // the way it faces, unit, in xz
+  dz:Float,
+  light:CaveLight,  // its row's light
+}
+
 // the cave's dressing — stalagmites, flowstone, fallen rock, rimstone pools, crystals, fungus and root
-// curtains — dealt against the wall foot. render.sewer.SewerProps' idiom (per 2x2 block, gated per
+// curtains — dealt against the wall foot. a rimstone basin is not dealt: it lies on each pool cell the
+// generator blocked to walking (gen.cave.CaveGen.pools), since it fills most of a cell and an actor
+// stood in it. render.sewer.SewerProps' idiom (per 2x2 block, gated per
 // eligible wall face, dealt from a deck so a run cannot repeat, never the camera-side face, never next
 // to an exit) with one difference that is the cave's: the wall is not on the cell edge. the outline
 // sits wherever gen.cave.CaveField crosses ISO, a lumpy distance into the rock, so each prop finds its
@@ -43,19 +57,55 @@ class CaveProps
       // ponytail: no per-frame cull, for render.sewer.SewerProps' reason (a static level's handful)
       for (i in 0...models.length)
         {
+          // a cave dealt none of a piece builds no batch (a cave from before the pools has no basin)
+          if (places[i].length == 0)
+            continue;
           var path = models[i].path;
           var prop = Models.instanced(scene, path, places[i], models[i].h, SOLID);
           Models.get(path, function(_) patch(path, prop.mesh));
         }
     }
 
-// the patches a dressing batch draws with: the pools' water surface first, then the vision mask over
-// it. shared with render.cave.CaveWarm, so the warm compiles the same programs
+// the patches a dressing batch draws with: the pools' water surface first, then the shading (the
+// crystals' shimmer and glints with it), then the vision mask over both. shared with
+// render.cave.CaveWarm, so the warm compiles the same programs
   public static function patch(path:String, mesh:InstancedMesh):Void
     {
       if (path == render.RenderConfig.MODELS.caveRimstone)
         CaveWater.patch(mesh.material);
+      var h = 0.0;
+      for (mdl in CaveStyle.PROP_MODELS)
+        if (mdl.path == path)
+          h = mdl.h;
+      CaveShade.patch(mesh.material, h, path == render.RenderConfig.MODELS.caveCrystals);
       VisionMask.patchMesh(mesh);
+    }
+
+// the glowing pieces, off the same deal build() draws: one per crystal cluster and fungus patch
+  public static function glows(m:Sewer):Array<CaveGlow>
+    {
+      var models = CaveStyle.PROP_MODELS;
+      var places = places(m);
+      var out = [];
+      for (i in 0...models.length)
+        {
+          var mdl = models[i];
+          if (mdl.light == null)
+            continue;
+          for (p in places[i])
+            {
+              // the prop's local +z faces (nx, nz), and its yaw is atan2 of that (see place())
+              out.push({
+                x: p.x,
+                z: p.z,
+                top: mdl.h * p.scale,
+                dx: Math.sin(p.yaw),
+                dz: Math.cos(p.yaw),
+                light: mdl.light,
+              });
+            }
+        }
+      return out;
     }
 
 // the scatter itself: one placement list per PROP_MODELS entry, readable without a scene —
@@ -64,7 +114,19 @@ class CaveProps
     {
       var models = CaveStyle.PROP_MODELS;
       var places:Array<Array<Models.PropPlace>> = [for (_ in models) []];
-      var decks:Array<Array<Int>> = [[], [], []];
+      var decks:Array<Array<Int>> = [[], [], [], []];
+      // the basins first, each against the first of its north, west and east walls that is rock (the
+      // generator's straight run of it)
+      var pool = 0;
+      while (models[pool].spot != POOL)
+        pool++;
+      for (c in m.pools)
+        {
+          var dir = (!SewerModel.isFloor(m, c.col, c.row - 1) ? 0 :
+            !SewerModel.isFloor(m, c.col - 1, c.row) ? 2 : 3);
+          var h = SewerModel.mix((c.col * 73856093) ^ (c.row * 19349663));
+          places[pool].push(place(m, c.col, c.row, dir, -1, models[pool], h));
+        }
       for (brow in 0...Std.int((m.h + 1) / 2))
         for (bcol in 0...Std.int((m.w + 1) / 2))
           {
@@ -81,6 +143,7 @@ class CaveProps
                   var col = bc + dc;
                   var row = br + dr;
                   if (!SewerModel.isFloor(m, col, row) ||
+                      isPool(m, col, row) ||
                       SewerProps.nearExit(m, col, row))
                     continue;
                   for (dir in 0...4)
@@ -136,6 +199,16 @@ class CaveProps
       return places;
     }
 
+// is (col, row) one of the cave's pool cells?
+  static function isPool(m:Sewer, col:Int, row:Int):Bool
+    {
+      for (c in m.pools)
+        if (c.col == col &&
+            c.row == row)
+          return true;
+      return false;
+    }
+
 // is this a floor cell with rock to its north and no exit beside it — a cell a root curtain may hang
 // over? a curtain is wider than its cell, so it is dealt only where the face runs on into a neighbour
   static function northFace(m:Sewer, col:Int, row:Int):Bool
@@ -180,11 +253,14 @@ class CaveProps
       h:Int):Models.PropPlace
     {
       var half = (CityConfig.GRID * CELL) / 2;
-      var scale = CaveStyle.PROP_SCALE_LO +
-        (CaveStyle.PROP_SCALE_HI - CaveStyle.PROP_SCALE_LO) * ((h >> 5) % 1001) / 1000.0;
+      var sLo = (mdl.spot == POOL ? CaveStyle.POOL_SCALE_LO : CaveStyle.PROP_SCALE_LO);
+      var sHi = (mdl.spot == POOL ? CaveStyle.POOL_SCALE_HI : CaveStyle.PROP_SCALE_HI);
+      var scale = sLo + (sHi - sLo) * ((h >> 5) % 1001) / 1000.0;
       var off = mdl.r * mdl.h * scale * (1 - CaveStyle.PROP_TUCK);
-      // the cell centre, slid along a flat wall (a corner pins both axes, so it does not slide)
-      var slide = (perp < 0 ? (((h >> 11) % 2001) / 1000.0 - 1.0) * CaveStyle.PROP_SLIDE / CELL : 0.0);
+      // the cell centre, slid along a flat wall (a corner pins both axes, so it does not slide, and a
+      // basin owns its cell, so it stays centred in it)
+      var slide = (perp < 0 &&
+        mdl.spot != POOL ? (((h >> 11) % 2001) / 1000.0 - 1.0) * CaveStyle.PROP_SLIDE / CELL : 0.0);
       var u = col + 0.5 + (dir < 2 ? slide : 0.0);
       var v = row + 0.5 + (dir < 2 ? 0.0 : slide);
       // a curtain hangs inside its run of north face, clear of the rounded corners at both ends: one
@@ -258,12 +334,23 @@ class CaveProps
           p.y = CaveGeom.topY(footU, footV, 0) - mdl.h * scale - CaveStyle.HANG_TUCK;
           return p;
         }
-      return (clear(m, p, mdl, nx, nz) ? p : null);
+      var x = p.x;
+      var z = p.z;
+      if (clear(m, p, mdl, nx, nz))
+        return p;
+      if (mdl.spot != POOL)
+        return null;
+      // a basin is always drawn: it is what blocks its cell. the generator only picks a cell backed by
+      // a straight run of rock, so what stopped it is a lump of the wall, never the far side
+      p.x = x;
+      p.z = z;
+      return p;
     }
 
 // step a floor prop out along its facing until its footprint clears the rock: an ellipse of its own
 // half width and half depth at its scale plus PROP_CLEAR, turned with it, every sample of which has
-// to be on the floor side of the outline. false when PROP_PUSH_MAX runs out first
+// to be on the floor side of the outline — and, for anything but the basin, off the pool cells, so
+// nothing stands in one. false when PROP_PUSH_MAX runs out first
   static function clear(m:Sewer, p:Models.PropPlace, mdl:CaveProp, nx:Float, nz:Float):Bool
     {
       var isFloor = function(c:Int, r:Int) return SewerModel.isFloor(m, c, r);
@@ -285,7 +372,11 @@ class CaveProps
               // the prop's local x and z turned by its yaw, as three turns it (local +z faces (nx, nz))
               var x = p.x + lx * cs + lz * sn;
               var z = p.z - lx * sn + lz * cs;
-              if (CaveField.field(isFloor, (x + half) / CELL, (z + half) / CELL) < CaveField.ISO)
+              var u = (x + half) / CELL;
+              var v = (z + half) / CELL;
+              if (CaveField.field(isFloor, u, v) < CaveField.ISO ||
+                  (mdl.spot != POOL &&
+                  isPool(m, Math.floor(u), Math.floor(v))))
                 {
                   hit = true;
                   break;

@@ -12,6 +12,7 @@ package gen.cave;
 
 import gen.GenCtx;
 import gen.SewerShell;
+import tiles.Sewers;
 
 class CaveGen
 {
@@ -36,6 +37,12 @@ class CaveGen
   static inline var MOUTH_DEPTH = 3;
   // re-rolls before the last attempt is kept as it is
   public static inline var MAX_TRIES = 40;
+  // rimstone pools a cave holds at most, the least distance between two of them (cells, both axes
+  // summed), and the cells round a mouth, either axis, kept clear of one (render.sewer.SewerProps
+  // .nearExit's reach)
+  public static inline var POOLS = 2;
+  static inline var POOL_APART = 5;
+  public static inline var POOL_MOUTH = 1;
 
 // build one cave into ctx: the floor, the sewer shell over it, two cave mouths and the chambers
   public static function build(ctx: GenCtx): _CaveState
@@ -70,11 +77,15 @@ class CaveGen
         for (y in 0...h)
           ctx.cells[x][y] = (floor[x][y] ? Const.TILE_WALKWAY : Const.TILE_WALL);
       SewerShell.finalize(ctx.cells, w, h);
+      var pools = pools(ctx, floor, w, h, exits);
+      for (p in pools)
+        ctx.cells[p.x][p.y] = Sewers.TILE_FLOOR_POOL;
       for (e in exits)
         ctx.add('caveMouth', e.x, e.y);
       return {
         rooms: rooms,
         exits: exits,
+        pools: pools,
         tries: tries,
       };
     }
@@ -471,6 +482,55 @@ class CaveGen
             second = s;
           }
       return (second == null ? [ first ] : [ first, second ]);
+    }
+
+// the rimstone pools, blocked to walking: the basin fills most of its cell and an actor stood in it
+// (asked for). a spot is floor backed by a straight rock run north, west or east — a mouth's own test,
+// so the basin lies flat against its wall and the renderer always fits it — clear of both mouths,
+// POOL_APART from the other pools, and kept only if the floor still walks as one region
+  static function pools(ctx: GenCtx, floor: Array<Array<Bool>>, w: Int, h: Int,
+      exits: Array<{ x: Int, y: Int }>): Array<{ x: Int, y: Int }>
+    {
+      var spots = [];
+      for (x in 1...w - 1)
+        for (y in 1...h - 1)
+          if (mouthSide(floor, x, y) >= 0 &&
+              !nearMouth(exits, x, y))
+            spots.push({
+              x: x,
+              y: y,
+            });
+      var walk = [for (x in 0...w) floor[x].copy()];
+      var out: Array<{ x: Int, y: Int }> = [];
+      while (out.length < POOLS &&
+          spots.length > 0)
+        {
+          var s = spots.splice(ctx.random(spots.length), 1)[0];
+          var near = false;
+          for (o in out)
+            if (Math.abs(o.x - s.x) + Math.abs(o.y - s.y) < POOL_APART)
+              near = true;
+          if (near)
+            continue;
+          walk[s.x][s.y] = false;
+          if (regions(walk, w, h).length != 1)
+            {
+              walk[s.x][s.y] = true;
+              continue;
+            }
+          out.push(s);
+        }
+      return out;
+    }
+
+// is x,y within POOL_MOUTH cells of a mouth, either axis? shared with the oracle
+  public static function nearMouth(exits: Array<{ x: Int, y: Int }>, x: Int, y: Int): Bool
+    {
+      for (e in exits)
+        if (Math.abs(e.x - x) <= POOL_MOUTH &&
+            Math.abs(e.y - y) <= POOL_MOUTH)
+          return true;
+      return false;
     }
 
 // which side a cave mouth on x,y backs onto: 0 north, 1 west, 2 east, -1 when it can stand there at

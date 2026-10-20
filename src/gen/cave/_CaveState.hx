@@ -6,6 +6,9 @@ typedef _CaveState = {
   var rooms: Array<_Room>;
   // the two cave mouths (habitat exits), each on floor backed by a straight rock run north, west or east
   var exits: Array<{ x: Int, y: Int }>;
+  // the rimstone pools (Sewers.TILE_FLOOR_POOL), each on floor backed by a straight rock run north,
+  // west or east
+  var pools: Array<{ x: Int, y: Int }>;
   // rolls it took to get an acceptable cave (CaveGen.MAX_TRIES means the last one was kept as it was)
   var tries: Int;
 }

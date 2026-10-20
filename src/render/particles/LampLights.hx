@@ -243,6 +243,8 @@ class LampLights {
               // and the post's own tint: underground the shafts and the wall brackets are different
               // lights sharing one pool, so a slot has to take the colour of whatever it serves now
               lights[i].color.setHex(o.color);
+              // and its own soft edge, where it has one (a plain uniform, like the colour)
+              lights[i].penumbra = (o.penumbra != null ? o.penumbra : RenderConfig.LAMP_LIGHT.penumbra);
               activeList.push(o);
             }
         }

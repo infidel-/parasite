@@ -1868,3 +1868,40 @@ bloom and keep their hue. A blue or violet prism never crosses the 0.9 luminance
 any strength that keeps its colour.
 
 **Verdict:** landed.
+
+## Mountain cave lighting pass: glow lights in the idle spot slots, baked glow, moonbeams, per-piece shading, crystal glints, blocked pools
+
+Asked for as "we lack any interesting lighting... the stones are all uniform", plus four fixes.
+
+- **Why uniform, computed off the rig:** ambient 0x4e4d4a x7.0 is 0.52 on every face; hemi x3.0 adds 0.37 up,
+  0.20 vertical, 0.03 down. Top 0.89 / side 0.72: ambient is 73% of a side face and all four sides match.
+- **Glow lights** (`CaveScene`, `CaveProps.glows`): one `LampPost` per crystal cluster and fungus patch,
+  `LIGHT_OUT` 1.0 in front and `LIGHT_Y` 1.8x the crown, aimed at its foot, `penumbra` 0.6. The pool
+  had 12 slots and the cave used 2, so 13 posts cost no light and no program. `LampPost.penumbra` is new,
+  published per slot as a uniform. **Fill** 7.0 / 3.0 -> 3.5 / 6.0: top/side 1.24 -> ~1.52.
+- **Baked glow** (`CaveGeom.glow`): colour x `glow` x (1-d/5)^2 x wrapped N.L into the shell's and the
+  patches' vertex colours, after `computeVertexNormals`. 0 calls, works with the spot pool off.
+- **Moonbeams** (`CaveBeams`): a slanted open shell from inside each arch to 3.5 in front, additive,
+  fading to black at the floor, plus 18 CPU-drifted `Points` per shaft. +2 calls.
+- **`CaveShade`** on every dressing batch: +/-18% per placement (hash of the instance translation),
+  +/-14% world noise, a foot at 0.55 rising over min(1.2, 0.4h). Crystals add a climbing emissive band, a
+  breath, view-space orbiting glints, and cut 85% of the prisms' diffuse.
+- **Crystals:** blue 0.145 -> 0.298, violet 0.102 -> 0.318 luminance (cyan 0.447); emissive 1.8 -> 1.0;
+  cave bloom threshold 0.9 -> 0.6. **Crust decal** lift 1.65 -> 2.3: 3.08x the floor -> 1.55x.
+- **Pools block walking:** `CaveGen.pools` stamps `TILE_FLOOR_POOL` 902 (see area-gen.md); the basin lies
+  only there at scale 1.25-1.4. The live 18,10 basin had sat 0.58 from a cell centre against a 3.0-wide actor quad.
+
+**Measured:** frame 37-38 calls; warm 109 vs live 114, the same five; 0 failed programs; 2000 cave seeds OK.
+
+**Trap 1:** aimed OUT from the crown 3 units, a glow light landed as a torch disc two units off the piece,
+and at mul 0.15 it added +24% at grazing incidence — invisible. Hung over the piece aiming back at it, it pools.
+**Trap 2:** penumbra 0.9 thinned the whole cone to nothing; 0.6 is soft and still reads.
+**Trap 3:** that spotlight hangs ~1.5 units from prisms whose albedo is 4-5x the floor's, and with ACES
+the brightest texels hit 214/243/253, white. The diffuse cut plus emissive 0.9-1.0 gave 165/219/238.
+**Trap 4:** an absolute 1.2-unit foot blacked out the 0.33-tall basin, hence the share of h.
+**Trap 5:** a cave from before the pools deals no basin, `Models.instanced` builds no mesh, and the
+patch hit null and blanked the area. Empty batches are skipped.
+**Trap 6:** the cave scene holds TWO ambients (the debug full-bright one at pi, hidden); a fill A/B by
+`isAmbientLight` alone edited the wrong one.
+
+**Verdict:** landed.

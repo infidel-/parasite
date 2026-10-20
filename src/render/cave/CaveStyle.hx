@@ -1,12 +1,22 @@
 package render.cave;
 
 // which spots a cave prop may be dealt to (render.cave.CaveProps). the spot PARTITIONS the table, so
-// each of the three must keep at least one entry
+// each of the four must keep at least one entry
 enum CavePropSpot
 {
   FLAT;   // a straight run of wall foot
   CORNER; // the angle of two walls
   HANG;   // hung down a NORTH face (the one the camera looks at) from the rock top's lip
+  POOL;   // a pool cell the generator blocked (tiles.Sewers.TILE_FLOOR_POOL): one each, never dealt
+}
+
+// the light a glowing dressing piece throws: one pooled spotlight in front of its crown
+// (render.cave.CaveScene) and the same glow baked into the shell round it (render.cave.CaveGeom)
+typedef CaveLight = {
+  color:Int,          // PALE, the glow's hue washed toward white: a saturated light tints the rock
+                      // instead of lighting it (docs/3d-render.md, the biomineral's 0x8fe3b0)
+  mul:Float,          // the spotlight's share of a street lamp (RenderConfig.LAMP_LIGHT.intensity)
+  glow:Float,         // the baked glow at the piece, a multiple of the shell's own value
 }
 
 // one entry of CaveStyle.PROP_MODELS: a dressing glb and the numbers that are its own (see
@@ -18,6 +28,7 @@ typedef CaveProp = {
                       // its native height, measured off the baked glb
   w:Float,            // half its WIDTH (glTF x) over its native height, measured the same way
   spot:CavePropSpot,  // which spots deal it
+  ?light:CaveLight,   // the glowing pieces' light; the rest throw none
 }
 
 // one ground-patch layer of render.cave.CavePatches
@@ -120,14 +131,69 @@ class CaveStyle
   public static inline var WATER_GLINT_MUL = 0.9;
   public static inline var WATER_BAND = 0.5;     // the shallow band's share of the glint
 
+  // --- the dressing's own shading (render.cave.CaveShade), folded into its materials ---
+  public static inline var SHADE_JIT = 0.18;        // +/- albedo per placement, hashed off its position
+  public static inline var SHADE_NOISE = 0.14;      // +/- smooth world-space noise, so the stones of one pile part
+  public static inline var SHADE_NOISE_SCALE = 1.1; // noise cells per world unit: about a stone
+  public static inline var SHADE_FOOT = 0.55;       // albedo where a piece meets the floor
+  public static inline var SHADE_RISE = 1.2;        // world units over which it climbs back to full,
+  public static inline var SHADE_RISE_H = 0.4;      // or this share of the piece's height if less
+  // the crystals: a band of light climbing through the cluster, a breath under it, and glints
+  public static inline var CRYSTAL_BAND_RATE = 0.025;   // rises per BASE_MS: one every ~6 s
+  public static inline var CRYSTAL_BAND_H = 2.0;        // world units the band climbs, foot to above the tips
+  public static inline var CRYSTAL_BAND_W = 0.3;        // world units, the band's half width
+  public static inline var CRYSTAL_BAND_AMP = 0.9;      // emissive boost at the band's middle
+  public static inline var CRYSTAL_BREATHE = 0.15;      // +/- emissive, slow
+  public static inline var CRYSTAL_BREATHE_RATE = 0.24; // radians per BASE_MS: ~4 s a breath
+  // the glint's virtual light circles the eye in view space at 0.1-1.0 of a radian off it, so it
+  // sweeps every facet within ~25 degrees of facing the camera, one at a time
+  public static inline var GLINT_RATE = 0.19;   // radians per BASE_MS: ~5 s a turn
+  public static inline var GLINT_EDGE = 0.985;  // cos of the glint's half-width: a wink, not a sheen
+  public static inline var GLINT = 0xdfe8ff;    // the glint's colour at full, before the facet's own tint
+  public static inline var GLINT_MUL = 1.6;     // over the bloom threshold: a wink blooms
+  public static inline var CRYSTAL_DIFFUSE_CUT = 0.85; // share of the prisms' diffuse taken away (CaveShade)
+
+  // --- the glowing dressing's light (render.cave.CaveScene posts, render.cave.CaveGeom bake) ---
+  public static inline var LIGHT_Y = 1.8;       // the spotlight's height, a multiple of the piece's crown
+  public static inline var LIGHT_OUT = 1.0;     // world units in front of the piece it hangs
+  public static inline var LIGHT_AIM = 0.4;     // and in front of it the beam lands, on the floor
+  public static inline var LIGHT_PENUMBRA = 0.6; // mostly soft edge: a glow, not a torch's disc (0.9 thinned
+                                                 // the whole cone to nothing)
+  public static inline var GLOW_Y = 0.6;        // the baked glow's source height, a share of the crown
+  public static inline var GLOW_R = 5.0;        // world units the baked glow reaches
+  public static inline var GLOW_WRAP = 0.3;     // the share of it a face turned away still takes
+
+  // --- the moonlight shafts down the mouths (render.cave.CaveBeams) ---
+  public static inline var BEAM_BACK = 1.6;     // world units behind the mouth cell's centre the shaft starts
+  public static inline var BEAM_REACH = 3.5;    // and in front of it where it lands, inside the spot's pool
+  public static inline var BEAM_TOP_Y = 2.2;    // its top's height: inside the arch
+  public static inline var BEAM_TOP_R = 0.6;    // its radius there
+  public static inline var BEAM_BOT_R = 1.5;    // and where it lands
+  public static inline var BEAM_ALPHA = 0.05;   // additive strength at the top; nothing at the floor
+  public static inline var BEAM_SEG = 16;       // radial segments
+  public static inline var MOTES = 18;          // drifting dust specks per shaft
+  public static inline var MOTE_SIZE = 0.1;     // world units
+  public static inline var MOTE_RATE = 0.004;   // shaft lengths a speck sinks per BASE_MS
+  public static inline var MOTE_MUL = 0.6;      // a speck's brightness at full, times MOUTH_COLOR
+
   // --- the light rig (render.cave.CaveScene) ---
   public static inline var DARK = 0x05060a;   // background + fog, a shade warmer-neutral than the tunnels'
+  // the fill. swept live against the cave art's built values (floor 0.0445, wall 0.0929, rock top
+  // 0.1286 linear) at 7.0 / 3.0, where the normal-blind ambient was 73% of a vertical face's light
+  // and the same on all four sides; brought down so the mouths' and the glows' pooled lights read
+  public static inline var AMBIENT = 0x4e4d4a;
+  public static inline var AMBIENT_I = 3.5;
+  public static inline var HEMI_SKY = 0x5c6272;
+  public static inline var HEMI_GROUND = 0x1c1814;
+  public static inline var HEMI_I = 6.0;
   // moonlight down a cave mouth: cold, and pooled a little way into the cave from the mouth
   public static inline var MOUTH_COLOR = 0x8fa6c8;
   public static inline var MOUTH_REACH = 6.0;  // world units into the cave the beam aims at
   public static inline var MOUTH_BACK = 2.0;   // world units behind the mouth (over the rock) the beam starts
   public static inline var MOUTH_MUL = 0.9;
-  public static inline var BLOOM_THRESHOLD = 0.9;
+  // under the street's 0.9 (asked for: crystal bloom): a blue or violet prism keeps its hue only below
+  // ~0.6 of linear luminance, so at 0.9 only the cyan ones could ever halo
+  public static inline var BLOOM_THRESHOLD = 0.6;
   // the cave-mouth exit's depth in world units as render.world.ObjModels draws it (h 2.9; the glb is
   // 1.552 deep at 2.919 tall): render.cave.CaveArea.objWall stands it off the wall foot by half of it
   public static inline var MOUTH_DEPTH = 1.54;
@@ -149,6 +215,11 @@ class CaveStyle
       r: 0.306,
       w: 0.387,
       spot: CORNER,
+      light: {
+        color: 0xa9c4f2,
+        mul: 0.6,
+        glow: 2.5,
+      },
     },
     {
       path: render.RenderConfig.MODELS.caveFlowstone,
@@ -169,7 +240,7 @@ class CaveStyle
       h: 0.35,
       r: 2.761,
       w: 3.851,
-      spot: FLAT,
+      spot: POOL,
     },
     {
       path: render.RenderConfig.MODELS.caveFungus,
@@ -177,6 +248,11 @@ class CaveStyle
       r: 0.772,
       w: 0.863,
       spot: FLAT,
+      light: {
+        color: 0x9fe6cf,
+        mul: 0.45,
+        glow: 1.8,
+      },
     },
     {
       path: render.RenderConfig.MODELS.caveRoots,
@@ -201,6 +277,10 @@ class CaveStyle
   public static inline var PROP_YAW_JITTER = 0.3;
   public static inline var PROP_SCALE_LO = 0.9;
   public static inline var PROP_SCALE_HI = 1.3;
+  // a basin's own band: it owns the cell it blocks, so it fills most of it (at the dressing's band a
+  // blocked cell showed a basin in one corner and read as an invisible wall)
+  public static inline var POOL_SCALE_LO = 1.25;
+  public static inline var POOL_SCALE_HI = 1.4;
   // how far under the rock top's lip a root curtain's top hangs, so it reads as coming out of the rock
   public static inline var HANG_TUCK = 0.08;
   // the most the north wall's foot may wander across a root curtain's width, in cells: its back is set

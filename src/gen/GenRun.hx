@@ -859,6 +859,7 @@ class GenRun
       if (state.tries >= gen.cave.CaveGen.MAX_TRIES)
         add('triesExhausted', 1);
       add('floorCells', floor);
+      add('pools', state.pools.length);
       add('chambers', state.rooms.length);
       for (r in state.rooms)
         add('chamberCells', r.w * r.h);
@@ -871,7 +872,7 @@ class GenRun
         }
     }
 
-// dump one cave: '#' rock shell, ' ' buried rock, '.' floor, 'c' chamber floor, 'M' a mouth
+// dump one cave: '#' rock shell, ' ' buried rock, '.' floor, 'c' chamber floor, 'o' a pool, 'M' a mouth
   static function printCave(ctx: GenCtx, state: gen.cave._CaveState)
     {
       for (y in 0...ctx.height)
@@ -889,6 +890,7 @@ class GenRun
                   inRoom = true;
               line += (ctx.hasObjectAt(x, y) ? 'M' :
                 t == tiles.Sewers.TILE_FLOOR ? (inRoom ? 'c' : '.') :
+                t == tiles.Sewers.TILE_FLOOR_POOL ? 'o' :
                 t == Const.TILE_HIDDEN ? ' ' : '#');
             }
           log(line);

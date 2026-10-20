@@ -130,8 +130,11 @@ class CaveArea implements Area3D
       render.world.ObjModels.cull(props, opts, tactical && opts.ui);
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
-      // the pools' ripples, above the gate for the same reason
+      // the pools' ripples, the dressing's shimmer and the dust in the moonlight, above the gate for
+      // the same reason
       CaveWater.tick(opts.dtMs);
+      CaveShade.tick(opts.dtMs);
+      CaveBeams.tick(opts.dtMs);
       for (b in props)
         render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
       if (opts.outro)

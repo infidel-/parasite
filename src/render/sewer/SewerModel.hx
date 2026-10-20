@@ -27,6 +27,9 @@ typedef Sewer = {
   room:Array<Array<Bool>>,
   // corridor-node and exit light positions
   lamps:Array<SewerLamp>,
+  // a mountain cave's rimstone pools (tiles.Sewers.TILE_FLOOR_POOL): floor in `floor`, walked by
+  // nobody, each dressed with its basin by render.cave.CaveProps. the tunnels have none
+  ?pools:Array<{ col:Int, row:Int }>,
 };
 
 class SewerModel
