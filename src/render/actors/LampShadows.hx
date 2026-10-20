@@ -268,7 +268,7 @@ class LampShadows {
                 z: lp.z,
                 range: lp.beam,
                 lenMul: L.lenMul * Math.min(L.lowMax, lp.beam / lp.y),
-                op: L.op * Math.min(1.0, lp.mul),
+                op: L.op * (lp.shade != null ? lp.shade : Math.min(1.0, lp.mul)),
                 fade: L.fade,
                 flicker: lp.flick,
                 aimX: ax / ad,

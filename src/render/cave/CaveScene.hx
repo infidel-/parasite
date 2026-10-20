@@ -64,6 +64,7 @@ class CaveScene
             // the actors' fake shadows down the light, long and into the cave (asked for: the mouth
             // as the source); null threw a short round smudge from over the rock behind it
             beam: CaveStyle.MOUTH_BEAM,
+            shade: CaveStyle.MOUTH_SHADE,
           });
         }
       // and one per glowing piece, hung over and in front of it and aimed back down at its foot, so

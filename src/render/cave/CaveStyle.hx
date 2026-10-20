@@ -47,6 +47,8 @@ typedef CaveStone = {
   path:String,          // RenderConfig.MODELS entry
   h:Float,              // its native height off the baked glb: Models.instanced scales to it, so a
                         // stone's scale is the pile's own
+  w:Float,              // its half width at scale 1, off the same glb (a slab's half length)
+  d:Float,              // its half depth at scale 1
   kind:CaveStoneKind,   // its part in the heap
 }
 
@@ -188,24 +190,22 @@ class CaveStyle
   // is about +/- MOUTH_HOLE_W across, from MOUTH_HOLE_Y0 up to MOUTH_HOLE_Y1
   public static inline var MOUTH_PLATE = 0.32;
   public static inline var MOUTH_HOLE_W = 0.62;
-  public static inline var MOUTH_HOLE_Y0 = 0.3;  // under the ramp, which hides the card's bottom edge
+  public static inline var MOUTH_HOLE_Y0 = 0.3;  // under the ramp, which hides the shell's bottom edge
   public static inline var MOUTH_HOLE_Y1 = 2.1;
-  // the glow card stands this far behind the arch's centre: negative, IN FRONT of the boulders, so
-  // the halo lies over their faces round the hole. at 0.1 behind it, the card lit only the hole the
-  // boulders cut it to, and read as a flat blue panel with a hard edge
-  public static inline var GLOW_CARD_BACK = -0.25;
-  public static inline var GLOW_EDGE = 0.3;     // world units in from the hole's edge the rim band runs
-  public static inline var GLOW_HALO = 0.6;     // and out from it the halo fades to nothing over
-  public static inline var GLOW_FILL = 0.3;     // the hole's middle, a share of the rim band
-  public static inline var GLOW_ALPHA = 0.16;   // additive strength at the rim, times MOUTH_COLOR
-  public static inline var MOTES = 18;          // dust specks drifting out of each opening
+  // the light's shell out of the opening (render.LightCone's cone, on its side)
+  public static inline var SHAFT_LEN = 5.0;     // world units into the cave it runs, from the plate
+  public static inline var SHAFT_SPLAY = 2.4;   // its far end's width, a multiple of the hole's
+  public static inline var SHAFT_TOP = 0.6;     // its top's height there: it slopes down off the lintel
+  public static inline var SHAFT_RINGS = 6;     // sections along it, for the fade's curve
+  public static inline var SHAFT_FADE = 1.6;    // the fade along it: (1 - t) to this power
+  public static inline var SHAFT_RAYS = 7;      // columns across each face, each its own brightness, so
+                                                // it reads as rays of light and not as a sheet
+  public static inline var SHAFT_STREAK = 0.35; // a ray's darkest, a share of its brightest
+  public static inline var GLOW_ALPHA = 0.24;   // additive strength at the opening, times MOUTH_COLOR
+  public static inline var MOTES = 18;          // dust specks drifting down each shell
   public static inline var MOTE_SIZE = 0.1;     // world units
   public static inline var MOTE_RATE = 0.004;   // of its path a speck covers per BASE_MS
   public static inline var MOTE_MUL = 0.6;      // a speck's brightness at full, times MOUTH_COLOR
-  public static inline var MOTE_REACH = 3.5;    // world units into the cave a speck drifts
-  public static inline var MOTE_SPREAD = 2.2;   // how far it fans out sideways by then, a multiple of
-                                                // where it left the hole
-  public static inline var MOTE_FLOOR = 0.2;    // the height it has sunk to there
 
   // --- the light rig (render.cave.CaveScene) ---
   public static inline var DARK = 0x05060a;   // background + fog, a shade warmer-neutral than the tunnels'
@@ -223,9 +223,13 @@ class CaveStyle
   public static inline var MOUTH_BACK = 2.0;   // world units behind the mouth (over the rock) the beam starts
   public static inline var MOUTH_MUL = 0.9;
   // world units down the mouth's light the actors' fake shadows reach (render.actors.LampShadows'
-  // aimed beam): long, cast INTO the cave from the opening, and only inside the light's cone. off
-  // the light, MOUTH_BACK behind the mouth: at 10 they faded out a cell in front of the arch
-  public static inline var MOUTH_BEAM = 16.0;
+  // aimed beam): cast INTO the cave from the opening, only inside the light's cone, and out to the far
+  // edge of the third cell, counting the mouth's own (asked for: "stop on the third tile away"; at
+  // 16 they ran a cell further, and at 10, off a light MOUTH_BACK behind the mouth, a cell short)
+  public static inline var MOUTH_BEAM = MOUTH_BACK + 2.5 * citygen.CityConfig.CELL;
+  // and their strength, a share of a lamp's (asked for: "fainter"; at the beam's own 0.9 they were a
+  // street lamp's)
+  public static inline var MOUTH_SHADE = 0.45;
   // under the street's 0.9 (asked for: crystal bloom): a blue or violet prism keeps its hue only below
   // ~0.6 of linear luminance, so at 0.9 only the cyan ones could ever halo
   public static inline var BLOOM_THRESHOLD = 0.6;
@@ -300,38 +304,50 @@ class CaveStyle
   ];
   // the rubble pile's name (PROP_MODELS, render.cave.CaveSounds' settle)
   public static inline var RUBBLE = 'rubble';
-  // the stones a pile is heaped from, heights off the baked glbs
+  // the stones a pile is heaped from, sizes off the baked glbs
   public static var STONES:Array<CaveStone> = [
     {
       path: render.RenderConfig.MODELS.caveBoulder,
       h: 0.687,
+      w: 0.457,
+      d: 0.427,
       kind: BIG,
     },
     {
       path: render.RenderConfig.MODELS.caveBlock,
       h: 0.611,
+      w: 0.497,
+      d: 0.425,
       kind: BIG,
     },
     {
       path: render.RenderConfig.MODELS.caveSlab,
       h: 0.258,
+      w: 1.034,
+      d: 0.41,
       kind: SLAB,
     },
     {
       path: render.RenderConfig.MODELS.caveChunk,
       h: 0.202,
+      w: 0.17,
+      d: 0.14,
       kind: CHUNK,
     },
   ];
   // a pile's heap, in shares of its footprint's half width and half depth and of its scale
   public static inline var PILE_BIG_MAX = 3;       // big stones: one up to this many, along the wall
-  public static inline var PILE_BIG_X = 0.7;       // spread along the wall
+  public static inline var PILE_BIG_X = 0.95;      // the row's widest, a share of the footprint's width
   public static inline var PILE_BIG_Z = -0.5;      // set back toward it, a little into its bulge
   public static inline var PILE_BIG_LO = 0.75;     // scale band
   public static inline var PILE_BIG_HI = 1.25;
+  public static inline var PILE_NEST = 0.92;       // share of two stones' radii they stand apart: under 1
+                                                   // they nestle (asked for: "don't allow them to
+                                                   // intersect so much" when they stood a share of the
+                                                   // width apart whatever their size)
   public static inline var PILE_SLAB_PCT = 65;     // % of piles that carry a slab
-  public static inline var PILE_SLAB_LIFT = 0.85;  // across two big stones: its base at this share of the
-                                                   // lower one's top (at 0.55 it lay buried in them)
+  public static inline var PILE_SLAB_LIFT = 0.94;  // across two big stones: its base at this share of
+                                                   // their (levelled) tops, into their crowns only
   public static inline var PILE_SLAB_LO = 0.5;     // scale band (the slab is 2 units long at 1)
   public static inline var PILE_SLAB_HI = 0.75;
   public static inline var PILE_TIP = 0.15;        // +/- pitch, radians, of a slab
@@ -341,6 +357,7 @@ class CaveStyle
   public static inline var PILE_CHUNK_HI = 1.6;
   public static inline var PILE_CHUNK_TIP = 0.5;   // +/- pitch, radians: a chunk lies however it fell
   public static inline var PILE_SINK = 0.03;       // world units a tipped chunk sinks, so no edge floats
+  public static inline var PILE_TRIES = 6;        // spots a chunk tries before it is left out
   // one floor prop per 2x2 block, gated per eligible wall face (render.sewer.SewerStyle.PROP_PCT's
   // 18 is a tunnel's; a cave's dressing IS the room: at 14 a 24x18 cave dealt six, at 25 eight)
   public static inline var PROP_PCT = 40;

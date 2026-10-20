@@ -95,13 +95,16 @@ class CaveProps
     }
 
 // heap one rubble pile's stones off its placement (asked for: the one baked pile "looks repetitive,
-// split up into separate stones and use them in random combinations"): one to three big stones along
-// the wall, often a slab laid across two of them or tipped flat in front of a lone one, and chunks
-// strewn round their feet, every stone its own yaw and scale (and render.cave.CaveShade its own value,
-// off its own position). all of it inside the footprint place() cleared, rolled off the pile's
-// position, so a cave heaps the same piles on every entry
+// split up into separate stones and use them in random combinations"): one to three big stones side
+// by side along the wall, often a slab laid across two of them or flat in front of a lone one, and
+// chunks strewn round their feet, every stone its own yaw and scale (and render.cave.CaveShade its own
+// value, off its own position). every stone is spaced off the ones already down by their radii, so
+// they nestle instead of standing through each other. all of it inside the footprint place() cleared,
+// rolled off the pile's position, so a cave heaps the same piles on every entry
   static function pile(p:Models.PropPlace, mdl:CaveProp, out:Array<Array<Models.PropPlace>>):Void
     {
+      var stones = CaveStyle.STONES;
+      var nest = CaveStyle.PILE_NEST;
       var hw = mdl.w * mdl.h * p.scale;
       var hd = mdl.r * mdl.h * p.scale;
       var cs = Math.cos(p.yaw);
@@ -115,59 +118,129 @@ class CaveProps
       // a roll across a scale band
       function band(lo:Float, hi:Float):Float
         return lo + (hi - lo) * roll();
-      // one stone of `kind` at (lx, lz) in the pile's frame, local +z out from the wall as place()
-      // turns it; answers its top's height
-      function put(kind:CaveStoneKind, lx:Float, lz:Float, y:Float, scale:Float, pitch:Float,
-          yaw:Float):Float
+      // one of the stones of `kind`
+      function pick(kind:CaveStoneKind):Int
         {
-          var pick = [for (i in 0...CaveStyle.STONES.length) if (CaveStyle.STONES[i].kind == kind) i];
-          var i = pick[Std.int(roll() * pick.length)];
-          out[i].push({
-            x: p.x + lx * cs + lz * sn,
-            z: p.z - lx * sn + lz * cs,
-            y: y,
-            yaw: yaw,
-            scale: scale,
-            pitch: pitch,
-          });
-          return CaveStyle.STONES[i].h * scale;
+          var ids = [for (i in 0...stones.length) if (stones[i].kind == kind) i];
+          return ids[Std.int(roll() * ids.length)];
+        }
+      // a stone's footprint radius at scale 1, the mean of its half extents: it can face any way
+      function round(i:Int):Float
+        return (stones[i].w + stones[i].d) / 2;
+      // stone `i` at (lx, lz) in the pile's frame, local +z out from the wall as place() turns it
+      function put(i:Int, lx:Float, lz:Float, y:Float, scale:Float, pitch:Float, yaw:Float):Void
+        out[i].push({
+          x: p.x + lx * cs + lz * sn,
+          z: p.z - lx * sn + lz * cs,
+          y: y,
+          yaw: yaw,
+          scale: scale,
+          pitch: pitch,
+        });
+      // the floor the heap already stands on, as circles in the pile's frame
+      var taken:Array<{x:Float, z:Float, r:Float}> = [];
+      function free(x:Float, z:Float, rad:Float):Bool
+        {
+          for (t in taken)
+            if ((t.x - x) * (t.x - x) + (t.z - z) * (t.z - z) < (t.r + rad) * (t.r + rad) * nest * nest)
+              return false;
+          return true;
         }
 
-      // the big stones, each in its own share of the width, set back toward the wall
+      // the big stones: a row along the wall, each its radius from the next, shrunk as one to fit the
+      // footprint and slid along what is left of it. a slab across the first two levels their tops (the
+      // second scaled to the first's) and keeps a third stone under it
       var n = 1 + Std.int(roll() * CaveStyle.PILE_BIG_MAX);
+      var slab = roll() * 100 < CaveStyle.PILE_SLAB_PCT;
+      var ids = [for (_ in 0...n) pick(BIG)];
+      var ss = [for (_ in 0...n) p.scale * band(CaveStyle.PILE_BIG_LO, CaveStyle.PILE_BIG_HI)];
+      if (slab && n >= 2)
+        ss[1] = ss[0] * stones[ids[0]].h / stones[ids[1]].h;
+      if (slab && n == 3)
+        ss[2] = Math.min(ss[2], 0.7 * ss[0] * stones[ids[0]].h / stones[ids[2]].h);
+      var row = 0.0;
+      for (k in 0...n)
+        row += 2 * round(ids[k]) * ss[k] * nest;
+      var fit = Math.min(1, 2 * hw * CaveStyle.PILE_BIG_X / row);
+      var x = -row * fit / 2 + (roll() - 0.5) * Math.max(0, 2 * hw * CaveStyle.PILE_BIG_X - row * fit);
       var xs = [];
-      var tops = [];
+      var zs = [];
       for (k in 0...n)
         {
-          var lx = ((2 * k + 1) / n - 1 + (roll() - 0.5) * 0.5 / n) * CaveStyle.PILE_BIG_X * hw;
-          var s = p.scale * band(CaveStyle.PILE_BIG_LO, CaveStyle.PILE_BIG_HI);
-          xs.push(lx);
-          tops.push(put(BIG, lx, CaveStyle.PILE_BIG_Z * hd, 0, s, 0, roll() * 2 * Math.PI));
+          ss[k] *= fit;
+          var rad = round(ids[k]) * ss[k];
+          x += rad * nest;
+          var z = CaveStyle.PILE_BIG_Z * hd + roll() * 0.25 * hd;
+          xs.push(x);
+          zs.push(z);
+          taken.push({
+            x: x,
+            z: z,
+            r: rad,
+          });
+          put(ids[k], x, z, 0, ss[k], 0, roll() * 2 * Math.PI);
+          x += rad * nest;
         }
 
-      // a slab: across the first two big stones (its long axis is its own x, laid along the wall's),
-      // or tipped flat in front of a lone one
-      if (roll() * 100 < CaveStyle.PILE_SLAB_PCT)
+      // the slab (its long axis its own x, laid along the wall's), its pitch about that axis lifted
+      // off its low edge: across the first two big stones, long enough to bridge them, or flat in
+      // front of a lone one
+      if (slab)
         {
+          var sl = pick(SLAB);
+          var w = stones[sl].w;
+          var dd = stones[sl].d;
           var s = p.scale * band(CaveStyle.PILE_SLAB_LO, CaveStyle.PILE_SLAB_HI);
           var tip = (roll() * 2 - 1) * CaveStyle.PILE_TIP;
           if (n >= 2)
-            put(SLAB, (xs[0] + xs[1]) / 2, CaveStyle.PILE_BIG_Z * hd,
-              Math.min(tops[0], tops[1]) * CaveStyle.PILE_SLAB_LIFT, s, tip, p.yaw + tip);
+            {
+              s = Math.max(s, ((xs[1] - xs[0]) / 2 + 0.3 * round(ids[0]) * ss[0]) / w);
+              put(sl, (xs[0] + xs[1]) / 2, (zs[0] + zs[1]) / 2,
+                stones[ids[0]].h * ss[0] * CaveStyle.PILE_SLAB_LIFT + Math.sin(Math.abs(tip)) * dd * s,
+                s, tip, p.yaw + tip);
+            }
           else
-            put(SLAB, (roll() - 0.5) * 0.6 * hw, 0.35 * hd, 0, s, tip, roll() * 2 * Math.PI);
+            {
+              var sx = xs[0] + (roll() - 0.5) * 0.5 * hw;
+              var sz = zs[0] + round(ids[0]) * ss[0] * nest + dd * s;
+              put(sl, sx, sz, Math.sin(Math.abs(tip)) * dd * s, s, tip, p.yaw + tip);
+              // a slab on the floor takes the floor along its length, a chain of circles
+              var c = Std.int(Math.max(1, Math.round(w / dd)));
+              for (j in 0...c)
+                taken.push({
+                  x: sx + (2 * (j + 0.5) / c - 1) * (w - dd) * s,
+                  z: sz,
+                  r: dd * s,
+                });
+            }
         }
 
-      // the chunks, round the front of the heap and tucked in at its ends, outside the big stones
+      // the chunks, round the front of the heap and tucked in at its ends, each on floor nothing else
+      // has (a few tries, or it is left out)
       var c = CaveStyle.PILE_CHUNK_MIN +
         Std.int(roll() * (CaveStyle.PILE_CHUNK_MAX - CaveStyle.PILE_CHUNK_MIN + 1));
       for (_ in 0...c)
         {
-          var a = -0.3 + roll() * (Math.PI + 0.6);
-          var d = 0.45 + 0.45 * Math.sqrt(roll());
+          var ch = pick(CHUNK);
           var s = p.scale * band(CaveStyle.PILE_CHUNK_LO, CaveStyle.PILE_CHUNK_HI);
-          put(CHUNK, Math.cos(a) * d * hw, Math.sin(a) * d * hd, -CaveStyle.PILE_SINK, s,
-            (roll() * 2 - 1) * CaveStyle.PILE_CHUNK_TIP, roll() * 2 * Math.PI);
+          var rad = round(ch) * s;
+          for (_ in 0...CaveStyle.PILE_TRIES)
+            {
+              var a = -0.3 + roll() * (Math.PI + 0.6);
+              var d = 0.45 + 0.55 * Math.sqrt(roll());
+              var cx = Math.cos(a) * d * hw;
+              var cz = Math.sin(a) * d * hd;
+              if (!free(cx, cz, rad))
+                continue;
+              taken.push({
+                x: cx,
+                z: cz,
+                r: rad,
+              });
+              put(ch, cx, cz, -CaveStyle.PILE_SINK, s, (roll() * 2 - 1) * CaveStyle.PILE_CHUNK_TIP,
+                roll() * 2 * Math.PI);
+              break;
+            }
         }
     }
 

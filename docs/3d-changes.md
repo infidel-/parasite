@@ -1909,6 +1909,7 @@ patch hit null and blanked the area. Empty batches are skipped.
 **Verdict:** landed.
 
 ## Mountain cave rubble piles, mouth glow and the arch fade order
+> the glow card, the pile spacing and beam 16 SUPERSEDED by Mountain cave stone spacing, the mouth's light shell and fainter mouth shadows
 
 Four asks: rubble "looks repetitive", moss under a crust decal, the moonbeam "detached from the actual
 mouth" (make the mouth the source: glow quads on its edges, dust, fake actor shadows), and the arch going
@@ -1937,5 +1938,33 @@ Sort on membership in the set of faces made before `plate()`.
 **Trap 2:** behind the boulders (0.1 behind the arch centre) the card lit only the cut-out hole and read
 as a flat blue panel. In front of them (-0.25) the halo lies on their faces. A side view still shows it as a sheet.
 **Trap 3:** `beam` 10 reaches from the post, 2 units behind the mouth, so the shadows died a cell out.
+
+**Verdict:** landed.
+
+## Mountain cave stone spacing, the mouth's light shell and fainter mouth shadows
+
+Three asks on the pass above: stones "intersect so much" (four boulder/slab faces picked), the glow quads
+misread ("like coming from a lamp", perpendicular to the entrance "not 90 degrees ofc"), and mouth shadows
+"fainter and stop on the third tile away".
+
+- **Stone spacing** (`CaveProps.pile`): big stones stood a share of the pile's width apart whatever their
+  size, so three at up to 1.25 scale stood through each other. Now a row, each stone its footprint radius
+  (mean half extent off the glb, `CaveStone.w/d`) times `PILE_NEST` 0.92 from the next, the row shrunk as
+  one to fit the footprint and slid along the rest. A slab across two levels their tops (the second scaled
+  to the first's), sits at 0.94 of them plus its pitch's low edge, and caps a third stone at 0.7 of that
+  top. A flat slab and every chunk take floor circles; a chunk tries 6 spots or is left out.
+- **Light shell** (`CaveMouthGlow`): the card across the hole is gone. `render.LightCone`'s idea on its
+  side: a hollow additive frustum from the plate, top sloping 2.1 to 0.6 and sides splaying 2.4x over 5
+  units, `(1-t)^1.6` along it, 7 rays per face at 0.35-1, each face out to 0 at its long edges.
+  `GLOW_ALPHA` 0.24. The dust drifts down inside it.
+- **Mouth shadows**: new `LampPost.shade` (null = the beam's `mul`); the mouth's 0.45 (was 0.9).
+  `MOUTH_BEAM` = `MOUTH_BACK + 2.5 * CELL` = 12: from the post, 2 behind the arch, to the far edge of the
+  third cell counting the mouth's own.
+
+**Measured:** worst big-stone spacing 0.91 of the two radii, chunks 0.97, over 38 stones. Same calls
+(the shell takes the card's draw). Programs 116 at load, 119 after a walk: the known gap, no new material.
+
+**Trap:** the first shell drew its faces at full width: from the front, both sides read as glass panels
+with a bright seam down each corner. Fading each face to 0 at its long edges made three soft bands.
 
 **Verdict:** landed.

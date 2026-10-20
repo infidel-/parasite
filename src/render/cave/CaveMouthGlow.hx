@@ -17,11 +17,12 @@ private typedef CaveMouth = {
 // the moonlight in each cave mouth, made visible AT the mouth (asked for: a moonbeam slanting down in
 // front of the arch "looks a little weird detached from the actual mouth"; the mouth itself is the
 // source of the glow and the dust). the mouth's pooled spotlight (render.cave.CaveScene) lands on the
-// floor in front of it and throws the actors' fake shadows into the cave; this lights the opening it
-// comes through: an additive card across the hole the boulders leave, brightest in a band round its
-// edges and fading out over the boulders' inner faces as a halo, and the dust drifting out of it,
-// fanning and sinking a few metres into the cave. one merged mesh for every card and one for every
-// speck: two draw calls a cave
+// floor in front of it and throws the actors' fake shadows into the cave; this is the lit air it comes
+// in through, render.LightCone's idea on a lamp's cone turned on its side: a hollow additive shell out
+// of the opening, a top sloping down off the lintel and two sides splaying out from the jambs (asked
+// for: quads "like coming from a lamp", perpendicular to the entrance "not 90 degrees ofc", after a
+// glow card across the hole), fading out into the cave, and the dust drifting down inside it. one
+// merged mesh for every shell and one for every speck: two draw calls a cave
 class CaveMouthGlow
 {
   static var mouths:Array<CaveMouth> = [];
@@ -35,7 +36,7 @@ class CaveMouthGlow
   static var turn:Array<Float> = [];
   static var speed:Array<Float> = [];
 
-// build every mouth's card and its specks. runs from render.cave.CaveGeom.build, so the warm compiles
+// build every mouth's shell and its specks. runs from render.cave.CaveGeom.build, so the warm compiles
 // both programs
   public static function build(scene:Scene, m:Sewer):Void
     {
@@ -65,54 +66,68 @@ class CaveMouthGlow
       if (mouths.length == 0)
         return;
 
-      // the cards: a grid across the hole, its vertex colour the moonlight times the glow there (an
-      // additive black is nothing, so the colour is the fade)
+      // the shells: rings out along the light, each face split into rays across it, its vertex
+      // colour the moonlight times the fade along it and its ray's own brightness (an additive black
+      // is nothing, so the colour is the fade). the rays off a fixed sequence, so a cave's light is
+      // the same on every entry
       var moon = new Color(CaveStyle.MOUTH_COLOR);
-      var W = CaveStyle.MOUTH_HOLE_W;
-      var E = CaveStyle.GLOW_EDGE;
-      var H = CaveStyle.GLOW_HALO;
-      var Y1 = CaveStyle.MOUTH_HOLE_Y1;
-      var xs = [-W - H, -W, -W + E, W - E, W, W + H];
-      var ys = [CaveStyle.MOUTH_HOLE_Y0, Y1 - E, Y1, Y1 + H];
+      var rays = CaveStyle.SHAFT_RAYS;
+      var rings = CaveStyle.SHAFT_RINGS;
+      var r = 12345;
+      inline function roll():Float
+        {
+          r = (r * 1103515245 + 12345) & 0x7fffffff;
+          return r / 0x7fffffff;
+        }
       var pos:Array<Float> = [];
       var col:Array<Float> = [];
       var idx:Array<Int> = [];
       for (mo in mouths)
-        {
-          var base = Std.int(pos.length / 3);
-          var o = mo.o.clone().addScaledVector(mo.d, CaveStyle.MOUTH_PLATE - CaveStyle.GLOW_CARD_BACK);
-          for (y in ys)
-            for (x in xs)
+        for (face in 0...3)
+          {
+            var base = Std.int(pos.length / 3);
+            var ray = [
+              for (_ in 0...rays + 1)
+                CaveStyle.SHAFT_STREAK + (1 - CaveStyle.SHAFT_STREAK) * roll()
+            ];
+            for (j in 0...rings + 1)
               {
-                var p = o.clone().addScaledVector(mo.u, x);
-                pos.push(p.x);
-                pos.push(y);
-                pos.push(p.z);
-                var k = glow(x, y);
-                col.push(moon.r * k);
-                col.push(moon.g * k);
-                col.push(moon.b * k);
+                var t = j / rings;
+                var k = Math.pow(1 - t, CaveStyle.SHAFT_FADE);
+                for (i in 0...rays + 1)
+                  {
+                    var p = shell(mo, face, t, i / rays);
+                    pos.push(p.x);
+                    pos.push(p.y);
+                    pos.push(p.z);
+                    // out to nothing at the face's long edges, so the shell is three soft bands of
+                    // light and not a glass box with a bright seam down every corner
+                    var c = k * ray[i] * Math.sin(Math.PI * i / rays);
+                    col.push(moon.r * c);
+                    col.push(moon.g * c);
+                    col.push(moon.b * c);
+                  }
               }
-          var n = xs.length;
-          for (j in 0...ys.length - 1)
-            for (i in 0...n - 1)
-              {
-                var a = base + j * n + i;
-                idx.push(a);
-                idx.push(a + 1);
-                idx.push(a + n + 1);
-                idx.push(a);
-                idx.push(a + n + 1);
-                idx.push(a + n);
-              }
-        }
+            var n = rays + 1;
+            for (j in 0...rings)
+              for (i in 0...rays)
+                {
+                  var a = base + j * n + i;
+                  idx.push(a);
+                  idx.push(a + 1);
+                  idx.push(a + n + 1);
+                  idx.push(a);
+                  idx.push(a + n + 1);
+                  idx.push(a + n);
+                }
+          }
       var geo = new BufferGeometry();
       geo.setAttribute('position', new Float32BufferAttribute(pos, 3));
       geo.setAttribute('color', new Float32BufferAttribute(col, 3));
       geo.setIndex(idx);
       // render.LightCone's material, for its reasons: both faces in one additive draw, no depth write,
       // and ordered after the actors so a body standing in the mouth takes its light
-      var card = new Mesh(geo, VisionMask.patch(new MeshBasicMaterial({
+      var shaft = new Mesh(geo, VisionMask.patch(new MeshBasicMaterial({
         vertexColors: true,
         transparent: true,
         opacity: CaveStyle.GLOW_ALPHA,
@@ -121,23 +136,17 @@ class CaveMouthGlow
         forceSinglePass: true,
         blending: untyped THREE.AdditiveBlending,
       })));
-      untyped card.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
-      scene.add(card);
+      untyped shaft.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
+      scene.add(shaft);
 
-      // the specks, off a fixed sequence, so a cave's dust is the same on every entry
-      var r = 12345;
-      inline function roll():Float
-        {
-          r = (r * 1103515245 + 12345) & 0x7fffffff;
-          return r / 0x7fffffff;
-        }
+      // the specks, off the same sequence
       for (mi in 0...mouths.length)
         for (_ in 0...CaveStyle.MOTES)
           {
             mouth.push(mi);
             along.push(roll());
-            across.push((roll() * 2 - 1) * W * 0.8);
-            up.push(0.7 + roll() * (Y1 - 0.8));
+            across.push(0.15 + 0.7 * roll());
+            up.push(0.1 + 0.8 * roll());
             turn.push(roll() * 2 * Math.PI);
             speed.push(0.6 + 0.8 * roll());
           }
@@ -158,21 +167,27 @@ class CaveMouthGlow
       tick(0);
     }
 
-// the card's glow at (x across, y up) in the hole's frame: 1 on the rim band just inside the hole's
-// sides and top, GLOW_FILL in its middle, and fading to nothing over GLOW_HALO outside it
-  static function glow(x:Float, y:Float):Float
+// a point on one face of a mouth's shell, `t` out along the light (0 the opening's plate, behind the
+// boulders, 1 SHAFT_LEN into the cave) and `s` across the face: face 0 the top, from one jamb's
+// corner to the other's, faces 1 and 2 the sides, from the floor up. the opening's frame widens by
+// SHAFT_SPLAY and its top sinks to SHAFT_TOP on the way out, its bottom to the floor
+  static function shell(mo:CaveMouth, face:Int, t:Float, s:Float):Vector3
     {
-      var W = CaveStyle.MOUTH_HOLE_W;
-      var Y1 = CaveStyle.MOUTH_HOLE_Y1;
-      var out = Math.max(Math.abs(x) - W, y - Y1);
-      if (out > 0)
-        return Math.max(0, 1 - out / CaveStyle.GLOW_HALO);
-      var rim = Math.max(0, 1 - Math.min(W - Math.abs(x), Y1 - y) / CaveStyle.GLOW_EDGE);
-      return CaveStyle.GLOW_FILL + (1 - CaveStyle.GLOW_FILL) * rim;
+      var w = CaveStyle.MOUTH_HOLE_W * (1 + (CaveStyle.SHAFT_SPLAY - 1) * t);
+      var top = CaveStyle.MOUTH_HOLE_Y1 + (CaveStyle.SHAFT_TOP - CaveStyle.MOUTH_HOLE_Y1) * t;
+      var bot = CaveStyle.MOUTH_HOLE_Y0 * (1 - t);
+      var x = (face == 0 ? (2 * s - 1) * w : (face == 1 ? -w : w));
+      var y = (face == 0 ? top : bot + (top - bot) * s);
+      var p = mo.o.clone()
+        .addScaledVector(mo.d, CaveStyle.SHAFT_LEN * t)
+        .addScaledVector(mo.u, x);
+      p.y = y;
+      return p;
     }
 
-// drift the specks out of the openings, fanning out and sinking as they go with a slow sway, fading
-// in at the opening and out at the floor so the wrap back to the start never shows
+// drift the specks out of the openings down their shells, each holding its place across the shell as
+// it widens and sinks, with a slow sway, fading in at the opening and out at the shell's end so the
+// wrap back to the start never shows
   public static function tick(dtMs:Float):Void
     {
       if (motes == null)
@@ -189,11 +204,10 @@ class CaveMouthGlow
           turn[i] += dt * CaveStyle.MOTE_RATE * 6 * speed[i];
           var t = along[i];
           var mo = mouths[mouth[i]];
-          var x = across[i] * (1 + (CaveStyle.MOTE_SPREAD - 1) * t) + Math.sin(turn[i]) * 0.15;
-          var p = mo.o.clone()
-            .addScaledVector(mo.d, CaveStyle.MOTE_REACH * t)
-            .addScaledVector(mo.u, x);
-          pos.setXYZ(i, p.x, up[i] + (CaveStyle.MOTE_FLOOR - up[i]) * t * t, p.z);
+          var p = shell(mo, 1, t, up[i])
+            .lerp(shell(mo, 2, t, up[i]), across[i])
+            .addScaledVector(mo.u, Math.sin(turn[i]) * 0.15);
+          pos.setXYZ(i, p.x, p.y, p.z);
           var k = Math.sin(Math.PI * t);
           col.setXYZ(i, moon.r * k, moon.g * k, moon.b * k);
         }
