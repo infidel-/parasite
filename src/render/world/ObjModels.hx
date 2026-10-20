@@ -823,6 +823,27 @@ class ObjModels
       noCast: true, // its shaft lamp stays over the cell and shadows it onto the wall for real; the
                     // fake one was the 2D ladder lying flat at the cell centre
     },
+    // the mountain cave's exit (HabitatExit.getModelKey off its name): an arch of boulders backed onto
+    // the rock it opens from, its scree slope running out across the cell
+    {
+      keys: [ 'cave_exit' ],
+      path: RenderConfig.MODELS.caveExit,
+      h: 2.9,
+      sink: 0.0,
+      yaw: WALL,
+      light: null, // the moonlight down the mouth is render.cave.CaveScene's, not the prop's
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      noCast: true, // a 3-unit arch's fake silhouette shadow would lie across the cell in front of it
+    },
     // THE CORP STAIRS, a U-stairwell over the four sealed cells of its well, the object on the one
     // off the end wall: the well sinks under the floor (`sink`) into the hole CorpModel cuts there,
     // and `off` puts back the footprint centre off the object's cell (CorpStyle.STAIRS_*), Blender

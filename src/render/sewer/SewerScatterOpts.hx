@@ -37,4 +37,6 @@ typedef SewerScatterOpts = {
   // let an ORGANIC decal spill over its cell edges where the whole 3x3 around it is the same
   // surface. false on the ledge, where most cells are a one-cell-wide wall with a drop either side
   cross:Bool,
+  // only cells this passes take a decal (the cave's moss, near the mouths' light); absent = all
+  ?near:(Int, Int) -> Bool,
 };

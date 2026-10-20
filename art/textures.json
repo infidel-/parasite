@@ -8732,6 +8732,52 @@
       "last_converted": "2026-10-20T05:11:20",
       "built_linear": 0.1341,
       "built_srgb": 96.2
+    },
+    "cave/floor-guano": {
+      "src": "cave/floor-guano.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "prompt": "A dark GUANO AND GRIME STAIN seen from DIRECTLY ABOVE, isolated, centered, covering about 70% of the frame: an irregular soft-edged splotch, denser and darker in the middle, breaking up at its ragged outline into scattered droplet marks and a few small pale chalky specks. Flat discolouration only, no depth, no liquid, no reflections. A flat 2D game decal, strictly top-down, no perspective, no cast shadow. PALETTE: dark umber-brown #3e3428 and #4a3f31 for the body, near-black soaked core #2b241c, pale chalky specks #9a917c. The stain must not touch the frame edges. Only the stain. [append textures.json style]",
+      "note": "mountain cave floor decal (render.cave.CaveGeom.decals). gpt-image-2.5 flare high, background transparent. second roll: the first prompt said what floor it lies on and the model painted that floor in, opaque.",
+      "last_converted": "2026-10-20T05:40:29",
+      "built_linear": 0.0249,
+      "built_srgb": 40.5
+    },
+    "cave/floor-crust": {
+      "src": "cave/floor-crust.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "prompt": "A pale CALCITE MINERAL CRUST patch seen from DIRECTLY ABOVE, isolated, centered, covering about 70% of the frame: an irregular flat crust of cream mineral deposit with a slightly raised scalloped crystalline rim, a few concentric growth lines inside it, thin fingers of crust reaching outward and two or three small detached flakes. A flat 2D game decal, strictly top-down, no perspective, no cast shadow. PALETTE: cream #b8ad94 and pale buff #a89c80 for the crust, a lighter rim #c7bda5, faint ochre growth lines #8f8268. The crust must not touch the frame edges. Only the crust. [append textures.json style]",
+      "note": "mountain cave floor decal (render.cave.CaveGeom.decals). gpt-image-2.5 flare high, background transparent. second roll, as cave/floor-guano.",
+      "last_converted": "2026-10-20T05:40:47",
+      "built_linear": 0.2948,
+      "built_srgb": 140.4
+    },
+    "cave/floor-fungus": {
+      "src": "cave/floor-fungus.png",
+      "class": "chroma",
+      "res": 256,
+      "needs_alpha": true,
+      "chroma": "0x121619",
+      "tol": 24,
+      "prompt": "A loose cluster of tiny pale FUNGUS SPOTS joined by fine white MYCELIUM threads, seen from DIRECTLY ABOVE, isolated, centered, covering about 65% of the frame: dozens of small round pale fungus dots of different sizes gathered thickest in the middle and thinning out, linked by a fine web of branching thread-like mycelium spreading outward. A flat 2D game decal, strictly top-down, no perspective, no mushrooms standing up, no cast shadow, not glowing. PALETTE: bone-cream dots #b3aa92 and #a19780, pale grey-white threads #9c968a. The cluster must not touch the frame edges. Only the fungus. [append textures.json style]",
+      "note": "mountain cave floor decal (render.cave.CaveGeom.decals). gpt-image-2.5 flare high. asked for transparent twice and came back opaque on a flat navy (18,22,25, p95 dev 3) both times, so it is keyed instead.",
+      "last_converted": "2026-10-20T05:41:07",
+      "built_linear": 0.1389,
+      "built_srgb": 96.5
+    },
+    "cave/floor-moss": {
+      "src": "cave/floor-moss.png",
+      "class": "sprite",
+      "res": 256,
+      "needs_alpha": true,
+      "prompt": "An irregular patch of dark MOSS seen from DIRECTLY ABOVE, isolated, centered, covering about 65% of the frame: a soft-edged organic blotch of short damp moss, denser in the middle and ragged at its outline, a few thin tendrils creeping outward and two or three small detached specks. A flat 2D game decal, strictly top-down, no perspective, no plants standing up, no cast shadow. PALETTE: dark mossy green #4f5a36 and #5d6840 with a deep damp core #333b24 and a dry ochre-olive edge #77704a. The moss must not touch the frame edges. Only the moss. [append textures.json style]",
+      "note": "mountain cave floor decal, near the mouths only (render.cave.CaveGeom.decals). gpt-image-2.5 flare high, background transparent. second roll, as cave/floor-guano.",
+      "last_converted": "2026-10-20T05:41:26",
+      "built_linear": 0.0448,
+      "built_srgb": 50.1
     }
   }
 }

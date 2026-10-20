@@ -1789,3 +1789,37 @@ rounded stones, and it reads as one mass.
 
 **Verdict:** landed. The floor is flat (no `WorldCtx.ground`); bumps were skipped as invisible under
 CAMERA_SEWER.
+
+## Mountain cave dressing: a hand-modelled kit of eight off their own references, and four floor decals
+
+**Changed:** `models-src/cave/cave_build.py`, a trimmed `lab/top_build.py` with `wild/rock_build.py`'s
+chipped blob, plus one module per piece in `kit/`, built headless by two agents in parallel.
+Each piece got its own reference (`style_prop`) and a PACK4 sheet painted off it by
+`edit_image`, levelled per cell onto the shell's values. `render.cave.CaveProps` is a clone of
+`SewerProps`: per 2x2 block, gated per wall face, dealt from flat, corner and hang decks, never
+the south face. The difference is that each prop finds its own wall: the outline sits a lumpy
+distance past the cell edge, so it walks `CaveField` to the ISO crossing and stands off that. Root
+curtains hang only on north faces, lifted so their top sits under `CaveGeom.topY` at the lip. The
+exit is a new `ObjModels` row, `cave_exit`, reached through `HabitatExit.getModelKey` off the
+saved name 'cave mouth'. `objWall` stands it off the same foot. Floor decals come from
+`SewerGround.scatter`, made public with an optional `near` filter: guano, crust and fungus anywhere,
+moss within two cells of a mouth.
+
+**Measured:** pieces at 560 to 2,456 tris, all `check` 0/0/1 with `texel_off` 0, and every shell's
+signed volume positive. Eight gens at ~$0.06 each, plus 4+4 for the decals. A 24x18 cave deals
+17 floor props and 3 root curtains. The frame went from **21 to 30-32 calls** (7 prop batches,
+4 decal meshes), and to 47k tris zoomed out. Warm cached 103 against 108 live: the same five
+generic programs as before, so the kit adds no entry compile.
+
+**Trap 1:** at the sewer's per-face gate (14-18) a cave dealt **six** props. A tunnel is mostly
+walkway, but a cave's dressing is the room. It took 40 to reach 17.
+
+**Trap 2:** crystals at `emissiveStrength` 2.5 bloomed to white stars from the far camera. 1.2
+keeps them cyan (fungus 1.5).
+
+**Trap 3:** a decal prompt that names the surface it lies on ("on a warm brown silt floor") makes
+gpt-image-2.5 paint that surface in, opaque, even with `background: transparent` (alpha min
+138-234). Re-rolled with the surroundings left out: 67-75% clear. The fungus came back opaque on
+flat navy twice and is chroma-keyed instead.
+
+**Verdict:** landed.

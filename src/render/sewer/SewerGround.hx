@@ -72,8 +72,10 @@ class SewerGround
 // wall — most of a tunnel — comes out at the same per-cell density as an open plateau.
 //
 // deterministic: every decision comes from the block's own coordinates through SewerModel.mix, so a
-// tunnel is dressed identically on every reload and nothing is persisted
-  static function scatter(scene:Scene, m:Sewer, o:SewerScatterOpts):Void
+// tunnel is dressed identically on every reload and nothing is persisted.
+// public because the mountain cave lays its floor decals with it too (render.cave.CaveGeom.decals):
+// it reads only the floor/room grid the cave shares
+  public static function scatter(scene:Scene, m:Sewer, o:SewerScatterOpts):Void
     {
       var half = (CityConfig.GRID * CELL) / 2;
       var bufs = [for (_ in o.types) MeshBufTools.make()];
@@ -94,7 +96,9 @@ class SewerGround
                   var row = br + dr;
                   if (col >= m.w ||
                       row >= m.h ||
-                      m.floor[row][col] == o.solid)
+                      m.floor[row][col] == o.solid ||
+                      (o.near != null &&
+                      !o.near(col, row)))
                     continue;
                   cells.push({ col: col, row: row });
                 }

@@ -59,6 +59,8 @@ class CaveArea implements Area3D
       WorldCtx.seed = -1;
       sceneRef = scene;
       CaveGeom.build(scene, model);
+      // the dressing against the wall foot: decoration, built once, nothing per frame
+      CaveProps.build(scene, model);
       props = render.world.ObjModels.build(scene, game, objYaw, null, objWall);
       // the blocker predicate is the floor grid, not area.canSeeThrough (see SewerArea)
       VisionMask.attach(CaveStyle.MASK, model.w, model.h,
@@ -87,13 +89,18 @@ class CaveArea implements Area3D
         }
     }
 
-// how far a WALL-yawed prop steps back from its cell centre toward the rock: to the cell edge, where
-// the outline starts (it only ever lies further into the rock than that)
+// how far a WALL-yawed prop steps back from its cell centre toward the rock: the cave-mouth arch,
+// whose back has to meet the wall foot, which lies a lumpy distance past the cell edge
+// (render.cave.CaveProps.foot), in the wall objYaw turned it to
   function objWall(col:Int, row:Int):Float
     {
       if (!SewerModel.exitWalled(model, col, row))
         return 0.0;
-      return -(CityConfig.CELL / 2 - render.sewer.SewerStyle.EXIT_DEPTH / 2);
+      var d = (!SewerModel.isFloor(model, col, row - 1) ? 0 :
+        !SewerModel.isFloor(model, col - 1, row) ? 2 : 3);
+      var f = CaveProps.foot(model, col, row, d, col + 0.5, row + 0.5);
+      var reach = Math.abs(f - (d == 0 ? row + 0.5 : col + 0.5)) * CityConfig.CELL;
+      return -(reach - CaveStyle.MOUTH_DEPTH / 2);
     }
 
 // rebuild the prop batches after an object was added to or removed from the cave being shown (an

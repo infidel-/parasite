@@ -144,6 +144,68 @@ class CaveGeom
       add(scene, floor, CaveStyle.FLOOR, false);
       add(scene, top, CaveStyle.ROCKTOP, false);
       add(scene, walls, CaveStyle.WALL, true);
+      decals(scene, m);
+    }
+
+// the floor decals, here rather than in CaveArea so the warm (render.cave.CaveWarm, which runs this
+// builder) compiles their program too: grime, crust and fungus over the whole floor, moss only near
+// the mouths. the sewer floor's scatter, which reads nothing but the floor/room grid
+  static function decals(scene:Scene, m:Sewer):Void
+    {
+      render.sewer.SewerGround.scatter(scene, m, {
+        types: [
+          {
+            tex: CaveStyle.FLOOR_GUANO,
+            w: 2.4,
+            d: 2.2,
+            alpha: 0.85,
+            organic: true,
+          },
+          {
+            tex: CaveStyle.FLOOR_CRUST,
+            w: 2.0,
+            d: 1.8,
+            alpha: 1.0,
+            organic: true,
+          },
+          {
+            tex: CaveStyle.FLOOR_FUNGUS,
+            w: 1.8,
+            d: 1.8,
+            alpha: 1.0,
+            organic: true,
+          },
+        ],
+        pct: CaveStyle.DECAL_PCT,
+        y: CaveStyle.DECAL_Y,
+        margin: 0.2,
+        solid: false,
+        cross: true,
+      });
+      render.sewer.SewerGround.scatter(scene, m, {
+        types: [
+          {
+            tex: CaveStyle.FLOOR_MOSS,
+            w: 2.2,
+            d: 2.0,
+            alpha: 1.0,
+            organic: true,
+          },
+        ],
+        pct: CaveStyle.MOSS_PCT,
+        y: CaveStyle.DECAL_Y,
+        margin: 0.2,
+        solid: false,
+        cross: true,
+        near: function(col, row)
+          {
+            for (l in m.lamps)
+              if (Math.abs(l.col - col) <= CaveStyle.MOSS_REACH &&
+                  Math.abs(l.row - row) <= CaveStyle.MOSS_REACH)
+                return true;
+            return false;
+          },
+      });
     }
 
 // height of the rock top at (u, v) in cells, given the field less ISO there (<= 0): WALL_H, less a

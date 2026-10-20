@@ -748,6 +748,16 @@ class RenderConfig {
     sewerBlock: 'models/sewer/block.glb',   // broken half of a hollow concrete block, rebar stub
     sewerBricks: 'models/sewer/bricks.glb', // low heap of broken bricks and concrete fragments
     sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
+    // the mountain cave habitat's hand-modelled kit (models-src/cave/cave_build.py): the exit, then
+    // the dressing render.cave.CaveProps deals against the wall foot
+    caveExit: 'models/cave/mouth.glb',              // the cave mouth: boulder arch over a scree slope
+    caveStalagmites: 'models/cave/stalagmites.glb', // drip-ringed cones off one calcite base
+    caveFlowstone: 'models/cave/flowstone.glb',     // fluted floor-to-roof column
+    caveRubble: 'models/cave/rubble.glb',           // a slab fallen onto two boulders
+    caveRimstone: 'models/cave/rimstone.glb',       // two-terrace calcite basin of still water
+    caveCrystals: 'models/cave/crystals.glb',       // glowing prisms off a rock base
+    caveFungus: 'models/cave/fungus.glb',           // glowing cap mushrooms off a root lump
+    caveRoots: 'models/cave/roots.glb',             // root curtain hung down a wall from the lip
     // wilderness scatter, placed off the area's own tile grid by render.wild.WildProps. FOUR trees,
     // one per tile ID the 2D generator rolls (Const.TILE_TREE1 + 0..3), so the variant already written
     // into the saved grid picks the model. every one of them is HAND-MODELLED in models-src/wild
