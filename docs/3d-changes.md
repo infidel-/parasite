@@ -2313,3 +2313,14 @@ the same order. 55% / 58% clear first time, `pack16 --cols 2 --rows 2`. $0.14. `
 0.09-0.12; corp joins `LIFT` at 0.09 (gains 1.51-1.79), so all three bust sets sit together.
 
 **Verdict:** landed. Two reference images, one for layout and one for subject, carry both across.
+
+## entities128: the scientist's face repainted fair
+
+"Make the scientist skin lighter, reads badly": the face came back mostly in shadow (value 60-90, hue
+15-25°, sat ~0.2) and read as a dark blot under the beard. `tools/entities128.py` `fair()` repaints it in
+code, no re-gen: pixels in that hue/sat band at value 46-115, kept within 50 px of their own median
+(iterated twice, so the DNA cell's brown magnifier handle in the same band is dropped), each set to
+`(214, 172, 140)` times its value over the face mean, so the drawn shading survives. ~2,500 px a cell,
+confined to the face and neck; the arm, flasks, beard and hair untouched. The source sheet is unchanged.
+
+**Verdict:** landed. A few beard-edge pixels lift too, invisible at 64 px.

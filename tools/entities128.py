@@ -180,6 +180,31 @@ def outline(cell, px):
     return ring
 
 
+def fair(im, skin=(214, 172, 140), reach=50):
+    # repaint a bust's face a fair skin tone, keeping its shading: the scientist on region-lab.png came back
+    # at value 60-90 (hue 15-25, sat ~0.2) and read badly at map size. The skin is that hue and saturation
+    # band at a mid-dark value, kept within `reach` px of its own median so the DNA cell's brown magnifier
+    # handle (same band) stays; each pixel takes `skin` times its value over the face's mean
+    a = np.asarray(im).astype(float)
+    rgb = a[..., :3] / 255
+    mx, mn = rgb.max(-1), rgb.min(-1)
+    d = np.maximum(mx - mn, 1e-6)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    hue = np.where(mx == r, ((g - b) / d) % 6, np.where(mx == g, (b - r) / d + 2, (r - g) / d + 4)) * 60
+    sat = (mx - mn) / np.maximum(mx, 1e-6)
+    m = (a[..., 3] > 200) & (hue > 8) & (hue < 40) & (sat > 0.12) & (sat < 0.42) & (mx > 0.18) & (mx < 0.45)
+    ys, xs = np.nonzero(m)
+    near = np.zeros_like(m)
+    cx, cy = np.median(xs), np.median(ys)
+    for _ in range(2):
+        keep = (xs - cx) ** 2 + (ys - cy) ** 2 < reach ** 2
+        cx, cy = np.median(xs[keep]), np.median(ys[keep])
+    near[ys[keep], xs[keep]] = True
+    shade = mx[near] / mx[near].mean()
+    a[near, :3] = np.clip(np.outer(shade, skin), 0, 255)
+    return Image.fromarray(a.round().astype(np.uint8))
+
+
 def shrink(im, w, h):
     # premultiplied, so the colour under transparent texels cannot bleed into the edge
     return im.convert('RGBa').resize((w, h), Image.LANCZOS).convert('RGBA')
@@ -356,6 +381,7 @@ def main():
         w, h = sheet.width // 2, sheet.height // 2
         busts[name] = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(2) for x in range(2)]
     icons[4] = busts['corp'][0]
+    busts['lab'] = [fair(c) for c in busts['lab']]
     variants = busts['corp'][1:] + busts['lab'] + busts['base']
     dots = six[3:5]
     gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
