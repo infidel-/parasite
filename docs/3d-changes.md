@@ -2270,3 +2270,14 @@ token). The disc is LIGHTER than the art on it: the camo base marks sit at mean 
 their value would have swallowed them. High crime, habitat, ovum and cult keep the halo (no colour asked).
 
 **Verdict:** landed; colours are statics, tunable live.
+
+## Region map discs muted, habitat on a purple one
+
+"Make these colors less saturated": each disc colour blended 45% of the way to its own luma grey, so its
+value holds and HSV saturation drops ~40% (lab `#d9a24a` → `#c3a574` 0.66 → 0.41, corp `#4fb3cf` →
+`#70a7b6` 0.62 → 0.38, base `#8aa85a` → `#8fa075` 0.46 → 0.27). The habitat (both FRAME_HABITAT and the
+ambushed one) moved from the halo to a disc too, `DISC_HABITAT` `#a88ac4` at the same value and sat 0.30:
+light enough that the dark violet tentacles keep their silhouette. `RegionView.discColor` picks the
+corp/habitat colour; high crime, ovum and cult keep the halo.
+
+**Verdict:** landed.

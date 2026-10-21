@@ -34,11 +34,12 @@ class RegionView
   static var HALO_PAD = 12; // canvas margin a side, room for the blur to spread
   static var HALO_PASSES = 2; // blurred copies stacked: one alone left a fringe too faint to read
   static var HALO_ALPHA = 0.5; // its opacity
-  // the coloured disc under a lab, corp HQ or military base icon instead of the halo (drawDiscIcon),
-  // lighter than the art on it so the silhouette reads
-  static var DISC_LAB = '#d9a24a'; // yellow-orange
-  static var DISC_CORP = '#4fb3cf'; // blue-cyan
-  static var DISC_BASE = '#8aa85a'; // green
+  // the coloured disc under a lab, corp HQ, base or habitat icon instead of the halo (drawDiscIcon),
+  // lighter than the art on it so the silhouette reads, and muted (HSV sat ~0.3-0.4) to sit in the palette
+  static var DISC_LAB = '#c3a574'; // yellow-orange
+  static var DISC_CORP = '#70a7b6'; // blue-cyan
+  static var DISC_BASE = '#8fa075'; // green
+  static var DISC_HABITAT = '#a88ac4'; // purple
   static var DISC_RADIUS = 0.46; // share of the tile
   var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
   var lastPY: Int;
@@ -664,10 +665,10 @@ class RegionView
             ctx.drawImage(mark, ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
           return;
         }
+      var disc = discColor(icon);
       if (halo &&
-          icon.row == Const.ROW_REGION_ICON &&
-          Const.FRAME_CORPHQ_VARIANTS.indexOf(icon.col) >= 0)
-        drawDiscIcon(ctx, icon.col, icon.row, ax, ay, DISC_CORP);
+          disc != null)
+        drawDiscIcon(ctx, icon.col, icon.row, ax, ay, disc);
       else if (halo)
         drawHaloIcon(ctx, icon.col, icon.row, ax, ay, 1.0);
       else drawEntityCell(ctx, icon.col, icon.row, ax, ay);
@@ -729,6 +730,20 @@ class RegionView
         StringTools.replace(glyph, '<svg ',
           '<svg x="' + (cx - g / 2) + '" y="' + (cy - g / 2) + '" width="' + g + '" height="' + g + '" ') +
         '</svg>';
+    }
+
+// the disc colour under a corp HQ or habitat icon, null for one on a halo (labs and bases take theirs
+// in drawAreaTileOverlay)
+  function discColor(icon: _Icon): String
+    {
+      if (icon.row != Const.ROW_REGION_ICON)
+        return null;
+      if (Const.FRAME_CORPHQ_VARIANTS.indexOf(icon.col) >= 0)
+        return DISC_CORP;
+      if (icon.col == Const.FRAME_HABITAT ||
+          icon.col == Const.FRAME_HABITAT_AMBUSHED)
+        return DISC_HABITAT;
+      return null;
     }
 
 // draw one entity icon over a flat disc of its kind's colour, ringed darker so it holds on a light tile
