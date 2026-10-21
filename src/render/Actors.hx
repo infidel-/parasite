@@ -1173,6 +1173,8 @@ class Actors {
         faceX: a.face,
         yaw: yaw,
         sat: o.texSat,
+        // an upright icon at full opacity hides a lamp shaft behind it; a fading one writes nothing
+        depth: !flat && a.op >= 0.99,
       });
     }
 

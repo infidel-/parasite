@@ -107,7 +107,8 @@ class LightCone {
       // above Sprites.ORD_ACTOR: the additive shaft draws LAST among transparents, so anything seen
       // THROUGH the beam (ground, decals, bodies, AI behind it) gets the amber tint — else the beam
       // reads as fake glass over an untinted object. a UNIQUE order (nothing else sits here) also
-      // avoids the decal-slot tie it had at the default 0, which flipped cone-over-blood on zoom
+      // avoids the decal-slot tie it had at the default 0, which flipped cone-over-blood on zoom.
+      // a shaft BEHIND an actor is hidden by that actor's own depth (Sprites.paint `depth`)
       untyped inst.renderOrder = render.particles.Sprites.ORD_ACTOR + 1;
       var q = new Quaternion(), pos = new Vector3(), one = new Vector3(1, 1, 1);
       var up = new Vector3(0, 1, 0);

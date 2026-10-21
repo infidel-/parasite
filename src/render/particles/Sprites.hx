@@ -16,7 +16,9 @@ class Sprites {
   // transparent draw layering (higher = on top): ground decals < corpse < blood-over-corpse < fake
   // shadow < target markers < wall fixtures < upright actor icon. all share this pool +
   // depthWrite:false, so renderOrder (NOT Y — tiny Y gaps z-fight at this near/far, see
-  // docs/3d-render.md) fixes layering.
+  // docs/3d-render.md) fixes layering. the one exception is an OPAQUE actor billboard (paint's
+  // `depth`), which writes its silhouette's depth pushed back by DEPTH_OFFSET: nothing it shares a
+  // plane with notices, but a lamp shaft drawn after it from behind no longer paints over it.
   // a corpse sits over the blood already present when it fell (ORD_DECAL, batched); blood sprayed
   // AFTER it (in its cell) is pulled from the batch to ORD_BLOODOVER so it paints over the body
   public static inline var ORD_DECAL = 0;              // debris + batched blood (bulk, + blood predating a corpse in its cell)
@@ -26,11 +28,13 @@ class Sprites {
   public static inline var ORD_MARK = 4;               // targeting frame / reticle (above the shadow)
   // an emissive quad stuck ON a surface (a sewer wall lamp's glow). fractional so it slots in without
   // renumbering the rest — render.decals.Blood already does that for same-cell ties. it MUST sit
-  // below ORD_ACTOR: nothing in this pool writes depth, so a surface fixture drawn after the actors
-  // paints straight through anyone standing in front of it. an additive VOLUME (a light shaft) is the
-  // opposite case and stays above them, see render.LightCone
+  // below ORD_ACTOR: nothing else in this pool writes depth, so a surface fixture drawn after the
+  // actors paints straight through anyone standing in front of it. an additive VOLUME (a light shaft)
+  // is the opposite case and stays above them, see render.LightCone
   public static inline var ORD_FIXTURE = 4.5;
   public static inline var ORD_ACTOR = 5;              // upright actor billboard (above its own shadow)
+  public static inline var DEPTH_CUT = 0.5;            // texel alpha under which a depth-writing sprite discards
+  public static inline var DEPTH_OFFSET = 4.0;         // polygonOffset factor + units pushing that depth back
 
   var game:Game;                                        // for the sprite-atlas image provider
   var actorGroup:Group;                                 // scene group holding all sprite quads
@@ -137,6 +141,7 @@ class Sprites {
           mat.onBeforeCompile.spriteUnpremul == true)
         return mat;
       var uSat = { value: 1.0 };
+      var uCut = { value: 0.0 };
       var prev:Dynamic = mat.onBeforeCompile;
       var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
         mat.customProgramCacheKey : null;
@@ -145,6 +150,7 @@ class Sprites {
           if (prev != null)
             prev(shader, renderer);
           shader.uniforms.spriteSat = uSat;
+          shader.uniforms.spriteCut = uCut;
           // three r181's own two chunks, with the DECODE_VIDEO_TEXTURE branch of both dropped
           // (nothing this pool draws is a video texture) and three lines added to each. THE ORDER
           // IS THE WHOLE CONTENT OF THIS BLOCK: un-premultiply in the space the multiply happened
@@ -158,10 +164,15 @@ class Sprites {
           // the clamp is for premultiplied BYTE quantisation, not for the guard: b/255 can exceed a
           // by half a byte, which at alpha 1/255 is a ratio of 1.5 going into a 2.4 power — small
           // in the blend, unbounded in shape, and it feeds the bloom pass
-          shader.fragmentShader = 'uniform float spriteSat;\n' +
+          //
+          // `spriteCut` discards on the TEXEL's alpha, never on diffuseColor's (which carries the
+          // opacity fade), and only a depth-writing actor raises it above 0: 0 is a no-op, so the
+          // GLSL changes for every program of this hook while the cache key does not need to
+          shader.fragmentShader = 'uniform float spriteSat;\nuniform float spriteCut;\n' +
             StringTools.replace(shader.fragmentShader, '#include <map_fragment>',
               '#ifdef USE_MAP\n' +
               '  vec4 sampledDiffuseColor = texture2D( map, vMapUv );\n' +
+              '  if ( sampledDiffuseColor.a < spriteCut ) discard;\n' +
               '  sampledDiffuseColor.rgb = clamp( sampledDiffuseColor.rgb /\n' +
               '    max( sampledDiffuseColor.a, 1e-4 ), 0.0, 1.0 );\n' +
               '  sampledDiffuseColor = sRGBTransferEOTF( sampledDiffuseColor );\n' +
@@ -194,6 +205,7 @@ class Sprites {
       // and the uniform's box hung on the material, which is how `paint` reaches it: the pool holds
       // one material per quad, so this is per-sprite state and not a shared clock
       untyped mat.spriteSatU = uSat;
+      untyped mat.spriteCutU = uCut;
       mat.needsUpdate = true;
       return mat;
     }
@@ -279,6 +291,19 @@ class Sprites {
         overlay.add(m);
       if (o.depthFunc != null)
         untyped mat.depthFunc = o.depthFunc;
+      // an opaque actor writes its silhouette's depth, so a lamp shaft (LightCone, drawn after the
+      // actors to tint whoever stands INSIDE it) stops painting over one standing in FRONT of it.
+      // the depth is pushed back by DEPTH_OFFSET: a badge, a slash or a glow sharing the actor's
+      // plane still passes, and only something a real distance behind is hidden. GL state and a
+      // uniform, no define, so the program is the same one
+      if (o.depth == true)
+        {
+          mat.depthWrite = true;
+          untyped mat.spriteCutU.value = DEPTH_CUT;
+          untyped mat.polygonOffset = true;
+          untyped mat.polygonOffsetFactor = DEPTH_OFFSET;
+          untyped mat.polygonOffsetUnits = DEPTH_OFFSET;
+        }
       // UI overlays (badges, x-ray outline, target markers) stay out of the shadow maps — they must
       // read at a glance wherever the AI stands. everything else keeps slot()'s default
       m.receiveShadow = (o.shadow != false);
@@ -498,6 +523,10 @@ class Sprites {
       mat.metalness = 0;
       // full saturation, the byte-exact no-op — a paint that wants less re-sets it (see `unpremul`)
       untyped mat.spriteSatU.value = 1.0;
+      // no depth, no cut: only an opaque actor billboard opts in (see paint's `depth`)
+      untyped mat.spriteCutU.value = 0.0;
+      mat.depthWrite = false;
+      untyped mat.polygonOffset = false;
       m.renderOrder = 0;
       // world sprites/decals darken inside a building's moon/lamp shadow like the ground they stand
       // on. receiveShadow is a plain uniform in three (not a program define, and USE_SHADOWMAP is

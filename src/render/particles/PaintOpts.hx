@@ -26,4 +26,7 @@ typedef PaintOpts = {
   @:optional var sat:Float;          // how much of its own chroma the sprite keeps, default 1.0 =
                                      // untouched (see Sprites.unpremul for where it is applied)
   @:optional var shadow:Bool;        // sample the moon/lamp shadow maps, default true (false = UI overlay)
+  @:optional var depth:Bool;         // write the silhouette's depth (an opaque actor billboard), so a
+                                     // later transparent BEHIND it (a lamp shaft) is hidden by it;
+                                     // default false (see Sprites.paint)
 }

@@ -2324,3 +2324,30 @@ code, no re-gen: pixels in that hue/sat band at value 46-115, kept within 50 px 
 confined to the face and neck; the arm, flasks, beard and hair untouched. The source sheet is unchanged.
 
 **Verdict:** landed. A few beard-edge pixels lift too, invisible at 64 px.
+
+## Actor billboards write their silhouette's depth, so a lamp shaft behind one stops painting over it
+
+Found filming trailer footage at a low, level camera: the street shafts (`LightCone`, additive, at
+`Sprites.ORD_ACTOR + 1` so an actor standing INSIDE a beam is tinted) glowed across the parasite's
+tentacles and a civilian's face from BEHIND them. Nothing in the sprite pool wrote depth, so a shaft drawn
+after the actors could not know it was behind one. Low, level cameras are where it shows; the gameplay
+zooms look down past most shafts.
+
+**Change:** `PaintOpts.depth` (opt-in), set by `Actors.drawActor` for an upright icon at `op >= 0.99`.
+`Sprites.paint` then sets `depthWrite`, a `spriteCut` uniform of `DEPTH_CUT` 0.5 and `polygonOffset`
+`DEPTH_OFFSET` 4/4; `slot` resets all three. `spriteCut` lives in `unpremul`'s existing hook and discards
+on the SAMPLED texel's alpha, never on `diffuseColor` (that carries the opacity fade): 0 is a no-op, so the
+GLSL changes for every program of the hook while the cache key and the boot warm stay as they were. A
+fading actor writes nothing, or a near-invisible one would cut a hole in a shaft.
+
+**The offset is what keeps the FX on an actor.** Badges, the melee slash (`ORD_ACTOR + 1`), flame glows
+and the attached parasite share or sit just off the actor's plane; pushed back, the actor's depth lets them
+all pass while a shaft a metre behind fails. The attached parasite is 0.3 up the leaned plane, which puts
+its quad 0.17 IN FRONT of the host's along the normal, so it wins either way.
+
+**Measured** (lossless A/B, same pose, depth toggled at runtime): changed pixels 65,836, max 67, all the
+shafts; on the silhouette edge against plain background mean 3.1 / max 18 of 255, the faintest fringe
+under the cut. Attached parasite on a dog: no z-fight. Slash over a dog mid-bite: drawn. GTAO is
+untouched (its prepass already leaves billboards out). Same meshes, so no new draw call.
+
+**Verdict:** landed. The in-beam tint on an actor standing inside a shaft is kept.
