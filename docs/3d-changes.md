@@ -2259,3 +2259,14 @@ map the camo, face and gear read where they were a dark blot. A re-gen would not
 already asked for a medium value, and `style`'s "very dark" won.
 
 **Verdict:** landed.
+
+## Region map: coloured discs under the lab, corp HQ and base icons
+
+Asked for instead of the halo on those three kinds: a flat disc per kind, yellow-orange for a lab, blue-cyan
+for a corp HQ, green for a military base. `RegionView.drawDiscIcon`: a disc of radius `DISC_RADIUS` 0.46
+tile at `DISC_LAB` `#d9a24a` / `DISC_CORP` `#4fb3cf` / `DISC_BASE` `#8aa85a`, ringed at 1/32 tile in black
+45%, the icon drawn full size over it (the towers and the rotor break the disc edge, which reads as a
+token). The disc is LIGHTER than the art on it: the camo base marks sit at mean linear 0.09, so a green at
+their value would have swallowed them. High crime, habitat, ovum and cult keep the halo (no colour asked).
+
+**Verdict:** landed; colours are statics, tunable live.

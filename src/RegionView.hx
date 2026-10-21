@@ -34,6 +34,12 @@ class RegionView
   static var HALO_PAD = 12; // canvas margin a side, room for the blur to spread
   static var HALO_PASSES = 2; // blurred copies stacked: one alone left a fringe too faint to read
   static var HALO_ALPHA = 0.5; // its opacity
+  // the coloured disc under a lab, corp HQ or military base icon instead of the halo (drawDiscIcon),
+  // lighter than the art on it so the silhouette reads
+  static var DISC_LAB = '#d9a24a'; // yellow-orange
+  static var DISC_CORP = '#4fb3cf'; // blue-cyan
+  static var DISC_BASE = '#8aa85a'; // green
+  static var DISC_RADIUS = 0.46; // share of the tile
   var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
   var lastPY: Int;
   var lastCamX: Int;
@@ -420,11 +426,11 @@ class RegionView
   function drawAreaTileOverlay(ctx: CanvasRenderingContext2D, area: AreaGame, ax: Int, ay: Int)
     {
       if (area.typeID == AREA_FACILITY)
-        drawHaloIcon(ctx, Const.FRAME_FACILITY_MARK + area.tileID - Const.TILE_FACILITY1,
-          Const.ROW_REGION_ICON, ax, ay, 1.0);
+        drawDiscIcon(ctx, Const.FRAME_FACILITY_MARK + area.tileID - Const.TILE_FACILITY1,
+          Const.ROW_REGION_ICON, ax, ay, DISC_LAB);
       else if (area.typeID == AREA_MILITARY_BASE)
-        drawHaloIcon(ctx, Const.FRAME_BASE_MARK + (area.x * 3 + area.y * 5) % 4,
-          Const.ROW_REGION_ICON, ax, ay, 1.0);
+        drawDiscIcon(ctx, Const.FRAME_BASE_MARK + (area.x * 3 + area.y * 5) % 4,
+          Const.ROW_REGION_ICON, ax, ay, DISC_BASE);
     }
 
 // draw one alpha feather strip inside one unknown frontier tile
@@ -658,7 +664,11 @@ class RegionView
             ctx.drawImage(mark, ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
           return;
         }
-      if (halo)
+      if (halo &&
+          icon.row == Const.ROW_REGION_ICON &&
+          Const.FRAME_CORPHQ_VARIANTS.indexOf(icon.col) >= 0)
+        drawDiscIcon(ctx, icon.col, icon.row, ax, ay, DISC_CORP);
+      else if (halo)
         drawHaloIcon(ctx, icon.col, icon.row, ax, ay, 1.0);
       else drawEntityCell(ctx, icon.col, icon.row, ax, ay);
     }
@@ -719,6 +729,21 @@ class RegionView
         StringTools.replace(glyph, '<svg ',
           '<svg x="' + (cx - g / 2) + '" y="' + (cy - g / 2) + '" width="' + g + '" height="' + g + '" ') +
         '</svg>';
+    }
+
+// draw one entity icon over a flat disc of its kind's colour, ringed darker so it holds on a light tile
+  function drawDiscIcon(ctx: CanvasRenderingContext2D, col: Int, row: Int,
+      ax: Float, ay: Float, color: String)
+    {
+      var r = Const.TILE_SIZE * DISC_RADIUS;
+      ctx.beginPath();
+      ctx.arc(ax + Const.TILE_SIZE / 2, ay + Const.TILE_SIZE / 2, r, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.lineWidth = Const.TILE_SIZE / 32;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.stroke();
+      drawEntityCell(ctx, col, row, ax, ay);
     }
 
 // draw one entity icon over its soft dark halo (getHaloCanvas), both at alpha
