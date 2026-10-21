@@ -2290,3 +2290,12 @@ outline. `DISC_RADIUS` 0.46 → 0.506 → **0.557** (two asks of +10%), 11% wide
 adjacent location tiles' discs overlap.
 
 **Verdict:** landed.
+
+## Region map discs: corp bluer, lab cleaner
+
+"Make corpo bluer, and make research less dirty": corp `#70a7b6` → **`#6f98c0`** (hue 192° → 209°, sat
+0.38 → 0.42, value 182 → 192); lab `#c3a574` → **`#dcbc7c`** (value 195 → 220, sat 0.41 → 0.44). The
+dirt was VALUE, not hue: a desaturated orange at 195 reads greyish brown, and lifting it reads as pale gold
+at about the same saturation.
+
+**Verdict:** landed.

@@ -36,8 +36,8 @@ class RegionView
   static var HALO_ALPHA = 0.5; // its opacity
   // the coloured disc under a lab, corp HQ, base or habitat icon instead of the halo (drawDiscIcon),
   // lighter than the art on it so the silhouette reads, and muted (HSV sat ~0.3-0.4) to sit in the palette
-  static var DISC_LAB = '#c3a574'; // yellow-orange
-  static var DISC_CORP = '#70a7b6'; // blue-cyan
+  static var DISC_LAB = '#dcbc7c'; // pale gold (the muted orange read greyish brown, "dirty")
+  static var DISC_CORP = '#6f98c0'; // blue
   static var DISC_BASE = '#8fa075'; // green
   static var DISC_HABITAT = '#a88ac4'; // purple
   static var DISC_RADIUS = 0.557; // share of the tile (past its edge: a neighbour's disc can overlap)
