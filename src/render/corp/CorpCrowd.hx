@@ -238,20 +238,20 @@ class CorpCrowd
       var male = ((h >>> 3) & 1) == 1;
       var list = (male ? Images.civiliansMale : Images.civiliansFemale);
       var c = list[(h >>> 11) % list.length];
-      var t = Const.TILE_SIZE_CLEAN;
+      var t = CorpStyle.WALK_CELL;
       var aw = CorpStyle.WALK_ATLAS_W;
-      var ah = CorpStyle.WALK_ATLAS_H;
-      // the male sheet is drawn on top of the female one, so the whole canvas is 2 * ah tall
+      var ah = (CorpStyle.WALK_MALE_ROWS + CorpStyle.WALK_FEMALE_ROWS) * t;
+      // the male rows are drawn on top of the female ones
       var px = c.x * t;
-      var py = c.y * t + (male ? 0 : ah);
+      var py = c.y * t + (male ? 0 : CorpStyle.WALK_MALE_ROWS * t);
       // half a texel in on every edge: the cells sit edge to edge and a linear tap exactly on the
       // boundary pulls in the neighbour's pixels. `v` is flipped because a CanvasTexture uploads
       // flipY while atlas rows grow downward
       var e = 0.5;
       dst[i * 4] = (px + e) / aw;
-      dst[i * 4 + 1] = 1.0 - (py + t - e) / (2 * ah);
+      dst[i * 4 + 1] = 1.0 - (py + t - e) / ah;
       dst[i * 4 + 2] = (t - 2 * e) / aw;
-      dst[i * 4 + 3] = (t - 2 * e) / (2 * ah);
+      dst[i * 4 + 3] = (t - 2 * e) / ah;
     }
 
 // write every car's transform and its picture for the current clock.
@@ -535,24 +535,28 @@ class CorpCrowd
       return mesh;
     }
 
-// the two civilian sheets stacked into one texture. `warm` has no Images, and an empty canvas
-// compiles exactly the same program a filled one does
+// the two civilian sheets' civilian rows stacked into one texture, off the 128 px sheets at their
+// default skin. `warm` has no Images, and an empty canvas compiles exactly the same program a filled
+// one does. no mipmaps: the civilian cells fill their 128 px edge to edge on every side, so a coarse
+// level would average each walker with its neighbours on the sheet
   function atlas():CanvasTexture
     {
+      var t = CorpStyle.WALK_CELL;
       var aw = CorpStyle.WALK_ATLAS_W;
-      var ah = CorpStyle.WALK_ATLAS_H;
+      var mh = CorpStyle.WALK_MALE_ROWS * t;
+      var fh = CorpStyle.WALK_FEMALE_ROWS * t;
       var cv = js.Browser.document.createCanvasElement();
       cv.width = aw;
-      cv.height = 2 * ah;
+      cv.height = mh + fh;
       if (images != null)
         {
           var cx = cv.getContext2d();
-          var m:Dynamic = images.getImage('male');
-          var f:Dynamic = images.getImage('female');
-          if (m != null && m.complete)
-            cx.drawImage(m, 0, 0);
-          if (f != null && f.complete)
-            cx.drawImage(f, 0, ah);
+          var m:Dynamic = images.getAtlas128('male', false, 0);
+          var f:Dynamic = images.getAtlas128('female', false, 0);
+          if (m.naturalWidth > 0)
+            cx.drawImage(m, 0, 0, aw, mh, 0, 0, aw, mh);
+          if (f.naturalWidth > 0)
+            cx.drawImage(f, 0, 0, aw, fh, 0, mh, aw, fh);
         }
       var tex = new CanvasTexture(cv);
       tex.colorSpace = THREE.SRGBColorSpace;

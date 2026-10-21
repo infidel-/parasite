@@ -2156,3 +2156,25 @@ now hands the new pool the same texture object: lookup 0 ms, no rebuild, no re-u
 `setLocation`. A save flushed in that state loads empty once; re-entering builds it.
 
 **Verdict:** landed.
+
+## Corp street crowd off the 128 px civilian sheets
+
+`render.corp.CorpCrowd.atlas` stacked the whole `male64` and `female64` sheets into one 640x2048 canvas, the
+last reader of those two files. It now stacks only the civilian rows (`Images.civiliansMale` rows 0-7,
+`civiliansFemale` 0-5) off `male128` / `female128` at the default skin: 1280x1792, `CorpStyle.WALK_CELL`
+128, `WALK_MALE_ROWS` 8 / `WALK_FEMALE_ROWS` 6 (`WALK_ATLAS_H` gone). `cellUV` follows.
+
+- **Fixes an old overlap for free:** `male64` is 640x**1088** (17 rows), so the female sheet drawn at
+  y=1024 sat over male row 16, the soldiers, and their pixels showed through the transparent parts of
+  female row-0 civilians at x 0-6. Only the civilian rows are copied now.
+- **Still no mipmaps.** The civilian cells fill their 128 px to the edge on EVERY side (margin 0 on all
+  134 cells), so a coarse level would average each walker with its neighbours on the sheet.
+
+**Measured:** 64 walkers; every one samples a 127x127 rect on the 128 grid, 55-62% opaque, female rows
+included. From the plate a walker draws ~12 px tall, so a 128 cell minifies ~10x where the 64 one did
+~5x. Not judged in motion.
+
+**Trap:** "every civilian cell keeps a clear margin" was the premise for turning mipmaps on, and the
+measurement said the opposite: 0 px on all four sides.
+
+**Verdict:** landed.

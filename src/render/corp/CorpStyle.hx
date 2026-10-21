@@ -1159,9 +1159,12 @@ class CorpStyle
   // leave the icon where a person's clothing actually sits against tarmac — effective 0.056, about
   // 3.8x the road and 2.6x a car body, still the brightest thing on the street
   public static inline var WALK_DIM = 0.13;
-  // the people sheets, stacked into one canvas so both sexes ride one draw call
-  public static inline var WALK_ATLAS_W = 640;
-  public static inline var WALK_ATLAS_H = 1024;
+  // the people sheets' civilian rows (Images.civiliansMale 0-7, civiliansFemale 0-5) off the 128 px
+  // sheets, stacked into one canvas so both sexes ride one draw call: male on top, female below
+  public static inline var WALK_CELL = 128;
+  public static inline var WALK_ATLAS_W = 1280;
+  public static inline var WALK_MALE_ROWS = 8;
+  public static inline var WALK_FEMALE_ROWS = 6;
 
   // A CAR IS NOT A PATCH OF LIGHT AND THE PEDESTRIANS STILL ARE, which is the one place the
   // paragraph above has been overruled: an 8 x 3.6 quad wearing a circular gradient is an ELLIPSE,
