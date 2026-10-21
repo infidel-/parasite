@@ -2078,3 +2078,29 @@ white (gains x25-77, dragged by the new ring's own black). At the gen's own valu
 the dark map (a dark green on green), so only the dot is matched.
 
 **Verdict:** landed.
+
+## Habitat organ lamp shadows cast off their glb's silhouette
+
+The organs are glbs, but `LampShadows.actorShadow` cut each one's fake lamp shadow from its atlas cell
+(`Sprites.shadowContent`), i.e. the old 64 px sprite, a different shape from the model drawn over it. User's
+pick: render the silhouettes off the glbs.
+
+- **`models-src/habitat/organ_shadows.py`** (Blender over MCP, interactive: no CLI is configured): each
+  organ glb seen straight from the front (glTF +z = Blender -Y, the side `FRONTAL` turns to the camera),
+  orthographic, framed from the floor line up, the row's `sink` share cut off below it, workbench flat
+  black on transparent, 512 px. It renders in a throwaway scene and removes every datablock it made.
+  Four renders, `textures-src/img/entities128/organ-<name>.png`: every level of an organ draws the same
+  glb at the same `h`.
+- **`tools/entities128.py` places them like any cell,** bottom-aligned and aspect-locked, each level into
+  its organ's BIGGEST old box (the per-level sprites grew with the level; the glb does not). Black by
+  construction, so no colour match. The `HD128` rows redirect the shadow pass automatically; `iconOff`
+  is keyed by the model and untouched.
+
+**Measured:** fits 70-100% per axis (biomineral is narrower than its old box, preservator lower). The
+four shadow masks now resolve to 128 crops of the glb outlines (fw/fh 0.90-1.09 of the padded cell).
+
+**Trap:** `read_factory_settings` is the obvious way to start a clean scene, and in the INTERACTIVE
+Blender it would wipe whatever the user has open. A new scene per render, plus removing the datablocks
+by diffing `bpy.data` before and after, leaves the open file as it was found.
+
+**Verdict:** landed.

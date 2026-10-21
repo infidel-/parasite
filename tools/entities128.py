@@ -12,7 +12,8 @@ original then has its saturation and mean linear luminance matched to the old ce
 
 The old cells' boxes, alpha ceilings and colour targets are FROZEN in tools/entities128.json, read off
 entities64 once before that sheet was retired; nothing here opens a 64 px sheet any more. The habitat
-organs (5,*), (6,1), (7,*) are lamp-shadow silhouettes only (their 3D body is a glb), placed whole.
+organs (5,*), (6,1), (7,*) are lamp-shadow silhouettes only (their 3D body is a glb): front renders of
+those glbs, models-src/habitat/organ_shadows.py, organ-<name>.png.
 
 usage: python3 tools/entities128.py [out.png]      (default app/img/entities128.png)
 """
@@ -41,14 +42,13 @@ CELLS = [(4, 0), (4, 1), (2, 4), (2, 7), (4, 6), (4, 7), (16, 2), (3, 2), (3, 3)
         [(0, 1), (0, 2), (0, 3), (0, 9), (1, 4), (1, 6), (1, 7), (1, 8), (1, 9), (4, 2), (4, 4)] + \
         [(3, 0), (3, 1)] + \
         [(5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (6, 1), (7, 1), (7, 2)]
-# the first seven stand on their foot: bottom-aligned in their box
-UPRIGHT = 7
+# the first seven stand on their foot, and so do the organ silhouettes: bottom-aligned in their box
+UPRIGHT = set(range(7)) | set(range(47, 56))
 # the generated cells, which keep their own colours: the money, every splat, the alert marks and the
 # host mask (matching those to the old cells' value washed the gen's muted hues to pastel and white).
-# The path dot is matched: at the gen's own value it vanished into the dark map
-GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36, 43}
-# the cells drawn at 128 x 128 already, pasted as they are: the organ silhouettes
-WHOLE = set(range(47, 56))
+# The path dot is matched: at the gen's own value it vanished into the dark map. The organ silhouettes
+# are shadow masks, black by construction
+GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36, 43} | set(range(47, 56))
 
 
 def lzf(src, n):
@@ -332,7 +332,12 @@ def main():
     ]
     dots = six[3:5]
     gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
-    organs = [Image.open(GEN % ('organ-%d-%d' % rc)).convert('RGBA') for rc in CELLS[47:56]]
+    organs = [Image.open(GEN % ('organ-' + n)).convert('RGBA') for n in
+              ['biomineral'] * 3 + ['preservator'] * 3 + ['assimilation'] + ['watcher'] * 2]
+    # every level of an organ draws the same glb at the same height, so each takes its biggest level's
+    # box and not its own old sprite's
+    for i, last in ((47, 49), (48, 49), (50, 52), (51, 52), (54, 55)):
+        olds[i] = olds[last]
     # the splats: each sheet a 3 x 2 of six, five of them dealt to the old five shapes by best fit
     for colour in ('red', 'black', 'acid', 'slime'):
         sheet = Image.open(GEN % ('blood-' + colour)).convert('RGBA')
@@ -346,11 +351,7 @@ def main():
 
     out = Image.new('RGBA', (COLS * CELL, COLS * CELL))
     for i, (r, c) in enumerate(CELLS):
-        if i in WHOLE:
-            out.alpha_composite(src[i], ((i % COLS) * CELL, (i // COLS) * CELL))
-            print('%2d %2d/%-2d whole' % (i, r, c))
-            continue
-        cell, fx, fy = place(trim(src[i]), olds[i]['box'], i < UPRIGHT, olds[i]['amax'], crop_top=(i == 6))
+        cell, fx, fy = place(trim(src[i]), olds[i]['box'], i in UPRIGHT, olds[i]['amax'], crop_top=(i == 6))
         note = 'fit %3.0f%% x %3.0f%%' % (100 * fx, 100 * fy)
         if i not in GENERATED:
             n = np.asarray(cell).astype(float).copy()
