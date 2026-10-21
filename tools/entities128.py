@@ -10,10 +10,15 @@ upright sprites, so every anchor, content rect and shadow root lands where the 6
 original then has its saturation and mean linear luminance matched to the old cell's (it lands within
 0.92-1.00: it IS that cell's source, bar the darkened barrel); a generated cell keeps its painted colours.
 
+The old cells' boxes, alpha ceilings and colour targets are FROZEN in tools/entities128.json, read off
+entities64 once before that sheet was retired; nothing here opens a 64 px sheet any more. The habitat
+organs (5,*), (6,1), (7,*) are lamp-shadow silhouettes only (their 3D body is a glb), placed whole.
+
 usage: python3 tools/entities128.py [out.png]      (default app/img/entities128.png)
 """
 import io
 import itertools
+import json
 import os
 import re
 import sys
@@ -25,17 +30,23 @@ from PIL import Image
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.realpath(os.path.join(ROOT, 'textures-src', '..'))
 GEN = os.path.join(ROOT, 'textures-src', 'img', 'entities128', '%s.png')
+REFS = os.path.join(ROOT, 'tools', 'entities128.json')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'app', 'img', 'entities128.png')
 CELL = 128
 COLS = 8
 # Const.HD128, in its order
 CELLS = [(4, 0), (4, 1), (2, 4), (2, 7), (4, 6), (4, 7), (16, 2), (3, 2), (3, 3), (3, 6), (3, 7), (3, 8),
          (1, 10), (1, 11)] + [(40, c) for c in range(10)] + [(21, c) for c in range(3, 8)] + \
-        [(22, c) for c in range(3, 8)]
+        [(22, c) for c in range(3, 8)] + \
+        [(0, 1), (0, 2), (0, 3), (0, 9), (1, 4), (1, 6), (1, 7), (1, 8), (1, 9), (4, 2), (4, 4)] + \
+        [(3, 0), (3, 1)] + \
+        [(5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (6, 1), (7, 1), (7, 2)]
 # the first seven stand on their foot: bottom-aligned in their box
 UPRIGHT = 7
-# the generated cells, which keep their own colours: the money and every splat
-GENERATED = {7, 8} | set(range(14, 34))
+# the generated cells, which keep their own colours: the money, every splat and the region marks
+GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36, 43, 44}
+# the cells drawn at 128 x 128 already, pasted as they are: the region marks and the organ silhouettes
+WHOLE = {34, 35, 36, 43, 44} | set(range(47, 56))
 
 
 def lzf(src, n):
@@ -67,9 +78,9 @@ def kra(path, layer=None):
     if layer is None:
         return Image.open(io.BytesIO(z.read('mergedimage.png'))).convert('RGBA')
     doc = z.read('maindoc.xml').decode()
-    w = int(re.search(r'<IMAGE [^>]*\swidth="(\d+)"', doc).group(1))
-    h = int(re.search(r'<IMAGE [^>]*\sheight="(\d+)"', doc).group(1))
-    root = re.search(r'<IMAGE [^>]*\sname="([^"]*)"', doc).group(1)
+    w = int(re.search(r'<IMAGE[^>]*\swidth="(\d+)"', doc).group(1))
+    h = int(re.search(r'<IMAGE[^>]*\sheight="(\d+)"', doc).group(1))
+    root = re.search(r'<IMAGE[^>]*\sname="([^"]*)"', doc).group(1)
     for m in re.finditer(r'<layer ([^>]*)/?>', doc):
         a = dict(re.findall(r'(\w+)="([^"]*)"', m.group(1)))
         if a.get('name') != layer:
@@ -156,6 +167,15 @@ def box(old):
     return (xs.min() * 2, ys.min() * 2, xs.max() * 2 + 2, ys.max() * 2 + 2), old[..., 3].max()
 
 
+def freeze(old):
+    # what this script needs of one old 64 px cell: its 2x box, alpha ceiling, saturation and mean
+    # linear luminance (see match). run once per sheet, into REFS, before the sheet was retired
+    o = old.astype(float)
+    b, amax = box(old)
+    return {'box': [int(v) for v in b], 'amax': int(amax), 'sat': float(sat(o)),
+            'lum': float(lin(o)[1][mask(o)].mean())}
+
+
 def fill(sub, b):
     # how much of the box an aspect-locked fit covers
     tw, th = b[2] - b[0], b[3] - b[1]
@@ -223,11 +243,11 @@ def sat(cell, l=None):
     return np.where(mx > 0.02, (mx - rgb.min(1)) / np.maximum(mx, 1e-6), 0).mean()
 
 
-def match(n, o):
+def match(n, ref):
     # the old cell's saturation (a blend toward each pixel's luminance in LINEAR light, so luminance
     # holds), then its mean linear luminance (a gain, so hue holds)
     ln, yn = lin(n)
-    target = sat(o)
+    target = ref['sat']
     f = 1.0
     if sat(n) > target:
         lo, hi = 0.0, 1.0
@@ -238,56 +258,84 @@ def match(n, o):
             else:
                 lo = mid
         f = (lo + hi) / 2
-    gain = lin(o)[1][mask(o)].mean() / lin(n)[1][mask(n)].mean()
-    l = np.clip((yn[..., None] + f * (ln - yn[..., None])) * gain, 0, 1)
+    # the gain re-solved against what the clip leaves: the high-crime pistol's original is near black
+    # where its 64 px cell was mid grey (x5), and one pass clipped its highlights 30% short
+    base = yn[..., None] + f * (ln - yn[..., None])
+    m = mask(n)
+    gain = ref['lum'] / lin(n)[1][m].mean()
+    for _ in range(8):
+        gain *= ref['lum'] / (np.clip(base * gain, 0, 1) @ [0.2126, 0.7152, 0.0722])[m].mean()
+    l = np.clip(base * gain, 0, 1)
     n[..., :3] = np.where(l <= 0.0031308, l * 12.92, 1.055 * l ** (1 / 2.4) - 0.055) * 255
     return gain, f
 
 
-atlas = np.asarray(Image.open(os.path.join(ROOT, 'app', 'img', 'entities64.png')).convert('RGBA'))
-olds = [atlas[r * 64:r * 64 + 64, c * 64:c * 64 + 64] for r, c in CELLS]
-spits = split(kra('Effects/spit.kra'), 3)
-# every cell's source, in CELLS order
-src = [
-    kra('parasite-icon3.kra'),
-    kra('AI/dog.kra'),
-    kra('Objects/item.kra'),
-    kra('Objects/nutrient.kra'),
-    kra('Sewers/choir.kra', 'choir 3'),
-    kra('Sewers/choir.kra', 'choir dead'),
-    kra('Street/burning barrel.kra', 'Background'),
-    Image.open(GEN % 'money-bill').convert('RGBA'),
-    Image.open(GEN % 'money-scatter').convert('RGBA'),
-    spits[0],
-    spits[1],
-    spits[2],
-    kra('UI Elements/targeting-reticle.kra'),
-    kra('UI Elements/targeting-frame.kra'),
-]
-# the splats: each sheet a 3 x 2 of six, five of them dealt to the old five shapes by best fit
-for colour in ('red', 'black', 'acid', 'slime'):
-    sheet = Image.open(GEN % ('blood-' + colour)).convert('RGBA')
-    w, h = sheet.width // 3, sheet.height // 2
-    six = [trim(inside(sheet.crop((x * w, y * h, x * w + w, y * h + h)))) for y in range(2) for x in range(3)]
-    boxes = [box(olds[len(src) + k])[0] for k in range(5)]
-    best = max(itertools.permutations(range(6), 5), key=lambda p: sum(fill(six[p[k]], boxes[k]) for k in range(5)))
-    print('%-5s splats %s' % (colour, best))
-    src += [six[k] for k in best]
+def main():
+    refs = json.load(open(REFS))
+    olds = [refs['%d,%d' % rc] for rc in CELLS]
+    spits = split(kra('Effects/spit.kra'), 3)
+    # every cell's source, in CELLS order
+    src = [
+        kra('parasite-icon3.kra'),
+        kra('AI/dog.kra'),
+        kra('Objects/item.kra'),
+        kra('Objects/nutrient.kra'),
+        kra('Sewers/choir.kra', 'choir 3'),
+        kra('Sewers/choir.kra', 'choir dead'),
+        kra('Street/burning barrel.kra', 'Background'),
+        Image.open(GEN % 'money-bill').convert('RGBA'),
+        Image.open(GEN % 'money-scatter').convert('RGBA'),
+        spits[0],
+        spits[1],
+        spits[2],
+        kra('UI Elements/targeting-reticle.kra'),
+        kra('UI Elements/targeting-frame.kra'),
+    ]
+    # the region map's marks, then its location icons and the two gas puffs, then the organ silhouettes
+    marks = [Image.open(GEN % ('mark-%d-%d' % rc)).convert('RGBA') for rc in CELLS[34:37]]
+    icons = [
+        kra('Region/high crime.kra'),
+        kra('Region/lair2.kra', 'lair2.jpg'),
+        kra('Region/lair2.kra'),
+        kra('Region/ovum.kra'),
+        kra('Corp/flats+skyscraper.kra'),
+        kra('Cult/cult-mission.kra'),
+    ]
+    dots = [Image.open(GEN % ('mark-%d-%d' % rc)).convert('RGBA') for rc in CELLS[43:45]]
+    gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
+    organs = [Image.open(GEN % ('organ-%d-%d' % rc)).convert('RGBA') for rc in CELLS[47:56]]
+    # the splats: each sheet a 3 x 2 of six, five of them dealt to the old five shapes by best fit
+    for colour in ('red', 'black', 'acid', 'slime'):
+        sheet = Image.open(GEN % ('blood-' + colour)).convert('RGBA')
+        w, h = sheet.width // 3, sheet.height // 2
+        six = [trim(inside(sheet.crop((x * w, y * h, x * w + w, y * h + h)))) for y in range(2) for x in range(3)]
+        boxes = [olds[len(src) + k]['box'] for k in range(5)]
+        best = max(itertools.permutations(range(6), 5), key=lambda p: sum(fill(six[p[k]], boxes[k]) for k in range(5)))
+        print('%-5s splats %s' % (colour, best))
+        src += [six[k] for k in best]
+    src += marks + icons + dots + gas + organs
 
-out = Image.new('RGBA', (COLS * CELL, COLS * CELL))
-for i, (r, c) in enumerate(CELLS):
-    b, amax = box(olds[i])
-    cell, fx, fy = place(trim(src[i]), b, i < UPRIGHT, amax, crop_top=(i == 6))
-    note = 'fit %3.0f%% x %3.0f%%' % (100 * fx, 100 * fy)
-    if i not in GENERATED:
-        n = np.asarray(cell).astype(float).copy()
-        gain, f = match(n, olds[i].astype(float))
-        cell = Image.fromarray(n.round().astype(np.uint8))
-        note += '  gain %.2f  sat f %.2f' % (gain, f)
-    out.alpha_composite(cell, ((i % COLS) * CELL, (i // COLS) * CELL))
-    print('%2d %2d/%-2d %s' % (i, r, c, note))
-# through a temp file: overwriting in place fails with EINVAL while the game on the Windows host holds
-# the sheet open
-out.save(OUT + '.tmp.png')
-os.replace(OUT + '.tmp.png', OUT)
-print('wrote', OUT)
+    out = Image.new('RGBA', (COLS * CELL, COLS * CELL))
+    for i, (r, c) in enumerate(CELLS):
+        if i in WHOLE:
+            out.alpha_composite(src[i], ((i % COLS) * CELL, (i // COLS) * CELL))
+            print('%2d %2d/%-2d whole' % (i, r, c))
+            continue
+        cell, fx, fy = place(trim(src[i]), olds[i]['box'], i < UPRIGHT, olds[i]['amax'], crop_top=(i == 6))
+        note = 'fit %3.0f%% x %3.0f%%' % (100 * fx, 100 * fy)
+        if i not in GENERATED:
+            n = np.asarray(cell).astype(float).copy()
+            gain, f = match(n, olds[i])
+            cell = Image.fromarray(n.round().astype(np.uint8))
+            note += '  gain %.2f  sat f %.2f' % (gain, f)
+        out.alpha_composite(cell, ((i % COLS) * CELL, (i // COLS) * CELL))
+        print('%2d %2d/%-2d %s' % (i, r, c, note))
+    # through a temp file: overwriting in place fails with EINVAL while the game on the Windows host holds
+    # the sheet open
+    out.save(OUT + '.tmp.png')
+    os.replace(OUT + '.tmp.png', OUT)
+    print('wrote', OUT)
+
+
+if __name__ == '__main__':
+    main()

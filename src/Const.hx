@@ -660,11 +660,12 @@ class Const
     { row: 53, col: 3 },
   ];
 
-  // ---- the 128 px redraw: the entities64 cells the 3D view still drew at 64 ----------------------
+  // ---- the 128 px redraw: every entities64 cell still drawn anywhere -----------------------------
   // index = the cell of img/entities128 (an 8 x 8 of 128 px, reading order); value = the entities64
   // frame it redraws, from that frame's original art, registered onto its own content box at 2x so
-  // every anchor lands where the 64 px cell put it (tools/entities128.py). 3D-ONLY like the packs above:
-  // render.particles.Sprites.atlasFor redirects the sprite pool, Sprites.batchCell the batched decals
+  // every anchor lands where the 64 px cell put it (tools/entities128.py). The frame stays the cell's
+  // ID (saves keep it); render.particles.Sprites.atlasFor redirects the sprite pool and the region
+  // map, Sprites.batchCell the batched decals
   public static inline var HD128_CELL = 128;
   public static inline var HD128_COLS = 8;
   public static var HD128 = [
@@ -703,6 +704,33 @@ class Const
     { row: 22, col: 5 },
     { row: 22, col: 6 },
     { row: 22, col: 7 },
+    // the region map: alert marks 1-3, high crime, habitat, ambushed habitat, ovum, corp HQ, cult
+    // mission, host mask, path dot
+    { row: 0, col: 1 },
+    { row: 0, col: 2 },
+    { row: 0, col: 3 },
+    { row: 0, col: 9 },
+    { row: 1, col: 4 },
+    { row: 1, col: 6 },
+    { row: 1, col: 7 },
+    { row: 1, col: 8 },
+    { row: 1, col: 9 },
+    { row: 4, col: 2 },
+    { row: 4, col: 4 },
+    // panic and paralysis gas puffs
+    { row: 3, col: 0 },
+    { row: 3, col: 1 },
+    // the habitat organs' lamp-shadow silhouettes (their body is a glb): biomineral 1-3,
+    // preservator 1-3, assimilation cavity, watcher 1-2
+    { row: 5, col: 1 },
+    { row: 5, col: 2 },
+    { row: 5, col: 3 },
+    { row: 5, col: 5 },
+    { row: 5, col: 6 },
+    { row: 5, col: 7 },
+    { row: 6, col: 1 },
+    { row: 7, col: 1 },
+    { row: 7, col: 2 },
   ];
 
 // which entities128 cell redraws this frame, or -1. a linear scan, asked once per cache miss like decoHD

@@ -2023,3 +2023,32 @@ one, the bill and the scatter cut clean. One `edit_image` re-cut each ("keep the
 everything else") gave 76-82% at zero. The uncut drops are in `uncut/`.
 
 **Verdict:** landed.
+
+## entities128: region map icons and the gas puffs from their originals, 64 px data frozen
+
+Retiring entities64 before release. The region map drew 11 entities64 cells raw and the gas puffs
+(3,0)/(3,1) were the last 3D sprites still cut at 64.
+
+- **One lookup:** `Sprites.atlasFor` is now `public static` and image-in; `Entity.drawCell`,
+  `RegionView` (icons, high-crime outline, path dots) and `View.iconBox` all crop what it returns, so
+  an `HD128` row moves a frame everywhere at once. The outline canvas is sized at the source cell.
+- **22 cells appended to `Const.HD128` (34-55):** alert marks (0,1-3), high crime (0,9), habitat
+  (1,4)/(1,6), ovum (1,7), corp HQ (1,8), cult mission (1,9), host mask (4,2), path dot (4,4), gas
+  (3,0)/(3,1), and the nine habitat organ lamp-shadow silhouettes (5,1-3), (5,5-7), (6,1), (7,1-2).
+- **From the kra originals:** `Region/high crime`, `Region/lair2` (layer `lair2.jpg` = habitat, merged =
+  ambushed), `Region/ovum`, `Corp/flats+skyscraper`, `Cult/cult-mission`, `Effects/panic-gas`,
+  `Effects/paralysis-gas`; registered and colour-matched like the other originals.
+- **Frozen:** every cell's 2x box, alpha ceiling, saturation and linear luminance target is now in
+  `tools/entities128.json` (plus tileset64 row 1 cols 4-9), read off the 64 px sheets once; the tool
+  never opens a 64 px sheet. Cells 0-33 rebuild byte-identical from the JSON.
+
+**Measured:** icons gain 0.97-0.98, gas 1.00 (sat f 1.00: no chroma shift); fits 95-100%. In game the
+region icons resolve to entities128 and read sharper; both gas clouds draw from 128 crops with their
+lobes and colour intact, unlike the edit redraw that was left out for rimmed lobes and +30% chroma.
+
+**Trap 1:** `kra()`'s `<IMAGE [^>]*\sheight=` needed a space before the attribute, so a file whose
+IMAGE tag opens with `height` (lair2) matched nothing: `<IMAGE[^>]*\s`. **Trap 2:** the high-crime
+pistol's original is near black where its 64 px cell is mid grey; the single gain (x5) clipped the
+highlights and landed 30% short. The gain is now re-solved against the clipped result (x7.5, on target).
+
+**Verdict:** landed.
