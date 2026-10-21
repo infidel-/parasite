@@ -15,9 +15,11 @@ entities64 once before that sheet was retired; nothing here opens a 64 px sheet 
 organs (5,*), (6,1), (7,*) are lamp-shadow silhouettes only (their 3D body is a glb): front renders of
 those glbs, models-src/habitat/organ_shadows.py, organ-<name>.png.
 
-It also builds app/img/tileset128.png, the region map's facility and military-base marks (tileset64 row 1,
-cols 4-9) off their 512 px originals in Region/, one 128 px cell each in tile id order
-(Const.TILE_FACILITY1 .. TILE_MILITARY_BASE1 + 1), placed and matched the same way.
+The region map's location icons (high crime, habitat, ambushed habitat, ovum, corp HQ, cult mission) and
+its facility and military-base marks are GENERATED too, as free-standing objects in the game's style
+instead of the old flat discs: one 4 x 3 sheet, region-icons.png (gpt-image-2.5 sunburst, re-gridded by
+tools/pack16.py; the raw drop is in uncut/). The marks go to app/img/tileset128.png, one 128 px cell each
+in tile id order (Const.TILE_FACILITY1 .. TILE_MILITARY_BASE1 + 1), in tileset64 row 1 cols 4-9's boxes.
 
 usage: python3 tools/entities128.py [out.png]      (default app/img/entities128.png)
 """
@@ -51,11 +53,11 @@ CELLS = [(4, 0), (4, 1), (2, 4), (2, 7), (4, 6), (4, 7), (16, 2), (3, 2), (3, 3)
         [(5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (6, 1), (7, 1), (7, 2)]
 # the first seven stand on their foot, and so do the organ silhouettes: bottom-aligned in their box
 UPRIGHT = set(range(7)) | set(range(47, 56))
-# the generated cells, which keep their own colours: the money, every splat, the alert marks and the
-# host mask (matching those to the old cells' value washed the gen's muted hues to pastel and white).
-# The path dot is matched: at the gen's own value it vanished into the dark map. The organ silhouettes
-# are shadow masks, black by construction
-GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36, 43} | set(range(47, 56))
+# the generated cells, which keep their own colours: the money, every splat, the alert marks, the
+# location icons and the host mask (matching those to the old cells' value washed the gen's muted hues
+# to pastel and white). The path dot and the high-crime pistol are matched: at the gen's own value both
+# vanish into the dark map. The organ silhouettes are shadow masks, black by construction
+GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36} | set(range(38, 44)) | set(range(47, 56))
 
 
 def lzf(src, n):
@@ -329,14 +331,11 @@ def main():
     # the alert marks carry the 64 px glyphs' dark ring, so they read on a bright tile too: grown at the
     # source's scale, a 2 px ring once placed
     marks = [outline(m, m.height // 20) for m in six[:3]]
-    icons = [
-        kra('Region/high crime.kra'),
-        kra('Region/lair2.kra', 'lair2.jpg'),
-        kra('Region/lair2.kra'),
-        kra('Region/ovum.kra'),
-        kra('Corp/flats+skyscraper.kra'),
-        kra('Cult/cult-mission.kra'),
-    ]
+    # region-icons.png: a 4 x 3 of the six location icons in CELLS order, then the six TILES
+    sheet = Image.open(GEN % 'region-icons').convert('RGBA')
+    w, h = sheet.width // 4, sheet.height // 3
+    twelve = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(3) for x in range(4)]
+    icons = twelve[:6]
     dots = six[3:5]
     gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
     organs = [Image.open(GEN % ('organ-' + n)).convert('RGBA') for n in
@@ -372,12 +371,9 @@ def main():
     tiles = Image.new('RGBA', (len(TILES) * CELL, CELL))
     for k, name in enumerate(TILES):
         ref = refs['tileset:1,%d' % (4 + k)]
-        cell, fx, fy = place(trim(Image.open(os.path.join(ASSETS, 'Region', name + '.png')).convert('RGBA')),
-                             ref['box'], False, ref['amax'])
-        n = np.asarray(cell).astype(float).copy()
-        gain, f = match(n, ref)
-        tiles.alpha_composite(Image.fromarray(n.round().astype(np.uint8)), (k * CELL, 0))
-        print('tile 1/%d %-16s fit %3.0f%% x %3.0f%%  gain %.2f  sat f %.2f' % (4 + k, name, 100 * fx, 100 * fy, gain, f))
+        cell, fx, fy = place(trim(twelve[6 + k]), ref['box'], False, ref['amax'])
+        tiles.alpha_composite(cell, (k * CELL, 0))
+        print('tile 1/%d %-16s fit %3.0f%% x %3.0f%%' % (4 + k, name, 100 * fx, 100 * fy))
     save(tiles, TILES_OUT)
 
 

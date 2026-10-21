@@ -2026,6 +2026,8 @@ everything else") gave 76-82% at zero. The uncut drops are in `uncut/`.
 
 ## entities128: region map icons and the gas puffs from their originals, 64 px data frozen
 
+> Location icons SUPERSEDED by "entities128: region map location icons regenerated as free-standing objects"; the gas and the frozen data stand.
+
 Retiring entities64 before release. The region map drew 11 entities64 cells raw and the gas puffs
 (3,0)/(3,1) were the last 3D sprites still cut at 64.
 
@@ -2176,5 +2178,29 @@ included. From the plate a walker draws ~12 px tall, so a 128 cell minifies ~10x
 
 **Trap:** "every civilian cell keeps a clear margin" was the premise for turning mipmaps on, and the
 measurement said the opposite: 0 px on all four sides.
+
+**Verdict:** landed.
+
+## entities128: region map location icons regenerated as free-standing objects
+
+The location icons (high crime, habitat, ambushed habitat, ovum, corp HQ, cult mission) and the six
+facility/base marks in `tileset128.png` had been rebuilt at 2x off their kra/png originals, keeping the
+old flat clipart discs. The ask was new icons in our style; user's pick: free-standing objects, no disc.
+
+- **One gen:** gpt-image-2.5 sunburst high, transparent, 1024x768, a 4x3 in `CELLS` then `TILES` order,
+  separation clause first, `style` appended. $0.04. Raw drop in `textures-src/img/entities128/uncut/`,
+  `tools/pack16.py --cols 4 --rows 3 --cell 256 --valign center` → `region-icons.png`.
+- **Placed into each old box**, aspect-locked and centred. Gen colours kept (`GENERATED` 38-42, tiles
+  unmatched); only the pistol is value-matched (gain 4.2, sat f 0.02), being a black gun on a dark map.
+
+**Measured:** the drop had 0.1% clear and 68% under alpha 16 (a haze up to ~64), and its row seams
+landed at 236/494 against 256/512 (742 opaque px on the nominal 512 lane); `pack16` derived both and
+flattened the wash. Fits 96-100% on the disc boxes; the corp tower 44% wide, the cult flame 60%. In game
+the pistols, habitat, towers, DNA and helmet all read at 64 px; pasted over light and dark map crops,
+all twelve stay distinct.
+
+**Trap:** an old box was fitted to a disc, so a tall or narrow object comes out small inside it: the
+cult flame fills the 80 px cult disc box only 60% wide and draws ~24 px on the map. The helmet and the
+soldier are dark-on-dark against the darkest tiles.
 
 **Verdict:** landed.
