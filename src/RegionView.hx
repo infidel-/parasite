@@ -30,10 +30,10 @@ class RegionView
   static inline var SLIDE_MULT = 0.6; // slide length in BASE_MS multiples (under the 100ms path step)
   static inline var REVEAL_MULT = 1.0; // newly known tile fade length in BASE_MS multiples
   // the soft dark halo under every location icon (drawHaloIcon), in source cell px (128 a tile)
-  static var HALO_BLUR = 6.0; // blur radius
-  static var HALO_PAD = 20; // canvas margin a side, room for the blur to spread
-  static var HALO_PASSES = 3; // blurred copies stacked: one alone left a fringe too faint to read
-  static var HALO_ALPHA = 0.9; // its opacity
+  static var HALO_BLUR = 3.0; // blur radius (6, three passes at 0.9 read too dark and too wide)
+  static var HALO_PAD = 12; // canvas margin a side, room for the blur to spread
+  static var HALO_PASSES = 2; // blurred copies stacked: one alone left a fringe too faint to read
+  static var HALO_ALPHA = 0.5; // its opacity
   var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
   var lastPY: Int;
   var lastCamX: Int;

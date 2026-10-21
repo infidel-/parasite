@@ -17,8 +17,9 @@ those glbs, models-src/habitat/organ_shadows.py, organ-<name>.png.
 
 The region map's location icons (high crime, habitat, ambushed habitat, ovum, corp HQ, cult mission) and
 its variant marks (corp HQ towers 2-4, four facility, four military base) are GENERATED too, as
-free-standing objects in the game's style instead of the old flat discs: region-icons.png (a 4 x 3) and
-region-icons2.png (a 4 x 2), gpt-image-2.5 sunburst, re-gridded by tools/pack16.py, raw drops in uncut/.
+free-standing objects in the game's style instead of the old flat discs: region-icons.png (a 4 x 3),
+region-icons2.png (a 4 x 2) and region-base.png (a 2 x 2, the first sheet's soldier bust in front of his
+gear, an edit off that cell), gpt-image-2.5 sunburst, re-gridded by tools/pack16.py, raw drops in uncut/.
 The variant marks have no entities64 cell, so each borrows a ref: the towers the corp HQ's, the facility
 and base marks tileset64 row 1's (the sheet those marks were on before it went into this one).
 
@@ -335,7 +336,8 @@ def main():
     # source's scale, a 2 px ring once placed
     marks = [outline(m, m.height // 20) for m in six[:3]]
     # region-icons.png: the six location icons in CELLS order, the four facility marks, two retired
-    # base marks; region-icons2.png: corp HQ towers 2-4, a spare, the four base marks
+    # base marks; region-icons2.png: corp HQ towers 2-4, then a row nothing uses (the base marks before
+    # they were redrawn round the soldier bust); region-base.png: the four base marks
     sheet = Image.open(GEN % 'region-icons').convert('RGBA')
     w, h = sheet.width // 4, sheet.height // 3
     twelve = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(3) for x in range(4)]
@@ -343,7 +345,10 @@ def main():
     w, h = sheet.width // 4, sheet.height // 2
     eight = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(2) for x in range(4)]
     icons = twelve[:6]
-    variants = eight[:3] + twelve[6:10] + eight[4:]
+    sheet = Image.open(GEN % 'region-base').convert('RGBA')
+    w, h = sheet.width // 2, sheet.height // 2
+    base = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(2) for x in range(2)]
+    variants = eight[:3] + twelve[6:10] + base
     dots = six[3:5]
     gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
     organs = [Image.open(GEN % ('organ-' + n)).convert('RGBA') for n in

@@ -2236,3 +2236,16 @@ at map size (edge alpha ~0.35 under 0.7); three stacked passes read as a soft sh
 runtime it spills past the tile edge, which is what a shadow should do.
 
 **Verdict:** landed. tileset128 retired.
+
+## entities128: base marks redrawn round the soldier bust, the icon halo halved
+
+Feedback: the halo read too dark and too wide; the base marks were meant to be the first sheet's soldier
+bust (face and torso) IN FRONT of his gear, smaller than the full-tile soldier, not a small full figure.
+
+- **Base marks:** one `edit_image` off that soldier cell (sunburst high, transparent, 1024 2x2): the bust
+  in front, a tank, an armoured jeep, a fan of rifles and a helicopter behind. 52% clear first time,
+  `pack16 --cols 2 --rows 2`. $0.06. `region-base.png`; region-icons2's second row is now unused.
+- **Halo:** blur 6 / three passes / 0.9 → **3 / two / 0.5**, pad 20 → 12. Picked off a side-by-side of four
+  settings over map crops; at 64 px it still lifts every icon off a busy tile without a dark ring round it.
+
+**Verdict:** landed.
