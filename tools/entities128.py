@@ -1,4 +1,4 @@
-"""Build app/img/entities128.png, the 3D view's 128 px redraw of the entities64 cells in Const.HD128,
+"""Build app/img/entities128.png, the 128 px redraw of the entities64 cells in Const.HD128,
 from the ORIGINAL art under the asset store (the Krita files and pngs the 64 px cells were made from)
 instead of the gpt upscale it first shipped as. The blood family and the money are GENERATED in the
 game's own style instead (asked for: "closer to our game style" than the old flat art): four sheets of
@@ -14,6 +14,10 @@ The old cells' boxes, alpha ceilings and colour targets are FROZEN in tools/enti
 entities64 once before that sheet was retired; nothing here opens a 64 px sheet any more. The habitat
 organs (5,*), (6,1), (7,*) are lamp-shadow silhouettes only (their 3D body is a glb): front renders of
 those glbs, models-src/habitat/organ_shadows.py, organ-<name>.png.
+
+It also builds app/img/tileset128.png, the region map's facility and military-base marks (tileset64 row 1,
+cols 4-9) off their 512 px originals in Region/, one 128 px cell each in tile id order
+(Const.TILE_FACILITY1 .. TILE_MILITARY_BASE1 + 1), placed and matched the same way.
 
 usage: python3 tools/entities128.py [out.png]      (default app/img/entities128.png)
 """
@@ -33,6 +37,9 @@ ASSETS = os.path.realpath(os.path.join(ROOT, 'textures-src', '..'))
 GEN = os.path.join(ROOT, 'textures-src', 'img', 'entities128', '%s.png')
 REFS = os.path.join(ROOT, 'tools', 'entities128.json')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'app', 'img', 'entities128.png')
+TILES_OUT = os.path.join(os.path.dirname(OUT), 'tileset128.png')
+# tileset64 row 1 cols 4-9: the four facility marks, then the two military base ones
+TILES = ['chemistry', 'microscope', 'biology', 'medical-research', 'helmet', 'soldier']
 CELL = 128
 COLS = 8
 # Const.HD128, in its order
@@ -360,11 +367,26 @@ def main():
             note += '  gain %.2f  sat f %.2f' % (gain, f)
         out.alpha_composite(cell, ((i % COLS) * CELL, (i // COLS) * CELL))
         print('%2d %2d/%-2d %s' % (i, r, c, note))
+    save(out, OUT)
+
+    tiles = Image.new('RGBA', (len(TILES) * CELL, CELL))
+    for k, name in enumerate(TILES):
+        ref = refs['tileset:1,%d' % (4 + k)]
+        cell, fx, fy = place(trim(Image.open(os.path.join(ASSETS, 'Region', name + '.png')).convert('RGBA')),
+                             ref['box'], False, ref['amax'])
+        n = np.asarray(cell).astype(float).copy()
+        gain, f = match(n, ref)
+        tiles.alpha_composite(Image.fromarray(n.round().astype(np.uint8)), (k * CELL, 0))
+        print('tile 1/%d %-16s fit %3.0f%% x %3.0f%%  gain %.2f  sat f %.2f' % (4 + k, name, 100 * fx, 100 * fy, gain, f))
+    save(tiles, TILES_OUT)
+
+
+def save(im, path):
     # through a temp file: overwriting in place fails with EINVAL while the game on the Windows host holds
     # the sheet open
-    out.save(OUT + '.tmp.png')
-    os.replace(OUT + '.tmp.png', OUT)
-    print('wrote', OUT)
+    im.save(path + '.tmp.png')
+    os.replace(path + '.tmp.png', path)
+    print('wrote', path)
 
 
 if __name__ == '__main__':

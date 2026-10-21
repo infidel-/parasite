@@ -1369,9 +1369,9 @@ class Const
   public static var TILE_FLOOR_MARBLE2 = OFFSET_ROW12 + 11;
   public static var TILE_FLOOR_CARPET_MEETING = OFFSET_ROW12 + 12;
 
-  // the two floors gen.corp added, and they are ALIASES rather than art: tiles.Default.getIcon
-  // draws the cubicle farm as plain carpet and the server room as concrete, the same trick the car
-  // park's marks use one row up. They exist so a reader of the SAVED GRID can tell a cubicle farm
+  // the two floors gen.corp added, and they are IDs rather than art: the 3D floor reads the cubicle
+  // farm as plain carpet and the server room as concrete, the same trick the car park's marks use one
+  // row up. They exist so a reader of the SAVED GRID can tell a cubicle farm
   // from the corridor it opens off and a server room from the lift lobby it shares its concrete
   // with — one shared floor id cannot say that, and the floor is where a corp room's role lives
   public static var TILE_FLOOR_CUBICLE = OFFSET_ROW12 + 13;
@@ -1384,8 +1384,7 @@ class Const
   public static var TILE_FLOOR_ARCHIVE = OFFSET_ROW12 + 15;
   // === row 17 - corpo, again: row 12 is full. The RECEPTION's own floor, split off
   // TILE_FLOOR_MARBLE1 so the exec office can wear its own finish and the front desk keep the pale
-  // stone. It is marble to look at in 2D (tiles.Default.getIcon) and its unwalkable twin is one row
-  // below, +16, the same as every corp floor
+  // stone. Its unwalkable twin is one row below, +16, the same as every corp floor
   public static var OFFSET_ROW17 = 272;
   public static var TILE_FLOOR_RECEPTION = OFFSET_ROW17 + 0;
   // and the EXEC RUG, which is not a finish either: the exec office's own marble, but it marks the
@@ -1408,8 +1407,8 @@ class Const
   // and one receptionist per this many cells of it
   public static inline var RECEPTION_STATION_PITCH = 3;
 
-  // === row 19 - the military base (gen.military.MilitaryGen). No 2D art: a base always renders in
-  // 3D, and tiles.Default.getIcon aliases every one of these to a surface that exists
+  // === row 19 - the military base (gen.military.MilitaryGen). IDs only, no art: a base always
+  // renders in 3D
   public static var OFFSET_ROW19 = 304;
   // the perimeter chain-link, two cells high. Unwalkable and see-through
   public static var TILE_MIL_FENCE = OFFSET_ROW19 + 0;

@@ -6,7 +6,7 @@
 // Nothing about that is wrong except its conclusion — a car the player walks straight through is not
 // a car — so the DEAL moved here and the renderer reads the marks back. It is the boom barrier's own
 // move (gen.facility.FacilityTemp.TEMP_BARRIER) for the boom barrier's own reason, and like the boom
-// it costs no new art: both marks alias to the alley's asphalt (tiles.Default.getIcon).
+// it costs no new art: both marks are IDs the renderer reads as the alley's asphalt.
 //
 // THE BAY RHYTHM IS FacilityPaint's AND IS COPIED RATHER THAN SHARED, and that is a real cost worth
 // stating. The phase comes off `runStart` below, which is render.facility.FacilityPaint.runStart

@@ -161,10 +161,10 @@ class Default extends Tileset
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
   ];
 
-// load default tileset image
+// create default tileset
   public function new()
     {
-      super('img/tileset64.png');
+      super();
       splatLayerID = 0; // persisted in SPLAT decorations: the one floor layer the 2D view had
     }
 

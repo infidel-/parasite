@@ -5,7 +5,6 @@ import js.html.CanvasRenderingContext2D;
 import js.html.CanvasElement;
 import js.Browser;
 import game.*;
-import tiles.Tileset;
 import map.Image;
 import render.Viewport;
 import render.particles.Sprites;
@@ -290,11 +289,10 @@ class RegionView
         visibleTilesH * Const.TILE_SIZE);
 
       // draw area icons
-      var tileset = scene.images.getDefaultTileset();
       var cells = game.region.getCells();
       for (y in 0...height)
         for (x in 0...width)
-          drawArea(ctx, cells[x][y], tileset, now);
+          drawArea(ctx, cells[x][y], now);
 
       // draw player at its slide offset
       ctx.save();
@@ -411,18 +409,30 @@ class RegionView
       revealStart.set(a.id, Browser.window.performance.now());
     }
 
-// draw one special area tile on top of the region map image
-  function drawAreaTileOverlay(ctx: CanvasRenderingContext2D,
-      area: AreaGame, tileset: Tileset, ax: Int, ay: Int)
+// draw a facility's or a military base's own mark over its map tile, off tileset128: one 128 px cell
+// per tile id from Const.TILE_FACILITY1 (four facilities, then two bases). smoothed, since it is drawn
+// at 64 x mapScale
+  function drawAreaTileOverlay(ctx: CanvasRenderingContext2D, area: AreaGame, ax: Int, ay: Int)
     {
       if (area.typeID != AREA_MILITARY_BASE &&
           area.typeID != AREA_FACILITY)
         return;
-
-      var icon = tileset.getIcon(area.tileID);
-      untyped ctx.imageSmoothingEnabled = false;
-      tileset.draw(ctx, icon, ax, ay);
-      untyped ctx.imageSmoothingEnabled = true;
+      var img = scene.images.tileset128;
+      var cell = area.tileID - Const.TILE_FACILITY1;
+      // a saved tile id outside the six draws no mark
+      if (img.naturalWidth <= 0 ||
+          cell < 0 ||
+          cell >= Std.int(img.naturalWidth / Const.HD128_CELL))
+        return;
+      ctx.drawImage(img,
+        cell * Const.HD128_CELL,
+        0,
+        Const.HD128_CELL,
+        Const.HD128_CELL,
+        ax,
+        ay,
+        Const.TILE_SIZE,
+        Const.TILE_SIZE);
     }
 
 // draw one alpha feather strip inside one unknown frontier tile
@@ -561,7 +571,7 @@ class RegionView
     }
 
 // paint area icons on top of the region map image
-  function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, tileset: Tileset, now: Float)
+  function drawArea(ctx: CanvasRenderingContext2D, area: AreaGame, now: Float)
     {
       // area not visible
       if (area.x < scene.cameraTileX1 - 1 ||
@@ -584,7 +594,7 @@ class RegionView
           return;
         }
 
-      drawAreaTileOverlay(ctx, area, tileset, ax, ay);
+      drawAreaTileOverlay(ctx, area, ax, ay);
 
       // high crime marker
       if (area.highCrime)
