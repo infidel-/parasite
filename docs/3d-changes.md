@@ -2052,3 +2052,29 @@ pistol's original is near black where its 64 px cell is mid grey; the single gai
 highlights and landed 30% short. The gain is now re-solved against the clipped result (x7.5, on target).
 
 **Verdict:** landed.
+
+## entities128: the region map marks generated in the game's style
+
+The five region marks had no original art: the alert `?` in white, yellow and red (0,1-3), the host-mask
+disc (4,2) and the path dot (4,4). User's pick: generate them in our style rather than redraw them flat.
+
+- **One gen:** gpt-image-2.5 sunburst high, transparent, 1024x672, a 3x2 (three `?`, the disc, the dot,
+  a spare disc), `style` appended. `textures-src/img/entities128/marks.png`, cut on the fixed grid like
+  the splats and placed into each old box. ~$0.07 with the re-cut.
+- **Keyed in the tool (`unhaze`):** a near-black backdrop is keyed off max rgb 40-65; every haze pixel
+  measured <= 28 and every symbol body over 70. A key from 30 left the disc a dark rim.
+- **The `?` carry a dark ring** (`outline`, grown at source scale on a padded canvas, ~2 px placed),
+  like the 64 px glyphs, so they read over a bright tile.
+- **Colours:** the `?` and the disc keep the gen's own (`GENERATED`); the path dot takes the old cell's
+  value (`match`, gain 5.5).
+
+**Measured:** fits 100% x 88-100%. In game the three alert levels stay distinct with their ring, the
+host disc reads as a deep violet under the host, and the path dots read pale green on the map.
+
+**Trap 1:** the transparent drop came back UNCUT (alpha min 103, 0% clear) and the `edit_image` re-cut
+only reached 15% clear, a dark haze up to alpha 253 round everything, hence the key. **Trap 2:** matching
+all five to the old cells' value washed the muted hues to pastel and the white and yellow `?` both to
+white (gains x25-77, dragged by the new ring's own black). At the gen's own value the dot vanished into
+the dark map (a dark green on green), so only the dot is matched.
+
+**Verdict:** landed.

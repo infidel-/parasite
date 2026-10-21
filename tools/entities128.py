@@ -25,7 +25,7 @@ import sys
 import zipfile
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ASSETS = os.path.realpath(os.path.join(ROOT, 'textures-src', '..'))
@@ -43,10 +43,12 @@ CELLS = [(4, 0), (4, 1), (2, 4), (2, 7), (4, 6), (4, 7), (16, 2), (3, 2), (3, 3)
         [(5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (6, 1), (7, 1), (7, 2)]
 # the first seven stand on their foot: bottom-aligned in their box
 UPRIGHT = 7
-# the generated cells, which keep their own colours: the money, every splat and the region marks
-GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36, 43, 44}
-# the cells drawn at 128 x 128 already, pasted as they are: the region marks and the organ silhouettes
-WHOLE = {34, 35, 36, 43, 44} | set(range(47, 56))
+# the generated cells, which keep their own colours: the money, every splat, the alert marks and the
+# host mask (matching those to the old cells' value washed the gen's muted hues to pastel and white).
+# The path dot is matched: at the gen's own value it vanished into the dark map
+GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36, 43}
+# the cells drawn at 128 x 128 already, pasted as they are: the organ silhouettes
+WHOLE = set(range(47, 56))
 
 
 def lzf(src, n):
@@ -136,6 +138,26 @@ def inside(im):
     a = np.asarray(im).copy()
     a[..., 3] = np.where(keep, a[..., 3], 0)
     return Image.fromarray(a)
+
+
+def unhaze(im):
+    # key out a near-black backdrop a transparent gen left behind (marks.png: alpha min 0 but 85% of it
+    # a dark haze up to alpha 253, every haze pixel at max rgb <= 28 and every symbol's body over 70;
+    # a key from 30 left the disc a dark rim)
+    a = np.asarray(im).copy()
+    k = np.clip((a[..., :3].max(-1).astype(float) - 40) / 25, 0, 1)
+    a[..., 3] = (a[..., 3] * k).astype(np.uint8)
+    return Image.fromarray(a)
+
+
+def outline(cell, px):
+    # a dark ring under the art: the alpha grown by px (on a padded canvas, so it is never clipped),
+    # black at 80%
+    cell = cell.crop((-px, -px, cell.width + px, cell.height + px))
+    ring = Image.new('RGBA', cell.size, (0, 0, 0, 0))
+    ring.putalpha(cell.getchannel('A').filter(ImageFilter.MaxFilter(2 * px + 1)).point(lambda v: v * 4 // 5))
+    ring.alpha_composite(cell)
+    return ring
 
 
 def shrink(im, w, h):
@@ -292,7 +314,14 @@ def main():
         kra('UI Elements/targeting-frame.kra'),
     ]
     # the region map's marks, then its location icons and the two gas puffs, then the organ silhouettes
-    marks = [Image.open(GEN % ('mark-%d-%d' % rc)).convert('RGBA') for rc in CELLS[34:37]]
+    # marks.png: a 3 x 2 of the alert ? in white, yellow and red, the host mask disc, the path dot, a
+    # spare disc (gpt-image-2.5 sunburst, re-cut once and still hazy, so keyed here)
+    sheet = unhaze(Image.open(GEN % 'marks').convert('RGBA'))
+    w, h = sheet.width // 3, sheet.height // 2
+    six = [trim(sheet.crop((x * w, y * h, x * w + w, y * h + h))) for y in range(2) for x in range(3)]
+    # the alert marks carry the 64 px glyphs' dark ring, so they read on a bright tile too: grown at the
+    # source's scale, a 2 px ring once placed
+    marks = [outline(m, m.height // 20) for m in six[:3]]
     icons = [
         kra('Region/high crime.kra'),
         kra('Region/lair2.kra', 'lair2.jpg'),
@@ -301,7 +330,7 @@ def main():
         kra('Corp/flats+skyscraper.kra'),
         kra('Cult/cult-mission.kra'),
     ]
-    dots = [Image.open(GEN % ('mark-%d-%d' % rc)).convert('RGBA') for rc in CELLS[43:45]]
+    dots = six[3:5]
     gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
     organs = [Image.open(GEN % ('organ-%d-%d' % rc)).convert('RGBA') for rc in CELLS[47:56]]
     # the splats: each sheet a 3 x 2 of six, five of them dealt to the old five shapes by best fit
