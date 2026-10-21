@@ -2183,6 +2183,8 @@ measurement said the opposite: 0 px on all four sides.
 
 ## entities128: region map location icons regenerated as free-standing objects
 
+> tileset128 and the helmet/soldier marks SUPERSEDED by "entities128: region marks folded in, corp and base variants, a halo under every location icon".
+
 The location icons (high crime, habitat, ambushed habitat, ovum, corp HQ, cult mission) and the six
 facility/base marks in `tileset128.png` had been rebuilt at 2x off their kra/png originals, keeping the
 old flat clipart discs. The ask was new icons in our style; user's pick: free-standing objects, no disc.
@@ -2204,3 +2206,33 @@ cult flame fills the 80 px cult disc box only 60% wide and draws ~24 px on the m
 soldier are dark-on-dark against the darkest tiles.
 
 **Verdict:** landed.
+
+## entities128: region marks folded in, corp and base variants, a halo under every location icon
+
+Feedback on the first regenerated set: icons need something under them to read on busy tiles; corp HQ
+and the military base want four variants each like the lab (corp: three more towers; base: all four
+redone as a small soldier beside his gear); tileset128 goes into entities128.
+
+- **One more gen:** a 4x2 at 1024x640 (three towers, a spare helicopter, tank, jeep, rifle rack, sandbag
+  nest), same prompt skeleton, `style` appended. Came back UNCUT (alpha min 8, 0% clear); one re-cut gave
+  65.6% clear, then `pack16 --cols 4 --rows 2`. $0.07. `region-icons2.png`.
+- **11 new `HD128` frames, row 1 cols 13-23**, IDs only like `FRAME_SPACESHIP`: towers 2-4
+  (`FRAME_CORPHQ_VARIANTS`), facility marks (`FRAME_FACILITY_MARK + tileID - TILE_FACILITY1`), base marks
+  (`FRAME_BASE_MARK`). The sheet grows to 9 rows (1024x1152, 67 cells); nothing assumed a square sheet.
+  Variant marks borrow refs (`ALIAS`): the towers the corp HQ's, the marks tileset64 row 1's.
+- **Variants by map position, nothing saved:** `CorpHQ.initPost` sets its icon on every load, and a base
+  picks `(x * 3 + y * 5) % 4` at draw time; `tileID` 24/25 stays as it was (26 is the spaceship's, so four
+  ids would have needed a gap). The two HQs in the test save land on different towers.
+- **Halo:** `RegionView.getHaloCanvas`, the cell blurred (`ctx.filter`, 6 px at 128) three times stacked,
+  `source-in` black, padded 20 px, cached per frame and drawn at 0.9 under the icon (`drawHaloIcon`).
+  Location icons, the high-crime pistol and the marks only; alerts, leads and dots keep none.
+- Cult mission's box widened to the full tile (it was the 80 px disc's).
+
+**Measured:** cells 0-55 byte-identical bar 42 (cult box). One blur pass left a fringe too faint to see
+at map size (edge alpha ~0.35 under 0.7); three stacked passes read as a soft shadow, never a ring. Scale
+2 draws the 128 cells sharp with the halo scaled along.
+
+**Trap:** a halo baked into the cell would have needed the icons shrunk to leave it room; drawn at
+runtime it spills past the tile edge, which is what a shadow should do.
+
+**Verdict:** landed. tileset128 retired.
