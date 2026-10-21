@@ -24,11 +24,16 @@ class RegionView
   var scene: GameScene; // scene link
 
   var path: Array<{ x: Int, y: Int }>; // currently visible path
-  var outlinedEntityIconCache: IntMap<CanvasElement>; // cached black silhouette icons
+  var haloCache: IntMap<CanvasElement>; // cached soft dark halos under the location icons
 
   // move slide: the player and camera are drawn offset from their logical spots, easing to zero
   static inline var SLIDE_MULT = 0.6; // slide length in BASE_MS multiples (under the 100ms path step)
   static inline var REVEAL_MULT = 1.0; // newly known tile fade length in BASE_MS multiples
+  // the soft dark halo under every location icon (drawHaloIcon), in source cell px (128 a tile)
+  static var HALO_BLUR = 6.0; // blur radius
+  static var HALO_PAD = 20; // canvas margin a side, room for the blur to spread
+  static var HALO_PASSES = 3; // blurred copies stacked: one alone left a fringe too faint to read
+  static var HALO_ALPHA = 0.9; // its opacity
   var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
   var lastPY: Int;
   var lastCamX: Int;
@@ -53,7 +58,7 @@ class RegionView
       width = 100; // should be larger than any region
       height = 100;
       path = null;
-      outlinedEntityIconCache = new IntMap();
+      haloCache = new IntMap();
       lastPX = -1;
       lastPY = lastCamX = lastCamY = 0;
       plFromX = plFromY = camFromX = camFromY = 0;
@@ -415,11 +420,11 @@ class RegionView
   function drawAreaTileOverlay(ctx: CanvasRenderingContext2D, area: AreaGame, ax: Int, ay: Int)
     {
       if (area.typeID == AREA_FACILITY)
-        drawEntityCell(ctx, Const.FRAME_FACILITY_MARK + area.tileID - Const.TILE_FACILITY1,
-          Const.ROW_REGION_ICON, ax, ay);
+        drawHaloIcon(ctx, Const.FRAME_FACILITY_MARK + area.tileID - Const.TILE_FACILITY1,
+          Const.ROW_REGION_ICON, ax, ay, 1.0);
       else if (area.typeID == AREA_MILITARY_BASE)
-        drawEntityCell(ctx, Const.FRAME_BASE_MARK + (area.x * 3 + area.y * 5) % 4,
-          Const.ROW_REGION_ICON, ax, ay);
+        drawHaloIcon(ctx, Const.FRAME_BASE_MARK + (area.x * 3 + area.y * 5) % 4,
+          Const.ROW_REGION_ICON, ax, ay, 1.0);
     }
 
 // draw one alpha feather strip inside one unknown frontier tile
@@ -576,8 +581,8 @@ class RegionView
         {
           drawUnknownAreaTile(ctx, area, ax, ay);
           // still surface timeline intel known independent of area exploration
-          drawIcon(ctx, getEventIcon(area), ax, ay);
-          drawIcon(ctx, getNPCIcon(area), ax, ay);
+          drawIcon(ctx, getEventIcon(area), ax, ay, false);
+          drawIcon(ctx, getNPCIcon(area), ax, ay, false);
           return;
         }
 
@@ -586,7 +591,7 @@ class RegionView
       // high crime marker
       if (area.highCrime)
         {
-          drawOutlinedEntityIcon(ctx, Const.FRAME_HIGH_CRIME, Const.ROW_ALERT, ax, ay, 0.85);
+          drawHaloIcon(ctx, Const.FRAME_HIGH_CRIME, Const.ROW_ALERT, ax, ay, 0.85);
         }
 
       // area icons
@@ -619,7 +624,8 @@ class RegionView
               case 6:
                 icon = getShipIcon(area);
             }
-          drawIcon(ctx, icon, ax, ay);
+          // the location icons (region object, habitat, cult mission) sit on a halo, the marks do not
+          drawIcon(ctx, icon, ax, ay, i == 0 || i == 4 || i == 5);
         }
 
       // just revealed: the darkening fades out over the whole tile
@@ -639,8 +645,9 @@ class RegionView
       ctx.restore();
     }
 
-// draw one area icon: a timeline mark from its SVG, the rest from the entities sprite sheet
-  function drawIcon(ctx: CanvasRenderingContext2D, icon: _Icon, ax: Int, ay: Int)
+// draw one area icon: a timeline mark from its SVG, the rest from the entities sprite sheet, a
+// location icon over its halo
+  function drawIcon(ctx: CanvasRenderingContext2D, icon: _Icon, ax: Int, ay: Int, halo: Bool)
     {
       if (icon == null)
         return;
@@ -651,7 +658,9 @@ class RegionView
             ctx.drawImage(mark, ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
           return;
         }
-      drawEntityCell(ctx, icon.col, icon.row, ax, ay);
+      if (halo)
+        drawHaloIcon(ctx, icon.col, icon.row, ax, ay, 1.0);
+      else drawEntityCell(ctx, icon.col, icon.row, ax, ay);
     }
 
 // draw one entities frame at a map spot, off whichever sheet holds its pixels now
@@ -712,98 +721,66 @@ class RegionView
         '</svg>';
     }
 
-// draw one entity icon with a small black outline
-  function drawOutlinedEntityIcon(ctx: CanvasRenderingContext2D, col: Int, row: Int,
-      ax: Int, ay: Int, alpha: Float)
+// draw one entity icon over its soft dark halo (getHaloCanvas), both at alpha
+  function drawHaloIcon(ctx: CanvasRenderingContext2D, col: Int, row: Int,
+      ax: Float, ay: Float, alpha: Float)
     {
-      var iconCanvas = getOutlinedEntityIconCanvas(col, row);
-      if (iconCanvas == null)
-        return;
-      var t = iconCanvas.width;
-      var outlineOffset = 0.5;
-
-      ctx.globalAlpha = alpha * 0.75;
-      ctx.drawImage(iconCanvas,
-        0,
-        0,
-        t,
-        t,
-        ax - outlineOffset,
-        ay,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
-      ctx.drawImage(iconCanvas,
-        0,
-        0,
-        t,
-        t,
-        ax + outlineOffset,
-        ay,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
-      ctx.drawImage(iconCanvas,
-        0,
-        0,
-        t,
-        t,
-        ax,
-        ay - outlineOffset,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
-      ctx.drawImage(iconCanvas,
-        0,
-        0,
-        t,
-        t,
-        ax,
-        ay + outlineOffset,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
-
-// draw the original icon on top of the outline
+      var halo = getHaloCanvas(col, row);
+      if (halo != null)
+        {
+          // the halo canvas is the cell plus HALO_PAD a side, scaled like the cell to the tile
+          var k = Const.TILE_SIZE / (halo.width - 2 * HALO_PAD);
+          ctx.globalAlpha = HALO_ALPHA * alpha;
+          ctx.drawImage(halo,
+            ax - HALO_PAD * k,
+            ay - HALO_PAD * k,
+            halo.width * k,
+            halo.height * k);
+        }
       ctx.globalAlpha = alpha;
       drawEntityCell(ctx, col, row, ax, ay);
       ctx.globalAlpha = 1.0;
     }
 
-// return one cached black silhouette for an entity icon, at its source sheet's cell size; null
-// until that sheet decodes (caching an empty canvas would lose the outline for the session)
-  function getOutlinedEntityIconCanvas(col: Int, row: Int): CanvasElement
+// return one cached soft dark halo for an entity icon: its silhouette blurred onto a canvas HALO_PAD
+// bigger on every side, at its source sheet's cell size; null until that sheet decodes (caching an
+// empty canvas would lose the halo for the session)
+  function getHaloCanvas(col: Int, row: Int): CanvasElement
     {
       var key = (row << 16) | col;
-      var iconCanvas = outlinedEntityIconCache.get(key);
-      if (iconCanvas != null)
-        return iconCanvas;
+      var halo = haloCache.get(key);
+      if (halo != null)
+        return halo;
       var src = Sprites.atlasFor(scene.images, 'entities', col, row, false, 0);
       if (src.img == null ||
           src.img.naturalWidth <= 0)
         return null;
 
       var t = src.t;
-      iconCanvas = Browser.document.createCanvasElement();
-      iconCanvas.width = t;
-      iconCanvas.height = t;
-      var iconCtx = iconCanvas.getContext('2d');
+      halo = Browser.document.createCanvasElement();
+      halo.width = t + 2 * HALO_PAD;
+      halo.height = t + 2 * HALO_PAD;
+      var hctx = halo.getContext2d();
+      // the sprite blurred and stacked (each copy lifts the soft edge, a + a(1 - a)), then every pixel
+      // it reached turned black at its own alpha
+      hctx.filter = 'blur(' + HALO_BLUR + 'px)';
+      for (_ in 0...HALO_PASSES)
+        hctx.drawImage(src.img,
+          src.ix * t,
+          src.iy * t,
+          t,
+          t,
+          HALO_PAD,
+          HALO_PAD,
+          t,
+          t);
+      hctx.filter = 'none';
+      hctx.globalCompositeOperation = 'source-in';
+      hctx.fillStyle = '#000000';
+      hctx.fillRect(0, 0, halo.width, halo.height);
 
-// draw the source sprite into a temporary canvas
-      iconCtx.drawImage(src.img,
-        src.ix * t,
-        src.iy * t,
-        t,
-        t,
-        0,
-        0,
-        t,
-        t);
-
-// convert the sprite silhouette into a black outline source
-      untyped iconCtx.globalCompositeOperation = 'source-in';
-      iconCtx.fillStyle = '#000000';
-      iconCtx.fillRect(0, 0, t, t);
-      untyped iconCtx.globalCompositeOperation = 'source-over';
-
-      outlinedEntityIconCache.set(key, iconCanvas);
-      return iconCanvas;
+      haloCache.set(key, halo);
+      return halo;
     }
 
 // hide gui
