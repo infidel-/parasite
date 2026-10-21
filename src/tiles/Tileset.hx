@@ -9,7 +9,7 @@ class Tileset
   public var splatLayerID: Int; // persisted into SPLAT decorations (Tile.decoration.layerID)
 
 // create tileset: tile behaviour only, nothing draws from a tileset image any more (the region map's
-// facility and base marks are Images.tileset128)
+// facility and base marks are entities128 cells, Const.FRAME_FACILITY_MARK)
   public function new()
     {
       splatLayerID = -1;

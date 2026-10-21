@@ -26,9 +26,10 @@ class CorpHQ extends RegionObject
   public override function initPost(onLoad: Bool)
     {
       super.initPost(onLoad);
+      // one of four towers, by map position: picked again on every load, so nothing is saved
       icon = {
         row: Const.ROW_REGION_ICON,
-        col: Const.FRAME_CORPHQ,
+        col: Const.FRAME_CORPHQ_VARIANTS[(x * 3 + y * 5) % 4],
       };
     }
 }

@@ -51,8 +51,8 @@ override is logged at boot, so users can see which mod replaced what.
 ## Notes and limits
 
 - Overriding `img/entities128.png` (or any tilemap) means shipping the **whole**
-  image — there is no partial/per-tile override in v1. It is an 8 x 8 sheet of
-  128 px cells; cell `i` (reading order) draws the frame at index `i` of
+  image — there is no partial/per-tile override in v1. It is a sheet of
+  128 px cells, 8 to a row; cell `i` (reading order) draws the frame at index `i` of
   `Const.HD128`. Frames keep their old `(row, col)` as their ID, so a mod
   addresses a sprite the same way it always did.
 - The `mod://` scheme is already permitted by the engine's content-security

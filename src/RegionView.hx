@@ -409,30 +409,17 @@ class RegionView
       revealStart.set(a.id, Browser.window.performance.now());
     }
 
-// draw a facility's or a military base's own mark over its map tile, off tileset128: one 128 px cell
-// per tile id from Const.TILE_FACILITY1 (four facilities, then two bases). smoothed, since it is drawn
-// at 64 x mapScale
+// draw a facility's or a military base's own mark over its map tile: a facility's by its tile id
+// (Const.TILE_FACILITY1 + 0-3, rolled at creation), a base's by its map position (its tile id only
+// ever rolled two)
   function drawAreaTileOverlay(ctx: CanvasRenderingContext2D, area: AreaGame, ax: Int, ay: Int)
     {
-      if (area.typeID != AREA_MILITARY_BASE &&
-          area.typeID != AREA_FACILITY)
-        return;
-      var img = scene.images.tileset128;
-      var cell = area.tileID - Const.TILE_FACILITY1;
-      // a saved tile id outside the six draws no mark
-      if (img.naturalWidth <= 0 ||
-          cell < 0 ||
-          cell >= Std.int(img.naturalWidth / Const.HD128_CELL))
-        return;
-      ctx.drawImage(img,
-        cell * Const.HD128_CELL,
-        0,
-        Const.HD128_CELL,
-        Const.HD128_CELL,
-        ax,
-        ay,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
+      if (area.typeID == AREA_FACILITY)
+        drawEntityCell(ctx, Const.FRAME_FACILITY_MARK + area.tileID - Const.TILE_FACILITY1,
+          Const.ROW_REGION_ICON, ax, ay);
+      else if (area.typeID == AREA_MILITARY_BASE)
+        drawEntityCell(ctx, Const.FRAME_BASE_MARK + (area.x * 3 + area.y * 5) % 4,
+          Const.ROW_REGION_ICON, ax, ay);
     }
 
 // draw one alpha feather strip inside one unknown frontier tile

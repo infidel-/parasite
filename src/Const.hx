@@ -61,6 +61,11 @@ class Const
   public static var FRAME_TARGET_RETICLE = 10;
   public static var FRAME_TARGET_FRAME = 11;
   public static var FRAME_SPACESHIP = 12; // SVG tile mark only (RegionView.tileMark), no atlas cell
+  // the region map's variant marks: IDs of entities128 cells only, never on an entities64 sheet and
+  // never persisted (region.CorpHQ and RegionView.drawAreaTileOverlay pick one by map position)
+  public static var FRAME_CORPHQ_VARIANTS = [FRAME_CORPHQ, 13, 14, 15];
+  public static var FRAME_FACILITY_MARK = 16; // 16-19, by tile id from TILE_FACILITY1
+  public static var FRAME_BASE_MARK = 20; // 20-23
 
   // object row frames
   public static var ROW_OBJECT = 2;
@@ -657,8 +662,8 @@ class Const
   ];
 
   // ---- the 128 px redraw: every entities64 cell still drawn anywhere -----------------------------
-  // index = the cell of img/entities128 (an 8 x 8 of 128 px, reading order); value = the entities64
-  // frame it redraws, from that frame's original art, registered onto its own content box at 2x so
+  // index = the cell of img/entities128 (8 columns of 128 px, reading order); value = the entities
+  // frame it draws, from that frame's original art or a gen, registered onto its own content box at 2x so
   // every anchor lands where the 64 px cell put it (tools/entities128.py). The frame stays the cell's
   // ID (saves keep it); render.particles.Sprites.atlasFor redirects the sprite pool and the region
   // map, Sprites.batchCell the batched decals
@@ -727,6 +732,18 @@ class Const
     { row: 6, col: 1 },
     { row: 7, col: 1 },
     { row: 7, col: 2 },
+    // the region map's variant marks: corp HQ towers 2-4, the four facility marks, the four base ones
+    { row: 1, col: 13 },
+    { row: 1, col: 14 },
+    { row: 1, col: 15 },
+    { row: 1, col: 16 },
+    { row: 1, col: 17 },
+    { row: 1, col: 18 },
+    { row: 1, col: 19 },
+    { row: 1, col: 20 },
+    { row: 1, col: 21 },
+    { row: 1, col: 22 },
+    { row: 1, col: 23 },
   ];
 
 // which entities128 cell redraws this frame, or -1. a linear scan, asked once per cache miss like decoHD

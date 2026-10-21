@@ -29,7 +29,6 @@ class Images
   public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
   public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
   public var entities128: Image; // 128px art of every entities frame still drawn, Const.HD128 order (tools/entities128.py)
-  public var tileset128: Image; // region map facility and military base marks, tile id order (tools/entities128.py)
   var debrisPacks = new Map<String, Image>(); // the per-tier street litter PACK64s, loaded on first ask
   var defaultTileset: Default;
   var sewerTileset: Sewers;
@@ -59,8 +58,6 @@ class Images
       // and the 128 px redraw of every entities frame still drawn (Const.HD128)
       entities128 = new Image();
       entities128.src = AssetPath.resolve('img/entities128.png');
-      tileset128 = new Image();
-      tileset128.src = AssetPath.resolve('img/tileset128.png');
       // and the sewer hatch lid, the same route again for a single cell
       hatchHD = loadHatchHD();
       // and the wall vent's grille, the same again
