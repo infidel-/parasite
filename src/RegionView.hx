@@ -40,7 +40,7 @@ class RegionView
   static var DISC_CORP = '#70a7b6'; // blue-cyan
   static var DISC_BASE = '#8fa075'; // green
   static var DISC_HABITAT = '#a88ac4'; // purple
-  static var DISC_RADIUS = 0.506; // share of the tile (a hair past its edge)
+  static var DISC_RADIUS = 0.557; // share of the tile (past its edge: a neighbour's disc can overlap)
   var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
   var lastPY: Int;
   var lastCamX: Int;
