@@ -510,22 +510,24 @@ class Sprites {
 
 // resolve an atlas cell to the image, cell size and coordinates its pixels actually come from.
 //
-// TWO REDIRECTIONS LIVE HERE AND BOTH ARE 3D-ONLY — the 2D view goes through Images.getImage and
-// keeps drawing the 64 px sheets in every case:
+// THE ONE LOOKUP: the 3D sprites, the region map (entities.Entity.drawCell, RegionView) and the
+// facility model's bench boxes (render.View.iconBox) all crop what this returns, so a frame that
+// moves to a hi-res sheet moves everywhere at once:
 //   male/female actors take the 128 px skin-variant atlases, at the same (ix, iy);
-//   a facility BENCH decoration takes its 256 px cell off a pack sheet (Const.FACILITY_DECO_HD).
+//   an entities frame takes its cell off entities128 (Const.HD128), a bench pack, the clue pack or a
+//   single-cell image.
 //
-// the second one is why this returns COORDINATES and not just an image: a pack cell is not at the
-// frame's own (col, row) — sixteen decorations sit on a 4x4 sheet in the table's own order — so the
-// caller cannot crop with the numbers it handed in. Every reader below takes its cell from the
-// returned record and its cache KEY from the arguments, which is what keeps one cache entry per
-// entities64 frame however its pixels are sourced
-  function atlasFor(imageName:String, ix:Int, iy:Int, male:Bool, skin:Int):AtlasSrc
+// this is why it returns COORDINATES and not just an image: a pack cell is not at the frame's own
+// (col, row) — sixteen decorations sit on a 4x4 sheet in the table's own order — so the caller
+// cannot crop with the numbers it handed in. Every reader below takes its cell from the returned
+// record and its cache KEY from the arguments, which is what keeps one cache entry per entities64
+// frame however its pixels are sourced. Static and image-in for the same reason as cellBox
+  public static function atlasFor(images:Images, imageName:String, ix:Int, iy:Int, male:Bool, skin:Int):AtlasSrc
     {
       if (imageName == 'male' ||
           imageName == 'female')
         return {
-          img: game.scene.images.getAtlas128(imageName, male, skin),
+          img: images.getAtlas128(imageName, male, skin),
           t: 128,
           ix: ix,
           iy: iy,
@@ -536,7 +538,7 @@ class Sprites {
           var h = Const.hd128(iy, ix);
           if (h >= 0)
             return {
-              img: game.scene.images.entities128,
+              img: images.entities128,
               t: Const.HD128_CELL,
               ix: h % Const.HD128_COLS,
               iy: Std.int(h / Const.HD128_COLS),
@@ -544,7 +546,7 @@ class Sprites {
           var hd = Const.decoHD(iy, ix);
           if (hd >= 0)
             return {
-              img: game.scene.images.getDecoPack(Const.decoHDPack(hd)),
+              img: images.getDecoPack(Const.decoHDPack(hd)),
               t: Const.DECO_PACK_CELL,
               ix: Const.decoHDCol(hd),
               iy: Const.decoHDRow(hd),
@@ -554,7 +556,7 @@ class Sprites {
           var clue = Const.clueHD(iy, ix);
           if (clue >= 0)
             return {
-              img: game.scene.images.cluePack,
+              img: images.cluePack,
               t: Const.CLUE_PACK_CELL,
               ix: Const.clueHDCol(clue),
               iy: Const.clueHDRow(clue),
@@ -567,7 +569,7 @@ class Sprites {
           if (iy == Const.ROW_OBJECT &&
               ix == Const.FRAME_SEWER_HATCH)
             return {
-              img: game.scene.images.hatchHD,
+              img: images.hatchHD,
               t: Const.HATCH_HD_CELL,
               ix: 0,
               iy: 0,
@@ -579,14 +581,14 @@ class Sprites {
           if (iy == Const.ROW_OBJECT2 &&
               ix == Const.FRAME_VENTILATION)
             return {
-              img: game.scene.images.ventHD,
+              img: images.ventHD,
               t: Const.VENT_HD_CELL,
               ix: 0,
               iy: 0,
             };
         }
       return {
-        img: game.scene.images.getImage(imageName, male),
+        img: images.getImage(imageName, male),
         t: Const.TILE_SIZE_CLEAN,
         ix: ix,
         iy: iy,
@@ -599,7 +601,7 @@ class Sprites {
     {
       var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var src = atlasFor(imageName, ix, iy, male, skin);
+      var src = atlasFor(game.scene.images, imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       // retry next frame if the atlas image isn't decoded yet
       if (img == null ||
@@ -652,7 +654,7 @@ class Sprites {
     {
       var key = 'sil:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + fill + ':' + spacing + ':' + thick + ':' + skin;
       if (texCache.exists(key)) return texCache.get(key);
-      var src = atlasFor(imageName, ix, iy, male, skin);
+      var src = atlasFor(game.scene.images, imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -684,7 +686,7 @@ class Sprites {
     {
       var key = 'out:' + imageName + ':' + ix + ':' + iy + ':' + male + ':' + px + ':' + skin + ':' + fill;
       if (outlineCache.exists(key)) return outlineCache.get(key);
-      var src = atlasFor(imageName, ix, iy, male, skin);
+      var src = atlasFor(game.scene.images, imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -778,7 +780,7 @@ class Sprites {
     {
       var key = imageName + ':' + ix + ':' + iy + ':' + male + ':' + mul + ':' + skin;
       if (contentCache.exists(key)) return contentCache.get(key);
-      var src = atlasFor(imageName, ix, iy, male, skin);
+      var src = atlasFor(game.scene.images, imageName, ix, iy, male, skin);
       var img:Dynamic = src.img;
       if (img == null ||
           !img.complete ||
@@ -996,7 +998,7 @@ class Sprites {
       bcx.drawImage(img, pad, pad);
       var tex = mkTex(bc);
       // 256 for a bench decoration pack cell, 128 for an actor sheet, 64 otherwise
-      var t = atlasFor(imageName, ix, iy, male, skin).t;
+      var t = atlasFor(game.scene.images, imageName, ix, iy, male, skin).t;
       // `by` IS THE CONTENT BOTTOM AND NOT THE PAD'S, and it is carried through rather than zeroed
       // because render.actors.LampShadows needs it: Sprites.paint leans the upright quad back about
       // its own CENTRE, so the drawn base lands well in front of the cell and a shadow rooted on the

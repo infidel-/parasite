@@ -673,13 +673,8 @@ class View {
 // killed every facility entry — the area built, then never presented a frame
   function iconBox(row:Int, col:Int):render.particles.AtlasBox
     {
-      var hd = Const.decoHD(row, col);
-      if (hd >= 0)
-        return render.particles.Sprites.cellBox(
-          game.scene.images.getDecoPack(Const.decoHDPack(hd)),
-          Const.DECO_PACK_CELL, Const.decoHDCol(hd), Const.decoHDRow(hd));
-      return render.particles.Sprites.cellBox(game.scene.images.getImage('entities'),
-        Const.TILE_SIZE_CLEAN, col, row);
+      var src = render.particles.Sprites.atlasFor(game.scene.images, 'entities', col, row, false, 0);
+      return render.particles.Sprites.cellBox(src.img, src.t, src.ix, src.iy);
     }
 
 // show the 3D open wilderness for an area, built from its saved tile grid for the same reason the

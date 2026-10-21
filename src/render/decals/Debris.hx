@@ -32,11 +32,13 @@ class Debris {
 // because nothing in them clears the threshold
   public function draw():Void
     {
-      if (list == null)
+      // an empty scatter must not build the atlas: every kind hands a list, most of them empty
+      if (list == null ||
+          list.length == 0)
         return;
       // a scatter is cut from ONE atlas: a tier's litter pack, whose value its manifest cap already
       // fitted to the ground (no darkening on top), or the alpha-capped entities64 rows
-      var img = (list.length > 0 ? list[0].img : null);
+      var img = list[0].img;
       var name = (img != null ? img : 'entities');
       var atlas = d.sprites.atlasTex(name, false, (img != null ? 1.0 : RenderConfig.DECAL.debrisMul));
       if (atlas == null)

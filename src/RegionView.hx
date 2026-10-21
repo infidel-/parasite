@@ -8,6 +8,7 @@ import game.*;
 import tiles.Tileset;
 import map.Image;
 import render.Viewport;
+import render.particles.Sprites;
 
 // one region-border marker: a point of interest pinned to the screen edge while it is off-screen
 typedef RegionMarker = {
@@ -233,6 +234,7 @@ class RegionView
         {
           var ai = game.player.host;
           ple.skinColor = ai.skinColor;
+          ple.isMaleAtlas = ai.usesMaleAtlas();
           ple.setIcon(
             (ai.isMale ? 'male' : 'female'),
             ai.tileAtlasX,
@@ -242,6 +244,7 @@ class RegionView
         }
       else
         {
+          ple.isMaleAtlas = false;
           ple.setIcon(
             'entities',
             Const.FRAME_PARASITE,
@@ -302,16 +305,9 @@ class RegionView
       // path
       if (path != null)
         for (pos in path)
-          ctx.drawImage(scene.images.entities,
-            Const.FRAME_DOT * Const.TILE_SIZE_CLEAN, 
-            Const.ROW_PARASITE * Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-            Const.TILE_SIZE_CLEAN,
-
+          drawEntityCell(ctx, Const.FRAME_DOT, Const.ROW_PARASITE,
             (pos.x - scene.cameraTileX1) * Const.TILE_SIZE,
-            (pos.y - scene.cameraTileY1) * Const.TILE_SIZE,
-            Const.TILE_SIZE,
-            Const.TILE_SIZE);
+            (pos.y - scene.cameraTileY1) * Const.TILE_SIZE);
       ctx.restore();
       drawMarkers(camFromX * k, camFromY * k);
       scene.endRenderSampleRegion(renderTS);
@@ -658,12 +654,24 @@ class RegionView
             ctx.drawImage(mark, ax, ay, Const.TILE_SIZE, Const.TILE_SIZE);
           return;
         }
-      ctx.drawImage(scene.images.entities,
-        icon.col * Const.TILE_SIZE_CLEAN,
-        icon.row * Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
-        ax, ay,
+      drawEntityCell(ctx, icon.col, icon.row, ax, ay);
+    }
+
+// draw one entities frame at a map spot, off whichever sheet holds its pixels now
+// (render.particles.Sprites.atlasFor); nothing until that image decodes
+  function drawEntityCell(ctx: CanvasRenderingContext2D, col: Int, row: Int, ax: Float, ay: Float)
+    {
+      var src = Sprites.atlasFor(scene.images, 'entities', col, row, false, 0);
+      if (src.img == null ||
+          src.img.naturalWidth <= 0)
+        return;
+      ctx.drawImage(src.img,
+        src.ix * src.t,
+        src.iy * src.t,
+        src.t,
+        src.t,
+        ax,
+        ay,
         Const.TILE_SIZE,
         Const.TILE_SIZE);
     }
@@ -712,14 +720,17 @@ class RegionView
       ax: Int, ay: Int, alpha: Float)
     {
       var iconCanvas = getOutlinedEntityIconCanvas(col, row);
+      if (iconCanvas == null)
+        return;
+      var t = iconCanvas.width;
       var outlineOffset = 0.5;
 
       ctx.globalAlpha = alpha * 0.75;
       ctx.drawImage(iconCanvas,
         0,
         0,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
+        t,
+        t,
         ax - outlineOffset,
         ay,
         Const.TILE_SIZE,
@@ -727,8 +738,8 @@ class RegionView
       ctx.drawImage(iconCanvas,
         0,
         0,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
+        t,
+        t,
         ax + outlineOffset,
         ay,
         Const.TILE_SIZE,
@@ -736,8 +747,8 @@ class RegionView
       ctx.drawImage(iconCanvas,
         0,
         0,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
+        t,
+        t,
         ax,
         ay - outlineOffset,
         Const.TILE_SIZE,
@@ -745,8 +756,8 @@ class RegionView
       ctx.drawImage(iconCanvas,
         0,
         0,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
+        t,
+        t,
         ax,
         ay + outlineOffset,
         Const.TILE_SIZE,
@@ -754,46 +765,44 @@ class RegionView
 
 // draw the original icon on top of the outline
       ctx.globalAlpha = alpha;
-      ctx.drawImage(scene.images.entities,
-        col * Const.TILE_SIZE_CLEAN,
-        row * Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
-        ax,
-        ay,
-        Const.TILE_SIZE,
-        Const.TILE_SIZE);
+      drawEntityCell(ctx, col, row, ax, ay);
       ctx.globalAlpha = 1.0;
     }
 
-// return one cached black silhouette for an entity icon
+// return one cached black silhouette for an entity icon, at its source sheet's cell size; null
+// until that sheet decodes (caching an empty canvas would lose the outline for the session)
   function getOutlinedEntityIconCanvas(col: Int, row: Int): CanvasElement
     {
       var key = (row << 16) | col;
       var iconCanvas = outlinedEntityIconCache.get(key);
       if (iconCanvas != null)
         return iconCanvas;
+      var src = Sprites.atlasFor(scene.images, 'entities', col, row, false, 0);
+      if (src.img == null ||
+          src.img.naturalWidth <= 0)
+        return null;
 
+      var t = src.t;
       iconCanvas = Browser.document.createCanvasElement();
-      iconCanvas.width = Const.TILE_SIZE_CLEAN;
-      iconCanvas.height = Const.TILE_SIZE_CLEAN;
+      iconCanvas.width = t;
+      iconCanvas.height = t;
       var iconCtx = iconCanvas.getContext('2d');
 
 // draw the source sprite into a temporary canvas
-      iconCtx.drawImage(scene.images.entities,
-        col * Const.TILE_SIZE_CLEAN,
-        row * Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN,
+      iconCtx.drawImage(src.img,
+        src.ix * t,
+        src.iy * t,
+        t,
+        t,
         0,
         0,
-        Const.TILE_SIZE_CLEAN,
-        Const.TILE_SIZE_CLEAN);
+        t,
+        t);
 
 // convert the sprite silhouette into a black outline source
       untyped iconCtx.globalCompositeOperation = 'source-in';
       iconCtx.fillStyle = '#000000';
-      iconCtx.fillRect(0, 0, Const.TILE_SIZE_CLEAN, Const.TILE_SIZE_CLEAN);
+      iconCtx.fillRect(0, 0, t, t);
       untyped iconCtx.globalCompositeOperation = 'source-over';
 
       outlinedEntityIconCache.set(key, iconCanvas);

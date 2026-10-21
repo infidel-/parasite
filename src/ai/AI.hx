@@ -184,22 +184,26 @@ public function show()
       // create entity and set correct icon
       entity = new AIEntity(this, game, x, y);
       entity.skinColor = skinColor; // 3D actor atlas skin variant
-      var atlasID = (iconID != null ? iconID : type);
-      var useMaleSpecialAtlas = (
-        !isMale &&
-        Images.specialsMale[atlasID] != null &&
-        Images.specialsFemale[atlasID] == null
-      );
-      // blackops heavy kludge
-      if (inventory.clothing.id == 'fullBodyArmor')
-        entity.isMaleAtlas = true;
-      else
-        entity.isMaleAtlas = useMaleSpecialAtlas;
+      entity.isMaleAtlas = usesMaleAtlas();
       // first try to set ai-specific icon
       if (!setIcon())
         entity.setIcon(
           (isMale ? 'male' : 'female'),
           tileAtlasX, tileAtlasY);
+    }
+
+// whether this AI's cell sits on the male atlas whatever its gender (a male-only special, or the
+// blackops heavy kludge). the region map's player icon needs it too, with no area entity around
+  public function usesMaleAtlas(): Bool
+    {
+      if (inventory.clothing.id == 'fullBodyArmor')
+        return true;
+      var atlasID = (iconID != null ? iconID : type);
+      return (
+        !isMale &&
+        Images.specialsMale[atlasID] != null &&
+        Images.specialsFemale[atlasID] == null
+      );
     }
 
 // select AI icon data before entity creation

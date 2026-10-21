@@ -5,7 +5,6 @@ package entities;
 import js.html.CanvasRenderingContext2D;
 import game.Game;
 import Const.TILE_SIZE as tile;
-import Const.TILE_SIZE_CLEAN as tileClean;
 
 class Entity
 {
@@ -37,28 +36,15 @@ class Entity
       slideNoSnap = false;
     }
 
-// draw one atlas cell at this entity's map spot (region map). the host sheets and the parasite come
-// off the 3D's 128 px art at half size: only that carries the skin variants and the redraw
-// (render.particles.Sprites.atlasFor makes the same two redirections)
+// draw one atlas cell at this entity's map spot (region map), off whichever sheet holds its pixels
+// (render.particles.Sprites.atlasFor): the host sheets and the parasite come off the 3D's 128 px art
+// at half size. a negative column is "no cell" (the mask with no host)
   function drawCell(ctx: CanvasRenderingContext2D, name: String, xx: Int, yy: Int)
     {
-      var images = game.scene.images;
-      var img = images.getImage(name, isMaleAtlas);
-      var t = tileClean;
-      var hd = (name == 'entities' ? Const.hd128(yy, xx) : -1);
-      if (name == 'male' ||
-          name == 'female')
-        {
-          img = images.getAtlas128(name, isMaleAtlas, skinColor);
-          t = 128;
-        }
-      else if (hd >= 0)
-        {
-          img = images.entities128;
-          t = Const.HD128_CELL;
-          xx = hd % Const.HD128_COLS;
-          yy = Std.int(hd / Const.HD128_COLS);
-        }
+      if (xx < 0)
+        return;
+      var src = render.particles.Sprites.atlasFor(game.scene.images, name, xx, yy, isMaleAtlas, skinColor);
+      var img = src.img;
       if (img == null)
         {
           trace('UNKNOWN IMAGE: ' + name);
@@ -67,10 +53,11 @@ class Entity
       if (!img.complete ||
           img.naturalWidth <= 0)
         return;
+      var t = src.t;
       // kludge: draw one source pixel less to avoid scaling bugs
       ctx.drawImage(img,
-        xx * t,
-        yy * t + 1,
+        src.ix * t,
+        src.iy * t + 1,
         t,
         t - 1,
 
