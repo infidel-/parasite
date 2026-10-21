@@ -18,8 +18,11 @@ those glbs, models-src/habitat/organ_shadows.py, organ-<name>.png.
 The region map's location icons (high crime, habitat, ambushed habitat, ovum, corp HQ, cult mission) and
 its variant marks (corp HQ towers 2-4, four facility, four military base) are GENERATED too, as
 free-standing objects in the game's style instead of the old flat discs: region-icons.png (a 4 x 3),
-region-icons2.png (a 4 x 2) and region-base.png (a 2 x 2, the first sheet's soldier bust in front of his
-gear, an edit off that cell), gpt-image-2.5 sunburst, re-gridded by tools/pack16.py, raw drops in uncut/.
+region-icons2.png (a 4 x 2), and three 2 x 2s with a bust in front of the subject: region-base.png (the
+first sheet's soldier, an edit off that cell), region-corp.png (a businesswoman before the four towers) and
+region-lab.png (a bearded scientist before the four lab marks), both edits off region-base.png for the
+layout and their own earlier cells for the subject. gpt-image-2.5 sunburst, re-gridded by tools/pack16.py,
+raw drops in uncut/; the sheets they replaced stay, unused, for comparison.
 The variant marks have no entities64 cell, so each borrows a ref: the towers the corp HQ's, the facility
 and base marks tileset64 row 1's (the sheet those marks were on before it went into this one).
 
@@ -63,8 +66,9 @@ UPRIGHT = set(range(7)) | set(range(47, 56))
 # vanish into the dark map. The organ silhouettes are shadow masks, black by construction
 GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36} | set(range(38, 44)) | set(range(47, 67))
 # generated cells lifted to a mean linear luminance (match's gain alone, saturation kept): the four base
-# marks came back at 0.025, a quarter of the lab marks' 0.10-0.12, and read as dark blots on the map
-LIFT = {i: 0.09 for i in range(63, 67)}
+# marks came back at 0.025, a quarter of the lab marks' 0.10-0.12, and read as dark blots on the map; the
+# corp HQs with the woman in front at 0.05-0.06, so all three bust sets sit at the lab marks' 0.09
+LIFT = {i: 0.09 for i in [41, 56, 57, 58] + list(range(63, 67))}
 
 
 def lzf(src, n):
@@ -338,20 +342,21 @@ def main():
     # the alert marks carry the 64 px glyphs' dark ring, so they read on a bright tile too: grown at the
     # source's scale, a 2 px ring once placed
     marks = [outline(m, m.height // 20) for m in six[:3]]
-    # region-icons.png: the six location icons in CELLS order, the four facility marks, two retired
-    # base marks; region-icons2.png: corp HQ towers 2-4, then a row nothing uses (the base marks before
-    # they were redrawn round the soldier bust); region-base.png: the four base marks
+    # region-icons.png: the six location icons in CELLS order (its corp HQ and lab marks now only the
+    # subjects the bust sheets were drawn off), two retired base marks; region-icons2.png: the towers
+    # before the bust, then the base marks before theirs, both retired; region-corp.png, region-lab.png
+    # and region-base.png: the four corp HQs, the four lab marks and the four base marks
     sheet = Image.open(GEN % 'region-icons').convert('RGBA')
     w, h = sheet.width // 4, sheet.height // 3
     twelve = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(3) for x in range(4)]
-    sheet = Image.open(GEN % 'region-icons2').convert('RGBA')
-    w, h = sheet.width // 4, sheet.height // 2
-    eight = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(2) for x in range(4)]
     icons = twelve[:6]
-    sheet = Image.open(GEN % 'region-base').convert('RGBA')
-    w, h = sheet.width // 2, sheet.height // 2
-    base = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(2) for x in range(2)]
-    variants = eight[:3] + twelve[6:10] + base
+    busts = {}
+    for name in ('corp', 'lab', 'base'):
+        sheet = Image.open(GEN % ('region-' + name)).convert('RGBA')
+        w, h = sheet.width // 2, sheet.height // 2
+        busts[name] = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(2) for x in range(2)]
+    icons[4] = busts['corp'][0]
+    variants = busts['corp'][1:] + busts['lab'] + busts['base']
     dots = six[3:5]
     gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
     organs = [Image.open(GEN % ('organ-' + n)).convert('RGBA') for n in

@@ -2299,3 +2299,17 @@ dirt was VALUE, not hue: a desaturated orange at 195 reads greyish brown, and li
 at about the same saturation.
 
 **Verdict:** landed.
+
+## entities128: a bust in front of the corp HQ and lab marks too
+
+Asked for: a corporate woman in front of the corp HQs and a scientist (glasses, beard) in front of the labs,
+at the soldier's size. Two `edit_image` calls (sunburst high, transparent, 1024 2x2), each given TWO
+images: `region-base.png` for the LAYOUT (bust in front at ~60% height, subject behind) and a 2x2 of the
+kind's own four current cells for the SUBJECT. Every tower and lab subject came back the same drawing in
+the same order. 55% / 58% clear first time, `pack16 --cols 2 --rows 2`. $0.14. `region-corp.png`,
+`region-lab.png`; the sheets they replace stay in the store, unused, and every raw drop is in `uncut/`.
+
+**Measured:** the corp cells at mean linear 0.05-0.06 (dark blazer, shadowed face), the lab ones at
+0.09-0.12; corp joins `LIFT` at 0.09 (gains 1.51-1.79), so all three bust sets sit together.
+
+**Verdict:** landed. Two reference images, one for layout and one for subject, carry both across.
