@@ -8679,6 +8679,28 @@
       "built_linear": 0.0514,
       "built_srgb": 61.7
     },
+    "city/debris-generic": {
+      "src": "city/debris-generic.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt_exact": true,
+      "sat": 0.5,
+      "cells": {
+        "grid": 8,
+        "cap": 0.05
+      },
+      "note": "PACK64 of the generic dumped rubbish every NON-city kind lays (render.decals.Debris via FacilityDebris, SewerDebris, WildDebris: facility, military base, sewers, tunnel habitats, highway wilderness), replacing entities64 rows 41-47, the same item mix restyled. Packed by tools/pack16.py --cols 8 --rows 8 --cell 128 --tol 4 --valign center off a sunburst-high transparent drop that came back UNCUT (alpha min 2, 0% clear); one edit_image re-cut left a haze under alpha 32 that pack16 flattens (64% clear, borders 0). Raw re-cut parked in city/Unused/debris-generic-drop.png. Cells 0-47 the small things a cluster scatters, 48-63 the big flat ones laid square. ONE cells.cap for several grounds (sewer floor 0.056, turf 0.048, asphalt 0.033): started mid-range.",
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT AND MATTERS MORE THAN THE OBJECTS THEMSELVES. Draw exactly 64 small objects arranged as a strict 8 x 8 grid, 8 rows of 8 objects. Imagine the square image cut into 64 equal cells of 128 by 128 pixels. Every object must fit ENTIRELY inside the MIDDLE 60% of its own cell and must be SMALL: no object may be wider or taller than 75 pixels. That leaves a wide empty margin on all four sides of every object. No object may touch, overlap, or reach across into a neighbouring cell. The empty lanes between rows and between columns must run COMPLETELY UNBROKEN from one edge of the image to the other - a straight horizontal line drawn at y = 128, 256, 384, 512, 640, 768 or 896 pixels must cross NOTHING, and the same for vertical lines at x = 128, 256, 384, 512, 640, 768 and 896. Do not draw any grid lines, frames, labels, numbers or text - only the 64 objects. Nothing may touch the outer edges of the frame. Each object is an isolated cut-out drawn STRAIGHT TOP-DOWN, seen from directly overhead: no perspective, no tilt, no side thickness, no cast shadow. Keep all 64 objects at roughly similar scale to each other. They are the ordinary dumped rubbish that collects anywhere people pass and nobody cleans: dropped, used, worn and dusty, in pale greys, off-whites, faded beige and washed-out blues. NO BRAND LOGOS, NO LETTERING, NO WRITTEN WORDS ANYWHERE: printed paper carries only abstract grey smudge bars standing in for text. Row 1: crumpled white plastic bag, empty pale-blue cloth tote bag, crumpled tissue, flattened food wrapper, torn crisp packet, small clear snack bag, knotted clear plastic bag, crumpled paper napkin. Row 2: crumpled sheet of white paper, crumpled grey paper ball, crumpled kitchen foil, crumpled pale-green paper, small pale-blue rubbish sack, white bin bag, beige sack, discarded grey sweatshirt. Row 3: tied beige bin bag, grey bin bag, discarded pale-blue t-shirt, dark grey t-shirt, white plastic cup on its side, paper cup on its side, scattered paper scraps, scattered white plastic shards. Row 4: loose printed pages, folded flyer, torn magazine page, empty cigarette packet, two small plastic bottles, a pizza slice, a dropped half pizza, an old white sneaker. Row 5: worn grey sneaker, faded pink sneaker, grey plastic shopping bag, clear plastic carrier bag, crumpled newspaper, spilled bag of rice, beige paper shopping bag, white paper bag. Row 6: torn paper sheet, folded paper sheet, flat paper sheet, crushed plastic water bottle, crushed tin can, small cardboard box, open cardboard box, flattened cardboard box. Row 7: pile of mixed rubbish, heap of gravel and grit, heap of broken plaster rubble, pile of cardboard boxes, stack of three cardboard boxes, broken wooden crate, low heap of dust and sand, flattened cardboard sheet. Row 8: spilled heap of torn paper and plastic, pile of tied rubbish bags, collapsed cardboard box, cluster of small boxes, heap of broken concrete chunks, scatter of broken bricks, pile of old rags, crumpled grey tarp. [append textures.json style]",
+      "last_converted": "2026-10-21T14:08:47",
+      "last_sat": 0.5,
+      "last_cells": {
+        "grid": 8,
+        "cap": 0.05
+      },
+      "built_linear": 0.0492,
+      "built_srgb": 60.5
+    },
     "city/clue-pack": {
       "src": "city/clue-pack.png",
       "class": "sprite",

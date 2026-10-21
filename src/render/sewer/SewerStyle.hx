@@ -447,11 +447,6 @@ class SewerStyle
   // were 20/8, then 60/24 — a whole habitat level came to ~9-11 fragments, which reads as swept
   public static inline var DEBRIS_PCT_TUNNEL = 180;
   public static inline var DEBRIS_PCT_ROOM = 120;
-  // smallest fragment scale the tunnels will keep. render.world.Debris rolls 0.1 + 0.9 * rng for a
-  // cluster fragment, and the drawn size is Sprites.SIZE (3.0) * contentFraction * scale — so a 0.1
-  // roll on a half-content sprite draws 0.15 world units against a CELL of 4, i.e. a pixel. measured
-  // in the habitat before this: 0.15 / 0.73 / 0.86 / 0.88 / 1.21
-  public static inline var DEBRIS_MIN_SCALE = 0.5;
   // sub-cell jitter for a STATIC fragment, which render.world.Debris leaves dead-centre and unrotated
   // (only transformable ones get an offset). stays inside Debris.canPlace's free band, so a fragment
   // can never end up over a wall and no ground test is needed

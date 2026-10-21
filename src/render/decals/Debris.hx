@@ -24,23 +24,16 @@ class Debris {
 
 // paint the debris as content-cropped flat ground quads, fog-gated per cell like the blood decals.
 // instanced: one draw call per debris texture instead of one quad each.
-//
-// the art is the ONLY alpha-capped block in entities64: rows 41-47 (Const.STREET_DEBRIS_*) peak at
-// alpha 127 where every other row of the 12x48 atlas peaks at 255, so litter draws at ~43% opacity
-// and can never read as solid whatever RenderConfig.DECAL.debrisMul does. Worth knowing before
-// measuring it — scan those rows at the usual alpha > 128 and they come back COMPLETELY EMPTY,
-// because nothing in them clears the threshold
   public function draw():Void
     {
       // an empty scatter must not build the atlas: every kind hands a list, most of them empty
       if (list == null ||
           list.length == 0)
         return;
-      // a scatter is cut from ONE atlas: a tier's litter pack, whose value its manifest cap already
-      // fitted to the ground (no darkening on top), or the alpha-capped entities64 rows
-      var img = list[0].img;
-      var name = (img != null ? img : 'entities');
-      var atlas = d.sprites.atlasTex(name, false, (img != null ? 1.0 : RenderConfig.DECAL.debrisMul));
+      // a scatter is cut from ONE litter pack, whose value its manifest cap already fitted to the
+      // ground (no darkening on top)
+      var name = list[0].img;
+      var atlas = d.sprites.atlasTex(name, false, 1.0);
       if (atlas == null)
         return;
       for (s in list)
@@ -52,13 +45,12 @@ class Debris {
           var op = d.radiusOp(w.x, w.z);
           if (op <= 0.001)
             continue;
-          // geometry is a unit quad, so bake the content footprint (SIZE * fw/fh) into the size. a pack
-          // fragment's scale is its drawn longest side in world units (render.world.Debris.build), an
-          // entities64 one's a factor on SIZE.
+          // geometry is a unit quad, so bake the content footprint (SIZE * fw/fh) into the size. a
+          // fragment's scale is its drawn longest side in world units (render.world.Debris.sized).
           // height off floorYAt and not floorY: the quad sits at s.col + s.dx, up to a quarter cell
           // off centre, and floorY answers about the CENTRE — see RenderConfig.DECAL.groundLift for
           // what that cost on the highway
-          var k = (img != null ? s.scale / (Sprites.SIZE * Math.max(r.fw, r.fh)) : s.scale);
+          var k = s.scale / (Sprites.SIZE * Math.max(r.fw, r.fh));
           d.batch.add(atlas, r, w.x, WorldCtx.floorYAt(w.x, w.z) + RenderConfig.DECAL.groundLift, w.z,
             Sprites.SIZE * r.fw * k, Sprites.SIZE * r.fh * k, s.angle, op, 1.0, 0.0);
         }

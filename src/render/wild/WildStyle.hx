@@ -494,10 +494,8 @@ class WildStyle
   // either side, which is where anything thrown from a car actually stops
   public static inline var LITTER_REACH = 6.0;
   public static inline var LITTER_PCT = 0.16;
-  // the tunnels' own two, verbatim, and for the reasons SewerDebris.dress spells out: a cluster
-  // fragment can roll a scale too small to see from a camera 18-55 units up, and a STATIC fragment
+  // the tunnels' own jitter, verbatim, for the reason SewerDebris.dress spells out: a STATIC fragment
   // comes back with no offset and no rotation, which reads as a grid
-  public static inline var LITTER_MIN_SCALE = 0.5;
   public static inline var LITTER_JITTER = 0.25;
 
   // --- the scene (render.wild.WildScene) ---

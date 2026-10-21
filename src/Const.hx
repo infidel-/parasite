@@ -1094,20 +1094,9 @@ class Const
         };
     }
 
-  public static var STREET_DEBRIS_TRANSFORMABLE = [
-    { row: 41, col: 0, amount: 12 },
-    { row: 42, col: 0, amount: 12 },
-    { row: 43, col: 0, amount: 12 },
-    { row: 44, col: 0, amount: 12 },
-    { row: 45, col: 0, amount: 12 },
-    { row: 46, col: 0, amount: 1 },
-  ];
-  public static var STREET_DEBRIS_STATIC = [
-    { row: 46, col: 1, amount: 11 },
-    { row: 47, col: 0, amount: 10 },
-  ];
-  // the per-tier street litter PACK64s (AreaStyle.debrisPack, textures/city/debris-*.png): an 8 x 8
-  // of 128 px cells, rows 0-5 the small things a cluster scatters, rows 6-7 the big flat ones
+  // the litter PACK64s (AreaStyle.debrisPack per city tier, render.world.Debris.GENERIC_PACK for every
+  // other kind; textures/city/debris-*.png): an 8 x 8 of 128 px cells, rows 0-5 the small things a
+  // cluster scatters, rows 6-7 the big flat ones. entities64 rows 41-47 were the old litter
   public static inline var DEBRIS_PACK_CELL = 128;
   public static var DEBRIS_PACK_TRANSFORMABLE = [
     { row: 0, col: 0, amount: 8 },

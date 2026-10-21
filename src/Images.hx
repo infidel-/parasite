@@ -177,13 +177,14 @@ class Images
           case 'undergroundLabObjects1': return undergroundLabObjects1;
           case 'male': return male;
           case 'female': return isMaleAtlas ? male : female;
-          case 'debris-slums', 'debris-city', 'debris-downtown': return debrisPack(name);
+          case 'debris-slums', 'debris-city', 'debris-downtown', 'debris-generic': return debrisPack(name);
           case 'entities128': return entities128;
           default: return null;
         }
     }
 
-// a per-tier street litter PACK64 (AreaStyle.debrisPack), loaded the first time a city asks for it
+// a litter PACK64 (AreaStyle.debrisPack, render.world.Debris.GENERIC_PACK), loaded the first time an
+// area asks for it
   function debrisPack(name: String): Image
     {
       var img = debrisPacks.get(name);

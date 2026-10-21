@@ -23,11 +23,10 @@ typedef LotProp = {
 // what is lying about in the compound's parking lot: ground litter, and junk standing on it.
 //
 // TWO PASSES OVER ONE SURFACE and neither is the other's fallback. the litter is flat sprite decals
-// on the shared render.decals.DecalBatch, so it costs NO draw call and can cover the whole lot; but
-// the atlas rows it draws from are the only alpha-capped block in entities64 (Const.STREET_DEBRIS_*
-// peak at 127 where every other row peaks at 255), so it draws at ~43% opacity and can never read as
-// more than scraps. the standing props are three real glbs at one batch each, which is what actually
-// reads at a camera pitched 51 degrees down onto asphalt.
+// on the shared render.decals.DecalBatch, off the generic litter pack (render.world.Debris
+// .GENERIC_PACK), so it costs NO draw call and can cover the whole lot. the standing props are three
+// real glbs at one batch each, which is what actually reads at a camera pitched 51 degrees down onto
+// asphalt.
 //
 // BOTH ARE RENDER-ONLY AND UNSTAMPED, the contract render.facility.FacilityCars and
 // render.facility.FacilityRoof already run on: nothing is written to the tiles, so a piece of litter
@@ -88,25 +87,22 @@ class FacilityDebris
               continue;
             var rng = CityGen.mulberry32(h);
             if (rng() < 0.35)
-              Debris.spawnCluster(spots, ok, col, row, 1 + Std.int(rng() * 2), rng);
+              Debris.spawnCluster(spots, ok, col, row, 1 + Std.int(rng() * 2), rng, Debris.GENERIC_PACK);
             else
-              Debris.addFragment(spots, col, row, Const.STREET_DEBRIS_STATIC, false, rng, ok);
+              Debris.addFragment(spots, col, row, Const.DEBRIS_PACK_STATIC, false, rng, ok, Debris.GENERIC_PACK);
           }
       dress(spots);
-      return spots;
+      return Debris.generic(spots);
     }
 
-// the same two fixes render.sewer.SewerDebris and render.wild.WildDebris both make to the shared
-// placer, and for the same reasons — a cluster fragment can roll a scale too small to see, and a
-// STATIC fragment comes back with no offset and no rotation at all, which reads as a grid. kept
-// local rather than pushed into render.world.Debris because that one is the city's too and is
-// already at 7 positional args
+// the fix render.sewer.SewerDebris and render.wild.WildDebris both make to the shared placer, and for
+// the same reason — a STATIC fragment comes back with no offset and no rotation at all, which reads as
+// a grid. kept local rather than pushed into render.world.Debris because that one is the city's too
+// and is already at 7 positional args
   static function dress(spots:Array<DebrisSpot>):Void
     {
       for (s in spots)
         {
-          if (s.scale < FacilityStyle.LITTER_MIN_SCALE)
-            s.scale = FacilityStyle.LITTER_MIN_SCALE;
           if (s.dx == 0.0 &&
               s.dy == 0.0 &&
               s.angle == 0.0)

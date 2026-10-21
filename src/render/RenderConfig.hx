@@ -363,7 +363,8 @@ class RenderConfig {
     // measured from the CELL CENTRE, which is only the same thing where the masonry fills its cell;
     // it is measured from the face the area kind actually draws now (WorldCtx.faceOff)
     wallProud: 0.12,
-    // street-debris + thrown-money crop darken factor (matte trash, no bright glow).
+    // thrown-money crop darken factor (matte, no bright glow). it was the litter's too until every
+    // kind's litter moved to a PACK64, whose manifest `cells.cap` does this job per pack.
     //
     // 0.40 and MEASURED, after the wilderness roadside litter put this art on turf for the first
     // time and it read as scattered paper. the atlas is painted at sRGB mean 199/193/187 (singles)

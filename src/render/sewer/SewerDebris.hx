@@ -35,14 +35,14 @@ class SewerDebris
             if (rng() < 0.45)
               cluster(spots, ok, col, row, rng);
             else
-              Debris.addFragment(spots, col, row, Const.STREET_DEBRIS_STATIC, false, rng, ok);
+              Debris.addFragment(spots, col, row, Const.DEBRIS_PACK_STATIC, false, rng, ok, Debris.GENERIC_PACK);
           }
       dress(spots);
-      return spots;
+      return Debris.generic(spots);
     }
 
-// second pass over our own spots, fixing two things the shared placer does that read badly on a
-// tunnel floor. it runs HERE rather than in render.world.Debris because that one is the city's too
+// second pass over our own spots, fixing what the shared placer does that reads badly on a tunnel
+// floor. it runs HERE rather than in render.world.Debris because that one is the city's too
 // (and is already at 7 positional args): the streets are seen from much further out, where neither
 // matters. no ground test is needed for the jitter — Debris.canPlace only rejects an offset past
 // 0.25 of a cell, so anything inside DEBRIS_JITTER is legal by construction
@@ -50,11 +50,6 @@ class SewerDebris
     {
       for (s in spots)
         {
-          // a cluster fragment rolls scale 0.1..1.0, and drawn size is 3.0 * contentFraction * scale —
-          // so the low end of that roll is a fragment a fifth of a metre across, invisible on a 4-unit
-          // cell. clamp rather than rescale, so the spread above the floor is untouched
-          if (s.scale < SewerStyle.DEBRIS_MIN_SCALE)
-            s.scale = SewerStyle.DEBRIS_MIN_SCALE;
           // a STATIC fragment gets no offset and no rotation at all from addFragment, and static is
           // the half of the litter big enough to actually see — so the visible half was every piece
           // dead-centre in its cell and axis-aligned, which reads as a grid
@@ -75,7 +70,7 @@ class SewerDebris
 // spray would spend most of its rolls on wall cells
   static function cluster(spots:Array<DebrisSpot>, ok:Int->Int->Bool, col:Int, row:Int, rng:Void->Float):Void
     {
-      Debris.spawnCluster(spots, ok, col, row, 1 + Std.int(rng() * 2), rng);
+      Debris.spawnCluster(spots, ok, col, row, 1 + Std.int(rng() * 2), rng, Debris.GENERIC_PACK);
       for (dr in -1...2)
         for (dc in -1...2)
           {
@@ -85,7 +80,7 @@ class SewerDebris
             if (rng() >= 0.22 ||
                 !ok(col + dc, row + dr))
               continue;
-            Debris.spawnCluster(spots, ok, col + dc, row + dr, 1 + Std.int(rng() * 2), rng);
+            Debris.spawnCluster(spots, ok, col + dc, row + dr, 1 + Std.int(rng() * 2), rng, Debris.GENERIC_PACK);
           }
     }
 

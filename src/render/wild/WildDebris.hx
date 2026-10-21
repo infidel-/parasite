@@ -56,24 +56,22 @@ class WildDebris
               continue;
             var rng = CityGen.mulberry32(h);
             if (rng() < 0.35)
-              Debris.spawnCluster(spots, ok, col, row, 1 + Std.int(rng() * 2), rng);
+              Debris.spawnCluster(spots, ok, col, row, 1 + Std.int(rng() * 2), rng, Debris.GENERIC_PACK);
             else
-              Debris.addFragment(spots, col, row, Const.STREET_DEBRIS_STATIC, false, rng, ok);
+              Debris.addFragment(spots, col, row, Const.DEBRIS_PACK_STATIC, false, rng, ok, Debris.GENERIC_PACK);
           }
       dress(spots);
-      return spots;
+      return Debris.generic(spots);
     }
 
-// the same two fixes render.sewer.SewerDebris makes to the shared placer, and for the same reasons —
-// a cluster fragment can roll a scale too small to see, and a STATIC fragment comes back with no
-// offset and no rotation at all, which reads as a grid. kept local rather than pushed into
-// render.world.Debris because that one is the city's too and is already at 7 positional args
+// the same fix render.sewer.SewerDebris makes to the shared placer, and for the same reason — a
+// STATIC fragment comes back with no offset and no rotation at all, which reads as a grid. kept local
+// rather than pushed into render.world.Debris because that one is the city's too and is already at 7
+// positional args
   static function dress(spots:Array<DebrisSpot>):Void
     {
       for (s in spots)
         {
-          if (s.scale < WildStyle.LITTER_MIN_SCALE)
-            s.scale = WildStyle.LITTER_MIN_SCALE;
           if (s.dx == 0.0 &&
               s.dy == 0.0 &&
               s.angle == 0.0)

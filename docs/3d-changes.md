@@ -2104,3 +2104,31 @@ Blender it would wipe whatever the user has open. A new scene per render, plus r
 by diffing `bpy.data` before and after, leaves the open file as it was found.
 
 **Verdict:** landed.
+
+## One generic litter PACK64 for every non-city kind; entities64 rows 41-47 retired
+
+Facility, military base, sewers, tunnel habitats and the highway wilderness still laid their litter off
+entities64 rows 41-47 (`Const.STREET_DEBRIS_*`), the alpha-capped block, at 64 px. The city tiers already
+had their own packs. User's call: regenerate it once, as one PACK64, for all of those kinds.
+
+- **Art:** `city/debris-generic` (`art/textures.json`), the rows' own item mix restyled (bags, sacks,
+  crumpled paper, shirts, cups, shards, flyers, pizza, sneakers, carriers; rubble heaps and boxes in
+  rows 6-7). gpt-image-2.5 sunburst high, transparent, the city packs' PACK64 prompt shape; `pack16.py
+  --cols 8 --rows 8 --cell 128 --tol 4 --valign center`; `cells.cap` 0.05 (built 0.049 linear). ~$0.12.
+- **Code:** `render.world.Debris.GENERIC_PACK` / `GENERIC_SIZES`, a static `[8][8]` of world sizes, plus
+  `Debris.generic()`, the city's size pass (`sized`, now shared). `FacilityDebris`, `SewerDebris` and
+  `WildDebris` lay pack cells and end on `Debris.generic`. Their 0.5 minimum-scale clamps are gone,
+  since the size pass overwrites scale. With every tier on a pack too, the entities64 branch is gone from
+  both `world/Debris` and `decals/Debris`, `DebrisSpot.img` is required, and `STREET_DEBRIS_*` is deleted.
+- **`DECAL.debrisMul`** now darkens the thrown money only; the pack's cap does the litter's job.
+
+**Measured:** facility 110 spots, habitat 40, highway wilderness 92, all `debris-generic`. The first size
+table (a bin bag 0.8) drew every piece about half the size the old rows had (0.5-2.1 units), so it is
+x1.5: pieces 0.22-1.2, heaps 1.35-1.95. At night they read as boxes, sheets and scraps on the asphalt
+and the lot, dim and not glowing.
+
+**Trap 1:** the drop came back UNCUT (alpha min 2, 0% clear); the `edit_image` re-cut left a haze under
+alpha 32 that pack16 flattens (64% clear, borders 0). **Trap 2:** inserting the manifest entry through
+`json.dump` re-indented all 17.6k lines of `textures.json`; it is inserted as text.
+
+**Verdict:** landed.

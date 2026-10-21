@@ -513,10 +513,8 @@ class FacilityStyle
   // does the work and it is untouched at 4.3x, so litter still collects against the edges
   public static inline var LITTER_PCT = 0.03;
   public static inline var LITTER_EDGE_PCT = 0.13;
-  // the tunnels' own two, verbatim, for the reasons render.sewer.SewerDebris.dress spells out: a
-  // cluster fragment can roll a scale too small to see from a camera 18-55 units up, and a STATIC
-  // fragment comes back with NO offset and NO rotation at all, which reads as a grid
-  public static inline var LITTER_MIN_SCALE = 0.5;
+  // the tunnels' own jitter, verbatim, for the reason render.sewer.SewerDebris.dress spells out: a
+  // STATIC fragment comes back with NO offset and NO rotation at all, which reads as a grid
   public static inline var LITTER_JITTER = 0.25;
   // and the standing junk: one candidate cell in this many, then the list is STRIDED down to this
   // many props. the stride is not a cap — FacilityRoof.fill records what a running counter does to a
