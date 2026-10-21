@@ -2249,3 +2249,13 @@ bust (face and torso) IN FRONT of his gear, smaller than the full-tile soldier, 
   settings over map crops; at 64 px it still lifts every icon off a busy tile without a dark ring round it.
 
 **Verdict:** landed.
+
+## entities128: the base marks lifted
+
+"Military icons are too dark": the four base marks measured mean linear luminance **0.025** against the
+lab marks' 0.10-0.12 and the corp towers' 0.06-0.10. `tools/entities128.py` `LIFT` runs `match`'s gain
+alone (saturation kept, `sat` target 1.0) to **0.09**: gains 3.44-3.60, no visible clipping, and on the
+map the camo, face and gear read where they were a dark blot. A re-gen would not have helped: the prompt
+already asked for a medium value, and `style`'s "very dark" won.
+
+**Verdict:** landed.

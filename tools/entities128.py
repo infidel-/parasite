@@ -62,6 +62,9 @@ UPRIGHT = set(range(7)) | set(range(47, 56))
 # to pastel and white). The path dot and the high-crime pistol are matched: at the gen's own value both
 # vanish into the dark map. The organ silhouettes are shadow masks, black by construction
 GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36} | set(range(38, 44)) | set(range(47, 67))
+# generated cells lifted to a mean linear luminance (match's gain alone, saturation kept): the four base
+# marks came back at 0.025, a quarter of the lab marks' 0.10-0.12, and read as dark blots on the map
+LIFT = {i: 0.09 for i in range(63, 67)}
 
 
 def lzf(src, n):
@@ -374,9 +377,9 @@ def main():
     for i, (r, c) in enumerate(CELLS):
         cell, fx, fy = place(trim(src[i]), olds[i]['box'], i in UPRIGHT, olds[i]['amax'], crop_top=(i == 6))
         note = 'fit %3.0f%% x %3.0f%%' % (100 * fx, 100 * fy)
-        if i not in GENERATED:
+        if i not in GENERATED or i in LIFT:
             n = np.asarray(cell).astype(float).copy()
-            gain, f = match(n, olds[i])
+            gain, f = match(n, {'sat': 1.0, 'lum': LIFT[i]} if i in LIFT else olds[i])
             cell = Image.fromarray(n.round().astype(np.uint8))
             note += '  gain %.2f  sat f %.2f' % (gain, f)
         out.alpha_composite(cell, ((i % COLS) * CELL, (i // COLS) * CELL))
