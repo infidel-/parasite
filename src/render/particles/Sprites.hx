@@ -36,6 +36,7 @@ class Sprites {
   var actorGroup:Group;                                 // scene group holding all sprite quads
   var pool:Array<Mesh> = [];                            // reused quad meshes
   var texCache:Map<String, CanvasTexture> = new Map();  // atlas-crop / svg -> texture
+  static var atlasCache:Map<String, CanvasTexture> = new Map();  // whole-atlas decal maps, for the session (atlasTex)
   var svgImgs:Map<String, Dynamic> = new Map();         // svg cache key -> decoding <img> (async)
   var contentCache:Map<String, GroundSprite> = new Map(); // atlas-crop -> content-trimmed sprite
   var outlineCache:Map<String, OutlineSprite> = new Map(); // atlas-crop -> outline ring + its quad-scale
@@ -864,11 +865,16 @@ class Sprites {
 // the whole sprite atlas as ONE texture, darkened by mul — the shared map behind every batched
 // ground decal. tex()/texContent() cut each cell into a texture of its own, which forces DecalBatch
 // to open a group (a draw call) per cell; sampling the atlas directly with a per-instance UV rect
-// collapses those to one group per material. null until the atlas image decodes (retry, like tex())
+// collapses those to one group per material. null until the atlas image decodes (retry, like tex()).
+//
+// CACHED FOR THE SESSION, not per sprite pool: a pool is rebuilt with every area, and each entry
+// rebuilt each atlas it laid — measured 8-9 ms CPU for each darkened entities128 copy (blood, money),
+// 1.5-2.5 ms for a litter pack, plus its re-upload. there are a handful of these and nothing disposes
+// them (render.decals.DecalBatch.dispose frees its material, never the map)
   public function atlasTex(imageName:String, male:Bool, mul:Float = 1.0):CanvasTexture
     {
-      var key = 'atlas:' + imageName + ':' + male + ':' + mul;
-      if (texCache.exists(key)) return texCache.get(key);
+      var key = imageName + ':' + male + ':' + mul;
+      if (atlasCache.exists(key)) return atlasCache.get(key);
       var img:Dynamic = game.scene.images.getImage(imageName, male);
       // retry next frame if the atlas image isn't decoded yet
       if (img == null ||
@@ -898,7 +904,7 @@ class Sprites {
       // ponytail: no-mips over rebuilding the atlas with padded gutters — revisit if decals shimmer
       untyped tex.generateMipmaps = false;
       untyped tex.minFilter = THREE.LinearFilter;
-      texCache.set(key, tex);
+      atlasCache.set(key, tex);
       return tex;
     }
 

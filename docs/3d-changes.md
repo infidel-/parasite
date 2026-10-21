@@ -2132,3 +2132,27 @@ alpha 32 that pack16 flattens (64% clear, borders 0). **Trap 2:** inserting the 
 `json.dump` re-indented all 17.6k lines of `textures.json`; it is inserted as text.
 
 **Verdict:** landed.
+
+## Whole-atlas decal maps cached for the session
+
+`render.decals.Debris.draw` built a darkened copy of all of entities64 (768x3456) on every area entry,
+even for an empty litter list, because `Sprites.atlasTex` cached per sprite pool and a pool is rebuilt
+with every area (`Actors.hx:138`). Two fixes:
+
+- **Empty list returns first** (`decals/Debris.draw`): corp, lab, cave and road-less wilderness build
+  nothing.
+- **`atlasTex` caches in a static `atlasCache`, for the session.** Nothing disposes these maps
+  (`DecalBatch.dispose` frees its material, never the map; `View.disposeScene` skips textures), so a
+  shared one is safe. There are a handful: one per litter pack, plus entities128 at the blood and the
+  money darken.
+
+**Measured** (CPU of one build, median of 5, this laptop): the old entities64 atlas at 0.40 **20-22 ms**
+(plus a 10.6 MB upload with no mips), gone with the generic litter pack; a litter pack at mul 1.0
+**1.5-2.5 ms**; each darkened entities128 copy (blood 0.6, money 0.4) **8-9 ms**. Re-entering an area
+now hands the new pool the same texture object: lookup 0 ms, no rebuild, no re-upload.
+
+**Trap:** driving region -> area -> region in ONE eval leaves the 3D view unbuilt (`actors` null,
+`running` false), the same as the `area regen` note in `docs/debug-surface.md`. Separate evals per
+`setLocation`. A save flushed in that state loads empty once; re-entering builds it.
+
+**Verdict:** landed.
