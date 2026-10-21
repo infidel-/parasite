@@ -118,9 +118,8 @@ class Const
   // rows 9-11, 14 and 48-49 - chem laboratory decoration table.
   //
   // 43 frames became 64 with the pack16 sheets (FACILITY_DECO_HD below): row 14's five free columns
-  // were filled, and rows 48-49 are NEW — entities64 grew from 48 rows to 50, which reaches nothing
-  // else because no other family addresses down there. The 64 px icons for the 21 invented frames
-  // are baked out of the pack art by tools/atlaspaste.py, so the 2D area view draws them too
+  // were filled, and rows 48-49 are NEW frame IDs (the old entities64 grew from 48 rows to 50), which
+  // reach nothing else because no other family addresses down there
   public static var CHEM_LABS_DECO_TABLE: Array<_TileRow> = [
     { row: 9, amount: 12 },
     { row: 10, amount: 12 },
@@ -147,9 +146,6 @@ class Const
   // axis-aligned quads only, so those two are instanced glbs the compound already ships. Being in
   // this table is what turns their sprite off and what stamps their cell, which is the same job for
   // both routes.
-  //
-  // the 2D area view is not affected at all: a fitting is still an objects.Decoration drawing the
-  // same entities64 cell it always drew
   public static var FACILITY_DECO: Array<_DecoPlace> = [
     // the open metal shelving with boxes on it, the one kind emitted as a composite rather than a box
     {
@@ -523,10 +519,10 @@ class Const
   // ---- pack16: the hi-res bench decoration sheets --------------------------------------------
   //
   // one 1024 image carries SIXTEEN decorations at 256 px each, against the 64 an entities64 cell
-  // gives one. A 3D-ONLY REDIRECTION, exactly the trade the 128 px actor atlases make: the 2D area
-  // view still draws every decoration from entities64, and render.particles.Sprites.atlasFor swaps
-  // the pack cell in underneath it for the sprite pool alone. So nothing is persisted, nothing is
-  // migrated, and a save made before any of this lights up the moment it is drawn again.
+  // gave one. A REDIRECTION, the trade the 128 px actor atlases make: the decoration keeps its
+  // entities64 frame as its ID and render.particles.Sprites.atlasFor swaps the pack cell in under it.
+  // So nothing is persisted, nothing is migrated, and a save made before any of this lights up the
+  // moment it is drawn again.
   //
   // WHAT IT BUYS is texel density and nothing else. A bench sprite spans Sprites.SIZE 3.0 x
   // FacilityStyle.DECO_TABLE_SCALE 0.81 = 2.43 world units, so a 64 px cell is 26.3 texels per world
@@ -542,8 +538,8 @@ class Const
   // index = the pack cell, counted across sheets in reading order (sheet DECO_PACK_CELLS at a time,
   // then row-major inside it); value = the entities64 bench frame that cell redraws.
   //
-  // AUTHORED BESIDE THE GENERATION PROMPT — cell i's art IS the frame it names here, so the 2D icon
-  // and the 3D sprite stay the same object and a decoration does not change identity between views.
+  // AUTHORED BESIDE THE GENERATION PROMPT — cell i's art IS the frame it names here, so a
+  // decoration's saved frame and the pack cell it draws stay the same object.
   // The prompts are in art/textures.json under facility/bench-pack<n>, one numbered line per cell in
   // this same order
   public static var FACILITY_DECO_HD: Array<_FittingFrame> = [
@@ -583,7 +579,7 @@ class Const
     { row: 11, col: 7 },
     // sheet 3 — the rest of row 11, then row 14. its last FIVE cells are decorations that did
     // not exist: 14/7-11 were free columns, which is why CHEM_LABS_DECO_TABLE's row 14 above
-    // deals 12 and not 7. tools/atlaspaste.py bakes their 64 px icons into the atlas for the 2D view
+    // deals 12 and not 7
     { row: 11, col: 8 },
     { row: 11, col: 9 },
     { row: 11, col: 10 },
@@ -751,9 +747,8 @@ class Const
   // against the 64 px an entities64 cell gave them — the clue documents were the last family in the
   // compound still drawn straight off the atlas, i.e. at 26 texels per world unit.
   //
-  // 3D-ONLY, like the bench packs: the 2D area view, the inventory and every window still draw the
-  // entities64 frame, which tools/atlaspaste.py bakes from these same cells, so the two are one
-  // object drawn twice. Nothing is persisted and nothing is migrated
+  // a redirection like the bench packs: the document keeps its entities64 frame as its ID. Nothing
+  // is persisted and nothing is migrated
   // and the sewer hatch's own hi-res cell, which is a whole IMAGE rather than a pack: one object, one
   // cell, so it needs no index table and no coordinate arithmetic (render.particles.Sprites.atlasFor
   // and art/textures.json city/sewer-hatch)

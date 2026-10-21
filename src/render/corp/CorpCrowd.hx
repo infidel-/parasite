@@ -50,12 +50,12 @@ typedef CorpCrowdSet = {
 //
 // **THE PEOPLE ARE THE GAME'S OWN AI ICONS**, and this is the one shape decision in the file.
 // `AI` is the NPC class here (see src/ai/AI.hx, `createIcon`), and `Images.getRandomCivilianAI`
-// deals every civilian in the game a cell off `images.male` / `images.female`. The 2D corp view
+// deals every civilian in the game a cell off the male / female actor sheets. The 2D corp view
 // drew this same fake crowd from those same sheets — `AreaView.paintFakeHost`, commit ab37666,
 // `ix: Std.random(10), iy: Std.random(isMale ? 8 : 6)` at half alpha. The first 3D pass replaced
 // them with additive radial gradients on the argument that at 114 units down a pedestrian is the
 // patch of light they stand in rather than a silhouette. That argument was wrong twice over: it
-// is not what was asked for, and the sheets cost nothing — the two 640x1024 atlases stack into
+// is not what was asked for, and the sheets cost nothing — the two sheets' civilian rows stack into
 // ONE canvas, so both sexes and all 134 civilian icons ride one instanced batch and one draw
 // call, exactly as the four cars do off `corp/traffic`.
 //
@@ -486,9 +486,9 @@ class CorpCrowd
 // SAME MACHINERY AS THE CARS, and deliberately — an `instanceUV` vec4 plus the `vMapUv` rewrite
 // after <uv_vertex>, with a cache key of its own. What differs is only the atlas and the lean.
 //
-// BOTH SHEETS GO IN ONE CANVAS. `images.male` and `images.female` are 640x1024 each; drawn one
-// above the other they are a single CanvasTexture, which is what keeps 134 possible icons and two
-// sexes at ONE draw call. Mipmaps are off for render.particles.Sprites.atlasTex's reason: the
+// BOTH SHEETS GO IN ONE CANVAS: the civilian rows of `male128` and `female128` (8 and 6 rows of ten
+// 128 px cells), drawn one above the other, are a single CanvasTexture, which is what keeps 134
+// possible icons and two sexes at ONE draw call. Mipmaps are off for render.particles.Sprites.atlasTex's reason: the
 // cells sit edge to edge, so a coarse mip averages a neighbouring civilian into this one.
 //
 // NO vision mask and NO indoor mask, the street's own rule.

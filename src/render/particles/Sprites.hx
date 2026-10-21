@@ -516,7 +516,8 @@ class Sprites {
 // moves to a hi-res sheet moves everywhere at once:
 //   male/female actors take the 128 px skin-variant atlases, at the same (ix, iy);
 //   an entities frame takes its cell off entities128 (Const.HD128), a bench pack, the clue pack or a
-//   single-cell image.
+//   single-cell image, and a frame in none of those has no image (entities64 is retired): it draws
+//   nothing, and every reader below returns null for it.
 //
 // this is why it returns COORDINATES and not just an image: a pack cell is not at the frame's own
 // (col, row) — sixteen decorations sit on a 4x4 sheet in the table's own order — so the caller
@@ -589,7 +590,7 @@ class Sprites {
             };
         }
       return {
-        img: images.getImage(imageName, male),
+        img: images.getImage(imageName),
         t: Const.TILE_SIZE_CLEAN,
         ix: ix,
         iy: iy,
@@ -875,7 +876,7 @@ class Sprites {
     {
       var key = imageName + ':' + male + ':' + mul;
       if (atlasCache.exists(key)) return atlasCache.get(key);
-      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      var img:Dynamic = game.scene.images.getImage(imageName);
       // retry next frame if the atlas image isn't decoded yet
       if (img == null ||
           !img.complete ||
@@ -910,7 +911,7 @@ class Sprites {
 
 // the image and cell a BATCHED ground decal cuts an entities64 frame from: atlasTex/cellRect take a
 // whole image, so they cannot follow atlasFor's per-cell redirect by themselves. the 128 redraw where
-// the frame has one (Const.HD128), the frame itself otherwise
+// the frame has one (Const.HD128); otherwise a name with no image behind it, which draws nothing
   public function batchCell(ix:Int, iy:Int):BatchCell
     {
       var h = Const.hd128(iy, ix);
@@ -932,7 +933,7 @@ class Sprites {
     {
       var key = 'cell:' + imageName + ':' + ix + ':' + iy + ':' + male;
       if (rectCache.exists(key)) return rectCache.get(key);
-      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      var img:Dynamic = game.scene.images.getImage(imageName);
       if (img == null ||
           !img.complete ||
           img.naturalWidth <= 0)
@@ -951,7 +952,7 @@ class Sprites {
     {
       var key = 'content:' + imageName + ':' + ix + ':' + iy + ':' + male;
       if (rectCache.exists(key)) return rectCache.get(key);
-      var img:Dynamic = game.scene.images.getImage(imageName, male);
+      var img:Dynamic = game.scene.images.getImage(imageName);
       if (img == null ||
           !img.complete ||
           img.naturalWidth <= 0)

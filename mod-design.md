@@ -458,7 +458,7 @@ Convention: mod's `assets/<category>/<name>` shadows engine's `<category>/<name>
 
 | Engine path | Mod override path |
 |-------------|-------------------|
-| `img/entities64.png` | `<mod>/assets/img/entities64.png` |
+| `img/entities128.png` | `<mod>/assets/img/entities128.png` |
 | `sound/ai-arrive-police.mp3` | `<mod>/assets/sound/ai-arrive-police.mp3` |
 | `music/menu.mp3` | `<mod>/assets/music/menu.mp3` |
 
@@ -870,7 +870,7 @@ Smoke checklist:
 - Mod with `minGameVersion` newer than current engine → skipped + log.
 - Path-traversal `mod://com.x.y/../../etc/passwd` → 403.
 - Disabled mod via `profile.disabledMods` → skipped.
-- Asset override: mod ships `assets/img/entities64.png` → engine uses mod's image.
+- Asset override: mod ships `assets/img/entities128.png` → engine uses mod's image.
 - Per-mod settings: mod writes via `parasite.settings`, persisted under `settings.mods.<id>.*`.
 - Console `mods` command lists loaded/disabled/failed mods.
 - Mod calls `parasite.api.registerItem(MyItem)` → item appears in `ItemsConst.infos`. Start new game → item still present. Open console, run `add` flow that re-inits → item still present.

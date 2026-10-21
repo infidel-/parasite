@@ -1133,7 +1133,7 @@ class CorpStyle
   //
   // THE PEDESTRIANS ARE THE GAME'S OWN AI ICONS, which is what "random ai art" meant and what the
   // 2D corp view already did: `AreaView.paintFakeHost` (commit ab37666) drew each fake host from
-  // `images.male` / `images.female` at a random `ix`/`iy`, off the very sheets `AI.createIcon`
+  // the male / female sheets at a random `ix`/`iy`, off the very sheets `AI.createIcon`
   // deals a civilian's own portrait from. The first 3D pass replaced them with additive glow
   // gradients on the argument that at this range a person is the light they stand in; asked for
   // twice, and the answer is the sheets. See render.corp.CorpCrowd.people.

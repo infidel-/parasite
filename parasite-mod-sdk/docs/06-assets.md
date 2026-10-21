@@ -10,7 +10,7 @@ mod file at `assets/<category>/<name>` shadows the engine's `<category>/<name>`:
 
 | Engine asset                  | Override it with                          |
 |-------------------------------|-------------------------------------------|
-| `img/entities64.png`          | `<mod>/assets/img/entities64.png`         |
+| `img/entities128.png`         | `<mod>/assets/img/entities128.png`        |
 | `sound/ai-arrive-police.mp3`  | `<mod>/assets/sound/ai-arrive-police.mp3` |
 | `music/menu.mp3`              | `<mod>/assets/music/menu.mp3`             |
 
@@ -22,7 +22,7 @@ mymod/
   manifest.json
   entry.js
   assets/
-    img/entities64.png
+    img/entities128.png
     sound/mod-mymod-bark.mp3
 ```
 
@@ -50,8 +50,11 @@ override is logged at boot, so users can see which mod replaced what.
 
 ## Notes and limits
 
-- Overriding `img/entities64.png` (or any tilemap) means shipping the **whole**
-  image — there is no partial/per-tile override in v1.
+- Overriding `img/entities128.png` (or any tilemap) means shipping the **whole**
+  image — there is no partial/per-tile override in v1. It is an 8 x 8 sheet of
+  128 px cells; cell `i` (reading order) draws the frame at index `i` of
+  `Const.HD128`. Frames keep their old `(row, col)` as their ID, so a mod
+  addresses a sprite the same way it always did.
 - The `mod://` scheme is already permitted by the engine's content-security
   policy for images, media, and fonts, so overrides load without any further
   setup on your side.

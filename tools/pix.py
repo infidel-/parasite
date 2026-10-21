@@ -10,7 +10,7 @@ sessions computed exactly this, four of them retyping the same sRGB->linear tran
   python3 tools/pix.py app/textures/wild/ground.png                     one surface
   python3 tools/pix.py app/textures/wild/*.png                          a value ladder
   python3 tools/pix.py sshot.jpg --box lino,900,600,1020,660 --scene    a region of a frame
-  python3 tools/pix.py app/img/entities64.png --atlas 16,0,16,16,32,32  one atlas cell
+  python3 tools/pix.py app/img/entities128.png --atlas 16,0,16,16,32,32  one atlas cell
   python3 tools/pix.py models-src/sewer/drum-base.png --hue             what colour IS it
 
 What each column is, and why it is there:

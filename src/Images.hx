@@ -17,21 +17,18 @@ typedef _CivilianData = {
 class Images
 {
   var scene: GameScene;
-  public var entities: Image;
   public var cultBase: Image;
   public var cultBaseDestroyed: Image;
   public var creatures: Image;
   public var sewersObjects1: Image;
   public var undergroundLabObjects1: Image;
-  public var male: Image;
-  public var female: Image;
   public var male128: Array<Image>; // 3D 128px atlas, [SKIN_YELLOW, SKIN_DARK, SKIN_WHITE]
   public var female128: Array<Image>;
   public var decoPacks: Array<Image>; // 3D 256px facility bench decoration sheets (Const.FACILITY_DECO_HD)
   public var cluePack: Image; // 3D 170px clue document/book sheet (Const.CLUE_HD)
   public var hatchHD: Image;  // 3D 256px sewer hatch lid — ONE cell, not a pack (Const.ROW_OBJECT)
   public var ventHD: Image;  // 3D 256px wall vent grille — ONE cell, edge to edge (Const.ROW_OBJECT2)
-  public var entities128: Image; // 3D 128px redraw of the entities64 cells in Const.HD128 (tools/entities128.py)
+  public var entities128: Image; // 128px art of every entities frame still drawn, Const.HD128 order (tools/entities128.py)
   public var tileset128: Image; // region map facility and military base marks, tile id order (tools/entities128.py)
   var debrisPacks = new Map<String, Image>(); // the per-tier street litter PACK64s, loaded on first ask
   var defaultTileset: Default;
@@ -42,8 +39,6 @@ class Images
       scene = s;
 
       // load all images
-      entities = new Image();
-      entities.src = AssetPath.resolve('img/entities64.png');
       cultBase = new Image();
       cultBase.src = AssetPath.resolve(CultBaseConst.IMAGE_PATH);
       cultBaseDestroyed = new Image();
@@ -54,18 +49,14 @@ class Images
       sewersObjects1.src = AssetPath.resolve(Sewers.OBJECTS_IMAGE_PATH);
       undergroundLabObjects1 = new Image();
       undergroundLabObjects1.src = AssetPath.resolve(UndergroundLab.OBJECTS_IMAGE_PATH);
-      male = new Image();
-      male.src = AssetPath.resolve('img/male64.png');
-      female = new Image();
-      female.src = AssetPath.resolve('img/female64.png');
-      // 3D-only 128px skin-variant atlases (2D views keep using the 64px sheets above)
+      // the 128px skin-variant actor atlases
       male128 = loadAtlas128('male');
       female128 = loadAtlas128('female');
       decoPacks = loadDecoPacks();
       // and the clue sheet, the same built-art route for one sheet instead of four
       cluePack = new Image();
       cluePack.src = AssetPath.resolve('textures/facility/clue-pack.png');
-      // and the 128 px redraw of the sprites, splats and FX the 3D view drew at 64
+      // and the 128 px redraw of every entities frame still drawn (Const.HD128)
       entities128 = new Image();
       entities128.src = AssetPath.resolve('img/entities128.png');
       tileset128 = new Image();
@@ -92,7 +83,7 @@ class Images
       return out;
     }
 
-// load the hi-res facility bench decoration sheets (3D only; the 2D view keeps entities64).
+// load the hi-res facility bench decoration sheets.
 //
 // out of textures/ and not img/, which is where every other atlas here lives: these are BUILT ART —
 // art/textures.json carries their prompts and `make tex` writes them — and the img/ sheets are
@@ -161,22 +152,18 @@ class Images
         }
     }
 
-// resolve an entity-atlas name to its loaded Image. mirrors the lookup in
-// Entity.draw and handles the female→male atlas fallback when isMaleAtlas
-// is set (used by specials that only ship a male sprite). returns null on
-// unknown name so callers can decide how to handle it.
-  public function getImage(name: String, ?isMaleAtlas: Bool = false): Image
+// resolve a whole-sheet atlas name to its loaded Image. the actor sheets and the entities frames are
+// not here: they resolve per cell (render.particles.Sprites.atlasFor). returns null on an unknown name
+// so callers can decide how to handle it
+  public function getImage(name: String): Image
     {
       switch (name)
         {
-          case 'entities': return entities;
           case 'cultBase': return cultBase;
           case 'cultBaseDestroyed': return cultBaseDestroyed;
           case 'creatures': return creatures;
           case 'sewersObjects1': return sewersObjects1;
           case 'undergroundLabObjects1': return undergroundLabObjects1;
-          case 'male': return male;
-          case 'female': return isMaleAtlas ? male : female;
           case 'debris-slums', 'debris-city', 'debris-downtown', 'debris-generic': return debrisPack(name);
           case 'entities128': return entities128;
           default: return null;
@@ -197,8 +184,8 @@ class Images
       return img;
     }
 
-// the cell size of an atlas getImage() hands out: a litter pack's or the redraw's 128, the entities
-// grid's otherwise
+// the cell size of an atlas getImage() hands out: a litter pack's or the redraw's 128, the 64 px
+// sheets' (cult base, creatures, sewer and lab objects) otherwise
   public static function cellSize(name: String): Int
     {
       if (name == 'entities128')

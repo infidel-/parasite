@@ -1103,11 +1103,11 @@ class FacilityDeco
 
 // one floor drain, centred on its cell.
 //
-// IT USED TO BE ITS OWN ATLAS ICON LAID FLAT, and that is the whole reason this exists. The icon is
-// baked into app/img/entities64.png at 32 x 32 inside a 64 cell, drawn on a render.particles.Sprites
-// quad of SIZE 3.0 — 21 texels per world unit against the floor tile's own 73, and reported from the
-// game as blurry. The atlas is right for the 2D view and right for BATCHING (see Sprites.atlasTex:
-// per-cell textures open a draw call each), but it caps a floor fitting at 32 px forever.
+// IT USED TO BE ITS OWN ATLAS ICON LAID FLAT, and that is the whole reason this exists. The icon was
+// 32 x 32 inside a 64 cell of the old entities64 sheet, drawn on a render.particles.Sprites quad of
+// SIZE 3.0 — 21 texels per world unit against the floor tile's own 73, and reported from the game as
+// blurry. An atlas is right for BATCHING (see Sprites.atlasTex: per-cell textures open a draw call
+// each), but it capped a floor fitting at 32 px.
 //
 // emitted here it takes the 256 source directly, mapped 0..1 over its own square: 170 texels per
 // world unit, one merged mesh for every drain in the compound, and a normal `lift` for its value.

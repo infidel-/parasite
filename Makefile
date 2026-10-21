@@ -46,8 +46,9 @@ tex:
 sounds:
 	python3 tools/sounds.py
 
-# the 3D view's 128 px entities sheet: the original kra/png art under the asset store (and the
-# generated blood sheets in textures-src/img/entities128/) -> app/img/entities128.png
+# the 128 px entities sheet and the region map's tileset128: the original kra/png art under the asset
+# store (and the generated sheets in textures-src/img/entities128/) -> app/img/entities128.png and
+# app/img/tileset128.png
 entities:
 	python3 tools/entities128.py
 

@@ -4,7 +4,7 @@
 - `make` / `make game-debug`: `cd src && make electron`
 - `make testmod`: `cd examples/testmod/ && make`
 - `make main`: `cd electron && make`
-- `make entities`: rebuild `app/img/entities128.png` (the 3D 128 px redraw of the `Const.HD128` cells) from the original kra/png art — after any change to those sources
+- `make entities`: rebuild `app/img/entities128.png` (the 128 px art of every `Const.HD128` frame) and `app/img/tileset128.png` from the original kra/png art — after any change to those sources
 
 ## Where the rest of it lives
 
