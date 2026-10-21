@@ -2281,3 +2281,11 @@ light enough that the dark violet tentacles keep their silhouette. `RegionView.d
 corp/habitat colour; high crime, ovum and cult keep the halo.
 
 **Verdict:** landed.
+
+## Region map discs: thinner tinted ring, 10% bigger
+
+The ring went from 1/32 tile of black at 45% to **1/64 tile of the disc's own colour under a 30% black
+wash** (stroked twice: the colour, then the wash), so it reads as a shade of the disc rather than an
+outline. `DISC_RADIUS` 0.46 → **0.506**, a hair past the tile edge.
+
+**Verdict:** landed.

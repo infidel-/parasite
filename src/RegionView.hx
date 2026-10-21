@@ -40,7 +40,7 @@ class RegionView
   static var DISC_CORP = '#70a7b6'; // blue-cyan
   static var DISC_BASE = '#8fa075'; // green
   static var DISC_HABITAT = '#a88ac4'; // purple
-  static var DISC_RADIUS = 0.46; // share of the tile
+  static var DISC_RADIUS = 0.506; // share of the tile (a hair past its edge)
   var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
   var lastPY: Int;
   var lastCamX: Int;
@@ -746,7 +746,8 @@ class RegionView
       return null;
     }
 
-// draw one entity icon over a flat disc of its kind's colour, ringed darker so it holds on a light tile
+// draw one entity icon over a flat disc of its kind's colour, ringed a shade darker so it holds on a
+// light tile
   function drawDiscIcon(ctx: CanvasRenderingContext2D, col: Int, row: Int,
       ax: Float, ay: Float, color: String)
     {
@@ -755,8 +756,12 @@ class RegionView
       ctx.arc(ax + Const.TILE_SIZE / 2, ay + Const.TILE_SIZE / 2, r, 0, 2 * Math.PI);
       ctx.fillStyle = color;
       ctx.fill();
-      ctx.lineWidth = Const.TILE_SIZE / 32;
-      ctx.strokeStyle = 'rgba(0, 0, 0, 0.45)';
+      // the ring is the disc's own colour under a light black wash, so it is a shade of the disc and
+      // not a black line round it
+      ctx.lineWidth = Const.TILE_SIZE / 64;
+      ctx.strokeStyle = color;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
       ctx.stroke();
       drawEntityCell(ctx, col, row, ax, ay);
     }
