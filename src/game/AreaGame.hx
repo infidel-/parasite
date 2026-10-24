@@ -2760,6 +2760,13 @@ class Test {
       if (maxSpawn > 10)
         maxSpawn = 10;
 
+      // common police already here (hard capped, a police roll past the cap spawns nothing)
+      var police = 0;
+      for (ai in _ai)
+        if (ai.isCommon &&
+            ai.type == 'police')
+          police++;
+
       for (_ in 0...maxSpawn)
         {
           // get random ai class id based on probability
@@ -2775,6 +2782,13 @@ class Test {
                 }
 
               min += info.ai[key];
+            }
+
+          if (type == 'police')
+            {
+              if (police >= WorldConst.AREA_MAX_COMMON_POLICE)
+                continue;
+              police++;
             }
 
           // spawns AI at spot unseen by player

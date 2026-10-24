@@ -362,6 +362,9 @@ class WorldConst
 // tuned against the 3D camera footprint: a city spawn region is ~440 cells, so a city area
 // sits below this and keeps the 0.6 curve
   public static var AREA_AI_CELLS = 500;
+
+// hard cap on common (spawn-table) police in an area; law response and alertness spawns bring the rest
+  public static var AREA_MAX_COMMON_POLICE = 3;
 }
 
 
