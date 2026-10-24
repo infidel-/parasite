@@ -57,7 +57,7 @@ class PediaConst
           id: 'hostAssimilation',
           name: 'Host: Assimilation',
           img: 'imp/imp_assimilation',
-          text: "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available (a fully consenting host does that too). Finally, they gain additional body feature and inventory slots.",
+          text: "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots.",
         },
         {
           id: 'hostAttributes',

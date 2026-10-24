@@ -361,7 +361,7 @@ class Goals
       id: GOAL_GROUP_INTEL,
       isOptional: true,
       name: 'Gather intel on the Group',
-      note: 'Probe the brains of Group agents and read their dossiers in a habitat to find out who directs the hunt.',
+      note: 'Probe the brains of Group agents and read their dossiers to learn more.',
       noteFunc: function (game) {
         return Const.col('gray', Const.small(
           'Intel: ' + game.group.intel + '/' + game.group.intelNeeded()));
@@ -379,7 +379,7 @@ class Goals
       id: GOAL_GROUP_DIRECTOR,
       isOptional: true,
       name: 'Deal with the regional controller',
-      note: 'A Group regional controller directs the hunt from a military base. Planting false memories into them will close my file. Killing them will too, but only after their people make a last attempt on me.',
+      note: 'Planting false memories into them will close my file. Killing will do too.',
       noteFunc: GroupDirector.noteFunc,
       onEnter: GroupDirector.onEnter,
       onTurn: GroupDirector.onTurn,
