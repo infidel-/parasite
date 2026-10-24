@@ -7,8 +7,9 @@ package tiles;
 
 class UndergroundLab
 {
+  // no longer an image: the lab's doors, lift and vats are 3D (render.lab), and the name and the frames
+  // below stay as the tag and the open/closed state those objects (and their saves) are read by
   public static var OBJECTS_IMAGE = 'undergroundLabObjects1';
-  public static var OBJECTS_IMAGE_PATH = 'img/underground-lab-objects1.png';
   public static var DOOR_HORIZONTAL_CLOSED_LEFT: _Icon = { row: 6, col: 0 };
   public static var DOOR_HORIZONTAL_CLOSED_RIGHT: _Icon = { row: 6, col: 1 };
   public static var DOOR_HORIZONTAL_OPEN_LEFT: _Icon = { row: 7, col: 0 };

@@ -21,7 +21,6 @@ class Images
   public var cultBaseDestroyed: Image;
   public var creatures: Image;
   public var sewersObjects1: Image;
-  public var undergroundLabObjects1: Image;
   public var male128: Array<Image>; // 3D 128px atlas, [SKIN_YELLOW, SKIN_DARK, SKIN_WHITE]
   public var female128: Array<Image>;
   public var decoPacks: Array<Image>; // 3D 256px facility bench decoration sheets (Const.FACILITY_DECO_HD)
@@ -46,8 +45,6 @@ class Images
       creatures.src = AssetPath.resolve('img/creatures64.png');
       sewersObjects1 = new Image();
       sewersObjects1.src = AssetPath.resolve(Sewers.OBJECTS_IMAGE_PATH);
-      undergroundLabObjects1 = new Image();
-      undergroundLabObjects1.src = AssetPath.resolve(UndergroundLab.OBJECTS_IMAGE_PATH);
       // the 128px skin-variant actor atlases
       male128 = loadAtlas128('male');
       female128 = loadAtlas128('female');
@@ -160,7 +157,6 @@ class Images
           case 'cultBaseDestroyed': return cultBaseDestroyed;
           case 'creatures': return creatures;
           case 'sewersObjects1': return sewersObjects1;
-          case 'undergroundLabObjects1': return undergroundLabObjects1;
           case 'debris-slums', 'debris-city', 'debris-downtown', 'debris-generic': return debrisPack(name);
           case 'entities128': return entities128;
           default: return null;
