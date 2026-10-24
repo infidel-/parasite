@@ -267,12 +267,13 @@ class PlayerRegion extends _SaveObject
 
 
 // can a habitat be built here: a microhabitat in the sewers under any inhabited area, or a natural
-// cave in the mountains. plains and forest have neither
+// cave in the mountains off the highway. plains and forest have neither
   function canHaveHabitat(area: AreaGame): Bool
     {
       return (area.info.isInhabited ||
         (area.typeID == AREA_GROUND &&
-         map.Terrain.bandAtArea(game.region.mapSeed, area.x, area.y) == TERRAIN_MOUNTAIN));
+         map.Terrain.bandAtArea(game.region.mapSeed, area.x, area.y) == TERRAIN_MOUNTAIN &&
+         map.Highway.atArea(game.region, area.x, area.y) == null));
     }
 
 // action: create habitat
