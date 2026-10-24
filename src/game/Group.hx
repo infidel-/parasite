@@ -352,11 +352,14 @@ class Group extends _SaveObject
     {
       game.goals.complete(GOAL_GROUP_DIRECTOR);
       neutralize();
+      // the final team skips the search: an ambush on the parasite wherever it is in a few turns
       if (team == null)
         {
           team = new Team(game);
           team.level = 4;
-          team.distance = 30;
+          team.state = TEAM_AMBUSH;
+          team.distance = 0;
+          team.timer = 3;
         }
       game.message({
         text: 'The controller is dead. Their people will throw everything they have left at me before the file closes.',
