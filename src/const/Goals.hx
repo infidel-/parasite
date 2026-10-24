@@ -381,6 +381,9 @@ class Goals
       name: 'Deal with the regional controller',
       note: 'Planting false memories into them will close my file. Killing will do too.',
       noteFunc: GroupDirector.noteFunc,
+      markAreaFunc: function (game) {
+        return game.group.directorAreaID;
+      },
       onEnter: GroupDirector.onEnter,
       onTurn: GroupDirector.onTurn,
       leaveAreaPre: GroupDirector.leaveAreaPre,

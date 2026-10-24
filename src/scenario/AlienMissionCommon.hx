@@ -284,6 +284,12 @@ class AlienMissionCommon
       return pt;
     }
 
+// region map mark: the target corp office
+  public static function markAreaFunc(game:Game): Int
+    {
+      return getMissionState(game).areaID;
+    }
+
 // mission note
   public static function noteFunc(game:Game): String
     {

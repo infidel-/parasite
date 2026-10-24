@@ -53,6 +53,7 @@ class RegionView
   var revealStart: IntMap<Float>; // area id -> fade-in start timestamp, ms
   var ticking: Bool; // animation frame requested
   var markers: Array<RegionMarker>; // region-border markers, rebuilt per turn
+  var targetIDs: Array<Int>; // area IDs the current goals target, rebuilt per turn
   var tileMarks: IntMap<js.html.Image>; // the SVG timeline tile marks by ROW_REGION_ICON frame
 
   public var width: Int; // width, height in cells
@@ -73,6 +74,7 @@ class RegionView
       revealStart = new IntMap();
       ticking = false;
       markers = [];
+      targetIDs = [];
       tileMarks = new IntMap();
     }
 
@@ -88,10 +90,11 @@ class RegionView
     }
 
 // collect the region-border markers: timeline leads with notes still unknown, NPCs with unread
-// memories, open cult missions and habitats. rebuilt per turn, projected on every draw
+// memories, open cult missions, habitats and goal targets. rebuilt per turn, projected on every draw
   function updateMarkers()
     {
       markers = [];
+      targetIDs = game.goals.getMarkAreaIDs();
       function add(a: AreaGame, key: String, color: String, scale: Float)
         markers.push({
           x: a.x,
@@ -119,6 +122,8 @@ class RegionView
                 (hab.col == Const.FRAME_HABITAT_AMBUSHED ? '#ff5b45' : '#c9a8ef'), 1.25);
             if (getShipIcon(a) != null)
               add(a, 'regionship', '#92b9ff', 1.25);
+            if (getTargetIcon(a) != null)
+              add(a, 'regiontarget', '#ff5b45', 1.25);
           }
     }
 
@@ -590,6 +595,7 @@ class RegionView
           // still surface timeline intel known independent of area exploration
           drawIcon(ctx, getEventIcon(area), ax, ay, false);
           drawIcon(ctx, getNPCIcon(area), ax, ay, false);
+          drawIcon(ctx, getTargetIcon(area), ax, ay, false);
           return;
         }
 
@@ -602,7 +608,7 @@ class RegionView
         }
 
       // area icons
-      for (i in 0...7)
+      for (i in 0...8)
         {
           var icon = null;
           switch (i)
@@ -630,6 +636,9 @@ class RegionView
               // crashed spaceship
               case 6:
                 icon = getShipIcon(area);
+              // goal target (over everything)
+              case 7:
+                icon = getTargetIcon(area);
             }
           // the location icons (region object, habitat, cult mission) sit on a halo, the marks do not
           drawIcon(ctx, icon, ax, ay, i == 0 || i == 4 || i == 5);
@@ -712,6 +721,8 @@ class RegionView
         svg = tileMarkSvg(14, 14, 12, '#f7af46', ui.UISvg.regionNPC());
       else if (icon.col == Const.FRAME_SPACESHIP)
         svg = tileMarkSvg(32, 32, 19, '#92b9ff', ui.UISvg.regionShip()); // 25% over a lead, like the habitat
+      else if (icon.col == Const.FRAME_TARGET_RETICLE)
+        svg = tileMarkSvg(50, 14, 12, '#ff5b45', ui.UISvg.regionTarget()); // top-right, clear of the NPC mark
       else return null;
       img = new js.html.Image();
       img.onload = function() scene.draw();
@@ -859,6 +870,17 @@ class RegionView
           col: Const.FRAME_CULT_MISSION,
         };
       return null;
+    }
+
+// the crosshair tile mark on the area a current goal targets (GoalInfo.markAreaFunc)
+  function getTargetIcon(area: AreaGame): _Icon
+    {
+      if (targetIDs.indexOf(area.id) < 0)
+        return null;
+      return {
+        row: Const.ROW_REGION_ICON,
+        col: Const.FRAME_TARGET_RETICLE,
+      };
     }
 
 // the crashed spaceship's tile mark, on the wilderness area it hides in (GoalsAlienCrashLanding

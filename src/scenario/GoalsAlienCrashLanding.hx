@@ -339,6 +339,7 @@ class GoalsAlienCrashLanding
       onReceive: AlienMissionCommon.onReceive,
       onTurn: AlienMissionCommon.onTurn,
       noteFunc: AlienMissionCommon.noteFunc,
+      markAreaFunc: AlienMissionCommon.markAreaFunc,
 
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
@@ -402,6 +403,7 @@ class GoalsAlienCrashLanding
       onReceive: AlienMissionCommon.onReceive,
       onTurn: AlienMissionCommon.onTurn,
       noteFunc: AlienMissionCommon.noteFunc,
+      markAreaFunc: AlienMissionCommon.markAreaFunc,
 
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP);
@@ -427,6 +429,7 @@ class GoalsAlienCrashLanding
       onReceive: AlienMissionCommon.onReceive,
       onTurn: AlienMissionCommon.onTurn,
       noteFunc: AlienMissionCommon.noteFunc,
+      markAreaFunc: AlienMissionCommon.markAreaFunc,
 
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP);

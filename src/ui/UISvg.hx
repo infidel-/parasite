@@ -564,12 +564,21 @@ class UISvg
             return regionHabitat();
           case 'regionship':
             return regionShip();
+          case 'regiontarget':
+            return regionTarget();
           case 'cultist', 'cultistx':
             return badgeCultist();
           case 'padlock':
             return badgePadlock();
         }
       return badgeWarn();
+    }
+
+// crosshair (region border: the area a current goal targets)
+  public static function regionTarget(): String
+    {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="6.5"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>';
     }
 
 // torn note (region border: timeline lead with notes still unknown)

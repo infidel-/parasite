@@ -10,6 +10,7 @@ typedef GoalInfo = {
   name: String, // goal name
   note: String, // goal note (static part)
   ?noteFunc: Game -> String, // dynamic note function, called on display
+  ?markAreaFunc: Game -> Int, // region area ID this goal targets, marked on the region map while the goal is current
 
   ?messageReceive: String, // message on receiving goal
   ?messageComplete: String, // message on goal completion

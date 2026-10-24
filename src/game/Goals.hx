@@ -40,6 +40,19 @@ class Goals extends _SaveObject
       return _listFailed.iterator();
     }
 
+// region area IDs the current goals target (region map marks)
+  public function getMarkAreaIDs(): Array<Int>
+    {
+      var ids = [];
+      for (goal in _listCurrent)
+        {
+          var info = getInfo(goal);
+          if (info.markAreaFunc != null)
+            ids.push(info.markAreaFunc(game));
+        }
+      return ids;
+    }
+
 // TURN: goals turn functions
   public function turn()
     {
