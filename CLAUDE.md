@@ -33,6 +33,7 @@ the war story there. A rule nobody can act on without opening the doc anyway bel
 - ALWAYS run tests at the end of each task: cd src/ && make
 - When changing persisted game data structures, ALWAYS verify Saver/Loader savegame compatibility (both serialization and load behavior, including old saves when relevant). Note that you should ask whether it is needed when planning (there might not have been a release yet)
 - **After changing anything player-facing (gameplay, UI, controls, areas, AI behaviour), ASK the user whether the pedia articles in [`src/const/PediaConst.hx`](src/const/PediaConst.hx) need updating** — name the articles the change touches. Do not edit them unasked.
+- **When adding a NEW pedia article, tell the user it most likely needs an image** (`img:`, a 2560×1440 jpg in `app/img/pedia/`) — say whether an existing one fits or a new one has to be made.
 - **When adding, removing or changing a cult ordeal (`src/cult/ordeals/`, the lists in `src/cult/Ordeals.hx`), update [`reports/cult-ordeals.md`](reports/cult-ordeals.md)** — its row: name, required members, power/money cost.
 - **After updating anything in `reports/`, run `make report`** — copies them to `ObsidianReports/`, overwriting the older versions.
 - When modifying AI logic, see if additional ai traces are needed
