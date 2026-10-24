@@ -926,10 +926,11 @@ class PlayerArea extends _SaveObject
 // NOTE: this is for displaying the leave area action, the actual checks are done in leaveAreaAction and can be different
   function canLeaveArea(): Bool
     {
-      // a military base is left on foot from outside its fence, with nobody alerted
+      // a military base is left on foot from outside its fence (shown even while the soldiers are
+      // alerted, so leaveAreaAction can say why it refuses; inside it would only clutter the list)
       if (game.area.typeID == AREA_MILITARY_BASE)
         return state != PLR_STATE_ATTACHED &&
-          game.area.canLeaveBase(x, y);
+          game.area.isOutsideBase(x, y);
       return state != PLR_STATE_ATTACHED &&
         !game.area.info.isInhabited &&
         (!game.area.isHabitat || !hasHabitatExit());

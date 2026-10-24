@@ -248,13 +248,15 @@ class AreaGame extends _SaveObject
          y >= f.y2);
     }
 
-// may the player leave a military base from this cell: outside the fence, with nobody alerted
+// may the player leave a military base from this cell: outside the fence, with none of the base's
+// own people alerted (the Group's hunt the parasite anywhere, they do not seal the base)
   public function canLeaveBase(x: Int, y: Int): Bool
     {
       if (!isOutsideBase(x, y))
         return false;
       for (ai in _ai)
-        if (ai.state == AI_STATE_ALERT)
+        if (ai.state == AI_STATE_ALERT &&
+            !ai.isGroup())
           return false;
       return true;
     }
