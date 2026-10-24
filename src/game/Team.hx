@@ -449,6 +449,13 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (state != TEAM_FIGHT)
         return;
 
+      // the file is closed: slipping away from their last attempt ends the hunt
+      if (game.group.isNeutralized)
+        {
+          game.group.onFinalEscape();
+          return;
+        }
+
       // since blackops deaths should trigger the good outcome
       // this one is for when some of them are alive - habitat is burned
       if (game.area.isHabitat)

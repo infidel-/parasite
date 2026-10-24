@@ -304,6 +304,16 @@ class Group extends _SaveObject
       game.info('Team wiped, timeout: ' + teamTimeout + ' turns');
     }
 
+// the parasite escaped the last team while the file is closed: the hunt is over
+  public function onFinalEscape()
+    {
+      team = null;
+      game.message({
+        text: "I've slipped away from their last attempt. The Group has stopped hunting me.",
+        img: 'pedia/team_deactivation'
+      });
+    }
+
 // on repelling an ambush
   public function onRepelAmbush()
     {
