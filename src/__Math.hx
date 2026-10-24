@@ -90,6 +90,11 @@ class __Math
       else if (consented)
         1;
 
+      // travelling the wilderness in region mode costs 10 a region turn
+      else if (game.location == LOCATION_REGION &&
+          game.playerRegion.currentArea.typeID == AREA_GROUND)
+        energy = -10;
+
       // lose energy by default
       else energy = - time;
 

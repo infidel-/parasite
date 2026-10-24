@@ -110,18 +110,21 @@ class Team extends FSM<_TeamState, _TeamFlag>
       ambushedHabitatAreaID = -1;
 
       // set ambush timer
-      // if player is currently in habitat, skip timer
+      // if player is currently in a habitat the team can reach, skip timer
       timer = 40 + 10 * Std.random(5);
       if (game.location == LOCATION_AREA &&
-          game.area.isHabitat)
+          game.area.isHabitat &&
+          !game.region.isSafeHabitat(game.area.parent))
         timer = 0;
 
-      // no habitats, skip
-      var cnt = game.region.getHabitatsCount();
+      // the habitats the team can reach: safe mountain caves are ignored
+      var tmp = [ for (area in game.region.getHabitatsList())
+        if (!game.region.isSafeHabitat(area.parent)) area ];
       // SPOON: no ambushes in habitats
       if (game.config.spoonHabitatAmbush)
-        cnt = 0;
-      if (cnt == 0)
+        tmp = [];
+      // no habitats, skip
+      if (tmp.length == 0)
         {
           ambushedHabitat = null;
           ambushedHabitatAreaID = -1;
@@ -129,7 +132,6 @@ class Team extends FSM<_TeamState, _TeamFlag>
         }
 
       // pick random habitat
-      var tmp = game.region.getHabitatsList();
       // L2 watcher attracts ambush
       for (area in tmp)
         if (area.habitat.watcherLevel >= 2)
@@ -237,8 +239,10 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // no ambushed habitat, spawn ambush right on player
       if (ambushedHabitat == null)
         {
-          // player is in the sewers
-          if (game.location == LOCATION_REGION)
+          // player is in the sewers, or in a safe habitat the team cannot reach
+          if (game.location == LOCATION_REGION ||
+              (game.area.isHabitat &&
+               game.region.isSafeHabitat(game.area.parent)))
             return;
 
           // spawn blackops

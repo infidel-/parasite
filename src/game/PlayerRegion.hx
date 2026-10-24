@@ -94,7 +94,8 @@ class PlayerRegion extends _SaveObject
             game.ui.hud.addAction({
               id: 'createHabitat',
               type: ACTION_REGION,
-              name: 'Create habitat',
+              name: (game.region.isSafeHabitat(currentArea) ?
+                'Create safe habitat' : 'Create habitat'),
               energy: 10
             });
         }

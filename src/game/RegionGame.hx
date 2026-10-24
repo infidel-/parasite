@@ -999,6 +999,25 @@ class RegionGame extends _SaveObject
       return area;
     }
 
+// is a habitat on this tile out of the Group's reach: a mountain cave at least
+// WorldConst.SAFE_HABITAT_DISTANCE steps from every city and corp tile
+  public function isSafeHabitat(area: AreaGame): Bool
+    {
+      if (area.typeID != AREA_GROUND)
+        return false;
+      var d = WorldConst.SAFE_HABITAT_DISTANCE;
+      for (dy in -d + 1...d)
+        for (dx in -d + 1...d)
+          {
+            var a = getXY(area.x + dx, area.y + dy);
+            if (a != null &&
+                (a.info.type == 'city' ||
+                 a.typeID == AREA_CORP))
+              return false;
+          }
+      return true;
+    }
+
 // get random area
   public function getRandom(?params: {
     ?noMission: Bool,

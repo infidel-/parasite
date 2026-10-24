@@ -365,6 +365,10 @@ class WorldConst
 
 // hard cap on common (spawn-table) police in an area; law response and alertness spawns bring the rest
   public static var AREA_MAX_COMMON_POLICE = 3;
+
+// region steps (diagonals count one) a mountain cave habitat keeps from every city and corp tile to
+// be safe: the Group's teams never ambush it
+  public static var SAFE_HABITAT_DISTANCE = 3;
 }
 
 
