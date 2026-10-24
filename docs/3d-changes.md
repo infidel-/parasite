@@ -2351,3 +2351,21 @@ under the cut. Attached parasite on a dog: no z-fight. Slash over a dog mid-bite
 untouched (its prepass already leaves billboards out). Same meshes, so no new draw call.
 
 **Verdict:** landed. The in-beam tint on an actor standing inside a shaft is kept.
+
+## Every clue at the military 0.6 (`FacilityDeco.CLUE_SCALE`)
+
+Reported in play: a clue on a corp floor read too big. Clues (`objects.Document`, `objects.Book`) drew
+at the full billboard everywhere except a military base, whose documents were already cut to
+`MIL_CLUE_SCALE` 0.6 to fit the desk tops. Asked for a 20% cut, then "all do as military".
+
+**Change:** `MIL_CLUE_SCALE` renamed `CLUE_SCALE`; `FacilityDeco.spriteScale` returns it for any
+`document` or `book` in any area (the area gate is gone, and military books now shrink too). The hook was
+already asked per object by `render.Actors` for every area, so no new call site.
+
+**Measured:** `spriteScale` reads 0.6 for a document and a book with no area, 1.0 for anything else. The
+clue pack's 170 px cell over the 0.6 quad rises from 70 to ~117 texels/unit (street papers 85 → ~142).
+
+**The trap:** `LampShadows` casts only for `spriteScale >= 1.0`, so clues no longer throw lamp shadows
+anywhere, as military clues already did not. Same meshes, so no draw-call change.
+
+**Verdict:** landed. Size is a playtest call; the knob is the one constant.

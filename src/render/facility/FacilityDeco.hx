@@ -94,9 +94,10 @@ typedef DrumProp = {
 class FacilityDeco
 {
   static inline var CELL = CityConfig.CELL;
-  // a military base clue's sprite against the full billboard: a 2.2-deep desk top took a full-size
-  // sheet of paper from edge to edge
-  static inline var MIL_CLUE_SCALE = 0.6;
+  // a clue's sprite (document or book) against the full billboard, in every area: set on a military
+  // base, where a 2.2-deep desk top took a full-size sheet of paper from edge to edge, and then taken
+  // everywhere because the full size read too big on the streets and in the corp tower too
+  static inline var CLUE_SCALE = 0.6;
 
   // the four cell-edge directions, in render.facility.FacilityGeom's own numbering:
   // 0 = -z, 1 = +z, 2 = -x, 3 = +x
@@ -163,8 +164,8 @@ class FacilityDeco
       return false;
     }
 
-// how big this object's sprite draws in the facility, as a fraction of the full billboard. 1.0 for
-// everything except a decoration standing on a laboratory BENCH.
+// how big this object's sprite draws, as a fraction of the full billboard. 1.0 for everything
+// except a decoration standing on a laboratory BENCH and a clue (CLUE_SCALE, in every area).
 //
 // those 43 icons keep their sprite — a flask, a retort stand and a microscope are what a mesh
 // generator is for and what an emitted box cannot state at all — but they were drawing at full size,
@@ -175,11 +176,10 @@ class FacilityDeco
 // atlas ROW and of nothing else, so render.Actors can ask it without a model
   public static function spriteScale(area:game.AreaGame, o:objects.AreaObject):Float
     {
-      // and a military base's clue paperwork, sized to the desk tops and the clutter round it
-      if (area != null &&
-          area.typeID == AREA_MILITARY_BASE &&
-          o.type == 'document')
-        return MIL_CLUE_SCALE;
+      // and clue paperwork and books, sized to the military desk tops in every area
+      if (o.type == 'document' ||
+          o.type == 'book')
+        return CLUE_SCALE;
       return onBench(area, o) ? FacilityStyle.DECO_TABLE_SCALE : 1.0;
     }
 
