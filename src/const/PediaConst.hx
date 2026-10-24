@@ -412,6 +412,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
         {
           id: 'groupNeutralize',
           groupAddFlag: true,
+          img: 'pedia/team_deactivation',
           name: 'Group: Closing the File',
           text: "<p>The Group can be made to stop hunting the parasite, though never for good. There are two ways to close the parasite file.</p>" +
             "<p><b>The regional controller.</b> The first brain probe of every Group agent gives you some intel on the Group: a team member gives one point and a blackops agent gives two. The blackops of the more experienced teams also carry a dossier that gives three points when read in a habitat. Once you have gathered enough (the amount depends on the Group difficulty), you learn which military base the regional controller works from. The leak does not go unnoticed: the Group priority jumps to the maximum and the active team gets much closer. The controller waits in a locked room under blackops guard. The guard posted outside the door carries the keycard, and so does every officer on that base. Once the alarm is raised, you cannot leave the base until the controller is dealt with. Planting false memories into the controller closes the file quietly. Killing them closes it too, but only after their people make one last attempt on you with the strongest team they have.</p>" +
