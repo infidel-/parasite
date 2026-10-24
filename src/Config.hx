@@ -97,7 +97,7 @@ class Config
       minimapScale = 1;
       musicVolume = 30;
       effectsVolume = 40;
-      ambientVolume = 30;
+      ambientVolume = 80;
       repeatDelay = 100;
       difficulty = 0;
       mods = {};
