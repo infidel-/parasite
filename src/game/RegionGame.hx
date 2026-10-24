@@ -792,21 +792,43 @@ class RegionGame extends _SaveObject
       promoteAdjacentLowDensityToMedium(area);
     }
 
-// get high-density city area for corp office conversion
+// get high-density city area for corp office conversion (medium when no high one is left), never
+// next to another corp office: their region icons overlap
   function getCorpArea(): AreaGame
     {
       ensureHighCityArea();
-      var area = getRandom({
-        type: AREA_CITY_HIGH,
-        noEvents: true,
-        noThrow: true
-      });
-      if (area == null)
-        area = getRandom({
-          type: AREA_CITY_HIGH,
-          noThrow: true
-        });
-      return area;
+      for (t in [ AREA_CITY_HIGH, AREA_CITY_MEDIUM ])
+        {
+          var list = [];
+          var quiet = [];
+          for (a in _list)
+            if (a.typeID == t &&
+                !nextToCorp(a))
+              {
+                list.push(a);
+                if (a.events.length == 0)
+                  quiet.push(a);
+              }
+          if (quiet.length > 0)
+            return quiet[Std.random(quiet.length)];
+          if (list.length > 0)
+            return list[Std.random(list.length)];
+        }
+      return null;
+    }
+
+// does any of the 8 neighbouring areas hold a corp office
+  function nextToCorp(area: AreaGame): Bool
+    {
+      for (dy in -1...2)
+        for (dx in -1...2)
+          {
+            var a = getXY(area.x + dx, area.y + dy);
+            if (a != null &&
+                a.typeID == AREA_CORP)
+              return true;
+          }
+      return false;
     }
 
 // adjust low-density city blocks to introduce high-crime pockets
