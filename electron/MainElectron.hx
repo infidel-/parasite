@@ -904,12 +904,6 @@ class MainElectron
       IpcMain.handle('host:quit', function(e) {
         App.quit();
       });
-      IpcMain.handle('host:fullscreen:on', function(e) {
-        win.fullScreen = true;
-      });
-      IpcMain.handle('host:fullscreen:off', function(e) {
-        win.fullScreen = false;
-      });
       // minimise/restore, for driving the game over CDP: a minimised window stops compositing, so
       // every PAGE call (evaluate_script, take_screenshot) hangs until the debugger's own timeout
       // while browser-level calls still answer. That makes it useful — the window can be parked out
@@ -1016,7 +1010,11 @@ class MainElectron
               obj.fullscreen != null)
             isFullscreen = (obj.fullscreen != '0');
 
-          // create main window
+          // create main window. fullscreen is a frameless window without a thick frame: on
+          // Windows electron then just sizes it to the display. chromium's own fullscreen
+          // shrinks and re-marks the window with the taskbar on every alt-tab, and the win11
+          // switcher leaks each round as a ghost alt-tab entry. the frame can't change at
+          // runtime, so the fullscreen option applies on the next launch
 //          var isClassic = App.commandLine.hasSwitch('classic');
           win = new BrowserWindow({
             icon: __dirname + '/favicon.png',
@@ -1025,6 +1023,8 @@ class MainElectron
             minWidth: 600,
             minHeight: 400,
             fullscreen: isFullscreen,
+            frame: !isFullscreen,
+            thickFrame: !isFullscreen,
             webPreferences: {
               preload: Path.join(__dirname, 'preload.js'),
               nodeIntegration: false,
@@ -1036,16 +1036,13 @@ class MainElectron
           });
           // no app menu in any build: removes the default Ctrl+W "close window"
           // accelerator (Ctrl+W is repurposed as console word-delete). the menu
-          // also carried F11 fullscreen + dev shortcuts, so rebind them here:
-          // F11 in all builds, devtools / reload only in debug
+          // also carried the dev shortcuts, so rebind them here, debug only
           win.setMenu(null);
           untyped win.webContents.on('before-input-event', function(e, input) {
             if (input.type != 'keyDown')
               return;
             var k = ('' + input.key).toLowerCase();
-            if (k == 'f11')
-              win.fullScreen = !win.fullScreen;
-            else if (isDebug &&
+            if (isDebug &&
                 (k == 'f12' || (input.control && input.shift && k == 'i')))
               win.webContents.toggleDevTools();
             else if (isDebug && input.control && k == 'r')

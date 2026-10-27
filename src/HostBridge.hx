@@ -56,7 +56,6 @@ class HostBridge
 
 // window control
   public static function quit(): Void h().quit();
-  public static function setFullscreen(on: Bool): Void h().setFullscreen(on);
 
 // register a callback fired on OS window focus/blur (focused: Bool)
   public static function onFocusChange(cb: Bool -> Void): Void h().onFocusChange(cb);

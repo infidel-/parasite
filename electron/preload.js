@@ -54,7 +54,6 @@ contextBridge.exposeInMainWorld('host', {
   },
 
   quit:          ()   => ipcRenderer.invoke('host:quit'),
-  setFullscreen: (on) => ipcRenderer.invoke(on ? 'host:fullscreen:on' : 'host:fullscreen:off'),
 
   // park/wake the window while driving the game over CDP. a minimised window stops compositing, so
   // every PAGE call hangs until the debugger times out — raise BEFORE touching the page, and never

@@ -268,13 +268,9 @@ class Config
         collapsedGoals = (val == '1');
       else if (key == 'hudDebugCollapsed')
         hudDebugCollapsed = (val == '1');
+      // read by the host at launch only (MainElectron picks the window frame from it)
       else if (key == 'fullscreen')
-        {
-          fullscreen = (val == '1');
-#if electron
-          HostBridge.setFullscreen(val == '1');
-#end
-        }
+        fullscreen = (val == '1');
       else if (key == 'skipTutorial')
         skipTutorial = (val == '1');
       else if (key == 'spoonEvolutionBasic')
