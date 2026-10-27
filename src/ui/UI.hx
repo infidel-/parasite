@@ -926,8 +926,7 @@ class UI
                   var presets = game.profile.object.difficultyPresets;
                   var presetID = - difficultySetting - 1;
                   if (presets.length > presetID)
-                    difficultySetting = Reflect.field(
-                      presets[presetID], ev.obj);
+                    difficultySetting = presets[presetID].settings.get(ev.obj);
                   else trace('no difficulty preset for ' + difficultySetting);
                   if (difficultySetting == null)
                     difficultySetting = 1;
