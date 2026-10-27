@@ -338,12 +338,9 @@ class Player extends _SaveObject
   public inline function onHostDeath(msg: String)
     {
       // reduce max energy from affinity
-      if (host.affinity >= 100)
-        {
-          msg += ' You feel great pain due to the affinity.';
-          maxEnergy -= 5;
-          energy = energy; // clamp current value
-        }
+      var pain = affinityLoss(true);
+      if (pain != null)
+        msg += ' ' + pain;
       if (game.location == LOCATION_AREA)
         {
           // message on first death
@@ -368,6 +365,18 @@ class Player extends _SaveObject
       game.scene.clearPath();
       log(msg);
       game.profile.addPediaArticle('hostExpiry');
+    }
+
+// take max energy for losing a full affinity host, returns the message or null when nothing is lost
+  public function affinityLoss(isDeath: Bool): String
+    {
+      var val = chat.affinityLoss(isDeath);
+      if (host.affinity < 100 ||
+          val == 0)
+        return null;
+      maxEnergy -= val;
+      energy = energy; // clamp current value
+      return 'You feel ' + (isDeath ? 'great ' : '') + 'pain due to the affinity (-' + val + ' max energy).';
     }
 
 

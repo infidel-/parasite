@@ -29,6 +29,20 @@ class Chat extends _SaveObject
       difficulty = UNSET;
     }
 
+// max energy lost on leaving a full affinity host, or on its death under the parasite
+  public function affinityLoss(isDeath: Bool): Int
+    {
+      switch (difficulty)
+        {
+          case NORMAL:
+            return (isDeath ? 5 : 1);
+          case HARD:
+            return (isDeath ? 5 : 2);
+          default:
+            return 0;
+        }
+    }
+
 // init clues and event id for this ai
   public function initClues(ai: AI)
     {

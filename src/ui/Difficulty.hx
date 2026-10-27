@@ -235,9 +235,9 @@ class Difficulty extends UIWindow
       id: 'chat',
       title: 'Conversation',
       notes: [
-        'Starting consent is high. High bonus to skill rolls. Bonus to consent growth. No max energy loss on leaving host with max affinity.',
-        'Medium starting consent. Medium bonus to skill rolls. Small bonus to consent growth. Tiny max energy loss.',
-        'Low consent at start. Nominal bonus to skill rolls. No bonus to consent growth. Small max energy loss.',
+        'Starting consent is high. High bonus to skill rolls. Bonus to consent growth. No max energy loss from full affinity hosts.',
+        'Medium starting consent. Medium bonus to skill rolls. Small bonus to consent growth. Leaving a full affinity host costs 1 max energy, its death 5.',
+        'Low consent at start. Nominal bonus to skill rolls. No bonus to consent growth. Leaving a full affinity host costs 2 max energy, its death 5.',
       ]
     },
   ];

@@ -531,7 +531,13 @@ class InfoHud
           if (game.player.isHostBreaking())
             badges += Icon.breaking;
           if (host.affinity >= 100)
-            badges += Icon.affinity;
+            {
+              var leave = game.player.chat.affinityLoss(false);
+              badges += Icon.affinity(leave == 0 ?
+                'Full affinity: losing this host costs no maximum energy.' :
+                'Full affinity: leaving this host costs ' + leave + ' maximum energy, its death costs ' +
+                game.player.chat.affinityLoss(true) + '.');
+            }
           if (host.chat.consent >= 100)
             badges += Icon.consent;
           if (host.isPlayerCultist())

@@ -949,9 +949,10 @@ public function show()
               game.player.state == PLR_STATE_HOST &&
               game.player.host == this)
             {
+              var pain = game.player.affinityLoss(true);
               game.playerArea.onDetach();
               game.scene.clearPath();
-              game.player.log('Your host has died from injuries.');
+              game.player.log('Your host has died from injuries.' + (pain != null ? ' ' + pain : ''));
             }
 
           return;

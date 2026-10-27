@@ -1611,9 +1611,10 @@ class PlayerArea extends _SaveObject
       if (player.host != null &&
           player.host.state == AI_STATE_DEAD)
         {
+          var pain = player.affinityLoss(true);
           onDetach();
 
-          log('Your host has died from injuries.');
+          log('Your host has died from injuries.' + (pain != null ? ' ' + pain : ''));
 
           return;
         }
@@ -1646,23 +1647,13 @@ class PlayerArea extends _SaveObject
       // set state
       state = PLR_STATE_PARASITE;
 
-      // max energy loss
+      // max energy loss (a dead host was already charged for its death)
       if (player.host != null &&
-          player.host.affinity >= 100)
+          player.host.state != AI_STATE_DEAD)
         {
-          game.log('You feel pain due to the affinity.');
-          var val = 0;
-          switch (player.chat.difficulty)
-            {
-              case UNSET:
-              case EASY | NOOB:
-                val = 0;
-              case NORMAL:
-                val = 1;
-              case HARD:
-                val = 2;
-            }
-          game.player.maxEnergy -= val;
+          var pain = player.affinityLoss(false);
+          if (pain != null)
+            game.log(pain);
         }
 
       attachHost = null;
