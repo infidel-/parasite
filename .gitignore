@@ -39,3 +39,4 @@ sounds-src
 tools/node_modules
 tools/__pycache__
 ai-src
+.steam-user

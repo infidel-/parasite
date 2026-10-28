@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -99,6 +99,23 @@ main:
 
 steam-docs:
 	node electron/tools/md-to-steam.js parasite-mod-sdk/docs parasite/docs-steam
+
+# upload the game to Steam with the Windows steamcmd in C:\steamcmd (login cached, name in .steam-user);
+# only changed chunks go up. needs `make mod-sdk` for this version first. the default branch is set
+# live on the Steamworks site, never from here.
+# usage: make steam-upload [preview=1] [branch=staging]
+steam-upload:
+	git diff --quiet HEAD -- src electron || { echo 'uncommitted src/electron changes'; exit 1; }
+	test -f parasite/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip
+	$(MAKE) game-debug main
+	mkdir -p /mnt/c/steamcmd/scripts
+	sed -e "s/@DESC@/$$(cat src/VERSION)/g" \
+	  -e "s/@PREVIEW@/$(or $(preview),0)/" \
+	  -e "s/@BRANCH@/$(branch)/" \
+	  -e "s/@DEVDIR@/$$(basename "$$(readlink -f parasite)")/g" \
+	  tools/steam-app-build.vdf > /mnt/c/steamcmd/scripts/app_build_1920320.vdf
+	/mnt/c/steamcmd/steamcmd.exe +login $$(cat .steam-user) \
+	  +run_app_build 'C:\steamcmd\scripts\app_build_1920320.vdf' +quit
 
 report:
 	cp -Rf reports/* ObsidianReports/

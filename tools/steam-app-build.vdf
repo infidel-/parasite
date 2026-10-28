@@ -1,0 +1,65 @@
+// SteamPipe app build for Parasite (app 1920320), filled in by `make steam-upload`:
+// @DESC@ = src/VERSION, @PREVIEW@ = 1 for a dry run, @BRANCH@ = beta branch to set live (default
+// branch can only be set live on the Steamworks site), @DEVDIR@ = the dev build dir under Projects.
+// the linux depot 1920323 is not built here: Windows steamcmd would drop its exec bits.
+"AppBuild"
+{
+	"AppID" "1920320"
+	"Desc" "@DESC@"
+	"ContentRoot" "C:\\YandexDisk\\PC LIGHTSTAR\\Projects\\"
+	"BuildOutput" "C:\\steamcmd\\output\\"
+	"Preview" "@PREVIEW@"
+	"SetLive" "@BRANCH@"
+	"Depots"
+	{
+		// common: the game itself, straight from the dev dir, plus the root bits kept in _Build_
+		"1920321"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "@DEVDIR@\\resources\\app\\*"
+				"DepotPath" "resources\\app\\"
+				"Recursive" "1"
+			}
+			"FileMapping"
+			{
+				"LocalPath" "@DEVDIR@\\mod-sdk\\parasite-mod-sdk-@DESC@.zip"
+				"DepotPath" "mod-sdk\\"
+			}
+			"FileMapping"
+			{
+				"LocalPath" "Parasite\\_Build_\\common\\icons.txt"
+				"DepotPath" "."
+			}
+			"FileMapping"
+			{
+				"LocalPath" "Parasite\\_Build_\\common\\sounds.txt"
+				"DepotPath" "."
+			}
+			"FileMapping"
+			{
+				"LocalPath" "Parasite\\_Build_\\common\\dev\\placeholder"
+				"DepotPath" "dev\\"
+			}
+			"FileMapping"
+			{
+				"LocalPath" "Parasite\\_Build_\\common\\mods\\placeholder"
+				"DepotPath" "mods\\"
+			}
+			// dev-only files living in the dev app dir
+			"FileExclusion" "*node_modules-0.3.0*"
+			"FileExclusion" "*action-pickpocket*"
+			"FileExclusion" "*md-to-steam.js"
+		}
+		// windows: the Electron runtime, changes only on an Electron upgrade
+		"1920322"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "Parasite\\_Build_\\windows\\*"
+				"DepotPath" "."
+				"Recursive" "1"
+			}
+		}
+	}
+}
