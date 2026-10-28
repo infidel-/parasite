@@ -7,6 +7,8 @@ class Version
     {
       // resolve via classpath so callers compiled from any cwd work
       var path = haxe.macro.Context.resolvePath("VERSION");
+      // the compile server caches macro output; re-run when VERSION changes
+      haxe.macro.Context.registerModuleDependency(haxe.macro.Context.getLocalModule(), path);
       var version = StringTools.trim(sys.io.File.getContent(path));
       return macro $v{version};
     }
