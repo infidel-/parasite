@@ -28,7 +28,10 @@ logs and manifests in `C:\steamcmd\output\`.
 
 ## itch.io
 `make itch-zips` → `_Build_/parasite-<VERSION>-win32.zip` / `-linux64.zip`, the same files as the Steam depots
-(checked by SHA1 against the steamcmd manifests for 1.0.1). Upload them on itch by hand. They are zipped from WSL, so
+(checked by SHA1 against the steamcmd manifests for 1.0.1). `make itch-push [dry=1]` pushes them with butler
+(`C:\butler`, logged in) to `starinfidel/parasite:windows` / `:linux`, with `--userversion` from `src/VERSION`. The first
+push of a channel is full, later ones only the changes. The pre-butler web uploads are not channels; hide or delete
+them after the first push. The zips are made from WSL, so
 `Parasite`, `chrome-sandbox` and `chrome_crashpad_handler` carry exec bits; the Windows-made zips up to 0.24 had none.
 
 ## Measured (1.0.1, 2026-10-28)

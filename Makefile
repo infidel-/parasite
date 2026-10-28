@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload itch-zips soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -141,6 +141,19 @@ itch-zips:
 	  (cd "$$dev" && zip -rq "$$out" resources/app mod-sdk/parasite-mod-sdk-$$v.zip \
 	    -x '*node_modules-0.3.0*' '*action-pickpocket*' '*md-to-steam.js'); \
 	  echo "$$out"; \
+	done
+
+# push the itch zips (`make itch-zips` first) with the Windows butler in C:\butler (logged in) to the
+# windows/linux channels; the first push of a channel is full, later ones send only the changes.
+# usage: make itch-push [dry=1]
+itch-push:
+	set -e; \
+	v=$$(cat src/VERSION); \
+	b="$$(dirname "$$(readlink -f parasite)")/Parasite/_Build_"; \
+	for c in win32:windows linux64:linux; do \
+	  /mnt/c/butler/butler.exe push $(if $(dry),--dry-run) \
+	    "$$(wslpath -w "$$b/parasite-$$v-$${c%%:*}.zip")" starinfidel/parasite:$${c##*:} \
+	    --userversion $$v; \
 	done
 
 report:
