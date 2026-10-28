@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload itch-zips soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -116,6 +116,32 @@ steam-upload:
 	  tools/steam-app-build.vdf > /mnt/c/steamcmd/scripts/app_build_1920320.vdf
 	/mnt/c/steamcmd/steamcmd.exe +login $$(cat .steam-user) \
 	  +run_app_build 'C:\steamcmd\scripts\app_build_1920320.vdf' +quit
+
+# itch.io zips, the same files as the Steam depots: Electron runtime + root bits from _Build_, the game
+# straight from the dev dir -> _Build_/parasite-<VERSION>-win32.zip / -linux64.zip. zipped from WSL, so
+# the linux binaries keep their exec bits. upload them on itch by hand.
+itch-zips:
+	git diff --quiet HEAD -- src electron || { echo 'uncommitted src/electron changes'; exit 1; }
+	test -f parasite/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip
+	$(MAKE) game-debug main
+	set -e; \
+	v=$$(cat src/VERSION); \
+	dev="$$(readlink -f parasite)"; \
+	b="$$(dirname "$$dev")/Parasite/_Build_"; \
+	for os in win32 linux64; do \
+	  out="$$b/parasite-$$v-$$os.zip"; \
+	  rm -f "$$out"; \
+	  if [ $$os = win32 ]; then \
+	    (cd "$$b/windows" && zip -rq "$$out" .); \
+	  else \
+	    (cd "$$b/linux" && zip -rq "$$out" .); \
+	    (cd "$$b" && zip -q "$$out" Parasite.sh); \
+	  fi; \
+	  (cd "$$b/common" && zip -rq "$$out" icons.txt sounds.txt dev mods); \
+	  (cd "$$dev" && zip -rq "$$out" resources/app mod-sdk/parasite-mod-sdk-$$v.zip \
+	    -x '*node_modules-0.3.0*' '*action-pickpocket*' '*md-to-steam.js'); \
+	  echo "$$out"; \
+	done
 
 report:
 	cp -Rf reports/* ObsidianReports/

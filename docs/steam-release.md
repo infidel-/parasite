@@ -26,6 +26,11 @@ logs and manifests in `C:\steamcmd\output\`.
 5. Steamworks → Builds → set the build live on `default`. steamcmd cannot set the default branch live.
    Then switch yuggoth back to no beta.
 
+## itch.io
+`make itch-zips` → `_Build_/parasite-<VERSION>-win32.zip` / `-linux64.zip`, the same files as the Steam depots
+(checked by SHA1 against the steamcmd manifests for 1.0.1). Upload them on itch by hand. They are zipped from WSL, so
+`Parasite`, `chrome-sandbox` and `chrome_crashpad_handler` carry exec bits; the Windows-made zips up to 0.24 had none.
+
 ## Measured (1.0.1, 2026-10-28)
 - **Only the delta goes up, even from an empty cache**: steamcmd pulls the live manifest from Steam as the
   baseline. 1.0.1 sent 10.2 MB; the web zip for 1.0 was 732 MB. The baseline is the DEFAULT branch's build,
