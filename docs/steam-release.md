@@ -28,7 +28,8 @@ logs and manifests in `C:\steamcmd\output\`.
 
 ## Measured (1.0.1, 2026-10-28)
 - **Only the delta goes up, even from an empty cache**: steamcmd pulls the live manifest from Steam as the
-  baseline. 1.0.1 sent 10.2 MB; the web zip for 1.0 was 732 MB.
+  baseline. 1.0.1 sent 10.2 MB; the web zip for 1.0 was 732 MB. The baseline is the DEFAULT branch's build,
+  not the last staging one: a second staging upload is again diffed against default.
 - **Depots left out of the script carry over**: Steam builds the listed depots, then MERGES that build into the
   previous one ("Merged build 26279082 into build 26184037"), so the result keeps all three depots.
   That is why linux is never listed. An unchanged listed depot logs "Previous manifestID reused, no chunks uploaded".
