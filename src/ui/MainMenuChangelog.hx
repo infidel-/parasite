@@ -11,6 +11,7 @@ import game.Game;
 class MainMenuChangelog
 {
   static inline var GAP = 32; // px of margin around the panel (half on each side when space is tight)
+  static inline var CARD_GAP = 16; // px between the card and the panel
   static inline var MAX_WIDTH = 420; // px panel width cap
   static inline var MIN_WIDTH = 200; // px panel width floor (may overlap the card in a tiny window)
 
@@ -46,46 +47,47 @@ class MainMenuChangelog
         '<div class="mm-cl-body">' + render(Version.getChangelog()) + '</div>';
       bg.appendChild(panel);
 
+      // corner-X close, the shared .win-x look (turns and glows on hover)
+      var x = Browser.document.createDivElement();
+      x.className = 'win-x';
+      x.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
+        '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>' +
+        '<span class="esc">ESC</span>';
+      x.onclick = function(e) {
+        game.scene.sounds.play('click-menu');
+        close();
+      };
+      panel.appendChild(x);
+
       Browser.window.addEventListener('resize', function(e) {
         if (isOpen())
           place();
       });
     }
 
-// changes.md to html: "## version", "### section" (shown only once it has entries), "- tag: entry"
+// changes.md to html: "## version", "### section" (shown only once it has entries), "- tag: entry".
+// flat children of one two-column grid, so every tag chip in the log shares one column width
   static function render(md: String): String
     {
       var current = Version.getVersion();
       var out = new StringBuf();
       var section: String = null; // pending section heading
-      var inVersion = false;
-      var inList = false;
       for (raw in md.split('\n'))
         {
           var line = StringTools.trim(raw);
-          // version block
+          // version header
           if (StringTools.startsWith(line, '## '))
             {
-              if (inList)
-                out.add('</ul>');
-              if (inVersion)
-                out.add('</section>');
               var ver = StringTools.trim(line.substr(3));
-              out.add('<section class="mm-cl-ver"><div class="mm-cl-vh"><span class="mm-cl-vnum">v' +
+              out.add('<div class="mm-cl-vh"><span class="mm-cl-vnum">v' +
                 StringTools.htmlEscape(ver) + '</span>' +
                 (ver == current ? '<span class="mm-cl-cur">current</span>' : '') + '</div>');
-              inVersion = true;
-              inList = false;
               section = null;
             }
           // section heading, held back until its first entry
           else if (StringTools.startsWith(line, '### '))
-            {
-              if (inList)
-                out.add('</ul>');
-              inList = false;
-              section = StringTools.trim(line.substr(4));
-            }
+            section = StringTools.trim(line.substr(4));
           // entry: "tag: text" or plain text
           else if (StringTools.startsWith(line, '- '))
             {
@@ -95,9 +97,6 @@ class MainMenuChangelog
                     StringTools.htmlEscape(section) + '</div>');
                   section = null;
                 }
-              if (!inList)
-                out.add('<ul class="mm-cl-list">');
-              inList = true;
               var text = line.substr(2);
               var colon = text.indexOf(': ');
               var tag = '<span></span>'; // empty first grid column
@@ -107,25 +106,20 @@ class MainMenuChangelog
                   tag = '<span class="mm-cl-tag">' + StringTools.htmlEscape(text.substr(0, colon)) + '</span>';
                   text = text.substr(colon + 2);
                 }
-              out.add('<li>' + tag + Const.small(StringTools.htmlEscape(text)) + '</li>');
+              out.add(tag + Const.small(StringTools.htmlEscape(text)));
             }
         }
-      if (inList)
-        out.add('</ul>');
-      if (inVersion)
-        out.add('</section>');
-      return out.toString();
+      return '<div class="mm-cl-log">' + out.toString() + '</div>';
     }
 
-// match the card: same top and height, centered in the space right of it
+// match the card: same top and height, just right of it
   function place()
     {
       var r = card.getBoundingClientRect();
       var screenW = Browser.window.innerWidth;
       var room = screenW - r.right;
-      var width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, room - GAP));
-      var left = Math.min(r.right + Math.max(GAP / 2, (room - width) / 2),
-        screenW - width - GAP / 2);
+      var width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, room - CARD_GAP - GAP / 2));
+      var left = Math.min(r.right + CARD_GAP, screenW - width - GAP / 2);
       panel.style.left = left + 'px';
       panel.style.top = r.top + 'px';
       panel.style.width = width + 'px';
