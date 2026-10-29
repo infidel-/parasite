@@ -385,6 +385,14 @@ public function show()
     }
 
 
+// returns true if this AI is not alerted or searching (an alert and its search hops are one alert)
+  public inline function isCalm(): Bool
+    {
+      return (state != AI_STATE_ALERT &&
+        state != AI_STATE_SEARCH_LAST_SEEN &&
+        state != AI_STATE_SEARCH_AREA);
+    }
+
 // set AI state (plus all vars for this state)
 // npcTrouble - treat any reason as an NPC fight (a body an NPC left behind)
   public function setState(vstate: _AIState,
@@ -396,16 +404,14 @@ public function show()
       // npc trouble: an NPC fight alerting a calm AI marks the alert, any other reason clears it.
       // reasonless alert <-> search hops keep it
       var wasNPCTrouble = isNPCTrouble;
-      var isCalm = (state != AI_STATE_ALERT &&
-        state != AI_STATE_SEARCH_LAST_SEEN &&
-        state != AI_STATE_SEARCH_AREA);
+      var wasCalm = isCalm();
       if (vreason == REASON_NPC_FIGHT ||
           npcTrouble)
         {
-          if (isCalm)
+          if (wasCalm)
             isNPCTrouble = true;
         }
-      else if (isCalm ||
+      else if (wasCalm ||
           vreason != REASON_NONE)
         isNPCTrouble = false;
 

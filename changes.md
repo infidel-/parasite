@@ -5,6 +5,7 @@
 ### Changes
 
 ### Fixes
+- ai: an alerted team member calls for backup once, not again every time it loses and re-finds its target
 - ai: fights between NPCs no longer close the team distance — undercover team members stay out of them and do not report them or the bodies they leave, calls about them only bring the police, those caught up in one leave a host standing nearby alone, and a body already reported is not reported again by every passer-by
 - game: hosts given false memories by the pseudocampus are never reported to the Group, and the pseudocampus organ no longer counts as a body anomaly
 

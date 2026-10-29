@@ -7,6 +7,8 @@ import game.Game;
 class TeamMemberAI extends HumanAI
 {
   public var wasParasiteAlerted: Bool; // was this agent alerted by the parasite side (not by NPC fights)?
+  var isBackupCalled: Bool; // backup already called during this alert (search hops re-enter it)
+  var isBackupSkipped: Bool; // NPC-fight backup call already skipped during this alert
 
   public function new(g: Game, vx: Int, vy: Int)
     {
@@ -90,6 +92,8 @@ class TeamMemberAI extends HumanAI
       isAggressive = true;
       isTeamMember = true;
       wasParasiteAlerted = false;
+      isBackupCalled = false;
+      isBackupSkipped = false;
     }
 
 // called after load or creation
@@ -101,11 +105,20 @@ class TeamMemberAI extends HumanAI
 // event: on state change
   public override function onStateChange()
     {
+      // calmed down: the next alert may call again
+      if (isCalm())
+        {
+          isBackupCalled = false;
+          isBackupSkipped = false;
+        }
+
       // an undercover agent does not call the group over an NPC fight
       if (isNPCTrouble)
         {
-          if (canCallForHelp())
+          if (!isBackupSkipped &&
+              canCallForHelp())
             {
+              isBackupSkipped = true;
               traceAI('TeamMemberAI', 'npc trouble, no team backup call');
               game.group.skipPriority(5);
             }
@@ -116,6 +129,13 @@ class TeamMemberAI extends HumanAI
       if (!canCallForHelp())
         return;
 
+      // one call per alert, the search hops back into it do not call again
+      if (isBackupCalled)
+        {
+          traceAI('TeamMemberAI', 'backup already called this alert');
+          return;
+        }
+      isBackupCalled = true;
       game.managerArea.addAI(this, AREAEVENT_CALL_TEAM_BACKUP, 1);
     }
 
