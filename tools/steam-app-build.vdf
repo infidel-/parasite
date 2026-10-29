@@ -28,6 +28,11 @@
 			}
 			"FileMapping"
 			{
+				"LocalPath" "@DEVDIR@\\changes.md"
+				"DepotPath" "."
+			}
+			"FileMapping"
+			{
 				"LocalPath" "Parasite\\_Build_\\common\\icons.txt"
 				"DepotPath" "."
 			}

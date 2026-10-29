@@ -12,6 +12,7 @@ logs and manifests in `C:\steamcmd\output\`.
 ## Where the files come from
 - `resources/app` and `mod-sdk/parasite-mod-sdk-<VERSION>.zip`: straight from the dev dir (the `parasite`
   symlink's target). The release build IS the `make` build; the target rebuilds and refuses on uncommitted `src`/`electron`.
+- `changes.md` at the install root: the repo's changelog, copied into the dev dir by every `make`.
 - `icons.txt`, `sounds.txt`, `dev/placeholder`, `mods/placeholder` and the Windows runtime: `_Build_/common`
   and `_Build_/windows` under `C:\YandexDisk\PC LIGHTSTAR\Projects\Parasite\`.
 - Dev-only files in `app/` are cut by `FileExclusion` (the old steamworks.js, the pickpocket example mod's sounds,

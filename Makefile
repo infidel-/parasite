@@ -138,7 +138,7 @@ itch-zips:
 	    (cd "$$b" && zip -q "$$out" Parasite.sh); \
 	  fi; \
 	  (cd "$$b/common" && zip -rq "$$out" icons.txt sounds.txt dev mods); \
-	  (cd "$$dev" && zip -rq "$$out" resources/app mod-sdk/parasite-mod-sdk-$$v.zip \
+	  (cd "$$dev" && zip -rq "$$out" resources/app mod-sdk/parasite-mod-sdk-$$v.zip changes.md \
 	    -x '*node_modules-0.3.0*' '*action-pickpocket*' '*md-to-steam.js'); \
 	  echo "$$out"; \
 	done
