@@ -37,11 +37,11 @@ class AreaManager extends _SaveObject
         buf.add(e.type + ': ' + e.turns + '<br>');
     }
 
-// add event originating from x,y
+// add event originating from x,y, returns it
 // NOTE: params must be serializable!
   public inline function add(
       type: _AreaManagerEventType, x: Int, y: Int,
-      turns: Int, ?params: _SaveObject = null)
+      turns: Int, ?params: _SaveObject = null): AreaEvent
     {
       var e: AreaEvent = {
         id: lastEventID++,
@@ -57,6 +57,7 @@ class AreaManager extends _SaveObject
 //      Const.p(game.turns + ': AreaManager.add(): ' + e);
 
       _list.push(e);
+      return e;
     }
 
 
@@ -192,13 +193,17 @@ class AreaManager extends _SaveObject
     }
 
 // event: attack noise (called immediately)
-  public function onAttackNoise(attacker: Attacker)
+  public function onAttackNoise(attacker: Attacker, target: AttackTarget)
     {
       var radius = (attacker.weapon.isRanged ?
         AI.HEAR_DISTANCE : AI.VIEW_DISTANCE);
       if (area.info.isSmall == true)
         radius *= 2;
-      var reason = AI.witnessReason(attacker.ai);
+      // only NPCs on both ends make an NPC fight
+      var reason = (target.type == TARGET_AI ?
+        AI.witnessReason(target.ai) : REASON_WITNESS);
+      if (reason == REASON_NPC_FIGHT)
+        reason = AI.witnessReason(attacker.ai);
       var tmp = area.getAIinRadius(attacker.x, attacker.y, radius, false);
       for (ai in tmp)
         {
@@ -296,7 +301,8 @@ class AreaManager extends _SaveObject
         '. Dispatching units to the location.');
 
       // raise group priority, an NPC fight is not the parasite's doing
-      if (e.details == '' + REASON_NPC_FIGHT)
+      var isNPCFight = (e.details == '' + REASON_NPC_FIGHT);
+      if (isNPCFight)
         game.group.skipPriority(pts);
       else game.group.raisePriority(pts);
 
@@ -312,8 +318,10 @@ class AreaManager extends _SaveObject
       // increase area alertness
       area.alertness += apts;
 
-      // alert all police already in area
-      add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
+      // alert all police already in area (an NPC fight leaves the parasite out of it)
+      var alert = add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
+      if (isNPCFight)
+        alert.details = '' + REASON_NPC_FIGHT;
 
       // move on to arriving
       add(AREAEVENT_ARRIVE_LAW, e.ai.x, e.ai.y, area.info.lawResponseTime);
@@ -326,7 +334,8 @@ class AreaManager extends _SaveObject
       for (ai in list)
         if (Lambda.has([ 'police', 'security', 'soldier', 'officer' ], ai.type) &&
             ai.state == AI_STATE_IDLE)
-          ai.setState(AI_STATE_ALERT, REASON_BACKUP);
+          ai.setState(AI_STATE_ALERT,
+            (e.details == '' + REASON_NPC_FIGHT ? REASON_NPC_FIGHT : REASON_BACKUP));
     }
 
 // event: law arrives
@@ -391,22 +400,27 @@ class AreaManager extends _SaveObject
         e.ai.log('calls for backup!');
 
       // an NPC fight is not the parasite's doing
-      if (e.ai.isNPCTrouble)
+      var isNPCFight = e.ai.isNPCTrouble;
+      if (isNPCFight)
         game.group.skipPriority(1);
       else game.group.raisePriority(1);
 
       // increase area alertness
       area.alertness += 20;
 
-      // alert all law already in area
-      add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
+      // alert all law already in area (an NPC fight leaves the parasite out of it)
+      var alert = add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
+      if (isNPCFight)
+        alert.details = '' + REASON_NPC_FIGHT;
 
       // move on to arriving
       var params: _AreaManagerEventParamsArriveBackup = {
         type: e.ai.type,
       };
-      add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y,
+      var arrive = add(AREAEVENT_ARRIVE_BACKUP, e.ai.x, e.ai.y,
         area.info.lawResponseTime, params);
+      if (isNPCFight)
+        arrive.details = '' + REASON_NPC_FIGHT;
     }
 
 // helper: get law ai number around player
@@ -483,6 +497,7 @@ class AreaManager extends _SaveObject
 */
           ai.timers.alert = 10;
           ai.state = AI_STATE_ALERT;
+          ai.isNPCTrouble = (e.details == '' + REASON_NPC_FIGHT);
           untyped ai.isBackup = true;
         }
     }

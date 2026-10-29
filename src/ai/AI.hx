@@ -1384,6 +1384,18 @@ public function show()
         }
     }
 
+// returns true if this AI goes after the parasite: never a hidden or invisible one, never for a
+// player cultist, and not the host while this AI is busy with an NPC fight (relentless AI never
+// calm down, so an NPC fight would blind them to the host for good)
+  inline function canTargetPlayer(): Bool
+    {
+      return (!game.player.invisibleToAI() &&
+        !isPlayerCultist() &&
+        !(isNPCTrouble &&
+          !isRelentless &&
+          game.player.state == PLR_STATE_HOST));
+    }
+
 // returns true if ai sees any enemy from the list or player (if hostile)
 // NOTE: this is for alert state vision
   public function seesAnyEnemy(): Bool
@@ -1391,7 +1403,7 @@ public function show()
       // check player first if hostile
       if (!isPlayerCultist())
         {
-          if (!game.player.invisibleToAI() &&
+          if (canTargetPlayer() &&
               seesPosition(game.playerArea.x, game.playerArea.y))
             return true;
           if (isTracing &&
@@ -1448,8 +1460,7 @@ public function show()
         }
 
       // check for parasite
-      if (!game.player.invisibleToAI() &&
-          !isPlayerCultist() &&
+      if (canTargetPlayer() &&
           seesPosition(game.playerArea.x, game.playerArea.y))
         {
           var dst = distance(game.playerArea.x, game.playerArea.y);

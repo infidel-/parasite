@@ -152,7 +152,7 @@ class CommonLogic
         }
 
       // propagate attacker-side combat noise
-      game.managerArea.onAttackNoise(attacker);
+      game.managerArea.onAttackNoise(attacker, target);
 
       // notify target
       if (target.type == TARGET_AI)
