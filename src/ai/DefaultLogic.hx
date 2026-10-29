@@ -231,11 +231,11 @@ class DefaultLogic
                   // mark body as seen by someone to limit the law response
                   body.wasSeen = true;
 
-                  ai.setState(AI_STATE_ALERT, REASON_BODY);
+                  ai.setState(AI_STATE_ALERT, REASON_BODY, null, body.isNPCKill);
                 }
 
               // silent alert - no calling law
-              else ai.setState(AI_STATE_ALERT, REASON_BODY_SILENT);
+              else ai.setState(AI_STATE_ALERT, REASON_BODY_SILENT, null, body.isNPCKill);
             }
 
           ai.objectSeen(obj.id);

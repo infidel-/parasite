@@ -386,8 +386,9 @@ public function show()
 
 
 // set AI state (plus all vars for this state)
+// npcTrouble - treat any reason as an NPC fight (a body an NPC left behind)
   public function setState(vstate: _AIState,
-      ?vreason: _AIStateChangeReason, ?msg: String)
+      ?vreason: _AIStateChangeReason, ?msg: String, ?npcTrouble: Bool = false)
     {
       if (vreason == null)
         vreason = REASON_NONE;
@@ -398,7 +399,8 @@ public function show()
       var isCalm = (state != AI_STATE_ALERT &&
         state != AI_STATE_SEARCH_LAST_SEEN &&
         state != AI_STATE_SEARCH_AREA);
-      if (vreason == REASON_NPC_FIGHT)
+      if (vreason == REASON_NPC_FIGHT ||
+          npcTrouble)
         {
           if (isCalm)
             isNPCTrouble = true;
@@ -1079,6 +1081,10 @@ public function show()
         }
 
       o.organPoints = organs.getPoints();
+      // ponytail: a death with no attacker (bleed-out, effect tick) still counts as the parasite's,
+      // the attacker would have to ride along on the effect to tell
+      o.isNPCKill = (attacker != null &&
+        witnessReason(attacker.ai) == REASON_NPC_FIGHT);
       o.inventory = inventory; // copy inventory
       game.scene.updateCamera();
 

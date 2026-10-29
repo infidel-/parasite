@@ -301,8 +301,7 @@ class AreaManager extends _SaveObject
         '. Dispatching units to the location.');
 
       // raise group priority, an NPC fight is not the parasite's doing
-      var isNPCFight = (e.details == '' + REASON_NPC_FIGHT);
-      if (isNPCFight)
+      if (e.details == '' + REASON_NPC_FIGHT)
         game.group.skipPriority(pts);
       else game.group.raisePriority(pts);
 
@@ -318,9 +317,9 @@ class AreaManager extends _SaveObject
       // increase area alertness
       area.alertness += apts;
 
-      // alert all police already in area (an NPC fight leaves the parasite out of it)
+      // alert all police already in area (NPC trouble leaves the parasite out of it)
       var alert = add(AREAEVENT_ALERT_LAW, e.ai.x, e.ai.y, 2);
-      if (isNPCFight)
+      if (e.ai.isNPCTrouble)
         alert.details = '' + REASON_NPC_FIGHT;
 
       // move on to arriving

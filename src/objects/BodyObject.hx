@@ -13,6 +13,7 @@ class BodyObject extends AreaObject
   public var isSearched: Bool; // is this body searched?
   public var isDecayAccel: Bool; // is this body with decay acceleration?
   public var organPoints: Int; // amount of organs on this body
+  public var isNPCKill: Bool; // was this body left by a fight between NPCs? (the group is not told)
   public var isMaleAtlas: Bool; // actor atlas gender (else male-atlas corpses crop wrong)
   public var skinColor: _SkinColor; // actor skin tone (3D only, picks the skin-variant sheet)
   var parentType: String;
@@ -38,6 +39,7 @@ class BodyObject extends AreaObject
       wasSeen = false;
       isSearched = false;
       organPoints = 0;
+      isNPCKill = false;
       isDecayAccel = false;
       isMaleAtlas = false;
       skinColor = SKIN_YELLOW;
