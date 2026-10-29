@@ -143,7 +143,7 @@ class ThugAI extends HumanAI
           addEnemy(other);
           // alert this AI (fear/aggro)
           if (state == AI_STATE_IDLE)
-            setState(AI_STATE_ALERT);
+            setState(AI_STATE_ALERT, REASON_NPC_FIGHT);
           emitSound({
             text: 'PIG!',
             kind: 'shout',

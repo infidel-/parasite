@@ -51,6 +51,7 @@ class AI extends AIData
   public var state: _AIState; // AI state
   public var stateTime: Int; // turns spent in this state
   public var reason: _AIStateChangeReason; // reason for setting this state
+  public var isNPCTrouble: Bool; // current alert was raised by NPC-on-NPC trouble only (the group is not told)
   public var alertness(default, set): Int; // 0-100, how alert is AI to the parasite
   public var search: _AIStateSearchArea; // search-around-last-seen state data
 
@@ -93,6 +94,7 @@ class AI extends AIData
       state = AI_STATE_IDLE;
       stateTime = 0;
       reason = REASON_NONE;
+      isNPCTrouble = false;
       alertness = 0;
       search = null;
       timers = {
@@ -334,7 +336,8 @@ public function show()
     }
 
 // reacts to combat noise by searching around the noise origin
-  public function onHearNoise(xx: Int, yy: Int)
+// reason - REASON_NPC_FIGHT when no one on the parasite side made the noise
+  public function onHearNoise(xx: Int, yy: Int, reason: _AIStateChangeReason)
     {
       if (!isAggressive)
         return;
@@ -349,9 +352,9 @@ public function show()
       // already alerted with no visual track: noise fills the gap
       // already alerted with visual track: keep it (avoids friendly-fire
       // noise poisoning the chase target)
+      // already alerted: setState only lets parasite noise take over an NPC fight
       var wasCalm = (state == AI_STATE_IDLE || state == AI_STATE_MOVE_TARGET);
-      if (state != AI_STATE_ALERT)
-        setState(AI_STATE_ALERT, REASON_WITNESS);
+      setState(AI_STATE_ALERT, reason);
       timers.alert = ALERTED_TIMER;
       if (wasCalm || lastSeenX < 0 || lastSeenY < 0)
         {
@@ -389,12 +392,38 @@ public function show()
       if (vreason == null)
         vreason = REASON_NONE;
 
+      // npc trouble: an NPC fight alerting a calm AI marks the alert, any other reason clears it.
+      // reasonless alert <-> search hops keep it
+      var wasNPCTrouble = isNPCTrouble;
+      var isCalm = (state != AI_STATE_ALERT &&
+        state != AI_STATE_SEARCH_LAST_SEEN &&
+        state != AI_STATE_SEARCH_AREA);
+      if (vreason == REASON_NPC_FIGHT)
+        {
+          if (isCalm)
+            isNPCTrouble = true;
+        }
+      else if (isCalm ||
+          vreason != REASON_NONE)
+        isNPCTrouble = false;
+
       traceAI('AI', 'setState ' + traceStateName(state) + ' -> ' +
-        traceStateName(vstate) + ' reason ' + vreason);
+        traceStateName(vstate) + ' reason ' + vreason +
+        (isNPCTrouble ? ' (npc trouble)' : ''));
 
       // AI is already in that state
       if (state == vstate)
-        return;
+        {
+          // the parasite took over an NPC fight: rerun the hook so the group hears of it now
+          if (state == AI_STATE_ALERT &&
+              wasNPCTrouble &&
+              !isNPCTrouble)
+            {
+              reason = vreason;
+              onStateChange();
+            }
+          return;
+        }
 
       // stop the chat
       if (game.player.chat.target == this)
@@ -1238,6 +1267,17 @@ public function show()
       );
     }
 
+// alert reason for trouble started by other: the parasite side (bare parasite, host,
+// player cultist, object) is a witness, anyone else is an NPC fight the group is not told of
+  public static function witnessReason(other: AI): _AIStateChangeReason
+    {
+      if (other == null ||
+          other.isPlayerHost() ||
+          other.isPlayerCultist())
+        return REASON_WITNESS;
+      return REASON_NPC_FIGHT;
+    }
+
 // returns true if ai can call for help
   public function canCallForHelp(): Bool
     {
@@ -1316,11 +1356,12 @@ public function show()
 
           // victim is non-cultist law: notify nearby non-cultist law units
           // addEnemy already filters law-on-law unless cultist; this still
-          // propagates cultist infiltrators to nearby law
+          // propagates cultist infiltrators to nearby law. undercover team members stay out of it
           if (isLawVictim &&
               !isCultist &&
               !tmp.isCultist &&
               tmp.isLaw() &&
+              !tmp.isTeamMember &&
               Const.distance(x, y, tmp.x, tmp.y) <= 10)
             {
               tmp.addEnemy(attackerAI);
@@ -1551,7 +1592,7 @@ public function show()
         return;
 
       // alert this AI (fear/aggro)
-      setState(AI_STATE_ALERT);
+      setState(AI_STATE_ALERT, witnessReason(attacker.ai));
       onAttack(); // attack event
 
       // seed last seen so victim has a chase target even without LOS
@@ -1741,4 +1782,5 @@ enum _AIStateChangeReason
   REASON_PARASITE;
   REASON_DAMAGE;
   REASON_WITNESS;
+  REASON_NPC_FIGHT; // NPC-on-NPC trouble: police still respond, the group is not told
 }

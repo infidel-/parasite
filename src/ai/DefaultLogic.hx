@@ -134,7 +134,7 @@ class DefaultLogic
           if (!ai.seesPosition(enemy.x, enemy.y))
             continue;
           ai.traceAI('DefaultLogic', 'idle sees enemy ' + enemy.id);
-          ai.setState(AI_STATE_ALERT, REASON_WITNESS);
+          ai.setState(AI_STATE_ALERT, AI.witnessReason(enemy));
           return;
         }
 
@@ -182,7 +182,9 @@ class DefaultLogic
             continue;
           if (other.isLaw())
             continue;
-          if (ai.isLaw())
+          // undercover team members do not pick fights with armed NPCs
+          if (ai.isLaw() &&
+              !ai.isTeamMember)
             {
               ai.alertness += 10;
               ai.addEnemy(other);

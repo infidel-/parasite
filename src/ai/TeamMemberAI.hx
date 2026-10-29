@@ -6,6 +6,8 @@ import game.Game;
 
 class TeamMemberAI extends HumanAI
 {
+  public var wasParasiteAlerted: Bool; // was this agent alerted by the parasite side (not by NPC fights)?
+
   public function new(g: Game, vx: Int, vy: Int)
     {
       super(g, vx, vy);
@@ -87,6 +89,7 @@ class TeamMemberAI extends HumanAI
       soundsID = 'team';
       isAggressive = true;
       isTeamMember = true;
+      wasParasiteAlerted = false;
     }
 
 // called after load or creation
@@ -98,6 +101,18 @@ class TeamMemberAI extends HumanAI
 // event: on state change
   public override function onStateChange()
     {
+      // an undercover agent does not call the group over an NPC fight
+      if (isNPCTrouble)
+        {
+          if (canCallForHelp())
+            {
+              traceAI('TeamMemberAI', 'npc trouble, no team backup call');
+              game.group.skipPriority(5);
+            }
+          return;
+        }
+      if (state == AI_STATE_ALERT)
+        wasParasiteAlerted = true;
       if (!canCallForHelp())
         return;
 
@@ -116,12 +131,19 @@ class TeamMemberAI extends HumanAI
       if (hasFalseMemories)
         return;
 
-      // team member was alerted at some point before despawn, raise priority
+      // team member was alerted by the parasite at some point before despawn, raise priority
+      if (wasParasiteAlerted)
+        {
+          game.group.raisePriority(10);
+          return;
+        }
+
+      // alerted by NPC fights only: nothing to report on the parasite
       if (wasAlerted)
-        game.group.raisePriority(10);
+        game.group.skipPriority(10);
 
       // team member was noticed but never alerted, raise distance instead
-      else if (wasNoticed)
+      if (wasNoticed)
         game.group.raiseTeamDistance(1);
     }
 

@@ -108,7 +108,9 @@ class HumanAI extends AI
       // try to call police on next turn if not struggling with parasite
       // if berserk, just skip that
       // same with if player cultist
-      if (!canCallForHelp())
+      // a body someone already reported is a silent alert
+      if (!canCallForHelp() ||
+          reason == REASON_BODY_SILENT)
         return;
 
       var time = 1;

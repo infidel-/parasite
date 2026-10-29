@@ -198,6 +198,7 @@ class AreaManager extends _SaveObject
         AI.HEAR_DISTANCE : AI.VIEW_DISTANCE);
       if (area.info.isSmall == true)
         radius *= 2;
+      var reason = AI.witnessReason(attacker.ai);
       var tmp = area.getAIinRadius(attacker.x, attacker.y, radius, false);
       for (ai in tmp)
         {
@@ -211,10 +212,10 @@ class AreaManager extends _SaveObject
               ai.isSameCult(attacker.ai))
             continue;
           if (ai.isAggressive)
-            ai.onHearNoise(attacker.x, attacker.y);
+            ai.onHearNoise(attacker.x, attacker.y, reason);
           else if (ai.state == AI_STATE_IDLE ||
               ai.state == AI_STATE_MOVE_TARGET)
-            ai.setState(AI_STATE_ALERT, REASON_WITNESS);
+            ai.setState(AI_STATE_ALERT, reason);
         }
     }
 
@@ -263,6 +264,12 @@ class AreaManager extends _SaveObject
           apts = 10;
           pts = 2;
         }
+      else if (e.details == '' + REASON_NPC_FIGHT)
+        {
+          sdetails = 'a fight';
+          apts = 5;
+          pts = 1;
+        }
       else
         {
           sdetails = 'wild animal sighting';
@@ -288,8 +295,10 @@ class AreaManager extends _SaveObject
         ' has received reports about ' + sdetails +
         '. Dispatching units to the location.');
 
-      // raise group priority
-      game.group.raisePriority(pts);
+      // raise group priority, an NPC fight is not the parasite's doing
+      if (e.details == '' + REASON_NPC_FIGHT)
+        game.group.skipPriority(pts);
+      else game.group.raisePriority(pts);
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         {
@@ -381,7 +390,10 @@ class AreaManager extends _SaveObject
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         e.ai.log('calls for backup!');
 
-      game.group.raisePriority(1);
+      // an NPC fight is not the parasite's doing
+      if (e.ai.isNPCTrouble)
+        game.group.skipPriority(1);
+      else game.group.raisePriority(1);
 
       // increase area alertness
       area.alertness += 20;

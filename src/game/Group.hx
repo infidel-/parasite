@@ -225,6 +225,14 @@ class Group extends _SaveObject
     }
 
 
+// extended info on a raisePriority() skipped because NPCs were fighting each other
+  public function skipPriority(mod: Float)
+    {
+      game.info('NPC fight, group not told: ' +
+        (team != null ? 'Team distance -' : 'Group priority +') + mod);
+    }
+
+
 // specifically raise priority, without team distance logic
   function changeOnlyPriority(mod: Float)
     {

@@ -85,7 +85,7 @@ class PoliceAI extends HumanAI
             continue;
           addEnemy(other);
           if (state == AI_STATE_IDLE)
-            setState(AI_STATE_ALERT, REASON_WITNESS);
+            setState(AI_STATE_ALERT, AI.witnessReason(other));
         }
     }
 
