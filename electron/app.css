@@ -6716,12 +6716,14 @@ select {
   }
 }
 
-/* main menu changelog (ui/MainMenuChangelog.hx): corner button + glass panel right of the card.
+/* main menu changelog (ui/MainMenuChangelog.hx): button straddling the card's bottom edge at its
+   lower right corner (clear of the corner bracket) + glass panel right of the card.
    the panel's left/top/width/height are set from the card's rect on open */
 .mm-cl-btn {
   position: absolute;
-  right: 24px;
-  bottom: 20px;
+  right: 52px;
+  bottom: 0;
+  transform: translateY(50%);
   z-index: 4;
   pointer-events: all;
   display: flex;
@@ -6731,13 +6733,14 @@ select {
   font-family: 'Cruiser2015', sans-serif;
   font-size: calc(var(--text-font-size) * 0.8);
   letter-spacing: .24em;
-  color: var(--blue-gray);
-  border: 1px solid rgba(164,95,224,.22);
+  color: var(--accent-light);
+  border: 1px solid rgba(164,95,224,.45);
   border-radius: 999px;
-  background: linear-gradient(180deg, rgba(20,12,28,.86), rgba(10,6,16,.92));
+  background: linear-gradient(180deg, rgba(30,17,42,.97), rgba(14,8,22,.98));
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.05),
-    0 8px 26px rgba(0,0,0,.5);
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 14px rgba(164,95,224,.22),
+    0 8px 22px rgba(0,0,0,.55);
   cursor: var(--ui-cursor);
   transition: color .18s, border-color .18s, box-shadow .18s;
 }
@@ -6747,8 +6750,8 @@ select {
 }
 .mm-cl-btn:hover,
 .mm-cl-btn.active {
-  color: var(--accent-light);
-  border-color: rgba(201,168,239,.55);
+  color: var(--text);
+  border-color: rgba(201,168,239,.75);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.06),
     0 0 18px rgba(164,95,224,.35),

@@ -1,4 +1,4 @@
-// main menu changelog: corner button + glass panel right of the menu card, built from changes.md
+// main menu changelog: button on the card's lower right corner + glass panel right of the card, built from changes.md
 
 package ui;
 
@@ -24,7 +24,7 @@ class MainMenuChangelog
       game = g;
       this.card = card;
 
-      // corner button
+      // button straddling the card's bottom edge at its right corner
       button = Browser.document.createDivElement();
       button.className = 'mm-cl-btn';
       button.innerHTML =
@@ -36,7 +36,7 @@ class MainMenuChangelog
         game.scene.sounds.play('click-menu');
         toggle();
       };
-      bg.appendChild(button);
+      card.appendChild(button);
 
       // panel: header + scrolling version list
       panel = Browser.document.createDivElement();
@@ -126,12 +126,10 @@ class MainMenuChangelog
       var width = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, room - GAP));
       var left = Math.min(r.right + Math.max(GAP / 2, (room - width) / 2),
         screenW - width - GAP / 2);
-      // a small window: stop short of the corner button
-      var bottom = Math.min(r.bottom, button.getBoundingClientRect().top - GAP / 2);
       panel.style.left = left + 'px';
       panel.style.top = r.top + 'px';
       panel.style.width = width + 'px';
-      panel.style.height = (bottom - r.top) + 'px';
+      panel.style.height = r.height + 'px';
     }
 
 // open/close the panel
