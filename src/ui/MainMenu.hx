@@ -34,6 +34,7 @@ class MainMenu extends UIWindow
   var restoreTimer: Int;
   var itemCount: Int;
   var cursorObserver: Dynamic; // ResizeObserver: re-places the highlight bar when rows reflow
+  var changelog: MainMenuChangelog; // corner button + changelog panel right of the card
 
   public function new(g: Game)
     {
@@ -133,6 +134,8 @@ class MainMenu extends UIWindow
       // corner-X close (only shown in-game; see update()/loadGame())
       close = addWinClose();
       close.style.display = 'none';
+
+      changelog = new MainMenuChangelog(game, bg, window);
     }
 
 // add the decorative overlay layers (sigil, aura, vignette) above the canvas, below the panel
@@ -262,9 +265,17 @@ class MainMenu extends UIWindow
         UIDecode.decodeTo(labels[i], labelTexts[i]);
     }
 
-// handle in-menu keys: arrows move the highlight, Enter activates it
+// handle in-menu keys: arrows move the highlight, Enter activates it, Escape closes the changelog
   public override function handleKey(key: String, code: String, altKey: Bool, ctrlKey: Bool): Bool
     {
+      // Escape closes the changelog before the menu
+      if (key == 'Escape' &&
+          changelog.isOpen())
+        {
+          game.scene.sounds.play('click-menu');
+          changelog.close();
+          return true;
+        }
       if (code == 'ArrowDown' ||
           key == 'ArrowDown')
         navMove(1);
@@ -431,6 +442,7 @@ class MainMenu extends UIWindow
     {
       // render loop self-stops via its visibility check; show() restarts it
       menuGL.hide();
+      changelog.close();
       bg.classList.remove('mainmenu-open');
       stopGlitch();
       animatedHide(true); // keep display set: WebGL canvas mustn't go through display:none

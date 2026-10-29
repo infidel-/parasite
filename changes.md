@@ -3,6 +3,7 @@
 ## 1.0.2
 
 ### Changes
+- ui: changelog button on the main menu shows what changed in each version
 
 ### Fixes
 - ai: an alerted team member calls for backup once, not again every time it loses and re-finds its target

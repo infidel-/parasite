@@ -6716,6 +6716,187 @@ select {
   }
 }
 
+/* main menu changelog (ui/MainMenuChangelog.hx): corner button + glass panel right of the card.
+   the panel's left/top/width/height are set from the card's rect on open */
+.mm-cl-btn {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  z-index: 4;
+  pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 15px 7px 11px;
+  font-family: 'Cruiser2015', sans-serif;
+  font-size: calc(var(--text-font-size) * 0.8);
+  letter-spacing: .24em;
+  color: var(--blue-gray);
+  border: 1px solid rgba(164,95,224,.22);
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(20,12,28,.86), rgba(10,6,16,.92));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 8px 26px rgba(0,0,0,.5);
+  cursor: var(--ui-cursor);
+  transition: color .18s, border-color .18s, box-shadow .18s;
+}
+.mm-cl-btn svg {
+  width: 15px;
+  height: 15px;
+}
+.mm-cl-btn:hover,
+.mm-cl-btn.active {
+  color: var(--accent-light);
+  border-color: rgba(201,168,239,.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 0 18px rgba(164,95,224,.35),
+    0 8px 26px rgba(0,0,0,.5);
+}
+/* panel: the card's glass, slides in from the right and fades */
+.mm-cl {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 30px 8px 18px 26px;
+  text-align: left;
+  border: 1px solid rgba(164,95,224,.16);
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(20,12,28,.93), rgba(10,6,16,.96));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    inset 0 0 52px rgba(164,95,224,.05),
+    0 22px 72px rgba(0,0,0,.62);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(48px);
+  transition: opacity .28s ease, transform .34s cubic-bezier(.2,.8,.2,1), visibility 0s linear .34s;
+}
+.mm-cl.open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+  transform: none;
+  transition: opacity .28s ease, transform .34s cubic-bezier(.2,.8,.2,1), visibility 0s;
+}
+.mm-cl-head {
+  padding: 0 18px 14px 0;
+  border-bottom: 1px solid rgba(164,95,224,.14);
+  font-family: 'Cruiser2015', sans-serif;
+  font-size: calc(var(--text-font-size) * 1.5);
+  letter-spacing: .18em;
+  color: var(--text);
+  text-shadow: 0 0 16px rgba(164,95,224,.4);
+}
+.mm-cl-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 14px 26px 0;
+  /* soft fade where the list runs under the bottom edge */
+  -webkit-mask-image: linear-gradient(180deg, #000 calc(100% - 30px), transparent);
+  mask-image: linear-gradient(180deg, #000 calc(100% - 30px), transparent);
+}
+.mm-cl-body::-webkit-scrollbar-thumb {
+  background: rgba(164,95,224,.32);
+  background-clip: padding-box;
+}
+.mm-cl-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(201,168,239,.55);
+  background-clip: padding-box;
+}
+/* version block: accent number, current chip, dashed rule between versions */
+.mm-cl-ver {
+  padding: 16px 0 6px;
+}
+.mm-cl-ver + .mm-cl-ver {
+  border-top: 1px dashed rgba(143,163,196,.14);
+}
+.mm-cl-vh {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.mm-cl-vnum {
+  font-family: 'Cruiser2015', sans-serif;
+  font-size: calc(var(--text-font-size) * 1.25);
+  letter-spacing: .12em;
+  color: var(--accent-light);
+}
+.mm-cl-cur {
+  font-size: calc(var(--text-font-size) * 0.62);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--narrative);
+  border: 1px solid rgba(116,224,136,.4);
+  background: rgba(116,224,136,.08);
+}
+/* section heading (Changes / Fixes) with a colored dot */
+.mm-cl-sec {
+  margin: 10px 0 4px;
+  font-size: calc(var(--text-font-size) * 0.7);
+  letter-spacing: .28em;
+  text-transform: uppercase;
+  color: var(--text-color-gray);
+}
+.mm-cl-sec::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+  background: var(--accent);
+}
+.mm-cl-sec-fixes::before {
+  background: var(--narrative);
+}
+/* entries: tag chip + Const.small text; a two-column grid sizes every chip in a list to its widest
+   tag so the text lines up */
+.mm-cl-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: baseline;
+  column-gap: 9px;
+  row-gap: 10px;
+  margin: 6px 0 4px;
+  padding: 0;
+  color: var(--text);
+}
+.mm-cl-list li {
+  display: contents;
+}
+.mm-cl-list li .small {
+  line-height: 1.4em;
+}
+.mm-cl-tag {
+  box-sizing: border-box;
+  text-align: center;
+  font-size: calc(var(--text-font-size) * 0.62);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: var(--accent-light);
+  border: 1px solid rgba(201,168,239,.32);
+  background: rgba(164,95,224,.1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mm-cl,
+  .mm-cl.open {
+    transition: none;
+  }
+}
+
 /* bg + crowd canvases ramp from dim to full */
 .window-fade-in .menu-bg-canvas,
 .window-fade-in .menu-crowd-canvas {
