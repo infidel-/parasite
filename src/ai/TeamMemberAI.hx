@@ -112,6 +112,10 @@ class TeamMemberAI extends HumanAI
           game.group.team.state == TEAM_AMBUSH)
         return;
 
+      // an agent with false memories reports nothing
+      if (hasFalseMemories)
+        return;
+
       // team member was alerted at some point before despawn, raise priority
       if (wasAlerted)
         game.group.raisePriority(10);

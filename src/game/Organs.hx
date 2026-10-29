@@ -87,7 +87,9 @@ class Organs extends _SaveObject
     {
       var cnt = 0;
       for (o in _list)
-        cnt += o.level;
+        // the pseudocampus leaves no anomaly worth reporting
+        if (o.id != IMP_FALSE_MEMORIES)
+          cnt += o.level;
 
       // assimilated hosts count as body features
       if (_ai.hasTrait(TRAIT_ASSIMILATED))
