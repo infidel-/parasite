@@ -481,11 +481,18 @@ class MainElectron
       try {
         var exeDir = Path.dirname(App.getPath('exe'));
         var p = Path.join(exeDir, 'steam_appid.txt');
-        Fs.writeFileSync(p, '' + STEAM_APPID);
+        Fs.writeFileSync(p, '' + steamAppID());
       }
       catch (e: Dynamic) {
         mlog('[steam] steam_appid.txt write failed: ' + e);
       }
+    }
+
+// the app id Steam launched us under (the demo is its own app, 1982220), else the full game's
+  static function steamAppID(): Int
+    {
+      var env = Node.process.env.get('SteamAppId');
+      return (env != null ? Std.parseInt(env) : STEAM_APPID);
     }
 
 // enable Steam in-game overlay (Shift+Tab). MUST run pre-ready: appends
@@ -510,8 +517,8 @@ class MainElectron
     {
       if (steamworks == null) return;
       try {
-        steamClient = steamworks.init(STEAM_APPID);
-        mlog('[steam] init OK (appid=' + STEAM_APPID + ')');
+        steamClient = steamworks.init(steamAppID());
+        mlog('[steam] init OK (appid=' + steamAppID() + ')');
       }
       catch (e: Dynamic) {
         steamClient = null;
