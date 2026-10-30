@@ -1,0 +1,36 @@
+// SteamPipe app build for the Parasite demo (app 1982220), filled in by `make steam-demo-upload`:
+// @DESC@ = src/VERSION, @PREVIEW@ = 1 for a dry run, @BRANCH@ = beta branch to set live (default
+// branch can only be set live on the Steamworks site), @DEVDIR@ = the dev build dir under Projects.
+// only the content depot: the demo's Electron runtime depot carries over from the previous build.
+"AppBuild"
+{
+	"AppID" "1982220"
+	"Desc" "@DESC@ demo"
+	"ContentRoot" "C:\\YandexDisk\\PC LIGHTSTAR\\Projects\\"
+	"BuildOutput" "C:\\steamcmd\\output\\"
+	"Preview" "@PREVIEW@"
+	"SetLive" "@BRANCH@"
+	"Depots"
+	{
+		// the -D demo build straight from the dev dir, minus what the demo cannot reach
+		"1982221"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "@DEVDIR@\\resources\\app\\*"
+				"DepotPath" "resources\\app\\"
+				"Recursive" "1"
+			}
+			// dev-only files living in the dev app dir
+			"FileExclusion" "*node_modules-0.3.0*"
+			"FileExclusion" "*action-pickpocket*"
+			"FileExclusion" "*md-to-steam.js"
+			"FileExclusion" "*publish-workshop.js"
+			// the underground lab (a cult mission; the demo has no cult) and the military base (locked)
+			"FileExclusion" "*\\lab\\*"
+			"FileExclusion" "*\\military\\*"
+			"FileExclusion" "*ambient-military*"
+			"FileExclusion" "*\\img\\cult\\*"
+		}
+	}
+}

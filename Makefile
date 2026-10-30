@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -116,6 +116,24 @@ steam-upload:
 	  tools/steam-app-build.vdf > /mnt/c/steamcmd/scripts/app_build_1920320.vdf
 	/mnt/c/steamcmd/steamcmd.exe +login $$(cat .steam-user) \
 	  +run_app_build 'C:\steamcmd\scripts\app_build_1920320.vdf' +quit
+
+# upload the demo (app 1982220) the same way: the dev dir rebuilt with -D demo, its resources/app minus
+# the lab/military/cult art (tools/steam-demo-build.vdf), then the full build put back whatever steamcmd did.
+# that restore is a plain `make`: a recipe line naming $(MAKE) runs even under `make -n`, steamcmd with it.
+# usage: make steam-demo-upload [preview=1] [branch=staging]
+steam-demo-upload:
+	git diff --quiet HEAD -- src electron || { echo 'uncommitted src/electron changes'; exit 1; }
+	$(MAKE) -C src electron-demo
+	$(MAKE) main
+	mkdir -p /mnt/c/steamcmd/scripts
+	sed -e "s/@DESC@/$$(cat src/VERSION)/g" \
+	  -e "s/@PREVIEW@/$(or $(preview),0)/" \
+	  -e "s/@BRANCH@/$(branch)/" \
+	  -e "s/@DEVDIR@/$$(basename "$$(readlink -f parasite)")/g" \
+	  tools/steam-demo-build.vdf > /mnt/c/steamcmd/scripts/app_build_1982220.vdf
+	/mnt/c/steamcmd/steamcmd.exe +login $$(cat .steam-user) \
+	  +run_app_build 'C:\steamcmd\scripts\app_build_1982220.vdf' +quit; \
+	  r=$$?; make game-debug; exit $$r
 
 # itch.io zips, the same files as the Steam depots: Electron runtime + root bits from _Build_, the game
 # straight from the dev dir -> _Build_/parasite-<VERSION>-win32.zip / -linux64.zip. zipped from WSL, so

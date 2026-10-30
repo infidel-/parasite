@@ -27,6 +27,24 @@ logs and manifests in `C:\steamcmd\output\`.
 5. Steamworks → Builds → set the build live on `default`. steamcmd cannot set the default branch live.
    Then switch yuggoth back to no beta.
 
+## Demo
+- app `1982220`, content depot `1982221` (only `resources/app`; the runtime depot is never listed and carries over).
+  `make steam-demo-upload [preview=1] [branch=staging]` builds the dev dir with `-D demo`, uploads it with
+  [`tools/steam-demo-build.vdf`](../tools/steam-demo-build.vdf), then rebuilds the full game into the dev dir.
+- What `-D demo` does: ends at 500 turns or on receiving "Find your ship" (`Game.finishDemo`), no cult can be founded
+  (`Chat.canRecruit`), military bases refuse entry with a "full game only" region tag (`PlayerRegion.enterAreaAction`,
+  `RegionTooltip`), no Group director goal (it points into a base), no military clue sheet load (`Images.loadDecoPacks`).
+- What the depot leaves out, by `FileExclusion`: every `lab/`, `military/` and `img/cult/` dir, `ambient-military`
+  (~260 MB of 778). Nothing a demo player can reach loads them: a demo tour of boot, facility, corp, city and
+  wilderness made 601 requests, none into those dirs. A new dir with one of those names is cut too. The excluded
+  dirs still ship EMPTY: `FileExclusion` drops files, not folders.
+- Measured, first steamcmd build (1.0.2 over the 0.23.1 web zip, preview): ~505 MB scanned, 572 files added (215 MB),
+  14 changed, 14 removed — the old 64 px atlases, the stale hud pngs, `ambient-military1.mp3` and the zip's folder entries.
+- The Electron main inits Steam with the `SteamAppId` Steam launches it with, so the demo registers as 1982220.
+- Releasing: `preview=1` and read `depot_build_1982221.log`, then `branch=staging` and test on yuggoth, then set it
+  live on `default` on the Steamworks site, the same as the game.
+- Up to 0.23.1 the demo was a web-uploaded zip of `_Build_/common-demo`, copied over and never wiped.
+
 ## itch.io
 `make itch-zips` → `_Build_/parasite-<VERSION>-win32.zip` / `-linux64.zip`, the same files as the Steam depots
 (checked by SHA1 against the steamcmd manifests for 1.0.1). `make itch-push [dry=1]` pushes them with butler
