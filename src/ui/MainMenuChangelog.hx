@@ -33,6 +33,8 @@ class MainMenuChangelog
         '<line x1="9" y1="7" x2="20" y2="7"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="17" x2="16" y2="17"/>' +
         '<circle cx="4.5" cy="7" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="17" r="1.2"/></svg>' +
         '<span>CHANGELOG</span>';
+      // glowing dot until this version's changelog is opened
+      button.classList.toggle('new', game.profile.object.changelogSeen != Version.getVersion());
       button.onclick = function(e) {
         game.scene.sounds.play('click-menu');
         toggle();
@@ -140,6 +142,8 @@ class MainMenuChangelog
       place();
       panel.classList.add('open');
       button.classList.add('active');
+      button.classList.remove('new');
+      game.profile.markChangelog();
     }
 
 // slide the panel out

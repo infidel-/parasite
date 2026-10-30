@@ -6756,6 +6756,17 @@ select {
     0 0 18px rgba(164,95,224,.35),
     0 8px 26px rgba(0,0,0,.5);
 }
+/* unread: the pedia's glowing dot until this version's changelog is opened */
+.mm-cl-btn.new::after {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e6c489;
+  box-shadow: 0 0 8px 1px #d3a85f;
+  animation: pedia-pulse 1.6s ease-in-out infinite;
+}
 /* panel open: stays pressed in */
 .mm-cl-btn.active {
   color: var(--text);
@@ -6914,6 +6925,9 @@ select {
   .mm-cl,
   .mm-cl.open {
     transition: none;
+  }
+  .mm-cl-btn.new::after {
+    animation: none;
   }
 }
 

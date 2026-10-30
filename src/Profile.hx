@@ -19,6 +19,7 @@ class Profile
         pediaArticles: {},
         difficultyPresets: [],
         disabledMods: [],
+        changelogSeen: '',
       };
 
       game.debug('profile load');
@@ -73,6 +74,16 @@ class Profile
       save();
     }
 
+// mark the current version's changelog as read
+  public function markChangelog()
+    {
+      // already read
+      if (object.changelogSeen == Version.getVersion())
+        return;
+      object.changelogSeen = Version.getVersion();
+      save();
+    }
+
 // get pedia article state
   public function getPediaArticle(id: String): Int
     {
@@ -99,6 +110,7 @@ typedef _ProfileObject = {
   var pediaArticles: haxe.DynamicAccess<Int>;
   var difficultyPresets: Array<_Preset>;
   var disabledMods: Array<String>;
+  var changelogSeen: String; // last version whose changelog was opened
 }
 
 typedef _Preset = {

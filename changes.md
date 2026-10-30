@@ -3,7 +3,7 @@
 ## 1.0.2
 
 ### Changes
-- ui: changelog button on the main menu shows what changed in each version
+- ui: changelog button on the main menu shows what changed in each version, with a glowing dot until the new version's changes are read
 
 ### Fixes
 - ai: a body already reported is not reported again by every passer-by
