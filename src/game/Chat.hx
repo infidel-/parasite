@@ -928,6 +928,10 @@ class Chat extends _SaveObject
 // returns true if recruit can be added to actions
   function canRecruit(): Bool
     {
+#if demo
+      // the demo has no cult: no founder, so no ordeals, missions or underground lab
+      return false;
+#end
       if (target.isCultist)
         return false;
       var cult = game.cults[0];

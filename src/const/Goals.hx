@@ -370,8 +370,11 @@ class Goals
         game.profile.addPediaArticle('groupNeutralize');
       },
       onComplete: function (game, player) {
+#if !demo
+        // the director's goal leads into a military base, locked in the demo
         if (!game.group.isNeutralized)
           GroupDirector.start(game);
+#end
       },
     },
 

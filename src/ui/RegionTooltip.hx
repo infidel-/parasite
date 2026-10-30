@@ -65,6 +65,10 @@ class RegionTooltip extends BeamTooltip
             tags.push('habitat');
           if (!area.info.canEnter)
             tags.push('inaccessible');
+#if demo
+          if (area.typeID == AREA_MILITARY_BASE)
+            tags.push('full game only');
+#end
           if (area.info.isHighRisk)
             tags.push('high risk');
           if (missionLines.length > 0)

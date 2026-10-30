@@ -223,6 +223,15 @@ class PlayerRegion extends _SaveObject
           return false;
         }
 
+#if demo
+      // the demo locks military bases (their art is not shipped)
+      if (currentArea.typeID == AREA_MILITARY_BASE)
+        {
+          game.actionFailed("Military bases are available in the full game.");
+          return false;
+        }
+#end
+
       // cannot enter area with high alertness
       if (currentArea.alertness >= 75)
         {

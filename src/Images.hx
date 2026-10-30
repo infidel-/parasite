@@ -107,6 +107,10 @@ class Images
       for (i in 0...Const.decoPackCount())
         {
           var img = new Image();
+#if demo
+          // the demo ships no military art; an unloaded sheet is skipped by Sprites
+          if (paths[i] != 'military/clue-pack')
+#end
           img.src = AssetPath.resolve('textures/' + paths[i] + '.png');
           out.push(img);
         }
