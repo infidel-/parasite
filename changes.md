@@ -4,6 +4,7 @@
 
 ### Changes
 - ui: changelog button on the main menu shows what changed in each version, with a glowing dot until the new version's changes are read
+- ui: the mouse path shows the energy the move will cost the parasite or host at its end, red when the move would drain it dry
 
 ### Fixes
 - ai: a body already reported is not reported again by every passer-by

@@ -724,7 +724,7 @@ class View {
     a.build(scene);
     debug.onRebuild(); // fresh area: reset cycler indices + counts
     tacticalGrid = new TacticalGrid(scene, game.area);
-    pathLine = new PathLine(game, scene);
+    pathLine = new PathLine(game, scene, camera);
 
     // player marker ring + the group holding all actor billboards
     ring = playerRing();
@@ -998,6 +998,9 @@ void main() {
     choreo = null;
     area3d = null;
     tacticalGrid = null;
+    // its energy label is a HUD element that outlives the view: hide it on the way out
+    if (pathLine != null)
+      pathLine.clear();
     pathLine = null;
     tactical = false;
     if (canvas != null) canvas.style.display = 'none';

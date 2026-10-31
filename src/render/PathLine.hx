@@ -1,5 +1,7 @@
 package render;
 
+import js.Browser.document;
+import js.html.DivElement;
 import three.Three;
 import citygen.CityConfig;
 import citygen.CityConfig.cellToWorld;
@@ -31,12 +33,27 @@ class PathLine
   var phase:Float = 0.0;                                  // scrolling wobble phase (advances each frame)
   var pulse:Float = 0.0;                                  // target-dot pulse phase (advances each frame)
   var lastAmp:Float = -1.0;                               // amp used at the last rebuild (rebuild when it changes)
+  var camera:PerspectiveCamera;                          // read live to project the target dot for the label
+  var label:DivElement;                                  // the energy readout by the target dot (#path-cost under #hud)
+  var labelText:String = '';                             // text the label shows now ('' = hidden)
+  var _v = new Vector3();                                // scratch projection vector
 
 // build the (initially hidden) ribbon + dot on the scene; geometry filled lazily on the first set()
-  public function new(game:Game, scene:Scene)
+  public function new(game:Game, scene:Scene, camera:PerspectiveCamera)
     {
       this.game = game;
       this.scene = scene;
+      this.camera = camera;
+      // one label for the session: the view builds a fresh PathLine per area, so take over the last
+      // one's element instead of stacking a new div under the HUD each time
+      label = cast document.getElementById('path-cost');
+      if (label == null)
+        {
+          label = document.createDivElement();
+          label.id = 'path-cost';
+          game.ui.hud.container.appendChild(label);
+        }
+      setLabel('', false);
       var P = RenderConfig.PATH;
       // HDR endpoint colors (glow baked in): green at full control, discolored toward toxic red as
       // control is lost — the material color lerps between them each frame by the control factor
@@ -121,6 +138,7 @@ class PathLine
       mesh.visible = false;
       dot.visible = false;
       dotStart.visible = false;
+      setLabel('', false);
     }
 
 // per frame: advance the wobble phase and rebuild the ribbon when the phase or amplitude moved
@@ -140,6 +158,45 @@ class PathLine
       dotStart.scale.set(pss, pss, pss);
       // discolor green -> toxic red as control is lost (same factor as the waviness)
       mat.color.lerpColors(colFull, colLost, lostFactor());
+      updateLabel();
+    }
+
+// park the energy readout beside the target dot. while a clicked walk is under way the preview is
+// frozen as drawn, so the steps come from what is LEFT of that walk and the number counts down; the
+// preview stays frozen through the last step's slide too, and by then the player has left the path's
+// first cell with nothing left to walk
+  function updateLabel():Void
+    {
+      var pa = game.playerArea;
+      var steps =
+        (pa.path != null ? pa.path.length :
+        (pa.x == cells[0].x && pa.y == cells[0].y ? cells.length - 1 : 0));
+      var delta = __Math.pathEnergy(steps);
+      _v.copy(dot.position).project(camera);
+      if (delta == 0 ||
+          _v.z > 1 ||
+          _v.x < -1 || _v.x > 1 ||
+          _v.y < -1 || _v.y > 1)
+        {
+          setLabel('', false);
+          return;
+        }
+      var left = (game.player.state == _PlayerState.PLR_STATE_HOST ?
+        game.player.host.energy : game.player.energy);
+      setLabel((delta > 0 ? '+' : '') + delta, -delta >= left);
+      label.style.left = ((_v.x * 0.5 + 0.5) * Viewport.w) + 'px';
+      label.style.top = ((-_v.y * 0.5 + 0.5) * Viewport.h) + 'px';
+    }
+
+// show `text` on the label ('' hides it), red when the walk is lethal; touches the DOM only on change
+  function setLabel(text:String, lethal:Bool):Void
+    {
+      label.classList.toggle('lethal', lethal);
+      if (text == labelText)
+        return;
+      labelText = text;
+      label.textContent = text;
+      label.style.display = (text == '' ? 'none' : '');
     }
 
 // control-loss factor 0..1: 0 at full control (or no host), 1 at zero host control. drives both the

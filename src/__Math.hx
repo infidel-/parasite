@@ -19,6 +19,16 @@ class __Math
     }
 
 
+// net energy change of the body the player moves (the host if invaded, else the parasite) over a walk
+// of `steps` moves: each move spends one of the turn's 2 AP and energy only ticks when a turn ends
+  public static function pathEnergy(steps: Int): Int
+    {
+      var turns = Std.int((steps + 2 - game.playerArea.ap) / 2);
+      return turns * (game.player.state == PLR_STATE_HOST ?
+        fullHostEnergyPerTurn(1) : parasiteEnergyPerTurn(1));
+    }
+
+
 // parasite energy per turn (spent or acquired)
   public static inline function parasiteEnergyPerTurn(time: Int)
     {

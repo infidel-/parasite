@@ -131,7 +131,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
         {
           id: 'movement',
           name: 'Movement',
-          text: "You can use the numpad or mouse for movement. Moving the mouse cursor around the screen you can see the path that you will take. Clicking the LMB on the screen will start the movement if it is possible. Note that you cannot click and move to the black tiles on the screen because what is actually on them is not known to you. Since movement requires energy, be careful or you might end up dead.",
+          text: "You can use the numpad or mouse for movement. Moving the mouse cursor around the screen you can see the path that you will take. The number at the end of the path shows how much energy the move will cost your parasite or host, and turns red if it would drain them completely. Clicking the LMB on the screen will start the movement if it is possible. Note that you cannot click and move to the black tiles on the screen because what is actually on them is not known to you. Since movement requires energy, be careful or you might end up dead.",
         },
         {
           id: 'npcAlertness',

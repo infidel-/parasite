@@ -1041,6 +1041,24 @@ hr {
   from { opacity: 1; }
   to   { opacity: 0; }
 }
+/* energy the hovered walk will cost (render.PathLine): a small outlined number off to the upper right
+   of the path's target dot, in the path's own slime green; red when the walk would drain the body dry */
+#path-cost {
+  position: fixed;
+  transform: translate(8px, -100%);
+  pointer-events: none;
+  z-index: 25;
+  font-family: var(--text-font-title), sans-serif;
+  font-size: calc(var(--text-font-size) * 0.8);
+  font-weight: bold;
+  color: #9be86a;
+  text-shadow: 0 0 2px #000, 0 1px 3px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  user-select: none;
+}
+#path-cost.lethal {
+  color: #e0553f;
+}
 
 /* panels sit above the region tooltip beam/panel (which use z-index ≤ 25) */
 .hud-panel {
