@@ -921,7 +921,7 @@ class ObjModels
     {
       keys: [ 'summoning_portal_2' ],
       path: RenderConfig.MODELS.portalSkin,
-      h: 4.93,
+      h: 4.8,
       sink: 0.0,
       yaw: FRONTAL,
       // the portal's own light, hung ~2 over the pillar tips (at PROP_LIGHT.yMul's 1.15 it was 0.6
@@ -952,22 +952,23 @@ class ObjModels
       tether: null,
       // the eyes and the mouth open onto space and everything else that is black is tar. the three
       // holes are measured off the baked atlas: the dark texels whose red beats their blue (the
-      // streaks run the other way), clustered, centre and 2nd..98th percentile extent
+      // streaks run the other way), clustered, centre and 2nd..98th percentile extent. the eyes'
+      // u then took portal_skin_fit.py's pull at their height (x 0.943 about the centre)
       tar: {
         dark: 0.02,
         flat: false,
         pools: [],
         holes: [
           {
-            u: 0.389,
+            u: 0.395,
             v: 0.649,
-            ru: 0.07,
+            ru: 0.066,
             rv: 0.062,
           },
           {
-            u: 0.606,
+            u: 0.6,
             v: 0.645,
-            ru: 0.072,
+            ru: 0.068,
             rv: 0.066,
           },
           {

@@ -2407,9 +2407,11 @@ it, and the portal as a violet light source with fake shadows.
 
 **Change:** every portal row's `h` x 0.85, then on review the pillars out to ±1.44 off the group centre
 and the ring x 1.2 (its pool ellipse shrunk to keep its world size). `models-src/sewer/portal_skin_fit.py`
-pulls the skin's x in over its top third (x 0.6 at the crown) and widens all of it x 1.2, so the waist
-still meets the moved pillars, into `portal-skin-fit.glb`, the manifest's new src. A uniform x scale keeps
-every box-fraction hole where it was. New column `?tar:PropTar` in `PropGlow`'s patch: tar is
+pulls the skin's x in from 0.55 of its height (x 0.45 at the crown) into `portal-skin-fit.glb`, the
+manifest's new src, and the skin is drawn at h 4.8. Those three were searched together. A face sample
+pokes when, from the tunnel camera or three orbits, its ray to the camera is clear and the ray away hits
+a pillar: 0 of 2,610, against 75 of 9,684 at 0.65 / 0.6 / 4.93 (arm tips over the horn tops). The eye
+holes took the pull at their height (u x 0.943 about the centre). New column `?tar:PropTar` in `PropGlow`'s patch: tar is
 albedo under a LINEAR luminance key, plus `pools` (box-frame ellipses painted black), and `holes` that
 override both with three parallax star layers and a faint nebula. Tar takes `Blood.shimmerColor`'s hue
 film on `BLOOD`'s own cycle, and per-cell glints on `BLOOD`'s bucket length and odds (3x3 neighbourhood,
@@ -2436,6 +2438,10 @@ beats their blue (streaks run the other way), clustered: eyes ~0.07 x 0.06 of th
   rubble on break). No organ ever changed key, so this was latent; the slot now goes dark on the spot.
 - `cast` is a Haxe keyword, hence `PropLight.shadows`.
 - The box frame's +v (z) is SOUTH, toward the camera. Probed live with an off-centre test pool.
+- A pillar glb is an open TRELLIS shell (1,844 boundary edges), so a ray-parity inside-test called the
+  pillar's own core "outside". Test what the camera sees instead: clear toward it, stone behind it.
+- Widening the skin to meet the moved pillars was REJECTED by the user. The waist stands up to 0.31 off
+  the pillars' inner faces in a front silhouette, hidden by their front bulge from the tunnel pitch.
 
 `skipSelf` at y 1.45, light on against off from the tunnel pitch: skin R 30.9 / 30.5 (unchanged),
 pillar tops 50 / 18, ring floor 10 / 5, floor past the ring 8 / 5.
