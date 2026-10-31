@@ -138,8 +138,12 @@ class SewerArea implements Area3D
     {
       if (props == null)
         return;
-      render.world.ObjModels.dispose(sceneRef, props);
+      // handed over rather than disposed: an object whose model changed (the summoning portal broken
+      // into rubble) cross-fades instead of popping. ponytail: the only kind with a model swap; the
+      // others still dispose, and take this the day one of theirs swaps
+      var old = props;
       props = render.world.ObjModels.build(sceneRef, game, objYaw, null, objWall);
+      render.world.ObjModels.handOver(sceneRef, old, props);
     }
 
 // every LAMP down here is a pooled fixture — a manhole shaft or a wall bracket — so their fake

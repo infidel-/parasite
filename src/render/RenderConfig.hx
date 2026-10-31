@@ -444,6 +444,14 @@ class RenderConfig {
     shadowFade: 0.3,        // outer fraction of the range over which a shadow eases to 0 (smooth
                             // enter/leave as the actor slides across the radius — motion is the anim)
   };
+  // a camera quake for an event that shakes the whole place (the summoning portal breaking,
+  // render.CameraRig.quake): a jitter added over the follow camera, fading out with the square of
+  // the time left, so it starts at its hardest and settles rather than stopping
+  public static final QUAKE = {
+    mul: 12.0,              // duration, in BASE_MS
+    amp: 0.5,               // peak jitter (world units, each axis): ~19 px at the sewer zoom
+    hz: 14.0,               // jitter frequency (cycles per second of the anim clock)
+  };
   // 3D gun-shot choreography: a blooming tracer streak races muzzle->impact, a muzzle flash +
   // transient point light pop at the shooter, impact sparks + blood on a hit, and (player only)
   // a small camera recoil. per-weapon pellet counts mirror the 2D shot feel. sizes marked
@@ -1187,6 +1195,8 @@ class RenderConfig {
     lerp: 0.25,  // per-30fps-frame ease toward the target (dt-compensated, as OCCLUSION.lerp)
     snap: 0.02,  // lock to solid within this of 0 — the handover BACK to the opaque batch is gated on
                  // it, and an exponential tail never reaches 0 on its own
+    swapMul: 8.0, // an object whose model changed (the portal breaking) cross-fades over this many
+                  // BASE_MS, old out and new in (render.world.ObjModels.handOver)
   };
   // coloured point lights for the object props that glow — the habitat's grown organs. the light is
   // what makes an organ read as luminescing now: an emissive MAP only brightens the prop's own texels

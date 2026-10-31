@@ -80,6 +80,9 @@ class SummoningPortal extends AreaObject
         }
       // every part's model key just changed, and the 3D props are only placed at build
       game.scene.updateObjects3D();
+      // the tear shakes the whole tunnel, so it is heard and felt wherever the player stands
+      game.scene.sounds.play('sewer/portal-break');
+      game.scene.view3d.playQuake();
     }
 
 // remove every portal part object from its area

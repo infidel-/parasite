@@ -2456,3 +2456,27 @@ beats their blue (streaks run the other way), clustered: eyes ~0.07 x 0.06 of th
 pillar tops 50 / 18, ring floor 10 / 5, floor past the ring 8 / 5.
 
 **Verdict:** landed.
+
+## The summoning portal breaks with a quake and a cross-fade (`ObjModels.handOver`, `CameraRig.quake`)
+
+Breaking the ritual used to snap the portal from intact to rubble on the frame the model keys
+changed: `SewerArea.refreshObjects` disposed every prop batch and built them again.
+
+- **Cross-fade, the vat's idea on the prop rows.** `ObjModels.handOver(scene, old, fresh)` replaces
+  `dispose` after the rebuild. A batch is a SWAP when every placement stands on a cell that another
+  row held in the other build, and its own row held none of them. The old swapped batches go to a
+  static `dying` list, and the new ones start at `fade` 0. Both draw whole in their GHOST batch at
+  opacity `fade` (ghosts write no depth already) for `PROP_GHOST.swapMul` 8 x `BASE_MS`, and `cull`
+  then drops the dying ones. The pool row is the same row for both keys, so it never fades.
+- **Quake.** `CameraRig.quake()` (`View.playQuake`) adds a jitter after the follow lerp:
+  - three sines per axis, `QUAKE` amp 0.5, 14 Hz, 12 x `BASE_MS`, scaled by the square of the time left;
+  - the jitter comes off again before the next lerp, so it never feeds the follow, and the camera settles exactly where it was.
+- `SummoningPortal.breakPortalGroup` plays `sewer/portal-break` area-wide (no position) and calls the quake.
+
+Measured live:
+- **Cross-fade:** 3 dying batches (pillars and skin) went 0.97 → 0 while the 3 broken rows went 0.03 → 1, then took their solid batches. After the fade only the 4 broken rows' meshes were left in the scene, with no console errors.
+- **Quake:** 0.29 units of offset on the first frame, about 13.5 px per 0.35 units at the sewer's zoom 0.6, and the settle offset afterwards was 0 to 4 places.
+
+Trap: the swap test is per BATCH, because a batch has one ghost opacity. A row whose placements only partly swapped falls back to the old snap. Only `SewerArea` hands over; the other kinds still dispose, since none of them swaps a model.
+
+**Verdict:** landed.

@@ -26,6 +26,9 @@ typedef PropBatch = {
                                      // fade-out, when the player has already stepped off the cell
   t:Float,                           // ghost level, 0 solid .. 1 fully faded. one per BATCH, not per
                                      // instance: the player stands in exactly one cell
+  fade:Float,                        // model-swap crossfade (handOver), 1 drawn as usual; below it the
+                                     // whole batch draws in its ghost at this opacity, fading IN while
+                                     // it is the area's and OUT while it is in `dying`
 };
 
 // how a prop is turned on its cell. the area kind owns the actual rule (only it knows what is solid);
@@ -599,6 +602,9 @@ class ObjModels
   static inline var CULL_R = CityConfig.CELL * 3;
   // the batches the last build() made: the live area's, which is the only one drawing (see standsAt)
   static var built:Array<PropBatch> = [];
+  // the batches a rebuild took a model away from, fading out in their ghosts (handOver), dropped by
+  // cull() once gone. not cleared on an area change: they finish in a few hundred ms in any scene
+  static var dying:Array<PropBatch> = [];
 
   // does the area kind on screen BUILD these batches at all?
   //
@@ -1781,10 +1787,53 @@ class ObjModels
             hullMask: [for (_ in places) false],
             ghostIdx: -1,
             t: 0.0,
+            fade: 1.0,
           });
         }
       built = out;
       return out;
+    }
+
+// tear the old batches out after a rebuild, except where an object's model CHANGED under it (the
+// summoning portal breaking into rubble): those cross-fade, the old one out of `dying` and the new one
+// in, the way a purged vat's clone turns into its heap (render.lab.LabVats). call with the batches
+// the area had and the ones build() just made over them, in place of dispose()
+  public static function handOver(scene:Scene, old:Array<PropBatch>, fresh:Array<PropBatch>):Void
+    {
+      // does every placement of `b` stand on a cell another row held in `other`, and none its own?
+      // ponytail: the whole batch or nothing, since a batch has one ghost opacity; a row whose
+      // placements only partly swapped snaps as before
+      function swapped(b:PropBatch, other:Array<PropBatch>):Bool
+        {
+          for (c in b.cells)
+            {
+              var was = false;
+              for (o in other)
+                for (oc in o.cells)
+                  if (oc.col == c.col &&
+                      oc.row == c.row)
+                    {
+                      if (o.model == b.model)
+                        return false;
+                      was = true;
+                    }
+              if (!was)
+                return false;
+            }
+          return true;
+        }
+      for (b in fresh)
+        if (swapped(b, old))
+          b.fade = 0.0;
+      for (b in old)
+        if (b.solid.mesh != null &&
+            swapped(b, fresh))
+          {
+            b.fade = 1.0;
+            b.ghostIdx = -1;
+            dying.push(b);
+          }
+        else dispose(scene, [ b ]);
     }
 
 // patch one row's three variants, and THE ORDER IS THE CONTRACT
@@ -1884,6 +1933,7 @@ class ObjModels
       // what the hover pick outlines: the object under the cursor, or every piece of the group it is
       // part of (a summoning portal's pillars, skin and pool light together whichever one was picked)
       var hov = (opts.ui && opts.hover != null ? opts.hover.getHoverGroup() : null);
+      var swap = opts.dtMs * RenderConfig.ANIM_SPEED / (RenderConfig.BASE_MS * G.swapMul);
       for (b in batches)
         {
           // the glb resolves through a loader callback, so every batch is mesh-less for the first few
@@ -1906,11 +1956,14 @@ class ObjModels
           if (idx < 0 &&
               b.t < G.snap)
             b.t = 0;
+          // a batch swapped in by handOver draws whole in its ghost until it has faded in
+          var fading = b.fade < 1;
+          b.fade = Math.min(1.0, b.fade + swap);
           // the fading placement stays with the GHOST batch for the whole fade in both directions: at
           // t = 0 the ghost is a pixel-identical clone of the solid, so neither handover shows
           for (i in 0...b.cells.length)
             {
-              var g = i == b.ghostIdx && (idx >= 0 || b.t > 0);
+              var g = fading || (i == b.ghostIdx && (idx >= 0 || b.t > 0));
               b.ghostMask[i] = g;
               b.solidMask[i] = !g || b.model.ghostPart == true;
               b.hullMask[i] = tactical ||
@@ -1919,7 +1972,28 @@ class ObjModels
           // one opacity for the batch is correct BECAUSE only one placement can be mid-fade. a true
           // cross-dissolve is impossible here and must not be attempted: the solid material is shared
           // by every other placement, so dimming it would dim every copy of the prop in the level
-          b.ghost.mesh.material.opacity = 1 - b.t * (1 - G.alpha);
+          b.ghost.mesh.material.opacity = (1 - b.t * (1 - G.alpha)) * (fading ? b.fade : 1.0);
+          Models.cull(b.solid, opts.camera, CULL_R, b.solidMask, all);
+          Models.cull(b.ghost, opts.camera, CULL_R, b.ghostMask, all);
+          Models.cull(b.hull, opts.camera, CULL_R, b.hullMask);
+        }
+      // the batches a model swap took away, fading out whole in their ghosts, then gone
+      for (b in dying.copy())
+        {
+          b.fade -= swap;
+          if (b.fade <= 0)
+            {
+              dispose(null, [ b ]);
+              dying.remove(b);
+              continue;
+            }
+          for (i in 0...b.cells.length)
+            {
+              b.solidMask[i] = false;
+              b.ghostMask[i] = true;
+              b.hullMask[i] = false;
+            }
+          b.ghost.mesh.material.opacity = b.fade;
           Models.cull(b.solid, opts.camera, CULL_R, b.solidMask, all);
           Models.cull(b.ghost, opts.camera, CULL_R, b.ghostMask, all);
           Models.cull(b.hull, opts.camera, CULL_R, b.hullMask);

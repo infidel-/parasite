@@ -1057,6 +1057,13 @@ void main() {
         });
     }
 
+// shake the camera for an event that shakes the whole place — see render.CameraRig.quake
+  public function playQuake():Void
+    {
+      if (running)
+        rig.quake();
+    }
+
 // grip-struggle shake (parasite + host wrestle) — see render.choreo.Reactions
   public function playGripStruggle(parasite:Entity, host:Entity):Void
     {
