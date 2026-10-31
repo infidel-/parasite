@@ -87,28 +87,28 @@
       "tex": 512,
       "seed": 1550890212,
       "baseColor": [
-        0.16,
-        0.16,
-        0.16,
+        0.45,
+        0.45,
+        0.45,
         1
       ],
       "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the LEFT intact pillar, bending toward +x (the skin). the master pillar: the first left/right rolls came back as two different stones (the right one 14 components at 80.8%, chroma 11 against 48), so both sides are this one roll. 2 components at 55/45 (shaft + tip). baked 156/117/142; propstat asked for 0.10, set lighter so the portal reads over the sewer family.",
       "last_converted": "2026-10-31T14:33:43Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.16,0.16,0.16,1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.45,0.45,0.45,1"
     },
     "sewer/portal-pillar-r": {
       "src": "sewer/portal-pillar-mirror.glb",
       "tris": -1,
       "tex": 512,
       "baseColor": [
-        0.16,
-        0.16,
-        0.16,
+        0.45,
+        0.45,
+        0.45,
         1
       ],
       "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the RIGHT intact pillar: portal-pillar.glb mirrored across x by models-src/sewer/portal_mirror.py (position/normal x negated, winding flipped), so the pair matches the way the 2D art did.",
       "last_converted": "2026-10-31T16:01:12Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.16,0.16,0.16,1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.45,0.45,0.45,1"
     },
     "sewer/portal-skin": {
       "src": "sewer/portal-skin.glb",
@@ -116,14 +116,14 @@
       "tex": 512,
       "seed": 264771440,
       "baseColor": [
-        0.54,
-        0.54,
-        0.54,
+        0.85,
+        0.85,
+        0.85,
         1
       ],
       "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the flayed skin stretched between the pillars, with the three starry orbs and the ooze drips; its plane faces +z. 9 components at 60.9% largest -- the orbs and drip strands are their own shells, by design, not a blob cloud. split 2.13x. baked 126/49/40 (chroma 86).",
       "last_converted": "2026-10-31T14:30:05Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.54,0.54,0.54,1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.85,0.85,0.85,1"
     },
     "sewer/portal-base": {
       "src": "sewer/portal-base.glb",
@@ -131,14 +131,14 @@
       "tex": 512,
       "seed": 1549143282,
       "baseColor": [
-        0.32,
-        0.32,
-        0.32,
+        0.5,
+        0.5,
+        0.5,
         1
       ],
       "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the floor piece of both states: a starry tar pool inside a carved stone ritual ring, 1 component, flat (widest/height 27). baked 83/80/87.",
       "last_converted": "2026-10-31T14:30:35Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.32,0.32,0.32,1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.5,0.5,0.5,1"
     },
     "sewer/portal-broken-l": {
       "src": "sewer/portal-broken-l.glb",
@@ -146,14 +146,14 @@
       "tex": 512,
       "seed": 708142963,
       "baseColor": [
-        0.17,
-        0.17,
-        0.17,
+        0.55,
+        0.55,
+        0.55,
         1
       ],
       "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the LEFT pillar snapped, bending toward +x. 3 components at 55/43 -- the broken top rests on the shaft. baked 104/96/130.",
       "last_converted": "2026-10-31T14:30:56Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.17,0.17,0.17,1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1"
     },
     "sewer/portal-broken-r": {
       "src": "sewer/portal-broken-r.glb",
@@ -161,14 +161,14 @@
       "tex": 512,
       "seed": 1286159724,
       "baseColor": [
-        0.28,
-        0.28,
-        0.28,
+        0.65,
+        0.65,
+        0.65,
         1
       ],
       "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the RIGHT pillar broken down to a stump, 1 component. baked 91/72/109.",
       "last_converted": "2026-10-31T14:31:25Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.28,0.28,0.28,1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.65,0.65,0.65,1"
     },
     "sewer/portal-rubble": {
       "src": "sewer/portal-rubble.glb",
@@ -176,14 +176,14 @@
       "tex": 512,
       "seed": 1284769845,
       "baseColor": [
-        0.27,
-        0.27,
-        0.27,
+        0.4,
+        0.4,
+        0.4,
         1
       ],
       "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the fallen chunks lying in a starry tar splash, where the skin stood. 6 components at 69% -- separate stones, by design. baked 79/79/100.",
       "last_converted": "2026-10-31T14:31:47Z",
-      "last_sig": "n1/-1/512/0.01/-/-/bc0.27,0.27,0.27,1"
+      "last_sig": "n1/-1/512/0.01/-/-/bc0.4,0.4,0.4,1"
     },
     "sewer/drum": {
       "src": "sewer/drum.glb",

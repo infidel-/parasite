@@ -571,6 +571,33 @@ class ObjModels
       tol: 0.45,
     };
 
+// one piece of the sewer summoning portal. objects.mission.SummoningPortal is a 2x2 group of four
+// objects, each keyed on its part index (getModelKey), so each part places ONE piece and `off` moves
+// it from its own cell to where the piece stands in the group: the pillars on the row boundary of
+// the top two cells, the skin and the floor piece on the group's centre. every piece faces the
+// camera, and none casts the fake shadow, which would be the old 2D quarter icon
+  static function portalPiece(keys:Array<String>, path:String, h:Float, off:Array<Float>):ObjModel
+    return {
+      keys: keys,
+      path: path,
+      h: h,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: off,
+      noCast: true,
+    };
+
   // every object-backed prop there is. ONE table: build() places from it, render.View warms every
   // entry at boot, modelFor() is the lookup and render.particles.PropLights reads the `light` rows —
   // so a new prop is a row here plus its path in RenderConfig.MODELS, nothing to keep in sync by hand.
@@ -823,6 +850,17 @@ class ObjModels
       noCast: true, // its shaft lamp stays over the cell and shadows it onto the wall for real; the
                     // fake one was the 2D ladder lying flat at the cell centre
     },
+    // the cult summoning portal (portalPiece): part 0 top-left, 1 top-right, 2 bottom-left, 3
+    // bottom-right. the two pillars pull in toward the skin hung between them; the floor piece is
+    // the same in both states
+    portalPiece([ 'summoning_portal_0' ], RenderConfig.MODELS.portalPillarL, 6.0, [ 0.6, 2.0 ]),
+    portalPiece([ 'summoning_portal_1' ], RenderConfig.MODELS.portalPillarR, 6.0, [ -0.6, 2.0 ]),
+    portalPiece([ 'summoning_portal_2' ], RenderConfig.MODELS.portalSkin, 5.8, [ 2.0, -2.0 ]),
+    portalPiece([ 'summoning_portal_3', 'summoning_portal_broken_3' ], RenderConfig.MODELS.portalBase,
+      0.26, [ -2.0, -2.0 ]),
+    portalPiece([ 'summoning_portal_broken_0' ], RenderConfig.MODELS.portalBrokenL, 5.0, [ 0.6, 2.0 ]),
+    portalPiece([ 'summoning_portal_broken_1' ], RenderConfig.MODELS.portalBrokenR, 2.2, [ -0.6, 2.0 ]),
+    portalPiece([ 'summoning_portal_broken_2' ], RenderConfig.MODELS.portalRubble, 1.0, [ 2.0, -2.0 ]),
     // the mountain cave's exit (HabitatExit.getModelKey off its name): an arch of boulders backed onto
     // the rock it opens from, its scree slope running out across the cell
     {

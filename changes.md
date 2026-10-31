@@ -3,6 +3,7 @@
 ## 1.0.2
 
 ### Changes
+- art: the sewer summoning portal is 3D — rock pillars, the skin hung between them and a ritual pool, broken into rubble when the ritual ends
 - ui: changelog button on the main menu shows what changed in each version, with a glowing dot until the new version's changes are read
 - ui: the mouse path shows the energy the move will cost the parasite or host at its end, red when the move would drain it dry
 

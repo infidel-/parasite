@@ -78,6 +78,8 @@ class SummoningPortal extends AreaObject
           portal.updatePortalIcon();
           area.recalcTile(portal.x, portal.y);
         }
+      // every part's model key just changed, and the 3D props are only placed at build
+      game.scene.updateObjects3D();
     }
 
 // remove every portal part object from its area
@@ -167,6 +169,12 @@ class SummoningPortal extends AreaObject
         return;
 
       ritual.onPortalProximity(this);
+    }
+
+// each part of the group draws its own 3D piece (render.world.ObjModels.portalPiece), intact or broken
+  public override function getModelKey(): String
+    {
+      return (isBroken ? 'summoning_portal_broken_' : 'summoning_portal_') + portalPartIndex;
     }
 
 // block movement on intact portal tiles

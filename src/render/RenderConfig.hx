@@ -749,6 +749,15 @@ class RenderConfig {
     sewerBlock: 'models/sewer/block.glb',   // broken half of a hollow concrete block, rebar stub
     sewerBricks: 'models/sewer/bricks.glb', // low heap of broken bricks and concrete fragments
     sewerPipe: 'models/sewer/pipe.glb',     // short broken section of concrete sewer pipe, on its side
+    // the cult summoning portal (objects.mission.SummoningPortal), one glb per part of its 2x2 group
+    // so the skin can move on its own (render.world.ObjModels)
+    portalPillarL: 'models/sewer/portal-pillar-l.glb',   // left rock pillar, bending in toward the skin
+    portalPillarR: 'models/sewer/portal-pillar-r.glb',   // its mirror on the right
+    portalSkin: 'models/sewer/portal-skin.glb',          // the flayed skin hung between them, orbs and drips
+    portalBase: 'models/sewer/portal-base.glb',          // starry tar pool in a carved ritual ring
+    portalBrokenL: 'models/sewer/portal-broken-l.glb',   // the left pillar, snapped
+    portalBrokenR: 'models/sewer/portal-broken-r.glb',   // the right one, down to a stump
+    portalRubble: 'models/sewer/portal-rubble.glb',      // fallen chunks in a tar splash
     // the mountain cave habitat's hand-modelled kit (models-src/cave/cave_build.py): the exit, then
     // the dressing render.cave.CaveProps deals against the wall foot
     caveExit: 'models/cave/mouth.glb',              // the cave mouth: boulder arch over a scree slope
