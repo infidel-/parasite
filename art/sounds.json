@@ -3554,6 +3554,42 @@
       "last_outputs": [
         "choir/scream1.mp3"
       ]
+    },
+    "sewer/ritual": {
+      "area": "sewer",
+      "loop": true,
+      "variants": [
+        {
+          "file": "sewer/ritual-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a small circle of hooded cultists chanting a summoning incantation in unison, deep monotone murmured syllables in an unknown ancient language, slow steady rhythm, low male and female voices droning together, constant, no events, echoing in an underground brick sewer chamber at night, realistic recording, no instruments, no music",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, elevenlabs and sonilo both picked by ear; cassette in sounds-src/unused/sewer"
+        },
+        {
+          "file": "sewer/ritual-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "a small circle of hooded cultists chanting a summoning incantation in unison, deep monotone murmured syllables in an unknown ancient language, slow steady rhythm, low male and female voices droning together, constant, no events, echoing in an underground brick sewer chamber at night, realistic recording, no instruments, no music",
+          "duration": 19.969161,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, elevenlabs and sonilo both picked by ear; cassette in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-11-01T01:56:22",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "sewer/ritual1.mp3",
+        "sewer/ritual2.mp3"
+      ]
     }
   }
 }
