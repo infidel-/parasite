@@ -2397,3 +2397,39 @@ Pieces ~4.7-4.9k tris each, tex 512. `baseColor` fitted live in the dark ritual 
 - Saving is blocked inside a mission area, so every reload needs the ordeal set up again.
 
 **Verdict:** landed. No glow on the orbs, no portal light and no tear animation on break.
+
+## The summoning portal, round 2: stars in its eyes, tar that shimmers, a violet light (`PropTar`)
+
+Asked for, after the first pass: the whole portal 15% smaller (pillars read too thick), the skin's arm
+tips off the outside of the pillars, a black pool where the skin pours, black blood's shimmer and glints
+on every black part, the eyes and mouth as windows onto space, the cursor on any piece outlining all of
+it, and the portal as a violet light source with fake shadows.
+
+**Change:** every portal row's `h` and pillar `off` x 0.85 (pillars ±1.19 off the group centre).
+`models-src/sewer/portal_skin_fit.py` pulls the skin's x in over its top third (x 0.6 at the crown) into
+`portal-skin-fit.glb`, the manifest's new src. New column `?tar:PropTar` in `PropGlow`'s patch: tar is
+albedo under a LINEAR luminance key, plus `pools` (box-frame ellipses painted black), and `holes` that
+override both with three parallax star layers and a faint nebula. Tar takes `Blood.shimmerColor`'s hue
+film on `BLOOD`'s own cycle, and per-cell glints on `BLOOD`'s bucket length and odds (3x3 neighbourhood,
+so rays cross cell edges). `PropGlow.patch`/`patchMesh` now take the `ObjModel` row, like `PropShader`.
+`PropLight` gains `?y` (height fraction) and `?shadows`. `PropLights` puts the light where the prop
+STANDS (`standsAt`), not on its cell, and publishes casting slots as `LampPost`s for
+`SewerArea.shadowLamps`. `AreaObject.getHoverGroup()` (the portal returns its four parts) feeds
+`ObjModels.cull`'s hull mask.
+
+**Measured:** sewer warm 178 programs = live 178. Hiding both tar meshes changed nothing measurable:
+GPU 28.3/28.1/27.9 on against 25.5/28.1/28.1 off, with the laptop in a slow 30 fps state. +0 draw calls;
+the light takes 1 of `PROP_LIGHT`'s 2 slots, and 1 fake-shadow post. Holes: the dark texels whose red
+beats their blue (streaks run the other way), clustered: eyes ~0.07 x 0.06 of the box, mouth 0.088 x 0.112.
+
+**The traps:**
+- Film 0.15 made the pool read as a red or teal floor rather than a black one. It needs a trough near
+  zero: `0.1 + 0.9 * w^2` at 0.02.
+- Hole rims at the first tint bloomed into lilac rings; ~1/9 of it is a lip.
+- `PropLights` dereferenced `m.light` on a slot whose owner's KEY had moved to a lightless row (skin to
+  rubble on break). No organ ever changed key, so this was latent; the slot now goes dark on the spot.
+- `cast` is a Haxe keyword, hence `PropLight.shadows`.
+- The box frame's +v (z) is SOUTH, toward the camera. Probed live with an off-centre test pool.
+
+**Verdict:** landed. The point light still lands a pink hot spot between the eyes from a low orbit. It
+is not visible from the tunnel camera's own pitch.

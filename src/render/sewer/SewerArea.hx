@@ -142,10 +142,11 @@ class SewerArea implements Area3D
       props = render.world.ObjModels.build(sceneRef, game, objYaw, null, objWall);
     }
 
-// every light down here is a pooled fixture — a manhole shaft or a wall bracket — so the fake
-// shadows come from LampLights.active()
+// every LAMP down here is a pooled fixture — a manhole shaft or a wall bracket — so their fake
+// shadows come from LampLights.active(). what this adds is the glowing props whose light casts
+// (PropLight.shadows: the summoning portal), served by the prop light pool rather than the lamps'
   public function shadowLamps():Array<render.particles.LampPost>
-    return [];
+    return propLights.shadows();
 
 // no park out here, so no swarm — see render.Area3D.flyLamps
   public function flyLamps():Array<render.particles.LampPost>

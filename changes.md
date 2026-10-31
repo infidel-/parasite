@@ -3,7 +3,7 @@
 ## 1.0.2
 
 ### Changes
-- art: the sewer summoning portal is 3D — rock pillars, a breathing skin hung between them and a ritual pool, broken into rubble when the ritual ends
+- art: the sewer summoning portal is 3D — rock pillars, a breathing skin hung between them and a ritual pool, broken into rubble when the ritual ends; its eyes and mouth open onto starry space, its black ooze shimmers and glints into a black pool, it lights the room violet and throws shadows, and the cursor on any part outlines all of it
 - ui: changelog button on the main menu shows what changed in each version, with a glowing dot until the new version's changes are read
 - ui: the mouse path shows the energy the move will cost the parasite or host at its end, red when the move would drain it dry
 

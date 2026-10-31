@@ -177,6 +177,14 @@ class SummoningPortal extends AreaObject
       return (isBroken ? 'summoning_portal_broken_' : 'summoning_portal_') + portalPartIndex;
     }
 
+// the cursor on any part outlines the whole portal, pillars, skin and pool together
+  public override function getHoverGroup(): Array<AreaObject>
+    {
+      var area = game.region.get(areaID);
+      return [ for (objectID in getGroupObjectIDs())
+        if (area.getObject(objectID) != null) area.getObject(objectID) ];
+    }
+
 // block movement on intact portal tiles
   public override function isWalkable(): Bool
     {

@@ -2,10 +2,8 @@ package render.world;
 
 import three.Three;
 import render.RenderConfig;
-import render.world.ObjModels.PropShine;
+import render.world.ObjModels.ObjModel;
 import render.world.ObjModels.PropKey;
-import render.world.ObjModels.PropEyes;
-import render.world.ObjModels.PropLamps;
 import render.world.PropShader.ShaderPatch;
 
 // the grown props' SURFACE GLOW, folded into the material they already draw with. two terms, both
@@ -69,15 +67,15 @@ class PropGlow
 // patch a mesh's material, tolerating a mesh that is not there yet and a prop that does not glow.
 // every glb-backed prop arrives through a loader callback, so its InstancedMesh is null for the first
 // frames — the same reason render.world.PropShader.patchMesh is called per frame rather than at build
-  public static function patchMesh(o:Object3D, s:PropShine, e:PropEyes, ?l:PropLamps):Void
+  public static function patchMesh(o:Object3D, m:ObjModel):Void
     {
-      if ((s == null && e == null && l == null) ||
+      if ((m.shine == null && m.eyes == null && m.lamps == null && m.tar == null) ||
           !RenderConfig.PROP_GLOW.enabled)
         return;
       if (o != null &&
           o.material != null &&
           o.geometry != null)
-        patch(o.material, o.geometry, s, e, l);
+        patch(o.material, o.geometry, m);
     }
 
 // fold the glow into one material. `geo` is needed as well as the material because every offset and
@@ -90,9 +88,12 @@ class PropGlow
 // here (Standard, Basic and Lambert are three unrelated classes in three.Three) and none of them
 // declares onBeforeCompile / customProgramCacheKey / needsUpdate. render.world.PropShader carries the
 // same note for the same reason
-  public static function patch(mat:Dynamic, geo:BufferGeometry, s:PropShine, e:PropEyes,
-      ?l:PropLamps):Void
+  public static function patch(mat:Dynamic, geo:BufferGeometry, m:ObjModel):Void
     {
+      var s = m.shine;
+      var e = m.eyes;
+      var l = m.lamps;
+      var t = m.tar;
       // the mark lives on the HOOK and not in userData: Material.clone() copies userData but NOT
       // onBeforeCompile, so a userData flag would ride onto the GHOST clones render.Models makes from
       // a patched template and lock them out of the patch they never received
@@ -117,6 +118,7 @@ class PropGlow
       var hasS = (s != null);
       var hasE = (e != null);
       var hasL = (l != null && l.list.length > 0);
+      var hasT = (t != null);
       // the lamp tables, resolved once here. a MARKER hue is normalised by its own max channel and
       // converted to LINEAR first, because that is the space three hands the sampled map back in
       // (an emissive map is declared sRGB and the sampler decodes it) — compare an sRGB constant
@@ -246,6 +248,25 @@ class PropGlow
         lampFull: { value: lampFull },
         // clamped away from 0 because it is a smoothstep WIDTH, like the two eye terms above
         lampTol: { value: hasL ? Math.max(l.tol, 1e-3) : 1.0 },
+        // the tar's BOX frame (PropHole), floored away from 0 because it divides: a flat floor piece
+        // is nearly zero tall, and a sheet nearly zero deep
+        tarMin: { value: new Vector3(bb.min.x, bb.min.y, bb.min.z) },
+        tarSize: { value: new Vector3(Math.max(bb.max.x - bb.min.x, 1e-4), span,
+          Math.max(bb.max.z - bb.min.z, 1e-4)) },
+        tarDark: { value: hasT ? t.dark : 0.0 },
+        tarFlat: { value: hasT && t.flat ? 1.0 : 0.0 },
+        tarPool: { value: hasT ? [ for (h in t.pools) new Vector4(h.u, h.v, h.ru, h.rv) ] : [] },
+        tarHole: { value: hasT ? [ for (h in t.holes) new Vector4(h.u, h.v, h.ru, h.rv) ] : [] },
+        tarFilm: { value: hasT ? t.film : 0.0 },
+        tarGlint: { value: hasT ? t.glint : 0.0 },
+        tarCell: { value: hasT ? t.cell : 1.0 },
+        tarStars: { value: hasT ? t.stars : 0.0 },
+        // black blood's own clock and odds, so the floor's splats and the portal's tar are one stuff
+        tarCycle: { value: RenderConfig.BLOOD.blackCycleMult },
+        tarGlintMult: { value: RenderConfig.BLOOD.blackGlintMult },
+        tarGlintPct: { value: RenderConfig.BLOOD.blackGlintPct / 100 },
+        // and its star's size: Blood.drawStar's quad, whose four rays reach 0.45 of it
+        tarStarR: { value: RenderConfig.BLOOD.blackStarScale * render.particles.Sprites.SIZE * 0.45 },
       };
       var decl =
         'uniform float propGlowTime;\n' +
@@ -292,6 +313,24 @@ class PropGlow
           'uniform vec4 propLampBeat[ ' + l.list.length + ' ];\n' +
           'uniform float propLampFull[ ' + l.list.length + ' ];\n' +
           'uniform float propLampTol;\n' : '') +
+        (hasT ?
+          'uniform vec3 propTarMin;\n' +
+          'uniform vec3 propTarSize;\n' +
+          'uniform float propTarDark;\n' +
+          'uniform float propTarFlat;\n' +
+          // a zero-length uniform array does not compile, so an empty table declares nothing
+          (t.pools.length > 0 ? 'uniform vec4 propTarPool[ ' + t.pools.length + ' ];\n' : '') +
+          (t.holes.length > 0 ? 'uniform vec4 propTarHole[ ' + t.holes.length + ' ];\n' : '') +
+          'uniform float propTarFilm;\n' +
+          'uniform float propTarGlint;\n' +
+          'uniform float propTarCell;\n' +
+          'uniform float propTarStars;\n' +
+          'uniform float propTarCycle;\n' +
+          'uniform float propTarGlintMult;\n' +
+          'uniform float propTarGlintPct;\n' +
+          'uniform float propTarStarR;\n' +
+          'varying vec3 vTarO;\n' +
+          'varying vec3 vTarV;\n' : '') +
         'varying vec3 vGlowPos;\n' +
         'varying float vGlowPh;\n' + // ALREADY hashed to 0..1 by the vertex half — see the note there
         'varying float vGlowCam;\n' + // camera azimuth in the INSTANCE's own local frame
@@ -358,6 +397,13 @@ class PropGlow
         // camera is atan2( localZ, localX ). atan2( x, z ) is the natural-looking spelling and it is
         // 90 degrees wrong — it put the whole sweep on the flank and the far side
         '  vGlowCam = atan( dot( gcd, gm[ 2 ].xyz ), dot( gcd, gm[ 0 ].xyz ) );\n' +
+        // the tar's two WORLD vectors: off the instance's origin (small, so a cell hash keyed on it
+        // keeps its precision — see vGlowPh above) and from the camera, which is the ray a hole's
+        // starfield is looked at along. `position` and not `transformed`, for vGlowPos's reason
+        (hasT ?
+          '  vec3 tw = ( gm * vec4( position, 1.0 ) ).xyz;\n' +
+          '  vTarO = tw - gm[ 3 ].xyz;\n' +
+          '  vTarV = tw - cameraPosition;\n' : '') +
         '  }';
       // BRACED, and the loop bound is a LITERAL: the count rides the program cache key below, because
       // GLSL wants a constant bound and because a row that changes it must compile its own program
@@ -579,7 +625,107 @@ class PropGlow
         '  }\n' +
         '  }\n' +
         '  #endif';
-      var frag = '#include <emissivemap_fragment>\n' + shine + eyes + lamps;
+      // THE TAR. Everything here is in one plane, the row's own (`flat`): swizzled so that .xy lies in
+      // it and .z runs along its normal toward the camera, so the sheet and the floor piece share
+      // every line below. BRACED, and the table loops are literal bounds, for the reasons above
+      var tar = !hasT ? '' :
+        '  {\n' +
+        '  vec3 tb = ( vGlowPos - propTarMin ) / propTarSize;\n' +
+        '  vec2 tq = mix( tb.xy, tb.xz, propTarFlat );\n' +
+        '  vec3 to = mix( vTarO, vTarO.xzy, propTarFlat );\n' +
+        '  vec3 tv = mix( vTarV, vTarV.xzy, propTarFlat );\n' +
+        // keyed on LINEAR luminance after the row's baseColor, which is what diffuseColor holds. the
+        // ternary is not defensive: smoothstep with equal edges is undefined, and 0 means "no key"
+        '  float tl = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );\n' +
+        '  float tar = propTarDark > 0.0 ?\n' +
+        '    1.0 - smoothstep( propTarDark, propTarDark * 2.0, tl ) : 0.0;\n' +
+        (t.pools.length == 0 ? '' :
+          '  for ( int i = 0; i < ' + t.pools.length + '; i ++ )\n' +
+          '  {\n' +
+          '    vec4 tp = propTarPool[ i ];\n' +
+          // a RAGGED rim, so the pool reads as something spilt and not as a painted oval. off the
+          // position and never an atan: atan( 0, 0 ) is undefined, and one NaN texel through the
+          // bloom downsample blacks out the whole frame
+          '    float tr = length( ( tq - tp.xy ) / tp.zw ) +\n' +
+          '      0.07 * sin( tq.x * 61.0 ) * sin( tq.y * 47.0 + 1.3 );\n' +
+          '    tar = max( tar, 1.0 - smoothstep( 0.85, 1.0, tr ) );\n' +
+          '  }\n') +
+        '  float hole = 0.0;\n' +
+        '  float rim = 0.0;\n' +
+        (t.holes.length == 0 ? '' :
+          '  for ( int i = 0; i < ' + t.holes.length + '; i ++ )\n' +
+          '  {\n' +
+          '    vec4 th = propTarHole[ i ];\n' +
+          '    float te = length( ( tq - th.xy ) / th.zw );\n' +
+          '    hole = max( hole, 1.0 - smoothstep( 0.8, 1.0, te ) );\n' +
+          // a thin violet lip just outside, the light of the far side catching the edge
+          '    rim = max( rim, smoothstep( 0.85, 1.0, te ) * ( 1.0 - smoothstep( 1.0, 1.12, te ) ) );\n' +
+          '  }\n') +
+        '  tar *= 1.0 - hole;\n' +
+        '  diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.003 ), tar );\n' +
+        // the FILM: Blood.shimmerColor's hue, ping-ponging over teal -> violet -> magenta on Blood's
+        // own cycle (hsl, s 0.85, l 0.6), phased by position so the colour runs along a streak in
+        // bands instead of the whole sheet changing at once, and swelling on a slow travelling wave
+        // whose trough is near zero — an oil slick is mostly black with the colour sliding over it,
+        // and a film that never left was measured reading as a red or teal floor, not a black one
+        '  float tt = fract( propGlowTime / propTarCycle + dot( to.xy, vec2( 0.11, 0.07 ) ) + vGlowPh );\n' +
+        '  float tri = 1.0 - abs( 1.0 - tt * 2.0 );\n' +
+        '  vec3 tk = clamp( abs( fract( 0.5 + 0.45 * tri + vec3( 0.0, 2.0, 1.0 ) / 3.0 ) * 6.0 - 3.0 ) - 1.0,\n' +
+        '    0.0, 1.0 );\n' +
+        '  float fw = 0.5 + 0.5 * sin( dot( to.xy, vec2( 2.3, 1.7 ) ) + propGlowTime * 0.07 );\n' +
+        '  vec3 film = pow( 0.6 + 0.68 * ( tk - 0.5 ), vec3( 2.2 ) ) * ( 0.1 + 0.9 * fw * fw );\n' +
+        // the GLINTS: Blood.glintEnv per CELL of the plane rather than per splat — each cell's time is
+        // bucketed off its own phase, a hash of ( cell, bucket ) lights blackGlintPct of the buckets,
+        // and the star swells and fades on a sine bell over the bucket, scale and brightness together
+        // so it never pops. the 3x3 neighbourhood is so a star near its cell's edge keeps its rays.
+        // mod keeps every hash input small, for vGlowPh's reason
+        '  float gs = 0.0;\n' +
+        '  vec2 gc = floor( to.xy / propTarCell );\n' +
+        '  for ( int j = -1; j <= 1; j ++ )\n' +
+        '  for ( int k = -1; k <= 1; k ++ )\n' +
+        '  {\n' +
+        '    vec2 c = gc + vec2( float( j ), float( k ) );\n' +
+        '    float ch = propGlowHash( mod( c.x, 64.0 ) * 12.9898 + mod( c.y, 64.0 ) * 78.233 + vGlowPh );\n' +
+        '    float ct = propGlowTime / propTarGlintMult + ch;\n' +
+        '    if ( propGlowHash( mod( floor( ct ), 128.0 ) * 0.7123 + ch * 41.3 ) >= propTarGlintPct )\n' +
+        '      continue;\n' +
+        '    float env = sin( 3.14159 * fract( ct ) );\n' +
+        '    vec2 cp = ( c + 0.2 + 0.6 * vec2( propGlowHash( ch * 17.17 ), propGlowHash( ch * 31.31 + 2.0 ) ) ) *\n' +
+        '      propTarCell;\n' +
+        // Blood.STAR_SVG's shape: two thin diamonds crossed, over a small round core
+        '    vec2 dd = abs( to.xy - cp ) / ( propTarStarR * env + 1e-4 );\n' +
+        '    gs += env * ( max( 0.0, 1.0 - dd.x - dd.y * 6.0 ) + max( 0.0, 1.0 - dd.y - dd.x * 6.0 ) +\n' +
+        '      max( 0.0, 1.0 - length( dd ) * 3.0 ) );\n' +
+        '  }\n' +
+        '  totalEmissiveRadiance += tar * ( film * propTarFilm + vec3( 0.86, 0.73, 1.0 ) * propTarGlint * gs );\n' +
+        // the HOLES: unlit, since everything in one is light from beyond it, and that light is three
+        // layers of stars on planes behind the surface. each layer is where the view ray meets a plane
+        // `depth` back along the normal, so a deeper layer slides further against the rim as the
+        // camera moves — the parallax is the whole of the "window". each cell holds at most one star,
+        // twinkling on a beat of its own, white-blue or warm
+        (t.holes.length == 0 ? '' :
+          '  diffuseColor.rgb *= 1.0 - hole;\n' +
+          '  vec3 sd = normalize( tv );\n' +
+          '  vec3 sky = vec3( 0.0 );\n' +
+          '  for ( int k = 0; k < 3; k ++ )\n' +
+          '  {\n' +
+          '    float fk = float( k );\n' +
+          '    vec2 sp = ( to.xy + sd.xy * ( ( 0.8 + fk * 1.6 ) / max( -sd.z, 0.25 ) ) ) * ( 5.0 - fk );\n' +
+          '    vec2 sc = floor( sp );\n' +
+          '    float sh = propGlowHash( mod( sc.x, 64.0 ) * 12.9898 + mod( sc.y, 64.0 ) * 78.233 + fk * 7.31 );\n' +
+          '    vec2 so = 0.2 + 0.6 * vec2( propGlowHash( sh * 17.17 ), propGlowHash( sh * 31.31 + 2.0 ) );\n' +
+          '    float sr = length( fract( sp ) - so ) / ( 0.05 + 0.07 * sh );\n' +
+          '    float sw = 0.55 + 0.45 * sin( propGlowTime * ( 0.4 + sh ) + sh * 40.0 );\n' +
+          '    vec3 st = mix( vec3( 0.7, 0.8, 1.0 ), vec3( 1.0, 0.8, 0.5 ), propGlowHash( sh * 5.5 ) );\n' +
+          '    sky += st * step( 0.45, sh ) * exp( - sr * sr * 3.0 ) * sw * ( 1.0 - fk * 0.25 );\n' +
+          '  }\n' +
+          // a faint violet nebula behind them all, drifting, so the dark between the stars has depth
+          '  vec2 np = to.xy + sd.xy * ( 4.0 / max( -sd.z, 0.25 ) );\n' +
+          '  float neb = 0.5 + 0.5 * sin( np.x * 1.3 + propGlowTime * 0.03 ) * sin( np.y * 1.1 - propGlowTime * 0.02 );\n' +
+          '  totalEmissiveRadiance += hole * ( sky * propTarStars + vec3( 0.05, 0.01, 0.1 ) * neb ) +\n' +
+          '    vec3( 0.04, 0.01, 0.09 ) * rim * ( 1.0 - hole );\n') +
+        '  }';
+      var frag = '#include <emissivemap_fragment>\n' + shine + eyes + lamps + tar;
       // Dynamic, and it cannot be a typed function: `prev` is CALLED like one below and also carries
       // the previous patch's marker FIELDS, which the loop further down copies with Reflect. Haxe has
       // no type for "function with arbitrary own properties", which is exactly what a JS hook is here
@@ -625,6 +771,23 @@ class PropGlow
               shader.uniforms.propLampFull = u.lampFull;
               shader.uniforms.propLampTol = u.lampTol;
             }
+          if (hasT)
+            {
+              shader.uniforms.propTarMin = u.tarMin;
+              shader.uniforms.propTarSize = u.tarSize;
+              shader.uniforms.propTarDark = u.tarDark;
+              shader.uniforms.propTarFlat = u.tarFlat;
+              shader.uniforms.propTarPool = u.tarPool;
+              shader.uniforms.propTarHole = u.tarHole;
+              shader.uniforms.propTarFilm = u.tarFilm;
+              shader.uniforms.propTarGlint = u.tarGlint;
+              shader.uniforms.propTarCell = u.tarCell;
+              shader.uniforms.propTarStars = u.tarStars;
+              shader.uniforms.propTarCycle = u.tarCycle;
+              shader.uniforms.propTarGlintMult = u.tarGlintMult;
+              shader.uniforms.propTarGlintPct = u.tarGlintPct;
+              shader.uniforms.propTarStarR = u.tarStarR;
+            }
           if (hasE)
             {
               shader.uniforms.propEyeC = u.eyeC;
@@ -647,6 +810,7 @@ class PropGlow
           shader.vertexShader = 'varying vec3 vGlowPos;\n' +
             'varying float vGlowPh;\n' +
             'varying float vGlowCam;\n' +
+            (hasT ? 'varying vec3 vTarO;\nvarying vec3 vTarV;\n' : '') +
             StringTools.replace(shader.vertexShader, '#include <begin_vertex>', vert);
           // <emissivemap_fragment> is the anchor because it is where three has just finished with
           // totalEmissiveRadiance and diffuseColor is still in scope — one anchor gives both the
@@ -683,7 +847,9 @@ class PropGlow
           // loop bound in the source above while every colour, depth, rate and phase is a uniform.
           // a row with no lamps appends nothing, so every key already warmed is byte-identical to
           // what it was before this column existed and nothing recompiles
-          (hasL ? 'L' + l.list.length : '');
+          (hasL ? 'L' + l.list.length : '') +
+          // the tar's two table counts, for the same reason: both are literal loop bounds
+          (hasT ? 'T' + t.pools.length + 'h' + t.holes.length : '');
       mat.needsUpdate = true;
     }
 }

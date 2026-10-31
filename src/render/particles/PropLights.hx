@@ -27,6 +27,8 @@ class PropLights {
   var lights:Array<PointLight> = [];
   var owners:Array<AreaObject> = []; // the object each slot serves (null = free)
   var intens:Array<Float> = [];      // eased 0..1 claim level per slot, NOT the published intensity
+  var posts:Array<LampPost> = [];    // per slot and reused, the fake-shadow source it stands for
+  var casting:Array<LampPost> = [];  // this frame's lit slots whose prop's light casts (PropLight.shadows)
 
   public function new(group:Object3D)
     {
@@ -42,8 +44,26 @@ class PropLights {
           lights.push(l);
           owners.push(null);
           intens.push(0);
+          posts.push({
+            x: 0.0,
+            z: 0.0,
+            y: 1.0,
+            tx: 0.0,
+            tz: 0.0,
+            color: 0,
+            col: 0,
+            row: 0,
+            phase: 0.0,
+            flick: 1.0,
+            mul: 1.0,
+          });
         }
     }
+
+// the lit slots the actors throw fake shadows off this frame (render.Area3D.shadowLamps). each one's
+// `flick` is its slot's fade, so a shadow comes and goes with the light instead of snapping
+  public function shadows():Array<LampPost>
+    return casting;
 
 // the pool as plain Object3Ds, for the debug light toggles (keys 5 and 0)
   public function debugList():Array<Object3D>
@@ -53,6 +73,7 @@ class PropLights {
 // leaving the claim set fades instead of blinking. call once per frame from the area kind's tick
   public function update(game:Game, playerCol:Int, playerRow:Int, dtMs:Float):Void
     {
+      casting.resize(0);
       // pool 0 turns the whole feature off (RenderConfig.PROP_LIGHT.pool) — take the object walk and
       // the sort out with it rather than running them to fill nothing
       if (lights.length == 0)
@@ -113,13 +134,42 @@ class PropLights {
               untyped lights[i].intensity = 0;
               continue;
             }
-          // published fresh every frame: the prop's height decides the light height, so a table tweak
-          // to `h` moves the light with the model instead of leaving it buried or floating
           var m = ObjModels.modelFor(o.getModelKey());
+          // an owner whose model KEY moved to a row with no light (the portal's skin turned to rubble
+          // when its ritual broke) goes dark on the spot: there is no colour left to fade it out in
+          if (m == null ||
+              m.light == null)
+            {
+              untyped lights[i].intensity = 0;
+              owners[i] = null;
+              intens[i] = 0;
+              continue;
+            }
+          // published fresh every frame: the prop's height decides the light height, so a table tweak
+          // to `h` moves the light with the model instead of leaving it buried or floating. and where
+          // the prop STANDS, not its cell: a row's `off` can carry it two units away (the portal's skin
+          // hangs on its group's centre, off the corner of its own cell)
+          var c = ObjModels.standsAt(o.x, o.y, m);
           var w = CityConfig.cellToWorld(o.x, o.y);
-          lights[i].position.set(w.x, render.world.WorldCtx.floorY(o.x, o.y) + m.h * P.yMul, w.z);
+          var wx = (c != null ? c.x : w.x);
+          var wz = (c != null ? c.z : w.z);
+          var y = m.h * (m.light.y != null ? m.light.y : P.yMul);
+          lights[i].position.set(wx, render.world.WorldCtx.floorY(o.x, o.y) + y, wz);
           lights[i].color.setHex(m.light.color);
           untyped lights[i].intensity = P.intensity * m.light.mul * intens[i];
+          if (m.light.shadows != true)
+            continue;
+          var lp = posts[i];
+          lp.x = wx;
+          lp.z = wz;
+          lp.y = y;
+          lp.tx = wx;
+          lp.tz = wz;
+          lp.color = m.light.color;
+          lp.col = o.x;
+          lp.row = o.y;
+          lp.flick = intens[i];
+          casting.push(lp);
         }
     }
 }

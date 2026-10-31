@@ -134,6 +134,11 @@ class AreaObject extends _SaveObject
   public function getModelKey(): String
     { return type; }
 
+// the objects the 3D view outlines together when the cursor is on this one
+// (render.world.ObjModels.cull): just this one, unless it is a piece of a multi-cell group
+  public function getHoverGroup(): Array<AreaObject>
+    { return [ this ]; }
+
 // can be activated when player is next to it?
   public function canActivateNear(): Bool
     { return false; }

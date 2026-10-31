@@ -3,6 +3,7 @@ package render.world;
 import three.Three;
 import citygen.CityConfig;
 import game.Game;
+import objects.AreaObject;
 import render.Area3DTickOpts;
 import render.Models;
 import render.Models.ModelVariant;
@@ -58,8 +59,14 @@ enum PropYaw {
 // setting an absolute one, so a single dial moves every glowing prop and a row only says how bright
 // this one is RELATIVE to its neighbours. the pool that consumes it is render.particles.PropLights
 typedef PropLight = {
-  color:Int, // light colour — each organ's own glow hue, so the light reads as the thing luminescing
-  mul:Float, // multiplier on PROP_LIGHT.intensity
+  color:Int,     // light colour — each organ's own glow hue, so the light reads as the thing luminescing
+  mul:Float,     // multiplier on PROP_LIGHT.intensity
+  ?y:Float,      // light height as a fraction of the prop's `h`, or absent for PROP_LIGHT.yMul (just
+                 // over the crown). a prop that glows from WITHIN its silhouette (the portal's mouth)
+                 // wants it there instead, so the floor and the pillars round it are what it reaches
+  ?shadows:Bool, // the actors throw fake shadows off it (render.actors.LampShadows), the way they do
+                 // off a pooled lamp. absent for an organ, which lights its room without darkening
+                 // anyone in it
 };
 
 // the idle motion folded into a prop's own shaders, or null for one that stands still. every
@@ -454,6 +461,39 @@ typedef PropEyes = {
                   // around with its gaze reads as a sticker
 };
 
+// one ellipse on a PropTar prop, in the BOX frame: fractions of the bounding box's own extent off its
+// minimum, per axis, in the plane PropTar.flat picks. measured off the baked atlas (the method is in
+// docs/3d-changes.md), so it is dead the moment the mesh is regenerated, like PropEye
+typedef PropHole = {
+  u:Float,  // centre along the plane's first axis (x)
+  v:Float,  // and its second: y on a standing sheet, z on a floor piece (+z is toward the camera)
+  ru:Float, // half-widths, same fractions
+  rv:Float,
+};
+
+// the summoning portal's black. its TAR shimmers and glints the way black blood does on the floor
+// (render.decals.Blood, and on Blood's own clock and odds — RenderConfig.BLOOD), and its HOLES open onto
+// deep space: a starfield a few layers deep behind the surface, so it slides against the rim as the
+// camera moves, which is what makes it read as a window and not as a sticker.
+//
+// tar is whatever the baked albedo says is near black, plus `pools` painted black whatever the art
+// under them is. the holes override both. all of it is in WORLD axes, which is right only because every
+// portal piece is PropYaw.FRONTAL — on a prop that could be turned, a standing sheet's plane would not
+// be world XY. consumed by render.world.PropGlow, NO draw call, NO pass and NO art
+typedef PropTar = {
+  dark:Float,              // LINEAR albedo luminance (after `baseColor`) under which a texel is tar,
+                           // ramping in from twice it. 0 keys nothing, so only the pools are tar
+  flat:Bool,               // the plane the ellipses and the glints lie in: false = XY (a standing
+                           // sheet facing the camera), true = XZ (a floor piece)
+  pools:Array<PropHole>,   // painted as tar whatever the art under them is, or empty. the literal count
+  holes:Array<PropHole>,   // and windows onto stars. both COUNTS are loop bounds, so they ride the key
+  film:Float,              // strength of the iridescent film, emissive
+  glint:Float,             // HDR peak of a glint. over BLOOM_THRESHOLD 0.9, or it is only a lighter speck
+  cell:Float,              // world units between glint sites — the density. Blood.drawStar's quad is
+                           // ~0.4 across, so ~1.5 here leaves room for its rays
+  stars:Float,             // HDR peak of the brightest star in a hole
+};
+
 // a live cord arcing from this prop to each AI it holds (objects.AreaObject.getLinkedAI). unlike
 // PropArc above it is CONTINUOUS and TARGETED: no strike buckets, no random azimuth and no length of
 // its own — one ribbon per bound actor, anchored on the prop's surface, bowed over the gap and
@@ -512,6 +552,8 @@ typedef ObjModel = {
   lamps:PropLamps,    // independently pulsing lamp families read off its emissive map, or null.
                       // shares that same patch and is independent of both of the above
   arc:PropArc,        // short lightning discharged off it, or null
+  ?tar:PropTar,       // shimmering black and windows onto space, or absent. shares PropGlow's patch
+                      // and is independent of the three columns there
   tether:PropTether,  // live cord arcing to each AI this object holds, or null for one that holds
                       // none. the BINDING is the object's own (AreaObject.getLinkedAI), so nothing
                       // here knows what a preservator is
@@ -588,14 +630,13 @@ class ObjModels
       tol: 0.45,
     };
 
-// one piece of the sewer summoning portal. objects.mission.SummoningPortal is a 2x2 group of four
-// objects, each keyed on its part index (getModelKey), so each part places ONE piece and `off` moves
-// it from its own cell to where the piece stands in the group: the pillars on the row boundary of
-// the top two cells, the skin and the floor piece on the group's centre. every piece faces the
-// camera, and none casts the fake shadow, which would be the old 2D quarter icon. the skin alone
-// breathes (`billow`)
-  static function portalPiece(keys:Array<String>, path:String, h:Float, off:Array<Float>,
-      ?billow:PropBillow):ObjModel
+// one stone piece of the sewer summoning portal. objects.mission.SummoningPortal is a 2x2 group of
+// four objects, each keyed on its part index (getModelKey), so each part places ONE piece and `off`
+// moves it from its own cell to where the piece stands in the group: the pillars on the row boundary
+// of the top two cells, the skin and the floor piece on the group's centre. every piece faces the
+// camera, and none casts the fake shadow, which would be the old 2D quarter icon. the skin and the
+// floor piece are written out in full in the table, since they carry the columns this leaves null
+  static function portalPiece(keys:Array<String>, path:String, h:Float, off:Array<Float>):ObjModel
     return {
       keys: keys,
       path: path,
@@ -606,7 +647,6 @@ class ObjModels
       anim: null,
       pulse: null,
       curl: null,
-      billow: billow,
       core: null,
       fly: null,
       shine: null,
@@ -871,20 +911,117 @@ class ObjModels
                     // fake one was the 2D ladder lying flat at the cell centre
     },
     // the cult summoning portal (portalPiece): part 0 top-left, 1 top-right, 2 bottom-left, 3
-    // bottom-right. the two pillars pull in toward the skin hung between them; the floor piece is
-    // the same in both states
-    portalPiece([ 'summoning_portal_0' ], RenderConfig.MODELS.portalPillarL, 6.0, [ 0.6, 2.0 ]),
-    portalPiece([ 'summoning_portal_1' ], RenderConfig.MODELS.portalPillarR, 6.0, [ -0.6, 2.0 ]),
-    portalPiece([ 'summoning_portal_2' ], RenderConfig.MODELS.portalSkin, 5.8, [ 2.0, -2.0 ], {
-      amp: 0.05,
-      rate: 0.25,
-      wave: 0.5,
-    }),
-    portalPiece([ 'summoning_portal_3', 'summoning_portal_broken_3' ], RenderConfig.MODELS.portalBase,
-      0.26, [ -2.0, -2.0 ]),
-    portalPiece([ 'summoning_portal_broken_0' ], RenderConfig.MODELS.portalBrokenL, 5.0, [ 0.6, 2.0 ]),
-    portalPiece([ 'summoning_portal_broken_1' ], RenderConfig.MODELS.portalBrokenR, 2.2, [ -0.6, 2.0 ]),
-    portalPiece([ 'summoning_portal_broken_2' ], RenderConfig.MODELS.portalRubble, 1.0, [ 2.0, -2.0 ]),
+    // bottom-right. the two pillars pull in toward the skin hung between them, 1.19 either side of
+    // the group's centre (the cell centres are 2 off it); the floor piece is the same in both states
+    portalPiece([ 'summoning_portal_0' ], RenderConfig.MODELS.portalPillarL, 5.1, [ 0.81, 2.0 ]),
+    portalPiece([ 'summoning_portal_1' ], RenderConfig.MODELS.portalPillarR, 5.1, [ -0.81, 2.0 ]),
+    {
+      keys: [ 'summoning_portal_2' ],
+      path: RenderConfig.MODELS.portalSkin,
+      h: 4.93,
+      sink: 0.0,
+      yaw: FRONTAL,
+      // the portal's own light, from its mouth: an eerie violet over the ring, the pillars and anyone
+      // standing at it, who throws a shadow off it. it goes with the skin when the ritual is broken
+      light: {
+        color: 0x9a5cff,
+        mul: 2.0,
+        y: 0.5,
+        shadows: true,
+      },
+      anim: null,
+      pulse: null,
+      curl: null,
+      billow: {
+        amp: 0.05,
+        rate: 0.25,
+        wave: 0.5,
+      },
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      // the eyes and the mouth open onto space and everything else that is black is tar. the three
+      // holes are measured off the baked atlas: the dark texels whose red beats their blue (the
+      // streaks run the other way), clustered, centre and 2nd..98th percentile extent
+      tar: {
+        dark: 0.02,
+        flat: false,
+        pools: [],
+        holes: [
+          {
+            u: 0.389,
+            v: 0.649,
+            ru: 0.07,
+            rv: 0.062,
+          },
+          {
+            u: 0.606,
+            v: 0.645,
+            ru: 0.072,
+            rv: 0.066,
+          },
+          {
+            u: 0.499,
+            v: 0.368,
+            ru: 0.088,
+            rv: 0.112,
+          },
+        ],
+        film: 0.02,
+        glint: 3.0,
+        cell: 0.35,
+        stars: 2.0,
+      },
+      off: [ 2.0, -2.0 ],
+      noCast: true,
+    },
+    {
+      keys: [ 'summoning_portal_3', 'summoning_portal_broken_3' ],
+      path: RenderConfig.MODELS.portalBase,
+      h: 0.221,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      // the black the skin pours into, centred under its drips and spreading toward the camera, where
+      // the floor in front of the skin is seen (+v is south, probed live). painted, not keyed: the
+      // ring's own pool is a starry violet and only the spill is tar
+      tar: {
+        dark: 0.0,
+        flat: true,
+        pools: [
+          {
+            u: 0.5,
+            v: 0.56,
+            ru: 0.2,
+            rv: 0.15,
+          },
+        ],
+        holes: [],
+        film: 0.02,
+        glint: 3.0,
+        cell: 0.35,
+        stars: 0.0,
+      },
+      off: [ -2.0, -2.0 ],
+      noCast: true,
+    },
+    portalPiece([ 'summoning_portal_broken_0' ], RenderConfig.MODELS.portalBrokenL, 4.25, [ 0.81, 2.0 ]),
+    portalPiece([ 'summoning_portal_broken_1' ], RenderConfig.MODELS.portalBrokenR, 1.87, [ -0.81, 2.0 ]),
+    portalPiece([ 'summoning_portal_broken_2' ], RenderConfig.MODELS.portalRubble, 0.85, [ 2.0, -2.0 ]),
     // the mountain cave's exit (HabitatExit.getModelKey off its name): an arch of boulders backed onto
     // the rock it opens from, its scree slope running out across the cell
     {
@@ -1655,8 +1792,8 @@ class ObjModels
       PropShader.patchMesh(so, m);
       PropShader.patchMesh(gh, m);
       PropShader.patchMesh(hu, m);
-      PropGlow.patchMesh(so, m.shine, m.eyes, m.lamps);
-      PropGlow.patchMesh(gh, m.shine, m.eyes, m.lamps);
+      PropGlow.patchMesh(so, m);
+      PropGlow.patchMesh(gh, m);
     }
 
 // tear every batch out of the scene, so build() can run again after an object was added to or removed
@@ -1703,6 +1840,19 @@ class ObjModels
         opts.hover.y == cell.row);
     }
 
+// is one of the hovered objects standing on this cell AND drawn by this row? the row test is what
+// keeps a second prop sharing the cell from lighting with it
+  static function hoverHit(hov:Array<AreaObject>, cell:{ col:Int, row:Int }, m:ObjModel):Bool
+    {
+      if (hov != null)
+        for (o in hov)
+          if (o.x == cell.col &&
+              o.y == cell.row &&
+              modelFor(o.getModelKey()) == m)
+            return true;
+      return false;
+    }
+
 // per-frame prop pass: fade the prop the player is STANDING on to see-through so its body does not
 // hide the sprite (the tunnel camera looks near straight down and the exit ladder is a whole cell
 // tall), show the outline shells while the tactical view is up, then repack all three batches for the
@@ -1716,6 +1866,9 @@ class ObjModels
       // camera pulls out instead of staying see-through for the whole shot
       var col = opts.outro ? -1 : opts.playerCol;
       var row = opts.outro ? -1 : opts.playerRow;
+      // what the hover pick outlines: the object under the cursor, or every piece of the group it is
+      // part of (a summoning portal's pillars, skin and pool light together whichever one was picked)
+      var hov = (opts.ui && opts.hover != null ? opts.hover.getHoverGroup() : null);
       for (b in batches)
         {
           // the glb resolves through a loader callback, so every batch is mesh-less for the first few
@@ -1746,8 +1899,7 @@ class ObjModels
               b.ghostMask[i] = g;
               b.solidMask[i] = !g || b.model.ghostPart == true;
               b.hullMask[i] = tactical ||
-                (hovered(opts, b.cells[i]) &&
-                 modelFor(opts.hover.getModelKey()) == b.model);
+                hoverHit(hov, b.cells[i], b.model);
             }
           // one opacity for the batch is correct BECAUSE only one placement can be mid-fade. a true
           // cross-dissolve is impossible here and must not be attempted: the solid material is shared
