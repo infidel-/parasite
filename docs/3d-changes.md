@@ -2405,17 +2405,20 @@ tips off the outside of the pillars, a black pool where the skin pours, black bl
 on every black part, the eyes and mouth as windows onto space, the cursor on any piece outlining all of
 it, and the portal as a violet light source with fake shadows.
 
-**Change:** every portal row's `h` and pillar `off` x 0.85 (pillars ±1.19 off the group centre).
-`models-src/sewer/portal_skin_fit.py` pulls the skin's x in over its top third (x 0.6 at the crown) into
-`portal-skin-fit.glb`, the manifest's new src. New column `?tar:PropTar` in `PropGlow`'s patch: tar is
+**Change:** every portal row's `h` x 0.85, then on review the pillars out to ±1.44 off the group centre
+and the ring x 1.2 (its pool ellipse shrunk to keep its world size). `models-src/sewer/portal_skin_fit.py`
+pulls the skin's x in over its top third (x 0.6 at the crown) and widens all of it x 1.2, so the waist
+still meets the moved pillars, into `portal-skin-fit.glb`, the manifest's new src. A uniform x scale keeps
+every box-fraction hole where it was. New column `?tar:PropTar` in `PropGlow`'s patch: tar is
 albedo under a LINEAR luminance key, plus `pools` (box-frame ellipses painted black), and `holes` that
 override both with three parallax star layers and a faint nebula. Tar takes `Blood.shimmerColor`'s hue
 film on `BLOOD`'s own cycle, and per-cell glints on `BLOOD`'s bucket length and odds (3x3 neighbourhood,
 so rays cross cell edges). `PropGlow.patch`/`patchMesh` now take the `ObjModel` row, like `PropShader`.
-`PropLight` gains `?y` (height fraction), `?shadows` and `?skipSelf`. The last zeroes any point light
-inside the prop's own body (view-space centre, half its height as reach) in an expanded copy of r181's
-`lights_fragment_begin`. three has no per-mesh light exclusion, and a light hung in the skin's plane
-lands a pink hot spot on it. `PropLights` puts the light where the prop
+`PropLight` gains `?y` (height fraction), `?shadows` and `?skipSelf`. The last zeroes the prop's OWN
+point light, found where `PropLights` hangs it (footprint centre, `y` of the height up, within a tenth
+of it), in an expanded copy of r181's `lights_fragment_begin`. three has no per-mesh light exclusion.
+The light first hung in the skin's plane (y 0.5) and landed a pink hot spot on it. It now hangs at
+y 1.45, mul 2.8: at the default 1.15 it was 0.6 over the pillar tips and burnt them white. `PropLights` puts the light where the prop
 STANDS (`standsAt`), not on its cell, and publishes casting slots as `LampPost`s for
 `SewerArea.shadowLamps`. `AreaObject.getHoverGroup()` (the portal returns its four parts) feeds
 `ObjModels.cull`'s hull mask.
@@ -2434,7 +2437,7 @@ beats their blue (streaks run the other way), clustered: eyes ~0.07 x 0.06 of th
 - `cast` is a Haxe keyword, hence `PropLight.shadows`.
 - The box frame's +v (z) is SOUTH, toward the camera. Probed live with an off-centre test pool.
 
-`skipSelf`, light on against off from a low orbit: skin centre R 30.9 / 31.2 (unchanged), left pillar's
-inner face 63 / 13, ring floor 17 / 9.
+`skipSelf` at y 1.45, light on against off from the tunnel pitch: skin R 30.9 / 30.5 (unchanged),
+pillar tops 50 / 18, ring floor 10 / 5, floor past the ring 8 / 5.
 
 **Verdict:** landed.

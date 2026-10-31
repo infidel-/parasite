@@ -121,8 +121,8 @@
         0.85,
         1
       ],
-      "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the flayed skin stretched between the pillars, with the three starry orbs and the ooze drips; its plane faces +z. 9 components at 60.9% largest -- the orbs and drip strands are their own shells, by design, not a blob cloud. split 2.13x. baked 126/49/40 (chroma 86). built from portal-skin-fit.glb: portal-skin.glb with the top third of its width pulled in (models-src/sewer/portal_skin_fit.py, x * 0.6 at the top), so the arms end inside the inward-bent pillar horns instead of past their outside.",
-      "last_converted": "2026-10-31T17:28:47Z",
+      "note": "the sewer summoning portal (objects.mission.SummoningPortal, one part per 2x2 cell, placed by render.world.ObjModels). TRELLIS at decimationTarget 5000, tris -1, tex 512 (~53 texels/tri). reference cropped off a packed sheet edited from the old 2D sprite (sewers-objects1.png) on black, value-lifted darks. the flayed skin stretched between the pillars, with the three starry orbs and the ooze drips; its plane faces +z. 9 components at 60.9% largest -- the orbs and drip strands are their own shells, by design, not a blob cloud. split 2.13x. baked 126/49/40 (chroma 86). built from portal-skin-fit.glb: portal-skin.glb with the top third of its width pulled in (models-src/sewer/portal_skin_fit.py, x * 0.6 at the top), so the arms end inside the inward-bent pillar horns instead of past their outside, then all of it x 1.2 wide so the waist meets the pillars set further apart.",
+      "last_converted": "2026-10-31T18:19:33Z",
       "last_sig": "n1/-1/512/0.01/-/-/bc0.85,0.85,0.85,1"
     },
     "sewer/portal-base": {

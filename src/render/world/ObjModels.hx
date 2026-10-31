@@ -67,9 +67,9 @@ typedef PropLight = {
   ?shadows:Bool, // the actors throw fake shadows off it (render.actors.LampShadows), the way they do
                  // off a pooled lamp. absent for an organ, which lights its room without darkening
                  // anyone in it
-  ?skipSelf:Bool, // the prop's OWN surface takes none of it (render.world.PropGlow drops any point light
-                  // inside its body): a light hung in a sheet's plane lands a hot spot on the sheet.
-                  // absent for a light over the crown, which lights the crown on purpose
+  ?skipSelf:Bool, // the prop's OWN surface takes none of it (render.world.PropGlow drops the point light
+                  // standing where render.particles.PropLights hangs this one): a portal's skin is not
+                  // lit by its own mouth. absent for an organ, whose crown it lights on purpose
 };
 
 // the idle motion folded into a prop's own shaders, or null for one that stands still. every
@@ -914,22 +914,24 @@ class ObjModels
                     // fake one was the 2D ladder lying flat at the cell centre
     },
     // the cult summoning portal (portalPiece): part 0 top-left, 1 top-right, 2 bottom-left, 3
-    // bottom-right. the two pillars pull in toward the skin hung between them, 1.19 either side of
+    // bottom-right. the two pillars pull in toward the skin hung between them, 1.44 either side of
     // the group's centre (the cell centres are 2 off it); the floor piece is the same in both states
-    portalPiece([ 'summoning_portal_0' ], RenderConfig.MODELS.portalPillarL, 5.1, [ 0.81, 2.0 ]),
-    portalPiece([ 'summoning_portal_1' ], RenderConfig.MODELS.portalPillarR, 5.1, [ -0.81, 2.0 ]),
+    portalPiece([ 'summoning_portal_0' ], RenderConfig.MODELS.portalPillarL, 5.1, [ 0.56, 2.0 ]),
+    portalPiece([ 'summoning_portal_1' ], RenderConfig.MODELS.portalPillarR, 5.1, [ -0.56, 2.0 ]),
     {
       keys: [ 'summoning_portal_2' ],
       path: RenderConfig.MODELS.portalSkin,
       h: 4.93,
       sink: 0.0,
       yaw: FRONTAL,
-      // the portal's own light, from its mouth: an eerie violet over the ring, the pillars and anyone
-      // standing at it, who throws a shadow off it. it goes with the skin when the ritual is broken
+      // the portal's own light, hung ~2 over the pillar tips (at PROP_LIGHT.yMul's 1.15 it was 0.6
+      // over them and burnt them white): an eerie violet over the ring, the pillars and anyone standing
+      // at it, who throws a shadow off it. the skin itself takes none of it, and it goes with the skin
+      // when the ritual is broken
       light: {
         color: 0x9a5cff,
-        mul: 2.0,
-        y: 0.5,
+        mul: 2.8,
+        y: 1.45,
         shadows: true,
         skipSelf: true,
       },
@@ -986,7 +988,7 @@ class ObjModels
     {
       keys: [ 'summoning_portal_3', 'summoning_portal_broken_3' ],
       path: RenderConfig.MODELS.portalBase,
-      h: 0.221,
+      h: 0.265,
       sink: 0.0,
       yaw: FRONTAL,
       light: null,
@@ -1010,8 +1012,8 @@ class ObjModels
           {
             u: 0.5,
             v: 0.56,
-            ru: 0.2,
-            rv: 0.15,
+            ru: 0.167,
+            rv: 0.125,
           },
         ],
         holes: [],
@@ -1023,8 +1025,8 @@ class ObjModels
       off: [ -2.0, -2.0 ],
       noCast: true,
     },
-    portalPiece([ 'summoning_portal_broken_0' ], RenderConfig.MODELS.portalBrokenL, 4.25, [ 0.81, 2.0 ]),
-    portalPiece([ 'summoning_portal_broken_1' ], RenderConfig.MODELS.portalBrokenR, 1.87, [ -0.81, 2.0 ]),
+    portalPiece([ 'summoning_portal_broken_0' ], RenderConfig.MODELS.portalBrokenL, 4.25, [ 0.56, 2.0 ]),
+    portalPiece([ 'summoning_portal_broken_1' ], RenderConfig.MODELS.portalBrokenR, 1.87, [ -0.56, 2.0 ]),
     portalPiece([ 'summoning_portal_broken_2' ], RenderConfig.MODELS.portalRubble, 0.85, [ 2.0, -2.0 ]),
     // the mountain cave's exit (HabitatExit.getModelKey off its name): an arch of boulders backed onto
     // the rock it opens from, its scree slope running out across the cell

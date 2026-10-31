@@ -266,6 +266,8 @@ class PropGlow
         tarGlint: { value: hasT ? t.glint : 0.0 },
         tarCell: { value: hasT ? t.cell : 1.0 },
         tarStars: { value: hasT ? t.stars : 0.0 },
+        // the own light's height for PropLight.skipSelf, PropLights' own rule
+        ownY: { value: hasO ? (m.light.y != null ? m.light.y : RenderConfig.PROP_LIGHT.yMul) : 0.0 },
         // black blood's own clock and odds, so the floor's splats and the portal's tar are one stuff
         tarCycle: { value: RenderConfig.BLOOD.blackCycleMult },
         tarGlintMult: { value: RenderConfig.BLOOD.blackGlintMult },
@@ -412,13 +414,14 @@ class PropGlow
           '  vec3 tw = ( gm * vec4( position, 1.0 ) ).xyz;\n' +
           '  vTarO = tw - gm[ 3 ].xyz;\n' +
           '  vTarV = tw - cameraPosition;\n' : '') +
-        // the prop's own body for PropLight.skipSelf: its box centre in VIEW space, where three keeps
-        // pointLights[ i ].position, and half its height in world units as the reach. a view matrix
+        // the prop's OWN light for PropLight.skipSelf, where render.particles.PropLights hangs it (over
+        // the box's footprint centre, `y` of the height up) and in VIEW space, where three keeps
+        // pointLights[ i ].position. a tenth of the height in world units is the match: a view matrix
         // has no scale, so a world length is a view length
         (hasO ?
           '  vOwnC = ( viewMatrix * gm *\n' +
-          '    vec4( propGlowCentre + vec3( 0.0, propGlowSpan * 0.5, 0.0 ), 1.0 ) ).xyz;\n' +
-          '  vOwnR = 0.5 * propGlowSpan * length( gm[ 1 ].xyz );\n' : '') +
+          '    vec4( propGlowCentre + vec3( 0.0, propOwnY * propGlowSpan, 0.0 ), 1.0 ) ).xyz;\n' +
+          '  vOwnR = 0.1 * propGlowSpan * length( gm[ 1 ].xyz );\n' : '') +
         '  }';
       // BRACED, and the loop bound is a LITERAL: the count rides the program cache key below, because
       // GLSL wants a constant bound and because a row that changes it must compile its own program
@@ -741,9 +744,9 @@ class PropGlow
           '    vec3( 0.04, 0.01, 0.09 ) * rim * ( 1.0 - hole );\n') +
         '  }';
       var frag = '#include <emissivemap_fragment>\n' + shine + eyes + lamps + tar;
-      // PropLight.skipSelf: any point light inside the prop's own body adds nothing to it. three has no
-      // per-mesh light exclusion, so the point-light loop is expanded here and each light's colour is
-      // zeroed once its info is read. the anchor is r181's text: if a three upgrade rewords it, the
+      // PropLight.skipSelf: the prop's own point light adds nothing to it. three has no per-mesh light
+      // exclusion, so the point-light loop is expanded here and that light's colour is zeroed once its
+      // info is read. the anchor is r181's text: if a three upgrade rewords it, the
       // replace finds nothing and the prop is simply lit by its own light again
       var lights = !hasO ? null :
         StringTools.replace(THREE.ShaderChunk.get('lights_fragment_begin'),
@@ -769,6 +772,7 @@ class PropGlow
           shader.uniforms.propGlowTime = uTime;
           shader.uniforms.propGlowCentre = u.centre;
           shader.uniforms.propGlowSpan = u.span;
+          shader.uniforms.propOwnY = u.ownY;
           if (hasS)
             {
               shader.uniforms.propGlowColor = u.color;
@@ -836,7 +840,7 @@ class PropGlow
             'varying float vGlowCam;\n' +
             (hasT ? 'varying vec3 vTarO;\nvarying vec3 vTarV;\n' : '') +
             (hasO ?
-              'uniform vec3 propGlowCentre;\nuniform float propGlowSpan;\n' +
+              'uniform vec3 propGlowCentre;\nuniform float propGlowSpan;\nuniform float propOwnY;\n' +
               'varying vec3 vOwnC;\nvarying float vOwnR;\n' : '') +
             StringTools.replace(shader.vertexShader, '#include <begin_vertex>', vert);
           // <emissivemap_fragment> is the anchor because it is where three has just finished with
