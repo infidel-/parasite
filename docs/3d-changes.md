@@ -2415,7 +2415,12 @@ holes took the pull at their height (u x 0.943 about the centre). New column `?t
 albedo under a LINEAR luminance key, plus `pools` (box-frame ellipses painted black), and `holes` that
 override both with three parallax star layers and a faint nebula. Tar takes `Blood.shimmerColor`'s hue
 film on `BLOOD`'s own cycle, and per-cell glints on `BLOOD`'s bucket length and odds (3x3 neighbourhood,
-so rays cross cell edges). `PropGlow.patch`/`patchMesh` now take the `ObjModel` row, like `PropShader`.
+so rays cross cell edges). On a standing sheet the tar also OOZES: two octaves of value noise, stretched 4x
+down the plane and scrolled down it at `flow` 0.02 world per BASE_MS (a drop takes ~half a minute down
+the skin), its crests a wet sheen in the film's colour (`ooze` 0.06). The holes' star planes are FIXED
+behind the sheet's rest plane, and the tar's world vectors are taken at `<project_vertex>`, after the
+billow: a flap moves a fragment along its own camera ray, so it lands on the same star.
+`PropGlow.patch`/`patchMesh` now take the `ObjModel` row, like `PropShader`.
 `PropLight` gains `?y` (height fraction), `?shadows` and `?skipSelf`. The last zeroes the prop's OWN
 point light, found where `PropLights` hangs it (footprint centre, `y` of the height up, within a tenth
 of it), in an expanded copy of r181's `lights_fragment_begin`. three has no per-mesh light exclusion.
@@ -2437,6 +2442,10 @@ beats their blue (streaks run the other way), clustered: eyes ~0.07 x 0.06 of th
 - `PropLights` dereferenced `m.light` on a slot whose owner's KEY had moved to a lightless row (skin to
   rubble on break). No organ ever changed key, so this was latent; the slot now goes dark on the spot.
 - `cast` is a Haxe keyword, hence `PropLight.shadows`.
+- Star planes at a depth behind the FRAGMENT (`to + d * depth / -d.z`) glued the sky to the skin, so
+  every flap dragged the stars with it. The plane depth is measured from z 0 instead (`to.z + depth`).
+  Checked at 6x the billow: the mouth swung ~30 px, and 20 of the 29 stars visible at the end sat in
+  the same 3-px screen cells as at the start.
 - The box frame's +v (z) is SOUTH, toward the camera. Probed live with an off-centre test pool.
 - A pillar glb is an open TRELLIS shell (1,844 boundary edges), so a ray-parity inside-test called the
   pillar's own core "outside". Test what the camera sees instead: clear toward it, stone behind it.

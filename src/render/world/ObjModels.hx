@@ -495,6 +495,10 @@ typedef PropTar = {
   cell:Float,              // world units between glint sites — the density. Blood.drawStar's quad is
                            // ~0.4 across, so ~1.5 here leaves room for its rays
   stars:Float,             // HDR peak of the brightest star in a hole
+  ooze:Float,              // strength of the wet sheen sliding DOWN the tar, emissive. 0 lies still
+                           // (a floor piece always does)
+  flow:Float,              // how fast it slides, world units per BASE_MS. "slowly": a drop takes ~half
+                           // a minute down a 4.8 sheet at 0.02
 };
 
 // a live cord arcing from this prop to each AI it holds (objects.AreaObject.getLinkedAI). unlike
@@ -982,6 +986,8 @@ class ObjModels
         glint: 3.0,
         cell: 0.35,
         stars: 2.0,
+        ooze: 0.06,
+        flow: 0.02,
       },
       off: [ 2.0, -2.0 ],
       noCast: true,
@@ -1022,6 +1028,8 @@ class ObjModels
         glint: 3.0,
         cell: 0.35,
         stars: 0.0,
+        ooze: 0.0,
+        flow: 0.0,
       },
       off: [ -2.0, -2.0 ],
       noCast: true,

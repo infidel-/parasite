@@ -266,6 +266,8 @@ class PropGlow
         tarGlint: { value: hasT ? t.glint : 0.0 },
         tarCell: { value: hasT ? t.cell : 1.0 },
         tarStars: { value: hasT ? t.stars : 0.0 },
+        tarOoze: { value: hasT ? t.ooze : 0.0 },
+        tarFlow: { value: hasT ? t.flow : 0.0 },
         // the own light's height for PropLight.skipSelf, PropLights' own rule
         ownY: { value: hasO ? (m.light.y != null ? m.light.y : RenderConfig.PROP_LIGHT.yMul) : 0.0 },
         // black blood's own clock and odds, so the floor's splats and the portal's tar are one stuff
@@ -336,6 +338,8 @@ class PropGlow
           'uniform float propTarGlintMult;\n' +
           'uniform float propTarGlintPct;\n' +
           'uniform float propTarStarR;\n' +
+          'uniform float propTarOoze;\n' +
+          'uniform float propTarFlow;\n' +
           'varying vec3 vTarO;\n' +
           'varying vec3 vTarV;\n' : '') +
         (hasO ?
@@ -362,6 +366,21 @@ class PropGlow
           '  return vec3( propGlowHash( n * 1.7 + e * 13.1 ) * 2.0 - 1.0,\n' +
           '               propGlowHash( n * 3.3 + e * 7.7 + 5.1 ) * 2.0 - 1.0,\n' +
           '               propGlowHash( n * 5.9 + e * 3.3 + 11.7 ) * 2.0 - 1.0 );\n' +
+          '}\n' : '') +
+        (hasT ?
+          // smooth value noise for the ooze, off the same hash. the lattice is wrapped at 64 so a hash
+          // input never grows with the clock the ooze scrolls on
+          'float propTarNoise( vec2 p )\n' +
+          '{\n' +
+          '  vec2 i = floor( p );\n' +
+          '  vec2 f = fract( p );\n' +
+          '  f = f * f * ( 3.0 - 2.0 * f );\n' +
+          '  vec2 a = mod( i, 64.0 );\n' +
+          '  vec2 b = mod( i + 1.0, 64.0 );\n' +
+          '  return mix( mix( propGlowHash( a.x * 12.9898 + a.y * 78.233 ),\n' +
+          '                   propGlowHash( b.x * 12.9898 + a.y * 78.233 ), f.x ),\n' +
+          '              mix( propGlowHash( a.x * 12.9898 + b.y * 78.233 ),\n' +
+          '                   propGlowHash( b.x * 12.9898 + b.y * 78.233 ), f.x ), f.y );\n' +
           '}\n' : '');
       // the glow field is keyed on LOCAL position, never on the map uv: the atlas is a mosaic of tiny
       // charts, so a mote walking uv space would teleport across the model. `position` and not
@@ -407,13 +426,6 @@ class PropGlow
         // camera is atan2( localZ, localX ). atan2( x, z ) is the natural-looking spelling and it is
         // 90 degrees wrong — it put the whole sweep on the flank and the far side
         '  vGlowCam = atan( dot( gcd, gm[ 2 ].xyz ), dot( gcd, gm[ 0 ].xyz ) );\n' +
-        // the tar's two WORLD vectors: off the instance's origin (small, so a cell hash keyed on it
-        // keeps its precision — see vGlowPh above) and from the camera, which is the ray a hole's
-        // starfield is looked at along. `position` and not `transformed`, for vGlowPos's reason
-        (hasT ?
-          '  vec3 tw = ( gm * vec4( position, 1.0 ) ).xyz;\n' +
-          '  vTarO = tw - gm[ 3 ].xyz;\n' +
-          '  vTarV = tw - cameraPosition;\n' : '') +
         // the prop's OWN light for PropLight.skipSelf, where render.particles.PropLights hangs it (over
         // the box's footprint centre, `y` of the height up) and in VIEW space, where three keeps
         // pointLights[ i ].position. a tenth of the height in world units is the match: a view matrix
@@ -715,12 +727,21 @@ class PropGlow
         '    gs += env * ( max( 0.0, 1.0 - dd.x - dd.y * 6.0 ) + max( 0.0, 1.0 - dd.y - dd.x * 6.0 ) +\n' +
         '      max( 0.0, 1.0 - length( dd ) * 3.0 ) );\n' +
         '  }\n' +
-        '  totalEmissiveRadiance += tar * ( film * propTarFilm + vec3( 0.86, 0.73, 1.0 ) * propTarGlint * gs );\n' +
+        // the OOZE, on a standing sheet only (a floor pool lies still): two octaves of value noise
+        // stretched 4x down the plane and scrolled DOWN it at `flow` world units per BASE_MS, its
+        // crests a wet sheen in the film's own colour over a cool grey. what reads is slow, thick
+        // drops sliding down the streaks, and they never leave the tar: the sheen is under `tar`
+        '  vec2 oq = vec2( to.x * 9.0, ( to.y + propGlowTime * propTarFlow ) * 2.2 );\n' +
+        '  float on = propTarNoise( oq ) * 0.65 + propTarNoise( oq * 2.03 + 5.1 ) * 0.35;\n' +
+        '  float ooze = smoothstep( 0.55, 0.9, on ) * ( 1.0 - propTarFlat );\n' +
+        '  totalEmissiveRadiance += tar * ( film * propTarFilm + vec3( 0.86, 0.73, 1.0 ) * propTarGlint * gs +\n' +
+        '    ( vec3( 0.45, 0.42, 0.6 ) + film * 3.0 ) * propTarOoze * ooze );\n' +
         // the HOLES: unlit, since everything in one is light from beyond it, and that light is three
-        // layers of stars on planes behind the surface. each layer is where the view ray meets a plane
-        // `depth` back along the normal, so a deeper layer slides further against the rim as the
-        // camera moves — the parallax is the whole of the "window". each cell holds at most one star,
-        // twinkling on a beat of its own, white-blue or warm
+        // layers of stars on planes FIXED behind the sheet's rest plane (the instance origin's, z 0).
+        // each layer is where the view ray meets its plane, so a deeper layer slides further against
+        // the rim as the camera moves — the parallax is the whole of the "window" — while a flap of
+        // the sheet only moves the fragment ALONG its own ray and finds the same star. each cell holds
+        // at most one star, twinkling on a beat of its own, white-blue or warm
         (t.holes.length == 0 ? '' :
           '  diffuseColor.rgb *= 1.0 - hole;\n' +
           '  vec3 sd = normalize( tv );\n' +
@@ -728,7 +749,7 @@ class PropGlow
           '  for ( int k = 0; k < 3; k ++ )\n' +
           '  {\n' +
           '    float fk = float( k );\n' +
-          '    vec2 sp = ( to.xy + sd.xy * ( ( 0.8 + fk * 1.6 ) / max( -sd.z, 0.25 ) ) ) * ( 5.0 - fk );\n' +
+          '    vec2 sp = ( to.xy + sd.xy * ( ( to.z + 0.8 + fk * 1.6 ) / max( -sd.z, 0.25 ) ) ) * ( 5.0 - fk );\n' +
           '    vec2 sc = floor( sp );\n' +
           '    float sh = propGlowHash( mod( sc.x, 64.0 ) * 12.9898 + mod( sc.y, 64.0 ) * 78.233 + fk * 7.31 );\n' +
           '    vec2 so = 0.2 + 0.6 * vec2( propGlowHash( sh * 17.17 ), propGlowHash( sh * 31.31 + 2.0 ) );\n' +
@@ -738,12 +759,28 @@ class PropGlow
           '    sky += st * step( 0.45, sh ) * exp( - sr * sr * 3.0 ) * sw * ( 1.0 - fk * 0.25 );\n' +
           '  }\n' +
           // a faint violet nebula behind them all, drifting, so the dark between the stars has depth
-          '  vec2 np = to.xy + sd.xy * ( 4.0 / max( -sd.z, 0.25 ) );\n' +
+          '  vec2 np = to.xy + sd.xy * ( ( to.z + 4.0 ) / max( -sd.z, 0.25 ) );\n' +
           '  float neb = 0.5 + 0.5 * sin( np.x * 1.3 + propGlowTime * 0.03 ) * sin( np.y * 1.1 - propGlowTime * 0.02 );\n' +
           '  totalEmissiveRadiance += hole * ( sky * propTarStars + vec3( 0.05, 0.01, 0.1 ) * neb ) +\n' +
           '    vec3( 0.04, 0.01, 0.09 ) * rim * ( 1.0 - hole );\n') +
         '  }';
       var frag = '#include <emissivemap_fragment>\n' + shine + eyes + lamps + tar;
+      // the tar's two WORLD vectors: off the instance's origin (small, so a cell hash keyed on it keeps
+      // its precision — see vGlowPh above) and from the camera, along which a hole's starfield is
+      // looked at. AFTER every displacement, at <project_vertex>, and that is the point: the stars are
+      // found on the ray through where the sheet IS this frame, so a billowing skin swings its holes
+      // over a sky that stays put. the glints and the film only read .xy, which the billow leaves alone
+      // (it pushes along z), so they still ride the surface
+      var tarVert = '#include <project_vertex>\n' +
+        '  {\n' +
+        '  mat4 tm = modelMatrix;\n' +
+        '  #ifdef USE_INSTANCING\n' +
+        '    tm = modelMatrix * instanceMatrix;\n' +
+        '  #endif\n' +
+        '  vec3 tw = ( tm * vec4( transformed, 1.0 ) ).xyz;\n' +
+        '  vTarO = tw - tm[ 3 ].xyz;\n' +
+        '  vTarV = tw - cameraPosition;\n' +
+        '  }';
       // PropLight.skipSelf: the prop's own point light adds nothing to it. three has no per-mesh light
       // exclusion, so the point-light loop is expanded here and that light's colour is zeroed once its
       // info is read. the anchor is r181's text: if a three upgrade rewords it, the
@@ -815,6 +852,8 @@ class PropGlow
               shader.uniforms.propTarGlintMult = u.tarGlintMult;
               shader.uniforms.propTarGlintPct = u.tarGlintPct;
               shader.uniforms.propTarStarR = u.tarStarR;
+          shader.uniforms.propTarOoze = u.tarOoze;
+          shader.uniforms.propTarFlow = u.tarFlow;
             }
           if (hasE)
             {
@@ -852,6 +891,9 @@ class PropGlow
           if (hasO)
             shader.fragmentShader = StringTools.replace(shader.fragmentShader,
               '#include <lights_fragment_begin>', lights);
+          if (hasT)
+            shader.vertexShader = StringTools.replace(shader.vertexShader, '#include <project_vertex>',
+              tarVert);
         };
       // carry forward the marks of whatever hook we just wrapped. BOTH tests above read the
       // OUTERMOST hook, so a marker that got chained over reads as absent and its owner re-patches —
