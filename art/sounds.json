@@ -3403,6 +3403,29 @@
       "last_outputs": [
         "cave/bats1.mp3"
       ]
+    },
+    "sewer/portal-break": {
+      "area": "sewer",
+      "loop": false,
+      "variants": [
+        {
+          "file": "sewer/portal-break-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a ritual portal of stone and stretched flesh tearing apart and collapsing: a wet membrane ripping, heavy rock pillars cracking and crashing down into rubble, a deep low boom and rumble through the tunnel, grit and debris raining down after, clean recording with no distortion, single event, underground brick sewer tunnel at night, realistic field recording, no music, no voices",
+          "duration": 6.0,
+          "seed": null,
+          "cost": 0.012,
+          "native_loop": false,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs x2/sonilo/cassette, the second elevenlabs (re-roll) picked by ear; losers in sounds-src/unused/sewer"
+        }
+      ],
+      "last_converted": "2026-11-01T01:29:50",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "sewer/portal-break1.mp3"
+      ]
     }
   }
 }
