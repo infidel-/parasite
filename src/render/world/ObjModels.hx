@@ -149,6 +149,21 @@ typedef PropCurl = {
                 // sweeps and the root it grows out of does not
 };
 
+// the breath of a SHEET stretched between supports: the sewer summoning portal's skin, hung between
+// its pillars. none of the three above can say it — a sway weight is a power of HEIGHT and lifts the
+// top that is nailed to the pillar tips, a swell scales out from the vertical axis and would tear the
+// sheet's sides off the pillars, and a curl turns it about its own depth axis. this pushes the sheet
+// along its local Z (the axis it faces, toward the camera on a FRONTAL row) by a weight that is
+// sin(PI u) * sin(PI v) over the prop's own box: zero along every edge, so the sides, the strap tips
+// and the floor hem stay pinned and only the belly breathes. a phase running down the sheet makes the
+// breath roll from the top toward the hem. same fraction-of-the-prop's-height rule as the columns
+// above, consumed by render.world.PropShader in the same patch
+typedef PropBillow = {
+  amp:Float,  // peak push along local Z at the belly, as a fraction of the prop's height
+  rate:Float, // breath speed as a BASE_MS multiplier (smaller = slower)
+  wave:Float, // phase cycles from the top of the sheet to its hem; 0 = the whole belly as one
+};
+
 // the pulsing "innards" sprite drawn INSIDE a prop hollow enough to show one: a single frontal
 // additive quad, breathing on a slow scale beat, with its own map UVs disturbed in the FRAGMENT
 // shader so the mass writhes instead of merely resizing. same fraction-of-height rule as PropAnim
@@ -487,6 +502,8 @@ typedef ObjModel = {
                       // not breathe. shares PropShader's patch with `anim` and is independent of it
   curl:PropCurl,      // tangential sweep of limbs radiating from a core, or null for a prop with no
                       // limbs. shares that same patch, and is independent of both of the above
+  ?billow:PropBillow, // breath of a sheet pinned along every edge, or absent for anything that is
+                      // not one. shares that same patch, and is independent of all three above
   core:PropCore,      // pulsing innards sprite drawn inside it, or null
   fly:PropFly,        // fireflies orbiting it, one per habitat level, or null
   shine:PropShine,    // travelling motes on its own surface, or null
@@ -575,8 +592,10 @@ class ObjModels
 // objects, each keyed on its part index (getModelKey), so each part places ONE piece and `off` moves
 // it from its own cell to where the piece stands in the group: the pillars on the row boundary of
 // the top two cells, the skin and the floor piece on the group's centre. every piece faces the
-// camera, and none casts the fake shadow, which would be the old 2D quarter icon
-  static function portalPiece(keys:Array<String>, path:String, h:Float, off:Array<Float>):ObjModel
+// camera, and none casts the fake shadow, which would be the old 2D quarter icon. the skin alone
+// breathes (`billow`)
+  static function portalPiece(keys:Array<String>, path:String, h:Float, off:Array<Float>,
+      ?billow:PropBillow):ObjModel
     return {
       keys: keys,
       path: path,
@@ -587,6 +606,7 @@ class ObjModels
       anim: null,
       pulse: null,
       curl: null,
+      billow: billow,
       core: null,
       fly: null,
       shine: null,
@@ -855,7 +875,11 @@ class ObjModels
     // the same in both states
     portalPiece([ 'summoning_portal_0' ], RenderConfig.MODELS.portalPillarL, 6.0, [ 0.6, 2.0 ]),
     portalPiece([ 'summoning_portal_1' ], RenderConfig.MODELS.portalPillarR, 6.0, [ -0.6, 2.0 ]),
-    portalPiece([ 'summoning_portal_2' ], RenderConfig.MODELS.portalSkin, 5.8, [ 2.0, -2.0 ]),
+    portalPiece([ 'summoning_portal_2' ], RenderConfig.MODELS.portalSkin, 5.8, [ 2.0, -2.0 ], {
+      amp: 0.05,
+      rate: 0.25,
+      wave: 0.5,
+    }),
     portalPiece([ 'summoning_portal_3', 'summoning_portal_broken_3' ], RenderConfig.MODELS.portalBase,
       0.26, [ -2.0, -2.0 ]),
     portalPiece([ 'summoning_portal_broken_0' ], RenderConfig.MODELS.portalBrokenL, 5.0, [ 0.6, 2.0 ]),
@@ -1628,9 +1652,9 @@ class ObjModels
     {
       render.world.VisionMask.patchMesh(so);
       render.world.VisionMask.patchMesh(gh);
-      PropShader.patchMesh(so, m.anim, m.pulse, m.curl);
-      PropShader.patchMesh(gh, m.anim, m.pulse, m.curl);
-      PropShader.patchMesh(hu, m.anim, m.pulse, m.curl);
+      PropShader.patchMesh(so, m);
+      PropShader.patchMesh(gh, m);
+      PropShader.patchMesh(hu, m);
       PropGlow.patchMesh(so, m.shine, m.eyes, m.lamps);
       PropGlow.patchMesh(gh, m.shine, m.eyes, m.lamps);
     }

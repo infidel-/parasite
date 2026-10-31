@@ -2,9 +2,7 @@ package render.world;
 
 import three.Three;
 import render.RenderConfig;
-import render.world.ObjModels.PropAnim;
-import render.world.ObjModels.PropPulse;
-import render.world.ObjModels.PropCurl;
+import render.world.ObjModels.ObjModel;
 
 // the object three hands an onBeforeCompile hook: the shader sources about to be compiled, plus the
 // uniform bag to register ours in. `uniforms` stays Dynamic and cannot be anything else — it is an
@@ -44,14 +42,18 @@ typedef ShaderPatch = {
 //            height cannot move a limb sticking straight out sideways without dragging the core with
 //            it, and a turn about the VERTICAL moves a limb on a shallow fan almost entirely in
 //            depth. see the PropCurl header in render.world.ObjModels for the measurements.
+// and one is the `billow` column, a FOURTH shape:
+//   BILLOW — a push along the prop's own depth axis, weighted to zero along every edge of its box, so
+//            a sheet nailed between supports breathes in the middle and stays on its nails. see the
+//            PropBillow header in render.world.ObjModels.
 //
 // it deliberately costs NO draw call, NO pass and NO geometry, the same trade render.world.VisionMask
 // makes: the props stay the same instanced batches drawing the same materials, and everything here is
 // arithmetic in a vertex shader that was already running.
 //
-// WHICH props move is not decided here — it is the `anim`, `pulse` and `curl` columns of
-// render.world.ObjModels.MODELS. the three are independent, any may be null, and a row with all
-// three null is simply never patched (so it also keeps the shared unpatched program)
+// WHICH props move is not decided here — it is the `anim`, `pulse`, `curl` and `billow` columns of
+// render.world.ObjModels.MODELS. the four are independent, any may be null, and a row with all
+// four null is simply never patched (so it also keeps the shared unpatched program)
 class PropShader
 {
   // the clock every patched material references BY IDENTITY, in BASE_MS units — so per-prop `rate`
@@ -69,15 +71,18 @@ class PropShader
 // patch a mesh's material, tolerating a mesh that is not there yet and a prop that does not animate.
 // every glb-backed prop arrives through a loader callback, so its InstancedMesh is null for the first
 // frames — the same reason VisionMask.patchMesh exists and is called per frame rather than at build
-  public static function patchMesh(o:Object3D, a:PropAnim, p:PropPulse, c:PropCurl):Void
+  public static function patchMesh(o:Object3D, m:ObjModel):Void
     {
-      if ((a == null && p == null && c == null) ||
+      if ((m.anim == null &&
+          m.pulse == null &&
+          m.curl == null &&
+          m.billow == null) ||
           !RenderConfig.PROP_ANIM.enabled)
         return;
       if (o != null &&
           o.material != null &&
           o.geometry != null)
-        patch(o.material, o.geometry, a, p, c);
+        patch(o.material, o.geometry, m);
     }
 
 // fold the motion into one material. `geo` is needed as well as the material because the weights are
@@ -92,8 +97,12 @@ class PropShader
 // extern here (Standard, Basic and Lambert are three unrelated classes in three.Three), and none of
 // them declares onBeforeCompile / customProgramCacheKey / needsUpdate — this patches all three kinds
 // through one path. Typing it would take a Material supertype in the extern, which is its own change
-  public static function patch(mat:Dynamic, geo:BufferGeometry, a:PropAnim, p:PropPulse, c:PropCurl):Void
+  public static function patch(mat:Dynamic, geo:BufferGeometry, m:ObjModel):Void
     {
+      var a = m.anim;
+      var p = m.pulse;
+      var c = m.curl;
+      var b = m.billow;
       // the mark lives on the HOOK and not in userData: Material.clone() copies userData but NOT
       // onBeforeCompile, so a userData flag would ride onto the GHOST clones render.Models makes from
       // a patched template and lock them out of the patch they never received (VisionMask.hx carries
@@ -115,6 +124,7 @@ class PropShader
       var hasA = (a != null);
       var hasP = (p != null);
       var hasC = (c != null);
+      var hasB = (b != null);
       var u = {
         base: { value: base },
         span: { value: span },
@@ -157,6 +167,13 @@ class PropShader
         cYSoft: { value: hasC ? Math.max(c.ySoft, 1e-3) : 1.0 },
         cDFloor: { value: hasC ? c.dFloor : 0.0 },
         cDSoft: { value: hasC ? Math.max(c.dSoft, 1e-3) : 1.0 },
+        // the box's X extent the billow's edge weight is normalized over, read off the box for the
+        // reason `base` is: Models.normalize leaves raw local coordinates centred on nothing
+        bX: { value: new Vector2(bb.min.x, Math.max(bb.max.x - bb.min.x, 1e-3)) },
+        bAmp: { value: hasB ? b.amp * span : 0.0 },
+        bRate: { value: hasB ? b.rate : 0.0 },
+        // authored in CYCLES top to hem, converted to radians here, as cWave is
+        bWave: { value: hasB ? b.wave * 6.2832 : 0.0 },
       };
       // the per-instance phase, read off the instance TRANSLATION and never off gl_InstanceID:
       // render.Models.cull repacks the surviving instances into the front of the buffer every frame,
@@ -214,7 +231,12 @@ class PropShader
           'uniform float propCurlYFloor;\n' +
           'uniform float propCurlYSoft;\n' +
           'uniform float propCurlDFloor;\n' +
-          'uniform float propCurlDSoft;\n' : '');
+          'uniform float propCurlDSoft;\n' : '') +
+        (hasB ?
+          'uniform vec2 propBillowX;\n' +
+          'uniform float propBillowAmp;\n' +
+          'uniform float propBillowRate;\n' +
+          'uniform float propBillowWave;\n' : '');
       // the swell and the turn, gated to nothing below the floor line. BRACED and injected at the
       // same anchor as the sway, which is inside main(), so its locals must not escape into that
       // block's scope — and render.world.PropGlow injects a third block there on any prop that also
@@ -276,6 +298,19 @@ class PropShader
         '    vec2( propCt.x * propCc - propCt.y * propCn,\n' +
         '          propCt.x * propCn + propCt.y * propCc );\n' +
         '  }';
+      // the sheet's breath along local Z. BRACED for the reason the blocks above are. both weights
+      // read `position`, so it composes with whatever moved the vertex before it. the phase is ADDED
+      // up the sheet, so as the clock runs a crest moves to lower v: the breath rolls from the strap
+      // tips down to the hem. the shading normal is left alone for the curl's reason: the push is a
+      // few percent of the sheet's height
+      var billow =
+        '  {\n' +
+        iphase +
+        '  float propBu = clamp( ( position.x - propBillowX.x ) / propBillowX.y, 0.0, 1.0 );\n' +
+        '  float propBv = clamp( ( position.y - propBase ) / propSpan, 0.0, 1.0 );\n' +
+        '  transformed.z += propBillowAmp * sin( propBu * 3.1416 ) * sin( propBv * 3.1416 ) *\n' +
+        '    sin( propTime * propBillowRate + propBv * propBillowWave + propIPh );\n' +
+        '  }';
       // Dynamic, and it cannot be a typed function: `prev` is CALLED like one below and also carries
       // the previous patch's marker FIELDS, which the loop further down copies with Reflect. Haxe has
       // no type for "function with arbitrary own properties", which is exactly what a JS hook is here
@@ -330,6 +365,13 @@ class PropShader
               shader.uniforms.propCurlDFloor = u.cDFloor;
               shader.uniforms.propCurlDSoft = u.cDSoft;
             }
+          if (hasB)
+            {
+              shader.uniforms.propBillowX = u.bX;
+              shader.uniforms.propBillowAmp = u.bAmp;
+              shader.uniforms.propBillowRate = u.bRate;
+              shader.uniforms.propBillowWave = u.bWave;
+            }
           var v = shader.vertexShader;
           // the normal half goes in FIRST, at <beginnormal_vertex>, so <defaultnormal_vertex> — which
           // three runs between the two anchors — carries the tilt into view space for free.
@@ -373,7 +415,8 @@ class PropShader
               '  transformed.xz += propWave * propAmp * propWeight( position.y );\n' +
               '  }\n' : '') +
             (hasP ? swell : '') +
-            (hasC ? curl : ''));
+            (hasC ? curl : '') +
+            (hasB ? billow : ''));
           shader.vertexShader = decl + v;
         };
       // carry forward the marks of whatever hook we just wrapped. BOTH tests above read the
@@ -394,7 +437,8 @@ class PropShader
       // carry VisionMask's hook and its key
       mat.customProgramCacheKey = function()
         return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') +
-          'propAnim' + (hasA ? 'S' : '') + (hasP ? 'U' : '') + (hasC ? 'C' : '') + (lit ? 'L' : 'P');
+          'propAnim' + (hasA ? 'S' : '') + (hasP ? 'U' : '') + (hasC ? 'C' : '') + (hasB ? 'B' : '') +
+          (lit ? 'L' : 'P');
       mat.needsUpdate = true;
     }
 }

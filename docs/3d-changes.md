@@ -2369,3 +2369,31 @@ clue pack's 170 px cell over the 0.6 quad rises from 70 to ~117 texels/unit (str
 anywhere, as military clues already did not. Same meshes, so no draw-call change.
 
 **Verdict:** landed. Size is a playtest call; the knob is the one constant.
+
+## The sewer summoning portal in 3D, and a sheet that breathes (`PropBillow`)
+
+The cult ritual's portal (`objects.mission.SummoningPortal`, a 2x2 group) still drew its four quarters of
+the old 2D sprite. Asked for: separate models so the skin can move on its own.
+
+**Change:** seven TRELLIS glbs (`models-src/sewer/portal-*`), and four `ObjModels` rows a state, one per part.
+`SummoningPortal.getModelKey` is `summoning_portal_<part>` or `summoning_portal_broken_<part>`, and
+`ObjModels.portalPiece` places each piece by `off` from its own cell: pillars on the top row's boundary,
+skin and floor ring on the group centre. `breakPortalGroup` calls `updateObjects3D`, since a key change
+does not rebuild props. New column `?billow:PropBillow` (`amp`, `rate`, `wave`) in the same
+`PropShader` patch. It pushes along local Z, weighted `sin(PI u) * sin(PI v)` over the prop's own box, so
+every edge stays pinned. `PropShader.patch`/`patchMesh` now take the `ObjModel` row instead of the
+growing `a, p, c` list.
+
+**Measured:** 4 pieces drawn, about +4 calls (material-hidden A/B: 42 off, 46-48 on, the frame's own
+noise). Skin at amp 0.05 / rate 0.25 / wave 0.5: 2,703 of 37,800 px in the portal's box change between
+frames ~1 s apart, belly only. 10 programs carry the `B` key. No console errors and no black frames.
+Pieces ~4.7-4.9k tris each, tex 512. `baseColor` fitted live in the dark ritual room (pillars 0.16 → 0.45).
+
+**The traps:**
+- A packed reference sheet drew the intact pillars FLAT, front-on, while the broken sheet came back
+  isometric. Fixed with one edit that took the broken sheet as the style reference.
+- The two pillar rolls came back as different stones, and the re-roll bent the same way as the left one.
+  The pair is now one roll plus its mirror (`portal_mirror.py`).
+- Saving is blocked inside a mission area, so every reload needs the ordeal set up again.
+
+**Verdict:** landed. No glow on the orbs, no portal light and no tear animation on break.
