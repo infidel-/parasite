@@ -69,7 +69,11 @@ class PropGlow
 // frames — the same reason render.world.PropShader.patchMesh is called per frame rather than at build
   public static function patchMesh(o:Object3D, m:ObjModel):Void
     {
-      if ((m.shine == null && m.eyes == null && m.lamps == null && m.tar == null) ||
+      if ((m.shine == null &&
+           m.eyes == null &&
+           m.lamps == null &&
+           m.tar == null &&
+           (m.light == null || m.light.skipSelf != true)) ||
           !RenderConfig.PROP_GLOW.enabled)
         return;
       if (o != null &&
@@ -119,6 +123,7 @@ class PropGlow
       var hasE = (e != null);
       var hasL = (l != null && l.list.length > 0);
       var hasT = (t != null);
+      var hasO = (m.light != null && m.light.skipSelf == true);
       // the lamp tables, resolved once here. a MARKER hue is normalised by its own max channel and
       // converted to LINEAR first, because that is the space three hands the sampled map back in
       // (an emissive map is declared sRGB and the sampler decodes it) — compare an sRGB constant
@@ -331,6 +336,9 @@ class PropGlow
           'uniform float propTarStarR;\n' +
           'varying vec3 vTarO;\n' +
           'varying vec3 vTarV;\n' : '') +
+        (hasO ?
+          'varying vec3 vOwnC;\n' +
+          'varying float vOwnR;\n' : '') +
         'varying vec3 vGlowPos;\n' +
         'varying float vGlowPh;\n' + // ALREADY hashed to 0..1 by the vertex half — see the note there
         'varying float vGlowCam;\n' + // camera azimuth in the INSTANCE's own local frame
@@ -404,6 +412,13 @@ class PropGlow
           '  vec3 tw = ( gm * vec4( position, 1.0 ) ).xyz;\n' +
           '  vTarO = tw - gm[ 3 ].xyz;\n' +
           '  vTarV = tw - cameraPosition;\n' : '') +
+        // the prop's own body for PropLight.skipSelf: its box centre in VIEW space, where three keeps
+        // pointLights[ i ].position, and half its height in world units as the reach. a view matrix
+        // has no scale, so a world length is a view length
+        (hasO ?
+          '  vOwnC = ( viewMatrix * gm *\n' +
+          '    vec4( propGlowCentre + vec3( 0.0, propGlowSpan * 0.5, 0.0 ), 1.0 ) ).xyz;\n' +
+          '  vOwnR = 0.5 * propGlowSpan * length( gm[ 1 ].xyz );\n' : '') +
         '  }';
       // BRACED, and the loop bound is a LITERAL: the count rides the program cache key below, because
       // GLSL wants a constant bound and because a row that changes it must compile its own program
@@ -726,6 +741,15 @@ class PropGlow
           '    vec3( 0.04, 0.01, 0.09 ) * rim * ( 1.0 - hole );\n') +
         '  }';
       var frag = '#include <emissivemap_fragment>\n' + shine + eyes + lamps + tar;
+      // PropLight.skipSelf: any point light inside the prop's own body adds nothing to it. three has no
+      // per-mesh light exclusion, so the point-light loop is expanded here and each light's colour is
+      // zeroed once its info is read. the anchor is r181's text: if a three upgrade rewords it, the
+      // replace finds nothing and the prop is simply lit by its own light again
+      var lights = !hasO ? null :
+        StringTools.replace(THREE.ShaderChunk.get('lights_fragment_begin'),
+          'getPointLightInfo( pointLight, geometryPosition, directLight );',
+          'getPointLightInfo( pointLight, geometryPosition, directLight );\n' +
+          '\t\tdirectLight.color *= step( vOwnR, distance( pointLight.position, vOwnC ) );');
       // Dynamic, and it cannot be a typed function: `prev` is CALLED like one below and also carries
       // the previous patch's marker FIELDS, which the loop further down copies with Reflect. Haxe has
       // no type for "function with arbitrary own properties", which is exactly what a JS hook is here
@@ -811,6 +835,9 @@ class PropGlow
             'varying float vGlowPh;\n' +
             'varying float vGlowCam;\n' +
             (hasT ? 'varying vec3 vTarO;\nvarying vec3 vTarV;\n' : '') +
+            (hasO ?
+              'uniform vec3 propGlowCentre;\nuniform float propGlowSpan;\n' +
+              'varying vec3 vOwnC;\nvarying float vOwnR;\n' : '') +
             StringTools.replace(shader.vertexShader, '#include <begin_vertex>', vert);
           // <emissivemap_fragment> is the anchor because it is where three has just finished with
           // totalEmissiveRadiance and diffuseColor is still in scope — one anchor gives both the
@@ -818,6 +845,9 @@ class PropGlow
           // its `emissive` is black, so this term is the only contributor
           shader.fragmentShader = decl +
             StringTools.replace(shader.fragmentShader, '#include <emissivemap_fragment>', frag);
+          if (hasO)
+            shader.fragmentShader = StringTools.replace(shader.fragmentShader,
+              '#include <lights_fragment_begin>', lights);
         };
       // carry forward the marks of whatever hook we just wrapped. BOTH tests above read the
       // OUTERMOST hook, so a marker that got chained over reads as absent and its owner re-patches —
@@ -849,7 +879,8 @@ class PropGlow
           // what it was before this column existed and nothing recompiles
           (hasL ? 'L' + l.list.length : '') +
           // the tar's two table counts, for the same reason: both are literal loop bounds
-          (hasT ? 'T' + t.pools.length + 'h' + t.holes.length : '');
+          (hasT ? 'T' + t.pools.length + 'h' + t.holes.length : '') +
+          (hasO ? 'O' : '');
       mat.needsUpdate = true;
     }
 }

@@ -67,6 +67,9 @@ typedef PropLight = {
   ?shadows:Bool, // the actors throw fake shadows off it (render.actors.LampShadows), the way they do
                  // off a pooled lamp. absent for an organ, which lights its room without darkening
                  // anyone in it
+  ?skipSelf:Bool, // the prop's OWN surface takes none of it (render.world.PropGlow drops any point light
+                  // inside its body): a light hung in a sheet's plane lands a hot spot on the sheet.
+                  // absent for a light over the crown, which lights the crown on purpose
 };
 
 // the idle motion folded into a prop's own shaders, or null for one that stands still. every
@@ -928,6 +931,7 @@ class ObjModels
         mul: 2.0,
         y: 0.5,
         shadows: true,
+        skipSelf: true,
       },
       anim: null,
       pulse: null,

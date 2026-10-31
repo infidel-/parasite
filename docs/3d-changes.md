@@ -2412,7 +2412,10 @@ albedo under a LINEAR luminance key, plus `pools` (box-frame ellipses painted bl
 override both with three parallax star layers and a faint nebula. Tar takes `Blood.shimmerColor`'s hue
 film on `BLOOD`'s own cycle, and per-cell glints on `BLOOD`'s bucket length and odds (3x3 neighbourhood,
 so rays cross cell edges). `PropGlow.patch`/`patchMesh` now take the `ObjModel` row, like `PropShader`.
-`PropLight` gains `?y` (height fraction) and `?shadows`. `PropLights` puts the light where the prop
+`PropLight` gains `?y` (height fraction), `?shadows` and `?skipSelf`. The last zeroes any point light
+inside the prop's own body (view-space centre, half its height as reach) in an expanded copy of r181's
+`lights_fragment_begin`. three has no per-mesh light exclusion, and a light hung in the skin's plane
+lands a pink hot spot on it. `PropLights` puts the light where the prop
 STANDS (`standsAt`), not on its cell, and publishes casting slots as `LampPost`s for
 `SewerArea.shadowLamps`. `AreaObject.getHoverGroup()` (the portal returns its four parts) feeds
 `ObjModels.cull`'s hull mask.
@@ -2431,5 +2434,7 @@ beats their blue (streaks run the other way), clustered: eyes ~0.07 x 0.06 of th
 - `cast` is a Haxe keyword, hence `PropLight.shadows`.
 - The box frame's +v (z) is SOUTH, toward the camera. Probed live with an off-centre test pool.
 
-**Verdict:** landed. The point light still lands a pink hot spot between the eyes from a low orbit. It
-is not visible from the tunnel camera's own pitch.
+`skipSelf`, light on against off from a low orbit: skin centre R 30.9 / 31.2 (unchanged), left pillar's
+inner face 63 / 13, ring floor 17 / 9.
+
+**Verdict:** landed.
