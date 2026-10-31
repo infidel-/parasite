@@ -395,6 +395,25 @@ class CombatSummoningRitual extends Combat
       game.scene.draw();
     }
 
+// the cells of the ritual cultists still chanting: alive and unalerted, until the ritual breaks or
+// closes (render.sewer.SewerSounds plays the chant from them)
+  public function chanterCells(): Array<{ col: Int, row: Int }>
+    {
+      var cells = [];
+      if (state != WAITING &&
+          state != WAITING_DAMAGED &&
+          state != ACTIVE)
+        return cells;
+      for (targetID in targetIDs)
+        {
+          var ai = game.area.getAIByID(targetID);
+          if (ai != null &&
+              ai.state == AI_STATE_IDLE)
+            cells.push({ col: ai.x, row: ai.y });
+        }
+      return cells;
+    }
+
 // count currently living ritual cultists in mission area
   function livingRitualCultists(): Int
     {

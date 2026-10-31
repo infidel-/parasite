@@ -269,6 +269,7 @@ class SoundConst
       {
         text: '***',
         kind: 'bark',
+        file: 'choir/hurt',
         radius: 4,
         alertness: 10,
         params: null
@@ -287,6 +288,7 @@ class SoundConst
       {
         text: '***',
         kind: 'bark',
+        file: 'choir/alert',
         radius: 7,
         alertness: 15,
         params: null
@@ -305,6 +307,7 @@ class SoundConst
       {
         text: '***',
         kind: 'bark',
+        file: 'choir/die',
         radius: 4,
         alertness: 10,
         params: null

@@ -24,6 +24,11 @@ class SewerSounds
   var bed:Array<Float>;
   // the one-shots with no source, each with its mean gap and seconds to its next roll
   var far:Array<{ key:String, gap:Float, wait:Float }>;
+  // where each living choir of discord stands, refilled every tick: its chant follows it
+  var choirs:Array<{ col:Int, row:Int }> = [];
+  // the summoning ritual's chanting cultists, refilled every tick; null in a sewer with no ritual
+  var ritual:cult.missions.CombatSummoningRitual;
+  var chanters:Array<{ col:Int, row:Int }> = [];
 
   public function new(game:Game, m:Sewer, lampPosts:Array<LampPost>, wallGlow:render.LightCone.ConeSet)
     {
@@ -65,6 +70,8 @@ class SewerSounds
         { key: 'sewer/manhole', range: 5, cells: exits },
         { key: 'sewer/trickle', range: 2, cells: trickles },
         { key: 'sewer/pipe', range: 3, cells: pipes },
+        { key: 'choir/chant', range: 6, cells: choirs },
+        { key: 'sewer/ritual', range: 8, cells: chanters },
         {
           key: 'city/lampbuzz',
           range: 2,
@@ -88,6 +95,7 @@ class SewerSounds
       ];
       for (f in far)
         f.wait = f.gap * Math.random();
+      ritual = Std.downcast(game.area.getAreaMission(), cult.missions.CombatSummoningRitual);
       bed = [for (_ in BEDS) 0.0];
       SoundSources.beds = BEDS.copy();
       SoundSources.events = [for (f in far) f.key];
@@ -103,6 +111,16 @@ class SewerSounds
 // sourceless one-shots at full — the whole network's, heard wherever the player stands
   public function tick(pc:Int, pr:Int, dtMs:Float):Void
     {
+      // in place: AreaSounds holds this array, and a choir walks
+      choirs.resize(0);
+      for (ai in game.area.getAllAI())
+        if (ai.type == 'choirOfDiscord' &&
+            ai.state != AI_STATE_DEAD)
+          choirs.push({ col: ai.x, row: ai.y });
+      chanters.resize(0);
+      if (ritual != null)
+        for (c in ritual.chanterCells())
+          chanters.push(c);
       loops.tick(pc, pr, dtMs);
       var on = (SewerModel.isFloor(m, pc, pr) &&
         m.room[pr][pc] ? 1 : 0);

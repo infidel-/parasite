@@ -52,7 +52,7 @@ class ChoirSilentScream extends Ability
 
       // expanding dome + screen shockwave
       target.game.scene.view3d.playScream(ai.x, ai.y);
-      target.game.scene.sounds.play('ability-silent-scream', {
+      target.game.scene.sounds.play('choir/scream', {
         x: ai.x,
         y: ai.y,
         always: true,

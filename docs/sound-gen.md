@@ -356,11 +356,15 @@ mission map, off the region grid: to test one, `region.createArea('AREA_SEWERS')
 | `sewer/rats` | `SewerDebris.build(m)` litter (~250 cells) | event, gap 30 s | 5 |
 | `sewer/knock` | pipe and cable props | event, gap 45 s | 6 |
 | `sewer/rumble`, `sewer/surge` | none | event, gap 90 / 60 s | — |
+| `choir/chant` | every living `choirOfDiscord` AI, refilled each tick (it walks) | loop | 6 |
+| `sewer/ritual` | the summoning ritual's chanters, `CombatSummoningRitual.chanterCells` (idle targets, until the ritual breaks or closes) | loop | 8 |
 
 - Wall lamp `i` is `lampPosts[m.lamps.length + i]` and `wallGlow.on[i]`: the wall posts follow the
   node posts, pushed in the glow set's order. Measured: the lamps are dark ~20% of the time, and the
   buzz eased 0.43 → 0 through an outage and back to 1.
 - `sewer/cover` (a car over the manhole cover) was baked and dropped.
+- **The choir's barks are `SoundConst.choir` files** (`choir/alert`, `choir/hurt`, `choir/die`), played by `AI.emitSound` like any AI's; the silent scream plays `choir/scream`. The choir only ever exists in the summoning mission's sewer.
+- `sewer/portal-break` plays area-wide (no position) when the portal breaks, with the camera quake.
 
 ### Mountain cave: `render/cave/CaveSounds.hx`, driven from `CaveArea.tick`
 
@@ -456,3 +460,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-10-18 | city | dumpster-open, dumpster-close (one-shots, the player hiding in and climbing out of `objects.Dumpster`) | both: sonilo (open screened 12 clipped samples, picked by ear anyway) · open cassette CLIPPED (134), close cassette came back -44.6 LUFS, close elevenlabs CLIPPED (27) | $0.04 |
 | 2026-10-20 | cave | passage, chamber (beds) · mouth, seep, hum (loops) · drip, scree, bats, exit (one-shots) | passage, scree, bats, seep: sonilo (scree and bats had screened as possibly clipped, picked by ear) · drip, hum: elevenlabs (hum raw -59.5 LUFS) · mouth: elevenlabs + sonilo · chamber: the hum sonilo take, all chamber takes cut · exit: cut · seep elevenlabs kept as a brook | $0.53 |
 | 2026-11-01 | sewer | portal-break (one-shot: the summoning portal tearing into rubble, area-wide with the camera quake) | elevenlabs re-roll ("clean recording with no distortion"; still 0 dBFS, peak count 5.5, picked by ear) · first elevenlabs CLIPPED (26.5) · sonilo, cassette lost | $0.046 |
+| 2026-11-01 | choir | chant (loop, follows each living choir), alert, hurt, die, scream (the silent scream ability, `ability-silent-scream` before: referenced since the choir landed, never made) | all elevenlabs: chant, hurt (borderline, 4 peaks), scream clean · alert the "no distortion" re-roll (41.5 peaks) · die both takes as variants (23 and 236 peaks) · every cassette one-shot CLIPPED (546-2,671); shrieks clip elevenlabs even with "no distortion", picked by ear anyway | $0.20 |

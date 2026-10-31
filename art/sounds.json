@@ -3426,6 +3426,134 @@
       "last_outputs": [
         "sewer/portal-break1.mp3"
       ]
+    },
+    "choir/chant": {
+      "area": "choir",
+      "loop": true,
+      "variants": [
+        {
+          "file": "choir/chant-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an otherworldly entity made of many fused voices chanting a slow droning dissonant cluster, wordless low human moans and thin high wails bending against each other out of tune, breathy whispers underneath, a wet throat rattle, constant and steady, no events, no words, echoing in an underground brick sewer tunnel at night, no instruments, no music",
+          "duration": 20.0,
+          "seed": null,
+          "cost": 0.04,
+          "native_loop": true,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, picked by ear; losers in sounds-src/unused/choir"
+        }
+      ],
+      "last_converted": "2026-11-01T01:51:22",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "choir/chant1.mp3"
+      ]
+    },
+    "choir/alert": {
+      "area": "choir",
+      "loop": false,
+      "variants": [
+        {
+          "file": "choir/alert-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an otherworldly creature of many fused voices noticing its prey: dozens of voices suddenly swelling together into a rising dissonant shriek, out of tune with each other, then cut off, clean recording with no distortion, single event, no words, echoing in an underground brick sewer tunnel at night, no instruments, no music",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, picked by ear; losers in sounds-src/unused/choir"
+        }
+      ],
+      "last_converted": "2026-11-01T01:51:22",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "choir/alert1.mp3"
+      ]
+    },
+    "choir/die": {
+      "area": "choir",
+      "loop": false,
+      "variants": [
+        {
+          "file": "choir/die-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an otherworldly creature of many fused voices dying: a dissonant choir of voices collapsing, the voices dropping out one by one and pitching down into a wet gurgle, a last long breath fading out, single event, no words, echoing in an underground brick sewer tunnel at night, no instruments, no music",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, picked by ear; losers in sounds-src/unused/choir"
+        },
+        {
+          "file": "choir/die-elevenlabs2.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an otherworldly creature of many fused voices dying: a dissonant choir of voices collapsing, the voices dropping out one by one and pitching down into a wet gurgle, a last long breath fading out, clean recording with no distortion, single event, no words, echoing in an underground brick sewer tunnel at night, no instruments, no music",
+          "duration": 4.0,
+          "seed": null,
+          "cost": 0.008,
+          "native_loop": false,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, picked by ear; losers in sounds-src/unused/choir"
+        }
+      ],
+      "last_converted": "2026-11-01T01:51:23",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "choir/die1.mp3",
+        "choir/die2.mp3"
+      ]
+    },
+    "choir/hurt": {
+      "area": "choir",
+      "loop": false,
+      "variants": [
+        {
+          "file": "choir/hurt-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "an otherworldly creature of many fused voices being wounded: a short jarring cry of many voices at once in a dissonant cluster, wet and choked, glitching and stuttering, single event, no words, echoing in an underground brick sewer tunnel at night, no instruments, no music",
+          "duration": 2.0,
+          "seed": null,
+          "cost": 0.004,
+          "native_loop": false,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, picked by ear; losers in sounds-src/unused/choir"
+        }
+      ],
+      "last_converted": "2026-11-01T01:51:23",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "choir/hurt1.mp3"
+      ]
+    },
+    "choir/scream": {
+      "area": "choir",
+      "loop": false,
+      "variants": [
+        {
+          "file": "choir/scream-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "a silent scream from an otherworldly choir: a choir breath sucked in backwards, then a deep sub-bass pressure wave that pushes the air out in a muffled whoomp, ears left ringing with a thin high tone, single event, no words, echoing in an underground brick sewer tunnel at night, no instruments, no music",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-11-01T00:00",
+          "bakeoff": "bake-off 2026-11-01: elevenlabs/sonilo/cassette, picked by ear; losers in sounds-src/unused/choir"
+        }
+      ],
+      "last_converted": "2026-11-01T01:51:24",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "choir/scream1.mp3"
+      ]
     }
   }
 }
