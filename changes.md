@@ -3,11 +3,10 @@
 ## 1.0.2
 
 ### Changes
-- art: the sewer summoning portal is 3D — rock pillars, a breathing skin hung between them and a ritual pool, fading into rubble with a crash that shakes the screen when the ritual ends; its eyes and mouth open onto starry space, its black ooze slowly runs down, shimmering and glinting, into a black pool, it lights the room violet and throws shadows, and the cursor on any part outlines all of it
-- audio: the choir of discord drones as it walks and shrieks, cries out and dies aloud, and its silent scream is heard
-- audio: the cultists of the sewer summoning ritual chant around the portal until the ritual breaks
-- ui: changelog button on the main menu shows what changed in each version, with a glowing dot until the new version's changes are read
-- ui: the mouse path shows the energy the move will cost the parasite or host at its end, red when the move would drain it dry
+- art: -redacted- in the sewers cult mission is now 3D 
+- audio: -redacted- ai and mission sounds
+- ui: changelog button on the main menu shows what changed in each version
+- ui: the mouse path shows the energy the move will cost the parasite or host at its end
 
 ### Fixes
 - ai: a body already reported is not reported again by every passer-by
