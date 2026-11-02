@@ -1,0 +1,25 @@
+=== short ===
+Vous êtes un parasite d’origine inconnue, et sans hôte, vous ne tiendrez pas longtemps. Possédez des humains, consumez leur corps, lisez dans leurs pensées et évoluez tandis qu’une organisation secrète se rapproche. Un roguelike de survival horror : possession, conspiration et culte infâme.
+
+=== long ===
+Parasite est un roguelike de survival horror qui se déroule dans une ville moderne. Vous êtes une petite chose d’origine inconnue, incapable de survivre longtemps par elle-même. Chaque mouvement coûte de l’énergie, et quand il n’y en a plus, c’en est fini de vous. Alors vous trouvez un humain, vous vous accrochez à lui et vous le prenez.
+
+L’hôte est votre batterie, votre déguisement et votre outil. Dépensez son énergie au lieu de la vôtre, passez devant des gens qui hurleraient en vous voyant, servez-vous de ses compétences, de ses badges d’accès, de son arme. Sondez son cerveau pour connaître son nom, ce qu’il sait et ce qu’il a vu. Quand il est épuisé, trouvez-en un autre.
+
+Quelque part dans la tête de ces gens se cache l’histoire de vos origines. Reconstituez-la avant que ceux qui la connaissent déjà ne vous trouvent.
+
+[h2]Caractéristiques[/h2]
+
+[list]
+[*][b]Possession.[/b] Accrochez-vous, maîtrisez l’hôte qui se débat et envahissez-le. Les hôtes se fatiguent, se dégradent et meurent : consumez-les ou gardez-en un sur la durée.
+[*][b]Sonde cérébrale.[/b] Arrachez noms, compétences, connaissances et indices directement de la tête d’un hôte, au prix de son énergie et de sa santé. Sondez trop fort et il s’effondre pour ne jamais se réveiller.
+[*][b]Consentement.[/b] Restez assez longtemps dans un hôte et il s’habitue à vous. Persuadez-le de coopérer, et parlez aux autres par sa bouche.
+[*][b]Évolution.[/b] Étudiez de nouvelles améliorations et faites-les pousser sur vos hôtes : aiguilles à neurotoxine, gaz hallucinogène, camouflage, faux souvenirs implantés dans la tête d’une victime, et bien d’autres. Chacune est un outil de plus pour survivre.
+[*][b]Habitats.[/b] Faites croître un nid dans les égouts sous la ville ou dans une grotte au fin fond des montagnes. Assimilez des hôtes, regagnez de l’énergie grâce aux formations biominérales, postez un veilleur contre les embuscades ou pondez un ovum pour renaître après votre mort.
+[*][b]Enquête.[/b] Rassemblez des indices à travers la ville pour dévoiler une chronologie des événements qui remonte du présent jusqu’au moment où tout a commencé.
+[*][b]Le Groupe.[/b] Une conspiration gouvernementale chargée de tout ce que personne n’est censé savoir a désormais ouvert un dossier sur vous. Ses équipes suivent votre piste, découvrent vos habitats et vous y attendent. Soutirez assez de renseignements au cerveau de ses agents, et vous pourrez vous attaquer à son chef.
+[*][b]Cultus Carnis.[/b] Fondez un culte de fidèles humains. Recrutez des gens dont l’emploi vous donne de l’influence dans le combat, les médias, la justice, les entreprises et la politique, organisez des épreuves, équipez vos fidèles et invoquez-les quand il le faut.
+[*][b]Une ville où se cacher.[/b] Centre-ville, quartiers résidentiels, bidonvilles, sièges sociaux, laboratoires de recherche, bases militaires et étendues sauvages au-delà, générés à chaque partie et entièrement en 3D. Passez de l’un à l’autre par les égouts depuis la carte de la région.
+[*][b]La discrétion avant la force.[/b] Les gens remarquent ce qui cloche autour d’eux, la police intervient et la tension monte dans les quartiers. Plongez dans une benne, glissez-vous dans une bouche d’égout ou devenez tout simplement quelqu’un d’autre.
+[*][b]Jouez à votre façon.[/b] Un scénario narratif ou un mode bac à sable ouvert, une difficulté distincte pour chaque système à mesure que vous le découvrez, une encyclopédie intégrée et la prise en charge des mods.
+[/list]

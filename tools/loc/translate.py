@@ -26,6 +26,7 @@ eaten by output. Every translation must pass locfmt.check (placeholder names, ht
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 import json
 import os
 import re
@@ -647,6 +648,65 @@ def apply_review(code: str, path: str | None) -> int:
     return 1 if bad else 0
 
 
+# --------------------------------------------------------------------------- store page
+
+STORE_SHORT_MAX = 300  # Steam's limit on the short description
+RE_BB = re.compile(r"\[/?\w+\]|\[\*\]")
+STORE_PROMPT = """You translate the Steam store page of the video game "Parasite" from English into {LANG}.
+This is marketing copy: keep its punch, rhythm and concrete images, write natural {LANG} a player
+would read on a store page, never a word-for-word gloss. Keep every BBCode tag ([b] [/b] [h2] [/h2]
+[list] [/list] [*]) exactly where its text goes, keep the two section markers `=== short ===` and
+`=== long ===` as they are, and keep the short description under """ + str(STORE_SHORT_MAX) + """ characters.
+Game names and Latin terms (Parasite, Cultus Carnis) stay as they are. Answer with the translated
+text only, both sections, nothing else.
+
+The game's style sheet (register, typography, glossary) applies:"""
+
+
+def store_sections(text: str) -> dict:
+    """=== short === / === long === -> {short, long}."""
+    parts = re.split(r"^=== (\w+) ===$", text.strip(), flags=re.M)
+    return {parts[i]: parts[i + 1].strip() for i in range(1, len(parts) - 1, 2)}
+
+
+def store_problem(src: str, tr: str) -> str | None:
+    a, b = store_sections(src), store_sections(tr)
+    if set(a) != set(b):
+        return f"sections {sorted(b)} instead of {sorted(a)}"
+    if len(b["short"]) > STORE_SHORT_MAX:
+        return f"short description {len(b['short'])} chars, over {STORE_SHORT_MAX}"
+    if Counter(RE_BB.findall(src)) != Counter(RE_BB.findall(tr)):
+        return "BBCode tags differ"
+    return None
+
+
+def store(code: str) -> int:
+    """loc/store/<code>.txt from loc/store/en.txt (fetched from the public store page and turned
+    into the Steamworks BBCode): one call, retried with the reason if the tags or the length break.
+    The result is pasted into Steamworks by hand."""
+    src = (LOC / "store" / "en.txt").read_text(encoding="utf-8")
+    style = (LOC / f"style-{code}.md").read_text(encoding="utf-8")
+    system = STORE_PROMPT.replace("{LANG}", NAMES.get(code, code)) + "\n\n" + style.strip() + "\n"
+    # token totals only: the string state is never touched (a run may be writing it)
+    TOTALS[code] = {"calls": 0, "input": 0, "output": 0}
+    user, why = src, None
+    for attempt in range(3):
+        res = call_with_quota(system, user, f"{code}-store.jsonl", False)
+        tally(code, res["usage"])
+        tr = res["text"].strip() + "\n"
+        why = store_problem(src, tr)
+        if not why:
+            break
+        user = src + f"\n\n(Your previous answer was rejected: {why}. Translate again.)"
+    if why:
+        warn(f"store: rejected 3 times ({why})")
+        return 1
+    out = LOC / "store" / f"{code}.txt"
+    out.write_text(typo(code, tr), encoding="utf-8")
+    info(f"store: -> {out.relative_to(ROOT)} (short {len(store_sections(tr)['short'])} chars)")
+    return 0
+
+
 # --------------------------------------------------------------------------- noun table
 
 RE_NOUN_KEY = re.compile(r"[a-z][a-z' -]*")
@@ -790,6 +850,10 @@ def selftest() -> int:
     assert ks == ["dog"], ks
     for raw in ["a\tb", "x\ny", "back\\slash \\n", ""]:
         assert uncell(cell(raw)) == raw and "\t" not in cell(raw) and "\n" not in cell(raw), raw
+    en = "=== short ===\nA [b]bold[/b] game.\n\n=== long ===\n[h2]F[/h2]\n[list]\n[*]x\n[/list]\n"
+    assert store_problem(en, en.replace("game", "jeu")) is None
+    assert store_problem(en, en.replace("[b]", "")) == "BBCode tags differ"
+    assert store_problem(en, en.replace("game.", "x" * 301)).startswith("short description")
     assert typo("fr", "Attention ! « Oui » : l'agent") == "Attention\u00a0! «\u00a0Oui\u00a0»\u00a0: l’agent"
     assert typo("fr", "<span class='x'>a</span> &rarr; {s:def}") == "<span class='x'>a</span> &rarr; {s:def}"
     print("translate selftest: ok")
@@ -798,7 +862,7 @@ def selftest() -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("cmd", choices=["probe", "run", "build", "status", "nouns", "review", "apply-review", "selftest"])
+    ap.add_argument("cmd", choices=["probe", "run", "build", "status", "nouns", "review", "apply-review", "store", "selftest"])
     ap.add_argument("--sheet", help="apply-review: the TSV to import (default loc/review/<lang>.tsv)")
     ap.add_argument("--lang", default="fr")
     ap.add_argument("--batches", type=int, default=3, help="probe: how many batches")
@@ -816,6 +880,8 @@ def main() -> int:
         return nouns(a.lang)
     if a.cmd == "review":
         return review(a.lang)
+    if a.cmd == "store":
+        return store(a.lang)
     if a.cmd == "apply-review":
         return apply_review(a.lang, a.sheet)
     files = a.files.split(",") if a.files else None

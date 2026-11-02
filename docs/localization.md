@@ -191,6 +191,7 @@ are only transport: a new or edited string never re-translates the rest.
 | `python3 tools/loc/translate.py nouns --lang fr` | adds every missing noun key to `loc/nouns-<lang>.json` (gender, feminine form, aspirated h; prompt `loc/nouns.md`), passing the interface translation of the key so both agree. The file is the runtime noun table: review it by hand |
 | `make loc-build [lang=fr]` | `electron/lang/<lang>.json` from the state (+ `loc/nouns-<lang>.json`); French typography (non-breaking spaces, ’) is applied here, not trusted to the model |
 | `python3 tools/loc/translate.py status --lang fr` | counts per status |
+| `python3 tools/loc/translate.py store --lang fr` | the Steam store page: `loc/store/en.txt` (short + long description in Steamworks BBCode, taken from the public store page) → `loc/store/<lang>.txt`, marketing register, BBCode tags and the 300-character short limit checked; paste it into Steamworks by hand |
 | `python3 tools/loc/translate.py review --lang fr` | `loc/review/<lang>.tsv` for a human reader: id, context, English, translation, the model's doubt, an empty `fix` column; doubts first. UTF-8 with BOM (Excel) |
 | `python3 tools/loc/translate.py apply-review --lang fr [--sheet path]` | imports every non-empty `fix` that passes the same checks as a model translation, marks it `reviewed` (no re-run touches it until the English changes), then builds; rejects are listed with the reason |
 

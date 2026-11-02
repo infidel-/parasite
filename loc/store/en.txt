@@ -1,0 +1,25 @@
+=== short ===
+You are a parasite of unknown origin, and without a host you won't last long. Take over people, burn through their bodies, read their minds and evolve, while a secret organization closes in. A survival horror roguelike about possession, conspiracy and building a nefarious cult.
+
+=== long ===
+Parasite is a survival horror roguelike set in a modern city. You are a small thing of unknown origin that cannot live for long on its own. Every move costs energy, and when the energy runs out, so do you. So you find a human, latch on, and take them.
+
+The host is your battery, your disguise and your tool. Spend its energy instead of yours, walk past people who would scream at the sight of you, use its skills, its keycards, its gun. Probe its brain for its name, what it knows and what it has seen. When it is used up, find another.
+
+Somewhere in the heads of these people is the story of where you came from. Piece it together before the people who already know it find you.
+
+[h2]Features[/h2]
+
+[list]
+[*][b]Possession.[/b] Attach, subdue the struggling host and invade. Hosts tire, degrade and die: burn through them or keep one for the long haul.
+[*][b]Brain probing.[/b] Pull names, skills, knowledge and clues straight out of a host's head, at the cost of their energy and health. Probe too hard and they collapse, never to wake up.
+[*][b]Consent.[/b] Stay in one host long enough and it gets used to you. Talk it into cooperating, and speak to other people through its mouth.
+[*][b]Evolution.[/b] Research new improvements and grow them on your hosts: neurotoxin needles, hallucinogen gas, camouflage, false memories planted in a victim's head, and many others. Every one is a tool to help you survive.
+[*][b]Habitats.[/b] Grow a nest in the sewers under the city or in a cave far out in the mountains. Assimilate hosts, restore energy with biomineral, post a watcher against ambushes, or lay an ovum to be reborn when you die.
+[*][b]Investigation.[/b] Gather clues across the city to open a timeline of events, running backwards from the present toward the moment it all began.
+[*][b]The Group.[/b] A government conspiracy that handles the things nobody is supposed to know about now has a file on you. Its teams follow your trail, find your habitats and wait for you inside. Probe enough intel from their agents and you can go after their leader.
+[*][b]Cultus Carnis.[/b] Found a cult of human followers. Recruit people whose jobs give you combat, media, legal, corporate and political pull, run ordeals, equip them, and summon them when necessary.
+[*][b]A city to hide in.[/b] Downtown, residential streets, slums, corporate headquarters, research labs, military bases and the wilderness beyond, generated anew each game and fully 3D. Move between them through the sewers on the region map.
+[*][b]Stealth before strength.[/b] People notice what is wrong around them, the police respond and districts heat up. Duck into a dumpster, slip down a sewer hatch, or just be someone else.
+[*][b]Your way to play.[/b] A story scenario or an open-ended sandbox, a separate difficulty for each system as you meet it, an in-game encyclopedia, and mod support.
+[/list]
