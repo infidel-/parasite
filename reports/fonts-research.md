@@ -12,11 +12,16 @@ what the game would ship.
 |---|---|---|---|---|
 | Eastern European Latin (pl cs sk hu ro hr sl lt lv et tr) | **Oxanium** (new, 29 KB). Zero-cost option: **Orkney-Regular** (already shipped) | **Xolonium** (already shipped) | 0–1 | every shipped default fails these languages; see § 1 |
 | Cyrillic (ru uk bg sr) | **Tektur** (new, 76 KB, has Bulgarian/Serbian `locl`). Safe option: **Exo 2** (151 KB) | **Xolonium** (already shipped) | 1 | the appended CSS fallback (Orkney) has no Cyrillic |
-| Simplified Chinese | **Noto Sans SC**, subset (≈ 570 KB woff2) | **ZCOOL QingKe HuangYou**, subset (≈ 950 KB woff2, much less if subset to title strings only) | 2 | |
-| Japanese | **DotGothic16**, subset (≈ 190–380 KB woff2). Fallback choice: **Noto Sans JP** | **Dela Gothic One** (or DotGothic16 for both) | 1–2 | the PC-98 font may change this; see the last section |
+| Simplified Chinese | **Noto Sans SC**, subset (≈ 570 KB woff2) | **Noto Sans SC** (the text font; ZCOOL QingKe HuangYou dropped at the pick) | 1 | |
+| Japanese | **DotGothic16**, subset (≈ 190–380 KB woff2). Fallback choice: **Noto Sans JP** | **DotGothic16** (the text font; Dela Gothic One dropped at the pick) | 1 | the PC-98 font may change this; see the last section |
 | Korean | **Noto Sans KR**, subset (166 KB woff2 for KS X 1001) | **Orbit** (175 KB woff2) | 2 | |
 | Traditional Chinese (noted only) | Noto Sans TC, subset to Big5 level 1 (864 KB woff2) | n/a | 1 | |
 | Pixel option, all of CJK | **Fusion Pixel 12px**: one design for SC/TC/JP/KR, 37–185 KB woff2 | same | 1 per region | sharp only at 12/24/36 px; game text is 16 px |
+
+Picked by the developer (2026-11-02, from the side-by-side preview): Oxanium, Tektur, Exo 2, Noto Sans SC,
+DotGothic16, Noto Sans JP, Noto Sans KR, Orbit. ZCOOL QingKe HuangYou and Dela Gothic One are out, so Chinese and
+Japanese titles use their text font. The bitmap fonts (Fusion Pixel, the Oldschool PC Font Pack) were dropped from
+the preview at the developer's request.
 
 Surprises:
 - **Tektur's acute accent is almost flat.** á/ā and é/ē are hard to tell apart even at 36 px
@@ -254,6 +259,11 @@ What the traps decide:
   `font-synthesis: none`; Japanese pixel text snapped to 16 px multiples; Korean `word-break: keep-all`.
 
 ## PC-98 font (from the developer)
+
+Not found yet. The pack it was expected in, VileR's Ultimate Oldschool PC Font Pack v2.2
+(`oldschool_pc_font_pack_v2.2_web.zip`), has no PC-98 font: none of its 361 files has a kana or a kanji (FM Towns
+is the only Japanese machine in it, in codepage 437). The rest of the project folder has PC-98 screenshots
+(`LaBaguette/PC98 GUI Examples`) but no font file.
 
 _To fill in when the file arrives._ Check:
 - kana: 184
