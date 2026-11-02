@@ -4,6 +4,7 @@
 - `make` / `make game-debug`: `cd src && make electron`
 - `make testmod`: `cd examples/testmod/ && make`
 - `make main`: `cd electron && make`
+- `make loc-probe` / `make loc` / `make loc-build` (`lang=fr`): translate the string catalog with Claude and build `electron/lang/<lang>.json` — see `docs/localization.md`
 - `make entities`: rebuild `app/img/entities128.png` (the 128 px art of every `Const.HD128` frame, region map marks included) from the original kra/png art and the generated sheets — after any change to those sources
 
 ## Where the rest of it lives
@@ -23,6 +24,7 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 | BUILDING that thing out of quads instead of a glb — a fitting, a box, a run | [`docs/3d-geometry.md`](docs/3d-geometry.md) — the per-FACE texture split, the 0..1 aspect lock, wiring and warm |
 | dressing or enhancing a 3D area | skill `3d-enhance` |
 | generating or baking a SOUND (fal-sfx MCP, `make sounds`) | [`docs/sound-gen.md`](docs/sound-gen.md) — every new sound gets a bake-off; never touch shipped sounds |
+| adding or changing ANY player-facing text, or translating it | [`docs/localization.md`](docs/localization.md) — `T()`/`N()` markers, placeholder syntax, nouns |
 
 **A NEW FINDING GOES IN THE DOC, NOT HERE.** This file went 1.7 KB → 61 KB in six months and 75% of
 that was two sections that are now docs. One line here when it must fire unprompted, the numbers and
@@ -48,6 +50,7 @@ the war story there. A rule nobody can act on without opening the doc anyway bel
 ## Code style (Haxe)
 
 - Use two-space indentation, brace-on-newline, and avoid trailing whitespace. in general, follow the existing code style of the file and repository.
+- **Player-facing text goes through `T('…')` (shown now) or `N('…')` (saved or compared: translate at display with `Loc.tr`)** — never a bare literal, never glued from pieces: a sentence with values is ONE template with `{placeholders}`. See [`docs/localization.md`](docs/localization.md).
 - Lines without text should NEVER have whitespace.
 - When adding new functions, always add short comment with summary of what it does on top, first letter should be lowercase
 - When generating code, comment each large block with a short summary, first letter should be lowercase

@@ -40,3 +40,7 @@ tools/node_modules
 tools/__pycache__
 ai-src
 .steam-user
+
+# localization tool scratch: raw model replies, term suggestions, claude cwd
+loc/.logs/
+loc/.cache/

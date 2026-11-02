@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+.PHONY: game-debug testmod main report loc loc-probe loc-build mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -173,6 +173,19 @@ itch-push:
 	    "$$(wslpath -w "$$b/parasite-$$v-$${c%%:*}.zip")" starinfidel/parasite:$${c##*:} \
 	    --userversion $$v; \
 	done
+
+# localization (docs/localization.md): translate the string catalog with claude -p, two passes, into
+# loc/<lang>.json, then build the runtime table electron/lang/<lang>.json. `lang`, not LANG: that one
+# is the locale of every process make starts.
+# usage: make loc-probe [lang=fr] [n=3] [files=cult/events,PediaConst] / make loc [lang=fr] [jobs=4] / make loc-build
+loc:
+	python3 tools/loc/translate.py run --lang $(or $(lang),fr) --jobs $(or $(jobs),1)
+
+loc-probe:
+	python3 tools/loc/translate.py probe --lang $(or $(lang),fr) --batches $(or $(n),3) $(if $(files),--files $(files))
+
+loc-build:
+	python3 tools/loc/translate.py build --lang $(or $(lang),fr)
 
 report:
 	cp -Rf reports/* ObsidianReports/
