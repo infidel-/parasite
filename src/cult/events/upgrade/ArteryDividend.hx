@@ -44,12 +44,18 @@ class ArteryDividend
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('overpump drains ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} overpump drains {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('pump distributes ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} pump distributes {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles the artery audit choice outcome
@@ -61,13 +67,20 @@ class ArteryDividend
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'corporate');
           cult.effects.add(drain);
-          cult.logsg('audit fracture leaks into ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} audit fracture leaks into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'corporate');
       cult.effects.add(effect);
-      cult.log('artery audit pumps ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} artery audit pumps {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the dividend vow choice outcome
@@ -79,17 +92,20 @@ class ArteryDividend
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('buckles under the vow and gains the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} buckles under the vow and gains the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('dividend vow echoes without gifting new insight.');
+          cult.logsg(T('{cult} dividend vow echoes without gifting new insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('swears the ' + granted.name + ' vow, bound to the artery.');
+        ai.log(T('{ai:The} swears the {trait} vow, bound to the artery.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

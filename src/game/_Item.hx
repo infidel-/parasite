@@ -62,6 +62,16 @@ import ItemInfo;
         name : info.unknown);
     }
 
+// the noun l10n.Loc renders for an {item:form} placeholder
+  public function getLocNoun(): _LocNoun
+    {
+      return {
+        key: getName(),
+        kind: LOC_NOUN,
+        gender: 'n',
+      };
+    }
+
 // a name
   public inline function aName(): String
     {

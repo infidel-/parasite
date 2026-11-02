@@ -3,6 +3,7 @@ package game;
 
 import const.*;
 import ai.AI;
+import l10n.Loc;
 import _AIEffectType;
 import _ChatEmotion;
 
@@ -88,7 +89,7 @@ class Chat extends _SaveObject
     {
       if (ai.chat.timeout > 0)
         {
-          ai.log('does not want to converse with you at the moment.');
+          ai.log(T('{ai:The} does not want to converse with you at the moment.', { ai: ai }));
           return;
         }
       target = ai;
@@ -173,7 +174,7 @@ class Chat extends _SaveObject
           game.ui.hud.addAction({
             id: 'chat.' + a.toLowerCase(),
             type: ACTION_CHAT,
-            name: a,
+            name: Loc.tr(a),
             energy: cost,
           });
         }
@@ -183,7 +184,7 @@ class Chat extends _SaveObject
       game.ui.hud.addAction({
         id: 'chat.exit',
         type: ACTION_CHAT,
-        name: 'Exit',
+        name: T('Exit'),
       });
     }
 
@@ -192,18 +193,18 @@ class Chat extends _SaveObject
     {
       // generate a full list of possible actions
       var possibleActions = [
-        'Analyze',
-        'Assure',
-        'Discuss',
-        'Distort',
-        'Empathize',
-        'Encourage',
-        'Flatter',
-        'Lie',
-        'Provoke',
-        'Scare',
-        'Shock',
-        'Threaten',
+        N('Analyze'),
+        N('Assure'),
+        N('Discuss'),
+        N('Distort'),
+        N('Empathize'),
+        N('Encourage'),
+        N('Flatter'),
+        N('Lie'),
+        N('Provoke'),
+        N('Scare'),
+        N('Shock'),
+        N('Threaten'),
       ];
       // remove actions from previous turn
       for (a in prevActions)
@@ -228,9 +229,9 @@ class Chat extends _SaveObject
         }
       // check if question and consult are available
       if (canQuestion())
-        list.push('Question');
+        list.push(N('Question'));
       else if (canConsult())
-        list.push('Consult');
+        list.push(N('Consult'));
 //      trace(list);
       return list;
     }
@@ -240,36 +241,29 @@ class Chat extends _SaveObject
     {
       var list = [];
       if (canQuestion())
-        list.push('Question');
+        list.push(N('Question'));
       if (canConsult())
-        list.push('Consult');
+        list.push(N('Consult'));
       if (canDeescalate())
-        list.push('De-escalate');
+        list.push(N('De-escalate'));
       if (canSubvert())
-        list.push('Subvert');
+        list.push(N('Subvert'));
       if (canRequest())
-        list.push('Request');
+        list.push(N('Request'));
       if (canRecruit())
-        list.push('Recruit');
+        list.push(N('Recruit'));
       return list;
     }
 
 // analyze (use psychology)
   function analyze()
     {
-      // form basic string replacing pronouns
-      var msg = 'Analyzing ' + target.theName() + ' tells you that he ';
-      if (target.chat.aspectID > 0)
-        {
-          var aspect = ChatConst.aspects[target.chat.aspectID];
-          var char0 = aspect.charAt(0);
-          var a = 'a';
-          if ('aeiuo'.indexOf(char0) >= 0)
-            a = 'an';
-          msg += 'is ' + a + ' ' + aspect + ' individual, who ';
-        }
-      msg += ChatConst.needStrings[target.chat.needID]
-        [target.chat.needStringID];
+      // the need sentence, with the aspect phrase in it unless the aspect is normal
+      var msg = Loc.fmt(ChatConst.needStrings[target.chat.needID][target.chat.needStringID], {
+        ai: target,
+        aspect: (target.chat.aspectID > 0 ?
+          ChatConst.aspectDesc[ChatConst.aspects[target.chat.aspectID]] : 'none'),
+      });
 
       // mark job as known and add job info
       var skill = player.skills.getLevel(SKILL_PSYCHOLOGY);
@@ -278,19 +272,26 @@ class Chat extends _SaveObject
           target.isJobKnown = true;
           var jobInfo = game.jobs.getJobInfo(target.job);
           if (jobInfo != null)
-            msg += ' He works as a ' + target.job +
-              Const.smallgray(' [level ' + jobInfo.level + ']') + '.';
+            msg += ' ' + T('{ai, select, m{He} f{She} other{It}} works as {job:a} <span class="small gray">[level {level}]</span>.', {
+              ai: target,
+              job: target.getJobLocNoun(),
+              level: jobInfo.level,
+            });
         }
 
       if (target.hasClues())
-        msg += ' He knows something.';
-      else msg += ' He knows nothing' +
-        ((target.chat.eventID != null || target.isNPC) ?
-         ' else.' : '.');
+        msg += ' ' + T('{ai, select, m{He} f{She} other{It}} knows something.', { ai: target });
+      else if (target.chat.eventID != null ||
+          target.isNPC)
+        msg += ' ' + T('{ai, select, m{He} f{She} other{It}} knows nothing else.', { ai: target });
+      else msg += ' ' + T('{ai, select, m{He} f{She} other{It}} knows nothing.', { ai: target });
       if (target.chat.emotion > 0)
-        msg += ' He is visibly ' + ChatConst.emotions[target.chat.emotionID] + '.';
+        msg += ' ' + T('{ai, select, m{He} f{She} other{It}} is visibly {emotion, select, startled{startled} angry{angry} distressed{distressed} other{desensitized}}.', {
+          ai: target,
+          emotion: ChatConst.emotions[target.chat.emotionID],
+        });
       if (target.skills.hasLearnableSkills())
-        msg += ' He has some useful skills.';
+        msg += ' ' + T('{ai, select, m{He} f{She} other{It}} has some useful skills.', { ai: target });
 
       // print consent and fatigue
       var skill = player.skills.getLevel(SKILL_PSYCHOLOGY);
@@ -305,22 +306,23 @@ class Chat extends _SaveObject
             word = 'ambivalent';
           else if (target.chat.consent < 80)
             word = 'agreeable';
-          else if (target.chat.consent < 100)
-            word = 'enthusiastic';
-          msg += ' He seems ' + word + ' about the converation';
+          else word = 'enthusiastic';
+          var tired = 'no';
           if (skill >= 50 &&
               target.chat.fatigue >= 3)
             {
-              msg += ', but ';
               if (target.chat.fatigue < 6)
-                word = 'a little tired.';
+                tired = 'little';
               else if (target.chat.fatigue < 8)
-                word = 'somewhat weary.';
-              else if (target.chat.fatigue < 10)
-                word = 'almost ready to stop.';
-              msg += word;
+                tired = 'weary';
+              else tired = 'stop';
             }
-          else msg += '.';
+          // tr: {word} is the consent so far, {tired} the fatigue (no: not tired, or not seen)
+          msg += ' ' + T('{ai, select, m{He} f{She} other{It}} seems {word, select, reluctant{reluctant} tentative{tentative} ambivalent{ambivalent} agreeable{agreeable} other{enthusiastic}} about the conversation{tired, select, little{, but a little tired} weary{, but somewhat weary} stop{, but almost ready to stop} other{}}.', {
+            ai: target,
+            word: word,
+            tired: tired,
+          });
         }
 //      var needActions = ChatConst.needActions[target.chat.needID];
 //      trace(needActions);
@@ -342,11 +344,10 @@ class Chat extends _SaveObject
 
       // positive action
       target.chat.emotion--;
-      var msg = ChatConst.actionDesc[name] + ' ' + target.theName() + ', you observe how he calms down ';
-      if (target.chat.emotion == 0)
-        msg += 'completely.';
-      else msg += 'to a degree.';
-      log(msg);
+      log(Loc.fmt(ChatConst.actionDescCalm[name], {
+        ai: target,
+        calm: (target.chat.emotion == 0 ? 'full' : 'partial'),
+      }));
     }
 
 // common code for explosive aspect (manipulate, shock)
@@ -358,7 +359,7 @@ class Chat extends _SaveObject
       target.chat.stun = 0;
       target.chat.emotion = 2;
       target.chat.emotionID = EMOTION_ANGRY;
-      target.log('is suddenly enraged by your words.');
+      target.log(T('{ai:The} is suddenly enraged by your words.', { ai: target }));
       return true;
     }
 
@@ -389,7 +390,10 @@ class Chat extends _SaveObject
       target.chat.emotion++;
       target.chat.emotionID = emotionID;
       target.chat.stun = 0;
-      log(target.TheName() + "'s temperament gets the better of him. He is now noticeably " + emotion + '.');
+      log(T("{ai:The}'s temperament gets the better of {ai, select, m{him} f{her} other{it}}. {ai, select, m{He} f{She} other{It}} is now noticeably {emotion, select, startled{startled} angry{angry} distressed{distressed} other{desensitized}}.", {
+        ai: target,
+        emotion: emotion,
+      }));
       return true;
     }
 
@@ -461,18 +465,6 @@ class Chat extends _SaveObject
       // positive results
       if (isPositive)
         {
-          var adj = '';
-          switch (target.chat.stun)
-            {
-              case 0:
-                adj = 'noticeable';
-              case 1:
-                adj = 'significant';
-              case 2:
-                adj = 'tremendous';
-              case 3:
-                adj = 'staggering';
-            }
           var diffBonus = 0;
           switch (difficulty)
             {
@@ -488,8 +480,10 @@ class Chat extends _SaveObject
           // stun 3: 4 * (10 - [4-8] + [0-3]) = 4 * [2-7] = 8-28
           var val = (target.chat.stun + 1) * (10 - target.psyche + Std.random(4) + diffBonus);
           target.chat.consent += val;
-          log(ChatConst.actionDesc[name] + ' ' + target.theName() + ', you observe a ' + adj + ' growth in his consent. ' +
-            game.infostr('[+' + val + ' consent]'));
+          log(Loc.fmt(ChatConst.actionDesc[name], {
+            ai: target,
+            stun: target.chat.stun,
+          }) + ' ' + game.infostr('[+' + val + ' consent]'));
           // count all positive lies
           if (name == 'Lie')
             lies++;
@@ -505,25 +499,20 @@ class Chat extends _SaveObject
 // negative results for manipulation
   function manipulateNegative(name: String)
     {
-      var adj = '';
-      switch (target.chat.stun)
-        {
-          case 0:
-            adj = 'unimpressed';
-          case 1:
-            adj = 'annoyed';
-          case 2:
-            adj = 'irritated';
-          case 3:
-            adj = 'livid';
-        }
       var val = (target.chat.stun + 1) * (5 + Std.random(5));
       target.chat.consent -= val;
-      var msg = target.TheName() + ' is ' + adj + ' with your attempts to ' + name.toLowerCase() + '. ';
+      // tr: {stun} is how badly it lands, 0 (mildest) to 3
+      var msg = T('{ai:The} is {stun, select, 0{unimpressed} 1{annoyed} 2{irritated} other{livid}} with your attempts to {action, select, assure{assure} discuss{discuss} distort{distort} empathize{empathize} encourage{encourage} flatter{flatter} other{lie}}.', {
+        ai: target,
+        stun: target.chat.stun,
+        action: name,
+      });
       if (liesFlag)
-        msg = target.TheName() + ' sees through your lies and is ' + adj + '. ';
-      msg += game.infostr('[-' + val + ' consent]');
-      log(msg);
+        msg = T('{ai:The} sees through your lies and is {stun, select, 0{unimpressed} 1{annoyed} 2{irritated} other{livid}}.', {
+          ai: target,
+          stun: target.chat.stun,
+        });
+      log(msg + ' ' + game.infostr('[-' + val + ' consent]'));
       liesFlag = false;
       // increase alertness by that amount
       target.alertness += val;
@@ -560,7 +549,10 @@ class Chat extends _SaveObject
           case 'exhausted':
             if (Std.random(100) < 65)
               {
-                log('You fail to provoke ' + target.theName() + ' due to his enervation.');
+                log(T('You fail to {action, select, provoke{provoke} threaten{threaten} scare{scare} other{shock}} {ai:the} due to {ai, select, m{his} f{her} other{its}} enervation.', {
+                  action: 'provoke',
+                  ai: target,
+                }));
                 return;
               }
         }
@@ -572,7 +564,7 @@ class Chat extends _SaveObject
       var consent = 5 + Std.random(2);
       target.chat.consent -= consent;
       target.chat.stun = 0;
-      log('You provoke ' + target.theName() + ' invigorating his desire for more conversation. ' +
+      log(T('You provoke {ai:the} invigorating {ai, select, m{his} f{her} other{its}} desire for more conversation.', { ai: target }) + ' ' +
         game.infostr('[-' + consent + ' consent, -' + fatigue + ' fatigue]'));
     }
 
@@ -581,19 +573,12 @@ class Chat extends _SaveObject
     {
       // target is now emotional
       target.chat.emotion++;
-      var adj = '';
-      switch (target.chat.emotion)
-        {
-          case 1:
-            adj = 'noticeably';
-          case 2:
-            adj = 'even more';
-          case 3:
-            adj = 'completely';
-          default:
-            adj = 'completely';
-        }
-      log(target.TheName() + ' becomes ' + adj + ' ' + ChatConst.emotions[target.chat.emotionID] + ' by your attempts to communicate.');
+      // tr: {degree} is the emotion level, 1 to 3
+      log(T('{ai:The} becomes {degree, select, 1{noticeably} 2{even more} other{completely}} {emotion, select, startled{startled} angry{angry} distressed{distressed} other{desensitized}} by your attempts to communicate.', {
+        ai: target,
+        degree: target.chat.emotion,
+        emotion: ChatConst.emotions[target.chat.emotionID],
+      }));
       if (target.chat.emotion >= 3)
         maxEmotion();
       return true;
@@ -616,7 +601,7 @@ class Chat extends _SaveObject
                 ai.emitRandomSound('' + REASON_DAMAGE);
                 game.playerArea.moveToRandom(false);
               }
-            else ai.setState(AI_STATE_ALERT, null, ' is absolutely furious.');
+            else ai.setState(AI_STATE_ALERT, null, T('{ai:The} is absolutely furious.', { ai: ai }));
             ai.onEffect(new effects.Berserk(game, 10));
           // -> panic
           case EMOTION_STARTLED:
@@ -628,12 +613,12 @@ class Chat extends _SaveObject
                 ai.emitRandomSound('' + REASON_DAMAGE);
                 game.playerArea.moveToRandom(false);
               }
-            else ai.setState(AI_STATE_ALERT, null, ' is panicking.');
+            else ai.setState(AI_STATE_ALERT, null, T('{ai:The} is panicking.', { ai: ai }));
             ai.onEffect(new effects.Panic(game, 10));
           // -> tears
           case EMOTION_DISTRESSED:
             target.emitRandomSound('' + EFFECT_CRYING);
-            target.log('is crying.');
+            target.log(T('{ai:The} is crying.', { ai: target }));
             target.onEffect(new effects.Crying(game, 15));
           case EMOTION_DESENSITIZED:
             target.chat.consent = 100;
@@ -673,7 +658,7 @@ class Chat extends _SaveObject
           case 'resilient':
             if (Std.random(100) < 30)
               {
-                target.log('seems to be unperturbed by your words.');
+                target.log(T('{ai:The} seems to be unperturbed by your words.', { ai: target }));
                 return true;
               }
             if (Std.random(100) < 10)
@@ -691,18 +676,21 @@ class Chat extends _SaveObject
           case 'adaptive':
             if (Std.random(100) < 30)
               {
-                var msg = 'Ignoring your attempts to ' + id + ' him, ' + target.theName();
-                if (target.chat.stun == 0)
-                  msg += ' stays calm.';
-                else msg += ' calms down.';
-                log(msg);
+                log(T('Ignoring your attempts to {action, select, threaten{threaten} scare{scare} other{shock}} {ai, select, m{him} f{her} other{it}}, {ai:the} {calm, select, stays{stays calm} other{calms down}}.', {
+                  action: id,
+                  ai: target,
+                  calm: (target.chat.stun == 0 ? 'stays' : 'down'),
+                }));
                 target.chat.stun = 0;
                 return true;
               }
           case 'exhausted':
             if (Std.random(100) < 65)
               {
-                log('You fail to ' + id + ' ' + target.theName() + ' due to his enervation.');
+                log(T('You fail to {action, select, provoke{provoke} threaten{threaten} scare{scare} other{shock}} {ai:the} due to {ai, select, m{his} f{her} other{its}} enervation.', {
+                  action: id,
+                  ai: target,
+                }));
                 return true;
               }
         }
@@ -729,7 +717,6 @@ class Chat extends _SaveObject
           target.chat.stun++;
           var consent = 1 + Std.random(5);
           target.chat.consent -= consent;
-          var msg = target.TheName();
           if (Std.random(100) < 15)
             {
               var speech = ChatConst.shockSpeechHost;
@@ -739,20 +726,21 @@ class Chat extends _SaveObject
                 speech[Std.random(speech.length)],
                 COLOR_MESSAGE);
             }
+          var msg = '';
           switch (target.chat.stun)
             {
               case 1:
-               msg += ' is unsettled by your words.';
+                msg = T('{ai:The} is unsettled by your words.', { ai: target });
               case 2:
-               msg += ' is visibly shaken because of your words.';
+                msg = T('{ai:The} is visibly shaken because of your words.', { ai: target });
               case 3:
-               msg += '  is deeply disturbed by the things you said.';
+                msg = T('{ai:The} is deeply disturbed by the things you said.', { ai: target });
             }
           log(msg + ' ' + game.infostr('[-' + consent + ' consent, +1 shock]'));
         }
       else
         {
-          log('Your words fall on deaf ears, ' + target.theName() + ' is too stunned already.');
+          log(T('Your words fall on deaf ears, {ai:the} is too stunned already.', { ai: target }));
         }
     }
 
@@ -788,7 +776,7 @@ class Chat extends _SaveObject
           // no more clues
           if (!ret)
             {
-              game.log('You did not learn any new information.', COLOR_TIMELINE);
+              game.log(T('You did not learn any new information.'), COLOR_TIMELINE);
               target.chat.clues = 0;
             }
           else target.chat.clues--;
@@ -799,13 +787,13 @@ class Chat extends _SaveObject
           // has a chance of full note clue
           var ret = game.timeline.learnClues(target.event, true);
           if (!ret)
-            game.log('You did not learn any new information.', COLOR_TIMELINE);
+            game.log(T('You did not learn any new information.'), COLOR_TIMELINE);
           // mark npc as scanned (after 3 times)
           if (target.brainProbed >= 2 &&
               !target.npc.memoryKnown)
             {
               target.npc.memoryKnown = true;
-              target.log('does not know anything else.', COLOR_TIMELINE);
+              target.log(T('{ai:The} does not know anything else.', { ai: target }), COLOR_TIMELINE);
             }
           target.brainProbed++;
         }
@@ -860,12 +848,12 @@ class Chat extends _SaveObject
     {
       if (!target.inventory.has('radio'))
         {
-          target.log('says he does not have a radio on him.');
+          target.log(T('{ai:The} says {ai, select, m{he} f{she} other{it}} does not have a radio on {ai, select, m{him} f{her} other{it}}.', { ai: target }));
           return;
         }
       if (game.area.alertness == 0)
         {
-          target.log('says the area is considered low-risk at the moment.');
+          target.log(T('{ai:The} says the area is considered low-risk at the moment.', { ai: target }));
           return;
         }
       var val = 10 + Std.random(10);
@@ -875,7 +863,8 @@ class Chat extends _SaveObject
         canDelay: true,
         always: true,
       });
-      target.log('informs the HQ that the threat has been neutralized. ' + game.infostr('[-' + val + ' alertness]'));
+      target.log(T('{ai:The} informs the HQ that the threat has been neutralized.', { ai: target }) + ' ' +
+        game.infostr('[-' + val + ' alertness]'));
       game.area.alertness -= val;
       target.chat.timeout = 20 + 5 * Std.random(5);
       finish();
@@ -901,13 +890,13 @@ class Chat extends _SaveObject
       if (!target.inventory.has('smartphone') &&
           !target.inventory.has('mobilePhone'))
         {
-          target.log('says he does not have a phone.');
+          target.log(T('{ai:The} says {ai, select, m{he} f{she} other{it}} does not have a phone.', { ai: target }));
           return;
         }
       // no reception in habitat
       if (game.area.isHabitat)
         {
-          log("says there's no reception here.");
+          target.log(T("{ai:The} says there's no reception here.", { ai: target }));
           return;
         }
       var val = 5 + Std.random(5);
@@ -920,7 +909,8 @@ class Chat extends _SaveObject
         canDelay: true,
         always: true,
       });
-      target.log('informs the team leader that this was a dead end. ' + game.infostr('[+' + val + ' distance]'));
+      target.log(T('{ai:The} informs the team leader that this was a dead end.', { ai: target }) + ' ' +
+        game.infostr('[+' + val + ' distance]'));
       target.chat.timeout = 30 + 10 * Std.random(5);
       finish();
     }
@@ -983,7 +973,10 @@ class Chat extends _SaveObject
       for (item in target.inventory)
         list.push(item);
       var item = list[Std.random(list.length)];
-      log(target.TheName() + ' hands you ' + item.aName() + '.');
+      log(T('{ai:The} hands you {item:a}.', {
+        ai: target,
+        item: item,
+      }));
       target.inventory.removeItem(item);
       player.host.inventory.add(item);
       target.chat.timeout = 20 + 5 * Std.random(5);
@@ -1060,8 +1053,7 @@ class Chat extends _SaveObject
             {
               var val = 1 + Std.random(3);
               target.chat.consent -= val;
-              log('You try to ' +
-                ChatConst.actionDescFail[name] + ' ' + target.theName() + ' but fail miserably. ' +
+              log(Loc.fmt(ChatConst.actionDescFail[name], { ai: target }) + ' ' +
                 game.infostr('[-' + val + ' consent]'));
               player.skills.increase(skillID, 1);
               target.chat.stun = 0;
@@ -1094,7 +1086,7 @@ class Chat extends _SaveObject
             case 'question':
               question();
             case 'exit':
-              log('You interrupt the conversation.');
+              log(T('You interrupt the conversation.'));
               finish();
             // one of the consent actions
             default:
@@ -1139,7 +1131,7 @@ class Chat extends _SaveObject
         }
       if (target.chat.fatigue >= 10)
         {
-          log('Feeling tired, ' + target.theName() + ' ends the conversation.');
+          log(T('Feeling tired, {ai:the} ends the conversation.', { ai: target }));
           finish();
         }
     }
@@ -1153,7 +1145,7 @@ class Chat extends _SaveObject
       // check for minimal consent
       if (target.chat.consent <= 0)
         {
-          log('Frustrated by the conversation, ' + target.theName() + ' ends it.');
+          log(T('Frustrated by the conversation, {ai:the} ends it.', { ai: target }));
           finish();
         }
       // maximum consent (changed during the convo)
@@ -1162,11 +1154,10 @@ class Chat extends _SaveObject
         {
           var msg = '';
           if (impulsiveFinish)
-            msg += 'Without thinking, '
+            msg = T('Without thinking, {ai:the} gives you {ai, select, m{his} f{her} other{its}} full consent.', { ai: target });
           else if (target.chat.emotionID == EMOTION_DESENSITIZED)
-            msg += 'Shrugging, ';
-          else msg += 'Inspired by the conversation, ';
-          msg += target.theName() + ' gives you his full consent.';
+            msg = T('Shrugging, {ai:the} gives you {ai, select, m{his} f{her} other{its}} full consent.', { ai: target });
+          else msg = T('Inspired by the conversation, {ai:the} gives you {ai, select, m{his} f{her} other{its}} full consent.', { ai: target });
           game.goals.complete(GOAL_TUTORIAL_CONSENT);
           log(msg);
           finish();
@@ -1178,8 +1169,10 @@ class Chat extends _SaveObject
           turn > 1)
         {
           target.isNameKnown = true;
-          log('You find out that his name is ' +
-            target.getName() + '.');
+          log(T('You find out that {ai, select, m{his} f{her} other{its}} name is {name}.', {
+            ai: target,
+            name: target.getName(),
+          }));
         }
     }
 
@@ -1196,7 +1189,7 @@ class Chat extends _SaveObject
           game.ui.hud.addAction({
             id: 'converseHost',
             type: ACTION_AREA,
-            name: 'Converse With',
+            name: T('Converse With'),
           });
           return;
         }
@@ -1210,7 +1203,7 @@ class Chat extends _SaveObject
           game.ui.hud.addAction({
             id: 'converseHost',
             type: ACTION_AREA,
-            name: 'Converse With',
+            name: T('Converse With'),
             isVirtual: true,
           });
           return;
@@ -1221,7 +1214,7 @@ class Chat extends _SaveObject
           game.ui.hud.addAction({
             id: 'converseMenu',
             type: ACTION_AREA,
-            name: 'Converse With...',
+            name: T('Converse With...'),
             isVirtual: true,
           });
           return;
@@ -1234,7 +1227,7 @@ class Chat extends _SaveObject
       game.ui.hud.addAction({
         id: 'converseHost',
         type: ACTION_AREA,
-        name: 'Host',
+        name: T('Host'),
         isVirtual: true,
       });
       // get a list of targets around
@@ -1243,11 +1236,12 @@ class Chat extends _SaveObject
         game.ui.hud.addAction({
           id: 'converseMenu.chat',
           type: ACTION_AREA,
-          name: ai.getNameCapped() + ' ' +
-            Const.smallgray(
-              '[' + Const.dirToName(
-                ai.x - game.playerArea.x,
-                ai.y - game.playerArea.y) + ']'),
+          name: T('{ai:Bare} {dir}', {
+            ai: ai,
+            dir: Const.smallgray('[' + Const.dirToName(
+              ai.x - game.playerArea.x,
+              ai.y - game.playerArea.y) + ']'),
+          }),
           isVirtual: true,
           obj: ai,
         });
@@ -1256,7 +1250,7 @@ class Chat extends _SaveObject
       game.ui.hud.addAction({
         id: 'converseMenu.exit',
         type: ACTION_CONVERSE_MENU,
-        name: 'Exit',
+        name: T('Exit'),
       });
     }
 
@@ -1281,13 +1275,6 @@ class Chat extends _SaveObject
 // log line + stats
   function log(s: String)
     {
-      if (target != null && !target.isMale)
-        {
-          s = StringTools.replace(s, 'He ', 'She ');
-          s = StringTools.replace(s, ' he ', ' she ');
-          s = StringTools.replace(s, ' him', ' her');
-          s = StringTools.replace(s, ' his', ' her');
-        }
       game.log(s);
     }
 }

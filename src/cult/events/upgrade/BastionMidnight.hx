@@ -47,12 +47,18 @@ class BastionMidnight
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'combat');
           cult.effects.add(drain);
-          cult.logsg('bandits ambush, leaving ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} bandits ambush, leaving {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('combat', amount);
-      cult.logsg('channels +' + amount + ' combat resource into reserves.');
+      cult.logsg(T('{cult} channels {n, plural, one{+# combat resource} other{+# combat resources}} into reserves.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the vow rally choice outcome
@@ -63,13 +69,20 @@ class BastionMidnight
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('combat', penalty);
-          cult.logsg('overextensions bleed -' + penalty + ' combat resource.');
+          cult.logsg(T('{cult} overextensions bleed {n, plural, one{-# combat resource} other{-# combat resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'combat');
       cult.effects.add(effect);
-      cult.logsg('stirs fury into ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.logsg(T('{cult} stirs fury into {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the brief dark choice outcome
@@ -81,11 +94,14 @@ class BastionMidnight
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var eff = new DecreasePower(game, penaltyTurns, 'combat');
           cult.effects.add(eff);
-          cult.logsg('misdirection backfires into ' + Const.col('cult-effect', eff.customName()) + '.');
+          cult.logsg(T('{cult} misdirection backfires into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', eff.customName()),
+          }));
           return;
         }
       var awarded = addTrait(cult, targetID, 'mind', false);
       if (awarded == null)
-        cult.logsg('intelligence swap stays theoretical.');
+        cult.logsg(T('{cult} intelligence swap stays theoretical.', { cult: cult }));
     }
 }

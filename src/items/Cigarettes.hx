@@ -26,7 +26,7 @@ class Cigarettes extends ItemInfo
       actions.push({
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Smoke a ' + Const.col('inventory-item', 'cigarette'),
+        name: T('Smoke a {item}', { item: Const.col('inventory-item', T('cigarette')) }),
         nameClean: T('Smoke one'),
         energy: 0,
         item: item
@@ -48,7 +48,7 @@ class Cigarettes extends ItemInfo
   function smokeAction(item: _Item): Bool
     {
       game.scene.sounds.play('item-' + item.id);
-      game.player.host.log('takes a slow drag and exhales a ribbon of smoke.');
+      game.player.host.log(T('{ai:The} takes a slow drag and exhales a ribbon of smoke.', { ai: game.player.host }));
       // game.player.host.inventory.removeItem(item);
       return true;
     }

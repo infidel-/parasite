@@ -2,6 +2,8 @@
 
 package objects;
 
+import l10n.Loc;
+
 import game.Game;
 import const.EvolutionConst;
 
@@ -55,10 +57,13 @@ class HabitatObject extends AreaObject
     }
 
 
-// habitat objects also return level
-  public override function getName()
+// habitat objects also show their level
+  public override function getDisplayName(): String
     {
-      return name + ' (level ' + level + ')';
+      return T('{obj} (level {level})', {
+        obj: Loc.tr(name),
+        level: level,
+      });
     }
 }
 

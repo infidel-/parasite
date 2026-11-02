@@ -111,7 +111,7 @@ class Loader
       rebuildAIDataMaxID(game);
       // camera + first render are deferred to applyLoaded (one tick later) so the
       // fader's cover transition can paint before the 3D city build stalls the thread
-      game.log('Game loaded from slot ' + slotID + '.');
+      game.log(T('Game loaded from slot {slot}.', { slot: slotID }));
 
       // surface scrubbed mod content as a single end-of-load message
       var orphanItems = Inventory.loadOrphanCount;
@@ -127,18 +127,20 @@ class Loader
         {
           var parts: Array<String> = [];
           if (orphanItems > 0)
-            parts.push(orphanItems + ' item' + (orphanItems == 1 ? '' : 's'));
+            parts.push(T('{n, plural, one{# item} other{# items}}', { n: orphanItems }));
           if (orphanSkills > 0)
-            parts.push(orphanSkills + ' skill' + (orphanSkills == 1 ? '' : 's'));
+            parts.push(T('{n, plural, one{# skill} other{# skills}}', { n: orphanSkills }));
           if (orphanGoals > 0)
-            parts.push(orphanGoals + ' goal' + (orphanGoals == 1 ? '' : 's'));
+            parts.push(T('{n, plural, one{# goal} other{# goals}}', { n: orphanGoals }));
           if (orphanImprovs > 0)
-            parts.push(orphanImprovs + ' improvement' + (orphanImprovs == 1 ? '' : 's'));
+            parts.push(T('{n, plural, one{# improvement} other{# improvements}}', { n: orphanImprovs }));
           if (orphanTraits > 0)
-            parts.push(orphanTraits + ' AI trait' + (orphanTraits == 1 ? '' : 's'));
+            parts.push(T('{n, plural, one{# AI trait} other{# AI traits}}', { n: orphanTraits }));
           game.message({
-            text: 'Removed ' + joinAnd(parts) +
-              ' from this save because the mod that supplied them is no longer enabled.',
+            // tr: {list} is a joined list of counts, e.g. "2 items and 1 skill"
+            text: T('Removed {list} from this save because the mod that supplied them is no longer enabled.', {
+              list: joinAnd(parts),
+            }),
           });
         }
       return true;
@@ -149,10 +151,11 @@ class Loader
     {
       if (parts.length <= 1)
         return parts.join('');
-      if (parts.length == 2)
-        return parts[0] + ' and ' + parts[1];
-      return parts.slice(0, parts.length - 1).join(', ') +
-        ' and ' + parts[parts.length - 1];
+      // tr: the last join of a list ("a, b and c"); {list} is the rest, joined with ", "
+      return T('{list} and {last}', {
+        list: parts.slice(0, parts.length - 1).join(', '),
+        last: parts[parts.length - 1],
+      });
     }
 
 // peek _activeMods array from save slot without performing full load.

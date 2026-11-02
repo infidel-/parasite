@@ -5,8 +5,11 @@ typedef WeaponInfo = {
   var skill: _Skill;
   var minDamage: Int;
   var maxDamage: Int;
-  var verb1: String;
-  var verb2: String;
+  var textMiss: String; // T() template: {attacker:The} misses {target}
+  var textMissYou: String; // T() template: {attacker:The} misses you (the parasite: French puts the pronoun before the verb)
+  var textHit: String; // T() template: {attacker:The} hits {target} for {damage}
+  var textHitYou: String; // T() template: {attacker:The} hits you for {damage}
+  @:optional var textStun: String; // T() template, stun weapons: {attacker:The} stuns {target} for {rounds}
   var type: _WeaponType;
   @:optional var attackEffect: _AttackEffect;
   @:optional var spawnBlood: Bool;

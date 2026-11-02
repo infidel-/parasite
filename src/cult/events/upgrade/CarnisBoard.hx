@@ -44,12 +44,18 @@ class CarnisBoard
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('corporate', penalty);
-          cult.logsg('case draw leaks -' + penalty + ' corporate resource.');
+          cult.logsg(T('{cult} case draw leaks {n, plural, one{-# corporate resource} other{-# corporate resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('corporate', amount);
-      cult.logsg('case draw locks +' + amount + ' corporate resource.');
+      cult.logsg(T('{cult} case draw locks {n, plural, one{+# corporate resource} other{+# corporate resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the echo seal choice outcome
@@ -61,13 +67,20 @@ class CarnisBoard
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new DecreasePower(game, failTurns, 'corporate');
           cult.effects.add(drain);
-          cult.logsg('echo seal overreaches into ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} echo seal overreaches into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'corporate');
       cult.effects.add(effect);
-      cult.log('memorandum veil channels ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} memorandum veil channels {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the script lash choice outcome
@@ -79,17 +92,20 @@ class CarnisBoard
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('flinches from the lashes and gains the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} flinches from the lashes and gains the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('script lash fades without etching new recall.');
+          cult.logsg(T('{cult} script lash fades without etching new recall.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('feels ' + granted.name + ' sear along the clandestine charter.');
+        ai.log(T('{ai:The} feels {trait} sear along the clandestine charter.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

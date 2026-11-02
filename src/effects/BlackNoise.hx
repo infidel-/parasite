@@ -56,10 +56,10 @@ class BlackNoise extends Effect
             var attacker = Attacker.fromAI(game, ai, false);
             if (nearest == null ||
                 (!attacker.canMoveToTarget() && !ai.isNear(nearest.x, nearest.y)))
-              ai.log('stands catatonic, staring into nothingness.');
+              ai.log(T('{ai:The} stands catatonic, staring into nothingness.', { ai: ai }));
             else
               {
-                ai.log('lashes out through black static.');
+                ai.log(T('{ai:The} lashes out through black static.', { ai: ai }));
                 CommonLogic.logicAttack(attacker, {
                   game: game,
                   type: TARGET_AI,
@@ -68,11 +68,11 @@ class BlackNoise extends Effect
               }
           case 1:
             // clawing own eyes out (direct self-damage)
-            ai.log('claws at his own eyes in mute panic.');
+            ai.log(T('{ai:The} claws at {ai, select, m{his} f{her} other{its}} own eyes in mute panic.', { ai: ai }));
             ai.onDamage(1 + Std.random(3));
           case 2:
             // catatonic state
-            ai.log('stands catatonic, staring into nothingness.');
+            ai.log(T('{ai:The} stands catatonic, staring into nothingness.', { ai: ai }));
           default:
         }
 

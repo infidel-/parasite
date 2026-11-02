@@ -1,0 +1,3757 @@
+{
+ "abbey caretaker": {
+  "g": "m",
+  "s": "gardien de l’abbaye",
+  "fs": "gardienne de l’abbaye"
+ },
+ "academy fellow": {
+  "g": "m",
+  "s": "chercheur associé",
+  "fs": "chercheuse associée"
+ },
+ "academy pupil": {
+  "g": "m",
+  "s": "élève de l’académie"
+ },
+ "access control guard": {
+  "g": "m",
+  "s": "agent de contrôle d’accès"
+ },
+ "account rep": {
+  "g": "m",
+  "s": "chargé de clientèle",
+  "fs": "chargée de clientèle"
+ },
+ "accountant": {
+  "g": "m",
+  "s": "comptable"
+ },
+ "activation planner": {
+  "g": "m",
+  "s": "planificateur d’activation",
+  "fs": "planificatrice d’activation"
+ },
+ "adjutant": {
+  "g": "m",
+  "s": "officier adjoint",
+  "fs": "officière adjointe"
+ },
+ "admin assistant": {
+  "g": "m",
+  "s": "assistant administratif",
+  "fs": "assistante administrative"
+ },
+ "administrative assistant": {
+  "g": "m",
+  "s": "assistant administratif",
+  "fs": "assistante administrative"
+ },
+ "agent": {
+  "g": "m",
+  "s": "agent"
+ },
+ "aide": {
+  "g": "m",
+  "s": "collaborateur",
+  "fs": "collaboratrice"
+ },
+ "aircraft mechanic": {
+  "g": "m",
+  "s": "mécanicien aéronautique",
+  "fs": "mécanicienne aéronautique"
+ },
+ "alderman": {
+  "g": "m",
+  "s": "adjoint au maire",
+  "fs": "adjointe au maire"
+ },
+ "algorithm engineer": {
+  "g": "m",
+  "s": "ingénieur en algorithmique",
+  "fs": "ingénieure en algorithmique"
+ },
+ "analysis": {
+  "g": "f",
+  "s": "analyse"
+ },
+ "apprentice barber": {
+  "g": "m",
+  "s": "apprenti barbier",
+  "fs": "apprentie barbière"
+ },
+ "article": {
+  "g": "m",
+  "s": "article"
+ },
+ "ascension facilitator": {
+  "g": "m",
+  "s": "facilitateur d’ascension",
+  "fs": "facilitatrice d’ascension"
+ },
+ "assault lead": {
+  "g": "m",
+  "s": "chef d’assaut",
+  "fs": "cheffe d’assaut"
+ },
+ "assault rifle": {
+  "g": "m",
+  "s": "fusil d’assaut"
+ },
+ "assimilation cavity": {
+  "g": "f",
+  "s": "cavité d’assimilation"
+ },
+ "assistant director": {
+  "g": "m",
+  "s": "sous-directeur",
+  "fs": "sous-directrice"
+ },
+ "atrium concierge": {
+  "g": "m",
+  "s": "concierge du hall"
+ },
+ "attorney": {
+  "g": "m",
+  "s": "avocat",
+  "fs": "avocate"
+ },
+ "attorney general": {
+  "g": "m",
+  "s": "procureur général",
+  "fs": "procureure générale"
+ },
+ "auction caller": {
+  "g": "m",
+  "s": "crieur des enchères",
+  "fs": "crieuse des enchères"
+ },
+ "auction spotter": {
+  "g": "m",
+  "s": "assistant de commissaire-priseur",
+  "fs": "assistante de commissaire-priseur"
+ },
+ "audience curator": {
+  "g": "m",
+  "s": "curateur d’audience",
+  "fs": "curatrice d’audience"
+ },
+ "automotive technician": {
+  "g": "m",
+  "s": "mécanicien automobile",
+  "fs": "mécanicienne automobile"
+ },
+ "awakening orchestrator": {
+  "g": "m",
+  "s": "orchestrateur de l’éveil",
+  "fs": "orchestratrice de l’éveil"
+ },
+ "backup singer": {
+  "g": "m",
+  "s": "choriste"
+ },
+ "bailiff assistant": {
+  "g": "m",
+  "s": "assistant d’huissier",
+  "fs": "assistante d’huissier"
+ },
+ "ballroom usher": {
+  "g": "m",
+  "s": "placeur de salle de bal",
+  "fs": "placeuse de salle de bal"
+ },
+ "band frontman": {
+  "g": "m",
+  "s": "leader de groupe"
+ },
+ "bar manager": {
+  "g": "m",
+  "s": "gérant de bar",
+  "fs": "gérante de bar"
+ },
+ "bar steward": {
+  "g": "m",
+  "s": "employé de bar",
+  "fs": "employée de bar"
+ },
+ "barback": {
+  "g": "m",
+  "s": "commis de bar"
+ },
+ "barbershop lead": {
+  "g": "m",
+  "s": "chef barbier",
+  "fs": "cheffe barbière"
+ },
+ "barista": {
+  "g": "m",
+  "s": "barista"
+ },
+ "bartender": {
+  "g": "m",
+  "s": "barman",
+  "fs": "barmaid"
+ },
+ "base organ": {
+  "g": "m",
+  "s": "organe de base"
+ },
+ "baseball bat": {
+  "g": "f",
+  "s": "batte de baseball"
+ },
+ "battalion commander": {
+  "g": "m",
+  "s": "commandant de bataillon",
+  "fs": "commandante de bataillon"
+ },
+ "beat cop": {
+  "g": "m",
+  "s": "îlotier",
+  "fs": "îlotière"
+ },
+ "bellhop": {
+  "g": "m",
+  "s": "groom"
+ },
+ "berserk": {
+  "g": "f",
+  "s": "frénésie"
+ },
+ "beverage supervisor": {
+  "g": "m",
+  "s": "responsable des boissons"
+ },
+ "bike courier": {
+  "g": "m",
+  "s": "coursier à vélo",
+  "fs": "coursière à vélo"
+ },
+ "biochemist": {
+  "g": "m",
+  "s": "biochimiste"
+ },
+ "biomineral formation": {
+  "g": "f",
+  "s": "formation biominérale"
+ },
+ "black budget director": {
+  "g": "m",
+  "s": "directeur des fonds secrets",
+  "fs": "directrice des fonds secrets"
+ },
+ "black ice engineer": {
+  "g": "m",
+  "s": "ingénieur en glace noire",
+  "fs": "ingénieure en glace noire"
+ },
+ "black noise": {
+  "g": "m",
+  "s": "bruit noir"
+ },
+ "blackops agent": {
+  "g": "m",
+  "s": "agent clandestin"
+ },
+ "bleeding": {
+  "g": "m",
+  "s": "saignement"
+ },
+ "block kingpin": {
+  "g": "m",
+  "s": "parrain du quartier",
+  "fs": "marraine du quartier"
+ },
+ "body": {
+  "g": "m",
+  "s": "corps"
+ },
+ "book": {
+  "g": "m",
+  "s": "livre"
+ },
+ "bookkeeper": {
+  "g": "m",
+  "s": "aide-comptable"
+ },
+ "botanical host": {
+  "g": "m",
+  "s": "guide du jardin botanique"
+ },
+ "bottle of alcohol": {
+  "g": "f",
+  "s": "bouteille d’alcool"
+ },
+ "bottle of sleeping pills": {
+  "g": "m",
+  "s": "flacon de somnifères"
+ },
+ "bouncer": {
+  "g": "m",
+  "s": "videur",
+  "fs": "videuse"
+ },
+ "brand manager": {
+  "g": "m",
+  "s": "responsable de marque"
+ },
+ "brand storyteller": {
+  "g": "m",
+  "s": "conteur de marque",
+  "fs": "conteuse de marque"
+ },
+ "brass knuckles": {
+  "g": "m",
+  "s": "poing américain"
+ },
+ "brigade commander": {
+  "g": "m",
+  "s": "commandant de brigade",
+  "fs": "commandante de brigade"
+ },
+ "brigade rookie": {
+  "g": "f",
+  "s": "recrue de la brigade"
+ },
+ "broad blade": {
+  "g": "f",
+  "s": "lame large"
+ },
+ "broadcast executive": {
+  "g": "m",
+  "s": "dirigeant de l’audiovisuel",
+  "fs": "dirigeante de l’audiovisuel"
+ },
+ "broadcast icon": {
+  "g": "f",
+  "s": "icône de l’audiovisuel"
+ },
+ "broadcast journalist": {
+  "g": "m",
+  "s": "journaliste audiovisuel",
+  "fs": "journaliste audiovisuelle"
+ },
+ "budget analyst": {
+  "g": "m",
+  "s": "analyste budgétaire"
+ },
+ "building inspector": {
+  "g": "m",
+  "s": "inspecteur du bâtiment",
+  "fs": "inspectrice du bâtiment"
+ },
+ "bulky plated garment": {
+  "g": "m",
+  "s": "vêtement massif renforcé de plaques"
+ },
+ "bum": {
+  "g": "m",
+  "s": "clochard",
+  "fs": "clocharde"
+ },
+ "bum bruiser": {
+  "g": "m",
+  "s": "clochard cogneur",
+  "fs": "clocharde cogneuse"
+ },
+ "bum preacher": {
+  "g": "m",
+  "s": "clochard prêcheur",
+  "fs": "clocharde prêcheuse"
+ },
+ "bum scavenger": {
+  "g": "m",
+  "s": "clochard fouilleur",
+  "fs": "clocharde fouilleuse"
+ },
+ "bum shivman": {
+  "g": "m",
+  "s": "clochard surineur",
+  "fs": "clocharde surineuse"
+ },
+ "bum zealot": {
+  "g": "m",
+  "s": "clochard fanatique",
+  "fs": "clocharde fanatique"
+ },
+ "bureaucrat": {
+  "g": "m",
+  "s": "bureaucrate"
+ },
+ "burning barrel": {
+  "g": "m",
+  "s": "baril en feu"
+ },
+ "bus driver": {
+  "g": "m",
+  "s": "conducteur de bus",
+  "fs": "conductrice de bus"
+ },
+ "business analyst lead": {
+  "g": "m",
+  "s": "analyste métier principal",
+  "fs": "analyste métier principale"
+ },
+ "business associate": {
+  "g": "m",
+  "s": "associé d’affaires",
+  "fs": "associée d’affaires"
+ },
+ "business development manager": {
+  "g": "m",
+  "s": "responsable du développement commercial"
+ },
+ "bypass circuit": {
+  "g": "m",
+  "s": "circuit de dérivation"
+ },
+ "cabin attendant": {
+  "g": "m",
+  "s": "agent de bord"
+ },
+ "cabin supervisor": {
+  "g": "m",
+  "s": "chef de cabine"
+ },
+ "cabinet powerbroker": {
+  "g": "f",
+  "s": "éminence grise du gouvernement"
+ },
+ "cafe attendant": {
+  "g": "m",
+  "s": "employé de café",
+  "fs": "employée de café"
+ },
+ "cafe manager": {
+  "g": "m",
+  "s": "gérant de café",
+  "fs": "gérante de café"
+ },
+ "cafeteria attendant": {
+  "g": "m",
+  "s": "employé de cantine",
+  "fs": "employée de cantine"
+ },
+ "call center agent": {
+  "g": "m",
+  "s": "téléconseiller",
+  "fs": "téléconseillère"
+ },
+ "campaign manager": {
+  "g": "m",
+  "s": "directeur de campagne",
+  "fs": "directrice de campagne"
+ },
+ "campaign visionary": {
+  "g": "m",
+  "s": "visionnaire des campagnes"
+ },
+ "cannot tear away": {
+  "g": "m",
+  "s": "arrachement impossible"
+ },
+ "captain": {
+  "g": "m",
+  "s": "capitaine"
+ },
+ "car wash attendant": {
+  "g": "m",
+  "s": "laveur de voitures",
+  "fs": "laveuse de voitures"
+ },
+ "care coordinator": {
+  "g": "m",
+  "s": "coordinateur de soins",
+  "fs": "coordinatrice de soins"
+ },
+ "carpenter": {
+  "g": "m",
+  "s": "menuisier",
+  "fs": "menuisière"
+ },
+ "cartel leader": {
+  "g": "m",
+  "s": "chef de cartel",
+  "fs": "cheffe de cartel"
+ },
+ "case analyst": {
+  "g": "m",
+  "s": "analyste criminel",
+  "fs": "analyste criminelle"
+ },
+ "case officer": {
+  "g": "m",
+  "s": "officier traitant"
+ },
+ "case researcher": {
+  "g": "m",
+  "s": "chercheur en jurisprudence",
+  "fs": "chercheuse en jurisprudence"
+ },
+ "case scout": {
+  "g": "m",
+  "s": "éclaireur",
+  "fs": "éclaireuse"
+ },
+ "cashier": {
+  "g": "m",
+  "s": "caissier",
+  "fs": "caissière"
+ },
+ "cathedral preacher": {
+  "g": "m",
+  "s": "prédicateur de cathédrale",
+  "fs": "prédicatrice de cathédrale"
+ },
+ "cave mouth": {
+  "g": "f",
+  "s": "entrée de grotte"
+ },
+ "chair clipper": {
+  "g": "m",
+  "s": "tondeur au fauteuil",
+  "fs": "tondeuse au fauteuil"
+ },
+ "charge nurse": {
+  "g": "m",
+  "s": "infirmier en chef",
+  "fs": "infirmière en chef"
+ },
+ "charity runner": {
+  "g": "m",
+  "s": "coureur caritatif",
+  "fs": "coureuse caritative"
+ },
+ "chef": {
+  "g": "m",
+  "s": "chef cuisinier",
+  "fs": "cheffe cuisinière"
+ },
+ "chief counsel": {
+  "g": "m",
+  "s": "conseiller juridique en chef",
+  "fs": "conseillère juridique en chef"
+ },
+ "chief editor": {
+  "g": "m",
+  "s": "rédacteur en chef",
+  "fs": "rédactrice en chef"
+ },
+ "chief financial officer": {
+  "g": "m",
+  "s": "directeur financier",
+  "fs": "directrice financière"
+ },
+ "chief inspiration officer": {
+  "g": "m",
+  "s": "directeur de l’inspiration",
+  "fs": "directrice de l’inspiration"
+ },
+ "chief judge": {
+  "g": "m",
+  "s": "juge en chef"
+ },
+ "chief of staff": {
+  "g": "m",
+  "s": "directeur de cabinet",
+  "fs": "directrice de cabinet"
+ },
+ "chief operating officer": {
+  "g": "m",
+  "s": "directeur général délégué",
+  "fs": "directrice générale déléguée"
+ },
+ "chief prosecutor": {
+  "g": "m",
+  "s": "procureur en chef",
+  "fs": "procureure en chef"
+ },
+ "chief research officer": {
+  "g": "m",
+  "s": "directeur de la recherche",
+  "fs": "directrice de la recherche"
+ },
+ "chief scientist": {
+  "g": "m",
+  "s": "scientifique en chef"
+ },
+ "chief security officer": {
+  "g": "m",
+  "s": "directeur de la sûreté",
+  "fs": "directrice de la sûreté"
+ },
+ "chief strategy officer": {
+  "g": "m",
+  "s": "directeur de la stratégie",
+  "fs": "directrice de la stratégie"
+ },
+ "chief surgeon": {
+  "g": "m",
+  "s": "chirurgien en chef",
+  "fs": "chirurgienne en chef"
+ },
+ "childcare worker": {
+  "g": "m",
+  "s": "auxiliaire de puériculture"
+ },
+ "choir melee": {
+  "g": "f",
+  "s": "attaque du chœur"
+ },
+ "choir nun": {
+  "g": "f",
+  "s": "religieuse de chœur"
+ },
+ "choir of discord": {
+  "g": "m",
+  "s": "chœur de la discorde"
+ },
+ "choir performer": {
+  "g": "m",
+  "s": "chanteur de chorale",
+  "fs": "chanteuse de chorale"
+ },
+ "circuit justice": {
+  "g": "m",
+  "s": "juge de cour d’appel"
+ },
+ "city council member": {
+  "g": "m",
+  "s": "membre du conseil municipal"
+ },
+ "city hall worker": {
+  "g": "m",
+  "s": "employé de mairie",
+  "fs": "employée de mairie"
+ },
+ "civic reverend": {
+  "g": "m",
+  "s": "révérend civique",
+  "fs": "révérende civique"
+ },
+ "civic volunteer": {
+  "g": "m",
+  "s": "bénévole civique"
+ },
+ "civil service employee": {
+  "g": "m",
+  "s": "agent de la fonction publique"
+ },
+ "civilian": {
+  "g": "m",
+  "s": "civil",
+  "fs": "civile"
+ },
+ "claims adjuster": {
+  "g": "m",
+  "s": "expert en sinistres",
+  "fs": "experte en sinistres"
+ },
+ "clandestine agent": {
+  "g": "m",
+  "s": "agent clandestin"
+ },
+ "classroom teacher": {
+  "g": "m",
+  "s": "instituteur",
+  "fs": "institutrice"
+ },
+ "cleaner": {
+  "g": "m",
+  "s": "agent de nettoyage"
+ },
+ "client coordinator": {
+  "g": "m",
+  "s": "coordinateur clientèle",
+  "fs": "coordinatrice clientèle"
+ },
+ "client support manager": {
+  "g": "m",
+  "s": "responsable du support client"
+ },
+ "clinic nurse": {
+  "g": "m",
+  "s": "infirmier de clinique",
+  "fs": "infirmière de clinique"
+ },
+ "clinic resident": {
+  "g": "m",
+  "s": "interne en médecine"
+ },
+ "clinical assistant": {
+  "g": "m",
+  "s": "assistant clinique",
+  "fs": "assistante clinique"
+ },
+ "clinical researcher": {
+  "g": "m",
+  "s": "chercheur clinicien",
+  "fs": "chercheuse clinicienne"
+ },
+ "cloister attendant": {
+  "g": "f",
+  "s": "sœur tourière"
+ },
+ "clone scientist": {
+  "g": "m",
+  "s": "scientifique du clonage"
+ },
+ "cloning vat": {
+  "g": "f",
+  "s": "cuve de clonage"
+ },
+ "clothier": {
+  "g": "m",
+  "s": "confectionneur",
+  "fs": "confectionneuse"
+ },
+ "clothing": {
+  "g": "f",
+  "s": "tenue"
+ },
+ "club attendant": {
+  "g": "m",
+  "s": "employé de club",
+  "fs": "employée de club"
+ },
+ "club barkeep": {
+  "g": "m",
+  "s": "barman de club",
+  "fs": "barmaid de club"
+ },
+ "club crooner": {
+  "g": "m",
+  "s": "crooner de club",
+  "fs": "crooneuse de club"
+ },
+ "club matriarch": {
+  "g": "m",
+  "s": "patriarche de club",
+  "fs": "matriarche de club"
+ },
+ "club proprietor": {
+  "g": "m",
+  "s": "propriétaire de club"
+ },
+ "cocktail mixer": {
+  "g": "m",
+  "s": "préparateur de cocktails",
+  "fs": "préparatrice de cocktails"
+ },
+ "coffee runner": {
+  "g": "m",
+  "s": "porteur de cafés",
+  "fs": "porteuse de cafés"
+ },
+ "combat shotgun": {
+  "g": "m",
+  "s": "fusil de combat"
+ },
+ "combat soldier": {
+  "g": "m",
+  "s": "combattant",
+  "fs": "combattante"
+ },
+ "command sergeant": {
+  "g": "m",
+  "s": "adjudant de commandement",
+  "fs": "adjudante de commandement"
+ },
+ "commanding officer": {
+  "g": "m",
+  "s": "officier commandant",
+  "fs": "officière commandante"
+ },
+ "commis chef": {
+  "g": "m",
+  "s": "commis de cuisine"
+ },
+ "commissioner": {
+  "g": "m",
+  "s": "commissaire"
+ },
+ "common goon": {
+  "g": "m",
+  "s": "simple sbire"
+ },
+ "comms equipment installer": {
+  "g": "m",
+  "s": "installateur télécoms",
+  "fs": "installatrice télécoms"
+ },
+ "communications director": {
+  "g": "m",
+  "s": "directeur de la communication",
+  "fs": "directrice de la communication"
+ },
+ "community builder": {
+  "g": "m",
+  "s": "bâtisseur de communauté",
+  "fs": "bâtisseuse de communauté"
+ },
+ "community chaplain": {
+  "g": "m",
+  "s": "aumônier communautaire",
+  "fs": "aumônière communautaire"
+ },
+ "community college student": {
+  "g": "m",
+  "s": "étudiant d’IUT",
+  "fs": "étudiante d’IUT"
+ },
+ "community homemaker": {
+  "g": "m",
+  "s": "homme au foyer",
+  "fs": "femme au foyer"
+ },
+ "community manager": {
+  "g": "m",
+  "s": "animateur de communauté",
+  "fs": "animatrice de communauté"
+ },
+ "community officer": {
+  "g": "m",
+  "s": "agent de proximité"
+ },
+ "company sergeant": {
+  "g": "m",
+  "s": "sergent de compagnie",
+  "fs": "sergente de compagnie"
+ },
+ "compliance officer": {
+  "g": "m",
+  "s": "responsable de la conformité"
+ },
+ "concert performer": {
+  "g": "m",
+  "s": "artiste de concert"
+ },
+ "concierge assistant": {
+  "g": "m",
+  "s": "assistant de conciergerie",
+  "fs": "assistante de conciergerie"
+ },
+ "concierge manager": {
+  "g": "m",
+  "s": "chef de conciergerie",
+  "fs": "cheffe de conciergerie"
+ },
+ "conference planner": {
+  "g": "m",
+  "s": "organisateur de conférences",
+  "fs": "organisatrice de conférences"
+ },
+ "consciousness curator": {
+  "g": "m",
+  "s": "curateur de la conscience",
+  "fs": "curatrice de la conscience"
+ },
+ "conspirologist": {
+  "g": "m",
+  "s": "conspirationniste"
+ },
+ "constituency aide": {
+  "g": "m",
+  "s": "attaché de circonscription",
+  "fs": "attachée de circonscription"
+ },
+ "construction laborer": {
+  "g": "m",
+  "s": "ouvrier du bâtiment",
+  "fs": "ouvrière du bâtiment"
+ },
+ "construction superintendent": {
+  "g": "m",
+  "s": "conducteur de travaux",
+  "fs": "conductrice de travaux"
+ },
+ "contact center supervisor": {
+  "g": "m",
+  "s": "superviseur de centre d’appels",
+  "fs": "superviseuse de centre d’appels"
+ },
+ "containment unit": {
+  "g": "f",
+  "s": "unité de confinement"
+ },
+ "content moderator": {
+  "g": "m",
+  "s": "modérateur de contenu",
+  "fs": "modératrice de contenu"
+ },
+ "content writer": {
+  "g": "m",
+  "s": "rédacteur de contenu",
+  "fs": "rédactrice de contenu"
+ },
+ "contract attorney": {
+  "g": "m",
+  "s": "avocat contractuel",
+  "fs": "avocate contractuelle"
+ },
+ "convent director": {
+  "g": "m",
+  "s": "directeur du couvent",
+  "fs": "directrice du couvent"
+ },
+ "copy editor": {
+  "g": "m",
+  "s": "correcteur",
+  "fs": "correctrice"
+ },
+ "corner hustler": {
+  "g": "m",
+  "s": "racoleur",
+  "fs": "racoleuse"
+ },
+ "corner muscle": {
+  "g": "m",
+  "s": "gros bras du coin"
+ },
+ "corporate counsel": {
+  "g": "m",
+  "s": "juriste d’entreprise"
+ },
+ "corporate executive": {
+  "g": "m",
+  "s": "cadre d’entreprise"
+ },
+ "corporate liaison": {
+  "g": "m",
+  "s": "chargé de liaison",
+  "fs": "chargée de liaison"
+ },
+ "corporate security director": {
+  "g": "m",
+  "s": "directeur de la sécurité d’entreprise",
+  "fs": "directrice de la sécurité d’entreprise"
+ },
+ "corporate strategist": {
+  "g": "m",
+  "s": "stratège d’entreprise"
+ },
+ "cosmetologist": {
+  "g": "m",
+  "s": "esthéticien",
+  "fs": "esthéticienne"
+ },
+ "councilor": {
+  "g": "m",
+  "s": "conseiller municipal",
+  "fs": "conseillère municipale"
+ },
+ "councilwoman": {
+  "g": "f",
+  "s": "conseillère municipale"
+ },
+ "counterintelligence officer": {
+  "g": "m",
+  "s": "officier du contre-espionnage"
+ },
+ "court clerk": {
+  "g": "m",
+  "s": "greffier",
+  "fs": "greffière"
+ },
+ "court reporter": {
+  "g": "m",
+  "s": "sténographe judiciaire"
+ },
+ "courtesan": {
+  "g": "m",
+  "s": "courtisan",
+  "fs": "courtisane"
+ },
+ "covert operative": {
+  "g": "m",
+  "s": "agent clandestin"
+ },
+ "covert operator": {
+  "g": "m",
+  "s": "opérateur clandestin",
+  "fs": "opératrice clandestine"
+ },
+ "creative director": {
+  "g": "m",
+  "s": "directeur de création",
+  "fs": "directrice de création"
+ },
+ "crew captain": {
+  "g": "m",
+  "s": "capitaine de bande"
+ },
+ "crew enforcer": {
+  "g": "m",
+  "s": "gros bras de la bande"
+ },
+ "crew foreman": {
+  "g": "m",
+  "s": "chef d’équipe",
+  "fs": "cheffe d’équipe"
+ },
+ "crew leader": {
+  "g": "m",
+  "s": "chef de bande",
+  "fs": "cheffe de bande"
+ },
+ "crime boss": {
+  "g": "m",
+  "s": "patron du crime",
+  "fs": "patronne du crime"
+ },
+ "crime family head": {
+  "g": "m",
+  "s": "chef de clan mafieux",
+  "fs": "cheffe de clan mafieux"
+ },
+ "crime lord": {
+  "g": "m",
+  "s": "seigneur du crime"
+ },
+ "crime scene tech": {
+  "g": "m",
+  "s": "technicien de scène de crime",
+  "fs": "technicienne de scène de crime"
+ },
+ "criminal mastermind": {
+  "g": "m",
+  "s": "cerveau criminel"
+ },
+ "crying": {
+  "g": "f",
+  "s": "crise de larmes"
+ },
+ "crystal matrix": {
+  "g": "f",
+  "s": "matrice cristalline"
+ },
+ "culinary supervisor": {
+  "g": "m",
+  "s": "responsable culinaire"
+ },
+ "cult head": {
+  "g": "m",
+  "s": "chef du culte",
+  "fs": "cheffe du culte"
+ },
+ "culture ambassador": {
+  "g": "m",
+  "s": "ambassadeur de la culture",
+  "fs": "ambassadrice de la culture"
+ },
+ "curriculum director": {
+  "g": "m",
+  "s": "responsable des programmes"
+ },
+ "curved knife": {
+  "g": "m",
+  "s": "couteau courbe"
+ },
+ "curved piece of metal": {
+  "g": "m",
+  "s": "morceau de métal courbe"
+ },
+ "customer experience lead": {
+  "g": "m",
+  "s": "responsable de l’expérience client"
+ },
+ "customer service agent": {
+  "g": "m",
+  "s": "agent du service client"
+ },
+ "customer service rep": {
+  "g": "m",
+  "s": "conseiller clientèle",
+  "fs": "conseillère clientèle"
+ },
+ "customer support engineer": {
+  "g": "m",
+  "s": "ingénieur support client",
+  "fs": "ingénieure support client"
+ },
+ "custos": {
+  "g": "m",
+  "s": "custos"
+ },
+ "cyber intrusion expert": {
+  "g": "m",
+  "s": "expert en cyberintrusion",
+  "fs": "experte en cyberintrusion"
+ },
+ "data analyst": {
+  "g": "m",
+  "s": "analyste de données"
+ },
+ "data entry clerk": {
+  "g": "m",
+  "s": "opérateur de saisie",
+  "fs": "opératrice de saisie"
+ },
+ "data entry specialist": {
+  "g": "m",
+  "s": "opérateur de saisie",
+  "fs": "opératrice de saisie"
+ },
+ "deadly caress": {
+  "g": "f",
+  "s": "caresse mortelle"
+ },
+ "decorative sprayer": {
+  "g": "m",
+  "s": "peintre au pistolet"
+ },
+ "defense lawyer": {
+  "g": "m",
+  "s": "avocat de la défense",
+  "fs": "avocate de la défense"
+ },
+ "delivery driver": {
+  "g": "m",
+  "s": "livreur",
+  "fs": "livreuse"
+ },
+ "dental hygienist": {
+  "g": "m",
+  "s": "hygiéniste dentaire"
+ },
+ "department chair": {
+  "g": "m",
+  "s": "directeur de département",
+  "fs": "directrice de département"
+ },
+ "department head": {
+  "g": "m",
+  "s": "chef de département",
+  "fs": "cheffe de département"
+ },
+ "department manager": {
+  "g": "m",
+  "s": "chef de service",
+  "fs": "cheffe de service"
+ },
+ "deputy chief": {
+  "g": "m",
+  "s": "chef adjoint",
+  "fs": "cheffe adjointe"
+ },
+ "deputy director": {
+  "g": "m",
+  "s": "directeur adjoint",
+  "fs": "directrice adjointe"
+ },
+ "detective": {
+  "g": "m",
+  "s": "inspecteur",
+  "fs": "inspectrice"
+ },
+ "diary": {
+  "g": "m",
+  "s": "journal intime"
+ },
+ "digital content creator": {
+  "g": "m",
+  "s": "créateur de contenu numérique",
+  "fs": "créatrice de contenu numérique"
+ },
+ "diner server": {
+  "g": "m",
+  "s": "serveur de snack-bar",
+  "fs": "serveuse de snack-bar"
+ },
+ "dining supervisor": {
+  "g": "m",
+  "s": "responsable de salle"
+ },
+ "diplomatic driver": {
+  "g": "m",
+  "s": "chauffeur diplomatique",
+  "fs": "chauffeuse diplomatique"
+ },
+ "director of protection": {
+  "g": "m",
+  "s": "directeur de la protection",
+  "fs": "directrice de la protection"
+ },
+ "dishwasher": {
+  "g": "m",
+  "s": "plongeur",
+  "fs": "plongeuse"
+ },
+ "dispatch operator": {
+  "g": "m",
+  "s": "opérateur radio",
+  "fs": "opératrice radio"
+ },
+ "district attorney": {
+  "g": "m",
+  "s": "procureur de district",
+  "fs": "procureure de district"
+ },
+ "district coordinator": {
+  "g": "m",
+  "s": "coordinateur de circonscription",
+  "fs": "coordinatrice de circonscription"
+ },
+ "division chief": {
+  "g": "m",
+  "s": "chef de division",
+  "fs": "cheffe de division"
+ },
+ "division general": {
+  "g": "m",
+  "s": "général de division",
+  "fs": "générale de division"
+ },
+ "division president": {
+  "g": "m",
+  "s": "président de division",
+  "fs": "présidente de division"
+ },
+ "docket coordinator": {
+  "g": "m",
+  "s": "coordinateur des audiences",
+  "fs": "coordinatrice des audiences"
+ },
+ "document": {
+  "g": "m",
+  "s": "document"
+ },
+ "dog": {
+  "g": "m",
+  "s": "chien"
+ },
+ "door": {
+  "g": "f",
+  "s": "porte"
+ },
+ "dossier": {
+  "g": "m",
+  "s": "dossier"
+ },
+ "draft tender": {
+  "g": "m",
+  "s": "tireur de bière",
+  "fs": "tireuse de bière"
+ },
+ "drunk": {
+  "g": "f",
+  "s": "ivresse"
+ },
+ "dumpster": {
+  "g": "f",
+  "s": "benne à ordures"
+ },
+ "electrician": {
+  "g": "m",
+  "s": "électricien",
+  "fs": "électricienne"
+ },
+ "elevator": {
+  "g": "m",
+  "s": "ascenseur"
+ },
+ "elongated metallic object": {
+  "g": "m",
+  "s": "objet métallique allongé"
+ },
+ "elongated object": {
+  "g": "m",
+  "s": "objet allongé"
+ },
+ "embassy greeter": {
+  "g": "m",
+  "s": "agent d’accueil de l’ambassade"
+ },
+ "emitter array": {
+  "g": "m",
+  "s": "réseau d’émetteurs"
+ },
+ "empowerment director": {
+  "g": "m",
+  "s": "directeur de l’autonomisation",
+  "fs": "directrice de l’autonomisation"
+ },
+ "enforcer": {
+  "g": "m",
+  "s": "nervi"
+ },
+ "engagement architect": {
+  "g": "m",
+  "s": "architecte de l’engagement"
+ },
+ "engine core": {
+  "g": "m",
+  "s": "cœur de moteur"
+ },
+ "engine lieutenant": {
+  "g": "m",
+  "s": "lieutenant d’engin"
+ },
+ "engine operator": {
+  "g": "m",
+  "s": "conducteur d’engin",
+  "fs": "conductrice d’engin"
+ },
+ "enlightenment director": {
+  "g": "m",
+  "s": "directeur de l’illumination",
+  "fs": "directrice de l’illumination"
+ },
+ "enterprise architect": {
+  "g": "m",
+  "s": "architecte d’entreprise"
+ },
+ "escort": {
+  "g": "m",
+  "s": "escort"
+ },
+ "espresso maker": {
+  "g": "m",
+  "s": "préparateur d’expressos",
+  "fs": "préparatrice d’expressos"
+ },
+ "event planner": {
+  "g": "m",
+  "s": "organisateur d’événements",
+  "fs": "organisatrice d’événements"
+ },
+ "evidence custodian": {
+  "g": "m",
+  "s": "gardien des scellés",
+  "fs": "gardienne des scellés"
+ },
+ "executive aide": {
+  "g": "m",
+  "s": "attaché de direction",
+  "fs": "attachée de direction"
+ },
+ "executive assistant": {
+  "g": "m",
+  "s": "assistant de direction",
+  "fs": "assistante de direction"
+ },
+ "executive chef": {
+  "g": "m",
+  "s": "chef exécutif",
+  "fs": "cheffe exécutive"
+ },
+ "executive director": {
+  "g": "m",
+  "s": "directeur exécutif",
+  "fs": "directrice exécutive"
+ },
+ "executive officer": {
+  "g": "m",
+  "s": "commandant en second",
+  "fs": "commandante en second"
+ },
+ "executive protection director": {
+  "g": "m",
+  "s": "directeur de la protection rapprochée",
+  "fs": "directrice de la protection rapprochée"
+ },
+ "executive vice president": {
+  "g": "m",
+  "s": "vice-président exécutif",
+  "fs": "vice-présidente exécutive"
+ },
+ "experience designer": {
+  "g": "m",
+  "s": "designer d’expérience"
+ },
+ "express messenger": {
+  "g": "m",
+  "s": "messager express",
+  "fs": "messagère express"
+ },
+ "factory assembler": {
+  "g": "m",
+  "s": "assembleur",
+  "fs": "assembleuse"
+ },
+ "factory hand": {
+  "g": "m",
+  "s": "ouvrier d’usine",
+  "fs": "ouvrière d’usine"
+ },
+ "faculty mentor": {
+  "g": "m",
+  "s": "tuteur pédagogique",
+  "fs": "tutrice pédagogique"
+ },
+ "family caretaker": {
+  "g": "m",
+  "s": "aide familial",
+  "fs": "aide familiale"
+ },
+ "family coordinator": {
+  "g": "m",
+  "s": "coordinateur familial",
+  "fs": "coordinatrice familiale"
+ },
+ "farm worker": {
+  "g": "m",
+  "s": "ouvrier agricole",
+  "fs": "ouvrière agricole"
+ },
+ "fashion dresser": {
+  "g": "m",
+  "s": "habilleur de mode",
+  "fs": "habilleuse de mode"
+ },
+ "fast food worker": {
+  "g": "m",
+  "s": "employé de fast-food",
+  "fs": "employée de fast-food"
+ },
+ "federal marshal": {
+  "g": "m",
+  "s": "marshal fédéral"
+ },
+ "ferry aide": {
+  "g": "m",
+  "s": "assistant de ferry",
+  "fs": "assistante de ferry"
+ },
+ "festival headliner": {
+  "g": "m",
+  "s": "artiste en tête d’affiche"
+ },
+ "field agent": {
+  "g": "m",
+  "s": "agent de terrain"
+ },
+ "field commander": {
+  "g": "m",
+  "s": "commandant de terrain",
+  "fs": "commandante de terrain"
+ },
+ "field marshal": {
+  "g": "m",
+  "s": "maréchal",
+  "fs": "maréchale"
+ },
+ "field observer": {
+  "g": "m",
+  "s": "observateur de terrain",
+  "fs": "observatrice de terrain"
+ },
+ "field operations director": {
+  "g": "m",
+  "s": "directeur des opérations de terrain",
+  "fs": "directrice des opérations de terrain"
+ },
+ "field reporter": {
+  "g": "m",
+  "s": "reporter de terrain"
+ },
+ "field researcher": {
+  "g": "m",
+  "s": "chercheur de terrain",
+  "fs": "chercheuse de terrain"
+ },
+ "field specialist": {
+  "g": "m",
+  "s": "spécialiste de terrain"
+ },
+ "field supervisor": {
+  "g": "m",
+  "s": "superviseur de terrain",
+  "fs": "superviseuse de terrain"
+ },
+ "file clerk": {
+  "g": "m",
+  "s": "employé aux archives",
+  "fs": "employée aux archives"
+ },
+ "finance manager": {
+  "g": "m",
+  "s": "responsable financier",
+  "fs": "responsable financière"
+ },
+ "finish specialist": {
+  "g": "m",
+  "s": "spécialiste des finitions"
+ },
+ "fire captain": {
+  "g": "m",
+  "s": "capitaine des pompiers"
+ },
+ "firmus": {
+  "g": "m",
+  "s": "firmus"
+ },
+ "first sergeant": {
+  "g": "m",
+  "s": "adjudant d’unité",
+  "fs": "adjudante d’unité"
+ },
+ "fitness trainer": {
+  "g": "m",
+  "s": "coach sportif",
+  "fs": "coach sportive"
+ },
+ "flat rectangular object": {
+  "g": "m",
+  "s": "objet rectangulaire plat"
+ },
+ "fleet coordinator": {
+  "g": "m",
+  "s": "coordinateur de flotte",
+  "fs": "coordinatrice de flotte"
+ },
+ "fleet master": {
+  "g": "m",
+  "s": "commandant de flotte",
+  "fs": "commandante de flotte"
+ },
+ "flight hostess": {
+  "g": "f",
+  "s": "hôtesse de l’air"
+ },
+ "floor drain": {
+  "g": "m",
+  "s": "siphon de sol"
+ },
+ "floor sentry": {
+  "g": "m",
+  "s": "vigile d’étage"
+ },
+ "flow regulator": {
+  "g": "m",
+  "s": "régulateur de flux"
+ },
+ "food worker": {
+  "g": "m",
+  "s": "employé de restauration",
+  "fs": "employée de restauration"
+ },
+ "foot soldier": {
+  "g": "m",
+  "s": "simple soldat",
+  "fs": "simple soldate"
+ },
+ "forensic scientist": {
+  "g": "m",
+  "s": "expert en criminalistique",
+  "fs": "experte en criminalistique"
+ },
+ "forensics specialist": {
+  "g": "m",
+  "s": "spécialiste de la police scientifique"
+ },
+ "freelance blogger": {
+  "g": "m",
+  "s": "blogueur indépendant",
+  "fs": "blogueuse indépendante"
+ },
+ "front desk clerk": {
+  "g": "m",
+  "s": "réceptionniste"
+ },
+ "fuel injector port": {
+  "g": "m",
+  "s": "port d’injection de carburant"
+ },
+ "full-body armor": {
+  "g": "f",
+  "s": "armure intégrale"
+ },
+ "funeral director": {
+  "g": "m",
+  "s": "directeur de pompes funèbres",
+  "fs": "directrice de pompes funèbres"
+ },
+ "gang boss": {
+  "g": "m",
+  "s": "chef de gang",
+  "fs": "cheffe de gang"
+ },
+ "gang coordinator": {
+  "g": "m",
+  "s": "coordinateur du gang",
+  "fs": "coordinatrice du gang"
+ },
+ "gang lieutenant": {
+  "g": "m",
+  "s": "lieutenant du gang"
+ },
+ "gang lookout": {
+  "g": "m",
+  "s": "guetteur",
+  "fs": "guetteuse"
+ },
+ "gang member": {
+  "g": "m",
+  "s": "membre de gang"
+ },
+ "gang sergeant": {
+  "g": "m",
+  "s": "sergent du gang"
+ },
+ "gang unit officer": {
+  "g": "m",
+  "s": "agent de la brigade antigang"
+ },
+ "gardener": {
+  "g": "m",
+  "s": "jardinier",
+  "fs": "jardinière"
+ },
+ "gas station attendant": {
+  "g": "m",
+  "s": "pompiste"
+ },
+ "gate guard": {
+  "g": "m",
+  "s": "garde du portail"
+ },
+ "geneticist": {
+  "g": "m",
+  "s": "généticien",
+  "fs": "généticienne"
+ },
+ "glass container of liquid": {
+  "g": "m",
+  "s": "récipient en verre rempli de liquide"
+ },
+ "global operations head": {
+  "g": "m",
+  "s": "directeur des opérations mondiales",
+  "fs": "directrice des opérations mondiales"
+ },
+ "global security head": {
+  "g": "m",
+  "s": "chef de la sécurité mondiale",
+  "fs": "cheffe de la sécurité mondiale"
+ },
+ "global spokesperson": {
+  "g": "m",
+  "s": "porte-parole mondial",
+  "fs": "porte-parole mondiale"
+ },
+ "government auditor": {
+  "g": "m",
+  "s": "auditeur de l’État",
+  "fs": "auditrice de l’État"
+ },
+ "government clerk": {
+  "g": "m",
+  "s": "employé de l’administration",
+  "fs": "employée de l’administration"
+ },
+ "governor": {
+  "g": "m",
+  "s": "gouverneur",
+  "fs": "gouverneure"
+ },
+ "graduate student": {
+  "g": "m",
+  "s": "doctorant",
+  "fs": "doctorante"
+ },
+ "graphic designer": {
+  "g": "m",
+  "s": "graphiste"
+ },
+ "grievous burdens": {
+  "g": "m",
+  "s": "fardeau accablant"
+ },
+ "grocery bagger": {
+  "g": "m",
+  "s": "ensacheur",
+  "fs": "ensacheuse"
+ },
+ "grooming specialist": {
+  "g": "m",
+  "s": "spécialiste du soin masculin"
+ },
+ "ground pounder": {
+  "g": "m",
+  "s": "biffin"
+ },
+ "grunt": {
+  "g": "m",
+  "s": "troufion"
+ },
+ "guest services manager": {
+  "g": "m",
+  "s": "responsable de l’accueil"
+ },
+ "gun cabinet": {
+  "g": "f",
+  "s": "armoire à armes"
+ },
+ "hall coordinator": {
+  "g": "m",
+  "s": "coordinateur de salle",
+  "fs": "coordinatrice de salle"
+ },
+ "handler": {
+  "g": "m",
+  "s": "contrôleur",
+  "fs": "contrôleuse"
+ },
+ "happiness coordinator": {
+  "g": "m",
+  "s": "coordinateur du bonheur",
+  "fs": "coordinatrice du bonheur"
+ },
+ "harbor skipper": {
+  "g": "m",
+  "s": "patron de navette portuaire",
+  "fs": "patronne de navette portuaire"
+ },
+ "head cook": {
+  "g": "m",
+  "s": "chef de cuisine"
+ },
+ "head of security": {
+  "g": "m",
+  "s": "chef de la sécurité",
+  "fs": "cheffe de la sécurité"
+ },
+ "head server": {
+  "g": "m",
+  "s": "chef de rang"
+ },
+ "heavy rings": {
+  "g": "m",
+  "s": "jeu de grosses bagues"
+ },
+ "heavy truck driver": {
+  "g": "m",
+  "s": "conducteur poids lourd",
+  "fs": "conductrice poids lourd"
+ },
+ "help desk agent": {
+  "g": "m",
+  "s": "agent d’assistance"
+ },
+ "heritage archivist": {
+  "g": "m",
+  "s": "archiviste du patrimoine"
+ },
+ "hired muscle": {
+  "g": "m",
+  "s": "homme de main",
+  "fs": "femme de main"
+ },
+ "hitman": {
+  "g": "m",
+  "s": "tueur à gages",
+  "fs": "tueuse à gages"
+ },
+ "home health aide": {
+  "g": "m",
+  "s": "aide-soignant à domicile",
+  "fs": "aide-soignante à domicile"
+ },
+ "homicide detective": {
+  "g": "m",
+  "s": "inspecteur de la criminelle",
+  "fs": "inspectrice de la criminelle"
+ },
+ "hoodlum": {
+  "g": "m",
+  "s": "voyou",
+  "fs": "voyoute"
+ },
+ "hose operator": {
+  "g": "m",
+  "s": "porte-lance"
+ },
+ "hospitalist": {
+  "g": "m",
+  "s": "médecin hospitalier"
+ },
+ "hospitality supervisor": {
+  "g": "m",
+  "s": "superviseur de l’hôtellerie",
+  "fs": "superviseuse de l’hôtellerie"
+ },
+ "hotel clerk": {
+  "g": "m",
+  "s": "réceptionniste d’hôtel"
+ },
+ "house painter": {
+  "g": "m",
+  "s": "peintre en bâtiment"
+ },
+ "house steward": {
+  "g": "m",
+  "s": "intendant de maison",
+  "fs": "intendante de maison"
+ },
+ "household manager": {
+  "g": "m",
+  "s": "gestionnaire du foyer"
+ },
+ "housekeeper": {
+  "g": "m",
+  "s": "aide ménager",
+  "fs": "aide ménagère"
+ },
+ "human resources manager": {
+  "g": "m",
+  "s": "responsable des ressources humaines"
+ },
+ "hvac technician": {
+  "g": "m",
+  "s": "technicien en climatisation",
+  "fs": "technicienne en climatisation"
+ },
+ "incident commander": {
+  "g": "m",
+  "s": "commandant des opérations de secours",
+  "fs": "commandante des opérations de secours"
+ },
+ "income boost": {
+  "g": "f",
+  "s": "hausse de revenus",
+  "elide": false
+ },
+ "income drain": {
+  "g": "f",
+  "s": "ponction de revenus"
+ },
+ "independent escort": {
+  "g": "m",
+  "s": "escort indépendant",
+  "fs": "escort indépendante"
+ },
+ "infantry trooper": {
+  "g": "m",
+  "s": "soldat d’infanterie",
+  "fs": "soldate d’infanterie"
+ },
+ "infantryman": {
+  "g": "m",
+  "s": "fantassin"
+ },
+ "inflight concierge": {
+  "g": "m",
+  "s": "concierge de bord"
+ },
+ "institute director": {
+  "g": "m",
+  "s": "directeur d’institut",
+  "fs": "directrice d’institut"
+ },
+ "insurance agent": {
+  "g": "m",
+  "s": "agent d’assurances"
+ },
+ "intelligence analyst": {
+  "g": "m",
+  "s": "analyste du renseignement"
+ },
+ "intelligence chief": {
+  "g": "m",
+  "s": "chef du renseignement",
+  "fs": "cheffe du renseignement"
+ },
+ "intelligence director": {
+  "g": "m",
+  "s": "directeur du renseignement",
+  "fs": "directrice du renseignement"
+ },
+ "intelligence officer": {
+  "g": "m",
+  "s": "officier de renseignement"
+ },
+ "internal affairs investigator": {
+  "g": "m",
+  "s": "enquêteur des affaires internes",
+  "fs": "enquêtrice des affaires internes"
+ },
+ "internal auditor": {
+  "g": "m",
+  "s": "auditeur interne",
+  "fs": "auditrice interne"
+ },
+ "investigations officer": {
+  "g": "m",
+  "s": "enquêteur",
+  "fs": "enquêtrice"
+ },
+ "investigative agent": {
+  "g": "m",
+  "s": "agent enquêteur"
+ },
+ "investigative journalist": {
+  "g": "m",
+  "s": "journaliste d’investigation"
+ },
+ "investigative reporter": {
+  "g": "m",
+  "s": "journaliste d’investigation"
+ },
+ "jagged red crystal": {
+  "g": "m",
+  "s": "cristal rouge acéré"
+ },
+ "janitor": {
+  "g": "m",
+  "s": "agent d’entretien"
+ },
+ "jingle singer": {
+  "g": "m",
+  "s": "chanteur de jingles",
+  "fs": "chanteuse de jingles"
+ },
+ "journal": {
+  "g": "m",
+  "s": "journal"
+ },
+ "journalist": {
+  "g": "m",
+  "s": "journaliste"
+ },
+ "judge": {
+  "g": "m",
+  "s": "juge"
+ },
+ "junior analyst": {
+  "g": "m",
+  "s": "analyste junior"
+ },
+ "junior codebreaker": {
+  "g": "m",
+  "s": "décrypteur junior",
+  "fs": "décrypteuse junior"
+ },
+ "karaoke host": {
+  "g": "m",
+  "s": "animateur de karaoké",
+  "fs": "animatrice de karaoké"
+ },
+ "kevlar armor": {
+  "g": "f",
+  "s": "armure en kevlar"
+ },
+ "keycard": {
+  "g": "f",
+  "s": "carte magnétique"
+ },
+ "lab security guard": {
+  "g": "m",
+  "s": "agent de sécurité du laboratoire"
+ },
+ "lab technician": {
+  "g": "m",
+  "s": "technicien de laboratoire",
+  "fs": "technicienne de laboratoire"
+ },
+ "laboratory aide": {
+  "g": "m",
+  "s": "aide de laboratoire"
+ },
+ "laboratory director": {
+  "g": "m",
+  "s": "directeur de laboratoire",
+  "fs": "directrice de laboratoire"
+ },
+ "laboratory manager": {
+  "g": "m",
+  "s": "responsable de laboratoire"
+ },
+ "laborer": {
+  "g": "m",
+  "s": "manœuvre"
+ },
+ "ladder specialist": {
+  "g": "m",
+  "s": "opérateur d’échelle",
+  "fs": "opératrice d’échelle"
+ },
+ "laptop": {
+  "g": "m",
+  "s": "ordinateur portable"
+ },
+ "laundry worker": {
+  "g": "m",
+  "s": "blanchisseur",
+  "fs": "blanchisseuse"
+ },
+ "law clerk": {
+  "g": "m",
+  "s": "greffier",
+  "fs": "greffière"
+ },
+ "lead barista": {
+  "g": "m",
+  "s": "barista en chef"
+ },
+ "lead programmer": {
+  "g": "m",
+  "s": "programmeur principal",
+  "fs": "programmeuse principale"
+ },
+ "lead scientist": {
+  "g": "m",
+  "s": "scientifique en chef"
+ },
+ "lead singer": {
+  "g": "m",
+  "s": "chanteur principal",
+  "fs": "chanteuse principale"
+ },
+ "legal advisor": {
+  "g": "m",
+  "s": "conseiller juridique",
+  "fs": "conseillère juridique"
+ },
+ "legal assistant": {
+  "g": "m",
+  "s": "assistant juridique",
+  "fs": "assistante juridique"
+ },
+ "legal director": {
+  "g": "m",
+  "s": "directeur juridique",
+  "fs": "directrice juridique"
+ },
+ "legal secretary": {
+  "g": "m",
+  "s": "secrétaire juridique"
+ },
+ "legislative aide": {
+  "g": "m",
+  "s": "assistant parlementaire",
+  "fs": "assistante parlementaire"
+ },
+ "liaison operative": {
+  "g": "m",
+  "s": "agent de liaison"
+ },
+ "lieutenant": {
+  "g": "m",
+  "s": "lieutenant",
+  "fs": "lieutenante"
+ },
+ "lieutenant colonel": {
+  "g": "m",
+  "s": "lieutenant-colonel"
+ },
+ "lifeguard": {
+  "g": "m",
+  "s": "maître-nageur",
+  "fs": "maître-nageuse"
+ },
+ "lifestyle consultant": {
+  "g": "m",
+  "s": "consultant en art de vivre",
+  "fs": "consultante en art de vivre"
+ },
+ "line cook": {
+  "g": "m",
+  "s": "cuisinier",
+  "fs": "cuisinière"
+ },
+ "line rifleman": {
+  "g": "m",
+  "s": "fusilier de ligne"
+ },
+ "litigation counsel": {
+  "g": "m",
+  "s": "avocat en contentieux",
+  "fs": "avocate en contentieux"
+ },
+ "loan officer": {
+  "g": "m",
+  "s": "conseiller en crédit",
+  "fs": "conseillère en crédit"
+ },
+ "lobbyist": {
+  "g": "m",
+  "s": "lobbyiste"
+ },
+ "locker": {
+  "g": "m",
+  "s": "casier"
+ },
+ "logbook": {
+  "g": "m",
+  "s": "journal de bord"
+ },
+ "logistics coordinator": {
+  "g": "m",
+  "s": "coordinateur logistique",
+  "fs": "coordinatrice logistique"
+ },
+ "logistics dispatcher": {
+  "g": "m",
+  "s": "répartiteur logistique",
+  "fs": "répartitrice logistique"
+ },
+ "logistics officer": {
+  "g": "m",
+  "s": "officier logistique",
+  "fs": "officière logistique"
+ },
+ "long curved blade": {
+  "g": "f",
+  "s": "longue lame courbe"
+ },
+ "loss prevention officer": {
+  "g": "m",
+  "s": "agent de prévention des vols"
+ },
+ "lounge barkeep": {
+  "g": "m",
+  "s": "barman de lounge",
+  "fs": "barmaid de lounge"
+ },
+ "lounge singer": {
+  "g": "m",
+  "s": "chanteur de bar",
+  "fs": "chanteuse de bar"
+ },
+ "lounge vocalist": {
+  "g": "m",
+  "s": "chanteur de lounge",
+  "fs": "chanteuse de lounge"
+ },
+ "machinery mechanic": {
+  "g": "m",
+  "s": "mécanicien industriel",
+  "fs": "mécanicienne industrielle"
+ },
+ "machinist": {
+  "g": "m",
+  "s": "usineur",
+  "fs": "usineuse"
+ },
+ "magistrate": {
+  "g": "m",
+  "s": "magistrat",
+  "fs": "magistrate"
+ },
+ "maid": {
+  "g": "f",
+  "s": "femme de chambre"
+ },
+ "maintenance supervisor": {
+  "g": "m",
+  "s": "responsable de maintenance"
+ },
+ "major": {
+  "g": "m",
+  "s": "commandant",
+  "fs": "commandante"
+ },
+ "mall guard": {
+  "g": "m",
+  "s": "vigile de centre commercial"
+ },
+ "marketing director": {
+  "g": "m",
+  "s": "directeur marketing",
+  "fs": "directrice marketing"
+ },
+ "marketing specialist": {
+  "g": "m",
+  "s": "spécialiste marketing"
+ },
+ "massage therapist": {
+  "g": "m",
+  "s": "masseur",
+  "fs": "masseuse"
+ },
+ "master barber": {
+  "g": "m",
+  "s": "barbier émérite",
+  "fs": "barbière émérite"
+ },
+ "master sergeant": {
+  "g": "m",
+  "s": "adjudant-chef",
+  "fs": "adjudante-cheffe"
+ },
+ "mayor": {
+  "g": "m",
+  "s": "maire"
+ },
+ "meat packer": {
+  "g": "m",
+  "s": "ouvrier d’abattoir",
+  "fs": "ouvrière d’abattoir"
+ },
+ "media conglomerate head": {
+  "g": "m",
+  "s": "patron de groupe de médias",
+  "fs": "patronne de groupe de médias"
+ },
+ "media consultant": {
+  "g": "m",
+  "s": "consultant en médias",
+  "fs": "consultante en médias"
+ },
+ "media mogul": {
+  "g": "m",
+  "s": "magnat des médias"
+ },
+ "medical director": {
+  "g": "m",
+  "s": "directeur médical",
+  "fs": "directrice médicale"
+ },
+ "medical examiner": {
+  "g": "m",
+  "s": "médecin légiste"
+ },
+ "medical internist": {
+  "g": "m",
+  "s": "médecin interniste"
+ },
+ "medical sonographer": {
+  "g": "m",
+  "s": "échographiste"
+ },
+ "medium influencer": {
+  "g": "m",
+  "s": "influenceur intermédiaire",
+  "fs": "influenceuse intermédiaire"
+ },
+ "metallic object": {
+  "g": "m",
+  "s": "objet métallique"
+ },
+ "microbiologist": {
+  "g": "m",
+  "s": "microbiologiste"
+ },
+ "military strategist": {
+  "g": "m",
+  "s": "stratège militaire"
+ },
+ "mindfulness evangelist": {
+  "g": "m",
+  "s": "évangéliste de la pleine conscience"
+ },
+ "mission architect": {
+  "g": "m",
+  "s": "architecte de mission"
+ },
+ "mission commander": {
+  "g": "m",
+  "s": "commandant de mission",
+  "fs": "commandante de mission"
+ },
+ "mixologist": {
+  "g": "m",
+  "s": "mixologue"
+ },
+ "mob boss": {
+  "g": "m",
+  "s": "patron de la mafia",
+  "fs": "patronne de la mafia"
+ },
+ "mob lieutenant": {
+  "g": "m",
+  "s": "lieutenant de la pègre"
+ },
+ "mobile phone": {
+  "g": "m",
+  "s": "téléphone portable"
+ },
+ "mordax": {
+  "g": "m",
+  "s": "mordax"
+ },
+ "mother superior": {
+  "g": "f",
+  "s": "mère supérieure"
+ },
+ "movement architect": {
+  "g": "m",
+  "s": "architecte du mouvement"
+ },
+ "municipal aide": {
+  "g": "m",
+  "s": "assistant municipal",
+  "fs": "assistante municipale"
+ },
+ "museum docent": {
+  "g": "m",
+  "s": "médiateur culturel",
+  "fs": "médiatrice culturelle"
+ },
+ "museum guide": {
+  "g": "m",
+  "s": "guide de musée"
+ },
+ "musical theater lead": {
+  "g": "m",
+  "s": "premier rôle de comédie musicale"
+ },
+ "narcotics officer": {
+  "g": "m",
+  "s": "agent des stupéfiants"
+ },
+ "neighborhood matron": {
+  "g": "f",
+  "s": "matrone du quartier"
+ },
+ "network personality": {
+  "g": "f",
+  "s": "personnalité de la télévision"
+ },
+ "network president": {
+  "g": "m",
+  "s": "président de chaîne",
+  "fs": "présidente de chaîne"
+ },
+ "news anchor": {
+  "g": "m",
+  "s": "présentateur du journal",
+  "fs": "présentatrice du journal"
+ },
+ "news producer": {
+  "g": "m",
+  "s": "producteur d’actualités",
+  "fs": "productrice d’actualités"
+ },
+ "news stringer": {
+  "g": "m",
+  "s": "pigiste"
+ },
+ "night class attendee": {
+  "g": "m",
+  "s": "élève des cours du soir"
+ },
+ "night watchman": {
+  "g": "m",
+  "s": "gardien de nuit",
+  "fs": "gardienne de nuit"
+ },
+ "nightwalker": {
+  "g": "m",
+  "s": "péripatéticien",
+  "fs": "péripatéticienne"
+ },
+ "no armor": {
+  "g": "f",
+  "s": "absence d’armure"
+ },
+ "note": {
+  "g": "f",
+  "s": "note"
+ },
+ "notebook": {
+  "g": "m",
+  "s": "carnet"
+ },
+ "novice sister": {
+  "g": "f",
+  "s": "sœur novice"
+ },
+ "nurse": {
+  "g": "m",
+  "s": "infirmier",
+  "fs": "infirmière"
+ },
+ "nurse supervisor": {
+  "g": "m",
+  "s": "cadre de santé"
+ },
+ "nursery worker": {
+  "g": "m",
+  "s": "ouvrier horticole",
+  "fs": "ouvrière horticole"
+ },
+ "nutrients": {
+  "g": "m",
+  "s": "concentré de nutriments"
+ },
+ "object with many markings": {
+  "g": "m",
+  "s": "objet couvert de marques"
+ },
+ "office clerk": {
+  "g": "m",
+  "s": "employé de bureau",
+  "fs": "employée de bureau"
+ },
+ "office worker": {
+  "g": "m",
+  "s": "employé de bureau",
+  "fs": "employée de bureau"
+ },
+ "officer": {
+  "g": "m",
+  "s": "officier"
+ },
+ "open mic artist": {
+  "g": "m",
+  "s": "artiste de scène ouverte"
+ },
+ "opera guide": {
+  "g": "m",
+  "s": "guide de l’opéra"
+ },
+ "operations assistant": {
+  "g": "m",
+  "s": "assistant des opérations",
+  "fs": "assistante des opérations"
+ },
+ "operations captain": {
+  "g": "m",
+  "s": "capitaine des opérations"
+ },
+ "operations colonel": {
+  "g": "m",
+  "s": "colonel des opérations",
+  "fs": "colonelle des opérations"
+ },
+ "operations commander": {
+  "g": "m",
+  "s": "commandant des opérations",
+  "fs": "commandante des opérations"
+ },
+ "operations director": {
+  "g": "m",
+  "s": "directeur des opérations",
+  "fs": "directrice des opérations"
+ },
+ "operations firefighter": {
+  "g": "m",
+  "s": "pompier opérationnel",
+  "fs": "pompière opérationnelle"
+ },
+ "operations foreman": {
+  "g": "m",
+  "s": "contremaître des opérations",
+  "fs": "contremaîtresse des opérations"
+ },
+ "operations general": {
+  "g": "m",
+  "s": "général des opérations",
+  "fs": "générale des opérations"
+ },
+ "operations manager": {
+  "g": "m",
+  "s": "responsable des opérations"
+ },
+ "operations officer": {
+  "g": "m",
+  "s": "officier des opérations"
+ },
+ "operations sergeant": {
+  "g": "m",
+  "s": "sergent des opérations",
+  "fs": "sergente des opérations"
+ },
+ "operations supervisor": {
+  "g": "m",
+  "s": "superviseur des opérations",
+  "fs": "superviseuse des opérations"
+ },
+ "ops coordinator": {
+  "g": "m",
+  "s": "coordinateur des opérations",
+  "fs": "coordinatrice des opérations"
+ },
+ "order picker": {
+  "g": "m",
+  "s": "préparateur de commandes",
+  "fs": "préparatrice de commandes"
+ },
+ "organizer": {
+  "g": "m",
+  "s": "agenda"
+ },
+ "ovum": {
+  "g": "m",
+  "s": "ovum"
+ },
+ "pack of cigarettes": {
+  "g": "m",
+  "s": "paquet de cigarettes"
+ },
+ "pack of contraceptives": {
+  "g": "f",
+  "s": "boîte de contraceptifs"
+ },
+ "pack of thin objects": {
+  "g": "m",
+  "s": "paquet d’objets minces"
+ },
+ "packager": {
+  "g": "m",
+  "s": "conditionneur",
+  "fs": "conditionneuse"
+ },
+ "packer": {
+  "g": "m",
+  "s": "emballeur",
+  "fs": "emballeuse"
+ },
+ "padded garment": {
+  "g": "m",
+  "s": "vêtement rembourré"
+ },
+ "page": {
+  "g": "f",
+  "s": "page"
+ },
+ "panic": {
+  "g": "f",
+  "s": "panique"
+ },
+ "paper": {
+  "g": "m",
+  "s": "papier"
+ },
+ "paradigm shifter": {
+  "g": "m",
+  "s": "changeur de paradigme",
+  "fs": "changeuse de paradigme"
+ },
+ "paralegal": {
+  "g": "m",
+  "s": "assistant juridique",
+  "fs": "assistante juridique"
+ },
+ "paralysis": {
+  "g": "f",
+  "s": "paralysie"
+ },
+ "parcel runner": {
+  "g": "m",
+  "s": "livreur de colis",
+  "fs": "livreuse de colis"
+ },
+ "parking attendant": {
+  "g": "m",
+  "s": "gardien de parking",
+  "fs": "gardienne de parking"
+ },
+ "parking enforcement": {
+  "g": "m",
+  "s": "agent de stationnement"
+ },
+ "party chairman": {
+  "g": "m",
+  "s": "président du parti",
+  "fs": "présidente du parti"
+ },
+ "patrol captain": {
+  "g": "m",
+  "s": "capitaine de patrouille"
+ },
+ "patrol guard": {
+  "g": "m",
+  "s": "rondier",
+  "fs": "rondière"
+ },
+ "patrol officer": {
+  "g": "m",
+  "s": "agent de patrouille"
+ },
+ "penetration tester": {
+  "g": "m",
+  "s": "testeur d’intrusion",
+  "fs": "testeuse d’intrusion"
+ },
+ "personal care aide": {
+  "g": "m",
+  "s": "auxiliaire de vie"
+ },
+ "pickup": {
+  "g": "m",
+  "s": "objet"
+ },
+ "piece of paper": {
+  "g": "m",
+  "s": "morceau de papier"
+ },
+ "planetarium presenter": {
+  "g": "m",
+  "s": "animateur de planétarium",
+  "fs": "animatrice de planétarium"
+ },
+ "plant coordinator": {
+  "g": "m",
+  "s": "coordinateur d’usine",
+  "fs": "coordinatrice d’usine"
+ },
+ "plant foreman": {
+  "g": "m",
+  "s": "contremaître d’usine",
+  "fs": "contremaîtresse d’usine"
+ },
+ "plastic rectangular object": {
+  "g": "m",
+  "s": "objet rectangulaire en plastique"
+ },
+ "platoon leader": {
+  "g": "m",
+  "s": "chef de section",
+  "fs": "cheffe de section"
+ },
+ "platoon sergeant": {
+  "g": "m",
+  "s": "sergent de section",
+  "fs": "sergente de section"
+ },
+ "plumber": {
+  "g": "m",
+  "s": "plombier",
+  "fs": "plombière"
+ },
+ "podcast producer": {
+  "g": "m",
+  "s": "producteur de podcasts",
+  "fs": "productrice de podcasts"
+ },
+ "police cadet": {
+  "g": "m",
+  "s": "élève policier",
+  "fs": "élève policière"
+ },
+ "police captain": {
+  "g": "m",
+  "s": "capitaine de police"
+ },
+ "police chief": {
+  "g": "m",
+  "s": "chef de la police",
+  "fs": "cheffe de la police"
+ },
+ "police officer": {
+  "g": "m",
+  "s": "policier",
+  "fs": "policière"
+ },
+ "police radio": {
+  "g": "f",
+  "s": "radio de police"
+ },
+ "policy advocate": {
+  "g": "m",
+  "s": "défenseur des politiques publiques",
+  "fs": "défenseuse des politiques publiques"
+ },
+ "policy analyst": {
+  "g": "m",
+  "s": "analyste politique"
+ },
+ "policy director": {
+  "g": "m",
+  "s": "directeur des politiques",
+  "fs": "directrice des politiques"
+ },
+ "political consultant": {
+  "g": "m",
+  "s": "consultant politique",
+  "fs": "consultante politique"
+ },
+ "politician": {
+  "g": "m",
+  "s": "homme politique",
+  "fs": "femme politique"
+ },
+ "port commander": {
+  "g": "m",
+  "s": "capitaine de port"
+ },
+ "portfolio manager": {
+  "g": "m",
+  "s": "gestionnaire de portefeuille"
+ },
+ "postal service worker": {
+  "g": "m",
+  "s": "postier",
+  "fs": "postière"
+ },
+ "power battery": {
+  "g": "f",
+  "s": "batterie d’alimentation"
+ },
+ "power boost": {
+  "g": "f",
+  "s": "hausse de pouvoir",
+  "elide": false
+ },
+ "power conduit": {
+  "g": "m",
+  "s": "conduit d’alimentation"
+ },
+ "power drain": {
+  "g": "f",
+  "s": "ponction de pouvoir"
+ },
+ "power relay": {
+  "g": "m",
+  "s": "relais d’alimentation"
+ },
+ "preservator": {
+  "g": "m",
+  "s": "préservateur"
+ },
+ "presidential advisor": {
+  "g": "m",
+  "s": "conseiller présidentiel",
+  "fs": "conseillère présidentielle"
+ },
+ "principal investigator": {
+  "g": "m",
+  "s": "investigateur principal",
+  "fs": "investigatrice principale"
+ },
+ "private companion": {
+  "g": "m",
+  "s": "accompagnateur privé",
+  "fs": "accompagnatrice privée"
+ },
+ "procurement specialist": {
+  "g": "m",
+  "s": "spécialiste des achats"
+ },
+ "product manager": {
+  "g": "m",
+  "s": "chef de produit",
+  "fs": "cheffe de produit"
+ },
+ "program director": {
+  "g": "m",
+  "s": "directeur de programme",
+  "fs": "directrice de programme"
+ },
+ "project coordinator": {
+  "g": "m",
+  "s": "coordinateur de projet",
+  "fs": "coordinatrice de projet"
+ },
+ "project lead": {
+  "g": "m",
+  "s": "chef de projet",
+  "fs": "cheffe de projet"
+ },
+ "project painter": {
+  "g": "m",
+  "s": "peintre de chantier"
+ },
+ "prosecutor": {
+  "g": "m",
+  "s": "procureur",
+  "fs": "procureure"
+ },
+ "protective services chief": {
+  "g": "m",
+  "s": "chef des services de protection",
+  "fs": "cheffe des services de protection"
+ },
+ "pub attendant": {
+  "g": "m",
+  "s": "serveur de pub",
+  "fs": "serveuse de pub"
+ },
+ "public defender": {
+  "g": "m",
+  "s": "avocat commis d’office",
+  "fs": "avocate commise d’office"
+ },
+ "public house manager": {
+  "g": "m",
+  "s": "gérant de pub",
+  "fs": "gérante de pub"
+ },
+ "public records officer": {
+  "g": "m",
+  "s": "responsable des archives publiques"
+ },
+ "public relations associate": {
+  "g": "m",
+  "s": "chargé de relations publiques",
+  "fs": "chargée de relations publiques"
+ },
+ "public relations manager": {
+  "g": "m",
+  "s": "responsable des relations publiques"
+ },
+ "public safety director": {
+  "g": "m",
+  "s": "directeur de la sécurité publique",
+  "fs": "directrice de la sécurité publique"
+ },
+ "public servant": {
+  "g": "m",
+  "s": "fonctionnaire"
+ },
+ "publishing director": {
+  "g": "m",
+  "s": "directeur de publication",
+  "fs": "directrice de publication"
+ },
+ "purpose strategist": {
+  "g": "m",
+  "s": "stratège de la raison d’être"
+ },
+ "quality control inspector": {
+  "g": "m",
+  "s": "contrôleur qualité",
+  "fs": "contrôleuse qualité"
+ },
+ "radiologic technologist": {
+  "g": "m",
+  "s": "manipulateur en radiologie",
+  "fs": "manipulatrice en radiologie"
+ },
+ "random civilian": {
+  "g": "m",
+  "s": "civil",
+  "fs": "civile"
+ },
+ "random scientist": {
+  "g": "m",
+  "s": "scientifique"
+ },
+ "raw smash": {
+  "g": "m",
+  "s": "smash brut"
+ },
+ "reactor": {
+  "g": "m",
+  "s": "réacteur"
+ },
+ "real estate broker": {
+  "g": "m",
+  "s": "agent immobilier"
+ },
+ "receipt": {
+  "g": "m",
+  "s": "reçu"
+ },
+ "receptionist": {
+  "g": "m",
+  "s": "réceptionniste"
+ },
+ "recessu": {
+  "g": "m",
+  "s": "recessu"
+ },
+ "recording artist": {
+  "g": "m",
+  "s": "artiste discographique"
+ },
+ "records specialist": {
+  "g": "m",
+  "s": "archiviste"
+ },
+ "red team lead": {
+  "g": "m",
+  "s": "chef de red team",
+  "fs": "cheffe de red team"
+ },
+ "regional controller": {
+  "g": "m",
+  "s": "contrôleur régional",
+  "fs": "contrôleuse régionale"
+ },
+ "regional director": {
+  "g": "m",
+  "s": "directeur régional",
+  "fs": "directrice régionale"
+ },
+ "report": {
+  "g": "m",
+  "s": "rapport"
+ },
+ "reporter": {
+  "g": "m",
+  "s": "journaliste"
+ },
+ "representative": {
+  "g": "m",
+  "s": "député",
+  "fs": "députée"
+ },
+ "rescue captain": {
+  "g": "m",
+  "s": "capitaine de secours"
+ },
+ "rescue coordinator": {
+  "g": "m",
+  "s": "coordinateur des secours",
+  "fs": "coordinatrice des secours"
+ },
+ "research assistant": {
+  "g": "m",
+  "s": "assistant de recherche",
+  "fs": "assistante de recherche"
+ },
+ "research associate": {
+  "g": "m",
+  "s": "associé de recherche",
+  "fs": "associée de recherche"
+ },
+ "research chair": {
+  "g": "m",
+  "s": "titulaire de chaire de recherche"
+ },
+ "research dean": {
+  "g": "m",
+  "s": "doyen de la recherche",
+  "fs": "doyenne de la recherche"
+ },
+ "research scientist": {
+  "g": "m",
+  "s": "chercheur scientifique",
+  "fs": "chercheuse scientifique"
+ },
+ "researcher": {
+  "g": "m",
+  "s": "chercheur",
+  "fs": "chercheuse"
+ },
+ "resource drain": {
+  "g": "f",
+  "s": "ponction de ressources"
+ },
+ "resource gain": {
+  "g": "m",
+  "s": "gain de ressources"
+ },
+ "restoration artist": {
+  "g": "m",
+  "s": "restaurateur d’art",
+  "fs": "restauratrice d’art"
+ },
+ "retail manager": {
+  "g": "m",
+  "s": "gérant de magasin",
+  "fs": "gérante de magasin"
+ },
+ "retail salesperson": {
+  "g": "m",
+  "s": "vendeur",
+  "fs": "vendeuse"
+ },
+ "rifleman": {
+  "g": "m",
+  "s": "fusilier"
+ },
+ "ring bruiser": {
+  "g": "m",
+  "s": "cogneur du réseau",
+  "fs": "cogneuse du réseau"
+ },
+ "ring madam": {
+  "g": "f",
+  "s": "mère maquerelle"
+ },
+ "risk management director": {
+  "g": "m",
+  "s": "directeur de la gestion des risques",
+  "fs": "directrice de la gestion des risques"
+ },
+ "ritual cantor": {
+  "g": "m",
+  "s": "chantre rituel"
+ },
+ "ritual guard": {
+  "g": "m",
+  "s": "garde du rituel"
+ },
+ "ritual zealot": {
+  "g": "m",
+  "s": "fanatique du rituel"
+ },
+ "rival sanctum": {
+  "g": "m",
+  "s": "sanctuaire rival"
+ },
+ "route supervisor": {
+  "g": "m",
+  "s": "superviseur de tournées",
+  "fs": "superviseuse de tournées"
+ },
+ "safe": {
+  "g": "m",
+  "s": "coffre-fort"
+ },
+ "sales manager": {
+  "g": "m",
+  "s": "directeur commercial",
+  "fs": "directrice commerciale"
+ },
+ "sales rep": {
+  "g": "m",
+  "s": "commercial",
+  "fs": "commerciale"
+ },
+ "sample processor": {
+  "g": "m",
+  "s": "préparateur d’échantillons",
+  "fs": "préparatrice d’échantillons"
+ },
+ "sandwich artist": {
+  "g": "m",
+  "s": "préparateur de sandwichs",
+  "fs": "préparatrice de sandwichs"
+ },
+ "school instructor": {
+  "g": "m",
+  "s": "professeur",
+  "fs": "professeure"
+ },
+ "scientific director": {
+  "g": "m",
+  "s": "directeur scientifique",
+  "fs": "directrice scientifique"
+ },
+ "second lieutenant": {
+  "g": "m",
+  "s": "sous-lieutenant",
+  "fs": "sous-lieutenante"
+ },
+ "secretary of state": {
+  "g": "m",
+  "s": "secrétaire d’État"
+ },
+ "security analyst": {
+  "g": "m",
+  "s": "analyste en sécurité"
+ },
+ "security coordinator": {
+  "g": "m",
+  "s": "coordinateur de la sécurité",
+  "fs": "coordinatrice de la sécurité"
+ },
+ "security guard": {
+  "g": "m",
+  "s": "agent de sécurité"
+ },
+ "security manager": {
+  "g": "m",
+  "s": "responsable de la sécurité"
+ },
+ "security operations director": {
+  "g": "m",
+  "s": "directeur des opérations de sécurité",
+  "fs": "directrice des opérations de sécurité"
+ },
+ "security strategist": {
+  "g": "m",
+  "s": "stratège en sécurité"
+ },
+ "security supervisor": {
+  "g": "m",
+  "s": "superviseur de la sécurité",
+  "fs": "superviseuse de la sécurité"
+ },
+ "senator": {
+  "g": "m",
+  "s": "sénateur",
+  "fs": "sénatrice"
+ },
+ "senator aide": {
+  "g": "m",
+  "s": "assistant de sénateur",
+  "fs": "assistante de sénateur"
+ },
+ "senior educator": {
+  "g": "m",
+  "s": "enseignant chevronné",
+  "fs": "enseignante chevronnée"
+ },
+ "senior fellow": {
+  "g": "m",
+  "s": "membre émérite"
+ },
+ "senior field agent": {
+  "g": "m",
+  "s": "agent de terrain confirmé"
+ },
+ "senior flight attendant": {
+  "g": "m",
+  "s": "steward principal",
+  "fs": "hôtesse principale"
+ },
+ "senior pastor": {
+  "g": "m",
+  "s": "pasteur principal",
+  "fs": "pasteure principale"
+ },
+ "senior scientist": {
+  "g": "m",
+  "s": "scientifique senior"
+ },
+ "service desk rep": {
+  "g": "m",
+  "s": "opérateur du centre de services",
+  "fs": "opératrice du centre de services"
+ },
+ "session vocalist": {
+  "g": "m",
+  "s": "chanteur de session",
+  "fs": "chanteuse de session"
+ },
+ "sewer exit": {
+  "g": "f",
+  "s": "sortie d’égout"
+ },
+ "sewer hatch": {
+  "g": "f",
+  "s": "plaque d’égout"
+ },
+ "sex worker": {
+  "g": "m",
+  "s": "travailleur du sexe",
+  "fs": "travailleuse du sexe"
+ },
+ "shadow operative": {
+  "g": "m",
+  "s": "agent de l’ombre"
+ },
+ "sheet of paper": {
+  "g": "f",
+  "s": "feuille de papier"
+ },
+ "shift captain": {
+  "g": "m",
+  "s": "chef d’équipe"
+ },
+ "shift commander": {
+  "g": "m",
+  "s": "chef de quart",
+  "fs": "cheffe de quart"
+ },
+ "shift lead": {
+  "g": "m",
+  "s": "responsable de poste"
+ },
+ "shock escort": {
+  "g": "m",
+  "s": "escort de choc"
+ },
+ "shop stylist": {
+  "g": "m",
+  "s": "coiffeur de salon",
+  "fs": "coiffeuse de salon"
+ },
+ "short-order cook": {
+  "g": "m",
+  "s": "cuisinier de snack",
+  "fs": "cuisinière de snack"
+ },
+ "sig suppressor": {
+  "g": "m",
+  "s": "suppresseur de signature"
+ },
+ "signals officer": {
+  "g": "m",
+  "s": "officier des transmissions",
+  "fs": "officière des transmissions"
+ },
+ "silent scream": {
+  "g": "m",
+  "s": "cri silencieux"
+ },
+ "site foreman": {
+  "g": "m",
+  "s": "chef de chantier",
+  "fs": "cheffe de chantier"
+ },
+ "site supervisor": {
+  "g": "m",
+  "s": "chef de chantier",
+  "fs": "cheffe de chantier"
+ },
+ "sky steward": {
+  "g": "m",
+  "s": "steward",
+  "fs": "hôtesse"
+ },
+ "slime": {
+  "g": "m",
+  "s": "mucus"
+ },
+ "small blade": {
+  "g": "f",
+  "s": "petite lame"
+ },
+ "small container": {
+  "g": "m",
+  "s": "petit contenant"
+ },
+ "small leather object": {
+  "g": "m",
+  "s": "petit objet en cuir"
+ },
+ "small plastic bag": {
+  "g": "m",
+  "s": "petit sachet en plastique"
+ },
+ "small plastic container": {
+  "g": "m",
+  "s": "petit récipient en plastique"
+ },
+ "small plastic object": {
+  "g": "m",
+  "s": "petit objet en plastique"
+ },
+ "smartphone": {
+  "g": "m",
+  "s": "smartphone"
+ },
+ "smash": {
+  "g": "m",
+  "s": "choc"
+ },
+ "social media manager": {
+  "g": "m",
+  "s": "responsable des réseaux sociaux"
+ },
+ "social media strategist": {
+  "g": "m",
+  "s": "stratège des réseaux sociaux"
+ },
+ "social worker": {
+  "g": "m",
+  "s": "travailleur social",
+  "fs": "travailleuse sociale"
+ },
+ "soldier": {
+  "g": "m",
+  "s": "soldat"
+ },
+ "solicitor general": {
+  "g": "m",
+  "s": "avocat général",
+  "fs": "avocate générale"
+ },
+ "solo artist": {
+  "g": "m",
+  "s": "artiste solo"
+ },
+ "special agent": {
+  "g": "m",
+  "s": "agent spécial"
+ },
+ "special operations overseer": {
+  "g": "m",
+  "s": "superviseur des opérations spéciales",
+  "fs": "superviseuse des opérations spéciales"
+ },
+ "specimen handler": {
+  "g": "m",
+  "s": "manipulateur de spécimens",
+  "fs": "manipulatrice de spécimens"
+ },
+ "squad leader": {
+  "g": "m",
+  "s": "chef de groupe",
+  "fs": "cheffe de groupe"
+ },
+ "stabilizer": {
+  "g": "m",
+  "s": "stabilisateur"
+ },
+ "staff officer": {
+  "g": "m",
+  "s": "officier d’état-major",
+  "fs": "officière d’état-major"
+ },
+ "staff sergeant": {
+  "g": "m",
+  "s": "sergent-chef",
+  "fs": "sergente-cheffe"
+ },
+ "stairs": {
+  "g": "m",
+  "s": "escalier"
+ },
+ "state representative": {
+  "g": "m",
+  "s": "député d’État",
+  "fs": "députée d’État"
+ },
+ "station chief": {
+  "g": "m",
+  "s": "chef de poste",
+  "fs": "cheffe de poste"
+ },
+ "station responder": {
+  "g": "m",
+  "s": "intervenant de caserne",
+  "fs": "intervenante de caserne"
+ },
+ "station tender": {
+  "g": "m",
+  "s": "gardien de caserne",
+  "fs": "gardienne de caserne"
+ },
+ "stocker": {
+  "g": "m",
+  "s": "employé de mise en rayon",
+  "fs": "employée de mise en rayon"
+ },
+ "store clerk": {
+  "g": "m",
+  "s": "employé de magasin",
+  "fs": "employée de magasin"
+ },
+ "strange device": {
+  "g": "m",
+  "s": "appareil étrange"
+ },
+ "strategic mastermind": {
+  "g": "m",
+  "s": "cerveau stratégique"
+ },
+ "street busker": {
+  "g": "m",
+  "s": "musicien de rue",
+  "fs": "musicienne de rue"
+ },
+ "street captain": {
+  "g": "m",
+  "s": "capitaine de rue"
+ },
+ "street dealer": {
+  "g": "m",
+  "s": "dealer de rue",
+  "fs": "dealeuse de rue"
+ },
+ "street enforcer": {
+  "g": "m",
+  "s": "cogneur de rue",
+  "fs": "cogneuse de rue"
+ },
+ "street preacher": {
+  "g": "m",
+  "s": "prédicateur de rue",
+  "fs": "prédicatrice de rue"
+ },
+ "street sergeant": {
+  "g": "m",
+  "s": "brigadier de terrain",
+  "fs": "brigadière de terrain"
+ },
+ "street thug": {
+  "g": "m",
+  "s": "voyou"
+ },
+ "street worker": {
+  "g": "m",
+  "s": "travailleur du trottoir",
+  "fs": "travailleuse du trottoir"
+ },
+ "strike leader": {
+  "g": "m",
+  "s": "chef d’intervention",
+  "fs": "cheffe d’intervention"
+ },
+ "studio vocalist": {
+  "g": "m",
+  "s": "chanteur de studio",
+  "fs": "chanteuse de studio"
+ },
+ "stun rifle": {
+  "g": "m",
+  "s": "fusil paralysant"
+ },
+ "stunner": {
+  "g": "m",
+  "s": "paralyseur"
+ },
+ "summoning disruption": {
+  "g": "f",
+  "s": "perturbation d’invocation"
+ },
+ "summoning portal": {
+  "g": "m",
+  "s": "portail d’invocation"
+ },
+ "supply chain manager": {
+  "g": "m",
+  "s": "responsable de la chaîne logistique"
+ },
+ "support desk associate": {
+  "g": "m",
+  "s": "chargé d’assistance",
+  "fs": "chargée d’assistance"
+ },
+ "support lead": {
+  "g": "m",
+  "s": "responsable du support"
+ },
+ "support specialist": {
+  "g": "m",
+  "s": "spécialiste du support"
+ },
+ "supreme court justice": {
+  "g": "m",
+  "s": "juge de la Cour suprême"
+ },
+ "surveillance operator": {
+  "g": "m",
+  "s": "opérateur de vidéosurveillance",
+  "fs": "opératrice de vidéosurveillance"
+ },
+ "surveillance specialist": {
+  "g": "m",
+  "s": "spécialiste de la surveillance"
+ },
+ "surveyor": {
+  "g": "m",
+  "s": "géomètre"
+ },
+ "swat team member": {
+  "g": "m",
+  "s": "policier d’intervention",
+  "fs": "policière d’intervention"
+ },
+ "syndicate leader": {
+  "g": "m",
+  "s": "chef du syndicat du crime",
+  "fs": "cheffe du syndicat du crime"
+ },
+ "synergy specialist": {
+  "g": "m",
+  "s": "spécialiste des synergies"
+ },
+ "systems researcher": {
+  "g": "m",
+  "s": "chercheur en systèmes",
+  "fs": "chercheuse en systèmes"
+ },
+ "systems support analyst": {
+  "g": "m",
+  "s": "analyste support systèmes"
+ },
+ "table attendant": {
+  "g": "m",
+  "s": "commis de salle"
+ },
+ "tap tender": {
+  "g": "m",
+  "s": "préposé à la pression",
+  "fs": "préposée à la pression"
+ },
+ "taproom server": {
+  "g": "m",
+  "s": "serveur de brasserie",
+  "fs": "serveuse de brasserie"
+ },
+ "task force leader": {
+  "g": "m",
+  "s": "chef de cellule opérationnelle",
+  "fs": "cheffe de cellule opérationnelle"
+ },
+ "teacher": {
+  "g": "m",
+  "s": "enseignant",
+  "fs": "enseignante"
+ },
+ "teacher's aide": {
+  "g": "m",
+  "s": "assistant d’éducation",
+  "fs": "assistante d’éducation"
+ },
+ "team leader": {
+  "g": "m",
+  "s": "chef d’équipe",
+  "fs": "cheffe d’équipe"
+ },
+ "technical concierge": {
+  "g": "m",
+  "s": "concierge technique"
+ },
+ "telemarketer": {
+  "g": "m",
+  "s": "télévendeur",
+  "fs": "télévendeuse"
+ },
+ "television executive": {
+  "g": "m",
+  "s": "dirigeant de télévision",
+  "fs": "dirigeante de télévision"
+ },
+ "territory boss": {
+  "g": "m",
+  "s": "caïd du secteur"
+ },
+ "test coordinator": {
+  "g": "m",
+  "s": "coordinateur des essais",
+  "fs": "coordinatrice des essais"
+ },
+ "thin folder with markings": {
+  "g": "f",
+  "s": "chemise mince couverte de marques"
+ },
+ "thin object with markings": {
+  "g": "m",
+  "s": "objet mince couvert de marques"
+ },
+ "thought leader": {
+  "g": "m",
+  "s": "leader d’opinion"
+ },
+ "thug bruiser": {
+  "g": "m",
+  "s": "cogneur de la bande",
+  "fs": "cogneuse de la bande"
+ },
+ "thug gunman": {
+  "g": "m",
+  "s": "flingueur de la bande",
+  "fs": "flingueuse de la bande"
+ },
+ "thug lieutenant": {
+  "g": "m",
+  "s": "lieutenant de la bande",
+  "fs": "lieutenante de la bande"
+ },
+ "toll collector": {
+  "g": "m",
+  "s": "péagiste"
+ },
+ "top influencer": {
+  "g": "m",
+  "s": "influenceur vedette",
+  "fs": "influenceuse vedette"
+ },
+ "tour vocalist": {
+  "g": "m",
+  "s": "chanteur de tournée",
+  "fs": "chanteuse de tournée"
+ },
+ "trade cost decrease": {
+  "g": "f",
+  "s": "baisse du coût des échanges"
+ },
+ "trade cost increase": {
+  "g": "f",
+  "s": "hausse du coût des échanges",
+  "elide": false
+ },
+ "trade silence": {
+  "g": "m",
+  "s": "silence commercial"
+ },
+ "traffic officer": {
+  "g": "m",
+  "s": "agent de la circulation"
+ },
+ "train steward": {
+  "g": "m",
+  "s": "steward de train",
+  "fs": "hôtesse de train"
+ },
+ "transcendence executive": {
+  "g": "m",
+  "s": "cadre de la transcendance"
+ },
+ "transformation coach": {
+  "g": "m",
+  "s": "coach en transformation"
+ },
+ "transit pilot": {
+  "g": "m",
+  "s": "pilote de navette"
+ },
+ "triage nurse": {
+  "g": "m",
+  "s": "infirmier de triage",
+  "fs": "infirmière de triage"
+ },
+ "trial lawyer": {
+  "g": "m",
+  "s": "avocat plaidant",
+  "fs": "avocate plaidante"
+ },
+ "trooper": {
+  "g": "m",
+  "s": "militaire du rang"
+ },
+ "ufologist": {
+  "g": "m",
+  "s": "ufologue"
+ },
+ "undercover agent": {
+  "g": "m",
+  "s": "agent infiltré"
+ },
+ "underworld kingpin": {
+  "g": "m",
+  "s": "baron de la pègre",
+  "fs": "baronne de la pègre"
+ },
+ "unemployed": {
+  "g": "m",
+  "s": "chômeur",
+  "fs": "chômeuse"
+ },
+ "uneven dark-red object": {
+  "g": "m",
+  "s": "objet rouge sombre irrégulier"
+ },
+ "unit leader": {
+  "g": "m",
+  "s": "chef d’unité",
+  "fs": "cheffe d’unité"
+ },
+ "unknown object": {
+  "g": "m",
+  "s": "objet inconnu"
+ },
+ "usher": {
+  "g": "m",
+  "s": "placeur",
+  "fs": "placeuse"
+ },
+ "vain probation": {
+  "g": "f",
+  "s": "vaine probation"
+ },
+ "velvet room owner": {
+  "g": "m",
+  "s": "propriétaire du salon de velours"
+ },
+ "vent": {
+  "g": "f",
+  "s": "bouche d’aération"
+ },
+ "vice president": {
+  "g": "m",
+  "s": "vice-président",
+  "fs": "vice-présidente"
+ },
+ "vice president of security": {
+  "g": "m",
+  "s": "vice-président chargé de la sécurité",
+  "fs": "vice-présidente chargée de la sécurité"
+ },
+ "vice squad member": {
+  "g": "m",
+  "s": "policier des mœurs",
+  "fs": "policière des mœurs"
+ },
+ "video analyst": {
+  "g": "m",
+  "s": "analyste vidéo"
+ },
+ "video editor": {
+  "g": "m",
+  "s": "monteur vidéo",
+  "fs": "monteuse vidéo"
+ },
+ "visionary facilitator": {
+  "g": "m",
+  "s": "facilitateur visionnaire",
+  "fs": "facilitatrice visionnaire"
+ },
+ "voice actor": {
+  "g": "m",
+  "s": "comédien de doublage",
+  "fs": "comédienne de doublage"
+ },
+ "wad of money": {
+  "g": "f",
+  "s": "liasse de billets"
+ },
+ "waiter": {
+  "g": "m",
+  "s": "serveur",
+  "fs": "serveuse"
+ },
+ "waitress": {
+  "g": "f",
+  "s": "serveuse"
+ },
+ "waitstaff": {
+  "g": "m",
+  "s": "serveur",
+  "fs": "serveuse"
+ },
+ "wall finisher": {
+  "g": "m",
+  "s": "enduiseur",
+  "fs": "enduiseuse"
+ },
+ "wallet": {
+  "g": "m",
+  "s": "portefeuille"
+ },
+ "ward nurse": {
+  "g": "m",
+  "s": "infirmier hospitalier",
+  "fs": "infirmière hospitalière"
+ },
+ "ward physician": {
+  "g": "m",
+  "s": "médecin de service"
+ },
+ "warehouse porter": {
+  "g": "m",
+  "s": "manutentionnaire"
+ },
+ "warehouse worker": {
+  "g": "m",
+  "s": "magasinier",
+  "fs": "magasinière"
+ },
+ "watch captain": {
+  "g": "m",
+  "s": "capitaine de garde"
+ },
+ "watcher": {
+  "g": "m",
+  "s": "veilleur"
+ },
+ "wave converter": {
+  "g": "m",
+  "s": "convertisseur d’ondes"
+ },
+ "web developer": {
+  "g": "m",
+  "s": "développeur web",
+  "fs": "développeuse web"
+ },
+ "wedding singer": {
+  "g": "m",
+  "s": "chanteur de mariage",
+  "fs": "chanteuse de mariage"
+ },
+ "welder": {
+  "g": "m",
+  "s": "soudeur",
+  "fs": "soudeuse"
+ },
+ "wellness advocate": {
+  "g": "m",
+  "s": "ambassadeur du bien-être",
+  "fs": "ambassadrice du bien-être"
+ },
+ "white powder": {
+  "g": "f",
+  "s": "poudre blanche"
+ },
+ "withdrawal": {
+  "g": "m",
+  "s": "manque"
+ },
+ "wooden club": {
+  "g": "m",
+  "s": "gourdin en bois"
+ },
+ "you": {
+  "g": "m",
+  "s": "vous"
+ },
+ "your host": {
+  "g": "m",
+  "s": "votre hôte"
+ },
+ "youth minister": {
+  "g": "m",
+  "s": "pasteur des jeunes",
+  "fs": "pasteure des jeunes"
+ }
+}

@@ -2,6 +2,9 @@
 
 ## 1.1
 
+### Fixes
+- ui: log lines read "1 turn" / "5 resources", use "a"/"an" correctly and no longer end in a double full stop
+
 ## 1.0.2
 
 ### Changes

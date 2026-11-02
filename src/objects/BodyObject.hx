@@ -2,6 +2,8 @@
 
 package objects;
 
+import l10n.Loc;
+
 import game.Game;
 import game.Inventory;
 
@@ -142,12 +144,10 @@ class BodyObject extends AreaObject
               game.player.host.maxItems)
             continue;
 
-          var name = (game.player.knowsItem(item.id) ?
-            item.name : item.info.unknown);
           list.push({
             id: 'get.' + item.id,
             type: ACTION_OBJECT,
-            name: 'Get ' + Const.col('inventory-item', name),
+            name: T('Get {item}', { item: Loc.colored('inventory-item', item) }),
             energy: 5,
             obj: this
           });
@@ -177,9 +177,7 @@ class BodyObject extends AreaObject
       for (item in inventory)
         if (item.id == id)
           {
-            var tmpname = (game.player.knowsItem(item.info.id) ?
-              item.name : item.info.unknown);
-            game.player.log('You pick the ' + tmpname + ' up.');
+            game.player.log(T('You pick {item:the} up.', { item: item }));
             game.player.host.inventory.add(item);
             inventory.remove(id);
             break;

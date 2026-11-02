@@ -1,11 +1,12 @@
 // configurable melee ability used by special AI attacks
 package abilities;
 
+import l10n.Loc;
+
 import ai.AI;
 
 class BasicMelee extends Ability
 {
-  public var attackMessage: String;
   public var skill: Int;
   public var sound: AISound;
   public var minDamage: Int;
@@ -20,7 +21,6 @@ class BasicMelee extends Ability
   public override function init()
     {
       super.init();
-      attackMessage = 'XX attacks YY.';
       skill = 50;
       sound = null;
       minDamage = 1;
@@ -42,7 +42,12 @@ class BasicMelee extends Ability
       if (Std.random(100) >= chance)
         {
           playMelee3D(ai, target, false);
-          ai.log('tries to attack ' + target.theName() + ', but misses.');
+          ai.log(target.type == TARGET_PLAYER ?
+            T('{ai:The} tries to attack you, but misses.', { ai: ai }) :
+            T('{ai:The} tries to attack {target:the}, but misses.', {
+              ai: ai,
+              target: target,
+            }));
           return true;
         }
 
@@ -57,14 +62,25 @@ class BasicMelee extends Ability
         min: minDamage,
         max: maxDamage,
       });
-      // replace templates and log
-      var msg = StringTools.replace(attackMessage, 'XX', ai.TheName());
-      msg = StringTools.replace(msg, 'YY', target.theName());
-      target.game.log(msg + ' for ' + damage + ' damage.');
+      // log the hit
+      target.game.log(Loc.fmt(hitText(target.type == TARGET_PLAYER), {
+        ai: ai,
+        target: target,
+        damage: damage,
+      }));
 
       // apply damage
       target.onDamage(damage);
       return true;
+    }
+
+// the hit sentence template, formatted with {ai}, {target} and {damage}; isYou = the target is the
+// parasite itself, a separate template that names no {target} (French puts "you" before the verb)
+  function hitText(isYou: Bool): String
+    {
+      return (isYou ?
+        T('{ai:The} attacks you for {damage} damage.') :
+        T('{ai:The} attacks {target:the} for {damage} damage.'));
     }
 
 // 3D melee choreography for the ability path (it bypasses the CommonLogic weapon bridge):

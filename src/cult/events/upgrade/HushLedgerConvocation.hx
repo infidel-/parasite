@@ -41,12 +41,18 @@ class HushLedgerConvocation
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('proxy net unravels ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} proxy net unravels {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('proxy net sluices ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} proxy net sluices {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles the memo choir choice outcome
@@ -57,13 +63,20 @@ class HushLedgerConvocation
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreaseIncome(game, penaltyTurns);
           cult.effects.add(setback);
-          cult.logsg('memo choir overload births ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} memo choir overload births {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreaseIncome(game, turns);
       cult.effects.add(effect);
-      cult.log('hush ledger convocation breathes ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} hush ledger convocation breathes {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the vow ledger choice outcome
@@ -74,17 +87,20 @@ class HushLedgerConvocation
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_DUMB))
-            aiNeg.log('drowns in figures and takes on the dumb flaw.');
+            aiNeg.log(T('{ai:The} drowns in figures and takes on the dumb flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'cultBasic', false);
       if (granted == null)
         {
-          cult.logsg('vow ledger closes without granting fresh doctrine.');
+          cult.logsg(T('{cult} vow ledger closes without granting fresh doctrine.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('records ' + granted.name + ' into the hidden ledger vows.');
+        ai.log(T('{ai:The} records {trait} into the hidden ledger vows.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

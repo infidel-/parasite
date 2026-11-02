@@ -3,6 +3,7 @@
 // transitions (compact toggle, bar fills) survive turn updates
 package ui.hud;
 
+import l10n.Loc;
 import js.Browser.document;
 import js.html.Element;
 import js.html.DivElement;
@@ -527,7 +528,11 @@ class InfoHud
           setShown(hostSection, true);
           setShown(hostEyebrow, true);
           setShown(hostname, true);
-          hostnameText.innerHTML = (host.isHuman ? host.getNameCapped() : host.AName());
+          if (host.isNameKnown)
+            hostnameText.innerHTML = host.getNameCapped();
+          else if (host.isHuman)
+            hostnameText.innerHTML = Const.capitalize(Loc.tr(host.name.unknown));
+          else hostnameText.innerHTML = T('{host:A}', { host: Loc.thing(host.name.unknown) });
           var badges = '';
           // close to collapsing from degradation
           if (game.player.isHostBreaking())

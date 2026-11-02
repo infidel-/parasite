@@ -94,6 +94,16 @@ class RivalBaseOrganObject extends AreaObject
       return organ.name;
     }
 
+// organ names are Latin proper names: translated, never an article
+  public override function getLocNoun(): _LocNoun
+    {
+      return {
+        key: getName(),
+        kind: LOC_PHRASE,
+        gender: 'n',
+      };
+    }
+
 // returns organ name without an article
   public override function theName(): String
     {
@@ -153,7 +163,7 @@ class RivalBaseOrganObject extends AreaObject
       game.ui.hud.addAction({
         id: 'attackRivalBaseOrgan',
         type: ACTION_OBJECT,
-        name: 'Attack ' + getName(),
+        name: T('Attack {obj}', { obj: this }),
         energy: 0,
         obj: this
       });

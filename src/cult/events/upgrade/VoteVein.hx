@@ -45,12 +45,18 @@ class VoteVein
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'political');
           cult.effects.add(drain);
-          cult.logsg('pump rupture bleeds ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} pump rupture bleeds {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('political', amount);
-      cult.logsg('pump flows +' + amount + ' political resource.');
+      cult.logsg(T('{cult} pump flows {n, plural, one{+# political resource} other{+# political resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles clot tally choice
@@ -62,7 +68,7 @@ class VoteVein
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('tally pressure spawns weak-willed flaw.');
+            aiNeg.log(T('{ai:The} tally pressure spawns weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var grantskill = addTrait(cult, targetID, 'skill', true);
@@ -70,7 +76,7 @@ class VoteVein
       {
         var grantmind = addTrait(cult, targetID, 'mind', true);
         if (grantmind == null)
-          cult.logsg('clot tally counts without new insight.');
+          cult.logsg(T('{cult} clot tally counts without new insight.', { cult: cult }));
       }
     }
 
@@ -83,12 +89,19 @@ class VoteVein
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'political');
           cult.effects.add(setback);
-          cult.logsg('whip snaps into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} whip snaps into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'political');
       cult.effects.add(effect);
-      cult.log('vein whip lashes ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} vein whip lashes {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 }

@@ -14,7 +14,6 @@ class ChoirMelee extends BasicMelee
       super.init();
       id = ABILITY_CHOIR_MELEE;
       name = N('choir melee');
-      attackMessage = 'XX vibrates, rending flesh of YY';
       skill = 70;
       sound = {
         file: 'attack-fists',
@@ -23,5 +22,13 @@ class ChoirMelee extends BasicMelee
       };
       minDamage = 1;
       maxDamage = 6;
+    }
+
+// the hit sentence template (see BasicMelee.hitText)
+  override function hitText(isYou: Bool): String
+    {
+      return (isYou ?
+        T('{ai:The} vibrates, rending flesh of you for {damage} damage.') :
+        T('{ai:The} vibrates, rending flesh of {target:the} for {damage} damage.'));
     }
 }

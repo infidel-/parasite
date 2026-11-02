@@ -44,12 +44,18 @@ class BillSuture
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('political', penalty);
-          cult.logsg('suture rupture bleeds -' + penalty + ' political resource.');
+          cult.logsg(T('{cult} suture rupture bleeds {n, plural, one{-# political resource} other{-# political resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('political', amount);
-      cult.logsg('sutured text delivers +' + amount + ' political resource.');
+      cult.logsg(T('{cult} sutured text delivers {n, plural, one{+# political resource} other{+# political resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles graft clause choice
@@ -61,12 +67,12 @@ class BillSuture
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('grafted clause weakens will, spawning flaw.');
+            aiNeg.log(T('{ai:The} grafted clause weakens will, spawning flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'cultBasic', true);
       if (granted == null)
-        cult.logsg('clause graft fuses without new devotion.');
+        cult.logsg(T('{cult} clause graft fuses without new devotion.', { cult: cult }));
     }
 
 // handles scar archive choice
@@ -78,12 +84,19 @@ class BillSuture
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'political');
           cult.effects.add(setback);
-          cult.logsg('scar tissue scars into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} scar tissue scars into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'political');
       cult.effects.add(effect);
-      cult.log('scar archive seals ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} scar archive seals {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 }

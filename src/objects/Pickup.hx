@@ -3,6 +3,8 @@
 
 package objects;
 
+import l10n.Loc;
+
 import game.Game;
 
 class Pickup extends AreaObject
@@ -55,12 +57,10 @@ class Pickup extends AreaObject
       if (!canGet())
         return [];
 
-      var itemName = (game.player.knowsItem(item.info.id) ?
-        item.name : item.info.unknown);
       return [{
         id: 'get',
         type: ACTION_OBJECT,
-        name: 'Get ' + Const.col('inventory-item', itemName),
+        name: T('Get {item}', { item: Loc.colored('inventory-item', item) }),
         energy: 5,
         isAgreeable: true,
         obj: this
@@ -79,9 +79,7 @@ class Pickup extends AreaObject
       // get stuff from body
       if (action.id == 'get')
         {
-          var itemName = (game.player.knowsItem(item.info.id) ?
-            item.name : item.info.unknown);
-          game.player.log('You pick the ' + Const.col('inventory-item', itemName) + ' up.');
+          game.player.log(T('You pick {item:the} up.', { item: Loc.colored('inventory-item', item) }));
           game.player.host.inventory.add(item);
           game.area.removeObject(this);
 

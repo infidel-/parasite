@@ -44,12 +44,18 @@ class FleshPortfolio
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('audit ghost clips ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} audit ghost clips {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('skin trade clears ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} skin trade clears {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles the flesh fund choice outcome
@@ -61,13 +67,20 @@ class FleshPortfolio
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new LoseResource(game, penaltyTurns, 'corporate');
           cult.effects.add(setback);
-          cult.logsg('fund leak bleeds into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} fund leak bleeds into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new GainResource(game, turns, 'corporate');
       cult.effects.add(effect);
-      cult.log('flesh fund channels ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} flesh fund channels {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the tissue trust choice outcome
@@ -79,17 +92,20 @@ class FleshPortfolio
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('buckles under the trust and gains the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} buckles under the trust and gains the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('trust charter remains unsigned.');
+          cult.logsg(T('{cult} trust charter remains unsigned.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('holds the ' + granted.name + ' trust, managing eternal assets.');
+        ai.log(T('{ai:The} holds the {trait} trust, managing eternal assets.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

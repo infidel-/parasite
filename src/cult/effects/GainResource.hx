@@ -41,6 +41,7 @@ class GainResource extends Effect
 // returns custom display name
   public override function customName(): String
     {
+      // tr: {resource} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
       return T('+1-3 {resource} income', { resource: resourceType });
     }
 }

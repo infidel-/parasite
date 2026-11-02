@@ -32,8 +32,8 @@ class Slime extends Effect
 
       var free = ai.effects.decrease(EFFECT_SLIME, ai.strength, ai);
       if (free)
-        ai.log('manages to get free of the mucus.');
-      else ai.log('desperately tries to get free of the mucus.');
+        ai.log(T('{ai:The} manages to get free of the mucus.', { ai: ai }));
+      else ai.log(T('{ai:The} desperately tries to get free of the mucus.', { ai: ai }));
 
       // set alerted state
       if (ai.state == AI_STATE_IDLE)

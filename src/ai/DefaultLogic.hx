@@ -388,7 +388,7 @@ class DefaultLogic
       // random: try to tear parasite away
       if (game.player.hostControl < 25 && Std.random(100) < 5)
         {
-          ai.log('manages to tear you away.');
+          ai.log(T('{ai:The} manages to tear you away.', { ai: ai }));
           ai.onDetach('default');
           game.playerArea.onDetach(); // notify player
         }

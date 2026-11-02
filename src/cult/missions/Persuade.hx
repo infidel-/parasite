@@ -74,7 +74,10 @@ class Persuade extends Mission
   public override function customName(): String
     {
       if (target != null)
-        return Loc.tr(name) + ' - ' + target.TheName();
+        return T('{mission} - {ai:The}', {
+          mission: Loc.tr(name),
+          ai: target,
+        });
       return Loc.tr(name);
     }
 

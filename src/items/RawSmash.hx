@@ -1,6 +1,8 @@
 // defines raw smash junk item
 package items;
 
+import l10n.Loc;
+
 import Const;
 import game.Game;
 import game._Item;
@@ -22,11 +24,10 @@ class RawSmash extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Inject ' + Const.col('inventory-item', itemName),
+        name: T('Inject {item}', { item: Loc.colored('inventory-item', item) }),
         nameClean: T('Inject'),
         energy: 0,
         item: item
@@ -59,7 +60,7 @@ class RawSmash extends ItemInfo
         radius: 6,
         alertness: 12
       });
-      host.log('stabs the jagged crystal into flesh to flood the blood with raw smash.');
+      host.log(T('{ai:The} stabs the jagged crystal into flesh to flood the blood with raw smash.', { ai: host }));
       host.inventory.removeItem(action.item);
       host.onEffect(new effects.Smash(game, 10 + Std.random(4)));
       return true;

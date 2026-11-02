@@ -236,7 +236,7 @@ class AreaManager extends _SaveObject
               (game.player.state == PLR_STATE_ATTACHED &&
                game.playerArea.attachHost == e.ai))
             {
-              game.log('You have managed to stop ' + e.ai.getName() + ' from calling the authorities.');
+              game.log(T('You have managed to stop {ai:the} from calling the authorities.', { ai: e.ai }));
               return;
             }
         }
@@ -308,10 +308,11 @@ class AreaManager extends _SaveObject
       if (game.playerArea.hears(e.ai.x, e.ai.y))
         {
           if (game.player.skills.getLevel(KNOW_SOCIETY) < 5)
-            e.ai.log('calls someone!');
-          else e.ai.log('calls the ' +
-            area.info.lawType + '!',
-            COLOR_ALERT);
+            e.ai.log(T('{ai:The} calls someone!', { ai: e.ai }));
+          else e.ai.log(T('{ai:The} calls {law, select, security{the security} other{the police}}!', {
+            ai: e.ai,
+            law: area.info.lawType,
+          }), COLOR_ALERT);
         }
 
       // increase area alertness
@@ -396,7 +397,7 @@ class AreaManager extends _SaveObject
         ' calling for backup. Dispatching units to the location.');
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
-        e.ai.log('calls for backup!');
+        e.ai.log(T('{ai:The} calls for backup!', { ai: e.ai }));
 
       // an NPC fight is not the parasite's doing
       var isNPCFight = e.ai.isNPCTrouble;
@@ -519,7 +520,7 @@ class AreaManager extends _SaveObject
       log('Team member calling for backup. Dispatching units to the location.');
 
       if (game.playerArea.hears(e.ai.x, e.ai.y))
-        e.ai.log('calls for backup!');
+        e.ai.log(T('{ai:The} calls for backup!', { ai: e.ai }));
 
       game.group.raisePriority(5);
 

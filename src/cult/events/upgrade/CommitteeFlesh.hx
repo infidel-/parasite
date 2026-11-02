@@ -46,12 +46,18 @@ class CommitteeFlesh
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'political');
           cult.effects.add(drain);
-          cult.logsg('skin minutes bleed into ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} skin minutes bleed into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('political', amount);
-      cult.logsg('minutes absorbed +' + amount + ' political resource.');
+      cult.logsg(T('{cult} minutes absorbed {n, plural, one{+# political resource} other{+# political resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles flesh gavel choice
@@ -62,13 +68,20 @@ class CommitteeFlesh
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('political', penalty);
-          cult.logsg('gavel splinters -' + penalty + ' political resource.');
+          cult.logsg(T('{cult} gavel splinters {n, plural, one{-# political resource} other{-# political resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'political');
       cult.effects.add(effect);
-      cult.log('gavel strikes pulse ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} gavel strikes pulse {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles dermal bind choice
@@ -80,11 +93,11 @@ class CommitteeFlesh
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('bind buckles weak-willed flaw into flesh.');
+            aiNeg.log(T('{ai:The} bind buckles weak-willed flaw into flesh.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'cultBasic', true);
       if (granted == null)
-        cult.logsg('dermal bind fuses without new devotion.');
+        cult.logsg(T('{cult} dermal bind fuses without new devotion.', { cult: cult }));
     }
 }

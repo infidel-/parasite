@@ -3,6 +3,7 @@
 package objects;
 
 import ai.AI;
+import l10n.Loc;
 import entities.ObjectEntity;
 import game.Game;
 import game._Item;
@@ -164,6 +165,22 @@ class AreaObject extends _SaveObject
       if (known())
         return name;
       else return N('unknown object');
+    }
+
+// the name as shown on its own (a tooltip, a list row): translated
+  public function getDisplayName(): String
+    {
+      return Loc.tr(getName());
+    }
+
+// the noun l10n.Loc renders for an {obj:form} placeholder
+  public function getLocNoun(): _LocNoun
+    {
+      return {
+        key: getName(),
+        kind: LOC_NOUN,
+        gender: 'n',
+      };
     }
 
 // get name + article depending on whether its known or not

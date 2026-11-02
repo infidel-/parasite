@@ -85,6 +85,16 @@ class BaseOrganObject extends AreaObject
       return CultBaseConst.name(organ.type);
     }
 
+// organ names are Latin proper names: translated, never an article
+  public override function getLocNoun(): _LocNoun
+    {
+      return {
+        key: getName(),
+        kind: LOC_PHRASE,
+        gender: 'n',
+      };
+    }
+
 // returns base organ name without an article
   public override function theName(): String
     {

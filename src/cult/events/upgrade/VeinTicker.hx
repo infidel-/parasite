@@ -45,12 +45,18 @@ class VeinTicker
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'corporate');
           cult.effects.add(drain);
-          cult.logsg('audit ghosts ambush, leaving ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} audit ghosts ambush, leaving {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('corporate', amount);
-      cult.logsg('channels +' + amount + ' corporate resource into reserves.');
+      cult.logsg(T('{cult} channels {n, plural, one{+# corporate resource} other{+# corporate resources}} into reserves.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the covert ad choice outcome
@@ -61,12 +67,18 @@ class VeinTicker
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('audit ghost clips ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} audit ghost clips {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('backchannel invoices clear ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} backchannel invoices clear {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles the proxy seal choice outcome
@@ -78,17 +90,20 @@ class VeinTicker
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('buckles under the sealed refrain, inheriting the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} buckles under the sealed refrain, inheriting the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('proxy seal flares without gifting new insight.');
+          cult.logsg(T('{cult} proxy seal flares without gifting new insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('holds ' + granted.name + ' close, sworn to the hidden proxy.');
+        ai.log(T('{ai:The} holds {trait} close, sworn to the hidden proxy.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

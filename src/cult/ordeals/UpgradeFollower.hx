@@ -108,7 +108,10 @@ class UpgradeFollower extends Ordeal
   public override function customName(): String
     {
       var aidata = cult.getMemberByID(targetID);
-      return Loc.tr(name) + ' - ' + aidata.TheName();
+      return T('{ordeal} - {ai:The}', {
+        ordeal: Loc.tr(name),
+        ai: aidata,
+      });
     }
 
 // upgrade member to next job level if available
@@ -128,7 +131,11 @@ class UpgradeFollower extends Ordeal
       var jobData = game.jobs.rollJobInfo([nextJob]);
       member.job = jobData.name;
       member.income = jobData.income;
-      cult.log('member ' + member.TheName() + ' has been elevated to level ' + nextJob.level);
+      cult.log(T('{cult} member {ai:the} has been elevated to level {level}.', {
+        cult: cult,
+        ai: member,
+        level: nextJob.level,
+      }));
       cult.recalc();
       return true;
     }
@@ -184,7 +191,7 @@ class UpgradeFollower extends Ordeal
           actions.push({
             id: 'upgrade',
             type: ACTION_CULT,
-            name: m.TheName(),
+            name: m.getNameCapped(),
             energy: 0,
             obj: { targetID: mid }
           });

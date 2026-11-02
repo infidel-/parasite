@@ -35,8 +35,10 @@ class DeadlyCaress extends Ability
           Std.random(100) >= 85)
         return false;
 
-      ai.log('lunges at ' + target.theName() +
-        ' and plants a hard kiss, smiling far too wide.');
+      ai.log(T('{ai:The} lunges at {target:the} and plants a hard kiss, smiling far too wide.', {
+        ai: ai,
+        target: target,
+      }));
 
       // opposing constitution check to resist
       var resisted = __Math.opposingAttr(
@@ -45,7 +47,7 @@ class DeadlyCaress extends Ability
         'con/deadly caress');
       if (resisted)
         {
-          ai.log(target.theName() + ' resists the caress.');
+          ai.log(T('{target:The} resists the caress.', { target: target }));
           return true;
         }
 
@@ -53,8 +55,11 @@ class DeadlyCaress extends Ability
       target.ai.onEffect(new Paralysis(target.game, turns));
       target.onDamage(0);
       timeout = 3;
-      ai.log('leaves ' + target.theName() + ' trembling for ' +
-        turns + ' turns.');
+      ai.log(T('{ai:The} leaves {target:the} trembling for {turns, plural, one{# turn} other{# turns}}.', {
+        ai: ai,
+        target: target,
+        turns: turns,
+      }));
       return true;
     }
 }

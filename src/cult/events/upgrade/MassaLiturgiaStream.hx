@@ -45,12 +45,18 @@ class MassaLiturgiaStream
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('media', penalty);
-          cult.logsg('air-gapped array rots -' + penalty + ' media resource.');
+          cult.logsg(T('{cult} air-gapped array rots {n, plural, one{-# media resource} other{-# media resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('media', amount);
-      cult.logsg('sealed feed swells +' + amount + ' media resource.');
+      cult.logsg(T('{cult} sealed feed swells {n, plural, one{+# media resource} other{+# media resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the grey choir choice outcome
@@ -61,13 +67,20 @@ class MassaLiturgiaStream
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new LoseResource(game, penaltyTurns, 'media');
           cult.effects.add(setback);
-          cult.logsg('discordant drones ignite ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} discordant drones ignite {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new GainResource(game, turns, 'media');
       cult.effects.add(effect);
-      cult.log('massa liturgia chorus weaves ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} massa liturgia chorus weaves {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the clip rite choice outcome
@@ -78,17 +91,20 @@ class MassaLiturgiaStream
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_WEAK_WILLED))
-            ai.log('stumbles through edit loops, conceding to the weak-willed flaw.');
+            ai.log(T('{ai:The} stumbles through edit loops, conceding to the weak-willed flaw.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('clip rite crystallizes without gifting a fresh recall.');
+          cult.logsg(T('{cult} clip rite crystallizes without gifting a fresh recall.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('internalizes ' + granted.name + ' as the rite anchors their new tier.');
+        ai.log(T('{ai:The} internalizes {trait} as the rite anchors their new tier.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

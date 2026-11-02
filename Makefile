@@ -179,7 +179,8 @@ itch-push:
 # is the locale of every process make starts.
 # usage: make loc-probe [lang=fr] [n=3] [files=cult/events,PediaConst] / make loc [lang=fr] [jobs=4] / make loc-build
 loc:
-	python3 tools/loc/translate.py run --lang $(or $(lang),fr) --jobs $(or $(jobs),1)
+	python3 tools/loc/translate.py run --lang $(or $(lang),fr) --jobs $(or $(jobs),1) && \
+	python3 tools/loc/translate.py nouns --lang $(or $(lang),fr)
 
 loc-probe:
 	python3 tools/loc/translate.py probe --lang $(or $(lang),fr) --batches $(or $(n),3) $(if $(files),--files $(files))

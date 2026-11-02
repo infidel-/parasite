@@ -1,6 +1,8 @@
 // defines group dossier readable item: intel on the group, read in a habitat
 package items;
 
+import l10n.Loc;
+
 import game.Game;
 import game._Item;
 
@@ -33,7 +35,7 @@ class Dossier extends Readable
           return false;
         }
 
-      game.log('You study the contents of the ' + item.name + ' and destroy it.');
+      game.log(T('You study the contents of {item:the} and destroy it.', { item: Loc.thing(item.name) }));
       game.group.addIntel(3);
       game.scene.sounds.play('item-paper');
       game.player.host.inventory.removeItem(item);

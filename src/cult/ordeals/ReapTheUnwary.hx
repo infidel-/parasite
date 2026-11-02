@@ -57,8 +57,17 @@ class ReapTheUnwary extends Ordeal
   public override function onSuccess()
     {
       var lost = cult.base.addBodies(4);
-      cult.log('reaps ' + (4 - lost) + ' bodies' +
-        (lost > 0 ? ', losing ' + lost + ' to overflow' : ''));
+      if (lost > 0)
+        cult.log(T('{cult} reaps {n, plural, one{# body} other{# bodies}}, losing {lost} to overflow.', {
+          cult: cult,
+          n: 4 - lost,
+          lost: lost,
+        }));
+      else
+        cult.log(T('{cult} reaps {n, plural, one{# body} other{# bodies}}.', {
+          cult: cult,
+          n: 4,
+        }));
     }
 
 // adds initiate action

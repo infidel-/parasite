@@ -81,7 +81,7 @@ class BaseDefenseLogic
           bodies++;
       var lost = base.addBodies(bodies);
       if (bodies > 0)
-        game.logsg(T('Body storage receives {received} remains; {lost} are lost.', {
+        game.logsg(T('Body storage receives {received} remains; {lost, plural, one{# is lost} other{# are lost}}.', {
           received: bodies - lost,
           lost: lost,
         }));

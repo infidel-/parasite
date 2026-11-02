@@ -45,12 +45,18 @@ class SudorSigillumMass
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('combat', penalty);
-          cult.logsg('altar pumps clog and drain -' + penalty + ' combat resource.');
+          cult.logsg(T('{cult} altar pumps clog and drain {n, plural, one{-# combat resource} other{-# combat resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('combat', amount);
-      cult.logsg('altar pump surges +' + amount + ' combat resource.');
+      cult.logsg(T('{cult} altar pump surges {n, plural, one{+# combat resource} other{+# combat resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles liturgyfx choice
@@ -61,13 +67,20 @@ class SudorSigillumMass
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'combat');
           cult.effects.add(setback);
-          cult.logsg('feedback whine mutates into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} feedback whine mutates into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'combat');
       cult.effects.add(effect);
-      cult.log('sigil basslines kindle ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} sigil basslines kindle {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles blade seal choice
@@ -78,23 +91,23 @@ class SudorSigillumMass
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_DRUG_ADDICT))
-            aiNeg.log('inhales solvent hymns and gains the addict flaw.');
+            aiNeg.log(T('{ai:The} inhales solvent hymns and gains the addict flaw.', { ai: aiNeg }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai == null)
         {
-          cult.logsg('blade seal crackles without a vessel to anchor.');
+          cult.logsg(T('{cult} blade seal crackles without a vessel to anchor.', { cult: cult }));
           return;
         }
       if (ai.hasTrait(TRAIT_KNIFE_EXPERT))
         {
-          cult.logsg('blade seal finds steel already sworn.');
+          cult.logsg(T('{cult} blade seal finds steel already sworn.', { cult: cult }));
           return;
         }
       if (ai.addTrait(TRAIT_KNIFE_EXPERT))
-        ai.log('receives the Knife Expert litany carved into living grip.');
+        ai.log(T('{ai:The} receives the Knife Expert litany carved into living grip.', { ai: ai }));
       else
-        cult.logsg('blade seal fails to graft the promised edge.');
+        cult.logsg(T('{cult} blade seal fails to graft the promised edge.', { cult: cult }));
     }
 }

@@ -55,7 +55,8 @@ class AreaTooltip extends BeamTooltip
     {
       var buf = new StringBuf();
       // header: name + optional cultist mark
-      buf.add('<div class="area-tip-head"><span class="area-tip-name">' + ai.getNameCapped() + '</span>');
+      buf.add('<div class="area-tip-head"><span class="area-tip-name">' +
+        (ai.isNameKnown ? ai.getNameCapped() : Const.capitalize(Loc.tr(ai.name.unknown))) + '</span>');
       if (ai.isCultist)
         buf.add('<span class="area-tip-cultmark">' + Icon.cultist + '</span>');
       buf.add('</div>');
@@ -148,7 +149,7 @@ class AreaTooltip extends BeamTooltip
     {
       var buf = new StringBuf();
       buf.add('<div class="area-tip-head"><span class="area-tip-name">' +
-        Const.capitalize(Loc.tr(o.getName())) + '</span></div>');
+        Const.capitalize(o.getDisplayName()) + '</span></div>');
 
       // whatever the object wants to say about itself, but only once the player knows what it is
       if (o.known())

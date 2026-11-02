@@ -1,6 +1,8 @@
 // defines alcohol junk item
 package items;
 
+import l10n.Loc;
+
 import Const;
 import _PlayerAction;
 import game.Game;
@@ -23,11 +25,10 @@ class Alcohol extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Imbibe ' + Const.col('inventory-item', itemName),
+        name: T('Imbibe {item}', { item: Loc.colored('inventory-item', item) }),
         nameClean: T('Imbibe'),
         energy: 2,
         item: item
@@ -59,7 +60,7 @@ class Alcohol extends ItemInfo
         radius: 2,
         alertness: 2
       });
-      host.log('takes a few bold swigs, and the bottle quickly comes to an end.');
+      host.log(T('{ai:The} takes a few bold swigs, and the bottle quickly comes to an end.', { ai: host }));
       host.inventory.removeItem(item);
 
       // apply drunk effect stack and evaluate blackout threshold
@@ -70,7 +71,7 @@ class Alcohol extends ItemInfo
       if (drunkEffect.points >= 30)
         {
           host.onEffect(new effects.Paralysis(game, 5));
-          host.log('staggers, blacks out, and you lose the grip.');
+          host.log(T('{ai:The} staggers, blacks out, and you lose the grip.', { ai: host }));
           host.onDetach('drunk');
           game.playerArea.onDetach();
         }

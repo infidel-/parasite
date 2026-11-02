@@ -1,6 +1,8 @@
 // defines nutrients consumable item
 package items;
 
+import l10n.Loc;
+
 import game.Game;
 import game._Item;
 import ItemInfo;
@@ -24,11 +26,10 @@ class Nutrients extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Consume ' + Const.col('inventory-item', itemName),
+        name: T('Consume {item}', { item: Loc.colored('inventory-item', item) }),
         nameClean: T('Consume'),
         energy: 0,
         item: item

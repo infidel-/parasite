@@ -42,6 +42,7 @@ class DecreasePower extends Effect
 // returns custom display name with value
   public override function customName(): String
     {
+      // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
       return T('-{value} {power} power', {
         value: value,
         power: powerType,

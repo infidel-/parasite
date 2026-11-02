@@ -29,7 +29,7 @@ class WhitePowder extends Effect
       super.turn(ai, time);
       var restored = (5 + Std.random(6)) * time;
       ai.energy += restored;
-      ai.log('seems unnaturally energized by the powder.');
+      ai.log(T('{ai:The} seems unnaturally energized by the powder.', { ai: ai }));
       game.info('+ ' + restored + ' energy.');
     }
 

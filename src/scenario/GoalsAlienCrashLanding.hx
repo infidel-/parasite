@@ -2,6 +2,8 @@
 
 package scenario;
 
+import l10n.Loc;
+
 import const.ItemsConst;
 import gen.facility.FacilityTemp;
 import objects.EventObject;
@@ -79,7 +81,7 @@ class GoalsAlienCrashLanding
             list.push({
               id: 'installPart',
               type: ACTION_OBJECT,
-              name: 'Install ' + Const.col('inventory-item', item.name),
+              name: T('Install {item}', { item: Loc.colored('inventory-item', item) }),
               item: item,
               energy: 10,
               isAgreeable: true,
@@ -104,9 +106,7 @@ class GoalsAlienCrashLanding
             game.actionFailed(T('This item does not fit into this slot.'));
             return false;
           }
-        player.log('You successfully install the ' +
-          Const.col('inventory-item', action.item.name) +
-          ' into the slot.');
+        player.log(T('You successfully install {item:the} into the slot.', { item: Loc.colored('inventory-item', action.item) }));
         player.host.inventory.removeItem(action.item);
         game.scene.sounds.play('action-spaceship-install');
         // a filled slot is a different thing to look at and offers nothing more: the id carries

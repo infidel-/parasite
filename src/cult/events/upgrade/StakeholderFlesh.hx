@@ -45,13 +45,20 @@ class StakeholderFlesh
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'corporate');
           cult.effects.add(setback);
-          cult.logsg('overextensions bleed into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} overextensions bleed into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'corporate');
       cult.effects.add(effect);
-      cult.logsg('stirs fury into ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.logsg(T('{cult} stirs fury into {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the proxy run choice outcome
@@ -62,12 +69,18 @@ class StakeholderFlesh
         {
           var penalty = rollMoneyPayout();
           cult.resources.dec('money', penalty);
-          cult.logsg('bandits ambush, clipping ' + Const.col('cult-power', '-' + penalty) + Icon.money + '.');
+          cult.logsg(T('{cult} bandits ambush, clipping {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + penalty) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('channels +' + amount + Icon.money + ' into reserves.');
+      cult.logsg(T('{cult} channels {money} into reserves.', {
+        cult: cult,
+        money: '+' + amount + Icon.money,
+      }));
     }
 
 // handles the proxy dark choice outcome
@@ -79,17 +92,20 @@ class StakeholderFlesh
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('buckles under the sealed refrain, inheriting the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} buckles under the sealed refrain, inheriting the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('proxy dark flares without gifting new insight.');
+          cult.logsg(T('{cult} proxy dark flares without gifting new insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('holds ' + granted.name + ' close, sworn to the hidden proxy.');
+        ai.log(T('{ai:The} holds {trait} close, sworn to the hidden proxy.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

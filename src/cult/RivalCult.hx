@@ -1,6 +1,7 @@
 // rival cult structure
 package cult;
 
+import l10n.Loc;
 import game.Game;
 
 class RivalCult extends Cult
@@ -41,5 +42,11 @@ class RivalCult extends Cult
 // run rival cult turn
   public override function turn()
     {
+    }
+
+// returns cult display name (rival names are N() keys from CultConst)
+  public override function customName(): String
+    {
+      return Loc.tr(name);
     }
 }

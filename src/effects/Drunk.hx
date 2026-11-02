@@ -46,12 +46,12 @@ class Drunk extends Effect
         {
           if (Std.random(2) == 0)
             {
-              ai.log('starts sobbing.');
+              ai.log(T('{ai:The} starts sobbing.', { ai: ai }));
               ai.onEffect(new Crying(game, 3));
             }
           else
             {
-              ai.log('staggers aimlessly.');
+              ai.log(T('{ai:The} staggers aimlessly.', { ai: ai }));
               ai.onEffect(new Paralysis(game, 3));
             }
         }

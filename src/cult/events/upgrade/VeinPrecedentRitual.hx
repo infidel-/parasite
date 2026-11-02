@@ -41,12 +41,18 @@ class VeinPrecedentRitual
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('lawfare', penalty);
-          cult.logsg('blood docket hemorrhages -' + penalty + ' lawfare resource.');
+          cult.logsg(T('{cult} blood docket hemorrhages {n, plural, one{-# lawfare resource} other{-# lawfare resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('lawfare', amount);
-      cult.logsg('blood docket pools +' + amount + ' lawfare resource.');
+      cult.logsg(T('{cult} blood docket pools {n, plural, one{+# lawfare resource} other{+# lawfare resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the pulse bind choice outcome
@@ -57,13 +63,20 @@ class VeinPrecedentRitual
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new LoseResource(game, penaltyTurns, 'lawfare');
           cult.effects.add(setback);
-          cult.logsg('pulse bind clots into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} pulse bind clots into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new GainResource(game, turns, 'lawfare');
       cult.effects.add(effect);
-      cult.log('vein precedent ritual pulses ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} vein precedent ritual pulses {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the artery mark choice outcome
@@ -74,17 +87,20 @@ class VeinPrecedentRitual
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('buckles under artery weight and inherits the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} buckles under artery weight and inherits the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'cultBasic', false);
       if (granted == null)
         {
-          cult.logsg('artery mark fades without granting fresh doctrine.');
+          cult.logsg(T('{cult} artery mark fades without granting fresh doctrine.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('records ' + granted.name + ' as the vein precedent hardens in memory.');
+        ai.log(T('{ai:The} records {trait} as the vein precedent hardens in memory.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

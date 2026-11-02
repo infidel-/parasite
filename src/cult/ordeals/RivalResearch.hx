@@ -69,7 +69,10 @@ class RivalResearch extends Ordeal
             return;
           rival.rivalBaseAreaID = area.id;
         }
-      cult.log('reveals more about ' + rival.name);
+      cult.log(T('{cult} reveals more about {rival}.', {
+        cult: cult,
+        rival: Loc.tr(rival.name),
+      }));
     }
 
 // finds a city marker area for the rival base entrance

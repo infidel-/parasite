@@ -53,7 +53,10 @@ class EventHelper
         return null;
       if (!member.addTrait(info.id))
         return null;
-      member.logsg('embraces the ' + Const.col('trait', info.name) + ' calling.');
+      member.logsg(T('{ai:The} embraces the {trait} calling.', {
+        ai: member,
+        trait: Const.col('trait', info.name),
+      }));
       return info;
     }
 

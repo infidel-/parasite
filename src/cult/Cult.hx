@@ -9,6 +9,7 @@ import ai.AIData;
 import cult.effects.*;
 import cult.base.CultBase;
 import Type;
+import l10n.Loc;
 
 class Cult extends _SaveObject
 {
@@ -130,7 +131,10 @@ class Cult extends _SaveObject
       if (isPlayer)
         ai.inventory.addKnownItems();
       members.push(ai.cloneData());
-      log('gains a leader: ' + ai.theName());
+      log(T('{cult} gains a leader: {leader}.', {
+        cult: this,
+        leader: ai.getName(),
+      }));
       if (isPlayer)
         game.ui.event({
           type: UIEVENT_HIGHLIGHT,
@@ -184,7 +188,10 @@ class Cult extends _SaveObject
       if (isPlayer)
         aidata.inventory.addKnownItems();
       members.push(aidata);
-      log('gains a new member: ' + aidata.TheName());
+      log(T('{cult} gains a new member: {ai:The}.', {
+        cult: this,
+        ai: aidata,
+      }));
       recalc();
       return true;
     }
@@ -247,9 +254,9 @@ class Cult extends _SaveObject
       if (!isPlayer)
         {
           game.cults.remove(this);
-          log(' is destroyed, forgotten by time');
+          log(T('{cult} is destroyed, forgotten by time.', { cult: this }));
         }
-      else log(' is temporarily out of action');
+      else log(T('{cult} is temporarily out of action.', { cult: this }));
 
       // clear live ai in the current area without removing them mid-turn
       if (game.area != null)
@@ -497,7 +504,7 @@ class Cult extends _SaveObject
   function callMemberAction(action: _PlayerAction): Bool
     {
       var m = getMemberByID(action.obj.memberID);
-      game.log('You summon ' + m.TheName() + ' to your side.');
+      game.log(T('You summon {ai:the} to your side.', { ai: m }));
 
       // generate event with memberID in details
       // create a simple params object
@@ -756,7 +763,7 @@ class Cult extends _SaveObject
 // styled cult name
   public function Name()
     {
-      return '<span class=cult>' + name + '</span>';
+      return '<span class=cult>' + customName() + '</span>';
     }
 
 // returns cult display name
@@ -765,25 +772,37 @@ class Cult extends _SaveObject
       return name;
     }
 
-// cult log
+// the noun l10n.Loc renders for a {cult} placeholder: the styled name, a proper name
+  public function getLocNoun(): _LocNoun
+    {
+      return {
+        key: Name(),
+        kind: LOC_NAME,
+        gender: 'm',
+      };
+    }
+
+// cult log, player cult only (a whole T() template with {cult} in it). 1.0 mod API: a bare English
+// predicate (starts lowercase) gets the cult name in front and a full stop, as before
   public function log(text: String)
     {
       if (isPlayer)
-        game.log(Name() + ' ' + text + '.');
+        game.log(isPredicate(text) ? Name() + ' ' + text + '.' : text);
     }
 
-// cult log (no dot)
-  public function logNoDot(text: String)
-    {
-      if (isPlayer)
-        game.log(Name() + ' ' + text);
-    }
-
-// cult log (small gray helper)
+// cult log (small gray helper); a 1.0 predicate gets the cult name in front
   public function logsg(text: String)
     {
       if (isPlayer)
-        game.log(Const.smallgray(Name() + ' ' + text));
+        game.log(Const.smallgray(isPredicate(text) ? Name() + ' ' + text : text));
+    }
+
+// 1.0 mod API: is this a bare predicate instead of a whole sentence?
+  static function isPredicate(text: String): Bool
+    {
+      var c = text.charAt(0);
+      return (c == ' ' ||
+        (c >= 'a' && c <= 'z'));
     }
 
 // max cult size
@@ -975,9 +994,13 @@ class Cult extends _SaveObject
       // add power based on type
       resources.inc(powerType, 1);
 
-      log('trades ' + Const.col('cult-power', cost) + Icon.money + ' for ' +
-        Const.col('cult-power', '1 ') +
-        powerType + ' power');
+      // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+      log(T('{cult} trades {cost} for {gain} {power} power.', {
+        cult: this,
+        cost: Const.col('cult-power', cost) + Icon.money,
+        gain: Const.col('cult-power', 1),
+        power: powerType,
+      }));
       return true;
     }
 
@@ -993,6 +1016,7 @@ class Cult extends _SaveObject
       var cost = getTradeResourceCost();
       if (resources.get(from) < cost)
         {
+          // tr: {resource} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
           game.actionFailed(T('Not enough {resource} resources for trade.', { resource: from }));
           return false;
         }
@@ -1003,9 +1027,14 @@ class Cult extends _SaveObject
       // add target resource
       resources.inc(to, 1);
 
-      log('trades ' + Const.col('cult-power', cost) + ' ' +
-        Const.col('cult-power', from) + ' for ' +
-        Const.col('cult-power', '1 ') + to + ' power');
+      // tr: {from} and {power} are cult power keys, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+      log(T('{cult} trades {cost} {from} for {gain} {power} power.', {
+        cult: this,
+        cost: Const.col('cult-power', cost),
+        from: Const.col('cult-power', from),
+        gain: Const.col('cult-power', 1),
+        power: to,
+      }));
       return true;
     }
 
@@ -1140,7 +1169,10 @@ class Cult extends _SaveObject
       else effect = Type.createInstance(info.cls, [game, turns]);
       
       this.effects.add(effect);
-      log('gains a new burden: ' + Const.col('cult-effect', effect.name));
+      log(T('{cult} gains a new burden: {effect}.', {
+        cult: this,
+        effect: Const.col('cult-effect', Loc.tr(effect.name)),
+      }));
     }
 
 // returns true is cult or one of the ordeals has effect

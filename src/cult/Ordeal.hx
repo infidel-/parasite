@@ -196,10 +196,10 @@ class Ordeal extends _SaveObject
           if (powerAmount > 0 &&
               cultAmount >= powerAmount)
             {
-              var displayName = Const.col('cult-power', powerAmount) + ' ' + field + ' power';
               actions.push({
                 id: 'spend.' + field,
                 type: ACTION_CULT,
+                // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
                 name: T('Wield {amount} {power} power', {
                   amount: Const.col('cult-power', powerAmount),
                   power: field,
@@ -209,8 +209,13 @@ class Ordeal extends _SaveObject
                   cult.resources.dec(field, powerAmount);
                   power.set(field, 0);
                   this.actions++;
-                  cult.log('exerted ' + displayName + ' on ' +
-                    coloredName() + ' ordeal');
+                  // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+                  cult.log(T('{cult} exerted {amount} {power} power on {ordeal} ordeal.', {
+                    cult: cult,
+                    amount: Const.col('cult-power', powerAmount),
+                    power: field,
+                    ordeal: coloredName(),
+                  }));
                   check();
                   game.ui.updateWindow();
                 }
@@ -232,7 +237,11 @@ class Ordeal extends _SaveObject
               cult.resources.money -= power.money;
               this.power.money = 0;
               this.actions++;
-              cult.log('disbursed ' + displayName + ' on ' + coloredName() + ' ordeal');
+              cult.log(T('{cult} disbursed {money} on {ordeal} ordeal.', {
+                cult: cult,
+                money: displayName,
+                ordeal: coloredName(),
+              }));
               check();
               game.ui.updateWindow();
             }

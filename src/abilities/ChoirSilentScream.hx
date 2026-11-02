@@ -32,7 +32,7 @@ class ChoirSilentScream extends Ability
         }
       if (Std.random(100) >= 35)
         return false;
-      ai.log('screams in silence.');
+      ai.log(T('{ai:The} screams in silence.', { ai: ai }));
 
       // apply black noise to nearby AIs
       var area = target.game.area;
@@ -44,7 +44,7 @@ class ChoirSilentScream extends Ability
             continue;
           var turns = 2 + Std.random(3);
           other.onEffect(new BlackNoise(target.game, turns));
-          other.log(' exudes drops of black blood from his orifices.');
+          other.log(T('{ai:The} exudes drops of black blood from {ai, select, m{his} f{her} other{its}} orifices.', { ai: other }));
           affected++;
         }
       if (affected == 0)

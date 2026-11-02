@@ -394,6 +394,7 @@ public function show()
     }
 
 // set AI state (plus all vars for this state)
+// msg - a whole sentence to log (a T() template with the AI in it)
 // npcTrouble - treat any reason as an NPC fight (a body an NPC left behind)
   public function setState(vstate: _AIState,
       ?vreason: _AIStateChangeReason, ?msg: String, ?npcTrouble: Bool = false)
@@ -438,7 +439,7 @@ public function show()
         {
           game.player.chat.finish();
           if (vstate == AI_STATE_ALERT)
-            log('has become agitated.');
+            log(T('{ai:The} has become agitated.', { ai: this }));
         }
       game.ui.hud.resetState();
 
@@ -689,7 +690,7 @@ public function show()
       if (tmp.length == 0)
         {
           if (Std.random(100) < 30)
-            log('cowers in panic!');
+            log(T('{ai:The} cowers in panic!', { ai: this }));
           return;
         }
 
@@ -705,7 +706,7 @@ public function show()
 // common logic: try to tear parasite away
   public function logicTearParasiteAway()
     {
-      log('tries to tear you away!');
+      log(T('{ai:The} tries to tear you away!', { ai: this }));
 
       game.playerArea.attachHold -= strength;
       if (game.playerArea.attachHold > 0)
@@ -713,7 +714,7 @@ public function show()
 
       parasiteAttached = false;
       entity.setMask(-1);
-      log('manages to tear you away.');
+      log(T('{ai:The} manages to tear you away.', { ai: this }));
       game.playerArea.onDetach(); // notify player
     }
 
@@ -1039,7 +1040,7 @@ public function show()
       game.debug('AI.die[' + id + ']');
       if (game.player.state != PLR_STATE_HOST ||
           game.player.host != this)
-        log('dies.');
+        log(T('{ai:The} dies.', { ai: this }));
       setState(AI_STATE_DEAD);
       // mod event: pre-removeAI. entity ref is still live here; mods may
       // snapshot icon/state before AreaGame.removeAI nulls ai.entity below
@@ -1141,18 +1142,18 @@ public function show()
   public inline function onDetach(src: String)
     {
       if (src == 'default')
-        setState(AI_STATE_POST_DETACH, null, 'feels groggy and confused.');
+        setState(AI_STATE_POST_DETACH, null, T('{ai:The} feels groggy and confused.', { ai: this }));
       else if (src == 'drunk')
-        setState(AI_STATE_ALERT, null, 'feels groggy and confused.');
+        setState(AI_STATE_ALERT, null, T('{ai:The} feels groggy and confused.', { ai: this }));
       else if (src == 'panic')
-        setState(AI_STATE_ALERT, null, 'tears you away in panic. That hurt.');
+        setState(AI_STATE_ALERT, null, T('{ai:The} tears you away in panic. That hurt.', { ai: this }));
       else if (src == 'berserk')
-        setState(AI_STATE_ALERT, null, ' furiously tears you away. That hurt a lot.');
+        setState(AI_STATE_ALERT, null, T('{ai:The} furiously tears you away. That hurt a lot.', { ai: this }));
       else if (src == 'preservator')
-        setState(AI_STATE_PRESERVED, null, 'stands still motionlessly.');
+        setState(AI_STATE_PRESERVED, null, T('{ai:The} stands still motionlessly.', { ai: this }));
       else if (src == 'memories')
         setState(AI_STATE_POST_DETACH_MEMORIES, null,
-          'feels unsure about their surroundings.');
+          T('{ai:The} feels unsure about their surroundings.', { ai: this }));
       entity.setMask(-1);
     }
 

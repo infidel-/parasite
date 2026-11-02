@@ -91,7 +91,7 @@ class DogAI extends AI
             ai.roamTargetY = y;
             ai.state = AI_STATE_INVESTIGATE;
             ai.alertness += 1;
-            ai.log('investigates the noise.');
+            ai.log(T('{ai:The} investigates the noise.', { ai: ai }));
           }
     }
 }

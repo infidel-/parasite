@@ -48,7 +48,10 @@ class Ordeals extends _SaveObject
 // fail an ordeal
   public function fail(ordeal: Ordeal)
     {
-      cult.log('ordeal ' + ordeal.coloredName() + ' has failed');
+      cult.log(T('{cult} ordeal {ordeal} has failed.', {
+        cult: cult,
+        ordeal: ordeal.coloredName(),
+      }));
 
       // increment profane timeout if this was a profane ordeal
       if (ordeal.type == ORDEAL_PROFANE)
@@ -64,7 +67,10 @@ class Ordeals extends _SaveObject
 // complete an ordeal successfully
   public function success(ordeal: Ordeal)
     {
-      cult.log('ordeal ' + ordeal.coloredName() + ' completed successfully');
+      cult.log(T('{cult} ordeal {ordeal} completed successfully.', {
+        cult: cult,
+        ordeal: ordeal.coloredName(),
+      }));
 
       // increment profane timeout if this was a profane ordeal
       if (ordeal.type == ORDEAL_PROFANE)

@@ -161,8 +161,6 @@ class UpgradeFollower2 extends UpgradeFollower
           if (m == null)
             continue;
           
-          var name = m.TheName();
-          
           // check if member can be upgraded
           var job = game.jobs.getJobInfo(m.job);
           var canUpgrade = (job != null &&
@@ -172,7 +170,7 @@ class UpgradeFollower2 extends UpgradeFollower
           var action: _PlayerAction = {
             id: 'upgrade2',
             type: ACTION_CULT,
-            name: name,
+            name: m.getNameCapped(),
             energy: 0,
             obj: { targetID: mid }
           };

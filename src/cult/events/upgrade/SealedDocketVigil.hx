@@ -41,12 +41,18 @@ class SealedDocketVigil
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('lawfare', penalty);
-          cult.logsg('seized retainers bleed -' + penalty + ' lawfare resource.');
+          cult.logsg(T('{cult} seized retainers bleed {n, plural, one{-# lawfare resource} other{-# lawfare resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('lawfare', amount);
-      cult.logsg('seal bank swells +' + amount + ' lawfare resource.');
+      cult.logsg(T('{cult} seal bank swells {n, plural, one{+# lawfare resource} other{+# lawfare resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the clerk sync choice outcome
@@ -57,13 +63,20 @@ class SealedDocketVigil
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'lawfare');
           cult.effects.add(setback);
-          cult.logsg('clerk sync glitches into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} clerk sync glitches into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'lawfare');
       cult.effects.add(effect);
-      cult.log('sealed docket vigil weaves ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} sealed docket vigil weaves {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the oath mark choice outcome
@@ -74,17 +87,20 @@ class SealedDocketVigil
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('buckles beneath the oath mark and inherits the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} buckles beneath the oath mark and inherits the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('oath mark flickers without gifting new doctrine.');
+          cult.logsg(T('{cult} oath mark flickers without gifting new doctrine.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('memorizes ' + granted.name + ' as the sealed docket cools around them.');
+        ai.log(T('{ai:The} memorizes {trait} as the sealed docket cools around them.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

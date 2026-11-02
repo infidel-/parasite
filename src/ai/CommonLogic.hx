@@ -1,6 +1,8 @@
 // common AI logic routines
 package ai;
 
+import l10n.Loc;
+
 import game.Game;
 import particles.Particle;
 import _PlayerAction;
@@ -44,7 +46,7 @@ class CommonLogic
       var action: _PlayerAction = {
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Inject ' + item.getName(),
+        name: T('Inject {item}', { item: item }),
         item: item,
         who: ai
       };
@@ -138,7 +140,7 @@ class CommonLogic
         {
           if (Std.random(100) < 30)
             {
-              attacker.log('hesitates to attack you.');
+              attacker.log(T('{attacker:The} hesitates to attack you.', { attacker: attacker }));
               if (attacker.ai != null)
                 attacker.ai.traceAI('CommonLogic', 'hesitates attached human');
               attacker.emitSound({
@@ -237,8 +239,10 @@ class CommonLogic
             attacker.ai.traceAI('CommonLogic', 'attack misses');
           var sound = (weapon.soundMiss != null ? weapon.soundMiss : weapon.sound);
           attacker.emitSound(sound, !melee(sound, false));
-          attacker.log('tries to ' + weapon.verb1 + ' ' +
-            target.theName() + ', but misses.');
+          attacker.log(Loc.fmt(target.type == TARGET_PLAYER ? weapon.textMissYou : weapon.textMiss, {
+            attacker: attacker,
+            target: target,
+          }));
 
           if (attacker.isPlayer)
             {
@@ -304,13 +308,19 @@ class CommonLogic
           if (target.ai.isPlayerHost())
             {
               game.player.hostControl -= roll * 2;
-              attacker.log(weapon.verb2 + ' your host for ' + roll +
-                " rounds. You're losing control.");
+              attacker.log(Loc.fmt(weapon.textStun, {
+                attacker: attacker,
+                target: target,
+                rounds: roll,
+              }) + ' ' + T("You're losing control."));
               // on damage event
               game.playerArea.onDamage(0);
             }
-          else attacker.log(weapon.verb2 + ' ' +
-            target.theName() + ' for ' + roll + " rounds.");
+          else attacker.log(Loc.fmt(weapon.textStun, {
+            attacker: attacker,
+            target: target,
+            rounds: roll,
+          }));
 
           target.ai.onEffect(new effects.Paralysis(game, roll));
           // damage event (for alert)
@@ -362,8 +372,11 @@ class CommonLogic
             mods: mods
           });
 
-          attacker.log(weapon.verb2 + ' ' + target.theName() +
-            ' for ' + damage + ' damage.');
+          attacker.log(Loc.fmt(target.type == TARGET_PLAYER ? weapon.textHitYou : weapon.textHit, {
+            attacker: attacker,
+            target: target,
+            damage: damage,
+          }));
 
           // on damage event
           target.onDamage(damage, attacker);

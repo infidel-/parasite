@@ -90,6 +90,17 @@ class Loc
         }
     }
 
+// a common noun from its English key (an N() item, object or creature name) for a {x:form} placeholder,
+// where no entity with getLocNoun() is at hand
+  public static function thing(key: String): _LocNoun
+    {
+      return {
+        key: key,
+        kind: LOC_NOUN,
+        gender: 'n',
+      };
+    }
+
 // wrap an fmt argument in a text color span (the whole noun phrase, article included)
   public static function colored(col: String, value: Dynamic): LocColored
     {
@@ -270,9 +281,11 @@ class Loc
           case 'fr': french(n, f);
           default: generic(n, f);
         };
+      // capitalise the first letter (in pseudo, the one after the ⟦ mark)
+      var i = (StringTools.startsWith(s, '⟦') ? 1 : 0);
       if (form != f &&
-          s.length > 0)
-        s = s.charAt(0).toUpperCase() + s.substr(1);
+          s.length > i)
+        s = s.substr(0, i) + s.charAt(i).toUpperCase() + s.substr(i + 1);
       return s;
     }
 
@@ -362,9 +375,12 @@ class Loc
       };
     }
 
-// French elision before a vowel or a mute h
+// French elision before a vowel or a mute h (a leading tag, as in a styled cult name, is skipped)
   static function elides(w: String): Bool
     {
+      if (StringTools.startsWith(w, '<') &&
+          w.indexOf('>') > 0)
+        w = w.substr(w.indexOf('>') + 1);
       return ('aàâäeéèêëiîïoôöuùûüœæhAÀÂÄEÉÈÊËIÎÏOÔÖUÙÛÜŒÆH'.indexOf(w.charAt(0)) >= 0);
     }
 

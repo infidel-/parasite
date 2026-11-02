@@ -18,8 +18,10 @@ class CurvedKnife extends Weapon
         skill: SKILL_KNIFE,
         minDamage: 1,
         maxDamage: 6,
-        verb1: 'stab',
-        verb2: 'stabs',
+        textMiss: T('{attacker:The} tries to stab {target:the}, but misses.'),
+        textMissYou: T('{attacker:The} tries to stab you, but misses.'),
+        textHit: T('{attacker:The} stabs {target:the} for {damage} damage.'),
+        textHitYou: T('{attacker:The} stabs you for {damage} damage.'),
         type: WEAPON_MELEE,
         attackEffect: SLASH_LIGHT,
         spawnBlood: true,
@@ -44,7 +46,7 @@ class CurvedKnife extends Weapon
         {
           case TARGET_AI:
             target.ai.onEffect(new effects.Bleeding(game, 3));
-            target.ai.log(' is bleeding!');
+            target.ai.log(T('{ai:The} is bleeding!', { ai: target.ai }));
           case TARGET_PLAYER:
             // does not work on player
           default:

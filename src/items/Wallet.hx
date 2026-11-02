@@ -1,6 +1,8 @@
 // defines wallet junk item
 package items;
 
+import l10n.Loc;
+
 import Const;
 import _PlayerAction;
 import game.Game;
@@ -23,11 +25,10 @@ class Wallet extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Open ' + Const.col('inventory-item', itemName),
+        name: T('Open {item}', { item: Loc.colored('inventory-item', item) }),
         nameClean: T('Open'),
         energy: 3,
         isAgreeable: true,
@@ -53,8 +54,10 @@ class Wallet extends ItemInfo
       var inventory = game.player.host.inventory;
       inventory.removeItem(item);
       var money = inventory.addID('money');
-      ai.log('opens the wallet and pockets the ' +
-        Const.col('inventory-item', money.getName()) + ' inside.');
+      ai.log(T('{ai:The} opens the wallet and pockets {money:the} inside.', {
+        ai: ai,
+        money: Loc.colored('inventory-item', money),
+      }));
       game.scene.sounds.play('item-money');
       return true;
     }

@@ -130,6 +130,22 @@ class AttackTarget
         }
     }
 
+// the noun l10n.Loc renders for a {target:form} placeholder. the parasite itself is 'you', but a
+// template that can target it has a separate "you" variant: French puts the pronoun before the verb
+  public function getLocNoun(): _LocNoun
+    {
+      return switch (type)
+        {
+          case TARGET_PLAYER: {
+              key: N('you'),
+              kind: LOC_PHRASE,
+              gender: 'n',
+            };
+          case TARGET_AI: ai.getLocNoun();
+          default: obj.getLocNoun();
+        };
+    }
+
 // onDamage wrapper
   public function onDamage(damage: Int, ?attacker: Attacker)
     {

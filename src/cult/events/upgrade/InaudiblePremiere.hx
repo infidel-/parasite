@@ -43,12 +43,18 @@ class InaudiblePremiere
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('media', penalty);
-          cult.logsg('silent cut misfires and sheds -' + penalty + ' media resource.');
+          cult.logsg(T('{cult} silent cut misfires and sheds {n, plural, one{-# media resource} other{-# media resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('media', amount);
-      cult.logsg('silent cut returns +' + amount + ' media resource.');
+      cult.logsg(T('{cult} silent cut returns {n, plural, one{+# media resource} other{+# media resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the echo vault choice outcome
@@ -59,13 +65,20 @@ class InaudiblePremiere
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new LoseResource(game, penaltyTurns, 'media');
           cult.effects.add(setback);
-          cult.logsg('echo vault strains into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} echo vault strains into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new GainResource(game, turns, 'media');
       cult.effects.add(effect);
-      cult.log('inaudible premiere sanctifies ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} inaudible premiere sanctifies {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the script brand choice outcome
@@ -76,17 +89,20 @@ class InaudiblePremiere
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_WEAK_WILLED))
-            ai.log('reels from fractured edits and gains the weak-willed flaw.');
+            ai.log(T('{ai:The} reels from fractured edits and gains the weak-willed flaw.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('script brand glows without sowing a new recall.');
+          cult.logsg(T('{cult} script brand glows without sowing a new recall.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('lets ' + granted.name + ' echo across future clandestine sermons.');
+        ai.log(T('{ai:The} lets {trait} echo across future clandestine sermons.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

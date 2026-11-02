@@ -5,6 +5,8 @@ package l10n;
 class LocTest
 {
   static var fails = 0;
+  static inline var STAB = '{attacker:The} tries to stab {target:the}, but misses.';
+  static inline var STUN = '{attacker:The} stuns {target:the} for {rounds, plural, one{# round} other{# rounds}}.';
 
   static function main()
     {
@@ -36,6 +38,17 @@ class LocTest
       eq(Loc.fmt('{n, plural, one{# {what}} other{# {what}s}}', { n: 2, what: 'clue' }), '2 clues');
       eq(Loc.fmt('You find {i:a}.', { i: Loc.colored('inventory-item', noun('pistol', 'n')) }),
         "You find <span style='color:var(--text-color-inventory-item)'>a pistol</span>.");
+      // real templates: a weapon line (items/Knife.hx), a stun count, a styled cult name
+      eq(Loc.fmt(STAB, {
+        attacker: phrase('your host', 'm'),
+        target: noun('police officer', 'f'),
+      }), 'Your host tries to stab the police officer, but misses.');
+      eq(Loc.fmt(STUN, {
+        attacker: noun('agent', 'm'),
+        target: name('Ann', 'f'),
+        rounds: 1,
+      }), 'The agent stuns Ann for 1 round.');
+      eq(Loc.fmt('You pick {i:the} up.', { i: Loc.thing('keycard') }), 'You pick the keycard up.');
       eq(Loc.fmt('{oops', { oops: 1 }), '{oops');
       eq(Loc.names('{a:The} {n, plural, one{# {b}} other{#}} {a}').join(','), 'a,n,b');
     }
@@ -47,6 +60,8 @@ class LocTest
         strings: {
           'Hello.': 'Bonjour.',
           '{s:The} hesitates.': '{s:Def} hésite.',
+          'your host': 'votre hôte',
+          '{attacker:The} tries to stab {target:the}, but misses.': '{attacker:Def} essaie de poignarder {target:def}, mais rate son coup.',
         },
         nouns: {
           'soldier': { g: 'm', s: 'soldat' },
@@ -68,6 +83,13 @@ class LocTest
         'la secrétaire|de la secrétaire|à la secrétaire');
       eq(Loc.fmt('{s:def}', { s: noun('hero', 'm') }), 'le héros');
       eq(Loc.fmt('{a:de}|{b:de}|{b:a}', { a: name('Alice', 'f'), b: name('Bob', 'm') }), 'd’Alice|de Bob|à Bob');
+      eq(Loc.fmt(Loc.tr(STAB), {
+        attacker: phrase('your host', 'm'),
+        target: noun('police officer', 'f'),
+      }), 'Votre hôte essaie de poignarder la policière, mais rate son coup.');
+      var cult = name("<span class=cult>Ordo Carnis</span>", 'm');
+      eq(Loc.fmt('{c:de}|{c:a}', { c: cult }),
+        "d’<span class=cult>Ordo Carnis</span>|à <span class=cult>Ordo Carnis</span>");
       var tours = '{n, plural, one{# tour} other{# tours}}';
       eq(Loc.fmt(tours, { n: 0 }), '0 tour');
       eq(Loc.fmt(tours, { n: 2 }), '2 tours');
@@ -88,6 +110,7 @@ class LocTest
         p.indexOf('Ĥéļļö') == 1 &&
         StringTools.startsWith(p, '⟦') &&
         StringTools.endsWith(p, '~⟧'), true);
+      eq(Loc.fmt('{s:The}', { s: phrase('your host', 'm') }).indexOf('⟦Ý'), 0);
       var t = Loc.fmt(Loc.tr('{n, plural, one{# turn} other{# turns}}'), { n: 2 });
       eq(t.indexOf('2 ţûŕñš') > 0, true);
     }

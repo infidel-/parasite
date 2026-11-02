@@ -44,12 +44,18 @@ class FundGraft
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('artery rupture bleeds ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} artery rupture bleeds {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('pump flows ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} pump flows {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles graft count choice
@@ -61,12 +67,18 @@ class FundGraft
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'political');
           cult.effects.add(drain);
-          cult.logsg('graft rejection spills ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} graft rejection spills {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('political', amount);
-      cult.logsg('graft yields +' + amount + ' political resource.');
+      cult.logsg(T('{cult} graft yields {n, plural, one{+# political resource} other{+# political resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles vein ledger choice
@@ -78,11 +90,11 @@ class FundGraft
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_VORACIOUS_ACCOUNTS))
-            aiNeg.log('vein ledger consumes mind, spawning voracious flaw.');
+            aiNeg.log(T('{ai:The} vein ledger consumes mind, spawning voracious flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'cultBasic', true);
       if (granted == null)
-        cult.logsg('vein ledger closes without new devotion.');
+        cult.logsg(T('{cult} vein ledger closes without new devotion.', { cult: cult }));
     }
 }

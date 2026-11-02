@@ -1640,8 +1640,9 @@ class Const
     1 => 2,
     2 => 1,
   ];
+  // tr: compass direction abbreviations (north-west, west, …), shown in brackets in a menu
   public static var dirnames = [
-    'NW', 'W', 'SW', 'N', 'S', 'NE', 'E', 'SE'
+    T('NW'), T('W'), T('SW'), T('N'), T('S'), T('NE'), T('E'), T('SE')
   ];
   public static function dirToName(dx: Int, dy: Int): String
     {

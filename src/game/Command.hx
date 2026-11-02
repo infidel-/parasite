@@ -73,7 +73,7 @@ class Command
             id: 'command.attack',
             type: ACTION_AREA,
             name: (target.type == TARGET_AI ?
-              target.ai.prepLog('"Destroy him!"') : T('"Destroy that!"')),
+              T('"Destroy {ai, select, m{him} f{her} other{it}}!"', { ai: target.ai }) : T('"Destroy that!"')),
           });
         }
       hud.addAction({

@@ -113,8 +113,11 @@ class Body extends UIWindow
   override function update()
     {
       // titlebar host name (empty when not hosting)
-      nameEl.innerHTML = (game.player.state == PLR_STATE_HOST ?
-        game.player.host.theName() : '');
+      var host = game.player.host;
+      nameEl.innerHTML = '';
+      if (game.player.state == PLR_STATE_HOST)
+        nameEl.innerHTML = (host.isNameKnown ? host.getName() :
+          T('{host:the}', { host: Loc.thing(host.name.unknown) }));
       updateStats();
       updateInventory();
       updateParasite();

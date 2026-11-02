@@ -8,6 +8,7 @@ import objects.AreaObject;
 import objects.base.RivalBaseOrganObject;
 import const.*;
 import __Math;
+import l10n.Loc;
 
 class PlayerArea extends _SaveObject
 {
@@ -281,7 +282,7 @@ class PlayerArea extends _SaveObject
         game.ui.hud.addAction({
           id: 'pickupMenu',
           type: ACTION_AREA,
-          name: T('Pick up items…') + ' ' + Const.col('inventory-item', '(' + items.length + ')'),
+          name: T('Pick up items… {count}', { count: Const.col('inventory-item', '(' + items.length + ')') }),
           isVirtual: true,
         });
 
@@ -545,13 +546,13 @@ class PlayerArea extends _SaveObject
         {
           if (ai.state == AI_STATE_PRESERVED)
             {
-              log('Your host is unable to budge ' + ai.getName() + '.');
+              log(T('Your host is unable to budge {ai:the}.', { ai: ai }));
               return true;
             }
           // opposing strength check
           if (!__Math.opposingAttr(player.host.strength, ai.strength, 'strength'))
             {
-              log('Your host does not manage to push past ' + ai.getName() + '.');
+              log(T('Your host does not manage to push past {ai:the}.', { ai: ai }));
               return true;
             }
 
@@ -562,7 +563,7 @@ class PlayerArea extends _SaveObject
           // animates the contiguous move instead
           ai.entity.slideNoSnap = true;
           moveTo(newx, newy);
-          log('Your host pushes past ' + ai.getName() + '.');
+          log(T('Your host pushes past {ai:the}.', { ai: ai }));
           ret = true;
         }
 
@@ -1108,8 +1109,7 @@ class PlayerArea extends _SaveObject
       if (!player.host.isNameKnown)
         {
           player.host.isNameKnown = true;
-          log('You find out that the name of this host is ' +
-            player.host.getName() + '.');
+          log(T('You find out that the name of this host is {name}.', { name: player.host.getName() }));
         }
 
       // learn job/income once society knowledge is high enough (independent of name)
@@ -1117,8 +1117,10 @@ class PlayerArea extends _SaveObject
           player.skills.getLevel(KNOW_SOCIETY) > 25)
         {
           player.host.isJobKnown = true;
-          log('You find out that this host works as ' + player.host.job +
-            ' <span class="small gray">(income: ' + player.host.income + ')</span>.');
+          log(T('You find out that this host works as {job} <span class="small gray">(income: {income})</span>.', {
+            job: player.host.getJobLocNoun(),
+            income: player.host.income,
+          }));
         }
 
       // on first brain probe learn about items and area objects
@@ -1346,16 +1348,16 @@ class PlayerArea extends _SaveObject
           if (!o.visible())
             continue;
           cnt++;
-          s.add(Const.col('inventory-item', o.getName()));
+          s.add(Const.col('inventory-item', o.getDisplayName()));
           if (cnt < objs.length)
             s.add(', ');
         }
       if (s.length == 0)
         return true;
 
-      log('You can see ' +
-        (cnt > 1 ? 'the following objects ' : 'an object ') + 'here: ' +
-        s.toString() + '.');
+      log(cnt > 1 ?
+        T('You can see the following objects here: {list}.', { list: s.toString() }) :
+        T('You can see an object here: {obj}.', { obj: s.toString() }));
 
       // run trigger on move to
       for (o in objs)
@@ -1400,7 +1402,7 @@ class PlayerArea extends _SaveObject
           game.actionFailed(T('Something blocks the way out.'));
           return false;
         }
-      log('You climb out of the ' + game.area.getObject(hiddenIn).getName() + '.');
+      log(T('You climb out of {obj:the}.', { obj: game.area.getObject(hiddenIn) }));
       // the dumpster is the only hiding place
       game.scene.sounds.play('city/dumpster-close');
       hiddenIn = -1;

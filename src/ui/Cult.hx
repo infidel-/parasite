@@ -539,7 +539,7 @@ class Cult extends UIWindow
           addPlayerAction({
             id: 'callMember',
             type: ACTION_CULT,
-            name: m.TheName(),
+            name: m.getNameCapped(),
             energy: 0,
             obj: { memberID: memberID },
             f: function() {
@@ -624,7 +624,7 @@ class Cult extends UIWindow
           buf.add('<tr' + rowCls + '>');
 
           // name (+ leader tag)
-          buf.add('<td><span class="cult-mn">' + m.TheName() + '</span>' +
+          buf.add('<td><span class="cult-mn">' + m.getNameCapped() + '</span>' +
             (i == 0 ? ' <span class="cult-tag">' + T('(leader)') + '</span>' : '') + '</td>');
 
           // occupation
@@ -695,13 +695,13 @@ class Cult extends UIWindow
         giSpan(melee, melee != null ? meleeHit : -1);
     }
 
-// one gear slot: item name (+ optional hit-chance pill), or dim placeholder when empty
+// one gear slot: item name key (+ optional hit-chance pill), or dim placeholder when empty
   function giSpan(name: String, hit: Int): String
     {
       if (name == null)
         return '<span class="cult-gi cult-none">-</span>';
       var h = (hit >= 0 ? ' <i class="cult-hit">' + hit + '%</i>' : '');
-      return '<span class="cult-gi">' + name + h + '</span>';
+      return '<span class="cult-gi">' + Loc.tr(name) + h + '</span>';
     }
 
 // collects active cult + ordeal effect labels
@@ -859,7 +859,7 @@ class Cult extends UIWindow
         for (m in cult.members)
           if (m.id == memberID)
             {
-              memberNames.push(m.TheName());
+              memberNames.push(m.getNameCapped());
               break;
             }
       buf.add('<tr><th>' + T('Members') + '</th><td>' +
@@ -908,8 +908,9 @@ class Cult extends UIWindow
       if (isProfane)
         {
           var prof: ProfaneOrdeal = cast ordeal;
-          buf.add('<tr class="cult-timer"><th>' + T('Time left') + '</th><td><span class="cult-w">' +
-            prof.timer + '</span> ' + T('{n, plural, one{turn} other{turns}}', { n: prof.timer }) + '</td></tr>');
+          buf.add('<tr class="cult-timer"><th>' + T('Time left') + '</th><td>' +
+            T('{n, plural, one{<span class=cult-w>#</span> turn} other{<span class=cult-w>#</span> turns}}', { n: prof.timer }) +
+            '</td></tr>');
         }
 
       buf.add('</table></div>');

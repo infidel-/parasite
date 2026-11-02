@@ -30,7 +30,7 @@ class Withdrawal extends Effect
       if (ai == null)
         return;
       ai.energy -= 5 * time;
-      ai.log('shivers as withdrawal drains their strength.');
+      ai.log(T('{ai:The} shivers as withdrawal drains their strength.', { ai: ai }));
       game.info('- ' + (5 * time) + ' energy.');
     }
 }

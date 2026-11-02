@@ -413,8 +413,10 @@ class Organs extends _SaveObject
         min: params.minDamage,
         max: params.maxDamage,
       });
-      game.log('Your host spits a clot of corrosive substance on ' + ai.getName() +
-        ' for ' + damage + ' damage. ' + ai.getNameCapped() + ' howls in pain.');
+      game.log(T('Your host spits a clot of corrosive substance on {ai:the} for {damage} damage. {ai:The} howls in pain.', {
+        ai: ai,
+        damage: damage,
+      }));
       game.scene.sounds.play('action-acid-spit');
 
       ai.onDamage(damage); // damage event
@@ -444,8 +446,7 @@ class Organs extends _SaveObject
         game.playerArea.x, game.playerArea.y,
         { x: ai.x, y: ai.y });
 
-      game.log('Your host spits a clot of adhesive mucus on ' + ai.getName() +
-        '. ' + ai.getNameCapped() + ' desperately tries to tear it away.');
+      game.log(T('Your host spits a clot of adhesive mucus on {ai:the}. {ai:The} desperately tries to tear it away.', { ai: ai }));
       game.scene.sounds.play('action-slime-spit');
 
       // set alertness
@@ -484,8 +485,7 @@ class Organs extends _SaveObject
         { x: ai.x, y: ai.y });
 
       game.scene.sounds.play('action-paralysis-spit');
-      var msg = 'Your host releases a paralyzing projectile on ' +
-        ai.getName() + '.';
+      var msg = T('Your host releases a paralyzing projectile on {ai:the}.', { ai: ai });
       var chance = ai.inventory.clothing.info.armor.needleDeathChance;
       if (Std.random(100) < chance)
         {

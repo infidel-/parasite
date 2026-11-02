@@ -45,12 +45,18 @@ class RedKnifeVigil
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('combat', penalty);
-          cult.logsg('botched carving bleeds -' + penalty + ' combat resource.');
+          cult.logsg(T('{cult} botched carving bleeds {n, plural, one{-# combat resource} other{-# combat resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('combat', amount);
-      cult.logsg('stockpiles +' + amount + ' combat resource.');
+      cult.logsg(T('{cult} stockpiles {n, plural, one{+# combat resource} other{+# combat resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the mentor up choice outcome
@@ -61,12 +67,12 @@ class RedKnifeVigil
         {
           var ai = cult.getMemberByID(targetID);
           if (ai.addTrait(TRAIT_ALCOHOLIC))
-            ai.logsg('stumbles into ritual spirits and gains the alcoholic flaw.');
+            ai.logsg(T('{ai:The} stumbles into ritual spirits and gains the alcoholic flaw.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'skill', true);
       if (granted == null)
-        cult.logsg('mentor session inspires but is not otherwise beneficial.');
+        cult.logsg(T('{cult} mentor session inspires but is not otherwise beneficial.', { cult: cult }));
     }
 
 // handles the night sweep choice outcome
@@ -78,12 +84,19 @@ class RedKnifeVigil
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'combat');
           cult.effects.add(setback);
-          cult.logsg('fatigues the guard, triggering ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} fatigues the guard, triggering {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'combat');
       cult.effects.add(effect);
-      cult.logsg('activates ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.logsg(T('{cult} activates {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 }

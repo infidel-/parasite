@@ -43,12 +43,18 @@ class SleeperCourierBrief
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('media', penalty);
-          cult.logsg('subscriber purge scrapes -' + penalty + ' media resource.');
+          cult.logsg(T('{cult} subscriber purge scrapes {n, plural, one{-# media resource} other{-# media resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('media', amount);
-      cult.logsg('pulse lists fortify +' + amount + ' media resource.');
+      cult.logsg(T('{cult} pulse lists fortify {n, plural, one{+# media resource} other{+# media resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the inbox hex choice outcome
@@ -59,13 +65,20 @@ class SleeperCourierBrief
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new IncreaseTradeCost(game, penaltyTurns);
           cult.effects.add(setback);
-          cult.logsg('counter-ops rebound into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} counter-ops rebound into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreaseIncome(game, turns);
       cult.effects.add(effect);
-      cult.log('inbox hex spawns ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} inbox hex spawns {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the courier vow choice outcome
@@ -76,17 +89,20 @@ class SleeperCourierBrief
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_DUMB))
-            ai.log('loses sharpness under vow pressure, adopting the dumb flaw.');
+            ai.log(T('{ai:The} loses sharpness under vow pressure, adopting the dumb flaw.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'cultBasic', false);
       if (granted == null)
         {
-          cult.logsg('courier vow settles without revealing new devotion.');
+          cult.logsg(T('{cult} courier vow settles without revealing new devotion.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('signs the vow and absorbs ' + granted.name + ' into the mission brief.');
+        ai.log(T('{ai:The} signs the vow and absorbs {trait} into the mission brief.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

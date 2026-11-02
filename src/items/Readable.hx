@@ -1,6 +1,8 @@
 // base info for readable items
 package items;
 
+import l10n.Loc;
+
 import Const;
 import ItemInfo;
 import _PlayerAction;
@@ -20,11 +22,10 @@ class Readable extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'read.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Read ' + Const.col('inventory-item', itemName),
+        name: T('Read {item}', { item: Loc.colored('inventory-item', item) }),
         nameClean: T('Read'),
         energy: 10,
         isAgreeable: true,
@@ -70,7 +71,7 @@ class Readable extends ItemInfo
           return false;
         }
 
-      game.log('You study the contents of the ' + item.name + ' and destroy it.');
+      game.log(T('You study the contents of {item:the} and destroy it.', { item: Loc.thing(item.name) }));
       var cnt = 0;
       var event = item.getEvent();
       cnt += (game.timeline.learnClues(event, true) ? 1 : 0);

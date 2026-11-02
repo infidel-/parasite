@@ -195,7 +195,10 @@ class Combat extends Mission
   public override function customName(): String
     {
       if (primaryTarget != null)
-        return Loc.tr(name) + ' - ' + primaryTarget.TheName();
+        return T('{mission} - {ai:The}', {
+          mission: Loc.tr(name),
+          ai: primaryTarget,
+        });
       return Loc.tr(name);
     }
 

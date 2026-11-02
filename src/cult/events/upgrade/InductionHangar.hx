@@ -49,12 +49,18 @@ class InductionHangar
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('a bribed inspector skims ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} a bribed inspector skims {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('coffers take ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} coffers take {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles the share docs choice outcome
@@ -66,13 +72,20 @@ class InductionHangar
           var effTurns = d100() < 5 ? 10 : 5;
           var eff = new IncreaseTradeCost(game, effTurns);
           cult.effects.add(eff);
-          cult.logsg('misprints leak, causing ' + Const.col('cult-effect', eff.customName()) + '.');
+          cult.logsg(T('{cult} misprints leak, causing {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', eff.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreaseIncome(game, turns);
       cult.effects.add(effect);
-      cult.logsg('shares schematics, enabling ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.logsg(T('{cult} shares schematics, enabling {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the peer audit choice outcome
@@ -84,13 +97,13 @@ class InductionHangar
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_DRUG_ADDICT))
-            ai.logsg('slips into stim dependence during the long debrief.');
+            ai.logsg(T('{ai:The} slips into stim dependence during the long debrief.', { ai: ai }));
           return;
         }
       var awarded = addTrait(cult, targetID, 'cultBasic', false);
       if (awarded == null)
         {
-          cult.logsg('evaluations end with respect but no new trait.');
+          cult.logsg(T('{cult} evaluations end with respect but no new trait.', { cult: cult }));
         }
     }
 }

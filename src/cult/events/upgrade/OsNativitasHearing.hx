@@ -41,12 +41,18 @@ class OsNativitasHearing
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('marrow vault crumbles ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} marrow vault crumbles {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('marrow vault solidifies ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} marrow vault solidifies {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles the skeleton sync choice outcome
@@ -57,13 +63,20 @@ class OsNativitasHearing
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreaseIncome(game, penaltyTurns);
           cult.effects.add(setback);
-          cult.logsg('skeleton sync fractures into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} skeleton sync fractures into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreaseIncome(game, turns);
       cult.effects.add(effect);
-      cult.log('os nativitas hearing strengthens ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} os nativitas hearing strengthens {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the vertebra mark choice outcome
@@ -74,17 +87,20 @@ class OsNativitasHearing
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_DUMB))
-            aiNeg.log('cracks under vertebra pressure and inherits the dumb flaw.');
+            aiNeg.log(T('{ai:The} cracks under vertebra pressure and inherits the dumb flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('vertebra mark fractures without gifting new insight.');
+          cult.logsg(T('{cult} vertebra mark fractures without gifting new insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('internalizes ' + granted.name + ' as the os nativitas chamber seals.');
+        ai.log(T('{ai:The} internalizes {trait} as the os nativitas chamber seals.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

@@ -355,7 +355,17 @@ class AIData extends _SaveObject
       return false;
     }
 
-// prepare log string for gender
+// the noun l10n.Loc renders for an {ai:form} placeholder: your host, a known name or the unknown name
+  public function getLocNoun(): _LocNoun
+    {
+      return {
+        key: (isPlayerHost() ? N('your host') : getName()),
+        kind: (isPlayerHost() ? LOC_PHRASE : (isNameKnown ? LOC_NAME : LOC_NOUN)),
+        gender: (isIt() ? 'n' : (isMale ? 'm' : 'f')),
+      };
+    }
+
+// 1.0 mod API: gendered pronouns in an English predicate (game code uses a {ai, select} instead)
   public function prepLog(s: String): String
     {
       if (isIt())
@@ -431,17 +441,38 @@ class AIData extends _SaveObject
       else trace('Could not find icon for ' + targetInfo);
     }
 
-// log according to gender
+// log a sentence about this AI (a whole T() template with {ai} in it)
   public function log(s: String, ?col: _TextColor = null)
     {
-      s = prepLog(s);
-      game.log((isPlayerHost() ? 'Your host' : TheName()) + ' ' + s, col);
+      game.log(legacyLog(s), col);
     }
 
+// log a sentence about this AI, small gray
   public function logsg(s: String)
     {
-      s = prepLog(s);
-      game.log(Const.smallgray((isPlayerHost() ? 'Your host' : TheName()) + ' ' + s));
+      game.log(Const.smallgray(legacyLog(s)));
+    }
+
+// the job as a noun of this AI's gender (a female form where the language has one), for {job:form}
+  public function getJobLocNoun(): _LocNoun
+    {
+      return {
+        key: job,
+        kind: LOC_NOUN,
+        gender: (isMale ? 'm' : 'f'),
+      };
+    }
+
+// 1.0 mod API: mods pass a bare English predicate ('lights the cigar.'), which starts lowercase or
+// with a space, and get the subject put in front as before. a whole sentence starts with a capital
+// (or a tag, or ⟦ in pseudo) and passes through
+  function legacyLog(s: String): String
+    {
+      var c = s.charAt(0);
+      if (c != ' ' &&
+          (c < 'a' || c > 'z'))
+        return s;
+      return (isPlayerHost() ? 'Your host' : TheName()) + ' ' + prepLog(s);
     }
 
 // save derived stats (must be called in the end of derived classes constructors)

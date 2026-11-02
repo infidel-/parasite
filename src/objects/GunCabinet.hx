@@ -7,6 +7,8 @@
 
 package objects;
 
+import l10n.Loc;
+
 import game.Game;
 import game.Inventory;
 
@@ -130,7 +132,7 @@ class GunCabinet extends AreaObject
           game.ui.hud.addAction({
             id: 'openCabinet',
             type: ACTION_OBJECT,
-            name: 'Open ' + name,
+            name: T('Open {obj}', { obj: this }),
             energy: 5,
             obj: this
           });
@@ -141,7 +143,7 @@ class GunCabinet extends AreaObject
           game.ui.hud.addAction({
             id: 'searchCabinet',
             type: ACTION_OBJECT,
-            name: 'Search ' + name,
+            name: T('Search {obj}', { obj: this }),
             energy: 10,
             obj: this
           });
@@ -154,7 +156,10 @@ class GunCabinet extends AreaObject
         game.ui.hud.addAction({
           id: 'takeMenu',
           type: ACTION_OBJECT,
-          name: 'Take from ' + name + '… ' + Const.col('inventory-item', '(' + gets.length + ')'),
+          name: T('Take from {obj}… {count}', {
+            obj: this,
+            count: Const.col('inventory-item', '(' + gets.length + ')'),
+          }),
           isVirtual: true,
           obj: this
         });
@@ -169,17 +174,13 @@ class GunCabinet extends AreaObject
           game.player.host.maxItems)
         return list;
       for (item in inventory)
-        {
-          var name = (game.player.knowsItem(item.id) ?
-            item.name : item.info.unknown);
-          list.push({
-            id: 'get.' + item.id,
-            type: ACTION_OBJECT,
-            name: 'Get ' + Const.col('inventory-item', name),
-            energy: 5,
-            obj: this
-          });
-        }
+        list.push({
+          id: 'get.' + item.id,
+          type: ACTION_OBJECT,
+          name: T('Get {item}', { item: Loc.colored('inventory-item', item) }),
+          energy: 5,
+          obj: this
+        });
       return list;
     }
 
@@ -204,7 +205,7 @@ class GunCabinet extends AreaObject
   function openAction()
     {
       isOpen = true;
-      game.log('You open the ' + name + '.');
+      game.log(T('You open {obj:the}.', { obj: this }));
       game.scene.sounds.play('door-metal-open1', {
         x: x,
         y: y,
@@ -220,15 +221,14 @@ class GunCabinet extends AreaObject
       isSearched = true;
       if (inventory.length() == 0)
         {
-          game.log('The ' + name + ' is empty.');
+          game.log(T('{obj:The} is empty.', { obj: this }));
           return;
         }
       for (item in inventory)
-        {
-          var name = (game.player.knowsItem(item.id) ?
-            item.name : item.info.unknown);
-          game.log('You find ' + Const.col('inventory-item', name) + ' in the ' + this.name + '.');
-        }
+        game.log(T('You find {item} in {obj:the}.', {
+          item: Loc.colored('inventory-item', item),
+          obj: this,
+        }));
     }
 
 // ACTION: take one weapon out
@@ -237,9 +237,10 @@ class GunCabinet extends AreaObject
       for (item in inventory)
         if (item.id == id)
           {
-            var name = (game.player.knowsItem(item.info.id) ?
-              item.name : item.info.unknown);
-            game.player.log('You take the ' + name + ' out of the ' + this.name + '.');
+            game.player.log(T('You take {item:the} out of {obj:the}.', {
+              item: item,
+              obj: this,
+            }));
             game.player.host.inventory.add(item);
             inventory.remove(id);
             break;

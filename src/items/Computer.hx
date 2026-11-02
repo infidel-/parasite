@@ -1,6 +1,8 @@
 // base info for computer-like items
 package items;
 
+import l10n.Loc;
+
 import Const;
 import ItemInfo;
 import _PlayerAction;
@@ -20,7 +22,6 @@ class Computer extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       if (game.player.evolutionManager.getLevel(IMP_ENGRAM) >= 1 &&
           !game.player.vars.mapAbsorbed)
         actions.push({
@@ -35,7 +36,7 @@ class Computer extends ItemInfo
         actions.push({
           id: 'search.' + item.id,
           type: ACTION_INVENTORY,
-          name: 'Use ' + Const.col('inventory-item', itemName) + ' to search',
+          name: T('Use {item} to search', { item: Loc.colored('inventory-item', item) }),
           nameClean: T('Search'),
           energy: 10,
           item: item
@@ -116,7 +117,7 @@ class Computer extends ItemInfo
         }
 
       game.scene.sounds.play('item-' + item.id);
-      game.log('You use the ' + item.name + ' to search for known persons data.');
+      game.log(T('You use {item:the} to search for known persons data.', { item: Loc.thing(item.name) }));
       if (skillLevel < 99)
         game.player.skills.increase(SKILL_COMPUTER, 2);
 

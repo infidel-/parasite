@@ -370,7 +370,7 @@ class Config
       js.Browser.window.localStorage.setItem('config', str);
 
       if (needRestart)
-        game.log('Config saved. Reload page to apply new settings.');
+        game.log(T('Config saved. Reload page to apply new settings.'));
 #else
       var s = new StringBuf();
       for (k in keys)

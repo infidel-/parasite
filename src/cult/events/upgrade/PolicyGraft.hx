@@ -45,12 +45,18 @@ class PolicyGraft
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'political');
           cult.effects.add(drain);
-          cult.logsg('model error leaks into ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} model error leaks into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('political', amount);
-      cult.logsg('neural model computes +' + amount + ' political resource.');
+      cult.logsg(T('{cult} neural model computes {n, plural, one{+# political resource} other{+# political resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles graft insight choice
@@ -62,12 +68,12 @@ class PolicyGraft
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_DUMB))
-            aiNeg.log('graft overload spawns dumb flaw.');
+            aiNeg.log(T('{ai:The} graft overload spawns dumb flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
-        cult.logsg('graft insight fails to sharpen mind.');
+        cult.logsg(T('{cult} graft insight fails to sharpen mind.', { cult: cult }));
     }
 
 // handles mind archive choice
@@ -79,12 +85,19 @@ class PolicyGraft
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'political');
           cult.effects.add(setback);
-          cult.logsg('archive decay erodes into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} archive decay erodes into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'political');
       cult.effects.add(effect);
-      cult.log('neural archive sparks ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} neural archive sparks {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 }

@@ -44,12 +44,18 @@ class LinguaMareTelecast
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('media', penalty);
-          cult.logsg('internal scrubbers strip -' + penalty + ' media resource.');
+          cult.logsg(T('{cult} internal scrubbers strip {n, plural, one{-# media resource} other{-# media resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('media', amount);
-      cult.logsg('lingua mare cascade grants +' + amount + ' media resource.');
+      cult.logsg(T('{cult} lingua mare cascade grants {n, plural, one{+# media resource} other{+# media resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the echo sync choice outcome
@@ -60,13 +66,20 @@ class LinguaMareTelecast
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'media');
           cult.effects.add(setback);
-          cult.logsg('feedback howl births ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} feedback howl births {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'media');
       cult.effects.add(effect);
-      cult.log('shadow broadcast choirs weave ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} shadow broadcast choirs weave {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the vox seal choice outcome
@@ -77,17 +90,20 @@ class LinguaMareTelecast
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_WEAK_WILLED))
-            ai.log('buckles as static scars the creed, inheriting the weak-willed flaw.');
+            ai.log(T('{ai:The} buckles as static scars the creed, inheriting the weak-willed flaw.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('vox seal hovers without imprinting insight.');
+          cult.logsg(T('{cult} vox seal hovers without imprinting insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('lets ' + granted.name + ' echo inside the upgraded voice.');
+        ai.log(T('{ai:The} lets {trait} echo inside the upgraded voice.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

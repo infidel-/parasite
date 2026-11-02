@@ -1,6 +1,8 @@
 // base info for weapon items
 package items;
 
+import l10n.Loc;
+
 import Const;
 import ItemInfo;
 import _PlayerAction;
@@ -22,11 +24,10 @@ class Weapon extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'active.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Mark ' + Const.col('inventory-item', itemName) + ' as active',
+        name: T('Mark {item} as active', { item: Loc.colored('inventory-item', item) }),
         nameClean: T('Mark as active'),
         energy: 0,
         item: item
@@ -47,7 +48,7 @@ class Weapon extends ItemInfo
 // marks this weapon as the active choice; virtual (returns false so no energy/turn is spent)
   function activeAction(item: _Item): Bool
     {
-      game.log('You will now attack with the ' + item.name + '.');
+      game.log(T('You will now attack with {item:the}.', { item: Loc.thing(item.name) }));
       game.player.host.inventory.weaponID = item.id;
       return false;
     }

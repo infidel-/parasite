@@ -4,6 +4,7 @@ package game;
 
 import const.ItemsConst;
 import mods.ModEventRegistry;
+import l10n.Loc;
 
 class Inventory extends _SaveObject
 {
@@ -90,14 +91,13 @@ class Inventory extends _SaveObject
 
       for (item in withWorn())
         {
-          var itemName = item.getName();
           var worn = (item == clothing);
           // add learning action
           if (!game.player.knowsItem(item.id))
             tmp.push({
               id: 'learn.' + item.id,
               type: ACTION_INVENTORY,
-              name: 'Learn about ' + Const.col('inventory-item', itemName),
+              name: T('Learn about {item}', { item: Loc.colored('inventory-item', item) }),
               nameClean: T('Learn about'),
               energy: 10,
               isAgreeable: true,
@@ -115,7 +115,9 @@ class Inventory extends _SaveObject
                 tmp.push({
                   id: (worn ? 'takeOff.' : 'wear.') + item.id,
                   type: ACTION_INVENTORY,
-                  name: (worn ? 'Take off ' : 'Wear ') + Const.col('inventory-item', itemName),
+                  name: (worn ?
+                    T('Take off {item}', { item: Loc.colored('inventory-item', item) }) :
+                    T('Wear {item}', { item: Loc.colored('inventory-item', item) })),
                   nameClean: (worn ? T('Take off') : T('Wear')),
                   energy: 5,
                   item: item
@@ -127,7 +129,7 @@ class Inventory extends _SaveObject
             tmp.push({
               id: 'drop.' + item.id,
               type: ACTION_INVENTORY,
-              name: 'Drop ' + Const.col('inventory-item', itemName),
+              name: T('Drop {item}', { item: Loc.colored('inventory-item', item) }),
               nameClean: T('Drop'),
               energy: 0,
               item: item
@@ -198,8 +200,9 @@ class Inventory extends _SaveObject
 // ACTION: learn about item
   function learnAction(item: _Item)
     {
-      game.log('You probe the brain of the host and learn that this item is a ' +
-        Const.col('inventory-item', item.name) + '.');
+      game.log(T('You probe the brain of the host and learn that this item is {item:a}.', {
+        item: Loc.colored('inventory-item', Loc.thing(item.name)),
+      }));
       game.player.addKnownItem(item.id);
       item.info.onLearn();
 
@@ -225,9 +228,7 @@ class Inventory extends _SaveObject
     {
       game.area.addItem(game.playerArea.x, game.playerArea.y, item);
       _list.remove(item);
-      var itemName = (game.player.knowsItem(item.info.id) ?
-        item.name : item.info.unknown);
-      game.player.log('You drop the ' + Const.col('inventory-item', itemName) + '.');
+      game.player.log(T('You drop {item:the}.', { item: Loc.colored('inventory-item', item) }));
       game.scene.sounds.play('item-drop');
     }
 
@@ -239,7 +240,7 @@ class Inventory extends _SaveObject
       if (clothing.id != 'armorNone')
         _list.add(clothing);
       clothing = item;
-      game.player.log('You put on the ' + Const.col('inventory-item', item.getName()) + '.');
+      game.player.log(T('You put on {item:the}.', { item: Loc.colored('inventory-item', item) }));
     }
 
 // ACTION: take off what the host wears, into its hands
@@ -250,7 +251,7 @@ class Inventory extends _SaveObject
           clothing.info.itemFailed(T('Your host cannot carry any more.'));
           return false;
         }
-      game.player.log('You take off the ' + Const.col('inventory-item', clothing.getName()) + '.');
+      game.player.log(T('You take off {item:the}.', { item: Loc.colored('inventory-item', clothing) }));
       _list.add(clothing);
       clothing = bare();
       return true;

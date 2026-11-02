@@ -46,12 +46,18 @@ class UterusSusurroDrill
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('silent auditors pinch ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} silent auditors pinch {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('umbil feed secures ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} umbil feed secures {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles tank hymn choice
@@ -62,13 +68,20 @@ class UterusSusurroDrill
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new IncreaseTradeCost(game, penaltyTurns);
           cult.effects.add(setback);
-          cult.logsg('pod hymn leaks, birthing ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} pod hymn leaks, birthing {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreaseIncome(game, turns);
       cult.effects.add(effect);
-      cult.log('uterus susurro harmonics awaken ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} uterus susurro harmonics awaken {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles spine code choice
@@ -79,17 +92,20 @@ class UterusSusurroDrill
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_DRUG_ADDICT))
-            ai.log('slips into stim reliance after corrupted spinal script, breath fogging his visor.');
+            ai.log(T('{ai:The} slips into stim reliance after corrupted spinal script, breath fogging {ai, select, m{his} f{her} other{its}} visor.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('spine code stutters without sealing a fresh insight.');
+          cult.logsg(T('{cult} spine code stutters without sealing a fresh insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('embraces ' + granted.name + ' threading along his upgraded nerves.');
+        ai.log(T('{ai:The} embraces {trait} threading along {ai, select, m{his} f{her} other{its}} upgraded nerves.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

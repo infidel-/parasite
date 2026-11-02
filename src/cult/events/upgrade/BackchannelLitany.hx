@@ -44,13 +44,20 @@ class BackchannelLitany
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'media');
           cult.effects.add(setback);
-          cult.logsg('masking storm overreaches into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} masking storm overreaches into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'media');
       cult.effects.add(effect);
-      cult.log('signal fog crowns ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} signal fog crowns {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the covert ad choice outcome
@@ -60,12 +67,18 @@ class BackchannelLitany
         {
           var loss = rollMoneyPayout();
           cult.resources.dec('money', loss);
-          cult.logsg('audit ghost clips ' + Const.col('cult-power', '-' + loss) + Icon.money + '.');
+          cult.logsg(T('{cult} audit ghost clips {money}.', {
+            cult: cult,
+            money: Const.col('cult-power', '-' + loss) + Icon.money,
+          }));
           return;
         }
       var amount = rollMoneyPayout();
       cult.resources.money += amount;
-      cult.logsg('backchannel invoices clear ' + Const.col('cult-power', '+' + amount) + Icon.money + '.');
+      cult.logsg(T('{cult} backchannel invoices clear {money}.', {
+        cult: cult,
+        money: Const.col('cult-power', '+' + amount) + Icon.money,
+      }));
     }
 
 // handles the litany seal choice outcome
@@ -76,17 +89,20 @@ class BackchannelLitany
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_WEAK_WILLED))
-            ai.log('buckles under the sealed refrain, inheriting the weak-willed flaw.');
+            ai.log(T('{ai:The} buckles under the sealed refrain, inheriting the weak-willed flaw.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('litany seal flares without gifting new insight.');
+          cult.logsg(T('{cult} litany seal flares without gifting new insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('holds ' + granted.name + ' close, sworn to the hidden litany.');
+        ai.log(T('{ai:The} holds {trait} close, sworn to the hidden litany.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

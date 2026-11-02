@@ -360,11 +360,26 @@ def problem(src: str, tr: str) -> str | None:
     bad = locfmt.check(src, tr)
     if bad:
         return bad
+    if starts_upper(src) and not starts_upper(tr):
+        return "starts lowercase: the English starts with a capital (or a capitalized {x:Form}); a log line that starts lowercase is taken for a 1.0 mod predicate"
     if len(src) >= RATIO_MIN_CHARS:
         ratio = len(tr) / len(src)
         if not RATIO_MIN <= ratio <= RATIO_MAX:
             return f"length ratio {ratio:.2f} outside {RATIO_MIN}-{RATIO_MAX}"
     return None
+
+
+RE_LEAD = re.compile(r"(?:<[^>]*>|\s|[«\"(\[])*")
+
+
+def starts_upper(s: str) -> bool:
+    """Does the visible text start with a capital: a capital letter, or a placeholder with a
+    capitalized form ({x:The}, {x:Def}); leading tags, spaces and opening quotes skipped."""
+    s = s[RE_LEAD.match(s).end():]
+    m = re.match(r"\{\w+:(\w)", s)
+    if m:
+        return m.group(1).isupper()
+    return bool(s) and s[0].isupper()
 
 
 def doubt_for(doubts: list, i: int) -> str:
@@ -559,6 +574,70 @@ def spread(bs: list, n: int) -> list:
     return [bs[round(i * (len(bs) - 1) / (n - 1))] for i in range(n)]
 
 
+# --------------------------------------------------------------------------- noun table
+
+RE_NOUN_KEY = re.compile(r"[a-z][a-z' -]*")
+RE_NOUN = re.compile(r'<n id="(\d+)"([^>]*)>([^<]+)</n>')
+RE_ATTR = re.compile(r'(\w+)="([^"]*)"')
+
+
+def noun_keys(entries: list) -> list:
+    """Catalog entries that can be a {x:form} noun: short lowercase N() names (creatures, items,
+    objects, effects, jobs). Over-inclusive on purpose: an unused entry costs nothing, a missing one
+    makes the game fall back to a bare masculine noun (and loses the feminine job titles)."""
+    return [e for e in entries
+            if e.get("kind") == "N" and len(e["s"].split()) <= 4 and RE_NOUN_KEY.fullmatch(e["s"])]
+
+
+def parse_nouns(text: str, batch: list) -> dict:
+    """<n id=.. g=.. fs=.. elide=..>noun</n> lines -> {english: {g, s, fs?, elide?}}."""
+    out = {}
+    for m in RE_NOUN.finditer(text):
+        i = int(m.group(1))
+        if not 1 <= i <= len(batch):
+            continue
+        a = dict(RE_ATTR.findall(m.group(2)))
+        if a.get("g") not in ("m", "f"):
+            continue
+        r = {"g": a["g"], "s": m.group(3).strip()}
+        if a.get("fs"):
+            r["fs"] = a["fs"]
+        if a.get("elide") == "0":
+            r["elide"] = False
+        out[batch[i - 1]["s"]] = r
+    return out
+
+
+def nouns(code: str) -> int:
+    """Fill loc/nouns-<code>.json (the runtime noun table, reviewed by hand) for every noun key
+    it lacks; the interface translation of the key, when there is one, is passed so both agree."""
+    path = LOC / f"nouns-{code}.json"
+    table = load_json(path, {})
+    st = load_state(code)
+    TOTALS[code] = st["totals"]
+    todo = [e for e in noun_keys(catalog()) if e["s"] not in table]
+    info(f"{code}: {len(todo)} nouns to add ({len(table)} in the table)")
+    style = (LOC / f"style-{code}.md").read_text(encoding="utf-8")
+    system = (LOC / "nouns.md").read_text(encoding="utf-8").replace("{LANG}", NAMES.get(code, code))
+    system = system.rstrip() + "\n\n" + style.strip() + "\n"
+    for b0 in range(0, len(todo), 120):
+        batch = todo[b0:b0 + 120]
+        lines = []
+        for i, e in enumerate(batch, 1):
+            r = st["strings"].get(locfmt.sha(e["s"]))
+            ui = f" · ui: {r['t']}" if r and r.get("t") else ""
+            lines.append(f'{i}. {e["s"]} · ctx: {e["loc"][0]}{ui}')
+        res = call_with_quota(system, "\n".join(lines), f"{code}-nouns.jsonl", False)
+        tally(code, res["usage"])
+        got = parse_nouns(res["text"], batch)
+        table.update(got)
+        save_json(path, dict(sorted(table.items())))
+        info(f"nouns {b0 // 120 + 1}: {len(got)}/{len(batch)}")
+    save_json(state_path(code), st)
+    build(code)
+    return 0
+
+
 RE_FR_SPACE = re.compile(r" ([:;!?»])")
 RE_FR_APOS = re.compile(r"(?<=\w)'(?=\w)")
 
@@ -612,6 +691,9 @@ def selftest() -> int:
     assert problem("{s} hits {t}.", "{s} frappe.").startswith("missing")
     assert problem("A fairly long English sentence here.", "Ok.").startswith("length")
     assert problem("Hi", "") == "empty"
+    assert problem("{s:The} hits.", "{s:def} frappe.").startswith("starts lowercase")
+    assert problem("<b>Yes</b>", "<b>oui</b>").startswith("starts lowercase")
+    assert problem("{n} turns", "{n} tours") is None and starts_upper("« Oui")
     es = [{"s": "x" * 100, "loc": [f"src/a.hx:{i}"]} for i in range(10)] + \
          [{"s": "y" * 100, "loc": [f"src/b.hx:{i}"]} for i in range(10)]
     bs = batches(es)
@@ -622,6 +704,15 @@ def selftest() -> int:
     u = build_user([{"s": "Hi {n}", "loc": ["src/a.hx:3"], "where": "A.b", "field": "label",
                      "vars": ["n"], "kind": "T"}], 1, 1, "")
     assert '<s id="1">Hi {n}</s>' in u and "vars: n" in u and "in label" in u
+    got = parse_nouns('<n id="1" g="f" fs="x">policière</n>\n<n id="2" g="m" elide="0">hibou</n>'
+                      '<n id="3" g="q">bad</n>', [{"s": "officer"}, {"s": "owl"}, {"s": "z"}])
+    assert got == {"officer": {"g": "f", "s": "policière", "fs": "x"},
+                   "owl": {"g": "m", "s": "hibou", "elide": False}}, got
+    ks = [e["s"] for e in noun_keys([{"s": "dog", "kind": "N", "loc": ["src/ai/DogAI.hx:1"]},
+
+                                     {"s": "Dog", "kind": "N", "loc": ["src/ai/DogAI.hx:2"]},
+                                     {"s": "dog", "kind": "T", "loc": ["src/ai/DogAI.hx:3"]}])]
+    assert ks == ["dog"], ks
     assert typo("fr", "Attention ! « Oui » : l'agent") == "Attention\u00a0! «\u00a0Oui\u00a0»\u00a0: l’agent"
     assert typo("fr", "<span class='x'>a</span> &rarr; {s:def}") == "<span class='x'>a</span> &rarr; {s:def}"
     print("translate selftest: ok")
@@ -630,7 +721,7 @@ def selftest() -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("cmd", choices=["probe", "run", "build", "status", "selftest"])
+    ap.add_argument("cmd", choices=["probe", "run", "build", "status", "nouns", "selftest"])
     ap.add_argument("--lang", default="fr")
     ap.add_argument("--batches", type=int, default=3, help="probe: how many batches")
     ap.add_argument("--files", help="comma-separated path fragments to restrict the catalog")
@@ -643,6 +734,8 @@ def main() -> int:
         return 0
     if a.cmd == "status":
         return status(a.lang)
+    if a.cmd == "nouns":
+        return nouns(a.lang)
     files = a.files.split(",") if a.files else None
     return run(a.lang, a.batches if a.cmd == "probe" else None, files, a.jobs)
 

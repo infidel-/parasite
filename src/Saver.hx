@@ -38,8 +38,10 @@ class Saver
             }
           catch (e: Dynamic)
             {
-              game.log('Mod [' + modID +
-                '] save data dropped (unserializable): ' + e, COLOR_HINT);
+              game.log(T('Mod [{mod}] save data dropped (unserializable): {error}', {
+                mod: modID,
+                error: e,
+              }), COLOR_HINT);
             }
         }
       game.modData = safeModData;

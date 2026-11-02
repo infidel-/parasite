@@ -102,7 +102,7 @@ class RecruitFollower extends Ordeal
 // get custom name for display
   public override function customName(): String
     {
-      return Loc.tr(name) + ' - ' + Const.capitalize(followerType);
+      return Loc.tr(name) + ' - ' + _CultPower.namesCap[_CultPower.names.indexOf(followerType)];
     }
 
 // handle member death

@@ -45,12 +45,18 @@ class VenaArcanumWake
         {
           var penalty = rollResourcePayout();
           cult.resources.dec('combat', penalty);
-          cult.logsg('overdrawn pulse bank bleeds -' + penalty + ' combat resource.');
+          cult.logsg(T('{cult} overdrawn pulse bank bleeds {n, plural, one{-# combat resource} other{-# combat resources}}.', {
+            cult: cult,
+            n: penalty,
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('combat', amount);
-      cult.logsg('arterial reservoir swells +' + amount + ' combat resource.');
+      cult.logsg(T('{cult} arterial reservoir swells {n, plural, one{+# combat resource} other{+# combat resources}}.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles veil chant choice
@@ -61,13 +67,20 @@ class VenaArcanumWake
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'combat');
           cult.effects.add(setback);
-          cult.logsg('feedback howls corrodes into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} feedback howls corrodes into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new IncreasePower(game, turns, 'combat');
       cult.effects.add(effect);
-      cult.log('vena arcanum choir crowns ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} vena arcanum choir crowns {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles bone seal choice
@@ -78,17 +91,20 @@ class VenaArcanumWake
           var ai = cult.getMemberByID(targetID);
           if (ai != null &&
               ai.addTrait(TRAIT_ALCOHOLIC))
-            ai.log('staggers from sour sealant and embraces the alcoholic flaw.');
+            ai.log(T('{ai:The} staggers from sour sealant and embraces the alcoholic flaw.', { ai: ai }));
           return;
         }
       var granted = addTrait(cult, targetID, 'combat', true);
       if (granted == null)
         {
-          cult.logsg('bone seal scorches but reveals no new blessing.');
+          cult.logsg(T('{cult} bone seal scorches but reveals no new blessing.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('feels ' + granted.name + ' thread through the upgraded sinew.');
+        ai.log(T('{ai:The} feels {trait} thread through the upgraded sinew.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

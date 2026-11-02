@@ -118,9 +118,13 @@ class Ovum extends RegionObject
   public override function onMoveTo()
     {
       var ovum = game.player.evolutionManager.ovum;
-      var xpInfo = '';
+      var levelstr = T('Ovum level {level}.', { level: ovum.level });
       if (ovum.level < 5)
-        xpInfo = ' ' + T('({xp}/{next} pts)', { xp: ovum.xp, next: EvolutionConst.ovumXP[ovum.level] });
+        levelstr = T('Ovum level {level} ({xp}/{next} pts).', {
+          level: ovum.level,
+          xp: ovum.xp,
+          next: EvolutionConst.ovumXP[ovum.level],
+        });
       var marked = [];
       for (imp in game.player.evolutionManager)
         if (imp.isLocked)
@@ -128,7 +132,6 @@ class Ovum extends RegionObject
       var markedstr = T('No improvements are marked for parthenogenesis.');
       if (marked.length > 0)
         markedstr = T('Marked for parthenogenesis: {list}.', { list: marked.join(', ') });
-      game.log(Const.col('gray', Const.small('[' + T('Ovum level {level}', { level: ovum.level }) +
-        xpInfo + '. ' + markedstr + ']')));
+      game.log(Const.col('gray', Const.small('[' + levelstr + ' ' + markedstr + ']')));
     }
 }

@@ -45,12 +45,18 @@ class PulpitVein
           var failTurns = d100() < 5 ? 10 : 5;
           var drain = new LoseResource(game, failTurns, 'corporate');
           cult.effects.add(drain);
-          cult.logsg('false prophecy drains into ' + Const.col('cult-effect', drain.customName()) + '.');
+          cult.logsg(T('{cult} false prophecy drains into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', drain.customName()),
+          }));
           return;
         }
       var amount = rollResourcePayout();
       cult.resources.inc('corporate', amount);
-      cult.logsg('sermon converts +' + amount + ' corporate resource into believers.');
+      cult.logsg(T('{cult} sermon converts {n, plural, one{+# corporate resource} other{+# corporate resources}} into believers.', {
+        cult: cult,
+        n: amount,
+      }));
     }
 
 // handles the seal sermon choice outcome
@@ -62,13 +68,20 @@ class PulpitVein
           var penaltyTurns = d100() < 5 ? 10 : 5;
           var setback = new DecreasePower(game, penaltyTurns, 'corporate');
           cult.effects.add(setback);
-          cult.logsg('seal fractures into ' + Const.col('cult-effect', setback.customName()) + '.');
+          cult.logsg(T('{cult} seal fractures into {effect}.', {
+            cult: cult,
+            effect: Const.col('cult-effect', setback.customName()),
+          }));
           return;
         }
       var turns = d100() < 5 ? 10 : 5;
       var effect = new GainResource(game, turns, 'corporate');
       cult.effects.add(effect);
-      cult.log('encrypted sermon channels ' + Const.col('cult-effect', effect.customName()) + ' for ' + turns + ' turns.');
+      cult.log(T('{cult} encrypted sermon channels {effect} for {turns, plural, one{# turn} other{# turns}}.', {
+        cult: cult,
+        effect: Const.col('cult-effect', effect.customName()),
+        turns: turns,
+      }));
     }
 
 // handles the vein vow choice outcome
@@ -80,17 +93,20 @@ class PulpitVein
           var aiNeg = cult.getMemberByID(targetID);
           if (aiNeg != null &&
               aiNeg.addTrait(TRAIT_WEAK_WILLED))
-            aiNeg.log('buckles under the vow and gains the weak-willed flaw.');
+            aiNeg.log(T('{ai:The} buckles under the vow and gains the weak-willed flaw.', { ai: aiNeg }));
           return;
         }
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg('vow echoes without gifting new insight.');
+          cult.logsg(T('{cult} vow echoes without gifting new insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);
       if (ai != null)
-        ai.log('swears the ' + granted.name + ' vow, bound to the pulpit.');
+        ai.log(T('{ai:The} swears the {trait} vow, bound to the pulpit.', {
+          ai: ai,
+          trait: granted.name,
+        }));
     }
 }

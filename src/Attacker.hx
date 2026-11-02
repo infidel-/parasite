@@ -200,15 +200,16 @@ class Attacker
           other.alertness += sound.alertness;
     }
 
-// writes attacker log entry
+// writes attacker log entry (a whole T() template with {attacker} in it)
   public function log(s: String, ?col: _TextColor = null)
     {
-      if (ai != null)
-        {
-          ai.log(s, col);
-          return;
-        }
-      game.log(Const.capitalize(theName()) + ' ' + s, col);
+      game.log(s, col);
+    }
+
+// the noun l10n.Loc renders for an {attacker:form} placeholder
+  public function getLocNoun(): _LocNoun
+    {
+      return (ai != null ? ai.getLocNoun() : obj.getLocNoun());
     }
 
 // spends player-host attack energy

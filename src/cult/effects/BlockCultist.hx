@@ -61,7 +61,10 @@ class BlockCultist extends Effect
       var member = cult.getMemberByID(targetID);
       if (member == null)
         return Loc.tr(name);
-      return Loc.tr(name) + ' - ' + member.TheName();
+      return T('{effect} - {ai:The}', {
+        effect: Loc.tr(name),
+        ai: member,
+      });
     }
 
   // returns effect description

@@ -1,6 +1,8 @@
 // defines narcotics junk item
 package items;
 
+import l10n.Loc;
+
 import Const;
 import _PlayerAction;
 import game.Game;
@@ -23,11 +25,10 @@ class Narcotics extends ItemInfo
   override public function getInventoryActions(item: _Item): Array<_PlayerAction>
     {
       var actions = super.getInventoryActions(item);
-      var itemName = item.getName();
       actions.push({
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
-        name: 'Snort ' + Const.col('inventory-item', itemName),
+        name: T('Snort {item}', { item: Loc.colored('inventory-item', item) }),
         nameClean: T('Snort'),
         energy: 0,
         item: item
@@ -56,14 +57,14 @@ class Narcotics extends ItemInfo
         radius: 5,
         alertness: 5
       });
-      host.log('inhales the powder with unsettling confidence.');
+      host.log(T('{ai:The} inhales the powder with unsettling confidence.', { ai: host }));
       host.inventory.removeItem(item);
       host.onEffect(new effects.WhitePowder(game, 10));
 
       var powder = host.effects.get(EFFECT_WHITE_POWDER);
       if (powder != null && powder.points > 30)
         {
-          host.log('convulses as the powder overwhelms their body.');
+          host.log(T('{ai:The} convulses as the powder overwhelms their body.', { ai: host }));
           game.player.onHostDeath(T('Your host overdoses on the white powder and perishes.'));
         }
       return true;

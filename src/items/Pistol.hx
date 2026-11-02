@@ -17,8 +17,10 @@ class Pistol extends Weapon
         skill: SKILL_PISTOL,
         minDamage: 1,
         maxDamage: 10,
-        verb1: 'shoot',
-        verb2: 'shoots',
+        textMiss: T('{attacker:The} tries to shoot {target:the}, but misses.'),
+        textMissYou: T('{attacker:The} tries to shoot you, but misses.'),
+        textHit: T('{attacker:The} shoots {target:the} for {damage} damage.'),
+        textHitYou: T('{attacker:The} shoots you for {damage} damage.'),
         type: WEAPON_KINETIC,
         canConceal: true,
         sound: {

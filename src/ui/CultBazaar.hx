@@ -108,7 +108,7 @@ class CultBazaar
           cultWindow.addPlayerAction({
             id: 'bazaarMember',
             type: ACTION_CULT,
-            name: m.TheName(),
+            name: m.getNameCapped(),
             energy: 0,
             obj: { memberID: memberID },
             f: function() {
@@ -143,7 +143,7 @@ class CultBazaar
           cultWindow.addPlayerAction({
             id: 'bazaarTrainMember',
             type: ACTION_CULT,
-            name: m.TheName(),
+            name: m.getNameCapped(),
             energy: 0,
             obj: { memberID: memberID },
             f: function() {
@@ -275,14 +275,13 @@ class CultBazaar
 // adds one training action entry for melee or ranged weapon skill
   function addTrainingAction(args: _TrainActionArgs, option: _TrainingOption)
     {
-      var weaponName = args.weapon.getName();
       var cult = game.cults[0];
       var canAfford =
         (cult.resources.money >= option.moneyCost &&
          cult.resources.combat >= option.combatCost);
       // tr: COM = combat resource (the cult resource abbreviation)
       var text = T('{weapon} +{amount}% ({money}, {combat} COM)', {
-        weapon: weaponName,
+        weapon: args.weapon,
         amount: option.amount,
         money: Const.col('cult-power', option.moneyCost) + Icon.money,
         combat: Const.col('cult-power', option.combatCost),
@@ -386,8 +385,11 @@ class CultBazaar
       // after training, return to follower picker for quicker consecutive assignments
       cultWindow.setMenuState(STATE_BAZAAR_TRAIN_MEMBER);
       cultWindow.updateActions();
-      game.logsg(member.TheName() + ' trains ' + args.weapon.getName() +
-        ' by ' + Std.int(trainAmount) + '%.');
+      game.logsg(T('{ai:The} trains {weapon} by {amount}%.', {
+        ai: member,
+        weapon: args.weapon,
+        amount: Std.int(trainAmount),
+      }));
     }
 
 // builds list of equipment options for a member
