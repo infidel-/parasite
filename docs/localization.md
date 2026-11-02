@@ -135,6 +135,24 @@ translation of the key.
 - Missing translations fall back to English. Every miss is counted.
 - `<html lang>` follows the active language.
 
+## Fonts
+
+- `tools/loc/fonts.py` (run by every `translate.py build`) checks each font offered in Options
+  (`Config.fonts`/`fontsTitle`) against the characters the translation actually uses (markup stripped;
+  a character used fewer than 3 times doesn't disqualify a font) with `fc-query`, and writes the
+  allowed lists into the lang file as `fonts`/`fontsTitle`. `--report` lists what each rejected font
+  lacks. Measured: Dusty, DemunLotion, FlipsideBrk have no accents at all; Eurocorp and Xball no `œ`.
+- Options offers only the allowed fonts. `Loc.shownFont` replaces a saved font the language can't
+  render with the language default for the session; the saved choice is kept and returns in English.
+  The default is the lang file's `font`/`fontTitle`, else Virtucorp/Cruiser2015.
+- `--text-font`/`--text-font-title` always end in `, Orkney-Regular` (every European Latin letter), so
+  a missing glyph falls back to a font in the game's style instead of a system font.
+- Alien speech (`Lang.renderText`) scrambles every letter of a cased script, accents included.
+- For later languages: full Europe incl. Greek/Cyrillic is only Xolonium; all European Latin is
+  Orkney. CJK needs bundled fonts (`@font-face` + `unicode-range` in `electron/fonts.css`, the lang
+  file's `font`/`fontTitle` pointing at them), a per-language minimum size, `letter-spacing: 0` (app.css
+  has ~160 letter-spacing rules), `font-synthesis: none`, and `word-break: keep-all` for Korean.
+
 ## Checks
 
 - `cd src && make` runs `loc-test` (`src/l10n/LocTest.hx` under node: formatter, plural, select,

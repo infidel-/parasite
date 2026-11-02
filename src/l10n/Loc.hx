@@ -108,6 +108,28 @@ class Loc
       return new LocColored(col, value);
     }
 
+// the fonts the active language can render, for the Options lists (null: every font, as in English)
+  public static function fonts(title: Bool): Array<String>
+    {
+      if (table == null)
+        load();
+      if (file == null)
+        return null;
+      return (title ? file.fontsTitle : file.fonts);
+    }
+
+// the font shown for a chosen one: the choice when the language can render it, else the language's
+// default (the lang file's font/fontTitle, else the game's)
+  public static function shownFont(chosen: String, title: Bool): String
+    {
+      var list = fonts(title);
+      if (list == null ||
+          list.indexOf(chosen) >= 0)
+        return chosen;
+      var def = (file == null ? null : (title ? file.fontTitle : file.font));
+      return (def != null ? def : (title ? 'Cruiser2015' : 'Virtucorp'));
+    }
+
 // merge a mod's lang file into the active table (mods/<id>/lang/<code>.json)
   public static function merge(json: String)
     {

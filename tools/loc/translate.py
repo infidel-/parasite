@@ -39,6 +39,7 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fonts
 import locfmt  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -663,6 +664,7 @@ def build(code: str) -> None:
     LANG_OUT.mkdir(parents=True, exist_ok=True)
     save_json(LANG_OUT / f"{code}.json", out)
     info(f"build: {len(strings)} strings -> {(LANG_OUT / (code + '.json')).relative_to(ROOT)}")
+    fonts.apply(code)
 
 
 def status(code: str) -> int:

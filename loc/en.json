@@ -14,7 +14,7 @@
    "s": "Config saved. Reload page to apply new settings.",
    "kind": "T",
    "loc": [
-    "src/Config.hx:373"
+    "src/Config.hx:372"
    ],
    "vars": [],
    "where": "Config.save",
@@ -33073,7 +33073,7 @@
    "s": "Title font",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:161"
+    "src/ui/Options.hx:166"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33083,7 +33083,7 @@
    "s": "Text font",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:168"
+    "src/ui/Options.hx:177"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33093,7 +33093,7 @@
    "s": "Font size",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:171"
+    "src/ui/Options.hx:180"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33103,7 +33103,7 @@
    "s": "Overall difficulty",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:176"
+    "src/ui/Options.hx:185"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33113,8 +33113,8 @@
    "s": "Unset",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:177",
-    "src/ui/Options.hx:466"
+    "src/ui/Options.hx:186",
+    "src/ui/Options.hx:475"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33124,8 +33124,8 @@
    "s": "Easy",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:178",
-    "src/ui/Options.hx:467"
+    "src/ui/Options.hx:187",
+    "src/ui/Options.hx:476"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33135,8 +33135,8 @@
    "s": "Normal",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:179",
-    "src/ui/Options.hx:468"
+    "src/ui/Options.hx:188",
+    "src/ui/Options.hx:477"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33146,8 +33146,8 @@
    "s": "Hard",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:180",
-    "src/ui/Options.hx:469"
+    "src/ui/Options.hx:189",
+    "src/ui/Options.hx:478"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33157,7 +33157,7 @@
    "s": "Gameplay",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:186"
+    "src/ui/Options.hx:195"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33167,7 +33167,7 @@
    "s": "Skip tutorial",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:187"
+    "src/ui/Options.hx:196"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33177,7 +33177,7 @@
    "s": "Needs overall difficulty set",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:187"
+    "src/ui/Options.hx:196"
    ],
    "vars": [],
    "where": "Options.new"
@@ -33186,7 +33186,7 @@
    "s": "Enable fullscreen",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:189"
+    "src/ui/Options.hx:198"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33196,43 +33196,13 @@
    "s": "Applies on next launch",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:189"
+    "src/ui/Options.hx:198"
    ],
    "vars": [],
    "where": "Options.new"
   },
   {
    "s": "Enable AI-generated artwork",
-   "kind": "T",
-   "loc": [
-    "src/ui/Options.hx:191"
-   ],
-   "vars": [],
-   "where": "Options.new",
-   "field": "addOptToggle"
-  },
-  {
-   "s": "Advanced",
-   "kind": "T",
-   "loc": [
-    "src/ui/Options.hx:194"
-   ],
-   "vars": [],
-   "where": "Options.new",
-   "field": "addCard"
-  },
-  {
-   "s": "Log lines in HUD",
-   "kind": "T",
-   "loc": [
-    "src/ui/Options.hx:195"
-   ],
-   "vars": [],
-   "where": "Options.new",
-   "field": "addOptSlider"
-  },
-  {
-   "s": "Laptop movement keys (uiojklm,.)",
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:200"
@@ -33242,10 +33212,40 @@
    "field": "addOptToggle"
   },
   {
+   "s": "Advanced",
+   "kind": "T",
+   "loc": [
+    "src/ui/Options.hx:203"
+   ],
+   "vars": [],
+   "where": "Options.new",
+   "field": "addCard"
+  },
+  {
+   "s": "Log lines in HUD",
+   "kind": "T",
+   "loc": [
+    "src/ui/Options.hx:204"
+   ],
+   "vars": [],
+   "where": "Options.new",
+   "field": "addOptSlider"
+  },
+  {
+   "s": "Laptop movement keys (uiojklm,.)",
+   "kind": "T",
+   "loc": [
+    "src/ui/Options.hx:209"
+   ],
+   "vars": [],
+   "where": "Options.new",
+   "field": "addOptToggle"
+  },
+  {
    "s": "Extended gameplay information",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:201"
+    "src/ui/Options.hx:210"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33255,7 +33255,7 @@
    "s": "Shift-click/number repeat action",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:202"
+    "src/ui/Options.hx:211"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33265,7 +33265,7 @@
    "s": "Show mouse cursor on map",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:203"
+    "src/ui/Options.hx:212"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33275,7 +33275,7 @@
    "s": "Switch the language to {lang}?",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:223"
+    "src/ui/Options.hx:232"
    ],
    "vars": [
     "lang"
@@ -33287,7 +33287,7 @@
    "s": "The game reloads; a game in progress is autosaved first.",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:226"
+    "src/ui/Options.hx:235"
    ],
    "vars": [],
    "where": "Options.setLang",
@@ -33297,7 +33297,7 @@
    "s": "Presets",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:425"
+    "src/ui/Options.hx:434"
    ],
    "vars": [],
    "where": "Options.addOptSelect",

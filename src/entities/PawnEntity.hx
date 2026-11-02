@@ -103,6 +103,9 @@ class PawnEntity extends Entity
           family == '')
         return 'sans-serif';
       var trimmed = StringTools.trim(family);
+      // already a css list ('Virtucorp, Orkney-Regular': the font plus its glyph fallback)
+      if (trimmed.indexOf(',') >= 0)
+        return trimmed;
       if (trimmed.indexOf(' ') >= 0)
         return '"' + trimmed + '"';
       return trimmed;

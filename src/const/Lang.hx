@@ -206,18 +206,16 @@ class Lang
           info.ranges.length == 0)
         return s;
 
-// replace only basic latin letters
+      // replace every letter of any cased script (accented Latin, Cyrillic, Greek: a translated bark
+      // stays unreadable too); punctuation, digits and spaces stay
       var buf = new StringBuf();
       for (i in 0...s.length)
         {
-          var code = s.charCodeAt(i);
-          if ((code >= 65 &&
-               code <= 90) ||
-              (code >= 97 &&
-               code <= 122))
+          var c = s.charAt(i);
+          if (c.toLowerCase() != c.toUpperCase())
             buf.add(getRandomGlyph(info));
           else
-            buf.add(s.charAt(i));
+            buf.add(c);
         }
       return buf.toString();
     }

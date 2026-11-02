@@ -3862,5 +3862,31 @@
    "s": "pasteur des jeunes",
    "fs": "pasteure des jeunes"
   }
- }
+ },
+ "fonts": [
+  "Brainstorm",
+  "Eurocorp",
+  "Orkney-Regular",
+  "Probert",
+  "Schnaubelt",
+  "Twobit",
+  "Virtucorp",
+  "Xball",
+  "Xolonium"
+ ],
+ "fontsTitle": [
+  "Alternity",
+  "Cruiser2015",
+  "Horizon",
+  "Montalban",
+  "Orkney-Regular",
+  "Probert",
+  "Rapier-Zero",
+  "Rebellion",
+  "Sigma-Five-Sans",
+  "Sternbach",
+  "Twobit",
+  "Xolonium",
+  "Zebulon"
+ ]
 }

@@ -165,9 +165,8 @@ class Config
 
       loadFromObj(obj);
 #end
-      UI.setVar('--text-font', font);
+      applyFonts();
       UI.setVar('--text-font-size', fontSize + 'px');
-      UI.setVar('--text-font-title', fontTitle);
       applyAiArtSetting();
     }
 
@@ -295,7 +294,7 @@ class Config
       else if (key == 'font')
         {
           font = val;
-          ui.UI.setVar('--text-font', font);
+          applyFonts();
         }
       else if (key == 'fontSize')
         {
@@ -305,7 +304,7 @@ class Config
       else if (key == 'fontTitle')
         {
           fontTitle = val;
-          ui.UI.setVar('--text-font-title', fontTitle);
+          applyFonts();
         }
       else if (key == 'hudLogLines')
         hudLogLines = Const.clamp(Std.parseInt(val), 0, 10);
@@ -390,6 +389,15 @@ class Config
           if (aiArtEnabled)
             menuGL.setBackground(game.ui.mainMenu.getBackgroundUrl());
         }
+    }
+
+// set the font css vars. a font the active language cannot render (accents missing) shows as the
+// language default for this session only: the saved choice is kept and comes back in English.
+// Orkney (every European Latin letter) catches any glyph the chosen font lacks, before a system font
+  function applyFonts()
+    {
+      ui.UI.setVar('--text-font', l10n.Loc.shownFont(font, false) + ', Orkney-Regular');
+      ui.UI.setVar('--text-font-title', l10n.Loc.shownFont(fontTitle, true) + ', Orkney-Regular');
     }
 
   public static var fontsTitle = [

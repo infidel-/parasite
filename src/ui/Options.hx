@@ -155,16 +155,25 @@ class Options extends UIWindow
         });
 
       // title font selector
+      // only the fonts the active language can render; the selection is the font actually shown
       var fontTitles = [];
+      var allowed = Loc.fonts(true);
+      var shown = Loc.shownFont(game.config.fontTitle, true);
       for (f in Config.fontsTitle)
-        fontTitles.push({ font: f, title: f, val: f, isSelected: (game.config.fontTitle == f) });
+        if (allowed == null ||
+            allowed.indexOf(f) >= 0)
+          fontTitles.push({ font: f, title: f, val: f, isSelected: (shown == f) });
       addOptSelect(T('Title font'), 'fontTitle', fontTitles, function (val) {
         game.config.set('fontTitle', val);
       });
       // text font selector
       var fonts = [];
+      allowed = Loc.fonts(false);
+      shown = Loc.shownFont(game.config.font, false);
       for (f in Config.fonts)
-        fonts.push({ font: f, title: f, val: f, isSelected: (game.config.font == f) });
+        if (allowed == null ||
+            allowed.indexOf(f) >= 0)
+          fonts.push({ font: f, title: f, val: f, isSelected: (shown == f) });
       addOptSelect(T('Text font'), 'font', fonts, function (val) {
         game.config.set('font', val);
       });
