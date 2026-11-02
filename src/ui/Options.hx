@@ -2,6 +2,7 @@
 
 package ui;
 
+import l10n.Loc;
 import js.Browser;
 import js.html.DivElement;
 import js.html.InputElement;
@@ -56,30 +57,30 @@ class Options extends UIWindow
       window.appendChild(body);
 
       // ---- AUDIO ----
-      addCard('Audio');
-      addOptSlider('Music volume', game.config.musicVolume, 0, 100, 1, 'int', '',
+      addCard(T('Audio'));
+      addOptSlider(T('Music volume'), game.config.musicVolume, 0, 100, 1, 'int', '',
         function (v) {
           game.config.set('musicVolume', '' + Std.int(v), false);
           game.scene.sounds.musicVolumeChanged();
         });
-      addOptSlider('Effects volume', game.config.effectsVolume, 0, 100, 1, 'int', '',
+      addOptSlider(T('Effects volume'), game.config.effectsVolume, 0, 100, 1, 'int', '',
         function (v) {
           game.config.set('effectsVolume', '' + Std.int(v), false);
         });
-      addOptSlider('Ambience volume', game.config.ambientVolume, 0, 100, 1, 'int', '',
+      addOptSlider(T('Ambience volume'), game.config.ambientVolume, 0, 100, 1, 'int', '',
         function (v) {
           game.config.set('ambientVolume', '' + Std.int(v), false);
           game.scene.sounds.ambientVolumeChanged();
         });
 
       // ---- VIDEO ----
-      addCard('Video');
-      addOptRadio('FPS cap', [30, 60, 75, 90, 144], game.config.vidFpsCap,
+      addCard(T('Video'));
+      addOptRadio(T('FPS cap'), [30, 60, 75, 90, 144], game.config.vidFpsCap,
         function (v) game.config.set('vidFpsCap', '' + v, true));
-      addOptToggle('Show FPS counter', 'vidShowFps', game.config.vidShowFps,
+      addOptToggle(T('Show FPS counter'), 'vidShowFps', game.config.vidShowFps,
         function (on) game.ui.hud.topbar.ensureFps());
-      addOptSelect('Antialiasing', 'vidAntialias', [
-          { title: 'Off', val: '0', isSelected: (game.config.vidAntialias == 0) },
+      addOptSelect(T('Antialiasing'), 'vidAntialias', [
+          { title: T('Off'), val: '0', isSelected: (game.config.vidAntialias == 0) },
           { title: '2×', val: '2', isSelected: (game.config.vidAntialias == 2) },
           { title: '4×', val: '4', isSelected: (game.config.vidAntialias == 4) },
           { title: '8×', val: '8', isSelected: (game.config.vidAntialias == 8) },
@@ -89,7 +90,7 @@ class Options extends UIWindow
           game.scene.view3d.setAA(Std.parseInt(val));
         });
       // ordered cheapest -> most expensive, like the antialiasing row above
-      addOptSelect('Render scale', 'vidRenderScale', [
+      addOptSelect(T('Render scale'), 'vidRenderScale', [
           { title: '50%', val: '50', isSelected: (game.config.vidRenderScale == 50) },
           { title: '75%', val: '75', isSelected: (game.config.vidRenderScale == 75) },
           { title: '100%', val: '100', isSelected: (game.config.vidRenderScale == 100) },
@@ -103,8 +104,8 @@ class Options extends UIWindow
         });
       // changing this recompiles every lit material (NUM_SPOT_LIGHTS is in the program key), so it
       // stalls for a moment on apply — acceptable here, never during play
-      addOptSelect('Lamp lights', 'vidLampLights', [
-          { title: 'Off', val: '0', isSelected: (game.config.vidLampLights == 0) },
+      addOptSelect(T('Lamp lights'), 'vidLampLights', [
+          { title: T('Off'), val: '0', isSelected: (game.config.vidLampLights == 0) },
           { title: '4', val: '4', isSelected: (game.config.vidLampLights == 4) },
           { title: '8', val: '8', isSelected: (game.config.vidLampLights == 8) },
           { title: '12', val: '12', isSelected: (game.config.vidLampLights == 12) },
@@ -115,30 +116,39 @@ class Options extends UIWindow
         });
       // tone-map exposure as a percentage of the authored value. a live uniform, so it previews as the
       // slider moves; not saved per tick (the window close/Enter/Escape writes it, like the volumes)
-      addOptSlider('Brightness', game.config.vidBrightness, 50, 150, 5, 'int', '%',
+      addOptSlider(T('Brightness'), game.config.vidBrightness, 50, 150, 5, 'int', '%',
         function (v) {
           game.config.set('vidBrightness', '' + Std.int(v), false);
           game.scene.view3d.setExposure(Std.int(v));
         });
       // the two post-process passes, both plain enabled flips (see render.View.setBloom/setAO)
-      addOptToggle('Bloom', 'vidBloom', game.config.vidBloom,
+      addOptToggle(T('Bloom'), 'vidBloom', game.config.vidBloom,
         function (on) game.scene.view3d.setBloom(on));
-      addOptToggle('Ambient occlusion', 'vidAO', game.config.vidAO,
+      addOptToggle(T('Ambient occlusion'), 'vidAO', game.config.vidAO,
         function (on) game.scene.view3d.setAO(on));
 
       // ---- INTERFACE ----
-      addCard('Interface');
-      addOptSlider('Repeat delay', game.config.repeatDelay, 0, 500, 10, 'int', 'ms',
+      addCard(T('Interface'));
+      // language selector: a change reloads the game, so every window and table is rebuilt in it
+      var langs = [];
+      for (c in Loc.languages())
+        langs.push({
+          title: (Loc.NAMES.exists(c) ? Loc.NAMES[c] : c),
+          val: c,
+          isSelected: (Loc.lang() == c),
+        });
+      addOptSelect(T('Language'), 'lang', langs, setLang);
+      addOptSlider(T('Repeat delay'), game.config.repeatDelay, 0, 500, 10, 'int', 'ms',
         function (v) {
           game.config.set('repeatDelay', '' + Std.int(v), false);
         });
-      addOptSlider('Map scale', game.config.mapScale * 100, 10, 1000, 10, 'round', '%',
+      addOptSlider(T('Map scale'), game.config.mapScale * 100, 10, 1000, 10, 'round', '%',
         function (v) {
           game.config.set('mapScale', '' + Const.round(v / 100.0), false);
           Const.TILE_SIZE = Std.int(Const.TILE_SIZE_CLEAN * game.config.mapScale);
           game.scene.updateCamera();
         });
-      addOptSlider('Minimap scale', game.config.minimapScale * 100, 60, 1000, 20, 'round', '%',
+      addOptSlider(T('Minimap scale'), game.config.minimapScale * 100, 60, 1000, 20, 'round', '%',
         function (v) {
           game.config.set('minimapScale', '' + Const.round(v / 100.0), false);
           game.ui.hud.minimap.update();
@@ -148,49 +158,49 @@ class Options extends UIWindow
       var fontTitles = [];
       for (f in Config.fontsTitle)
         fontTitles.push({ font: f, title: f, val: f, isSelected: (game.config.fontTitle == f) });
-      addOptSelect('Title font', 'fontTitle', fontTitles, function (val) {
+      addOptSelect(T('Title font'), 'fontTitle', fontTitles, function (val) {
         game.config.set('fontTitle', val);
       });
       // text font selector
       var fonts = [];
       for (f in Config.fonts)
         fonts.push({ font: f, title: f, val: f, isSelected: (game.config.font == f) });
-      addOptSelect('Text font', 'font', fonts, function (val) {
+      addOptSelect(T('Text font'), 'font', fonts, function (val) {
         game.config.set('font', val);
       });
-      addOptSlider('Font size', game.config.fontSize, 8, 40, 1, 'int', '',
+      addOptSlider(T('Font size'), game.config.fontSize, 8, 40, 1, 'int', '',
         function (v) {
           game.config.set('fontSize', '' + v, false);
         });
       // overall difficulty + inline PRESETS button
-      addOptSelect('Overall difficulty', 'difficulty', [
-          { title: 'Unset', val: '0', isSelected: (game.config.difficulty == 0) },
-          { title: 'Easy', val: '1', isSelected: (game.config.difficulty == 1) },
-          { title: 'Normal', val: '2', isSelected: (game.config.difficulty == 2) },
-          { title: 'Hard', val: '3', isSelected: (game.config.difficulty == 3) },
+      addOptSelect(T('Overall difficulty'), 'difficulty', [
+          { title: T('Unset'), val: '0', isSelected: (game.config.difficulty == 0) },
+          { title: T('Easy'), val: '1', isSelected: (game.config.difficulty == 1) },
+          { title: T('Normal'), val: '2', isSelected: (game.config.difficulty == 2) },
+          { title: T('Hard'), val: '3', isSelected: (game.config.difficulty == 3) },
         ],
         function (val) { game.config.set('difficulty', val); },
         true);
 
       // ---- GAMEPLAY ----
-      addCard('Gameplay');
-      addOptToggle('Skip tutorial <span class="evolution-tip opt-help" data-tip="Needs overall difficulty set">?</span>',
+      addCard(T('Gameplay'));
+      addOptToggle(T('Skip tutorial') + ' <span class="evolution-tip opt-help" data-tip="' + T('Needs overall difficulty set') + '">?</span>',
         'skipTutorial', game.config.skipTutorial);
-      addOptToggle('Enable fullscreen <span class="evolution-tip opt-help" data-tip="Applies on next launch">?</span>',
+      addOptToggle(T('Enable fullscreen') + ' <span class="evolution-tip opt-help" data-tip="' + T('Applies on next launch') + '">?</span>',
         'fullscreen', game.config.fullscreen);
-      addOptToggle('Enable AI-generated artwork', 'aiArtEnabled', game.config.aiArtEnabled);
+      addOptToggle(T('Enable AI-generated artwork'), 'aiArtEnabled', game.config.aiArtEnabled);
 
       // ---- ADVANCED ----
-      addCard('Advanced');
-      addOptSlider('Log lines in HUD', game.config.hudLogLines, 1, 10, 1, 'int', '',
+      addCard(T('Advanced'));
+      addOptSlider(T('Log lines in HUD'), game.config.hudLogLines, 1, 10, 1, 'int', '',
         function (v) {
           game.config.set('hudLogLines', '' + Std.int(v), false);
           game.hudMessageList.clear();
         });
-      addOptToggle('Laptop movement keys (uiojklm,.)', 'laptopKeyboard', game.config.laptopKeyboard);
-      addOptToggle('Extended gameplay information', 'extendedInfo', game.config.extendedInfo);
-      addOptToggle('Shift-click/number repeat action', 'shiftLongActions', game.config.shiftLongActions);
-      addOptToggle('Show mouse cursor on map', 'mouseEnabled', game.config.mouseEnabled);
+      addOptToggle(T('Laptop movement keys (uiojklm,.)'), 'laptopKeyboard', game.config.laptopKeyboard);
+      addOptToggle(T('Extended gameplay information'), 'extendedInfo', game.config.extendedInfo);
+      addOptToggle(T('Shift-click/number repeat action'), 'shiftLongActions', game.config.shiftLongActions);
+      addOptToggle(T('Show mouse cursor on map'), 'mouseEnabled', game.config.mouseEnabled);
 
       finishCard();
       // start with only the first MAX_OPEN cards expanded
@@ -203,6 +213,34 @@ class Options extends UIWindow
         game.scene.sounds.play('window-close');
         game.config.save(false);
         game.ui.state = UISTATE_MAINMENU;
+      });
+    }
+
+// confirm a language change, then save it and reload into it (an ongoing game is autosaved)
+  function setLang(val: String)
+    {
+      var params: _YesNoParams = {
+        text: T('Switch the language to {lang}?', {
+          lang: (Loc.NAMES.exists(val) ? Loc.NAMES[val] : val),
+        }),
+        sub: T('The game reloads; a game in progress is autosaved first.'),
+        back: UISTATE_OPTIONS,
+        func: function(yes: Bool) {
+          if (!yes)
+            {
+              var sel: SelectElement = cast Browser.document.getElementById('option-lang');
+              sel.value = Loc.lang();
+              return;
+            }
+          game.config.set('lang', val);
+          game.config.save(false);
+          Loc.reload();
+        }
+      };
+      game.ui.event({
+        type: UIEVENT_STATE,
+        state: UISTATE_YESNO,
+        obj: params,
       });
     }
 
@@ -384,7 +422,7 @@ class Options extends UIWindow
         {
           var pb = Browser.document.createDivElement();
           pb.className = 'options-presets';
-          pb.innerHTML = 'Presets';
+          pb.innerHTML = T('Presets');
           pb.onclick = function (e) {
             game.scene.sounds.play('click-menu');
             game.scene.sounds.play('window-close');
@@ -425,10 +463,10 @@ class Options extends UIWindow
   override function update()
     {
       var options = [
-        { title: 'Unset', val: '0' },
-        { title: 'Easy', val: '1' },
-        { title: 'Normal', val: '2' },
-        { title: 'Hard', val: '3' },
+        { title: T('Unset'), val: '0' },
+        { title: T('Easy'), val: '1' },
+        { title: T('Normal'), val: '2' },
+        { title: T('Hard'), val: '3' },
       ];
       for (idx => info in game.profile.object.difficultyPresets)
         options.push({ title: info.name, val: '' + (- idx - 1) });

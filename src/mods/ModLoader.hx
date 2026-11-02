@@ -1,6 +1,7 @@
 // renderer-side mod loader
 package mods;
 
+import l10n.Loc;
 import game.Game;
 import js.Browser.console;
 
@@ -83,6 +84,31 @@ class ModLoader
 #end
     }
 
+// merge the mod's lang/<code>.json, if it ships one for the active language, into the table
+  static function loadLang(info: ModInfo): js.lib.Promise<Dynamic>
+    {
+      var code = Loc.lang();
+      if (code == 'en' ||
+          code == 'pseudo')
+        return js.lib.Promise.resolve(null);
+      return js.Browser.window.fetch('mod://' + info.id + '/lang/' + code + '.json')
+        .then(function(res: js.html.Response): js.lib.Promise<String> {
+          return (res.ok ? res.text() : js.lib.Promise.resolve(null));
+        })
+        .then(function(text: String) {
+          if (text != null)
+            {
+              Loc.merge(text);
+              console.log('[mods] lang: ' + info.id + ' ' + code);
+            }
+          return null;
+        })
+        .catchError(function(e) {
+          console.log('[mods] lang: ' + info.id + ' has no ' + code + ' (' + e + ')');
+          return null;
+        });
+    }
+
 // import one mod's entry module, build per-mod parasite object, call init() in try/catch
   static function loadOne(info: ModInfo): js.lib.Promise<Dynamic>
     {
@@ -105,8 +131,10 @@ class ModLoader
         fx: ModFx.forMod(info.id),
       };
 
-      var promise: js.lib.Promise<Dynamic> =
-        js.Syntax.code("import({0})", url);
+      // the mod's translations go in before its entry runs, so its static init already sees them
+      var promise: js.lib.Promise<Dynamic> = loadLang(info).then(function(_) {
+        return js.Syntax.code("import({0})", url);
+      });
 
       return promise
         .then(function(_) {

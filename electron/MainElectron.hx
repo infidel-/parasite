@@ -77,6 +77,77 @@ class MainElectron
       return 'resources/app/sound/';
     }
 
+// lang file dir: the generated electron/lang/<code>.json tables, copied into the app by the build
+  static function langDir(): String
+    {
+      if (Node.process.platform == 'darwin')
+        return Path.join(App.getAppPath(), 'lang');
+      return 'resources/app/lang/';
+    }
+
+// Steam API language names -> our language codes (only codes with a lang file are ever used)
+  static var STEAM_LANGS = [
+    'english' => 'en',
+    'french' => 'fr',
+    'german' => 'de',
+    'spanish' => 'es',
+    'latam' => 'es-419',
+    'italian' => 'it',
+    'polish' => 'pl',
+    'brazilian' => 'pt-BR',
+    'portuguese' => 'pt',
+    'russian' => 'ru',
+    'ukrainian' => 'uk',
+    'turkish' => 'tr',
+    'czech' => 'cs',
+    'hungarian' => 'hu',
+    'romanian' => 'ro',
+    'dutch' => 'nl',
+    'schinese' => 'zh-CN',
+    'tchinese' => 'zh-TW',
+    'japanese' => 'ja',
+    'koreana' => 'ko',
+  ];
+
+// pick the active language and read its lang file: settings.json lang, else the Steam game
+// language, else en. pseudo (debug pseudo-localization) needs no file
+  static function langBoot(): _LocBoot
+    {
+      var available = [ 'en' ];
+      try {
+        for (f in Fs.readdirSync(langDir()))
+          if (StringTools.endsWith(f, '.json'))
+            available.push(f.substr(0, f.length - 5));
+      }
+      catch (e: Dynamic) {}
+      var code: String = null;
+      try {
+        var obj: { lang: String } = Json.parse(Fs.readFileSync(getSettingsPath(), 'utf8'));
+        code = obj.lang;
+      }
+      catch (e: Dynamic) {}
+      if ((code == null || code == '') &&
+          steamClient != null)
+        {
+          try {
+            code = STEAM_LANGS.get(steamClient.apps.currentGameLanguage());
+          }
+          catch (e: Dynamic)
+            {
+              mlog('[lang] steam language read failed: ' + e);
+            }
+        }
+      if (code != 'pseudo' &&
+          available.indexOf(code) < 0)
+        code = 'en';
+      return {
+        code: code,
+        available: available,
+        json: ((code == 'en' || code == 'pseudo') ? null :
+          safeReadFile(Path.join(langDir(), code + '.json'))),
+      };
+    }
+
 // debug-only write dir under userData/debug
   static function debugDir(): String
     {
@@ -747,6 +818,11 @@ class MainElectron
         e.returnValue = safeWriteFile(writablePath('settings.json'), cast data);
       });
 
+      // active language + its lang file
+      IpcMain.on('host:lang', function(e) {
+        untyped e.returnValue = langBoot();
+      });
+
       // profile
       IpcMain.on('host:profile:read', function(e) {
         untyped e.returnValue = safeReadFile(writablePath('profile.json'));
@@ -910,6 +986,11 @@ class MainElectron
       // window control
       IpcMain.handle('host:quit', function(e) {
         App.quit();
+      });
+      // reload the renderer (language change): location.reload() is a navigation, and will-navigate
+      // blocks every navigation in the window, so the page cannot do it itself
+      IpcMain.handle('host:reload', function(e) {
+        win.webContents.reload();
       });
       // minimise/restore, for driving the game over CDP: a minimised window stops compositing, so
       // every PAGE call (evaluate_script, take_screenshot) hangs until the debugger's own timeout

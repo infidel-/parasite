@@ -33,6 +33,7 @@ contextBridge.exposeInMainWorld('host', {
     writeMeta: (slotID, data) => ipcRenderer.sendSync('host:save:writeMeta', slotID, data),
     delete:    (slotID)       => ipcRenderer.sendSync('host:save:delete', slotID),
   },
+  lang: () => ipcRenderer.sendSync('host:lang'),
   consoleHistory: {
     read:   ()     => ipcRenderer.sendSync('host:console:read'),
     write:  (data) => ipcRenderer.sendSync('host:console:write', data),
@@ -54,6 +55,7 @@ contextBridge.exposeInMainWorld('host', {
   },
 
   quit:          ()   => ipcRenderer.invoke('host:quit'),
+  reload:        ()   => ipcRenderer.invoke('host:reload'),
 
   // park/wake the window while driving the game over CDP. a minimised window stops compositing, so
   // every PAGE call hangs until the debugger times out — raise BEFORE touching the page, and never

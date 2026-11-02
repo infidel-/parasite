@@ -20,6 +20,7 @@ class Console
   var cultConsole: Cult;
   var habitatConsole: HabitatConsole;
   var modsConsole: Mods;
+  var locConsole: LocConsole;
   var perfConsole: Perf;
   public var completion: ConsoleCompletion;
 
@@ -39,6 +40,7 @@ class Console
       cultConsole = new Cult(this);
       habitatConsole = new HabitatConsole(this);
       modsConsole = new Mods(this);
+      locConsole = new LocConsole(this);
       perfConsole = new Perf(this);
       completion = new ConsoleCompletion(this);
     }
@@ -154,6 +156,7 @@ class Console
               'learn region, ' +
               'learn timeline, ' +
               'load - load game,<br/>' +
+              'loc [code|pseudo|missing] - language, pseudo-localization, untranslated strings,<br/>' +
               //
               'oa - organ action,<br/>' +
               'mods [list|enable <id>|disable <id>|errors|rescan],<br/>' +
@@ -197,6 +200,11 @@ class Console
           // XXX load game
           if (arr[0] == 'load' || arr[0] == 'lo')
             game.load(1);
+
+          // XXX loc [code|pseudo|missing] - language switch, pseudo-localization, untranslated
+          else if (Const.isDebug &&
+              arr[0] == 'loc')
+            locConsole.run(arr);
 
           else if (Const.isDebug)
             learnConsole.run(cmd);

@@ -1,6 +1,7 @@
 // console tab-completion + redis-style inline hints
 package console;
 
+import l10n.Loc;
 import mods.ModRegistry;
 import game.AreaGame;
 
@@ -150,6 +151,12 @@ class ConsoleCompletion
             { lit: 'npcs', next: [ { slot: '[count]' } ] },
             { lit: 'region' },
             { lit: 'timeline' },
+          ] });
+          // loc - language switch / pseudo-localization / untranslated strings
+          rootChildren.push({ lit: 'loc', next: [
+            { lit: 'missing' },
+            { lit: 'pseudo' },
+            { slot: '[code]', values: function() return Loc.languages() },
           ] });
           rootChildren.push({ lit: 'info', next: [
             { lit: 'improvements' },

@@ -34,6 +34,7 @@ class Config
   public var vidBloom: Bool;      // window/lamp glow post pass (see render.View.setBloom); off is a pure perf trade
   public var vidBrightness: Int;  // 3D view exposure, in percent of render.RenderConfig.EXPOSURE (see render.View.setExposure)
 
+  public var lang: String; // language picked in Options; '' = auto (Steam language, else en)
   public var font: String;
   public var fontSize: Int;
   public var fontTitle: String;
@@ -89,6 +90,7 @@ class Config
       // 100% = the authored exposure. purely a viewing comfort knob for dark displays, not a perf one
       vidBrightness = 100;
 
+      lang = '';
       font = 'Virtucorp';
       fontSize = 14;
       fontTitle = 'Cruiser2015';
@@ -127,6 +129,7 @@ class Config
       map['vidBloom'] = '1';
       map['vidBrightness'] = '' + vidBrightness;
 
+      map['lang'] = lang;
       map['font'] = font;
       map['fontSize'] = '' + fontSize;
       map['fontTitle'] = fontTitle;
@@ -287,6 +290,8 @@ class Config
           applyAiArtSetting();
         }
 
+      else if (key == 'lang')
+        lang = val;
       else if (key == 'font')
         {
           font = val;

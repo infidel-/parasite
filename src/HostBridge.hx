@@ -35,6 +35,9 @@ class HostBridge
 // delete a slot (removes both the save and its meta sidecar)
   public static function saveDelete(slotID: Int): Void h().save.delete(slotID);
 
+// active language + its lang file (main picks: settings lang, else Steam language, else en)
+  public static function langRead(): _LocBoot return h().lang();
+
 // console history.json read/write/exists
   public static function consoleHistoryRead(): String return h().consoleHistory.read();
   public static function consoleHistoryWrite(data: String): Void h().consoleHistory.write(data);
@@ -56,6 +59,8 @@ class HostBridge
 
 // window control
   public static function quit(): Void h().quit();
+// reload the renderer (the page's own location.reload() is blocked with every other navigation)
+  public static function reload(): Void h().reload();
 
 // register a callback fired on OS window focus/blur (focused: Bool)
   public static function onFocusChange(cb: Bool -> Void): Void h().onFocusChange(cb);

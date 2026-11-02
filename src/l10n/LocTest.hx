@@ -1,0 +1,138 @@
+// self-check for loc.Loc (formatter, plural/select, English and French noun forms, pseudo):
+// compiled and run under node by the src Makefile on every build; exits 1 on any failure
+package l10n;
+
+class LocTest
+{
+  static var fails = 0;
+
+  static function main()
+    {
+      english();
+      french();
+      pseudo();
+      out(fails == 0 ? 'loc-test: ok' : 'loc-test: ' + fails + ' FAILED');
+      if (fails > 0)
+        js.Syntax.code("process.exit(1)");
+    }
+
+// English: identity, plural, noun forms, select, colored spans, broken templates
+  static function english()
+    {
+      Loc.init('en', null);
+      eq(Loc.tr('Hello.'), 'Hello.');
+      var turns = '{n, plural, one{# turn} other{# turns}}';
+      eq(Loc.fmt(turns, { n: 1 }), '1 turn');
+      eq(Loc.fmt(turns, { n: 3 }), '3 turns');
+      eq(Loc.fmt('{n, plural, =0{none} one{one} other{#}}', { n: 0 }), 'none');
+      eq(Loc.fmt('{s:The} hesitates to attack you.', { s: noun('soldier', 'm') }),
+        'The soldier hesitates to attack you.');
+      eq(Loc.fmt('You see {s:a}.', { s: noun('officer', 'f') }), 'You see an officer.');
+      eq(Loc.fmt('{s:The} waits.', { s: name('John Smith', 'm') }), 'John Smith waits.');
+      eq(Loc.fmt('{s:The} waits.', { s: phrase('your host', 'm') }), 'Your host waits.');
+      var his = '{s, select, m{his} f{her} other{its}}';
+      eq(Loc.fmt(his, { s: noun('dog', 'n') }), 'its');
+      eq(Loc.fmt(his, { s: name('Ann', 'f') }), 'her');
+      eq(Loc.fmt('{n, plural, one{# {what}} other{# {what}s}}', { n: 2, what: 'clue' }), '2 clues');
+      eq(Loc.fmt('You find {i:a}.', { i: Loc.colored('inventory-item', noun('pistol', 'n')) }),
+        "You find <span style='color:var(--text-color-inventory-item)'>a pistol</span>.");
+      eq(Loc.fmt('{oops', { oops: 1 }), '{oops');
+      eq(Loc.names('{a:The} {n, plural, one{# {b}} other{#}} {a}').join(','), 'a,n,b');
+    }
+
+// French: table lookup, elision, articles, feminine variants, de/à contractions, names, plural
+  static function french()
+    {
+      Loc.init('fr', haxe.Json.stringify({
+        strings: {
+          'Hello.': 'Bonjour.',
+          '{s:The} hesitates.': '{s:Def} hésite.',
+        },
+        nouns: {
+          'soldier': { g: 'm', s: 'soldat' },
+          'agent': { g: 'm', s: 'agent' },
+          'police officer': { g: 'm', s: 'policier', fs: 'policière' },
+          'secretary': { g: 'f', s: 'secrétaire' },
+          'hero': { g: 'm', s: 'héros', elide: false },
+        },
+      }));
+      eq(Loc.tr('Hello.'), 'Bonjour.');
+      eq(Loc.fmt(Loc.tr('{s:The} hesitates.'), { s: noun('soldier', 'm') }), 'Le soldat hésite.');
+      eq(Loc.fmt('{s:def}|{s:indef}|{s:de}|{s:a}', { s: noun('soldier', 'm') }),
+        'le soldat|un soldat|du soldat|au soldat');
+      eq(Loc.fmt('{s:Def}|{s:de}|{s:a}', { s: noun('agent', 'f') }), 'L’agent|de l’agent|à l’agent');
+      eq(Loc.fmt('{s:def}|{s:def}', { s: noun('police officer', 'f') }), 'la policière|la policière');
+      eq(Loc.fmt('{s:def}', { s: noun('police officer', 'm') }), 'le policier');
+      eq(Loc.fmt('{s, select, m{il} f{elle} other{il}}', { s: noun('police officer', 'f') }), 'elle');
+      eq(Loc.fmt('{s:def}|{s:de}|{s:a}', { s: noun('secretary', 'm') }),
+        'la secrétaire|de la secrétaire|à la secrétaire');
+      eq(Loc.fmt('{s:def}', { s: noun('hero', 'm') }), 'le héros');
+      eq(Loc.fmt('{a:de}|{b:de}|{b:a}', { a: name('Alice', 'f'), b: name('Bob', 'm') }), 'd’Alice|de Bob|à Bob');
+      var tours = '{n, plural, one{# tour} other{# tours}}';
+      eq(Loc.fmt(tours, { n: 0 }), '0 tour');
+      eq(Loc.fmt(tours, { n: 2 }), '2 tours');
+      Loc.tr('Not translated.');
+      Loc.fmt('{s:def}', { s: noun('missing noun', 'm') });
+      eq(Loc.missingList().join('|'), '1× Not translated.|1× noun: missing noun|1× missing noun');
+    }
+
+// pseudo: letters accented, syntax and markup intact, marked and padded
+  static function pseudo()
+    {
+      Loc.init('pseudo', null);
+      var p = Loc.tr('Hello {n} <b class=x>bold</b> &rarr; %name%');
+      eq(p.indexOf('{n}') > 0 &&
+        p.indexOf('<b class=x>') > 0 &&
+        p.indexOf('&rarr;') > 0 &&
+        p.indexOf('%name%') > 0 &&
+        p.indexOf('Ĥéļļö') == 1 &&
+        StringTools.startsWith(p, '⟦') &&
+        StringTools.endsWith(p, '~⟧'), true);
+      var t = Loc.fmt(Loc.tr('{n, plural, one{# turn} other{# turns}}'), { n: 2 });
+      eq(t.indexOf('2 ţûŕñš') > 0, true);
+    }
+
+// noun argument helpers
+  static function noun(key: String, gender: String): _LocNoun
+    {
+      return {
+        key: key,
+        kind: LOC_NOUN,
+        gender: gender,
+      };
+    }
+
+  static function name(key: String, gender: String): _LocNoun
+    {
+      return {
+        key: key,
+        kind: LOC_NAME,
+        gender: gender,
+      };
+    }
+
+  static function phrase(key: String, gender: String): _LocNoun
+    {
+      return {
+        key: key,
+        kind: LOC_PHRASE,
+        gender: gender,
+      };
+    }
+
+// compare and report
+  static function eq(got: Dynamic, want: Dynamic, ?pos: haxe.PosInfos)
+    {
+      // got/want are strings or bools, compared as such
+      if (got == want)
+        return;
+      fails++;
+      out('FAIL line ' + pos.lineNumber + ': got [' + got + '] want [' + want + ']');
+    }
+
+// print one line to the node console
+  static function out(s: String)
+    {
+      js.Syntax.code("console.log({0})", s);
+    }
+}
