@@ -19,6 +19,8 @@ logs and manifests in `C:\steamcmd\output\`.
   `md-to-steam.js`). A new one gets a new exclusion.
 
 ## Releasing
+0. Localization check (CLAUDE.md rule): `python3 tools/loc/extract.py --strict` lists untranslated strings and
+   missing nouns for every shipped language; `make loc lang=<code>` fills them. Tell the user what was missing.
 1. Bump `src/VERSION`, commit, `make mod-sdk`.
 2. `make steam-upload preview=1` (it refuses while any shipped language has untranslated strings, and
    lists them: run `make loc`, or pass `allow-stale=1` to ship English fallbacks knowingly), then read "Changes to baseline manifest" in `C:\steamcmd\output\depot_build_1920321.log`.

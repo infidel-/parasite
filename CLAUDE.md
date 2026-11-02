@@ -32,6 +32,8 @@ the war story there. A rule nobody can act on without opening the doc anyway bel
 
 ## Project rules
 
+- **Deferred work lives in [`TODO.md`](TODO.md)** — read it before starting work in an area it names; add an entry when a known issue is left for later, remove it when done.
+- **A RELEASE NEEDS A LOCALIZATION CHECK FIRST.** When the user asks for a release (any `steam-upload`, `steam-demo-upload` or itch push, staging or live): run `python3 tools/loc/extract.py --strict` (untranslated strings and missing nouns per shipped language), translate what it lists (`make loc lang=<code>`), and REPORT what was missing and what was updated before uploading. Never pass `allow-stale=1` unasked. Steps in [`docs/steam-release.md`](docs/steam-release.md).
 - NEVER detach HEAD! NEVER!
 - NEVER sweep stray .md files (review reports, notes, scratch docs) into commits unless directly asked; check `git status` for them before `git add -A`, or stage explicit paths.
 - ALWAYS run tests at the end of each task: cd src/ && make
