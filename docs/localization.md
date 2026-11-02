@@ -172,6 +172,8 @@ translation of the key.
   English/French forms, pseudo), then `extract.py --check`. The check prints
   `loc: N strings (+a -b since last build) · fr: x new (y changed), z removed`. That line is the
   notification that a string changed and needs translating.
+- `make steam-upload` runs `extract.py --strict`: it fails, naming up to 30 untranslated strings per
+  language, unless `allow-stale=1`.
 - Console (debug): `loc` (current + available), `loc <code>`, `loc pseudo` (accented, +30%
   length, `⟦…⟧`: any plain English left on screen is a string that skipped the markers, and
   overflow shows), `loc missing` (strings shown without a translation this session).

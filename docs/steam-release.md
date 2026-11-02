@@ -20,7 +20,8 @@ logs and manifests in `C:\steamcmd\output\`.
 
 ## Releasing
 1. Bump `src/VERSION`, commit, `make mod-sdk`.
-2. `make steam-upload preview=1`, then read "Changes to baseline manifest" in `C:\steamcmd\output\depot_build_1920321.log`.
+2. `make steam-upload preview=1` (it refuses while any shipped language has untranslated strings, and
+   lists them: run `make loc`, or pass `allow-stale=1` to ship English fallbacks knowingly), then read "Changes to baseline manifest" in `C:\steamcmd\output\depot_build_1920321.log`.
    Every Added/Changed/Removed line must be expected.
 3. `make steam-upload branch=staging`.
 4. yuggoth: Properties → Betas → `staging`, update, launch ([`test-box.md`](test-box.md)).

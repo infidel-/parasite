@@ -106,6 +106,7 @@ steam-docs:
 # usage: make steam-upload [preview=1] [branch=staging]
 steam-upload:
 	git diff --quiet HEAD -- src electron || { echo 'uncommitted src/electron changes'; exit 1; }
+	$(if $(allow-stale),,python3 tools/loc/extract.py --strict || { echo 'untranslated strings in a shipped language (listed above); translate them (make loc) or pass allow-stale=1'; exit 1; })
 	test -f parasite/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip
 	$(MAKE) game-debug main
 	mkdir -p /mnt/c/steamcmd/scripts

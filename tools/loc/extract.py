@@ -286,6 +286,11 @@ def check(entries: list, before: list | None, strict: bool, list_lang: str | Non
             stale = stale or bool(d["new"])
         else:
             parts.append(f"{code}: up to date")
+        if strict and d["new"] and code != list_lang:
+            for e in d["new"][:30]:
+                print(f"  {code} untranslated  {e['loc'][0]}: {e['s'][:100]}")
+            if len(d["new"]) > 30:
+                print(f"  … and {len(d['new']) - 30} more (extract.py --list {code})")
         if code == list_lang:
             for e in d["new"]:
                 print(f"  new  {e['loc'][0]}: {e['s'][:100]}")
