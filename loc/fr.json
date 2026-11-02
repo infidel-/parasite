@@ -557,8 +557,8 @@
    ],
    "where": "Body.updateHost",
    "kind": "T",
-   "t": "aucun",
-   "status": "done",
+   "t": "néant",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -568,8 +568,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« none » appears in 5 places, including likely SKILLS (« compétences », feminine) and TRAITS/EFFECTS (masculine). The masculine « aucun » is the default but is wrong under COMPÉTENCES. Use « aucune » there, or a neutral « néant » everywhere, if the call sites can be split."
+   ]
   },
   "298dc05d5a9552e0": {
    "s": "TRAITS",
@@ -1630,8 +1629,8 @@
     "lang"
    ],
    "kind": "T",
-   "t": "Passer la langue en {lang} ?",
-   "status": "done",
+   "t": "Changer de langue : {lang} ?",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -1641,8 +1640,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "Whether « Passer la langue en {lang} ? » reads well depends on the form of {lang}. If it is the language's native name (« English », « Русский »), a neutral wording like « Changer la langue pour {lang} ? » may suit better."
+   ]
   },
   "1cda5d47379ca3bc": {
    "s": "The game reloads; a game in progress is autosaved first.",
@@ -5779,8 +5777,8 @@
    "where": "TeamMemberAI.onNotice",
    "field": "log",
    "kind": "T",
-   "t": "Vous avez l’impression d’être observé.",
-   "status": "done",
+   "t": "Vous sentez qu’on vous observe.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -15855,8 +15853,8 @@
    ],
    "where": "Jobs.initJobTable",
    "kind": "N",
-   "t": "pépiniériste",
-   "status": "done",
+   "t": "ouvrier de pépinière",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -15866,8 +15864,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« nursery worker » can mean a plant-nursery worker or a childcare worker. The list already has « childcare worker » (44), so the plant sense is likely and « pépiniériste » is kept. If the developer means a worker rather than a grower, « ouvrier de pépinière » is more exact."
+   ]
   },
   "c25883670127711f": {
    "s": "factory assembler",
@@ -21156,8 +21153,8 @@
    ],
    "where": "Jobs.initJobTable",
    "kind": "N",
-   "t": "producteur de journal",
-   "status": "done",
+   "t": "producteur d’actualités",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -21167,8 +21164,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« producteur de journal » could be read as a newspaper job. It was kept because the meaning is still acceptable for a TV news producer."
+   ]
   },
   "fd58cf4c058f5345": {
    "s": "broadcast journalist",
@@ -26083,8 +26079,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Espace - basculer en mode tactique<br>\nÉchap/Entrée - fermer n’importe quelle fenêtre, y compris les dialogues de message<br>\nPavé numérique - déplacement<br>\nPavé num. 5, Z - attendre un tour<br>\n1-3 - choisir une option dans un dialogue de message, de difficulté ou oui/non. 1 correspond à fermer/oui, 2 à non ; pour le choix de difficulté, de gauche à droite : facile, normal, difficile<br>\n; - ouvre la console (surtout utilisée pour le débogage), tapez « help » et appuyez sur Entrée pour voir les commandes disponibles dans la version normale<br>\n<br>\n<b>Actions rapides :</b><br>\nQ + B - fenêtre Corps<br>\nQ + C - fenêtre Culte<br><br>\nQ + E - fenêtre Évolution<br>\nQ + G - fenêtre Objectifs<br>\nQ + L - fenêtre Journal<br>\nQ + T - fenêtre Chronologie<br>\n<br>\n<b>Ciblage :</b><br>\nT - passer en mode ciblage lorsque vous contrôlez un hôte en mode zone<br>\nFlèches / pavé numérique - faire défiler les cibles visibles<br>\nEntrée / pavé num. 5 / clic gauche sur la cible - confirmer la cible choisie<br>\nÉchap - effacer la cible<br>\n<br>\n<b>Inspection :</b><br>\nSurvoler un PNJ ou un objet - afficher une infobulle avec ce que vous savez de lui<br>",
-   "status": "done",
+   "t": "Espace - basculer en mode tactique<br>\nÉchap/Entrée - fermer n’importe quelle fenêtre, y compris les dialogues de message<br>\nPavé numérique - déplacement<br>\nPavé num. 5, Z - attendre un tour<br>\n1-3 - choisir une option dans un dialogue de message, de difficulté ou oui/non. 1 correspond à fermer/oui, 2 à non ; pour le choix de difficulté, de gauche à droite : facile, normale, difficile<br>\n; - ouvre la console (surtout utilisée pour le débogage), tapez « help » et appuyez sur Entrée pour voir les commandes disponibles dans la version normale<br>\n<br>\n<b>Actions rapides :</b><br>\nQ + B - fenêtre Corps<br>\nQ + C - fenêtre Culte<br><br>\nQ + E - fenêtre Évolution<br>\nQ + G - fenêtre Objectifs<br>\nQ + L - fenêtre Journal<br>\nQ + T - fenêtre Chronologie<br>\n<br>\n<b>Ciblage :</b><br>\nT - passer en mode ciblage lorsque vous contrôlez un hôte en mode zone<br>\nFlèches / pavé numérique - faire défiler les cibles visibles<br>\nEntrée / pavé num. 5 / clic gauche sur la cible - confirmer la cible choisie<br>\nÉchap - effacer la cible<br>\n<br>\n<b>Inspection :</b><br>\nSurvoler un PNJ ou un objet - afficher une infobulle avec ce que vous savez de lui<br>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -26094,8 +26090,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The window names (Corps, Culte, Évolution, Objectifs, Journal, Chronologie) and the difficulty labels (facile, normal, difficile) must match their UI translations. Key names are translated (Échap, Entrée, Espace, Flèches, pavé numérique, clic gauche). The `<br>` tags and the stray `<br><br>` are kept as in the source."
+   ]
   },
   "799e64c6338305d4": {
    "s": "Life of a Parasite",
@@ -27828,8 +27823,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Une fois le parasite fixé sur l’hôte potentiel, vous devez maîtriser sa résistance avant de l’envahir. Pour cela, utilisez à plusieurs reprises l’action « Raffermir la prise », qui coûte du temps et de l’énergie au parasite. Normalement, la prise doit atteindre 100 avant l’invasion, mais si votre énergie est assez basse, une autre action se débloque : « Invasion prématurée ». Le parasite tente alors une invasion risquée alors que l’hôte n’est pas totalement maîtrisé. En cas d’échec, le parasite subit des dégâts. En fait, il en subit même en cas de réussite, mais moins.",
-   "status": "done",
+   "t": "Une fois le parasite fixé sur l’hôte potentiel, vous devez maîtriser sa résistance avant de l’envahir. Pour cela, utilisez à plusieurs reprises l’action « Renforcer la prise », qui coûte du temps et de l’énergie au parasite. Normalement, la prise doit atteindre 100 avant l’invasion, mais si votre énergie est assez basse, une autre action se débloque : « Invasion précoce ». Le parasite tente alors une invasion risquée alors que l’hôte n’est pas totalement maîtrisé. En cas d’échec, le parasite subit des dégâts. En fait, il en subit même en cas de réussite, mais moins.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -27839,8 +27834,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The action names « Raffermir la prise » and « Invasion prématurée » must match the labels used for the Harden Grip and Early Invasion actions in the action strings. I could not check that from this batch."
+   ]
   },
   "266695479a949eec": {
    "s": "Keyboard shortcuts",
@@ -28018,8 +28012,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "<p>Une fois l’amélioration Parthénogenèse évoluée, le parasite accède au processus de renaissance. Normalement, si le parasite meurt, la partie est terminée, mais si la renaissance est en place, il passe simplement à la « vie suivante » en subissant quelques pertes. Il vous faut d’abord créer l’objet ovum en mode région. Le processus ressemble à la création d’un microhabitat. Rendez-vous dans les égouts les plus proches, choisissez un bon endroit sur la carte de la région et activez l’action « Créer un ovum ». Choisissez cet endroit avec soin : vous devrez vous y rendre pour modifier les réglages, et le parasite y renaîtra à chaque fois. Pour le moment, l’ovum ne court aucun danger face aux antagonistes, et vous ne pouvez en créer qu’un seul.</p>\n\n<p>Une fois l’ovum créé, marcher sur sa case affiche des informations sur son niveau et sur les améliorations retenues pour la renaissance. Deux actions sont disponibles. « Définir les améliorations » ouvre l’écran permettant de verrouiller ou de déverrouiller les améliorations de base avec lesquelles vous voulez renaître. La seconde action, « Nourrir l’ovum », vous permet de donner votre hôte actuel en pâture à l’ovum, ce qui ajoute des points pour le niveau suivant. Chaque nouveau niveau demande davantage de points, et le niveau de l’ovum est plafonné. Les différents types d’hôtes rapportent des quantités de points différentes. En général, plus le type d’hôte est dangereux, plus l’ovum reçoit de points.</p>\n\n<p>La renaissance se déclenche automatiquement à la mort du parasite. Un nouveau parasite apparaît alors à l’endroit où se trouve l’ovum. Le niveau de l’ovum diminue de un. Si le niveau actuel de l’ovum est de zéro, c’est la mort définitive et la fin de la partie. Les améliorations de base verrouillées restent avec vous ; les autres sont abandonnées et vous recevez un nouvel ensemble d’améliorations de départ. Les améliorations de base sont celles que l’on peut obtenir en ouvrant le processus d’évolution pour la première fois dans le tutoriel. Toutes celles que vous avez acquises par la suite au cours de la partie ne sont pas abandonnées. Il y a toutefois de fortes chances que certaines d’entre elles perdent un niveau, sans descendre en dessous du niveau un. Les points d’évolution accumulés au-delà du niveau actuel d’une amélioration sont également remis à zéro.</p>",
-   "status": "done",
+   "t": "<p>Une fois l’amélioration Parthénogenèse évoluée, le parasite accède au processus de renaissance. Normalement, si le parasite meurt, la partie est terminée, mais si la renaissance est en place, il passe simplement à la « vie suivante » en subissant quelques pertes. Il vous faut d’abord créer l’objet ovum en mode région. Le processus ressemble à la création d’un microhabitat. Rendez-vous dans les égouts les plus proches, choisissez un bon endroit sur la carte de la région et activez l’action « Créer un ovum ». Choisissez cet endroit avec soin : vous devrez vous y rendre pour modifier les réglages, et le parasite y renaîtra à chaque fois. Pour le moment, l’ovum ne court aucun danger face aux antagonistes, et vous ne pouvez en créer qu’un seul.</p>\n\n<p>Une fois l’ovum créé, marcher sur sa case affiche des informations sur son niveau et sur les améliorations retenues pour la renaissance. Deux actions sont disponibles. « Choisir les améliorations » ouvre l’écran permettant de verrouiller ou de déverrouiller les améliorations de base avec lesquelles vous voulez renaître. La seconde action, « Nourrir l’ovum », vous permet de donner votre hôte actuel en pâture à l’ovum, ce qui ajoute des points pour le niveau suivant. Chaque nouveau niveau demande davantage de points, et le niveau de l’ovum est plafonné. Les différents types d’hôtes rapportent des quantités de points différentes. En général, plus le type d’hôte est dangereux, plus l’ovum reçoit de points.</p>\n\n<p>La renaissance se déclenche automatiquement à la mort du parasite. Un nouveau parasite apparaît alors à l’endroit où se trouve l’ovum. Le niveau de l’ovum diminue de un. Si le niveau actuel de l’ovum est de zéro, c’est la mort définitive et la fin de la partie. Les améliorations de base verrouillées restent avec vous ; les autres sont abandonnées et vous recevez un nouvel ensemble d’améliorations de départ. Les améliorations de base sont celles que l’on peut obtenir en ouvrant le processus d’évolution pour la première fois dans le tutoriel. Toutes celles que vous avez acquises par la suite au cours de la partie ne sont pas abandonnées. Il y a toutefois de fortes chances que certaines d’entre elles perdent un niveau, sans descendre en dessous du niveau un. Les points d’évolution accumulés au-delà du niveau actuel d’une amélioration sont également remis à zéro.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -28029,8 +28023,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The action labels « Créer un ovum », « Définir les améliorations » and « Nourrir l’ovum » must match the translated UI action strings elsewhere; check them against the actual action labels."
+   ]
   },
   "2147eae9137f649c": {
    "s": "Region Mode",
@@ -28146,8 +28139,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Lorsque le parasite se déplace sans hôte, la fenêtre d’informations est réduite et n’affiche que les informations générales et ses statistiques. La première ligne contient les informations suivantes : le nombre de tours écoulés depuis le début de la partie, le numéro du sous-tour en cours entre crochets (1 ou 2, puisque le parasite est toujours deux fois plus rapide que les PNJ), et la position x, y dans la zone ou la région, selon le mode en cours. En mode région, la ligne suivante indique le nom de la zone. Après le séparateur commencent les statistiques du parasite : la ligne d’énergie, qui indique l’énergie actuelle et maximale ainsi que la dépense ou le gain d’énergie par tour entre crochets. La ligne suivante indique la santé actuelle et maximale du parasite. Lorsque le parasite est accroché à un hôte sans l’avoir encore envahi, la ligne suivante indique les valeurs actuelle et maximale de la prise. Une fois que vous connaissez l’existence du Groupe, son emblème (un triangle au-dessus d’une barre) apparaît en haut de la fenêtre d’informations. Survolez-le pour afficher les informations sur le Groupe. Sa couleur indique la proximité de l’équipe du Groupe, et un avertissement rouge L’ÉQUIPE EST TOUT PRÈS ! s’affiche dans la fenêtre lorsque l’équipe est presque sur vous.",
-   "status": "done",
+   "t": "Lorsque le parasite se déplace sans hôte, la fenêtre d’informations est réduite et n’affiche que les informations générales et ses statistiques. La première ligne contient les informations suivantes : le nombre de tours écoulés depuis le début de la partie, le numéro du sous-tour en cours entre crochets (1 ou 2, puisque le parasite est toujours deux fois plus rapide que les PNJ), et la position x, y dans la zone ou la région, selon le mode en cours. En mode région, la ligne suivante indique le nom de la zone. Après le séparateur commencent les statistiques du parasite : la ligne d’énergie, qui indique l’énergie actuelle et maximale ainsi que la dépense ou le gain d’énergie par tour entre crochets. La ligne suivante indique la santé actuelle et maximale du parasite. Lorsque le parasite est accroché à un hôte sans l’avoir encore envahi, la ligne suivante indique les valeurs actuelle et maximale de la prise. Une fois que vous connaissez l’existence du Groupe, son emblème (un triangle au-dessus d’une barre) apparaît en haut de la fenêtre d’informations. Survolez-le pour afficher les informations sur le Groupe. Sa couleur indique la proximité de l’équipe du Groupe, et un avertissement rouge L’ÉQUIPE EST TRÈS PROCHE ! s’affiche dans la fenêtre lorsque l’équipe est presque sur vous.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -28157,8 +28150,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« L’ÉQUIPE EST TOUT PRÈS ! » must match the French of the in-game warning string (TEAM IS VERY CLOSE!). Check it against that string's translation."
+   ]
   },
   "40916d8b34adc374": {
    "s": "Info: Host",
@@ -28869,8 +28861,8 @@
    "where": "PediaConst.builtinContents",
    "field": "name",
    "kind": "T",
-   "t": "Info : parasite",
-   "status": "done",
+   "t": "Infos : parasite",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -28880,8 +28872,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "This is the title of a HUD window. I used « Info : parasite » (sentence case). Keep it consistent with the sibling titles (Info: Host and so on)."
+   ]
   },
   "305338f599bbc91f": {
    "s": "<p>The cult operates on an economy of power and money. There are five power types that correspond to spheres of influence: combat, media, lawfare, corporate, and political. Each free member contributes power based on their job group and level. Level 1 members provide 1 point, level 2 members provide 3 points, and level 3 members provide 10 points to their respective power type. Note that some members (mostly civilians) do not provide any power, only income.</p>",
@@ -29114,8 +29105,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p>Pour accomplir une épreuve, vous devez dépenser les ressources requises via les actions « Exercer » du menu de l’épreuve. Chaque membre affecté permet une action par tour du culte. Vous pouvez aussi annuler une épreuve, mais cela compte comme un échec.</p>",
-   "status": "done",
+   "t": "<p>Pour accomplir une épreuve, vous devez dépenser les ressources requises via les actions « Mobiliser » du menu de l’épreuve. Chaque membre affecté permet une action par tour du culte. Vous pouvez aussi annuler une épreuve, mais cela compte comme un échec.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29125,8 +29116,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« Exercer » must match the French label of the \"Wield\" action buttons in the ordeal menu. Check it against that batch."
+   ]
   },
   "4e52662f78a23a6d": {
    "s": "Profane Ordeals",
@@ -29340,8 +29330,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "<p>La priorité détermine le niveau de l’équipe d’agents que le Groupe charge du problème du parasite. En début de partie, le joueur dispose d’un répit avant l’apparition de l’équipe, et chaque élimination complète d’une équipe entraîne aussi un répit. Une fois l’équipe activée, ses membres commencent à enquêter sur les phénomènes et incidents étranges. Au lieu d’augmenter la priorité du Groupe, les actions du joueur décrites ci-dessus réduisent alors la distance entre l’équipe et le joueur. Plus le joueur reste longtemps dans une zone, plus il y a de chances qu’un membre de l’équipe apparaisse à proximité.</p>\n\n<p>Lorsqu’un membre de l’équipe voit le joueur, le message suivant s’affiche dans le journal : « Vous sentez qu’on vous observe. » Cela signifie qu’un des PNJ actuellement visibles à l’écran est un membre de l’équipe. Le mieux est alors de quitter la zone. Si le membre de l’équipe n’est pas alerté après avoir vu le joueur et disparaît, cela compte comme une fuite réussie. Semer des membres de l’équipe augmente un peu la distance avec l’équipe.</p>\n\n<p>Le marqueur du Groupe en haut de la fenêtre d’informations de l’interface suit l’équipe. Il est gris tant qu’il n’y a pas d’équipe, puis vert quand l’équipe est loin, jaune à moyenne distance, orange quand elle est proche et rouge quand elle est très proche. Quand l’équipe est presque sur vous, le marqueur palpite et l’avertissement L’ÉQUIPE EST TOUTE PROCHE ! apparaît. Pendant un combat contre l’équipe, ou dès qu’un veilleur d’habitat repère une embuscade, le marqueur clignote rapidement. En difficulté élevée, le marqueur reste terne et n’indique rien.</p>",
-   "status": "done",
+   "t": "<p>La priorité détermine le niveau de l’équipe d’agents que le Groupe charge du problème du parasite. En début de partie, le joueur dispose d’un répit avant l’apparition de l’équipe, et chaque élimination complète d’une équipe entraîne aussi un répit. Une fois l’équipe activée, ses membres commencent à enquêter sur les phénomènes et incidents étranges. Au lieu d’augmenter la priorité du Groupe, les actions du joueur décrites ci-dessus réduisent alors la distance entre l’équipe et le joueur. Plus le joueur reste longtemps dans une zone, plus il y a de chances qu’un membre de l’équipe apparaisse à proximité.</p>\n\n<p>Lorsqu’un membre de l’équipe voit le joueur, le message suivant s’affiche dans le journal : « Vous sentez qu’on vous observe. » Cela signifie qu’un des PNJ actuellement visibles à l’écran est un membre de l’équipe. Le mieux est alors de quitter la zone. Si le membre de l’équipe n’est pas alerté après avoir vu le joueur et disparaît, cela compte comme une fuite réussie. Semer des membres de l’équipe augmente un peu la distance avec l’équipe.</p>\n\n<p>Le marqueur du Groupe en haut de la fenêtre d’informations de l’interface suit l’équipe. Il est gris tant qu’il n’y a pas d’équipe, puis vert quand l’équipe est loin, jaune à moyenne distance, orange quand elle est proche et rouge quand elle est très proche. Quand l’équipe est presque sur vous, le marqueur palpite et l’avertissement L’ÉQUIPE EST TRÈS PROCHE ! apparaît. Pendant un combat contre l’équipe, ou dès qu’un veilleur d’habitat repère une embuscade, le marqueur clignote rapidement. En difficulté élevée, le marqueur reste terne et n’indique rien.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29351,8 +29341,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The log line « Vous sentez qu’on vous observe. » and the warning L’ÉQUIPE EST TOUTE PROCHE ! must match how those strings are translated elsewhere. Check them against the log and interface batches."
+   ]
   },
   "ad8240ea322b463b": {
    "s": "Team: Deactivation",
@@ -33492,8 +33481,8 @@
    "where": "CarnisBoard.create",
    "field": "button",
    "kind": "T",
-   "t": "Pulper l’ordre du jour",
-   "status": "done",
+   "t": "Broyer l’ordre du jour",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -33503,8 +33492,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« Pulper l’ordre du jour » dépasse les 130 % de longueur et « pulper » est rare. Aucune option plus courte n’est satisfaisante, donc gardé tel quel."
+   ]
   },
   "7153ccbaadec7ee8": {
    "s": "Inject enzyme into the board-table to digest old minutes and spawn new motions.",
@@ -39767,8 +39755,8 @@
    ],
    "kind": "T",
    "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement",
-   "t": "{cult} cède {cost} : +{gain} {power,select,media{médias}lawfare{judiciaire}corporate{entreprise}combat{combat}other{politique}}.",
-   "status": "done",
+   "t": "{cult} échange {cost} contre {gain} en {power, select, combat{pouvoir de combat} media{pouvoir des médias} lawfare{pouvoir de guérilla judiciaire} corporate{pouvoir d’entreprise} political{pouvoir politique} other{pouvoir}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39778,8 +39766,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "I shortened it to fit the limit: « cède {cost} : +{gain} … ». The word « pouvoir » is dropped. The « other » branch carries « politique », and « combat » is an explicit case. This only works because the key set is fixed at five values."
+   ]
   },
   "1eb07931c4534580": {
    "s": "Not enough {resource} resources for trade.",
@@ -45732,8 +45719,8 @@
    ],
    "kind": "T",
    "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement",
-   "t": "Trouvez qui pèse en {power, select, combat{combat} media{médias} lawfare{guérilla judiciaire} corporate{entreprise} other{politique}}.",
-   "status": "done",
+   "t": "Trouvez ceux qui ont de l’influence {power, select, combat{dans le combat} media{dans les médias} lawfare{dans la guérilla judiciaire} corporate{dans le monde de l’entreprise} other{en politique}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -45743,8 +45730,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The other{} case falls back to « de {power} » with the raw key"
+   ]
   },
   "b52b36b7269fbfc5": {
    "s": "Back",
@@ -54439,8 +54425,8 @@
    "where": "PlayerArea.leaveAreaAction",
    "field": "actionFailed",
    "kind": "T",
-   "t": "Vous ne pouvez pas quitter l’habitat avec une moisissure.",
-   "status": "done",
+   "t": "Vous ne pouvez pas quitter l’habitat avec un moule d’excroissance.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -54450,8 +54436,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« a mold » is unclear without context. If it is a cult or habitat object (a mould/cast) rather than fungus, « moisissure » is wrong and should be « moule »."
+   ]
   },
   "820ab9c30d8f6c97": {
    "s": "You cannot slip away while the soldiers are alerted.",
@@ -58643,8 +58628,8 @@
     "item"
    ],
    "kind": "T",
-   "t": "Fumer {item:indef}",
-   "status": "done",
+   "t": "Fumer une {item}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58654,8 +58639,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"Smoke a {item}\" with item = « cigarette »: used {item:indef} (« Fumer une cigarette ») instead of a hard-coded article."
+   ]
   },
   "218a26ec6421cdd8": {
    "s": "cigarette",
@@ -66133,8 +66117,8 @@
    ],
    "where": "AreaTooltip.signed",
    "kind": "T",
-   "t": "attention",
-   "status": "done",
+   "t": "repérage",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -66144,8 +66128,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« attention » assumes \"notice\" is a tooltip row label (how much the NPC notices you). If it is a verb or a status (\"notices you\"), it should be « vous remarque »."
+   ]
   },
   "9b8f624b5a80a765": {
    "s": "ignores you",
@@ -66175,8 +66158,8 @@
    ],
    "where": "AreaTooltip.signed",
    "kind": "T",
-   "t": "vous êtes caché",
-   "status": "done",
+   "t": "vous êtes invisible",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -66186,8 +66169,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« vous êtes caché » is masculine only, with no placeholder for the host's gender. The English source should provide a select on the host if a female host can see this string."
+   ]
   },
   "21280724b7ab2436": {
    "s": "does not see you",
@@ -66305,8 +66287,8 @@
    "where": "AreaTooltip.signed",
    "field": "row",
    "kind": "T",
-   "t": "arme lourde",
-   "status": "done",
+   "t": "grande arme",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -66316,8 +66298,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« arme lourde » reads as \"heavy weapon\". If \"large weapon\" means a conspicuous long gun that raises suspicion, « arme encombrante » or « arme voyante » would be more accurate."
+   ]
   },
   "f5ff55b0f48b8a27": {
    "s": "per turn",
@@ -72470,8 +72451,8 @@
   }
  },
  "totals": {
-  "calls": 151,
-  "input": 1679354,
-  "output": 544629
+  "calls": 152,
+  "input": 1685198,
+  "output": 544702
  }
 }

@@ -348,7 +348,8 @@
  },
  "budget analyst": {
   "g": "m",
-  "s": "analyste budgétaire"
+  "s": "analyste budgétaire",
+  "fs": "analyste budgétaire"
  },
  "building inspector": {
   "g": "m",
@@ -984,8 +985,9 @@
   "fs": "conseillère"
  },
  "councilwoman": {
-  "g": "f",
-  "s": "conseillère municipale"
+  "g": "m",
+  "s": "conseiller municipal",
+  "fs": "conseillère municipale"
  },
  "counterintelligence officer": {
   "g": "m",
@@ -1365,7 +1367,8 @@
  },
  "escort": {
   "g": "m",
-  "s": "escort"
+  "s": "escort",
+  "fs": "escort"
  },
  "espresso maker": {
   "g": "m",
@@ -2445,8 +2448,8 @@
  },
  "news producer": {
   "g": "m",
-  "s": "producteur de journal",
-  "fs": "productrice de journal"
+  "s": "producteur d’actualités",
+  "fs": "productrice d’actualités"
  },
  "news stringer": {
   "g": "m",
@@ -2497,8 +2500,8 @@
  },
  "nursery worker": {
   "g": "m",
-  "s": "pépiniériste",
-  "fs": "pépiniériste"
+  "s": "ouvrier de pépinière",
+  "fs": "ouvrière de pépinière"
  },
  "nutrients": {
   "g": "m",
