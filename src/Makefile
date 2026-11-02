@@ -26,6 +26,7 @@ electron: check-port
     mkdir -p ../app/lang ../electron/lang && cp -r ../electron/lang/. ../app/lang/ && \
     cp ../changes.md ../parasite/
 	$(MAKE) loc-test
+	python3 ../tools/loc/extract.py --check
 
 # loc.Loc self-check (formatter, noun forms, pseudo) under node
 loc-test: check-port
