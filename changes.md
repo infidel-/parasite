@@ -2,6 +2,9 @@
 
 ## 1.1
 
+### Changes
+- mods: mods can ship translations (lang/<code>.json) and translate their text through l10n.Loc
+
 ### Fixes
 - ui: log lines read "1 turn" / "5 resources", use "a"/"an" correctly and no longer end in a double full stop
 

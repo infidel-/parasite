@@ -135,6 +135,19 @@ translation of the key.
 - Missing translations fall back to English. Every miss is counted.
 - `<html lang>` follows the active language.
 
+## Mods
+
+- A mod calls `l10n.Loc` (curated extern `parasite-mod-sdk/externs/l10n/Loc.hx`: `lang`, `tr`, `fmt`,
+  `colored`, `thing`) — the `T`/`N` macros don't exist at runtime. Its `lang/<code>.json` (same
+  format as ours, `strings` + `nouns`) is merged by `ModLoader.loadLang` before the entry runs.
+  SDK page: `parasite-mod-sdk/docs/12-localization.md`; example: `examples/testmod/lang/fr.json`.
+- `extract.py --root <moddir>` lists a mod's `Loc.tr('…')` literals (printed, nothing written).
+- An untranslated template in another language (a mod with no lang file, a string newer than the
+  table) renders as plain English, nouns included: `{x:the}` is a form no translation uses, so it
+  marks the template as English. `translate.py` rejects a translation that keeps `{x:the}`/`{x:The}`.
+- 1.0 mod API kept working: bare-predicate logs (see above) and weapons with only `verb1`/`verb2`
+  (`CommonLogic.legacyWeaponText` builds English templates from them once).
+
 ## Fonts
 
 - `tools/loc/fonts.py` (run by every `translate.py build`) checks each font offered in Options
@@ -176,6 +189,8 @@ are only transport: a new or edited string never re-translates the rest.
 | `python3 tools/loc/translate.py nouns --lang fr` | adds every missing noun key to `loc/nouns-<lang>.json` (gender, feminine form, aspirated h; prompt `loc/nouns.md`), passing the interface translation of the key so both agree. The file is the runtime noun table: review it by hand |
 | `make loc-build [lang=fr]` | `electron/lang/<lang>.json` from the state (+ `loc/nouns-<lang>.json`); French typography (non-breaking spaces, ’) is applied here, not trusted to the model |
 | `python3 tools/loc/translate.py status --lang fr` | counts per status |
+| `python3 tools/loc/translate.py review --lang fr` | `loc/review/<lang>.tsv` for a human reader: id, context, English, translation, the model's doubt, an empty `fix` column; doubts first. UTF-8 with BOM (Excel) |
+| `python3 tools/loc/translate.py apply-review --lang fr [--sheet path]` | imports every non-empty `fix` that passes the same checks as a model translation, marks it `reviewed` (no re-run touches it until the English changes), then builds; rejects are listed with the reason |
 
 - The system prompt is `loc/prompt.md` (pass 1) or `loc/revise.md` (pass 2) followed by
   `loc/style-<lang>.md`. The style sheet holds register, typography, noun forms, plurals and the

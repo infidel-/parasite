@@ -2,6 +2,7 @@
 package;
 
 import mods.ModRuntime;
+import l10n.Loc;
 
 // custom item class — extends engine ItemInfo via window.parasiteHx.ItemInfo (SDK extern)
 class ModTestItem extends ItemInfo
@@ -77,9 +78,9 @@ class Entry
         articles: [
           {
             id: 'mod-testmod-hello',
-            name: 'Hello from testmod',
-            text: 'this article was added at runtime by testmod via ' +
-              'parasite.api.registerPediaEntry()',
+            // translated with the mod's lang/<code>.json (merged before init runs)
+            name: Loc.tr('Hello from testmod'),
+            text: Loc.tr('This article was added at runtime by testmod via parasite.api.registerPediaEntry().'),
           },
         ],
       });

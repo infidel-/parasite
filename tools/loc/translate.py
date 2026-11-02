@@ -361,6 +361,8 @@ def problem(src: str, tr: str) -> str | None:
     bad = locfmt.check(src, tr)
     if bad:
         return bad
+    if re.search(r"\{\w+:[Tt]he\}", tr):
+        return "English noun form {x:the}/{x:The} in the translation: use the forms of the style sheet"
     if starts_upper(src) and not starts_upper(tr):
         return "starts lowercase: the English starts with a capital (or a capitalized {x:Form}); a log line that starts lowercase is taken for a 1.0 mod predicate"
     if len(src) >= RATIO_MIN_CHARS:
@@ -575,6 +577,76 @@ def spread(bs: list, n: int) -> list:
     return [bs[round(i * (len(bs) - 1) / (n - 1))] for i in range(n)]
 
 
+# --------------------------------------------------------------------------- human review
+
+REVIEW_COLS = ["id", "context", "en", "tr", "doubt", "fix"]
+
+
+def cell(s: str) -> str:
+    """One TSV cell: tabs and newlines escaped (\\t \\n), so a row stays one line."""
+    return (s or "").replace("\\", "\\\\").replace("\t", "\\t").replace("\n", "\\n")
+
+
+def uncell(s: str) -> str:
+    return re.sub(r"\\(.)", lambda m: {"t": "\t", "n": "\n"}.get(m.group(1), m.group(1)), s)
+
+
+def review(code: str) -> int:
+    """loc/review/<code>.tsv: every current string, those with a model doubt first. Write a
+    correction in the `fix` column and run apply-review. UTF-8 with a BOM, so Excel reads the accents."""
+    st = load_state(code)
+    rows = []
+    for e in catalog():
+        k = locfmt.sha(e["s"])
+        r = st["strings"].get(k)
+        if not r or not r.get("t"):
+            continue
+        ctx = " · ".join(x for x in [e["loc"][0], e.get("where"), e.get("field") and "in " + e["field"],
+                                       e.get("note") and "note: " + e["note"]] if x)
+        rows.append((0 if r.get("doubt") else 1, e["loc"][0], [k, ctx, e["s"], r["t"], r.get("doubt", ""), ""]))
+    rows.sort(key=lambda x: (x[0], x[1]))
+    out = LOC / "review" / f"{code}.tsv"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open("w", encoding="utf-8-sig", newline="") as fh:
+        fh.write("\t".join(REVIEW_COLS) + "\n")
+        for _, _, cols in rows:
+            fh.write("\t".join(cell(c) for c in cols) + "\n")
+    info(f"review: {len(rows)} strings ({sum(1 for r in rows if r[0] == 0)} with doubts) -> {out.relative_to(ROOT)}")
+    return 0
+
+
+def apply_review(code: str, path: str | None) -> int:
+    """Import the `fix` column of a review sheet: each fix must pass the same checks as a model
+    translation; accepted ones become `reviewed`, which no re-run touches until the English changes."""
+    src = Path(path) if path else LOC / "review" / f"{code}.tsv"
+    st = load_state(code)
+    ok = bad = 0
+    lines = src.read_text(encoding="utf-8-sig").splitlines()
+    head = lines[0].split("\t")
+    for ln, line in enumerate(lines[1:], 2):
+        row = dict(zip(head, line.split("\t")))
+        fix = uncell(row.get("fix", "")).strip()
+        if not fix:
+            continue
+        r = st["strings"].get(row.get("id", ""))
+        if r is None:
+            warn(f"line {ln}: unknown id (the English changed since the sheet was written?)")
+            bad += 1
+            continue
+        why = problem(r["s"], fix)
+        if why:
+            warn(f"line {ln}: rejected ({why}): {fix[:80]}")
+            bad += 1
+            continue
+        r["t"], r["status"] = fix, "reviewed"
+        r.pop("doubt", None)
+        ok += 1
+    save_json(state_path(code), st)
+    info(f"apply-review: {ok} applied, {bad} rejected")
+    build(code)
+    return 1 if bad else 0
+
+
 # --------------------------------------------------------------------------- noun table
 
 RE_NOUN_KEY = re.compile(r"[a-z][a-z' -]*")
@@ -696,6 +768,7 @@ def selftest() -> int:
     assert problem("{s:The} hits.", "{s:def} frappe.").startswith("starts lowercase")
     assert problem("<b>Yes</b>", "<b>oui</b>").startswith("starts lowercase")
     assert problem("{n} turns", "{n} tours") is None and starts_upper("« Oui")
+    assert problem("{s:The} hits.", "{s:The} frappe.").startswith("English noun form")
     es = [{"s": "x" * 100, "loc": [f"src/a.hx:{i}"]} for i in range(10)] + \
          [{"s": "y" * 100, "loc": [f"src/b.hx:{i}"]} for i in range(10)]
     bs = batches(es)
@@ -715,6 +788,8 @@ def selftest() -> int:
                                      {"s": "Dog", "kind": "N", "loc": ["src/ai/DogAI.hx:2"]},
                                      {"s": "dog", "kind": "T", "loc": ["src/ai/DogAI.hx:3"]}])]
     assert ks == ["dog"], ks
+    for raw in ["a\tb", "x\ny", "back\\slash \\n", ""]:
+        assert uncell(cell(raw)) == raw and "\t" not in cell(raw) and "\n" not in cell(raw), raw
     assert typo("fr", "Attention ! « Oui » : l'agent") == "Attention\u00a0! «\u00a0Oui\u00a0»\u00a0: l’agent"
     assert typo("fr", "<span class='x'>a</span> &rarr; {s:def}") == "<span class='x'>a</span> &rarr; {s:def}"
     print("translate selftest: ok")
@@ -723,7 +798,8 @@ def selftest() -> int:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("cmd", choices=["probe", "run", "build", "status", "nouns", "selftest"])
+    ap.add_argument("cmd", choices=["probe", "run", "build", "status", "nouns", "review", "apply-review", "selftest"])
+    ap.add_argument("--sheet", help="apply-review: the TSV to import (default loc/review/<lang>.tsv)")
     ap.add_argument("--lang", default="fr")
     ap.add_argument("--batches", type=int, default=3, help="probe: how many batches")
     ap.add_argument("--files", help="comma-separated path fragments to restrict the catalog")
@@ -738,6 +814,10 @@ def main() -> int:
         return status(a.lang)
     if a.cmd == "nouns":
         return nouns(a.lang)
+    if a.cmd == "review":
+        return review(a.lang)
+    if a.cmd == "apply-review":
+        return apply_review(a.lang, a.sheet)
     files = a.files.split(",") if a.files else None
     return run(a.lang, a.batches if a.cmd == "probe" else None, files, a.jobs)
 

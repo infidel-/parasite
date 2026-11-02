@@ -24,6 +24,7 @@ Small, typed, every field commented. This is the surface designed for mods:
 - `mods/ModRuntime.hx` — the `parasite` object ([03](03-runtime-object.md)).
 - `mods/ModContentApi.hx` — `parasite.api` registration calls ([04](04-registering-content.md)).
 - `mods/ModSettings.hx` — `parasite.settings` ([07](07-settings.md)).
+- `l10n/Loc.hx` — translating a mod's text, `lang/<code>.json` ([12](12-localization.md)).
 - The content info typedefs you pass to `register*`: `_TraitInfo`, `_SkillInfo`,
   `_ImprovInfo`, `_OrganInfo`, `_GoalInfo`, and `const/PediaConst.hx`
   (`_PediaGroupInfo` / `_PediaArticleInfo`).

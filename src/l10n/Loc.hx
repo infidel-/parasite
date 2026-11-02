@@ -297,9 +297,12 @@ class Loc
   static function nounForm(n: _LocNoun, form: String): String
     {
       var f = form.toLowerCase();
+      // {x:the} is a form of no other language: the template is untranslated English (a string
+      // newer than the table, a mod without a lang file), so it reads as English, nouns included
       var s = switch (code)
         {
-          case 'en', 'pseudo': english(n, f);
+          case 'en', 'pseudo': english(n, f, false);
+          case _ if (f == 'the'): english(n, f, true);
           case 'fr': french(n, f);
           default: generic(n, f);
         };
@@ -311,10 +314,10 @@ class Loc
       return s;
     }
 
-// English forms: the, a (a/an), bare
-  static function english(n: _LocNoun, f: String): String
+// English forms: the, a (a/an), bare; raw keeps the English key (an untranslated template)
+  static function english(n: _LocNoun, f: String, raw: Bool): String
     {
-      var w = (n.kind == LOC_NAME ? n.key : tr(n.key));
+      var w = (n.kind == LOC_NAME || raw ? n.key : tr(n.key));
       if (n.kind != LOC_NOUN)
         return w;
       return switch (f)

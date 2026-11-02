@@ -51,6 +51,7 @@ Full walkthrough in [docs/01-getting-started.md](docs/01-getting-started.md).
 | [09-console-reference](docs/09-console-reference.md) | console commands |
 | [10-api-reference](docs/10-api-reference.md)       | how the two extern sets work |
 | [11-save-data-pitfalls](docs/11-save-data-pitfalls.md) | what survives `parasite.savedata`; testing your mod across save/load |
+| [12-localization](docs/12-localization.md) | translating a mod's text with `l10n.Loc`, shipping `lang/<code>.json` |
 
 ## The entry contract, in one block
 

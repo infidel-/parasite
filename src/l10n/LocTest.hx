@@ -90,6 +90,9 @@ class LocTest
       var cult = name("<span class=cult>Ordo Carnis</span>", 'm');
       eq(Loc.fmt('{c:de}|{c:a}', { c: cult }),
         "d’<span class=cult>Ordo Carnis</span>|à <span class=cult>Ordo Carnis</span>");
+      // an untranslated English template stays English, nouns included
+      eq(Loc.fmt('{a:The} rips {t:the}.', { a: noun('soldier', 'm'), t: phrase('your host', 'm') }),
+        'The soldier rips your host.');
       var tours = '{n, plural, one{# tour} other{# tours}}';
       eq(Loc.fmt(tours, { n: 0 }), '0 tour');
       eq(Loc.fmt(tours, { n: 2 }), '2 tours');

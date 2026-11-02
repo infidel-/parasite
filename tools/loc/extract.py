@@ -136,6 +136,15 @@ def scan(text: str, path: str) -> tuple:
                     entries.append(ent)
                 if warn:
                     warnings.append(warn)
+        # a mod has no T() macro: it calls Loc.tr('…') with the literal (a variable argument is a
+        # display-time translation, not a source string)
+        elif word == "tr" and before == "." and prev_word == "Loc":
+            k = skip_ws(text, j)
+            if k < n and text[k] == "(" and skip_ws(text, k + 1) < n and text[skip_ws(text, k + 1)] in "'\"":
+                ent, _, j = call(text, k + 1, "T", path, line_of(i))
+                if ent:
+                    ent.update(context(text, i, marks, src_lines, line_of(i)))
+                    entries.append(ent)
         prev_word = word
         i = j
     return entries, warnings
@@ -333,6 +342,9 @@ class Foo
     note_src = 'class A\n{\n  var x = [\n    // tr: a note\n    // tr: second line\n    { name: N("Gun") },\n  ];\n}\n'
     ents, _ = scan(note_src, "a.hx")
     assert ents[0]["note"] == "a note second line" and ents[0]["where"] == "A.x", ents
+    mod_src = "class M\n{\n  function f()\n    {\n      log(Loc.tr('Mod line.'));\n      x = Loc.tr(name);\n    }\n}\n"
+    ents, warns = scan(mod_src, "mod.hx")
+    assert [e["s"] for e in ents] == ["Mod line."] and not warns, (ents, warns)
     e1 = {"s": "A", "loc": ["f.hx:1"], "where": "C.m", "field": "name"}
     e2 = {"s": "B", "loc": ["f.hx:9"], "where": "C.m", "field": "name"}
     st = {"strings": {locfmt.sha("A0"): {"s": "A0", "t": "a", "loc": ["f.hx:1"], "where": "C.m",

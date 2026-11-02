@@ -19,8 +19,12 @@ class Chainsaw extends items.Weapon
         skill: 'mod-chainsaw-chainsaw-skill',
         minDamage: 4,
         maxDamage: 14,
-        verb1: 'rip',
-        verb2: 'rips',
+        // whole-sentence templates (see docs/12-localization.md): {attacker}/{target} are nouns the
+        // game renders with articles; the "you" variants are for when the parasite itself is hit
+        textMiss: '{attacker:The} tries to rip {target:the}, but misses.',
+        textMissYou: '{attacker:The} tries to rip you, but misses.',
+        textHit: '{attacker:The} rips {target:the} for {damage} damage.',
+        textHitYou: '{attacker:The} rips you for {damage} damage.',
         type: WEAPON_MELEE,
         spawnBlood: true,
         canConceal: false,

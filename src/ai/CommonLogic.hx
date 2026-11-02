@@ -82,6 +82,20 @@ class CommonLogic
         }
     }
 
+// 1.0 mod API: a mod weapon declares verb1/verb2 ('rip'/'rips') instead of the text* templates and
+// gets English sentences built from them, once (the weapon info object is shared)
+  static function legacyWeaponText(weapon: WeaponInfo)
+    {
+      if (weapon.textHit != null ||
+          weapon.verb2 == null)
+        return;
+      weapon.textMiss = '{attacker:The} tries to ' + weapon.verb1 + ' {target:the}, but misses.';
+      weapon.textMissYou = '{attacker:The} tries to ' + weapon.verb1 + ' you, but misses.';
+      weapon.textHit = '{attacker:The} ' + weapon.verb2 + ' {target:the} for {damage} damage.';
+      weapon.textHitYou = '{attacker:The} ' + weapon.verb2 + ' you for {damage} damage.';
+      weapon.textStun = '{attacker:The} ' + weapon.verb2 + ' {target:the} for {rounds, plural, one{# round} other{# rounds}}.';
+    }
+
 // logic: attack target (player, ai, or object)
   public static function logicAttack(attacker: Attacker, target: AttackTarget)
     {
@@ -89,6 +103,7 @@ class CommonLogic
         attacker.ai.traceAI('CommonLogic', 'logicAttack()');
       // get current weapon
       var weapon = attacker.weapon;
+      legacyWeaponText(weapon);
 
       // ingrained abilities can consume the attack action
       if (useAttackAbilities(attacker, target))

@@ -1,0 +1,18 @@
+{
+ "strings": {
+  "Hello from testmod": "Bonjour de testmod",
+  "This article was added at runtime by testmod via parasite.api.registerPediaEntry().": "Cet article a été ajouté en cours de partie par testmod, via parasite.api.registerPediaEntry().",
+  "mod test trinket": "babiole de test",
+  "odd trinket": "babiole étrange"
+ },
+ "nouns": {
+  "mod test trinket": {
+   "g": "f",
+   "s": "babiole de test"
+  },
+  "odd trinket": {
+   "g": "f",
+   "s": "babiole étrange"
+  }
+ }
+}
