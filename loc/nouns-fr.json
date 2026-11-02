@@ -262,8 +262,8 @@
  },
  "blackops agent": {
   "g": "m",
-  "s": "agent des opérations clandestines",
-  "fs": "agente des opérations clandestines"
+  "s": "agent clandestin",
+  "fs": "agente clandestine"
  },
  "bleeding": {
   "g": "m",
@@ -730,7 +730,8 @@
  },
  "clone scientist": {
   "g": "m",
-  "s": "scientifique du clonage"
+  "s": "scientifique du clonage",
+  "fs": "scientifique du clonage"
  },
  "cloning vat": {
   "g": "f",
@@ -890,7 +891,8 @@
  },
  "conspirologist": {
   "g": "m",
-  "s": "conspirationniste"
+  "s": "conspirationniste",
+  "fs": "conspirationniste"
  },
  "constituency aide": {
   "g": "m",
@@ -1006,7 +1008,7 @@
  },
  "courtesan": {
   "g": "m",
-  "s": "courtisan",
+  "s": "gigolo",
   "fs": "courtisane"
  },
  "covert operative": {
@@ -1985,7 +1987,8 @@
  },
  "investigative journalist": {
   "g": "m",
-  "s": "journaliste d’investigation"
+  "s": "journaliste d’investigation",
+  "fs": "journaliste d’investigation"
  },
  "investigative reporter": {
   "g": "m",
@@ -2045,7 +2048,8 @@
  },
  "lab security guard": {
   "g": "m",
-  "s": "agent de sécurité du laboratoire"
+  "s": "agent de sécurité du laboratoire",
+  "fs": "agente de sécurité du laboratoire"
  },
  "lab technician": {
   "g": "m",
@@ -2103,7 +2107,8 @@
  },
  "lead scientist": {
   "g": "m",
-  "s": "scientifique en chef"
+  "s": "scientifique en chef",
+  "fs": "scientifique en chef"
  },
  "lead singer": {
   "g": "m",
@@ -3029,7 +3034,8 @@
  },
  "reporter": {
   "g": "m",
-  "s": "journaliste"
+  "s": "journaliste",
+  "fs": "journaliste"
  },
  "representative": {
   "g": "m",
@@ -3310,7 +3316,7 @@
  },
  "shock escort": {
   "g": "f",
-  "s": "escorte de choc"
+  "s": "escort de choc"
  },
  "shop stylist": {
   "g": "m",
@@ -3351,8 +3357,8 @@
   "fs": "hôtesse"
  },
  "slime": {
-  "g": "f",
-  "s": "bave"
+  "g": "m",
+  "s": "mucus"
  },
  "small blade": {
   "g": "f",
@@ -3384,7 +3390,7 @@
  },
  "smash": {
   "g": "m",
-  "s": "fracas"
+  "s": "smash"
  },
  "social media manager": {
   "g": "m",
@@ -3779,7 +3785,8 @@
  },
  "ufologist": {
   "g": "m",
-  "s": "ufologue"
+  "s": "ufologue",
+  "fs": "ufologue"
  },
  "undercover agent": {
   "g": "m",

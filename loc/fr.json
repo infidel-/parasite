@@ -72,8 +72,8 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Acheminez les réserves de plasma pressurisé vers l’escouade promue.",
-   "status": "done",
+   "t": "Acheminer les réserves de plasma pressurisé vers l’escouade promue.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -114,8 +114,8 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Laissez les aumôniers accorder leurs électro-psaumes aux routines de bouclier des drones.",
-   "status": "done",
+   "t": "Laisser les aumôniers accorder leurs électro-psaumes aux routines de bouclier des drones.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -156,8 +156,8 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Marquez le combattant promu de sceaux de moelle qui lient la doctrine nouvelle.",
-   "status": "done",
+   "t": "Marquer le combattant promu de sceaux de moelle qui lient la doctrine nouvelle.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -3657,8 +3657,8 @@
    "where": "BlackopsAI.init",
    "field": "unknown",
    "kind": "N",
-   "t": "agent des opérations clandestines",
-   "status": "done",
+   "t": "agent clandestin",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -3678,8 +3678,8 @@
    "where": "BlackopsAI.init",
    "field": "unknownCapped",
    "kind": "N",
-   "t": "Agent des opérations clandestines",
-   "status": "done",
+   "t": "Agent clandestin",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -5576,8 +5576,8 @@
    "where": "ProstituteAI.init",
    "field": "unknown",
    "kind": "N",
-   "t": "travailleuse du sexe",
-   "status": "done",
+   "t": "travailleur du sexe",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -5597,8 +5597,8 @@
    "where": "ProstituteAI.init",
    "field": "unknownCapped",
    "kind": "N",
-   "t": "Travailleuse du sexe",
-   "status": "done",
+   "t": "Travailleur du sexe",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -10084,8 +10084,8 @@
     "bonus"
    ],
    "kind": "T",
-   "t": "Hausse du délai/de la distance de l’équipe : {bonus}<br/>Blackops : équipe désactivée, priorité du Groupe -25",
-   "status": "done",
+   "t": "Hausse du délai/de la distance de l’équipe : {bonus}<br/>Agents clandestins : équipe désactivée, priorité du Groupe -25",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -10095,8 +10095,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"Blackops\" looks like an internal name for a Group team type, so I kept it as is. I read \"group priority\" as the Group's priority: « priorité du Groupe »."
+   ]
   },
   "6377f41f177608f4": {
    "s": "A small interface outgrowth on the side of hippocampus allows for one-time projection of a set of false memories into the host brain",
@@ -12067,8 +12066,8 @@
    "where": "EvolutionConst.epCostImprovement",
    "field": "note",
    "kind": "T",
-   "t": "Excroissance de veilleur. Avertit d’une embuscade dans l’habitat et réduit la perte maximale d’énergie en cas de destruction de l’habitat.",
-   "status": "done",
+   "t": "Excroissance de veilleur. Avertit d’une embuscade dans l’habitat et réduit la perte d’énergie maximale en cas de destruction de l’habitat.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -12129,8 +12128,8 @@
    ],
    "where": "EvolutionConst.epCostImprovement",
    "kind": "T",
-   "t": "Le veilleur attirera l’embuscade, réduira la perte maximale d’énergie et vous laissera encore plus de distance",
-   "status": "done",
+   "t": "Le veilleur attirera l’embuscade, réduira la perte d’énergie maximale et vous laissera encore plus de distance",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -12140,8 +12139,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"Watcher will attract the ambush\" may mean the watcher lures the ambush toward itself. « attirera l’embuscade » keeps that literal meaning; check this against the game mechanics."
+   ]
   },
   "eac40ce5628f8eba": {
    "s": "Watcher mold",
@@ -12509,8 +12507,8 @@
    ],
    "where": "EvolutionConst.epCostImprovement",
    "kind": "T",
-   "t": "Accès à la mini-carte (utiliser un ordinateur)",
-   "status": "done",
+   "t": "Accès à la minicarte (utiliser un ordinateur)",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -13732,8 +13730,8 @@
    "where": "Goals.map",
    "field": "note",
    "kind": "T",
-   "t": "Lui implanter de faux souvenirs fermera mon dossier. Le tuer aussi.",
-   "status": "done",
+   "t": "Lui implanter de faux souvenirs classera mon dossier. Le tuer aussi.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -13743,8 +13741,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The note is in the first person (\"my file\"), unlike the other notes. I kept the first person as in the English. \"them\" refers to the controller, so I used « Lui » and « Le tuer », in the masculine by default."
+   ]
   },
   "e00f53319e639498": {
    "s": "While investigating humans I've used their maps. If I could reliably store that data in the host brain...",
@@ -13838,8 +13835,8 @@
    "where": "Goals.map",
    "field": "name",
    "kind": "T",
-   "t": "Se renseigner sur un objet",
-   "status": "done",
+   "t": "Étudier un objet",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -26205,8 +26202,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "<p>Aucun humain ni aucun animal ne réagit vraiment bien en voyant le parasite. Une icône ? apparaît au-dessus d’eux ; elle peut être blanche ou jaune, ou devenir un ! rouge. Elle indique le niveau de vigilance d’un PNJ. Leur vue et leur ouïe sont limitées, et ils réagissent à mesure que leur vigilance augmente. Lorsqu’elle atteint son maximum (le ! rouge), le PNJ prend pleinement conscience qu’il assiste à quelque chose d’étrange et réagit en conséquence : il s’enfuit, appelle la police ou vous attaque.</p>\n\n<p>Tant qu’un PNJ calme vous garde en vue, sa vigilance augmente à chaque tour. Plus vous êtes proche, plus elle monte vite ; au-delà de dix cases, la distance seule ne la fait plus augmenter. Une couche de camouflage sur l’hôte ralentit cette hausse, tandis que les plaques d’armure d’une couverture protectrice et une grande arme portée bien en vue l’accélèrent. Sur une base militaire, les soldats se méfient davantage de quiconque ne porte pas l’uniforme. Si les informations de jeu détaillées sont activées dans les options, survoler un PNJ affiche ce détail sous REPÉRAGE, avec en dernier la vigilance qu’il gagne par tour.</p>",
-   "status": "done",
+   "t": "<p>Aucun humain ni aucun animal ne réagit vraiment bien en voyant le parasite. Une icône ? apparaît au-dessus d’eux ; elle peut être blanche ou jaune, ou devenir un ! rouge. Elle indique le niveau de vigilance d’un PNJ. Leur vue et leur ouïe sont limitées, et ils réagissent à mesure que leur vigilance augmente. Lorsqu’elle atteint son maximum (le ! rouge), le PNJ prend pleinement conscience qu’il assiste à quelque chose d’étrange et réagit en conséquence : il s’enfuit, appelle la police ou vous attaque.</p>\n\n<p>Tant qu’un PNJ calme vous garde en vue, sa vigilance augmente à chaque tour. Plus vous êtes proche, plus elle monte vite ; au-delà de dix cases, la distance seule ne la fait plus augmenter. Une couche de camouflage sur l’hôte ralentit cette hausse, tandis que les plaques d’armure d’un revêtement protecteur et une grande arme portée bien en vue l’accélèrent. Sur une base militaire, les soldats se méfient davantage de quiconque ne porte pas l’uniforme. Si les informations de jeu détaillées sont activées dans les options, survoler un PNJ affiche ce détail sous REPÉRAGE, avec en dernier la vigilance qu’il gagne par tour.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -26216,8 +26213,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« REPÉRAGE » renders the tooltip heading NOTICE. Please check that the tooltip string itself uses the same word, so the pedia matches the in-game label."
+   ]
   },
   "388fc9a1fd4a0557": {
    "s": "NPCs: Interaction",
@@ -28117,7 +28113,7 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Lorsque le parasite se déplace sans hôte, la fenêtre d’informations est réduite et n’affiche que les informations générales et ses statistiques. La première ligne contient les informations suivantes : le nombre de tours écoulés depuis le début de la partie, le numéro du sous-tour en cours entre crochets (1 ou 2, puisque le parasite est toujours deux fois plus rapide que les PNJ), et la position x, y dans la zone ou la région, selon le mode en cours. En mode région, la ligne suivante indique le nom de la zone. Après le séparateur commencent les statistiques du parasite : la ligne d’énergie, qui indique l’énergie actuelle et maximale ainsi que la dépense ou le gain d’énergie par tour entre crochets. La ligne suivante indique la santé actuelle et maximale du parasite. Lorsque le parasite est accroché à un hôte sans l’avoir encore envahi, la ligne suivante indique les valeurs actuelle et maximale de la prise. Une fois que vous connaissez l’existence du Groupe, son emblème (un triangle au-dessus d’une barre) apparaît en haut de la fenêtre d’informations. Survolez-le pour afficher les informations sur le Groupe. Sa couleur indique la proximité de l’équipe du Groupe, et un avertissement rouge L’ÉQUIPE EST TRÈS PROCHE ! s’affiche dans la fenêtre lorsque l’équipe est presque sur vous.",
+   "t": "Lorsque le parasite se déplace sans hôte, la fenêtre d’informations est réduite et n’affiche que les informations générales et ses statistiques. La première ligne contient les informations suivantes : le nombre de tours écoulés depuis le début de la partie, le numéro du sous-tour en cours entre crochets (1 ou 2, puisque le parasite est toujours deux fois plus rapide que les PNJ), et la position x, y dans la zone ou la région, selon le mode en cours. En mode région, la ligne suivante indique le nom de la zone. Après le séparateur commencent les statistiques du parasite : la ligne d’énergie, qui indique l’énergie actuelle et maximale ainsi que la dépense ou le gain d’énergie par tour entre crochets. La ligne suivante indique la santé actuelle et maximale du parasite. Lorsque le parasite est accroché à un hôte sans l’avoir encore envahi, la ligne suivante indique les valeurs actuelle et maximale de la prise. Une fois que vous connaissez l’existence du Groupe, son marqueur (un triangle au-dessus d’une barre) apparaît en haut de la fenêtre d’informations. Survolez-le pour afficher les informations sur le Groupe. Sa couleur indique la proximité de l’équipe du Groupe, et un avertissement rouge L’ÉQUIPE EST TRÈS PROCHE ! s’affiche dans la fenêtre lorsque l’équipe est presque sur vous.",
    "status": "reviewed",
    "passes": [
     {
@@ -28265,8 +28261,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Vous venez donc de découvrir l’existence d’un groupe d’humains qui cherche activement à vous détruire. Par souci de simplicité, nous l’appellerons désormais le Groupe. Ce concept demande quelques explications, car la mécanique est assez complexe et en grande partie cachée. Une fois que vous connaissez l’existence du Groupe, son emblème apparaît en haut de la fenêtre d’informations de l’interface. Survolez-le pour afficher les informations sur le Groupe. Le niveau de difficulté choisi modifie la quantité de ces informations. En difficulté facile, des valeurs chiffrées s’affichent ; en difficulté normale, des descriptions en toutes lettres ; en difficulté difficile, rien du tout.",
-   "status": "done",
+   "t": "Vous venez donc de découvrir l’existence d’un groupe d’humains qui cherche activement à vous détruire. Par souci de simplicité, nous l’appellerons désormais le Groupe. Ce concept demande quelques explications, car la mécanique est assez complexe et en grande partie cachée. Une fois que vous connaissez l’existence du Groupe, son marqueur apparaît en haut de la fenêtre d’informations de l’interface. Survolez-le pour afficher les informations sur le Groupe. Le niveau de difficulté choisi modifie la quantité de ces informations. En difficulté facile, des valeurs chiffrées s’affichent ; en difficulté normale, des descriptions en toutes lettres ; en difficulté difficile, rien du tout.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -28276,8 +28272,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« en difficulté difficile » repeats a word but is correct. Keep it if the difficulty label is « Difficile »."
+   ]
   },
   "d2a4d4d072d03b68": {
    "s": "Group: Priority",
@@ -28962,8 +28957,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "<p>Les épreuves communales sont des rituels que vous lancez pour faire croître et renforcer le culte. Elles exigent des membres libres et des ressources. Tant qu’une épreuve est active, les membres affectés sont bloqués : ils ne peuvent ni fournir de pouvoir ni servir ailleurs.</p>",
-   "status": "done",
+   "t": "<p>Les épreuves communales sont des rituels que vous lancez pour faire croître et renforcer le culte. Elles exigent des membres libres et des ressources. Tant qu’une épreuve est active, les membres affectés sont verrouillés : ils ne peuvent ni fournir de pouvoir ni servir ailleurs.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29434,8 +29429,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><b>Le contrôleur régional.</b> La première sonde cérébrale de chaque agent du Groupe vous fournit des renseignements sur le Groupe : un membre d’équipe rapporte un point, un agent clandestin deux. Les agents clandestins des équipes plus expérimentées transportent aussi un dossier confidentiel qui rapporte trois points une fois lu dans un habitat. Lorsque vous en avez réuni assez (la quantité dépend de la difficulté du Groupe), vous apprenez depuis quelle base militaire opère le contrôleur régional. Cette fuite ne passe pas inaperçue : la priorité du Groupe grimpe au maximum et l’équipe active se rapproche nettement. Le contrôleur attend dans une pièce verrouillée, sous la garde d’agents clandestins. Le garde posté devant la porte a la carte d’accès, tout comme chaque officier de la base. Une fois l’alarme donnée, vous ne pouvez plus quitter la base tant que le sort du contrôleur n’est pas réglé. Implanter de faux souvenirs chez le contrôleur classe le dossier en toute discrétion. Le tuer le classe aussi, mais seulement après que ses hommes ont tenté une dernière fois de vous avoir avec leur équipe la plus redoutable.</p>",
-   "status": "done",
+   "t": "<p><b>Le contrôleur régional.</b> La première sonde cérébrale de chaque agent du Groupe vous fournit des renseignements sur le Groupe : un membre d’équipe rapporte un point, un agent clandestin deux. Les agents clandestins des équipes plus expérimentées transportent aussi un dossier confidentiel qui rapporte trois points une fois lu dans un habitat. Lorsque vous en avez réuni assez (la quantité dépend de la difficulté du Groupe), vous apprenez depuis quelle base militaire opère le contrôleur régional. Cette fuite ne passe pas inaperçue : la priorité du Groupe grimpe au maximum et l’équipe active se rapproche nettement. Le contrôleur attend dans une pièce verrouillée, sous la garde d’agents clandestins. Le garde posté devant la porte a la carte magnétique, tout comme chaque officier de la base. Une fois l’alarme donnée, vous ne pouvez plus quitter la base tant que le sort du contrôleur n’est pas réglé. Implanter de faux souvenirs chez le contrôleur classe le dossier en toute discrétion. Le tuer le classe aussi, mais seulement après que ses hommes ont tenté une dernière fois de vous avoir avec leur équipe la plus redoutable.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -30149,8 +30144,8 @@
    "where": "SkillsConst.skills",
    "field": "name",
    "kind": "T",
-   "t": "cajolerie",
-   "status": "done",
+   "t": "enjôlement",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -33690,8 +33685,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} se dérobe sous le fouet et acquiert le défaut de la volonté faible.",
-   "status": "done",
+   "t": "{ai:Def} se dérobe sous le fouet et acquiert le défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -34035,8 +34030,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "Chez {ai:def}, le regard vide remplace l’éclat : soumission au défaut de la bêtise.",
-   "status": "done",
+   "t": "Chez {ai:def}, le regard vide remplace l’éclat : soumission au défaut « bête ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -34581,8 +34576,8 @@
    "where": "DifficultHelp.customName",
    "field": "level",
    "kind": "T",
-   "t": "moyen",
-   "status": "done",
+   "t": "moyenne",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -34916,8 +34911,8 @@
    "where": "ArteryDividend.create",
    "field": "text",
    "kind": "T",
-   "t": "Accélérez la pompe artérielle pour augmenter les distributions de dividendes.",
-   "status": "done",
+   "t": "Accélérer la pompe artérielle pour augmenter les distributions de dividendes.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -34958,8 +34953,8 @@
    "where": "ArteryDividend.create",
    "field": "text",
    "kind": "T",
-   "t": "Scellez le réseau artériel pour auditer les distributions par des canaux sécurisés.",
-   "status": "done",
+   "t": "Sceller le réseau artériel pour auditer les distributions par des canaux sécurisés.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35000,8 +34995,8 @@
    "where": "ArteryDividend.create",
    "field": "text",
    "kind": "T",
-   "t": "Suturez le directeur financier promu au grand livre artériel pour qu’il gère des dividendes éternels.",
-   "status": "done",
+   "t": "Suturer le directeur financier promu au grand livre artériel pour qu’il gère des dividendes éternels.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35126,8 +35121,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} ploie sous le vœu et acquiert le défaut velléitaire.",
-   "status": "done",
+   "t": "{ai:Def} ploie sous le vœu et acquiert le défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35260,8 +35255,8 @@
    "where": "BackchannelLitany.create",
    "field": "text",
    "kind": "T",
-   "t": "Diffusez un trafic leurre sur des réseaux maillés privés pour masquer le vrai dépôt.",
-   "status": "done",
+   "t": "Diffuser un trafic leurre sur des réseaux maillés privés pour masquer le vrai dépôt.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35302,8 +35297,8 @@
    "where": "BackchannelLitany.create",
    "field": "text",
    "kind": "T",
-   "t": "Facturez des agences complaisantes via des fournisseurs-écrans et détournez les dépenses vers des fonds de guerre.",
-   "status": "done",
+   "t": "Facturer des agences complaisantes via des fournisseurs-écrans et détourner les dépenses vers des fonds de guerre.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35344,8 +35339,8 @@
    "where": "BackchannelLitany.create",
    "field": "text",
    "kind": "T",
-   "t": "Versez le nouveau rang dans une archive secrète de mantras, réservée aux oreilles éprouvées.",
-   "status": "done",
+   "t": "Verser le nouveau rang dans une archive secrète de mantras, réservée aux oreilles éprouvées.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35474,8 +35469,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} ploie sous le refrain scellé et hérite du défaut velléitaire.",
-   "status": "done",
+   "t": "{ai:Def} ploie sous le refrain scellé et hérite du défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35607,8 +35602,8 @@
    "where": "BastionMidnight.create",
    "field": "text",
    "kind": "T",
-   "t": "Détournez les fourgons de ravitaillement sous le nez des scanners de police pour regarnir les dépôts avancés avant que le couvre-feu de l’aube ne tombe.",
-   "status": "done",
+   "t": "Détourner les fourgons de ravitaillement sous le nez des scanners de police pour regarnir les dépôts avancés avant que le couvre-feu de l’aube ne tombe.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35649,8 +35644,8 @@
    "where": "BastionMidnight.create",
    "field": "text",
    "kind": "T",
-   "t": "Organisez un rassemblement nocturne de serments en déversant des hymnes surrénaliens dans les haut-parleurs de la caserne.",
-   "status": "done",
+   "t": "Organiser un rassemblement nocturne de serments en déversant des hymnes surrénaliens dans les haut-parleurs de la caserne.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35691,8 +35686,8 @@
    "where": "BastionMidnight.create",
    "field": "text",
    "kind": "T",
-   "t": "Isolez le combattant promu avec les officiers traitants des éclaireurs pour tisser des itinéraires d’occultation et des réseaux de contacts clandestins.",
-   "status": "done",
+   "t": "Isoler le combattant promu avec les officiers traitants des éclaireurs pour tisser des itinéraires d’occultation et des réseaux de contacts clandestins.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -35958,8 +35953,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "Le fouet claque : {ai:def} reçoit le défaut « faible volonté » dans l’échine.",
-   "status": "done",
+   "t": "Le fouet claque : {ai:def} reçoit le défaut « volonté faible » dans l’échine.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -36376,8 +36371,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "Le lien ploie : {ai:def} reçoit le défaut « faible volonté » dans la chair.",
-   "status": "done",
+   "t": "Le lien ploie : {ai:def} reçoit le défaut « volonté faible » dans la chair.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -36937,8 +36932,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} ploie sous la fiducie et reçoit le défaut « faible volonté ».",
-   "status": "done",
+   "t": "{ai:Def} ploie sous la fiducie et reçoit le défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -37279,8 +37274,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} s’étouffe sous les mémoires et hérite du défaut Stupide.",
-   "status": "done",
+   "t": "{ai:Def} s’étouffe sous les mémoires et hérite du défaut « bête ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -37620,8 +37615,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "Le registre veineux dévore l’esprit {ai:de} et fait naître le défaut Vorace.",
-   "status": "done",
+   "t": "Le registre veineux dévore l’esprit {ai:de} et fait naître le défaut « comptes voraces ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -37631,8 +37626,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The English \"{ai:The} vein ledger\" reads as a possessive with \"'s\" missing. The French translates it as « l’esprit {ai:de} », which reads correctly for every value."
+   ]
   },
   "2fc79d55b7610540": {
    "s": "{cult} vein ledger closes without new devotion.",
@@ -37938,8 +37932,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} se noie dans les chiffres et prend le défaut Stupide.",
-   "status": "done",
+   "t": "{ai:Def} se noie dans les chiffres et prend le défaut « bête ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38280,8 +38274,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} vacille sous les montages fracturés et gagne le défaut Velléitaire.",
-   "status": "done",
+   "t": "{ai:Def} vacille sous les montages fracturés et acquiert le défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38413,8 +38407,8 @@
    "where": "InductionHangar.create",
    "field": "text",
    "kind": "T",
-   "t": "Mettez aux enchères les trophées rituels via des courtiers du darknet et blanchissez les offres directement dans les budgets d’équipement renforcé.",
-   "status": "done",
+   "t": "Mettre aux enchères les trophées rituels via des courtiers du darknet et blanchir les offres directement dans les budgets d’équipement renforcé.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38455,8 +38449,8 @@
    "where": "InductionHangar.create",
    "field": "text",
    "kind": "T",
-   "t": "Échangez des manuels tactiques chiffrés avec les cellules alliées pour que les escouades s’entraînent aux schémas d’effraction les unes des autres.",
-   "status": "done",
+   "t": "Échanger des manuels tactiques chiffrés avec les cellules alliées pour que les escouades s’entraînent aux schémas d’effraction les unes des autres.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38497,8 +38491,8 @@
    "where": "InductionHangar.create",
    "field": "text",
    "kind": "T",
-   "t": "Associez vétérans et recrues pour une autopsie post-opération brutale, en annotant chaque faille sur les images de l’épreuve.",
-   "status": "done",
+   "t": "Associer vétérans et recrues pour une autopsie post-opération brutale, en annotant chaque faille sur les images de l’épreuve.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38522,8 +38516,8 @@
     "money"
    ],
    "kind": "T",
-   "t": "{cult} un inspecteur soudoyé prélève {money}.",
-   "status": "done",
+   "t": "{cult} : un inspecteur soudoyé prélève {money}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38547,8 +38541,8 @@
     "money"
    ],
    "kind": "T",
-   "t": "{cult} les coffres reçoivent {money}.",
-   "status": "done",
+   "t": "{cult} : les coffres reçoivent {money}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38572,8 +38566,8 @@
     "effect"
    ],
    "kind": "T",
-   "t": "{cult} des erreurs d’impression fuient et provoquent l’effet {effect}.",
-   "status": "done",
+   "t": "{cult} : des erreurs d’impression fuient et provoquent l’effet {effect}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38598,8 +38592,8 @@
     "turns"
    ],
    "kind": "T",
-   "t": "{cult} des schémas partagés activent l’effet {effect} pendant {turns, plural, one{# tour} other{# tours}}.",
-   "status": "done",
+   "t": "{cult} partage des schémas, ce qui active l’effet {effect} pendant {turns, plural, one{# tour} other{# tours}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38646,8 +38640,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "{cult} les évaluations s’achèvent dans le respect, mais sans nouveau trait.",
-   "status": "done",
+   "t": "{cult} : les évaluations s’achèvent dans le respect, mais sans nouveau trait.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38730,8 +38724,8 @@
    "where": "LinguaMareTelecast.create",
    "field": "text",
    "kind": "T",
-   "t": "Inondez les grappes de tendances verrouillées de clips sanctifiés et laissez l’indignation tourner sans être vue.",
-   "status": "done",
+   "t": "Inonder les grappes de tendances verrouillées de clips sanctifiés et laisser l’indignation tourner sans être vue.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38772,8 +38766,8 @@
    "where": "LinguaMareTelecast.create",
    "field": "text",
    "kind": "T",
-   "t": "Calez les micros de confession sur des essais de sirènes détournés pour que les boucles de peur ne nous nomment jamais.",
-   "status": "done",
+   "t": "Caler les micros de confession sur des essais de sirènes détournés pour que les boucles de peur ne nous nomment jamais.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38814,8 +38808,8 @@
    "where": "LinguaMareTelecast.create",
    "field": "text",
    "kind": "T",
-   "t": "Pressez un sceau vivant contre la gorge du présentateur pour lier les sermons clandestins.",
-   "status": "done",
+   "t": "Presser un sceau vivant contre la gorge du présentateur pour lier les sermons clandestins.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38839,8 +38833,8 @@
     "n"
    ],
    "kind": "T",
-   "t": "{cult} les filtres internes retirent {n, plural, one{-# ressource médias} other{-# ressources médias}}.",
-   "status": "done",
+   "t": "{cult} : les filtres internes retirent {n, plural, one{-# ressource de médias} other{-# ressources de médias}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38864,8 +38858,8 @@
     "n"
    ],
    "kind": "T",
-   "t": "{cult} la cascade Lingua Mare accorde {n, plural, one{+# ressource médias} other{+# ressources médias}}.",
-   "status": "done",
+   "t": "{cult} : la cascade Lingua Mare accorde {n, plural, one{+# ressource de médias} other{+# ressources de médias}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38889,8 +38883,8 @@
     "effect"
    ],
    "kind": "T",
-   "t": "{cult} un hurlement de larsen fait naître l’effet {effect}.",
-   "status": "done",
+   "t": "{cult} : un hurlement de larsen fait naître l’effet {effect}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38915,8 +38909,8 @@
     "turns"
    ],
    "kind": "T",
-   "t": "{cult} des chœurs de diffusion clandestine tissent l’effet {effect} pendant {turns, plural, one{# tour} other{# tours}}.",
-   "status": "done",
+   "t": "{cult} : des chœurs de diffusion clandestine tissent l’effet {effect} pendant {turns, plural, one{# tour} other{# tours}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38939,8 +38933,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} flanche tandis que le grésillement balafre le credo, et hérite du défaut faible volonté.",
-   "status": "done",
+   "t": "{ai:Def} flanche tandis que le grésillement balafre le credo, et hérite du défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38963,8 +38957,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "{cult} le sceau vocal plane sans imprimer la moindre révélation.",
-   "status": "done",
+   "t": "{cult} : le sceau vocal plane sans imprimer la moindre révélation.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39074,8 +39068,8 @@
    "where": "MassaLiturgiaStream.create",
    "field": "text",
    "kind": "T",
-   "t": "Débouchez les nœuds de syndication de secours et distillez le montage de l’épreuve à travers des écrans muraux vérifiés.",
-   "status": "done",
+   "t": "Déboucher les nœuds de syndication de secours et distiller le montage de l’épreuve à travers des écrans muraux vérifiés.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39116,8 +39110,8 @@
    "where": "MassaLiturgiaStream.create",
    "field": "text",
    "kind": "T",
-   "t": "Enrôlez des drones choristes pour tresser des boucles d’hymnes derrière des panneaux publicitaires anonymes.",
-   "status": "done",
+   "t": "Enrôler des drones choristes pour tresser des boucles d’hymnes derrière des panneaux publicitaires anonymes.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39158,8 +39152,8 @@
    "where": "MassaLiturgiaStream.create",
    "field": "text",
    "kind": "T",
-   "t": "Taillez une bobine de catéchisme privée pour préparer le témoin élevé aux épreuves à venir.",
-   "status": "done",
+   "t": "Tailler une bobine de catéchisme privée pour préparer le témoin élevé aux épreuves à venir.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39183,8 +39177,8 @@
     "n"
    ],
    "kind": "T",
-   "t": "{cult} le dispositif isolé fait pourrir {n, plural, one{-# ressource médias} other{-# ressources médias}}.",
-   "status": "done",
+   "t": "{cult} : le dispositif isolé fait pourrir {n, plural, one{-# ressource de médias} other{-# ressources de médias}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39208,8 +39202,8 @@
     "n"
    ],
    "kind": "T",
-   "t": "{cult} le flux scellé rapporte {n, plural, one{+# ressource médias} other{+# ressources médias}}.",
-   "status": "done",
+   "t": "{cult} : le flux scellé rapporte {n, plural, one{+# ressource de médias} other{+# ressources de médias}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39233,8 +39227,8 @@
     "effect"
    ],
    "kind": "T",
-   "t": "{cult} des drones discordants embrasent l’effet {effect}.",
-   "status": "done",
+   "t": "{cult} : des drones discordants embrasent l’effet {effect}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39259,8 +39253,8 @@
     "turns"
    ],
    "kind": "T",
-   "t": "{cult} le chœur Massa Liturgia tisse l’effet {effect} pendant {turns, plural, one{# tour} other{# tours}}.",
-   "status": "done",
+   "t": "{cult} : le chœur Massa Liturgia tisse l’effet {effect} pendant {turns, plural, one{# tour} other{# tours}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39283,8 +39277,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} s’égare dans les boucles de montage et cède au défaut faible volonté.",
-   "status": "done",
+   "t": "{ai:Def} s’égare dans les boucles de montage et cède au défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39307,8 +39301,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "{cult} le rite du clip se cristallise sans offrir de nouveau souvenir.",
-   "status": "done",
+   "t": "{cult} : le rite du clip se cristallise sans offrir de nouveau souvenir.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39758,8 +39752,8 @@
    ],
    "kind": "T",
    "note": "{resource} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement",
-   "t": "Manque de ressources {resource,select,media{médias}lawfare{judiciaires}corporate{entreprise}combat{combat}other{politiques}}.",
-   "status": "done",
+   "t": "Pas assez de ressources {resource, select, combat{de combat} media{de médias} lawfare{de guérilla judiciaire} corporate{d’entreprise} other{politiques}} pour l’échange.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39955,8 +39949,8 @@
    ],
    "kind": "T",
    "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement",
-   "t": "{cult} exerce {amount} de pouvoir {power,select,media{médiatique}lawfare{judiciaire}corporate{d’entreprise}combat{de combat}other{politique}} sur l’épreuve {ordeal}.",
-   "status": "done",
+   "t": "{cult} exerce {amount} en {power, select, combat{pouvoir de combat} media{pouvoir des médias} lawfare{pouvoir de guérilla judiciaire} corporate{pouvoir d’entreprise} political{pouvoir politique} other{pouvoir}} sur l’épreuve {ordeal}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -41407,8 +41401,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} cède sous la pression vertébrale et hérite du défaut stupide.",
-   "status": "done",
+   "t": "{ai:Def} cède sous la pression vertébrale et hérite du défaut « bête ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -41699,8 +41693,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} subit une surcharge de greffe et acquiert le défaut stupide.",
-   "status": "done",
+   "t": "{ai:Def} subit une surcharge de greffe et acquiert le défaut « bête ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42336,8 +42330,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} tombe sur les spiritueux rituels et acquiert le défaut alcoolique.",
-   "status": "done",
+   "t": "{ai:Def} tombe sur les spiritueux rituels et acquiert le défaut « alcoolique ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42495,8 +42489,8 @@
    "where": "SealedDocketVigil.create",
    "field": "text",
    "kind": "T",
-   "t": "Faites transiter des provisions de silence par des fiducies cautionnées pour nourrir le trésor de guerre judiciaire.",
-   "status": "done",
+   "t": "Faire transiter des provisions de silence par des fiducies cautionnées pour nourrir le trésor de guerre judiciaire.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42537,8 +42531,8 @@
    "where": "SealedDocketVigil.create",
    "field": "text",
    "kind": "T",
-   "t": "Reliez le chœur des greffiers aux flux de dossiers chiffrés pour préparer des jugements occultes.",
-   "status": "done",
+   "t": "Relier le chœur des greffiers aux flux de dossiers chiffrés pour préparer des jugements occultes.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42579,8 +42573,8 @@
    "where": "SealedDocketVigil.create",
    "field": "text",
    "kind": "T",
-   "t": "Marquez l’avocat au fer de statuts vivants pour ancrer le mandat caché.",
-   "status": "done",
+   "t": "Marquer l’avocat au fer de statuts vivants pour ancrer le mandat caché.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42704,8 +42698,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} ploie sous la marque du serment et hérite du défaut de faible volonté.",
-   "status": "done",
+   "t": "{ai:Def} ploie sous la marque du serment et hérite du défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42837,8 +42831,8 @@
    "where": "SleeperCourierBrief.create",
    "field": "text",
    "kind": "T",
-   "t": "Purgez les listes d’abonnés et préparez des coursiers triés sur le volet à des alertes synchronisées.",
-   "status": "done",
+   "t": "Purger les listes d’abonnés et préparer des coursiers triés sur le volet à des alertes synchronisées.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42879,8 +42873,8 @@
    "where": "SleeperCourierBrief.create",
    "field": "text",
    "kind": "T",
-   "t": "Implantez des logiciels malveillants jetables dans les lignes de signalement ennemies pour étouffer leurs réseaux de surveillance.",
-   "status": "done",
+   "t": "Implanter des logiciels malveillants jetables dans les lignes de signalement ennemies pour étouffer leurs réseaux de surveillance.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42921,8 +42915,8 @@
    "where": "SleeperCourierBrief.create",
    "field": "text",
    "kind": "T",
-   "t": "Liez la voix promue à des mots de serment chiffrés réservés aux relais dormants.",
-   "status": "done",
+   "t": "Lier la voix promue à des mots de serment chiffrés réservés aux relais dormants.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43046,8 +43040,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} perd de son acuité sous la pression du vœu et hérite du défaut de stupidité.",
-   "status": "done",
+   "t": "{ai:Def} perd de son acuité sous la pression du vœu et hérite du défaut « bête ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43180,8 +43174,8 @@
    "where": "StakeholderFlesh.create",
    "field": "text",
    "kind": "T",
-   "t": "Organisez à minuit un ralliement de procurations en pompant des hymnes surrénaliens dans les haut-parleurs de l’entreprise.",
-   "status": "done",
+   "t": "Organiser à minuit un ralliement de procurations en pompant des hymnes surrénaliens dans les haut-parleurs de l’entreprise.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43222,8 +43216,8 @@
    "where": "StakeholderFlesh.create",
    "field": "text",
    "kind": "T",
-   "t": "Détournez les fourgons de chair sous le nez des scanners de police pour réapprovisionner les dépôts avancés avant que le couvre-feu de l’aube ne frappe.",
-   "status": "done",
+   "t": "Détourner les fourgons de chair sous le nez des scanners de police pour réapprovisionner les dépôts avancés avant que le couvre-feu de l’aube ne frappe.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43264,8 +43258,8 @@
    "where": "StakeholderFlesh.create",
    "field": "text",
    "kind": "T",
-   "t": "Isolez le directeur promu avec ses référents actionnaires pour coudre des itinéraires de black-out et des arborescences de contacts clandestins.",
-   "status": "done",
+   "t": "Isoler le directeur promu avec ses référents actionnaires pour coudre des itinéraires de black-out et des arborescences de contacts clandestins.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43449,8 +43443,8 @@
    "where": "VeinTicker.create",
    "field": "text",
    "kind": "T",
-   "t": "Injectez de l’adrénaline dans le téléscripteur veineux pour accélérer le pouls et pousser les transactions favorables.",
-   "status": "done",
+   "t": "Injecter de l’adrénaline dans le téléscripteur veineux pour accélérer le pouls et pousser les transactions favorables.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43491,8 +43485,8 @@
    "where": "VeinTicker.create",
    "field": "text",
    "kind": "T",
-   "t": "Drainez les veines rivales du réseau de téléscripteurs et concentrez le flux dans nos canaux artériels.",
-   "status": "done",
+   "t": "Drainer les veines rivales du réseau de téléscripteurs et concentrer le flux dans nos canaux artériels.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43533,8 +43527,8 @@
    "where": "VeinTicker.create",
    "field": "text",
    "kind": "T",
-   "t": "Suturez le courtier promu dans un nœud de téléscripteur caché, réservé aux transactions validées.",
-   "status": "done",
+   "t": "Suturer le courtier promu dans un nœud de téléscripteur caché, réservé aux transactions validées.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43733,8 +43727,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} titube sous l’effet du scellant aigre et embrasse le travers de l’alcoolisme.",
-   "status": "done",
+   "t": "{ai:Def} titube sous l’effet du scellant aigre et embrasse le défaut « alcoolique ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43866,8 +43860,8 @@
    "where": "VoteVein.create",
    "field": "text",
    "kind": "T",
-   "t": "Pompez les voix dans les veines du parti.",
-   "status": "done",
+   "t": "Pomper les voix dans les veines du parti.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43908,8 +43902,8 @@
    "where": "VoteVein.create",
    "field": "text",
    "kind": "T",
-   "t": "Comptez les caillots qui éclatent pour faire adopter le texte.",
-   "status": "done",
+   "t": "Compter les caillots qui éclatent pour faire adopter le texte.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43950,8 +43944,8 @@
    "where": "VoteVein.create",
    "field": "text",
    "kind": "T",
-   "t": "Liez le chef de séance au fouet veineux.",
-   "status": "done",
+   "t": "Lier le chef de séance au fouet veineux.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -44024,8 +44018,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "La pression du décompte fait naître chez {ai:def} le travers de la volonté faible.",
-   "status": "done",
+   "t": "La pression du décompte fait naître chez {ai:def} le défaut « volonté faible ».",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -46626,8 +46620,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Def} reçoit la litanie de l’Expert au couteau, gravée à même sa poigne vivante.",
-   "status": "done",
+   "t": "{ai:Def} reçoit la litanie « spécialiste du couteau », gravée à même sa poigne vivante.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -48306,8 +48300,8 @@
    "where": "PoliticalConst.new",
    "field": "name",
    "kind": "N",
-   "t": "Sacrement écarlate du lobbyiste",
-   "status": "done",
+   "t": "Sacrement écarlate de la lobbyiste",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -49232,8 +49226,8 @@
    "where": "ProstituteCult.getInfo",
    "field": "success",
    "kind": "T",
-   "t": "Le réseau vole en éclats. La maquerelle s’effondre et ses escortes s’enfuient sous la pluie de néon, ne laissant que des sigilles de rouge à lèvres qui s’effacent sur le béton.",
-   "status": "done",
+   "t": "Le réseau vole en éclats. La maquerelle s’effondre et ses escorts s’enfuient sous la pluie de néon, ne laissant que des sigilles de rouge à lèvres qui s’effacent sur le béton.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -49295,8 +49289,8 @@
    "where": "ProstituteCult.getInfo",
    "field": "job",
    "kind": "N",
-   "t": "escorte de choc",
-   "status": "done",
+   "t": "escort de choc",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -49921,8 +49915,8 @@
    "where": "Slime.init",
    "field": "name",
    "kind": "N",
-   "t": "bave",
-   "status": "done",
+   "t": "mucus",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -49990,8 +49984,8 @@
    "where": "Smash.init",
    "field": "name",
    "kind": "N",
-   "t": "fracas",
-   "status": "done",
+   "t": "smash",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -50001,8 +49995,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"smash\" effect paired with *WAIL*. Its exact mechanic is unclear. I chose « fracas » (the impact, or a smashed state)."
+   ]
   },
   "40824bc564710a76": {
    "s": "*WAIL*",
@@ -52509,8 +52502,8 @@
    ],
    "where": "Group.row",
    "kind": "T",
-   "t": "dossier clos",
-   "status": "done",
+   "t": "dossier classé",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -52530,8 +52523,8 @@
    "where": "Group.row",
    "field": "row",
    "kind": "T",
-   "t": "Délai avant l’équipe",
-   "status": "done",
+   "t": "Échéance de l’équipe",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -52577,8 +52570,8 @@
    "where": "Group.row",
    "field": "row",
    "kind": "T",
-   "t": "Niveau de l’équipe",
-   "status": "done",
+   "t": "Puissance de l’équipe",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -52660,8 +52653,8 @@
    ],
    "where": "Group.numToWord",
    "kind": "T",
-   "t": "élevé",
-   "status": "done",
+   "t": "élevée",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -52680,8 +52673,8 @@
    ],
    "where": "Group.numToWord",
    "kind": "T",
-   "t": "très élevé",
-   "status": "done",
+   "t": "très élevée",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -62114,8 +62107,8 @@
    ],
    "where": "GunCabinet.getTooltipRows",
    "kind": "T",
-   "t": "fermée",
-   "status": "done",
+   "t": "fermé",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -62134,8 +62127,8 @@
    ],
    "where": "GunCabinet.getTooltipRows",
    "kind": "T",
-   "t": "ouverte",
-   "status": "done",
+   "t": "ouvert",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -62174,8 +62167,8 @@
    ],
    "where": "GunCabinet.getTooltipRows",
    "kind": "T",
-   "t": "fouillée",
-   "status": "done",
+   "t": "fouillé",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -63642,8 +63635,8 @@
     "item"
    ],
    "kind": "T",
-   "t": "Installer {item}",
-   "status": "done",
+   "t": "Installer {item:def}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -66198,8 +66191,8 @@
    "where": "AreaTooltip.signed",
    "field": "row",
    "kind": "T",
-   "t": "étranger",
-   "status": "done",
+   "t": "hors uniforme",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -66219,8 +66212,8 @@
    "where": "AreaTooltip.signed",
    "field": "row",
    "kind": "T",
-   "t": "couvert",
-   "status": "done",
+   "t": "revêtement",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67476,8 +67469,8 @@
    "where": "CultBazaar.showEquipList",
    "field": "name",
    "kind": "T",
-   "t": "Gilet en Kevlar",
-   "status": "done",
+   "t": "Armure en kevlar",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -72451,8 +72444,8 @@
   }
  },
  "totals": {
-  "calls": 152,
-  "input": 1685198,
-  "output": 544702
+  "calls": 153,
+  "input": 1691066,
+  "output": 544843
  }
 }
