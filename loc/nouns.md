@@ -6,9 +6,13 @@ for example `{x:def}` → « le policier », `{x:de}` → « de la policière »
 For every noun, give:
 - the {LANG} singular noun, lowercase, WITHOUT an article (the game adds it);
 - `g`: its grammatical gender, `m` or `f`;
-- `fs`: ONLY for a noun naming a person whose job or role has a distinct feminine form (policier →
-  policière, infirmier → infirmière, agent → agente is NOT used, keep agent). The game uses it when
-  the person is a woman. Leave it out for objects, animals and epicene nouns (secrétaire, garde);
+- `fs`: for EVERY noun naming a person (a job, a rank, a role, a kind of person): the form for a
+  woman, which the game uses when the person is one. Either the distinct feminine, in current usage
+  (policier → policière, agent → agente, soldat → soldate, officier → officière), or the same word
+  when the noun has one form for both (comptable → comptable, élève → élève, garde → garde): the game
+  then writes the feminine article (« la comptable », « une élève ») and « elle ». Leave it out for
+  objects and animals, and for a noun whose gender stays the same whoever it names (une recrue, une
+  personnalité, un mannequin);
 - `elide="0"`: ONLY when the noun starts with an aspirated h (le héros, la hache), so the game
   writes « le » / « la » instead of « l’ ».
 
@@ -18,5 +22,6 @@ interface and the sentences agree. The context (`ctx:`) says where the noun come
 Answer with one line per noun, nothing else:
 
 <n id="1" g="m" fs="policière">policier</n>
-<n id="2" g="f">hache</n>
-<n id="3" g="m" elide="0">hibou</n>
+<n id="2" g="m" fs="comptable">comptable</n>
+<n id="3" g="f">hache</n>
+<n id="4" g="m" elide="0">hibou</n>

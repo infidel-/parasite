@@ -600,21 +600,22 @@ def uncell(s: str) -> str:
     return re.sub(r"\\(.)", lambda m: {"t": "\t", "n": "\n"}.get(m.group(1), m.group(1)), s)
 
 
-def review(code: str) -> int:
-    """loc/review/<code>.tsv: every current string, those with a model doubt first. Write a
-    correction in the `fix` column and run apply-review. UTF-8 with a BOM, so Excel reads the accents."""
+def review(code: str, doubts: bool = False) -> int:
+    """loc/review/<code>.tsv: every current string, those with a model doubt first (--doubts: only
+    those, into <code>-doubts.tsv). Write a correction in the `fix` column and run apply-review
+    (--sheet for the doubts file). UTF-8 with a BOM, so Excel reads the accents."""
     st = load_state(code)
     rows = []
     for e in catalog():
         k = locfmt.sha(e["s"])
         r = st["strings"].get(k)
-        if not r or not r.get("t"):
+        if not r or not r.get("t") or (doubts and not r.get("doubt")):
             continue
         ctx = " · ".join(x for x in [e["loc"][0], e.get("where"), e.get("field") and "in " + e["field"],
                                        e.get("note") and "note: " + e["note"]] if x)
         rows.append((0 if r.get("doubt") else 1, e["loc"][0], [k, ctx, e["s"], r["t"], r.get("doubt", ""), ""]))
     rows.sort(key=lambda x: (x[0], x[1]))
-    out = LOC / "review" / f"{code}.tsv"
+    out = LOC / "review" / f"{code}{'-doubts' if doubts else ''}.tsv"
     out.parent.mkdir(parents=True, exist_ok=True)
     with out.open("w", encoding="utf-8-sig", newline="") as fh:
         fh.write("\t".join(REVIEW_COLS) + "\n")
@@ -749,6 +750,17 @@ def parse_nouns(text: str, batch: list) -> dict:
     return out
 
 
+def noun_agrees(n: dict | None, r: dict | None) -> bool:
+    """A noun entry is current when it exists and names the noun as the interface translation of the
+    same key does (its s or its fs), so the log and the windows agree; a revised interface redoes it."""
+    if n is None:
+        return False
+    if not r or not r.get("t"):
+        return True
+    norm = lambda x: x.replace("'", "’").lower().strip()
+    return norm(r["t"]) in (norm(n["s"]), norm(n.get("fs", "")))
+
+
 def nouns(code: str) -> int:
     """Fill loc/nouns-<code>.json (the runtime noun table, reviewed by hand) for every noun key
     it lacks; the interface translation of the key, when there is one, is passed so both agree."""
@@ -756,8 +768,8 @@ def nouns(code: str) -> int:
     table = load_json(path, {})
     st = load_state(code)
     TOTALS[code] = st["totals"]
-    todo = [e for e in noun_keys(catalog()) if e["s"] not in table]
-    info(f"{code}: {len(todo)} nouns to add ({len(table)} in the table)")
+    todo = [e for e in noun_keys(catalog()) if not noun_agrees(table.get(e["s"]), st["strings"].get(locfmt.sha(e["s"])))]
+    info(f"{code}: {len(todo)} nouns to add or redo ({len(table)} in the table)")
     style = (LOC / f"style-{code}.md").read_text(encoding="utf-8")
     system = (LOC / "nouns.md").read_text(encoding="utf-8").replace("{LANG}", NAMES.get(code, code))
     system = system.rstrip() + "\n\n" + style.strip() + "\n"
@@ -867,6 +879,9 @@ def selftest() -> int:
     assert store_problem(en, en.replace("game.", "x" * 301)).startswith("short description")
     assert typo("fr", "Attention ! « Oui » : l'agent") == "Attention\u00a0! «\u00a0Oui\u00a0»\u00a0: l’agent"
     assert typo("fr", "<span class='x'>a</span> &rarr; {s:def}") == "<span class='x'>a</span> &rarr; {s:def}"
+    assert noun_agrees({"g": "m", "s": "policier", "fs": "policière"}, {"t": "Policière"})
+    assert not noun_agrees({"g": "m", "s": "poing américain"}, {"t": "coup-de-poing américain"})
+    assert not noun_agrees(None, None) and noun_agrees({"g": "f", "s": "hache"}, None)
     print("translate selftest: ok")
     return 0
 
@@ -875,6 +890,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("cmd", choices=["probe", "run", "build", "status", "nouns", "review", "apply-review", "store", "selftest"])
     ap.add_argument("--sheet", help="apply-review: the TSV to import (default loc/review/<lang>.tsv)")
+    ap.add_argument("--doubts", action="store_true", help="review: only the strings with a model doubt")
     ap.add_argument("--lang", default="fr")
     ap.add_argument("--batches", type=int, default=3, help="probe: how many batches")
     ap.add_argument("--files", help="comma-separated path fragments to restrict the catalog")
@@ -890,7 +906,7 @@ def main() -> int:
     if a.cmd == "nouns":
         return nouns(a.lang)
     if a.cmd == "review":
-        return review(a.lang)
+        return review(a.lang, a.doubts)
     if a.cmd == "store":
         return store(a.lang)
     if a.cmd == "apply-review":
