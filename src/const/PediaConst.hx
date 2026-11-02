@@ -161,7 +161,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
 
 <p>There are two types of readable clues - short ones like documents and notes, and long ones like journals and books. The first type can be read anywhere while the second one requires being in a habitat but gives you more clues.</p>
 
-<p>The other source of event clues are NPCs. They must first be researched themselves (their name, photo and location must be known) through other clues or computer research. Areas that contain known event NPCs are marked with a smiley icon. And once you research the NPC, their icon in the area mode will be marked with a smiley, too. You can find out what the NPC knows through the brain probe once you locate them in the area and invade.<p>
+<p>The other source of event clues are NPCs. They must first be researched themselves (their name, photo and location must be known) through other clues or computer research. Areas that contain known event NPCs are marked with a smiley icon. And once you research the NPC, their icon in the area mode will be marked with a smiley, too. You can find out what the NPC knows through the brain probe once you locate them in the area and invade.</p>
 
 <p>Computer research (more like internet research) is a source of clues on NPCs. Due to it being an action requiring high concentration it can only be done in a habitat. You can leave the computer device lying there and, by the way, laptops are more efficient for research.</p>"),
         },

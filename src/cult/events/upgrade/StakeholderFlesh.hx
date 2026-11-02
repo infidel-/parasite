@@ -98,7 +98,7 @@ class StakeholderFlesh
       var granted = addTrait(cult, targetID, 'mind', true);
       if (granted == null)
         {
-          cult.logsg(T('{cult} proxy dark flares without gifting new insight.', { cult: cult }));
+          cult.logsg(T('{cult} stake dark flares without gifting new insight.', { cult: cult }));
           return;
         }
       var ai = cult.getMemberByID(targetID);

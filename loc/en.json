@@ -11998,7 +11998,7 @@
    "field": "name"
   },
   {
-   "s": "<p>Once you complete the tutorial, you get to the meat of the game - collecting clues to open up the timeline of events that have led to the present state. You can see the currently known events list in the Timeline window. Each event has a location, a text and NPC participants attached to it. Researching the more recent events through the clues allows you to open up earlier events until you get to the key event which will allow you to progress further into the final part of the game. Note that the events are numbered relatively to the first one known. Every event location is marked with an icon in the center of its tile on the regional map. An orange torn note means that there are clues you can gather in that area. A gray note with a tick means that you have already gathered everything you could. When a location with clues left is off-screen, its torn note waits at the edge of the screen in its direction.</p>\n\n<p>There are two types of readable clues - short ones like documents and notes, and long ones like journals and books. The first type can be read anywhere while the second one requires being in a habitat but gives you more clues.</p>\n\n<p>The other source of event clues are NPCs. They must first be researched themselves (their name, photo and location must be known) through other clues or computer research. Areas that contain known event NPCs are marked with a smiley icon. And once you research the NPC, their icon in the area mode will be marked with a smiley, too. You can find out what the NPC knows through the brain probe once you locate them in the area and invade.<p>\n\n<p>Computer research (more like internet research) is a source of clues on NPCs. Due to it being an action requiring high concentration it can only be done in a habitat. You can leave the computer device lying there and, by the way, laptops are more efficient for research.</p>",
+   "s": "<p>Once you complete the tutorial, you get to the meat of the game - collecting clues to open up the timeline of events that have led to the present state. You can see the currently known events list in the Timeline window. Each event has a location, a text and NPC participants attached to it. Researching the more recent events through the clues allows you to open up earlier events until you get to the key event which will allow you to progress further into the final part of the game. Note that the events are numbered relatively to the first one known. Every event location is marked with an icon in the center of its tile on the regional map. An orange torn note means that there are clues you can gather in that area. A gray note with a tick means that you have already gathered everything you could. When a location with clues left is off-screen, its torn note waits at the edge of the screen in its direction.</p>\n\n<p>There are two types of readable clues - short ones like documents and notes, and long ones like journals and books. The first type can be read anywhere while the second one requires being in a habitat but gives you more clues.</p>\n\n<p>The other source of event clues are NPCs. They must first be researched themselves (their name, photo and location must be known) through other clues or computer research. Areas that contain known event NPCs are marked with a smiley icon. And once you research the NPC, their icon in the area mode will be marked with a smiley, too. You can find out what the NPC knows through the brain probe once you locate them in the area and invade.</p>\n\n<p>Computer research (more like internet research) is a source of clues on NPCs. Due to it being an action requiring high concentration it can only be done in a habitat. You can leave the computer device lying there and, by the way, laptops are more efficient for research.</p>",
    "kind": "T",
    "loc": [
     "src/const/PediaConst.hx:160"
@@ -19835,7 +19835,7 @@
    "field": "logsg"
   },
   {
-   "s": "{cult} proxy dark flares without gifting new insight.",
+   "s": "{cult} stake dark flares without gifting new insight.",
    "kind": "T",
    "loc": [
     "src/cult/events/upgrade/StakeholderFlesh.hx:101"
@@ -33165,7 +33165,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:186",
-    "src/ui/Options.hx:475"
+    "src/ui/Options.hx:474"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33176,7 +33176,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:187",
-    "src/ui/Options.hx:476"
+    "src/ui/Options.hx:475"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33187,7 +33187,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:188",
-    "src/ui/Options.hx:477"
+    "src/ui/Options.hx:476"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33198,7 +33198,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:189",
-    "src/ui/Options.hx:478"
+    "src/ui/Options.hx:477"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33348,7 +33348,7 @@
    "s": "Presets",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:434"
+    "src/ui/Options.hx:433"
    ],
    "vars": [],
    "where": "Options.addOptSelect",

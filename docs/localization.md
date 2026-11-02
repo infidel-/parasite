@@ -159,7 +159,13 @@ translation of the key.
   render with the language default for the session; the saved choice is kept and returns in English.
   The default is the lang file's `font`/`fontTitle`, else Virtucorp/Cruiser2015.
 - `--text-font`/`--text-font-title` always end in `, Orkney-Regular` (every European Latin letter), so
-  a missing glyph falls back to a font in the game's style instead of a system font.
+  a missing glyph falls back to a font in the game's style instead of a system font. After it come
+  `FbText-cyr/-cjk/-kr` (`FbTitle-*` for titles), `sans-serif`: system sans faces for Cyrillic and Greek,
+  CJK and Hangul (`Config.FALLBACKS`, `local()` sources for Windows and SteamOS), each with a
+  `size-adjust` that `Config.fallbackFaces` measures on every font change so their glyphs stand as
+  tall as the chosen font's capitals (Virtucorp: Cyrillic 143%, CJK 124%). `font-size-adjust` cannot
+  do this: several game fonts declare a cap/x-height far from what they draw (Virtucorp 0.68/0.54
+  declared, 1.0/0.78 drawn), so `from-font` scales the chosen font itself.
 - Alien speech (`Lang.renderText`) scrambles every letter of a cased script, accents included.
 - For later languages: full Europe incl. Greek/Cyrillic is only Xolonium; all European Latin is
   Orkney. CJK needs bundled fonts (`@font-face` + `unicode-range` in `electron/fonts.css`, the lang

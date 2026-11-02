@@ -396,8 +396,91 @@ class Config
 // Orkney (every European Latin letter) catches any glyph the chosen font lacks, before a system font
   function applyFonts()
     {
-      ui.UI.setVar('--text-font', l10n.Loc.shownFont(font, false) + ', Orkney-Regular');
-      ui.UI.setVar('--text-font-title', l10n.Loc.shownFont(fontTitle, true) + ', Orkney-Regular');
+      var text = l10n.Loc.shownFont(font, false);
+      var title = l10n.Loc.shownFont(fontTitle, true);
+      ui.UI.setVar('--text-font', text + ', Orkney-Regular, FbText-cyr, FbText-cjk, FbText-kr, sans-serif');
+      ui.UI.setVar('--text-font-title', title + ', Orkney-Regular, FbTitle-cyr, FbTitle-cjk, FbTitle-kr, sans-serif');
+      fallbackFaces(text, title);
+    }
+
+  // the scripts no game font has: Cyrillic and Greek, CJK, Hangul. each falls back to a system sans
+  // face (`src`, first one found) for its `range`; `ratio` is how tall its `probe` glyph should stand
+  // against the chosen font's capital H (an ideograph fills more of the em than a Latin capital)
+  static var FALLBACKS = [
+    {
+      id: 'cyr',
+      src: "local('Segoe UI'), local('Arial'), local('DejaVu Sans'), local('Noto Sans'), local('Liberation Sans')",
+      range: 'U+0370-03FF, U+0400-052F, U+1C80-1C8F, U+1F00-1FFF, U+2DE0-2DFF, U+A640-A69F',
+      probe: 'Ж',
+      ratio: 1.0,
+    },
+    {
+      id: 'cjk',
+      src: "local('Microsoft YaHei'), local('Noto Sans CJK SC'), local('Noto Sans CJK SC Regular'), local('Noto Sans SC'), local('Source Han Sans SC'), local('WenQuanYi Micro Hei')",
+      range: 'U+2E80-2FDF, U+3000-30FF, U+3100-312F, U+31A0-31FF, U+3200-33FF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FFFF',
+      probe: '宿',
+      ratio: 1.2,
+    },
+    {
+      id: 'kr',
+      src: "local('Malgun Gothic'), local('Noto Sans CJK KR'), local('Noto Sans CJK KR Regular'), local('Noto Sans KR')",
+      range: 'U+1100-11FF, U+3130-318F, U+A960-A97F, U+AC00-D7AF, U+D7B0-D7FF',
+      probe: '숙',
+      ratio: 1.2,
+    },
+  ];
+  static var fallbackGen = 0;
+
+// fallback faces (FbText-*, FbTitle-*) scaled so foreign glyphs stand as tall as the chosen text and
+// title fonts. measured off the glyphs as drawn: several game fonts declare a cap/x-height far from
+// their real one (Virtucorp: 0.68 / 0.54 declared, 1.0 / 0.78 drawn), which rules out font-size-adjust
+  static function fallbackFaces(text: String, title: String)
+    {
+      var doc = js.Browser.document;
+      var el = doc.getElementById('font-fallback');
+      if (el == null)
+        {
+          el = doc.createStyleElement();
+          el.id = 'font-fallback';
+          doc.head.appendChild(el);
+        }
+      // unscaled faces first, to measure against
+      var base = new StringBuf();
+      for (f in FALLBACKS)
+        base.add("@font-face { font-family: 'FbBase-" + f.id + "'; src: " + f.src + '; unicode-range: ' + f.range + '; }\n');
+      el.textContent = base.toString();
+      var gen = ++fallbackGen;
+      var loads = [ doc.fonts.load("100px '" + text + "'", 'H'), doc.fonts.load("100px '" + title + "'", 'H') ];
+      for (f in FALLBACKS)
+        loads.push(doc.fonts.load("100px 'FbBase-" + f.id + "'", f.probe));
+      js.lib.Promise.all(loads).then(function(_) {
+        // a newer font choice already rewrote the faces
+        if (gen != fallbackGen)
+          return;
+        var css = new StringBuf();
+        css.add(base.toString());
+        for (pair in [ [ 'FbText', text ], [ 'FbTitle', title ] ])
+          {
+            var cap = glyphHeight("'" + pair[1] + "'", 'H');
+            for (f in FALLBACKS)
+              {
+                var pct = Math.round(Math.min(160, Math.max(80, 100 * cap * f.ratio / glyphHeight("'FbBase-" + f.id + "'", f.probe))));
+                css.add("@font-face { font-family: '" + pair[0] + '-' + f.id + "'; src: " + f.src +
+                  '; unicode-range: ' + f.range + '; size-adjust: ' + pct + '%; }\n');
+              }
+          }
+        el.textContent = css.toString();
+      });
+    }
+
+// height of one glyph as drawn at 100px, in px
+  static function glyphHeight(family: String, ch: String): Float
+    {
+      var c = js.Browser.document.createCanvasElement().getContext2d();
+      c.font = '100px ' + family;
+      // std TextMetrics only types width; the bounding box is in every engine this game runs on
+      var m: { actualBoundingBoxAscent: Float, actualBoundingBoxDescent: Float } = cast c.measureText(ch);
+      return m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
     }
 
   public static var fontsTitle = [
