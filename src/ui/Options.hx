@@ -246,11 +246,10 @@ class Options extends UIWindow
           Loc.reload();
         }
       };
-      game.ui.event({
-        type: UIEVENT_STATE,
-        state: UISTATE_YESNO,
-        obj: params,
-      });
+      // opened directly: ui.event() only queues it, and the queue waits for the Options window to close
+      game.ui.getComponent(UISTATE_YESNO).setParams(params);
+      game.scene.sounds.play('window-open');
+      game.ui.state = UISTATE_YESNO;
     }
 
 // finalize the previous card's row count
