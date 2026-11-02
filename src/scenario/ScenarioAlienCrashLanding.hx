@@ -86,20 +86,11 @@ class ScenarioAlienCrashLanding extends Scenario
               var type = tmp[Std.random(tmp.length)];
               timeline.setVar('alienMissionType', type);
               timeline.setVar('alienLanguageID', 1 + Std.random(4));
-
-              // change event note on the fly
-              var ev = timeline.getEvent('alienMission');
-              var text = type;
-              switch (type)
-                {
-                  case 'intel':
-                    text = 'intelligence collection';
-                }
-              ev.notes[0].text += ' The mission type was ' + text + '.';
             },
 
           notes: [
-            'You have received your mission details at the HQ.'
+            // tr: {alienMissionType} is a timeline variable: abduction, liquidation or intel
+            N('You have received your mission details at the HQ. The mission type was {alienMissionType, select, abduction{abduction} liquidation{liquidation} other{intelligence collection}}.')
             ],
           },
 
@@ -107,10 +98,10 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien ship spotted by civilians',
           next: 'shipSpottedMil',
           notes: [
-            'UFO was spotted by civilian witnesses.',
-            'Media has published some reports about UFO sighting.',
-            'Ufologists have recorded the information about UFO sighting.',
-            'Independent experts and conspiracy theorists may have some knowledge about the events.'
+            N('UFO was spotted by civilian witnesses.'),
+            N('Media has published some reports about UFO sighting.'),
+            N('Ufologists have recorded the information about UFO sighting.'),
+            N('Independent experts and conspiracy theorists may have some knowledge about the events.')
             ],
           location: {
             type: AREA_GROUND,
@@ -126,9 +117,9 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien ship spotted by military',
           next: 'dogfight',
           notes: [
-            'Radars from a military base have spotted a moving signature.',
-            'Radio requests were left unanswered.',
-            'An interceptor was scrambled.'
+            N('Radars from a military base have spotted a moving signature.'),
+            N('Radio requests were left unanswered.'),
+            N('An interceptor was scrambled.')
             ],
           location: {
             type: AREA_MILITARY_BASE,
@@ -142,10 +133,10 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'dogfight with alien ship',
           nextOR: [ 'shipLanded' => 30, 'shipShotDown' => 70 ],
           notes: [
-            'The interceptor pilot described the dogfight in detail.',
+            N('The interceptor pilot described the dogfight in detail.'),
             "A veteran pilot, he said it was unlike anything he's ever seen before.",
-            'The plane suffered heavy damage in a fight.',
-            'The pilot is on psychic evaluation and extended leave.'
+            N('The plane suffered heavy damage in a fight.'),
+            N('The pilot is on psychic evaluation and extended leave.')
             ],
           npc: [ N('soldier') => 5 ],
           },
@@ -158,7 +149,7 @@ class ScenarioAlienCrashLanding extends Scenario
               timeline.setVar('shipLanded', true);
             },
           notes: [
-            'The pilot did not manage to shoot UFO down but it was tracked by a second plane until it landed.',
+            N('The pilot did not manage to shoot UFO down but it was tracked by a second plane until it landed.'),
             ],
           location: {
             near: 'shipSpottedCiv',
@@ -174,7 +165,7 @@ class ScenarioAlienCrashLanding extends Scenario
               timeline.setVar('shipShotDown', true);
             },
           notes: [
-            'The pilot managed to shoot down the object.',
+            N('The pilot managed to shoot down the object.'),
             ],
           location: {
             near: 'shipSpottedCiv',
@@ -186,9 +177,9 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien ship landing investigation',
           next: 'alienShipTransportation',
           notes: [
-            'The military personnel formed a cordon surrounding the scene.',
-            'Agents proceeded to study the landing scene and gather evidence.',
-            'The agents made the decision to move all objects on the scene to a secure facility.'
+            N('The military personnel formed a cordon surrounding the scene.'),
+            N('Agents proceeded to study the landing scene and gather evidence.'),
+            N('The agents made the decision to move all objects on the scene to a secure facility.')
             ],
           location: {
             sameAs: 'shipLanded'
@@ -200,9 +191,9 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien ship crash landing investigation',
           next: 'alienShipTransportation',
           notes: [
-            'The military personnel formed a cordon surrounding the scene.',
-            'Agents proceeded to study the scene and gather evidence.',
-            'The agents made the decision to move all evidence recovered on the scene to a secure facility.'
+            N('The military personnel formed a cordon surrounding the scene.'),
+            N('Agents proceeded to study the scene and gather evidence.'),
+            N('The agents made the decision to move all evidence recovered on the scene to a secure facility.')
             ],
           location: {
             sameAs: 'shipShotDown'
@@ -214,8 +205,8 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien ship transported to secret facility',
           next: 'alienShipStudy',
           notes: [
-            'Everything recovered from the scene was successfully transported to %facility1%.',
-            'The largest object has received a speficic codename for future reference: %shipCode%.'
+            N('Everything recovered from the scene was successfully transported to %facility1%.'),
+            N('The largest object has received a speficic codename for future reference: %shipCode%.')
             ],
           npc: [ N('agent') => 5 ],
         },
@@ -224,10 +215,10 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'study of an alien ship',
           next: 'alienCaptureMission',
           notes: [
-            'Studying %shipCode% has proved to be extremely difficult.',
-            'The technology that produced %shipCode% is much more advanced than the one available to human civilization.',
-            'Strange metallic alloy that forms the outer layer of %shipCode% is unknown to science.',
-            'Scientists have been unable to determine if it is indeed a flying vessel.'
+            N('Studying %shipCode% has proved to be extremely difficult.'),
+            N('The technology that produced %shipCode% is much more advanced than the one available to human civilization.'),
+            N('Strange metallic alloy that forms the outer layer of %shipCode% is unknown to science.'),
+            N('Scientists have been unable to determine if it is indeed a flying vessel.')
           ],
           location: {
             type: AREA_FACILITY,
@@ -244,9 +235,9 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien capture mission',
           nextOR: [ 'alienCaptured' => 30, 'alienKilled' => 70 ],
           notes: [
-            'It was determined that %shipCode% could have pilot and/or crew onboard.',
-            'Multiple teams of agents were sent to capture or kill the pilot.',
-            'The primary goal of the mission was capturing the pilot alive.'
+            N('It was determined that %shipCode% could have pilot and/or crew onboard.'),
+            N('Multiple teams of agents were sent to capture or kill the pilot.'),
+            N('The primary goal of the mission was capturing the pilot alive.')
             ],
           location: {
             near: 'shipSpottedCiv' // cant make it near landing because of branching
@@ -258,9 +249,9 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'live alien was captured',
           next: 'liveAlienTransportation',
           notes: [
-            'Fortunately, the %shipCode% pilot survived the capture mission.',
-            'The pilot was not human.',
-            'The pilot was a grey humanoid of unknown origin.'
+            N('Fortunately, the %shipCode% pilot survived the capture mission.'),
+            N('The pilot was not human.'),
+            N('The pilot was a grey humanoid of unknown origin.')
             ],
           location: {
             sameAs: 'alienCaptureMission'
@@ -272,9 +263,9 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'alien was killed during capture attempt',
           next: 'deadAlienTransportation',
           notes: [
-            'Unfortunately, during the capture attempt the %shipCode% pilot was shot dead.',
-            'The pilot was not human.',
-            'The pilot was a grey humanoid of unknown origin.'
+            N('Unfortunately, during the capture attempt the %shipCode% pilot was shot dead.'),
+            N('The pilot was not human.'),
+            N('The pilot was a grey humanoid of unknown origin.')
             ],
           location: {
             sameAs: 'alienCaptureMission'
@@ -290,8 +281,8 @@ class ScenarioAlienCrashLanding extends Scenario
               timeline.setVar('alienIsAlive', 1);
             },
           notes: [
-            'The captured organism was transported to %facility2% for further study. Project %projectCode% initiated.',
-            'Captured organism has received a special code: %alienCode%.',
+            N('The captured organism was transported to %facility2% for further study. Project %projectCode% initiated.'),
+            N('Captured organism has received a special code: %alienCode%.'),
             ],
           npc: [ N('agent') => 2 ],
           },
@@ -304,8 +295,8 @@ class ScenarioAlienCrashLanding extends Scenario
               timeline.setVar('alienIsDead', 1);
             },
           notes: [
-            'The acquired cadaver was transported to %facility2% for further study. Project %projectCode% initiated.',
-            'The body of possibly extraterrestrial origins has received a special code: %alienCode%.',
+            N('The acquired cadaver was transported to %facility2% for further study. Project %projectCode% initiated.'),
+            N('The body of possibly extraterrestrial origins has received a special code: %alienCode%.'),
             ],
           npc: [ N('agent') => 2 ],
           },
@@ -314,10 +305,10 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'study of a live alien',
           next: 'parasiteRemoval',
           notes: [
-            'Preliminary examinations confirmed the extraterrestrial origins of %alienCode% organism.',
-            'Studies have shown that %alienCode% actually consists of two separate organisms.',
-            'One of the organisms is parasitic in nature. It has received a unique codename: %parasiteCode%.',
-            'It is unclear at this point whether the host organism of %alienCode% has any intelligence.'
+            N('Preliminary examinations confirmed the extraterrestrial origins of %alienCode% organism.'),
+            N('Studies have shown that %alienCode% actually consists of two separate organisms.'),
+            N('One of the organisms is parasitic in nature. It has received a unique codename: %parasiteCode%.'),
+            N('It is unclear at this point whether the host organism of %alienCode% has any intelligence.')
             ],
           location: {
             id: 'facility2',
@@ -339,11 +330,11 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'study of alien remains',
           next: 'parasiteRemoval',
           notes: [
-            'Preliminary examinations confirmed the extraterrestrial origins of %alienCode% cadaver.',
-            'Studies have shown that %alienCode% remains actually consist of two separate organisms.',
-            'One of the organisms is still functioning and is parasitic in nature.',
-            'The parasite organism has received a unique codename: %parasiteCode%.',
-            'It is unclear whether the host organism of %alienCode% had any intelligence.'
+            N('Preliminary examinations confirmed the extraterrestrial origins of %alienCode% cadaver.'),
+            N('Studies have shown that %alienCode% remains actually consist of two separate organisms.'),
+            N('One of the organisms is still functioning and is parasitic in nature.'),
+            N('The parasite organism has received a unique codename: %parasiteCode%.'),
+            N('It is unclear whether the host organism of %alienCode% had any intelligence.')
             ],
           location: {
             id: 'facility2',
@@ -362,9 +353,9 @@ class ScenarioAlienCrashLanding extends Scenario
           name: 'parasite removal',
           next: 'parasiteTransportation',
           notes: [
-            'The decision has been made to try to separate organisms surgically.',
-            'Separation was successful and %parasiteCode% was scheduled for transportation to %facility3%.',
-            'The specialist performing the operation speculated that the process was a violent shock for both %alienCode% and %parasiteCode% nervous systems and mental capacity.',
+            N('The decision has been made to try to separate organisms surgically.'),
+            N('Separation was successful and %parasiteCode% was scheduled for transportation to %facility3%.'),
+            N('The specialist performing the operation speculated that the process was a violent shock for both %alienCode% and %parasiteCode% nervous systems and mental capacity.'),
             ],
           location: { // cannot use sameAs due to branching but it should smartly check if location with this id exists
             id: 'facility2',
@@ -377,9 +368,9 @@ class ScenarioAlienCrashLanding extends Scenario
         'parasiteTransportation' => {
           name: 'parasite transportation',
           notes: [
-            'During the transportation of %parasiteCode% to %facility3% the containment protocol has been breached and the specimen has managed to escape.',
-            'Current location of %parasiteCode% specimen is unknown, project %projectCode% is on hold until retrieval.',
-            'Teams of field specialists have been scrambled to the area.'
+            N('During the transportation of %parasiteCode% to %facility3% the containment protocol has been breached and the specimen has managed to escape.'),
+            N('Current location of %parasiteCode% specimen is unknown, project %projectCode% is on hold until retrieval.'),
+            N('Teams of field specialists have been scrambled to the area.')
             ],
           location: {
             },

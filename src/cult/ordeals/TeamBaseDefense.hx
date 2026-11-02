@@ -1,6 +1,7 @@
 // timed team base-defense ordeal
 package cult.ordeals;
 
+import l10n.Loc;
 import cult.ProfaneOrdeal;
 import cult.missions.TeamBaseDefense as TeamBaseDefenseMission;
 import game.Game;
@@ -24,8 +25,14 @@ class TeamBaseDefense extends ProfaneOrdeal
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
-      note = Const.col('alert', 'The team attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.');
+      note = N('The team attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.');
       timer = 12;
+    }
+
+// the note, in the alert color
+  public override function getNote(): String
+    {
+      return Const.col('alert', Loc.tr(note));
     }
 
 // syncs base status timer after central profane timer tick

@@ -52,7 +52,6 @@ class RecruitFollower extends Ordeal
       requiredMembers = 1;
       requiredMemberLevels = 1;
       actions = requiredMembers;
-      note = 'Seek out those who hold sway over ' + followerType + ' matters.';
       // we pick target on creation based on follower type
       selectTarget();
     }
@@ -103,6 +102,13 @@ class RecruitFollower extends Ordeal
   public override function customName(): String
     {
       return Loc.tr(name) + ' - ' + _CultPower.namesCap[_CultPower.names.indexOf(followerType)];
+    }
+
+// the note, naming the power this follower is sought for
+  public override function getNote(): String
+    {
+      // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+      return T('Seek out those who hold sway over {power} matters.', { power: followerType });
     }
 
 // handle member death

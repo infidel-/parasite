@@ -74,6 +74,22 @@ attacker.log(Loc.fmt(weapon.textHit, { attacker: attacker, target: target, damag
   (English only, game code doesn't use them). So a translated log line must never start
   lowercase; `translate.py` rejects one whose English starts with a capital.
 
+## Saved text
+
+A save holds English keys, never composed or translated text, so it loads in any language:
+
+- Names and notes that are static: `N('…')`, translated where shown (`Loc.tr`).
+- Text with values in it is built AT DISPLAY from a template: `Ordeal.getNote()` (the base is
+  `Loc.tr(note)`; `BaseDefense`, `TeamBaseDefense`, `RecruitFollower` override it), and timeline notes
+  through `Timeline.noteText(event, i)`, which takes the note template from the scenario flow, fills
+  `%names%` and then `{variables}` from the timeline variables (a select on one replaces the old
+  on-the-fly text). The saved `EventNote.text` is only a fallback for a note the scenario lacks; it
+  keeps 1.0.x saves loading unchanged.
+- Known limits, by design: the log history (`Game.messageList`) stays in the language it was logged
+  in; a save slot's preview line (`_SaveMeta.area`) in the language it was saved in; generated place
+  names (NameConst patterns) and person names are proper names, never translated; the alien ship
+  part names stay English inside their alien-script font.
+
 ## Nouns
 
 A placeholder value that is an entity (`getLocNoun(): _LocNoun`) or a `_LocNoun` is a noun:

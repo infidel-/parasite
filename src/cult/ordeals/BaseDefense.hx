@@ -28,7 +28,7 @@ class BaseDefense extends ProfaneOrdeal
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
-      note = Const.col('alert', 'If the timer expires, Cor Nefandum is destroyed and all will be lost.');
+      note = N('If the timer expires, Cor Nefandum is destroyed and all will be lost.');
       timer = 12;
       cultID = -1;
     }
@@ -42,13 +42,13 @@ class BaseDefense extends ProfaneOrdeal
       return Loc.tr(name);
     }
 
-// called after load or creation
-  public override function initPost(onLoad: Bool)
+// the note, naming the attacking rival cult
+  public override function getNote(): String
     {
       var rival = game.getCultByID(cultID);
-      if (rival != null)
-        note = Const.col('alert', rival.customName() +
-          ' attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.');
+      return Const.col('alert', rival != null ?
+        T('{rival} attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.', { rival: rival.customName() }) :
+        Loc.tr(note));
     }
 
 // syncs base status timer after central profane timer tick

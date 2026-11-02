@@ -2,6 +2,7 @@
 
 package scenario;
 
+import l10n.Loc;
 import scenario.Scenario;
 import game.Game;
 import const.NameConst;
@@ -602,6 +603,22 @@ class Timeline extends _SaveObject
       _variables.set(key, value);
     }
 
+
+// a note as shown: rebuilt from the scenario template in the active language, its %names% and
+// {variables} filled. a save keeps the English text, shown only for a note the scenario lacks
+  public function noteText(event: Event, i: Int): String
+    {
+      var info = scenario.flow.get(event.id);
+      if (info == null ||
+          info.notes == null ||
+          i >= info.notes.length)
+        return event.notes[i].text;
+      // timeline variables are untyped by design (any value scenario code sets); fmt reads fields
+      var vars: Dynamic = {};
+      for (key in _variables.keys())
+        Reflect.setField(vars, key, _variables.get(key));
+      return Loc.fmt(parse(Loc.tr(info.notes[i])), vars);
+    }
 
 // get timeline variable value
   public inline function getStringVar(key: String): String

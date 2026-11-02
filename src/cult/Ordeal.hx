@@ -111,6 +111,13 @@ class Ordeal extends _SaveObject
       return Loc.tr(name);
     }
 
+// the note as shown: translated. an ordeal whose note has values in it builds it here, at display,
+// so a save holds no composed text and shows in any language
+  public function getNote(): String
+    {
+      return Loc.tr(note);
+    }
+
 // returns the initiate-menu price hint for this ordeal
   public static function priceHint(): String
     {

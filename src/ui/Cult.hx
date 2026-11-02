@@ -847,8 +847,9 @@ class Cult extends UIWindow
 
       // title + note
       buf.add('<div class="cult-rt">' + ordeal.customName() + '</div>');
-      if (ordeal.note != '')
-        buf.add('<div class="cult-rnote">' + Loc.tr(ordeal.note) + '</div>');
+      var note = ordeal.getNote();
+      if (note != '')
+        buf.add('<div class="cult-rnote">' + note + '</div>');
 
       buf.add('<table class="cult-rtab">');
 

@@ -314,7 +314,7 @@
    "kind": "T",
    "loc": [
     "src/_CultPower.hx:123",
-    "src/ui/Cult.hx:871"
+    "src/ui/Cult.hx:872"
    ],
    "vars": [],
    "where": "_CultPower.namesUpper"
@@ -324,7 +324,7 @@
    "kind": "T",
    "loc": [
     "src/_CultPower.hx:123",
-    "src/ui/Cult.hx:873"
+    "src/ui/Cult.hx:874"
    ],
    "vars": [],
    "where": "_CultPower.namesUpper"
@@ -334,7 +334,7 @@
    "kind": "T",
    "loc": [
     "src/_CultPower.hx:123",
-    "src/ui/Cult.hx:875"
+    "src/ui/Cult.hx:876"
    ],
    "vars": [],
    "where": "_CultPower.namesUpper"
@@ -344,7 +344,7 @@
    "kind": "T",
    "loc": [
     "src/_CultPower.hx:123",
-    "src/ui/Cult.hx:877"
+    "src/ui/Cult.hx:878"
    ],
    "vars": [],
    "where": "_CultPower.namesUpper"
@@ -354,7 +354,7 @@
    "kind": "T",
    "loc": [
     "src/_CultPower.hx:123",
-    "src/ui/Cult.hx:879"
+    "src/ui/Cult.hx:880"
    ],
    "vars": [],
    "where": "_CultPower.namesUpper"
@@ -687,17 +687,17 @@
    "kind": "N",
    "loc": [
     "src/ai/AgentAI.hx:33",
-    "src/scenario/ScenarioAlienCrashLanding.hx:196",
-    "src/scenario/ScenarioAlienCrashLanding.hx:210",
-    "src/scenario/ScenarioAlienCrashLanding.hx:220",
-    "src/scenario/ScenarioAlienCrashLanding.hx:236",
-    "src/scenario/ScenarioAlienCrashLanding.hx:254",
-    "src/scenario/ScenarioAlienCrashLanding.hx:268",
-    "src/scenario/ScenarioAlienCrashLanding.hx:282",
-    "src/scenario/ScenarioAlienCrashLanding.hx:296",
-    "src/scenario/ScenarioAlienCrashLanding.hx:310",
-    "src/scenario/ScenarioAlienCrashLanding.hx:327",
-    "src/scenario/ScenarioAlienCrashLanding.hx:386"
+    "src/scenario/ScenarioAlienCrashLanding.hx:187",
+    "src/scenario/ScenarioAlienCrashLanding.hx:201",
+    "src/scenario/ScenarioAlienCrashLanding.hx:211",
+    "src/scenario/ScenarioAlienCrashLanding.hx:227",
+    "src/scenario/ScenarioAlienCrashLanding.hx:245",
+    "src/scenario/ScenarioAlienCrashLanding.hx:259",
+    "src/scenario/ScenarioAlienCrashLanding.hx:273",
+    "src/scenario/ScenarioAlienCrashLanding.hx:287",
+    "src/scenario/ScenarioAlienCrashLanding.hx:301",
+    "src/scenario/ScenarioAlienCrashLanding.hx:318",
+    "src/scenario/ScenarioAlienCrashLanding.hx:377"
    ],
    "vars": [],
    "where": "AgentAI.init",
@@ -1058,12 +1058,12 @@
    "loc": [
     "src/ai/SoldierAI.hx:24",
     "src/ai/TeamMemberAI.hx:29",
-    "src/scenario/ScenarioAlienCrashLanding.hx:138",
-    "src/scenario/ScenarioAlienCrashLanding.hx:150",
-    "src/scenario/ScenarioAlienCrashLanding.hx:166",
-    "src/scenario/ScenarioAlienCrashLanding.hx:182",
-    "src/scenario/ScenarioAlienCrashLanding.hx:196",
-    "src/scenario/ScenarioAlienCrashLanding.hx:210"
+    "src/scenario/ScenarioAlienCrashLanding.hx:129",
+    "src/scenario/ScenarioAlienCrashLanding.hx:141",
+    "src/scenario/ScenarioAlienCrashLanding.hx:157",
+    "src/scenario/ScenarioAlienCrashLanding.hx:173",
+    "src/scenario/ScenarioAlienCrashLanding.hx:187",
+    "src/scenario/ScenarioAlienCrashLanding.hx:201"
    ],
    "vars": [],
    "where": "SoldierAI.init",
@@ -14947,7 +14947,7 @@
    "s": "Wield {amount} {power} power",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeal.hx:203"
+    "src/cult/Ordeal.hx:210"
    ],
    "vars": [
     "amount",
@@ -14961,7 +14961,7 @@
    "s": "{cult} exerted {amount} {power} power on {ordeal} ordeal.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeal.hx:213"
+    "src/cult/Ordeal.hx:220"
    ],
    "vars": [
     "cult",
@@ -14977,7 +14977,7 @@
    "s": "Disburse {money}",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeal.hx:234"
+    "src/cult/Ordeal.hx:241"
    ],
    "vars": [
     "money"
@@ -14989,7 +14989,7 @@
    "s": "{cult} disbursed {money} on {ordeal} ordeal.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeal.hx:240"
+    "src/cult/Ordeal.hx:247"
    ],
    "vars": [
     "cult",
@@ -15003,7 +15003,7 @@
    "s": "Annul",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeal.hx:256",
+    "src/cult/Ordeal.hx:263",
     "src/cult/ordeals/MetamorphosisPhaseII.hx:54"
    ],
    "vars": [],
@@ -15014,7 +15014,7 @@
    "s": "(results in failure)",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeal.hx:256",
+    "src/cult/Ordeal.hx:263",
     "src/cult/ordeals/MetamorphosisPhaseII.hx:54"
    ],
    "vars": [],
@@ -21234,6 +21234,27 @@
    "field": "name"
   },
   {
+   "s": "If the timer expires, Cor Nefandum is destroyed and all will be lost.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/BaseDefense.hx:31"
+   ],
+   "vars": [],
+   "where": "BaseDefense.init",
+   "field": "note"
+  },
+  {
+   "s": "{rival} attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/BaseDefense.hx:50"
+   ],
+   "vars": [
+    "rival"
+   ],
+   "where": "BaseDefense.getNote"
+  },
+  {
    "s": "{political} political, {lawfare} lawfare, {media} media, {money}",
    "kind": "T",
    "loc": [
@@ -21555,17 +21576,29 @@
    "kind": "N",
    "loc": [
     "src/cult/ordeals/RecruitFollower.hx:50",
-    "src/cult/ordeals/RecruitFollower.hx:136"
+    "src/cult/ordeals/RecruitFollower.hx:142"
    ],
    "vars": [],
    "where": "RecruitFollower.init",
    "field": "name"
   },
   {
+   "s": "Seek out those who hold sway over {power} matters.",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/RecruitFollower.hx:111"
+   ],
+   "vars": [
+    "power"
+   ],
+   "where": "RecruitFollower.getNote",
+   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+  },
+  {
    "s": "Back",
    "kind": "T",
    "loc": [
-    "src/cult/ordeals/RecruitFollower.hx:151",
+    "src/cult/ordeals/RecruitFollower.hx:157",
     "src/cult/ordeals/UpgradeFollower.hx:171",
     "src/cult/ordeals/UpgradeFollower2.hx:149",
     "src/ui/Cult.hx:381",
@@ -21656,11 +21689,21 @@
    "s": "Defend Cor Nefandum (The Group)",
    "kind": "N",
    "loc": [
-    "src/cult/ordeals/TeamBaseDefense.hx:23"
+    "src/cult/ordeals/TeamBaseDefense.hx:24"
    ],
    "vars": [],
    "where": "TeamBaseDefense.init",
    "field": "name"
+  },
+  {
+   "s": "The team attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/TeamBaseDefense.hx:28"
+   ],
+   "vars": [],
+   "where": "TeamBaseDefense.init",
+   "field": "note"
   },
   {
    "s": "Elevate the faithful",
@@ -24775,7 +24818,7 @@
    "loc": [
     "src/game/EvolutionManager.hx:307",
     "src/game/Organs.hx:628",
-    "src/ui/Cult.hx:866"
+    "src/ui/Cult.hx:867"
    ],
    "vars": [],
    "where": "EvolutionManager.getEvolutionDirectionInfo"
@@ -29686,7 +29729,7 @@
    "s": "You have gained a clue about an event {num} participant.",
    "kind": "T",
    "loc": [
-    "src/scenario/Event.hx:145"
+    "src/scenario/Event.hx:144"
    ],
    "vars": [
     "num"
@@ -29698,7 +29741,7 @@
    "s": "You have gained a major clue for event {num}.",
    "kind": "T",
    "loc": [
-    "src/scenario/Event.hx:176"
+    "src/scenario/Event.hx:175"
    ],
    "vars": [
     "num"
@@ -29710,7 +29753,7 @@
    "s": "You have gained the location for event {num}.",
    "kind": "T",
    "loc": [
-    "src/scenario/Event.hx:203"
+    "src/scenario/Event.hx:201"
    ],
    "vars": [
     "num"
@@ -30242,10 +30285,58 @@
    "field": "name"
   },
   {
+   "s": "You have received your mission details at the HQ. The mission type was {alienMissionType, select, abduction{abduction} liquidation{liquidation} other{intelligence collection}}.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:93"
+   ],
+   "vars": [
+    "alienMissionType"
+   ],
+   "where": "ScenarioAlienCrashLanding.new",
+   "note": "{alienMissionType} is a timeline variable: abduction, liquidation or intel"
+  },
+  {
+   "s": "UFO was spotted by civilian witnesses.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:101"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Media has published some reports about UFO sighting.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:102"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Ufologists have recorded the information about UFO sighting.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:103"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Independent experts and conspiracy theorists may have some knowledge about the events.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:104"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
    "s": "civilian",
    "kind": "N",
    "loc": [
-    "src/scenario/ScenarioAlienCrashLanding.hx:119"
+    "src/scenario/ScenarioAlienCrashLanding.hx:110"
    ],
    "vars": [],
    "where": "ScenarioAlienCrashLanding.new"
@@ -30254,7 +30345,7 @@
    "s": "reporter",
    "kind": "N",
    "loc": [
-    "src/scenario/ScenarioAlienCrashLanding.hx:120"
+    "src/scenario/ScenarioAlienCrashLanding.hx:111"
    ],
    "vars": [],
    "where": "ScenarioAlienCrashLanding.new"
@@ -30263,7 +30354,7 @@
    "s": "ufologist",
    "kind": "N",
    "loc": [
-    "src/scenario/ScenarioAlienCrashLanding.hx:121"
+    "src/scenario/ScenarioAlienCrashLanding.hx:112"
    ],
    "vars": [],
    "where": "ScenarioAlienCrashLanding.new"
@@ -30272,7 +30363,179 @@
    "s": "conspirologist",
    "kind": "N",
    "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:113"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Radars from a military base have spotted a moving signature.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:120"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Radio requests were left unanswered.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:121"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "An interceptor was scrambled.",
+   "kind": "N",
+   "loc": [
     "src/scenario/ScenarioAlienCrashLanding.hx:122"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The interceptor pilot described the dogfight in detail.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:136"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The plane suffered heavy damage in a fight.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:138"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The pilot is on psychic evaluation and extended leave.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:139"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The pilot did not manage to shoot UFO down but it was tracked by a second plane until it landed.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:152"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The pilot managed to shoot down the object.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:168"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The military personnel formed a cordon surrounding the scene.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:180",
+    "src/scenario/ScenarioAlienCrashLanding.hx:194"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Agents proceeded to study the landing scene and gather evidence.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:181"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The agents made the decision to move all objects on the scene to a secure facility.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:182"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Agents proceeded to study the scene and gather evidence.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:195"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The agents made the decision to move all evidence recovered on the scene to a secure facility.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:196"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Everything recovered from the scene was successfully transported to %facility1%.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:208"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The largest object has received a speficic codename for future reference: %shipCode%.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:209"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Studying %shipCode% has proved to be extremely difficult.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:218"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The technology that produced %shipCode% is much more advanced than the one available to human civilization.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:219"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Strange metallic alloy that forms the outer layer of %shipCode% is unknown to science.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:220"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Scientists have been unable to determine if it is indeed a flying vessel.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:221"
    ],
    "vars": [],
    "where": "ScenarioAlienCrashLanding.new"
@@ -30281,10 +30544,246 @@
    "s": "researcher",
    "kind": "N",
    "loc": [
-    "src/scenario/ScenarioAlienCrashLanding.hx:236",
-    "src/scenario/ScenarioAlienCrashLanding.hx:327",
-    "src/scenario/ScenarioAlienCrashLanding.hx:353",
-    "src/scenario/ScenarioAlienCrashLanding.hx:374"
+    "src/scenario/ScenarioAlienCrashLanding.hx:227",
+    "src/scenario/ScenarioAlienCrashLanding.hx:318",
+    "src/scenario/ScenarioAlienCrashLanding.hx:344",
+    "src/scenario/ScenarioAlienCrashLanding.hx:365"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "It was determined that %shipCode% could have pilot and/or crew onboard.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:238"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Multiple teams of agents were sent to capture or kill the pilot.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:239"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The primary goal of the mission was capturing the pilot alive.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:240"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Fortunately, the %shipCode% pilot survived the capture mission.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:252"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The pilot was not human.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:253",
+    "src/scenario/ScenarioAlienCrashLanding.hx:267"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The pilot was a grey humanoid of unknown origin.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:254",
+    "src/scenario/ScenarioAlienCrashLanding.hx:268"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Unfortunately, during the capture attempt the %shipCode% pilot was shot dead.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:266"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The captured organism was transported to %facility2% for further study. Project %projectCode% initiated.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:284"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Captured organism has received a special code: %alienCode%.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:285"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The acquired cadaver was transported to %facility2% for further study. Project %projectCode% initiated.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:298"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The body of possibly extraterrestrial origins has received a special code: %alienCode%.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:299"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Preliminary examinations confirmed the extraterrestrial origins of %alienCode% organism.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:308"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Studies have shown that %alienCode% actually consists of two separate organisms.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:309"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "One of the organisms is parasitic in nature. It has received a unique codename: %parasiteCode%.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:310"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "It is unclear at this point whether the host organism of %alienCode% has any intelligence.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:311"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Preliminary examinations confirmed the extraterrestrial origins of %alienCode% cadaver.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:333"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Studies have shown that %alienCode% remains actually consist of two separate organisms.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:334"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "One of the organisms is still functioning and is parasitic in nature.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:335"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The parasite organism has received a unique codename: %parasiteCode%.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:336"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "It is unclear whether the host organism of %alienCode% had any intelligence.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:337"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The decision has been made to try to separate organisms surgically.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:356"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Separation was successful and %parasiteCode% was scheduled for transportation to %facility3%.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:357"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "The specialist performing the operation speculated that the process was a violent shock for both %alienCode% and %parasiteCode% nervous systems and mental capacity.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:358"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "During the transportation of %parasiteCode% to %facility3% the containment protocol has been breached and the specimen has managed to escape.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:371"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Current location of %parasiteCode% specimen is unknown, project %projectCode% is on hold until retrieval.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:372"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
+   "s": "Teams of field specialists have been scrambled to the area.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:373"
    ],
    "vars": [],
    "where": "ScenarioAlienCrashLanding.new"
@@ -30299,6 +30798,17 @@
    "vars": [],
    "where": "ScenarioSandbox.new",
    "field": "name"
+  },
+  {
+   "s": "",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioSandbox.hx:25",
+    "src/scenario/ScenarioSandbox.hx:25",
+    "src/scenario/ScenarioSandbox.hx:25"
+   ],
+   "vars": [],
+   "where": "ScenarioSandbox.new"
   },
   {
    "s": "specimen &middot; unclassified",
@@ -30705,7 +31215,7 @@
     "src/ui/Body.hx:278",
     "src/ui/Body.hx:305",
     "src/ui/Body.hx:342",
-    "src/ui/Timeline.hx:145"
+    "src/ui/Timeline.hx:146"
    ],
    "vars": [],
    "where": "Body.updateHost"
@@ -30727,7 +31237,7 @@
     "src/ui/Body.hx:302",
     "src/ui/Body.hx:339",
     "src/ui/RegionTooltip.hx:114",
-    "src/ui/Timeline.hx:147"
+    "src/ui/Timeline.hx:148"
    ],
    "vars": [],
    "where": "Body.updateHost"
@@ -30989,7 +31499,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Cult.hx:583",
-    "src/ui/Cult.hx:882"
+    "src/ui/Cult.hx:883"
    ],
    "vars": [],
    "where": "Cult.updatePowerAndResources"
@@ -31114,7 +31624,7 @@
    "s": "Members",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:865"
+    "src/ui/Cult.hx:866"
    ],
    "vars": [],
    "where": "Cult.addOrdealCard"
@@ -31123,7 +31633,7 @@
    "s": "No power requirements",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:884"
+    "src/ui/Cult.hx:885"
    ],
    "vars": [],
    "where": "Cult.addOrdealCard"
@@ -31132,7 +31642,7 @@
    "s": "Actions",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:887"
+    "src/ui/Cult.hx:888"
    ],
    "vars": [],
    "where": "Cult.addOrdealCard"
@@ -31141,7 +31651,7 @@
    "s": "[completed]",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:897"
+    "src/ui/Cult.hx:898"
    ],
    "vars": [],
    "where": "Cult.addOrdealCard"
@@ -31150,7 +31660,7 @@
    "s": "at ({x}, {y})",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:898"
+    "src/ui/Cult.hx:899"
    ],
    "vars": [
     "x",
@@ -31163,7 +31673,7 @@
    "s": "Claves",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:904"
+    "src/ui/Cult.hx:905"
    ],
    "vars": [],
    "where": "Cult.addOrdealCard"
@@ -31172,7 +31682,7 @@
    "s": "Time left",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:911"
+    "src/ui/Cult.hx:912"
    ],
    "vars": [],
    "where": "Cult.addOrdealCard"
@@ -31181,7 +31691,7 @@
    "s": "{n, plural, one{<span class=cult-w>#</span> turn} other{<span class=cult-w>#</span> turns}}",
    "kind": "T",
    "loc": [
-    "src/ui/Cult.hx:912"
+    "src/ui/Cult.hx:913"
    ],
    "vars": [
     "n"
@@ -32294,7 +32804,7 @@
    "kind": "T",
    "loc": [
     "src/ui/NewGame.hx:46",
-    "src/ui/Timeline.hx:184"
+    "src/ui/Timeline.hx:185"
    ],
    "vars": [],
    "where": "NewGame.new"
@@ -33473,7 +33983,7 @@
    "s": "LEADS",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:105"
+    "src/ui/Timeline.hx:106"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33482,7 +33992,7 @@
    "s": "Participants",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:114"
+    "src/ui/Timeline.hx:115"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33491,7 +34001,7 @@
    "s": "status ?",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:138"
+    "src/ui/Timeline.hx:139"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33500,7 +34010,7 @@
    "s": "deceased",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:140"
+    "src/ui/Timeline.hx:141"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33509,7 +34019,7 @@
    "s": "active",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:141"
+    "src/ui/Timeline.hx:142"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33518,7 +34028,7 @@
    "s": "{n, plural, one{+# probed} other{+# probed}}",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:152"
+    "src/ui/Timeline.hx:153"
    ],
    "vars": [
     "n"
@@ -33529,7 +34039,7 @@
    "s": "{n, plural, one{+# deceased} other{+# deceased}}",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:154"
+    "src/ui/Timeline.hx:155"
    ],
    "vars": [
     "n"
@@ -33540,7 +34050,7 @@
    "s": "TIMELINE",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:172"
+    "src/ui/Timeline.hx:173"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33549,7 +34059,7 @@
    "s": "LIVE",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:173"
+    "src/ui/Timeline.hx:174"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33558,7 +34068,7 @@
    "s": "Timeline events revealed",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:174"
+    "src/ui/Timeline.hx:175"
    ],
    "vars": [],
    "where": "Timeline.update"
@@ -33567,7 +34077,7 @@
    "s": "Leads still open to investigate",
    "kind": "T",
    "loc": [
-    "src/ui/Timeline.hx:175"
+    "src/ui/Timeline.hx:176"
    ],
    "vars": [],
    "where": "Timeline.update"

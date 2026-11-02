@@ -84,14 +84,13 @@ class Event extends _SaveObject
         COLOR_TIMELINE);
       if (note != null)
         {
-          game.player.log('<i>' + note.text + '</i>', COLOR_TIMELINE);
-
-          // event hook
           var idx = -1;
           for (i in 0...notes.length)
             if (notes[i] == note)
               idx = i;
-//          var idx = notes.indexOf(note);
+          game.player.log('<i>' + game.timeline.noteText(this, idx) + '</i>', COLOR_TIMELINE);
+
+          // event hook
           if (info.onLearnNote != null)
             info.onLearnNote(game, idx);
         }
@@ -175,14 +174,13 @@ class Event extends _SaveObject
       game.timeline.update(); // update event numbering
       game.player.log(T('You have gained a major clue for event {num}.', { num: num }),
         COLOR_TIMELINE);
-      game.player.log(Const.narrative(note.text), COLOR_TIMELINE);
-
-      // event hook
       var idx = -1;
       for (i in 0...notes.length)
         if (notes[i] == note)
           idx = i;
-//      var idx = notes.indexOf(note);
+      game.player.log(Const.narrative(game.timeline.noteText(this, idx)), COLOR_TIMELINE);
+
+      // event hook
       if (info.onLearnNote != null)
         info.onLearnNote(game, idx);
 

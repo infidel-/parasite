@@ -96,10 +96,11 @@ class Timeline extends UIWindow
 
           // notes: known = bullet text; unknown w/ clues = ? + 4-pip clue meter
           buf.add("<ul class='timeline-notes'>");
-          for (n in event.notes)
+          for (ni in 0...event.notes.length)
             {
+              var n = event.notes[ni];
               if (n.isKnown)
-                buf.add("<li class='timeline-note'>" + n.text + "</li>");
+                buf.add("<li class='timeline-note'>" + game.timeline.noteText(event, ni) + "</li>");
               else if (n.clues > 0)
                 {
                   buf.add("<li class='timeline-note redacted' data-leads=\"" + T('LEADS') + "\"><span class='timeline-q'>?</span><span class='timeline-clues'>");
