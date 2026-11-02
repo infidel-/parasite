@@ -1,17 +1,18 @@
 # STYLE SHEET — FRENCH (fr)
 
-Draft for the probe: the register, the voice and the glossary below are to be confirmed or
-corrected by the developer after reading the probe output.
+Register (« tu ») confirmed by the developer. The glossary is corrected by hand after review.
 
 ## Register and voice
 
-- **The player is addressed with « vous »** everywhere: log, interface, pedia, popups.
-  "You slither through the drain." → « Vous vous glissez dans la canalisation. »
+- **The player is addressed with « tu »** everywhere: log, interface, pedia, popups. Never
+  « vous » for the player (« vous » is fine for a group of NPCs).
+  "You slither through the drain." → « Tu te glisses dans la canalisation. »
+  Imperatives in the singular: « Choisis », « Appuie sur », not « Choisissez ».
 - **The parasite's goal messages** (first person, `const/Goals`, `messageComplete` and so on) stay
   in short, cold, practical first-person sentences. Use « je ». No exclamations, no softening.
   « Cet hôte est agité, je dois fuir pour éviter les ennuis. »
 - **Log lines:** present tense, compact, neutral. The game reports facts.
-- **Pedia:** plain, explanatory French, vous.
+- **Pedia:** plain, explanatory French, tu.
 - **Cult texts** (`cult/events`, ordeals): ritual and grotesque, biological imagery. Keep the
   rhythm, use precise anatomical words, no slang.
 - **UI labels and buttons:** infinitive or noun phrase, short, sentence case (capital on the first
@@ -41,10 +42,10 @@ NEVER write « le », « la », « l’ », « un », « du », « au » before 
 | `{x:a}` | au soldat / à la secrétaire / à l’agent / à Marc | to the |
 | `{x}` | soldat (bare) | bare noun |
 
-- Capitalize the form name at the start of a sentence: `{x:Def} hésite à vous attaquer.` →
+- Capitalize the form name at the start of a sentence: `{x:Def} hésite à t’attaquer.` →
   « Le soldat hésite… ». `{x:Indef}` gives « Un soldat… ».
-- People's names and phrases such as « votre hôte » never get an article: `{x:def}` gives just
-  « Marc » or « votre hôte ». The forms above stay correct for every case.
+- People's names and phrases such as « ton hôte » never get an article: `{x:def}` gives just
+  « Marc » or « ton hôte ». The forms above stay correct for every case.
 - English `{x:The}` → French `{x:Def}`, `{x:the}` → `{x:def}`, `{x:a}`/`{x:A}` → `{x:indef}`/`{x:Indef}`.
 - Agreement: anything that agrees with the noun goes in a select on that same placeholder:
   `{x:Def} est {x, select, f{blessée} other{blessé}}.` Pronouns too:
@@ -60,7 +61,7 @@ Write both cases, even where the English only needs `other`.
 | English | French | note |
 |---|---|---|
 | parasite | parasite (m) | |
-| host | hôte (m) | « votre hôte » for the player's host |
+| host | hôte (m) | « ton hôte » for the player's host |
 | invade (a host) | envahir | |
 | affinity | affinité | |
 | consent | consentement | |
@@ -71,7 +72,7 @@ Write both cases, even where the English only needs `other`.
 | improvement (evolution) | amélioration | |
 | organ | organe | |
 | body features | caractéristiques corporelles | |
-| brain probe | sonde cérébrale | |
+| brain probe | sonde cérébrale | verb « sonder le cerveau » |
 | engram | engramme | |
 | clue | indice | |
 | habitat | habitat | |
@@ -102,6 +103,15 @@ Write both cases, even where the English only needs `other`.
 | false memories | faux souvenirs | |
 | Spoon mode / Sandbox mode | mode Spoon / mode bac à sable | |
 | goal | objectif | |
+| HUD | interface | « l’interface » in running text; never ATH, never « à l’écran » |
+| grip (on a host) | prise | |
+| habitat growth | excroissance d’habitat | |
+| striker (cult rank) | assaillant | |
+| growth points | points de croissance | |
+| slot (body feature) | emplacement | |
+| job (host) | emploi | |
+| Strength / Constitution / Intellect / Psyche | Force / Constitution / Intellect / Psyché | host attributes |
+| trait / attribute / effect / skill | trait / attribut / effet / compétence | |
 | log | journal | the message log |
 | pedia | encyclopédie | |
 

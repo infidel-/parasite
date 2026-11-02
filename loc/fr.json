@@ -1,897 +1,5 @@
 {
  "strings": {
-  "acdac205f5e24cb7": {
-   "s": "Audio",
-   "loc": [
-    "src/ui/Options.hx:59"
-   ],
-   "where": "Options.new",
-   "field": "addCard",
-   "kind": "T",
-   "t": "Audio",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Audio"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "0d49fceb8d4a4c2a": {
-   "s": "Music volume",
-   "loc": [
-    "src/ui/Options.hx:60"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Volume de la musique",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Volume de la musique"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "ca26fadba1d9acf7": {
-   "s": "Effects volume",
-   "loc": [
-    "src/ui/Options.hx:65"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Volume des effets",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Volume des effets"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "97de754cf7a5b5be": {
-   "s": "Ambience volume",
-   "loc": [
-    "src/ui/Options.hx:69"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Volume de l’ambiance",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Volume de l’ambiance"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "bc17c1f0179a888f": {
-   "s": "Video",
-   "loc": [
-    "src/ui/Options.hx:76"
-   ],
-   "where": "Options.new",
-   "field": "addCard",
-   "kind": "T",
-   "t": "Vidéo",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Vidéo"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "134499aaa7bf2cfa": {
-   "s": "FPS cap",
-   "loc": [
-    "src/ui/Options.hx:77"
-   ],
-   "where": "Options.new",
-   "field": "addOptRadio",
-   "kind": "T",
-   "t": "Limite d’images/s",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Limite d’images/s"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "bce64ff4e6714016": {
-   "s": "Show FPS counter",
-   "loc": [
-    "src/ui/Options.hx:79"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Afficher le compteur d’images",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Afficher le compteur d’images"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "a78939d37f8c7dc0": {
-   "s": "Antialiasing",
-   "loc": [
-    "src/ui/Options.hx:81"
-   ],
-   "where": "Options.new",
-   "field": "addOptSelect",
-   "kind": "T",
-   "t": "Anticrénelage",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Anticrénelage"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "e3de5ab0ca4c69db": {
-   "s": "Off",
-   "loc": [
-    "src/ui/Options.hx:82",
-    "src/ui/Options.hx:107"
-   ],
-   "where": "Options.new",
-   "field": "title",
-   "kind": "T",
-   "t": "Désactivé",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Désactivé"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ],
-   "doubt": "\"Off\" is shared by Antialiasing (m) and Lamp lights (+1 more). I used « Désactivé », the standard neutral value label."
-  },
-  "2d4be3f9a612726c": {
-   "s": "Render scale",
-   "loc": [
-    "src/ui/Options.hx:92"
-   ],
-   "where": "Options.new",
-   "field": "addOptSelect",
-   "kind": "T",
-   "t": "Échelle de rendu",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Échelle de rendu"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "b89e2c370e21e049": {
-   "s": "Lamp lights",
-   "loc": [
-    "src/ui/Options.hx:106"
-   ],
-   "where": "Options.new",
-   "field": "addOptSelect",
-   "kind": "T",
-   "t": "Éclairage des lampadaires",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Éclairage des lampadaires"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ],
-   "doubt": "« lampadaires » assumes street lamps. If \"lamp lights\" also covers indoor lamps, use « Éclairage des lampes »."
-  },
-  "e1a2b65df8ed2838": {
-   "s": "Brightness",
-   "loc": [
-    "src/ui/Options.hx:118"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Luminosité",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Luminosité"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "3ef84d550fdc4824": {
-   "s": "Bloom",
-   "loc": [
-    "src/ui/Options.hx:124"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Bloom",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Bloom"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "91abdb854bb470fc": {
-   "s": "Ambient occlusion",
-   "loc": [
-    "src/ui/Options.hx:126"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Occlusion ambiante",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Occlusion ambiante"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "7b4db7ef1fa23cfb": {
-   "s": "Interface",
-   "loc": [
-    "src/ui/Options.hx:130"
-   ],
-   "where": "Options.new",
-   "field": "addCard",
-   "kind": "T",
-   "t": "Interface",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Interface"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "89b86ab0e66f5271": {
-   "s": "Language",
-   "loc": [
-    "src/ui/Options.hx:139"
-   ],
-   "where": "Options.new",
-   "field": "addOptSelect",
-   "kind": "T",
-   "t": "Langue",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Langue"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "356308856e11b25e": {
-   "s": "Repeat delay",
-   "loc": [
-    "src/ui/Options.hx:140"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Délai de répétition",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Délai de répétition"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "b041b2a98eb7a703": {
-   "s": "Map scale",
-   "loc": [
-    "src/ui/Options.hx:144"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Échelle de la carte",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Échelle de la carte"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "df77c808c16250d5": {
-   "s": "Minimap scale",
-   "loc": [
-    "src/ui/Options.hx:150"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Échelle de la minicarte",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Échelle de la minicarte"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "14088da31edbd53d": {
-   "s": "Title font",
-   "loc": [
-    "src/ui/Options.hx:160"
-   ],
-   "where": "Options.new",
-   "field": "addOptSelect",
-   "kind": "T",
-   "t": "Police des titres",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Police des titres"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "322ac28a6c694a9b": {
-   "s": "Text font",
-   "loc": [
-    "src/ui/Options.hx:167"
-   ],
-   "where": "Options.new",
-   "field": "addOptSelect",
-   "kind": "T",
-   "t": "Police du texte",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Police du texte"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "83ca9e48c37ce260": {
-   "s": "Font size",
-   "loc": [
-    "src/ui/Options.hx:170"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Taille de police",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Taille de police"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "86e6fcac4f4fa007": {
-   "s": "Overall difficulty",
-   "loc": [
-    "src/ui/Options.hx:175"
-   ],
-   "where": "Options.new",
-   "field": "addOptSelect",
-   "kind": "T",
-   "t": "Difficulté générale",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Difficulté générale"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "1431f68f359f8699": {
-   "s": "Unset",
-   "loc": [
-    "src/ui/Options.hx:176",
-    "src/ui/Options.hx:465"
-   ],
-   "where": "Options.new",
-   "field": "title",
-   "kind": "T",
-   "t": "Non définie",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Non définie"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "00f03137e1553b03": {
-   "s": "Easy",
-   "loc": [
-    "src/ui/Options.hx:177",
-    "src/ui/Options.hx:466"
-   ],
-   "where": "Options.new",
-   "field": "title",
-   "kind": "T",
-   "t": "Facile",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Facile"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "45e118d0563ea858": {
-   "s": "Normal",
-   "loc": [
-    "src/ui/Options.hx:178",
-    "src/ui/Options.hx:467"
-   ],
-   "where": "Options.new",
-   "field": "title",
-   "kind": "T",
-   "t": "Normale",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Normale"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "20a89915f18c15e8": {
-   "s": "Hard",
-   "loc": [
-    "src/ui/Options.hx:179",
-    "src/ui/Options.hx:468"
-   ],
-   "where": "Options.new",
-   "field": "title",
-   "kind": "T",
-   "t": "Difficile",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Difficile"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "e04c712a3059820a": {
-   "s": "Gameplay",
-   "loc": [
-    "src/ui/Options.hx:185"
-   ],
-   "where": "Options.new",
-   "field": "addCard",
-   "kind": "T",
-   "t": "Jeu",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Jeu"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "ee50e5b5f5d96238": {
-   "s": "Skip tutorial",
-   "loc": [
-    "src/ui/Options.hx:186"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Passer le tutoriel",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Passer le tutoriel"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "6607f6ca161b0dfb": {
-   "s": "Needs overall difficulty set",
-   "loc": [
-    "src/ui/Options.hx:186"
-   ],
-   "where": "Options.new",
-   "kind": "T",
-   "t": "Nécessite de définir la difficulté générale",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Nécessite de définir la difficulté générale"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "55683fd329d42aba": {
-   "s": "Enable fullscreen",
-   "loc": [
-    "src/ui/Options.hx:188"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Activer le plein écran",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Activer le plein écran"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "e7750c334052eab0": {
-   "s": "Applies on next launch",
-   "loc": [
-    "src/ui/Options.hx:188"
-   ],
-   "where": "Options.new",
-   "kind": "T",
-   "t": "S’applique au prochain lancement",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "S’applique au prochain lancement"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "a28367903792f926": {
-   "s": "Enable AI-generated artwork",
-   "loc": [
-    "src/ui/Options.hx:190"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Activer les illustrations générées par IA",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Activer les illustrations générées par IA"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "4d064726954a1748": {
-   "s": "Advanced",
-   "loc": [
-    "src/ui/Options.hx:193"
-   ],
-   "where": "Options.new",
-   "field": "addCard",
-   "kind": "T",
-   "t": "Avancé",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Avancé"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "4d20449acf70809d": {
-   "s": "Log lines in HUD",
-   "loc": [
-    "src/ui/Options.hx:194"
-   ],
-   "where": "Options.new",
-   "field": "addOptSlider",
-   "kind": "T",
-   "t": "Lignes du journal à l’écran",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Lignes du journal à l’écran"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "dea1b6b301351253": {
-   "s": "Laptop movement keys (uiojklm,.)",
-   "loc": [
-    "src/ui/Options.hx:199"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Touches de déplacement pour portable (uiojklm,.)",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Touches de déplacement pour portable (uiojklm,.)"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "ec90c48c500f30b0": {
-   "s": "Extended gameplay information",
-   "loc": [
-    "src/ui/Options.hx:200"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Informations de jeu détaillées",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Informations de jeu détaillées"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "a00b0174c3fada5d": {
-   "s": "Shift-click/number repeat action",
-   "loc": [
-    "src/ui/Options.hx:201"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Maj+clic/chiffre : répéter l’action",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Maj+clic/chiffre : répéter l’action"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "74e35203d26e2d93": {
-   "s": "Show mouse cursor on map",
-   "loc": [
-    "src/ui/Options.hx:202"
-   ],
-   "where": "Options.new",
-   "field": "addOptToggle",
-   "kind": "T",
-   "t": "Afficher le curseur sur la carte",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Afficher le curseur sur la carte"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ],
-   "doubt": "« curseur » drops \"mouse\" to stay short. If the map also has a keyboard or look cursor, write « curseur de la souris »."
-  },
-  "11eecaf7a57e8617": {
-   "s": "Switch the language to {lang}?",
-   "loc": [
-    "src/ui/Options.hx:222"
-   ],
-   "where": "Options.setLang",
-   "field": "text",
-   "vars": [
-    "lang"
-   ],
-   "kind": "T",
-   "t": "Changer de langue : {lang} ?",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Changer de langue : {lang} ?"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ],
-   "doubt": "{lang} is probably a native language name such as \"English\". I used the « Changer de langue : {lang} ? » construction so the sentence reads correctly with any name."
-  },
-  "1cda5d47379ca3bc": {
-   "s": "The game reloads; a game in progress is autosaved first.",
-   "loc": [
-    "src/ui/Options.hx:225"
-   ],
-   "where": "Options.setLang",
-   "field": "sub",
-   "kind": "T",
-   "t": "Le jeu redémarre ; une partie en cours est d’abord sauvegardée automatiquement.",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Le jeu redémarre ; une partie en cours est d’abord sauvegardée automatiquement."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "e709e76ff5425bd5": {
-   "s": "Presets",
-   "loc": [
-    "src/ui/Options.hx:424"
-   ],
-   "where": "Options.addOptSelect",
-   "field": "innerHTML",
-   "kind": "T",
-   "t": "Préréglages",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Préréglages"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
   "e58c380eee1e9ab8": {
    "s": "Vena Arcanum Wake",
    "loc": [
@@ -900,19 +8,19 @@
    "where": "VenaArcanumWake.create",
    "field": "title",
    "kind": "T",
-   "t": "Veillée de la Vena Arcanum",
+   "t": "Veillée de Vena Arcanum",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Veillée de la Vena Arcanum"
+     "t": "Veillée de Vena Arcanum"
     },
     {
      "pass": 2,
      "t": null
     }
    ],
-   "doubt": "\"Wake\" could mean a vigil or an awakening. « Veillée » fits the scene (kneeling, murmured prayers, people watching the monitors), so it stays. The developer should confirm."
+   "doubt": "\"Wake\" is read as a vigil (« Veillée »), which fits the kneeling scene in 2. If the event is meant as an awakening of Vena Arcanum, use « Réveil de Vena Arcanum »."
   },
   "a453607a9eab7660": {
    "s": "Sealed railyard infirmary glows with emergency lanterns as the newly ranked striker kneels beside a chilled Vena Arcanum cistern. Masked confessors murmur prayers through respirator hoods while trauma techs stitch synth sinew under blackout tarps. Only the inner circle watches the monitors flicker.",
@@ -922,12 +30,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une cuve réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules à respirateur pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le cercle intérieur voit vaciller les moniteurs.",
+   "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une citerne réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules respiratoires pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le premier cercle regarde les moniteurs vaciller.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une cuve réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules à respirateur pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le cercle intérieur voit vaciller les moniteurs."
+     "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une citerne réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules respiratoires pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le premier cercle regarde les moniteurs vaciller."
     },
     {
      "pass": 2,
@@ -964,12 +72,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Acheminer des réserves de plasma pressurisé vers l’escouade renforcée.",
+   "t": "Canalise les réserves de plasma sous pression vers l’escouade renforcée.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Acheminer des réserves de plasma pressurisé vers l’escouade renforcée."
+     "t": "Canalise les réserves de plasma sous pression vers l’escouade renforcée."
     },
     {
      "pass": 2,
@@ -1006,12 +114,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Laisser les aumôniers synchroniser leurs électro-psaumes avec les routines de bouclier des drones.",
+   "t": "Laisse les aumôniers synchroniser leurs électro-psaumes avec les routines de bouclier des drones.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Laisser les aumôniers synchroniser leurs électro-psaumes avec les routines de bouclier des drones."
+     "t": "Laisse les aumôniers synchroniser leurs électro-psaumes avec les routines de bouclier des drones."
     },
     {
      "pass": 2,
@@ -1048,527 +156,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Marquer le combattant promu de sceaux de moelle qui lient la doctrine nouvelle.",
+   "t": "Marque au fer le combattant promu de sceaux médullaires qui lient la nouvelle doctrine.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Marquer le combattant promu de sceaux de moelle qui lient la doctrine nouvelle."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "f4432c682aa2c7d9": {
-   "s": "<li>Increases maximum health and energy</li>",
-   "loc": [
-    "src/const/PediaConst.hx:6",
-    "src/const/PediaConst.hx:13"
-   ],
-   "where": "PediaConst.hostAttrNoteStrength",
-   "field": "hostAttrNoteStrength",
-   "kind": "T",
-   "t": "<li>Augmente la santé et l’énergie maximales</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Augmente la santé et l’énergie maximales</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "93a801a2d62218f2": {
-   "s": "<li>Increases melee damage</li>",
-   "loc": [
-    "src/const/PediaConst.hx:7"
-   ],
-   "where": "PediaConst.hostAttrNoteStrength",
-   "kind": "T",
-   "t": "<li>Augmente les dégâts au corps à corps</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Augmente les dégâts au corps à corps</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "36a05f4dbbc17933": {
-   "s": "<li>Decreases grip efficiency</li>",
-   "loc": [
-    "src/const/PediaConst.hx:8"
-   ],
-   "where": "PediaConst.hostAttrNoteStrength",
-   "kind": "T",
-   "t": "<li>Réduit l’efficacité de la prise</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Réduit l’efficacité de la prise</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "08e02a34e0932ae3": {
-   "s": "<li>Decreases paralysis efficiency</li>",
-   "loc": [
-    "src/const/PediaConst.hx:9"
-   ],
-   "where": "PediaConst.hostAttrNoteStrength",
-   "kind": "T",
-   "t": "<li>Réduit l’efficacité de la paralysie</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Réduit l’efficacité de la paralysie</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "378641e7a8b3f661": {
-   "s": "<li>Increases speed of freeing from mucus</li>",
-   "loc": [
-    "src/const/PediaConst.hx:10"
-   ],
-   "where": "PediaConst.hostAttrNoteStrength",
-   "kind": "T",
-   "t": "<li>Permet de se libérer plus vite du mucus</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Accélère la libération du mucus</li>"
-    },
-    {
-     "pass": 2,
-     "t": "<li>Permet de se libérer plus vite du mucus</li>"
-    }
-   ],
-   "doubt": "« la libération du mucus » could be read as the host releasing mucus; I reworded it as freeing oneself from mucus. Check that this matches the mechanic."
-  },
-  "2b143be417b5ec34": {
-   "s": "<li>Limits the amount of inventory items</li>",
-   "loc": [
-    "src/const/PediaConst.hx:11"
-   ],
-   "where": "PediaConst.hostAttrNoteStrength",
-   "kind": "T",
-   "t": "<li>Limite le nombre d’objets dans l’inventaire</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Limite le nombre d’objets dans l’inventaire</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "5bf9e44cf8d51a58": {
-   "s": "<li>Limits the amount of body features</li>",
-   "loc": [
-    "src/const/PediaConst.hx:14"
-   ],
-   "where": "PediaConst.hostAttrNoteConstitution",
-   "kind": "T",
-   "t": "<li>Limite le nombre de caractéristiques corporelles</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Limite le nombre de caractéristiques corporelles</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "1663b2c86deeaf21": {
-   "s": "<li>Increases skills and society knowledge learning efficiency</li>",
-   "loc": [
-    "src/const/PediaConst.hx:16"
-   ],
-   "where": "PediaConst.hostAttrNoteIntellect",
-   "field": "hostAttrNoteIntellect",
-   "kind": "T",
-   "t": "<li>Améliore l’apprentissage des compétences et des connaissances sur la société</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Améliore l’apprentissage des compétences et des connaissances sur la société</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "dac338548e0a1cdb": {
-   "s": "<li>Boosts skill training when consulting agreeable hosts</li>",
-   "loc": [
-    "src/const/PediaConst.hx:17"
-   ],
-   "where": "PediaConst.hostAttrNoteIntellect",
-   "kind": "T",
-   "t": "<li>Renforce l’entraînement des compétences lors de la consultation d’hôtes conciliants</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Renforce l’entraînement des compétences en consultant des hôtes conciliants</li>"
-    },
-    {
-     "pass": 2,
-     "t": "<li>Renforce l’entraînement des compétences lors de la consultation d’hôtes conciliants</li>"
-    }
-   ],
-   "doubt": "\"agreeable hosts\" could be a game term tied to consent rather than temperament. I kept « conciliants ». The change only fixes the dangling gerund « en consultant »."
-  },
-  "b847c832143d2034": {
-   "s": "<li>Measures host mental will</li>",
-   "loc": [
-    "src/const/PediaConst.hx:19"
-   ],
-   "where": "PediaConst.hostAttrNotePsyche",
-   "field": "hostAttrNotePsyche",
-   "kind": "T",
-   "t": "<li>Mesure la volonté mentale de l’hôte</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Mesure la volonté mentale de l’hôte</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "274f3a7833c39639": {
-   "s": "<li>Increases energy needed to probe brain</li>",
-   "loc": [
-    "src/const/PediaConst.hx:20"
-   ],
-   "where": "PediaConst.hostAttrNotePsyche",
-   "kind": "T",
-   "t": "<li>Augmente l’énergie nécessaire pour sonder le cerveau</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Augmente l’énergie nécessaire pour sonder le cerveau</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "798eed3b96f4f345": {
-   "s": "<li>Reduces the efficiency of reinforcing control</li>",
-   "loc": [
-    "src/const/PediaConst.hx:21"
-   ],
-   "where": "PediaConst.hostAttrNotePsyche",
-   "kind": "T",
-   "t": "<li>Réduit l’efficacité du renforcement du contrôle</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Réduit l’efficacité du renforcement du contrôle</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "737df5d50a966153": {
-   "s": "<li>Makes conversations and gaining consent harder</li>",
-   "loc": [
-    "src/const/PediaConst.hx:22"
-   ],
-   "where": "PediaConst.hostAttrNotePsyche",
-   "kind": "T",
-   "t": "<li>Rend les conversations et l’obtention du consentement plus difficiles</li>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<li>Rend les conversations et l’obtention du consentement plus difficiles</li>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "ced57f21708b1314": {
-   "s": "BASICS",
-   "loc": [
-    "src/const/PediaConst.hx:48"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "name",
-   "kind": "T",
-   "t": "BASES",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "BASES"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "1e622b11ef61c87f": {
-   "s": "Host: Affinity",
-   "loc": [
-    "src/const/PediaConst.hx:52"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "name",
-   "kind": "T",
-   "t": "Hôte : affinité",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Hôte : affinité"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "80641d3fa50d3b1f": {
-   "s": "Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green icon of two interlocking rings after it in the HUD in case of the maximum affinity. On normal and hard conversation difficulty, leaving a host with full affinity will result in parasite losing some maximum energy (1 or 2). That reduction is small enough. However, if such host dies while the parasite is on it, for any reason, the loss will be much higher (5). Therefore if you intend to lose the host, leave it before it dies. On easy conversation difficulty there is no loss at all. Note also, that hosts that have both full affinity and consent do not get alerted when they see the parasite. In fact, you can quickly hop onto such a host again after leaving them.",
-   "loc": [
-    "src/const/PediaConst.hx:54"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "text",
-   "kind": "T",
-   "t": "Utiliser le même hôte assez longtemps fait augmenter votre affinité avec lui. Lorsque l’affinité est suffisamment élevée, la conversation et l’obtention du consentement de l’hôte deviennent possibles. L’affinité finit par atteindre son maximum, et un message vous en informe. Dans l’interface, le nom de l’hôte est alors suivi d’une icône verte représentant deux anneaux entrelacés. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est au maximum fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si cet hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus lourde (5). Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez aussi que les hôtes qui ont à la fois une affinité maximale et donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez d’ailleurs remonter rapidement sur un tel hôte après l’avoir quitté.",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Utiliser le même hôte assez longtemps fait augmenter votre affinité avec lui. Lorsque l’affinité est suffisamment élevée, la conversation et l’obtention du consentement de l’hôte deviennent possibles. L’affinité finit par atteindre son maximum, et un message vous en informe. Dans l’interface, le nom de l’hôte est alors suivi d’une icône verte représentant deux anneaux entrelacés. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est au maximum fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si cet hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus lourde (5). Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez aussi que les hôtes qui ont à la fois une affinité maximale et leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez d’ailleurs remonter rapidement sur un tel hôte après l’avoir quitté."
-    },
-    {
-     "pass": 2,
-     "t": "Utiliser le même hôte assez longtemps fait augmenter votre affinité avec lui. Lorsque l’affinité est suffisamment élevée, la conversation et l’obtention du consentement de l’hôte deviennent possibles. L’affinité finit par atteindre son maximum, et un message vous en informe. Dans l’interface, le nom de l’hôte est alors suivi d’une icône verte représentant deux anneaux entrelacés. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est au maximum fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si cet hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus lourde (5). Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez aussi que les hôtes qui ont à la fois une affinité maximale et donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez d’ailleurs remonter rapidement sur un tel hôte après l’avoir quitté."
-    }
-   ],
-   "doubt": "\"HUD\" is rendered as « interface ». Confirm whether a dedicated term (e.g. « ATH ») is wanted."
-  },
-  "8503d060505a291a": {
-   "s": "Host: Assimilation",
-   "loc": [
-    "src/const/PediaConst.hx:58"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "name",
-   "kind": "T",
-   "t": "Hôte : assimilation",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Hôte : assimilation"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "0061df0ce30153b8": {
-   "s": "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots.",
-   "loc": [
-    "src/const/PediaConst.hx:60"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "text",
-   "kind": "T",
-   "t": "Une fois que vous avez fait évoluer la connaissance des microhabitats et en avez créé un, vous pouvez y installer l’excroissance d’habitat « cavité d’assimilation ». Elle vous permet d’assimiler les hôtes, ce qui les rend bien mieux adaptés aux besoins du parasite. En termes de jeu, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, seulement lorsque vous effectuez des actions. Vous avez davantage de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire.",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Une fois que vous avez fait évoluer la connaissance des microhabitats et en avez créé un, vous pouvez y installer l’excroissance d’habitat « cavité d’assimilation ». Elle vous permet d’assimiler les hôtes, ce qui les rend bien mieux adaptés aux besoins du parasite. En termes de jeu, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, seulement lorsque vous effectuez des actions. Vous avez davantage de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "701733befe6a987d": {
-   "s": "Host: Attributes",
-   "loc": [
-    "src/const/PediaConst.hx:64"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "name",
-   "kind": "T",
-   "t": "Hôte : attributs",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Hôte : attributs"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "b8ed062cd15ee316": {
-   "s": "<p>Each host has four base attributes: strength, constitution, intellect and psyche. You can only find out the attributes for the host if you evolve the maximum level of brain probe and use it.</p>",
-   "loc": [
-    "src/const/PediaConst.hx:66"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "text",
-   "kind": "T",
-   "t": "<p>Chaque hôte possède quatre attributs de base : la force, la constitution, l’intellect et la psyché. Vous ne pouvez connaître les attributs d’un hôte qu’en faisant évoluer la sonde cérébrale jusqu’à son niveau maximal et en l’utilisant.</p>",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "<p>Chaque hôte possède quatre attributs de base : la force, la constitution, l’intellect et la psyché. Vous ne pouvez connaître les attributs d’un hôte qu’en faisant évoluer la sonde cérébrale jusqu’à son niveau maximal et en l’utilisant.</p>"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "24d3e4fdd9a8e186": {
-   "s": "Strength",
-   "loc": [
-    "src/const/PediaConst.hx:67"
-   ],
-   "where": "PediaConst.builtinContents",
-   "kind": "T",
-   "t": "Force",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Force"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "9669201cb04cf288": {
-   "s": "Constitution",
-   "loc": [
-    "src/const/PediaConst.hx:68"
-   ],
-   "where": "PediaConst.builtinContents",
-   "kind": "T",
-   "t": "Constitution",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Constitution"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "e8d4bafc56e1b41d": {
-   "s": "Intellect",
-   "loc": [
-    "src/const/PediaConst.hx:69"
-   ],
-   "where": "PediaConst.builtinContents",
-   "kind": "T",
-   "t": "Intellect",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Intellect"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "90c50c2d916318af": {
-   "s": "Psyche",
-   "loc": [
-    "src/const/PediaConst.hx:70"
-   ],
-   "where": "PediaConst.builtinContents",
-   "kind": "T",
-   "t": "Psyché",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Psyché"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "626ce342840c2bf5": {
-   "s": "Host: Conversation",
-   "loc": [
-    "src/const/PediaConst.hx:74"
-   ],
-   "where": "PediaConst.builtinContents",
-   "field": "name",
-   "kind": "T",
-   "t": "Hôte : conversation",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Hôte : conversation"
+     "t": "Marque au fer le combattant promu de sceaux médullaires qui lient la nouvelle doctrine."
     },
     {
      "pass": 2,
@@ -1676,8 +269,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« CARACTÉRISTIQUES » (16 characters) is twice as long as « FEATURES ». It follows the glossary, but it may overflow a tab heading. If space is tight, « TRAITS CORP. » or « MUTATIONS » would be shorter. Please check in the UI."
+   ]
   },
   "c911669a1fb5b77c": {
    "s": "/t",
@@ -1700,8 +292,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "I kept « /t » because « tour » also starts with t. « /tour » is clearer if the space allows it."
+   ]
   },
   "37fb25438a3c7cd5": {
    "s": "Energy spent per turn while growing body features",
@@ -1710,12 +301,12 @@
    ],
    "where": "Body.updateStats",
    "kind": "T",
-   "t": "Énergie dépensée par tour pendant la croissance des caractéristiques corporelles",
+   "t": "Énergie dépensée par tour pour faire croître les caractéristiques corporelles",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Énergie dépensée par tour pendant la croissance des caractéristiques corporelles"
+     "t": "Énergie dépensée par tour pour faire croître les caractéristiques corporelles"
     },
     {
      "pass": 2,
@@ -1933,7 +524,7 @@
      "t": null
     }
    ],
-   "doubt": "« inconnu » is masculine singular. It is used in 5 places; if any of them qualifies a feminine noun, it would need « inconnue » or a select."
+   "doubt": "\"unknown\" is also reused in several places. I used the masculine « inconnu » (emploi, attribut)."
   },
   "d08a4929f718717e": {
    "s": "SKILLS",
@@ -1978,7 +569,7 @@
      "t": null
     }
    ],
-   "doubt": "« néant » is used in 5 places as an empty-list marker. It is fine next to the ALL CAPS section headers, but « aucun » / « aucune » would be needed if the context is a noun phrase."
+   "doubt": "\"none\" is reused in 5 places (skills, traits, effects…) with different genders. I chose « néant » to avoid aucun/aucune agreement."
   },
   "298dc05d5a9552e0": {
    "s": "TRAITS",
@@ -2083,8 +674,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "Short tag for a knowledge as opposed to a skill: « SAVOIR ». « CONN. » would be shorter if needed."
+   ]
   },
   "b3092338a69cc1a8": {
    "s": "no body features",
@@ -2133,12 +723,12 @@
    ],
    "where": "Body.updateFeatures",
    "kind": "T",
-   "t": "tous les emplacements sont pris",
+   "t": "tous les emplacements sont occupés",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "tous les emplacements sont pris"
+     "t": "tous les emplacements sont occupés"
     },
     {
      "pass": 2,
@@ -2206,11 +796,1415 @@
      "t": null
     }
    ]
+  },
+  "acdac205f5e24cb7": {
+   "s": "Audio",
+   "loc": [
+    "src/ui/Options.hx:60"
+   ],
+   "where": "Options.new",
+   "field": "addCard",
+   "kind": "T",
+   "t": "Audio",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Audio"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "0d49fceb8d4a4c2a": {
+   "s": "Music volume",
+   "loc": [
+    "src/ui/Options.hx:61"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Volume de la musique",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Volume de la musique"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ca26fadba1d9acf7": {
+   "s": "Effects volume",
+   "loc": [
+    "src/ui/Options.hx:66"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Volume des effets",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Volume des effets"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "97de754cf7a5b5be": {
+   "s": "Ambience volume",
+   "loc": [
+    "src/ui/Options.hx:70"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Volume de l’ambiance",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Volume de l’ambiance"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "bc17c1f0179a888f": {
+   "s": "Video",
+   "loc": [
+    "src/ui/Options.hx:77"
+   ],
+   "where": "Options.new",
+   "field": "addCard",
+   "kind": "T",
+   "t": "Vidéo",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Vidéo"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "134499aaa7bf2cfa": {
+   "s": "FPS cap",
+   "loc": [
+    "src/ui/Options.hx:78"
+   ],
+   "where": "Options.new",
+   "field": "addOptRadio",
+   "kind": "T",
+   "t": "Limite d’images/s",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Limite d’images/s"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "bce64ff4e6714016": {
+   "s": "Show FPS counter",
+   "loc": [
+    "src/ui/Options.hx:80"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Afficher le compteur d’images",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Afficher le compteur d’images"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a78939d37f8c7dc0": {
+   "s": "Antialiasing",
+   "loc": [
+    "src/ui/Options.hx:82"
+   ],
+   "where": "Options.new",
+   "field": "addOptSelect",
+   "kind": "T",
+   "t": "Anticrénelage",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Anticrénelage"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e3de5ab0ca4c69db": {
+   "s": "Off",
+   "loc": [
+    "src/ui/Options.hx:83",
+    "src/ui/Options.hx:108"
+   ],
+   "where": "Options.new",
+   "field": "title",
+   "kind": "T",
+   "t": "Désactivé",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Désactivé"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2d4be3f9a612726c": {
+   "s": "Render scale",
+   "loc": [
+    "src/ui/Options.hx:93"
+   ],
+   "where": "Options.new",
+   "field": "addOptSelect",
+   "kind": "T",
+   "t": "Échelle de rendu",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Échelle de rendu"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "b89e2c370e21e049": {
+   "s": "Lamp lights",
+   "loc": [
+    "src/ui/Options.hx:107"
+   ],
+   "where": "Options.new",
+   "field": "addOptSelect",
+   "kind": "T",
+   "t": "Lumières des lampadaires",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Lumières des lampadaires"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "« lampadaires » assumes the setting means street lamps. If it also covers indoor lamps, « Lumières des lampes » is safer."
+  },
+  "e1a2b65df8ed2838": {
+   "s": "Brightness",
+   "loc": [
+    "src/ui/Options.hx:119"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Luminosité",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Luminosité"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "3ef84d550fdc4824": {
+   "s": "Bloom",
+   "loc": [
+    "src/ui/Options.hx:125"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Flou lumineux",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Flou lumineux"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "91abdb854bb470fc": {
+   "s": "Ambient occlusion",
+   "loc": [
+    "src/ui/Options.hx:127"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Occlusion ambiante",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Occlusion ambiante"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7b4db7ef1fa23cfb": {
+   "s": "Interface",
+   "loc": [
+    "src/ui/Options.hx:131"
+   ],
+   "where": "Options.new",
+   "field": "addCard",
+   "kind": "T",
+   "t": "Interface",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Interface"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "89b86ab0e66f5271": {
+   "s": "Language",
+   "loc": [
+    "src/ui/Options.hx:140"
+   ],
+   "where": "Options.new",
+   "field": "addOptSelect",
+   "kind": "T",
+   "t": "Langue",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Langue"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "356308856e11b25e": {
+   "s": "Repeat delay",
+   "loc": [
+    "src/ui/Options.hx:141"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Délai de répétition",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Délai de répétition"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "b041b2a98eb7a703": {
+   "s": "Map scale",
+   "loc": [
+    "src/ui/Options.hx:145"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Échelle de la carte",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Échelle de la carte"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "df77c808c16250d5": {
+   "s": "Minimap scale",
+   "loc": [
+    "src/ui/Options.hx:151"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Échelle de la minicarte",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Échelle de la minicarte"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "14088da31edbd53d": {
+   "s": "Title font",
+   "loc": [
+    "src/ui/Options.hx:161"
+   ],
+   "where": "Options.new",
+   "field": "addOptSelect",
+   "kind": "T",
+   "t": "Police des titres",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Police des titres"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "322ac28a6c694a9b": {
+   "s": "Text font",
+   "loc": [
+    "src/ui/Options.hx:168"
+   ],
+   "where": "Options.new",
+   "field": "addOptSelect",
+   "kind": "T",
+   "t": "Police du texte",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Police du texte"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "83ca9e48c37ce260": {
+   "s": "Font size",
+   "loc": [
+    "src/ui/Options.hx:171"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Taille de police",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Taille de police"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "86e6fcac4f4fa007": {
+   "s": "Overall difficulty",
+   "loc": [
+    "src/ui/Options.hx:176"
+   ],
+   "where": "Options.new",
+   "field": "addOptSelect",
+   "kind": "T",
+   "t": "Difficulté globale",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Difficulté globale"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1431f68f359f8699": {
+   "s": "Unset",
+   "loc": [
+    "src/ui/Options.hx:177",
+    "src/ui/Options.hx:466"
+   ],
+   "where": "Options.new",
+   "field": "title",
+   "kind": "T",
+   "t": "Non définie",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Non définie"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "00f03137e1553b03": {
+   "s": "Easy",
+   "loc": [
+    "src/ui/Options.hx:178",
+    "src/ui/Options.hx:467"
+   ],
+   "where": "Options.new",
+   "field": "title",
+   "kind": "T",
+   "t": "Facile",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Facile"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "45e118d0563ea858": {
+   "s": "Normal",
+   "loc": [
+    "src/ui/Options.hx:179",
+    "src/ui/Options.hx:468"
+   ],
+   "where": "Options.new",
+   "field": "title",
+   "kind": "T",
+   "t": "Normale",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Normale"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "20a89915f18c15e8": {
+   "s": "Hard",
+   "loc": [
+    "src/ui/Options.hx:180",
+    "src/ui/Options.hx:469"
+   ],
+   "where": "Options.new",
+   "field": "title",
+   "kind": "T",
+   "t": "Difficile",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Difficile"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e04c712a3059820a": {
+   "s": "Gameplay",
+   "loc": [
+    "src/ui/Options.hx:186"
+   ],
+   "where": "Options.new",
+   "field": "addCard",
+   "kind": "T",
+   "t": "Jeu",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Jeu"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ee50e5b5f5d96238": {
+   "s": "Skip tutorial",
+   "loc": [
+    "src/ui/Options.hx:187"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Passer le tutoriel",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Passer le tutoriel"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "6607f6ca161b0dfb": {
+   "s": "Needs overall difficulty set",
+   "loc": [
+    "src/ui/Options.hx:187"
+   ],
+   "where": "Options.new",
+   "kind": "T",
+   "t": "Nécessite une difficulté globale définie",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Nécessite une difficulté globale définie"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "55683fd329d42aba": {
+   "s": "Enable fullscreen",
+   "loc": [
+    "src/ui/Options.hx:189"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Activer le plein écran",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Activer le plein écran"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e7750c334052eab0": {
+   "s": "Applies on next launch",
+   "loc": [
+    "src/ui/Options.hx:189"
+   ],
+   "where": "Options.new",
+   "kind": "T",
+   "t": "Prend effet au prochain lancement",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Prend effet au prochain lancement"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a28367903792f926": {
+   "s": "Enable AI-generated artwork",
+   "loc": [
+    "src/ui/Options.hx:191"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Activer les illustrations générées par IA",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Activer les illustrations générées par IA"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "4d064726954a1748": {
+   "s": "Advanced",
+   "loc": [
+    "src/ui/Options.hx:194"
+   ],
+   "where": "Options.new",
+   "field": "addCard",
+   "kind": "T",
+   "t": "Avancé",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Avancé"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "4d20449acf70809d": {
+   "s": "Log lines in HUD",
+   "loc": [
+    "src/ui/Options.hx:195"
+   ],
+   "where": "Options.new",
+   "field": "addOptSlider",
+   "kind": "T",
+   "t": "Lignes du journal dans l’interface",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Lignes du journal dans l’interface"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "dea1b6b301351253": {
+   "s": "Laptop movement keys (uiojklm,.)",
+   "loc": [
+    "src/ui/Options.hx:200"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Touches de déplacement pour portable (uiojklm,.)",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Touches de déplacement pour portable (uiojklm,.)"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ec90c48c500f30b0": {
+   "s": "Extended gameplay information",
+   "loc": [
+    "src/ui/Options.hx:201"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Informations de jeu détaillées",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Informations de jeu détaillées"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a00b0174c3fada5d": {
+   "s": "Shift-click/number repeat action",
+   "loc": [
+    "src/ui/Options.hx:202"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Maj+clic/chiffre : répéter l’action",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Maj+clic/chiffre : répéter l’action"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "74e35203d26e2d93": {
+   "s": "Show mouse cursor on map",
+   "loc": [
+    "src/ui/Options.hx:203"
+   ],
+   "where": "Options.new",
+   "field": "addOptToggle",
+   "kind": "T",
+   "t": "Afficher le curseur sur la carte",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Afficher le curseur sur la carte"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "11eecaf7a57e8617": {
+   "s": "Switch the language to {lang}?",
+   "loc": [
+    "src/ui/Options.hx:223"
+   ],
+   "where": "Options.setLang",
+   "field": "text",
+   "vars": [
+    "lang"
+   ],
+   "kind": "T",
+   "t": "Changer la langue pour {lang} ?",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Changer la langue pour {lang} ?"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1cda5d47379ca3bc": {
+   "s": "The game reloads; a game in progress is autosaved first.",
+   "loc": [
+    "src/ui/Options.hx:226"
+   ],
+   "where": "Options.setLang",
+   "field": "sub",
+   "kind": "T",
+   "t": "Le jeu redémarre ; une partie en cours est d’abord sauvegardée automatiquement.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le jeu redémarre ; une partie en cours est d’abord sauvegardée automatiquement."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e709e76ff5425bd5": {
+   "s": "Presets",
+   "loc": [
+    "src/ui/Options.hx:425"
+   ],
+   "where": "Options.addOptSelect",
+   "field": "innerHTML",
+   "kind": "T",
+   "t": "Préréglages",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Préréglages"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "f4432c682aa2c7d9": {
+   "s": "<li>Increases maximum health and energy</li>",
+   "loc": [
+    "src/const/PediaConst.hx:6",
+    "src/const/PediaConst.hx:13"
+   ],
+   "where": "PediaConst.hostAttrNoteStrength",
+   "field": "hostAttrNoteStrength",
+   "kind": "T",
+   "t": "<li>Augmente la santé et l’énergie maximales</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Augmente la santé et l’énergie maximales</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "93a801a2d62218f2": {
+   "s": "<li>Increases melee damage</li>",
+   "loc": [
+    "src/const/PediaConst.hx:7"
+   ],
+   "where": "PediaConst.hostAttrNoteStrength",
+   "kind": "T",
+   "t": "<li>Augmente les dégâts au corps à corps</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Augmente les dégâts au corps à corps</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "36a05f4dbbc17933": {
+   "s": "<li>Decreases grip efficiency</li>",
+   "loc": [
+    "src/const/PediaConst.hx:8"
+   ],
+   "where": "PediaConst.hostAttrNoteStrength",
+   "kind": "T",
+   "t": "<li>Réduit l’efficacité de la prise</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Réduit l’efficacité de la prise</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "08e02a34e0932ae3": {
+   "s": "<li>Decreases paralysis efficiency</li>",
+   "loc": [
+    "src/const/PediaConst.hx:9"
+   ],
+   "where": "PediaConst.hostAttrNoteStrength",
+   "kind": "T",
+   "t": "<li>Réduit l’efficacité de la paralysie</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Réduit l’efficacité de la paralysie</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "378641e7a8b3f661": {
+   "s": "<li>Increases speed of freeing from mucus</li>",
+   "loc": [
+    "src/const/PediaConst.hx:10"
+   ],
+   "where": "PediaConst.hostAttrNoteStrength",
+   "kind": "T",
+   "t": "<li>Permet de se libérer plus vite du mucus</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Permet de se libérer plus vite du mucus</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2b143be417b5ec34": {
+   "s": "<li>Limits the amount of inventory items</li>",
+   "loc": [
+    "src/const/PediaConst.hx:11"
+   ],
+   "where": "PediaConst.hostAttrNoteStrength",
+   "kind": "T",
+   "t": "<li>Limite le nombre d’objets dans l’inventaire</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Limite le nombre d’objets dans l’inventaire</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5bf9e44cf8d51a58": {
+   "s": "<li>Limits the amount of body features</li>",
+   "loc": [
+    "src/const/PediaConst.hx:14"
+   ],
+   "where": "PediaConst.hostAttrNoteConstitution",
+   "kind": "T",
+   "t": "<li>Limite le nombre de caractéristiques corporelles</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Limite le nombre de caractéristiques corporelles</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1663b2c86deeaf21": {
+   "s": "<li>Increases skills and society knowledge learning efficiency</li>",
+   "loc": [
+    "src/const/PediaConst.hx:16"
+   ],
+   "where": "PediaConst.hostAttrNoteIntellect",
+   "field": "hostAttrNoteIntellect",
+   "kind": "T",
+   "t": "<li>Augmente l’efficacité de l’apprentissage des compétences et des connaissances sur la société</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Augmente l’efficacité de l’apprentissage des compétences et des connaissances sur la société</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "dac338548e0a1cdb": {
+   "s": "<li>Boosts skill training when consulting agreeable hosts</li>",
+   "loc": [
+    "src/const/PediaConst.hx:17"
+   ],
+   "where": "PediaConst.hostAttrNoteIntellect",
+   "kind": "T",
+   "t": "<li>Améliore l’entraînement des compétences quand tu consultes des hôtes conciliants</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Améliore l’entraînement des compétences quand tu consultes des hôtes conciliants</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "\"agreeable hosts\" may mean hosts that have given consent, or simply cooperative hosts. I chose « hôtes conciliants », which is neutral. Switch to « hôtes consentants » if consent is the actual condition."
+  },
+  "b847c832143d2034": {
+   "s": "<li>Measures host mental will</li>",
+   "loc": [
+    "src/const/PediaConst.hx:19"
+   ],
+   "where": "PediaConst.hostAttrNotePsyche",
+   "field": "hostAttrNotePsyche",
+   "kind": "T",
+   "t": "<li>Mesure la volonté de l’hôte</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Mesure la volonté de l’hôte</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "« mental will » is rendered as plain « volonté ». The word « mental » is implicit in French, so the string is kept as is."
+  },
+  "274f3a7833c39639": {
+   "s": "<li>Increases energy needed to probe brain</li>",
+   "loc": [
+    "src/const/PediaConst.hx:20"
+   ],
+   "where": "PediaConst.hostAttrNotePsyche",
+   "kind": "T",
+   "t": "<li>Augmente l’énergie nécessaire pour sonder le cerveau</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Augmente l’énergie nécessaire pour sonder le cerveau</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "798eed3b96f4f345": {
+   "s": "<li>Reduces the efficiency of reinforcing control</li>",
+   "loc": [
+    "src/const/PediaConst.hx:21"
+   ],
+   "where": "PediaConst.hostAttrNotePsyche",
+   "kind": "T",
+   "t": "<li>Réduit l’efficacité du renforcement du contrôle</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Réduit l’efficacité du renforcement du contrôle</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "737df5d50a966153": {
+   "s": "<li>Makes conversations and gaining consent harder</li>",
+   "loc": [
+    "src/const/PediaConst.hx:22"
+   ],
+   "where": "PediaConst.hostAttrNotePsyche",
+   "kind": "T",
+   "t": "<li>Rend les conversations et l’obtention du consentement plus difficiles</li>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<li>Rend les conversations et l’obtention du consentement plus difficiles</li>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ced57f21708b1314": {
+   "s": "BASICS",
+   "loc": [
+    "src/const/PediaConst.hx:48"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "name",
+   "kind": "T",
+   "t": "BASES",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "BASES"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1e622b11ef61c87f": {
+   "s": "Host: Affinity",
+   "loc": [
+    "src/const/PediaConst.hx:52"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "name",
+   "kind": "T",
+   "t": "Hôte : affinité",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Hôte : affinité"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "80641d3fa50d3b1f": {
+   "s": "Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green icon of two interlocking rings after it in the HUD in case of the maximum affinity. On normal and hard conversation difficulty, leaving a host with full affinity will result in parasite losing some maximum energy (1 or 2). That reduction is small enough. However, if such host dies while the parasite is on it, for any reason, the loss will be much higher (5). Therefore if you intend to lose the host, leave it before it dies. On easy conversation difficulty there is no loss at all. Note also, that hosts that have both full affinity and consent do not get alerted when they see the parasite. In fact, you can quickly hop onto such a host again after leaving them.",
+   "loc": [
+    "src/const/PediaConst.hx:54"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "text",
+   "kind": "T",
+   "t": "Utiliser le même hôte assez longtemps fait augmenter ton affinité avec lui. Quand l’affinité est assez élevée, tu peux entamer une conversation et obtenir le consentement de l’hôte. L’affinité finit par atteindre son maximum, et un message te l’annonce. Dans l’interface, une icône verte de deux anneaux entrelacés apparaît alors après le nom de l’hôte. En difficulté de conversation normale ou difficile, quitter un hôte à affinité maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si cet hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Si tu comptes perdre l’hôte, quitte-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Note aussi que les hôtes ayant à la fois une affinité maximale et donné leur consentement ne sont pas alertés en voyant le parasite. Tu peux même envahir de nouveau rapidement un tel hôte après l’avoir quitté.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Utiliser le même hôte assez longtemps fait augmenter ton affinité avec lui. Quand l’affinité est assez élevée, tu peux entamer une conversation et obtenir le consentement de l’hôte. L’affinité finit par atteindre son maximum, et un message te l’annonce. Dans l’interface, une icône verte de deux anneaux entrelacés apparaît alors après le nom de l’hôte. En difficulté de conversation normale ou difficile, quitter un hôte à affinité maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si cet hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Si tu comptes perdre l’hôte, quitte-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Note aussi que les hôtes ayant à la fois une affinité maximale et donné leur consentement ne sont pas alertés en voyant le parasite. Tu peux même envahir de nouveau rapidement un tel hôte après l’avoir quitté."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "\"hop onto such a host again\": I used the glossary verb « envahir » (« envahir de nouveau ») rather than a colloquial verb."
+  },
+  "8503d060505a291a": {
+   "s": "Host: Assimilation",
+   "loc": [
+    "src/const/PediaConst.hx:58"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "name",
+   "kind": "T",
+   "t": "Hôte : assimilation",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Hôte : assimilation"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "0061df0ce30153b8": {
+   "s": "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots.",
+   "loc": [
+    "src/const/PediaConst.hx:60"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "text",
+   "kind": "T",
+   "t": "Une fois que tu as fait évoluer la connaissance des microhabitats et que tu en as créé un, tu peux y installer l’excroissance d’habitat appelée cavité d’assimilation. Elle te permet d’assimiler les hôtes pour les rendre bien plus adaptés aux besoins du parasite. Concrètement, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, seulement quand tu effectues des actions. Tu as plus de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Une fois que tu as fait évoluer la connaissance des microhabitats et que tu en as créé un, tu peux y installer l’excroissance d’habitat appelée cavité d’assimilation. Elle te permet d’assimiler les hôtes pour les rendre bien plus adaptés aux besoins du parasite. Concrètement, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, seulement quand tu effectues des actions. Tu as plus de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "701733befe6a987d": {
+   "s": "Host: Attributes",
+   "loc": [
+    "src/const/PediaConst.hx:64"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "name",
+   "kind": "T",
+   "t": "Hôte : attributs",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Hôte : attributs"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "b8ed062cd15ee316": {
+   "s": "<p>Each host has four base attributes: strength, constitution, intellect and psyche. You can only find out the attributes for the host if you evolve the maximum level of brain probe and use it.</p>",
+   "loc": [
+    "src/const/PediaConst.hx:66"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "text",
+   "kind": "T",
+   "t": "<p>Chaque hôte possède quatre attributs de base : force, constitution, intellect et psyché. Tu ne peux connaître les attributs d’un hôte qu’après avoir fait évoluer la sonde cérébrale jusqu’à son niveau maximal et l’avoir utilisée.</p>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<p>Chaque hôte possède quatre attributs de base : force, constitution, intellect et psyché. Tu ne peux connaître les attributs d’un hôte qu’après avoir fait évoluer la sonde cérébrale jusqu’à son niveau maximal et l’avoir utilisée.</p>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "24d3e4fdd9a8e186": {
+   "s": "Strength",
+   "loc": [
+    "src/const/PediaConst.hx:67"
+   ],
+   "where": "PediaConst.builtinContents",
+   "kind": "T",
+   "t": "Force",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Force"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "9669201cb04cf288": {
+   "s": "Constitution",
+   "loc": [
+    "src/const/PediaConst.hx:68"
+   ],
+   "where": "PediaConst.builtinContents",
+   "kind": "T",
+   "t": "Constitution",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Constitution"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e8d4bafc56e1b41d": {
+   "s": "Intellect",
+   "loc": [
+    "src/const/PediaConst.hx:69"
+   ],
+   "where": "PediaConst.builtinContents",
+   "kind": "T",
+   "t": "Intellect",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Intellect"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "90c50c2d916318af": {
+   "s": "Psyche",
+   "loc": [
+    "src/const/PediaConst.hx:70"
+   ],
+   "where": "PediaConst.builtinContents",
+   "kind": "T",
+   "t": "Psyché",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Psyché"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "626ce342840c2bf5": {
+   "s": "Host: Conversation",
+   "loc": [
+    "src/const/PediaConst.hx:74"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "name",
+   "kind": "T",
+   "t": "Hôte : conversation",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Hôte : conversation"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
   }
  },
  "totals": {
-  "calls": 8,
-  "input": 63748,
-  "output": 13139
+  "calls": 12,
+  "input": 103922,
+  "output": 24170
  }
 }
