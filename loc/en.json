@@ -30405,6 +30405,15 @@
    "where": "ScenarioAlienCrashLanding.new"
   },
   {
+   "s": "A veteran pilot, he said it was unlike anything he's ever seen before.",
+   "kind": "N",
+   "loc": [
+    "src/scenario/ScenarioAlienCrashLanding.hx:137"
+   ],
+   "vars": [],
+   "where": "ScenarioAlienCrashLanding.new"
+  },
+  {
    "s": "The plane suffered heavy damage in a fight.",
    "kind": "N",
    "loc": [

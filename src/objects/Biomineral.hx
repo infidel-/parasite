@@ -72,14 +72,14 @@ class Biomineral extends HabitatObject
   override function updateActionList()
     {
       if (game.player.state != PLR_STATE_ATTACHED)
-        addAction('enterSewers', 'Enter sewers', 10);
+        addAction('enterSewers', T('Enter sewers'), 10);
     }
 
 
 // activate sewers - leave area
   override function onAction(id: String)
     {
-      game.log("You enter the damp fetid sewers, escaping the prying eyes.");
+      game.log(T("You enter the damp fetid sewers, escaping the prying eyes."));
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
     }

@@ -8381,11 +8381,12 @@ select {
 }
 .body-sk-name {
   flex: 1;
+  min-width: 0;
   color: var(--text);
   font-size: 94%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.15;
+  /* wraps instead of an ellipsis: translated skill names run longer (French +40-150%) */
+  overflow-wrap: anywhere;
 }
 .body-sk-tag {
   flex: none;
