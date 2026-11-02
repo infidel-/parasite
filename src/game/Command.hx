@@ -73,18 +73,18 @@ class Command
             id: 'command.attack',
             type: ACTION_AREA,
             name: (target.type == TARGET_AI ?
-              target.ai.prepLog('"Destroy him!"') : '"Destroy that!"'),
+              target.ai.prepLog('"Destroy him!"') : T('"Destroy that!"')),
           });
         }
       hud.addAction({
         id: 'command.leaveArea',
         type: ACTION_AREA,
-        name: '"Leave us!"',
+        name: T('"Leave us!"'),
       });
       hud.addAction({
         id: 'command.abort',
         type: ACTION_AREA,
-        name: 'Abort',
+        name: T('Abort'),
         isVirtual: true,
       });
     }
@@ -164,14 +164,14 @@ class Command
       var target = getAttackTarget();
       if (target == null)
         {
-          game.actionFailed('No visible target.');
+          game.actionFailed(T('No visible target.'));
           return false;
         }
 
       if (target.type == TARGET_AI &&
           target.ai.isPlayerCultist())
         {
-          game.actionFailed('Followers refuse to attack their own cult.');
+          game.actionFailed(T('Followers refuse to attack their own cult.'));
           return false;
         }
 
@@ -191,7 +191,7 @@ class Command
             ai.setState(AI_STATE_ALERT);
         }
 
-      game.log('You order your followers to attack.');
+      game.log(T('You order your followers to attack.'));
       exit();
       return true;
     }
@@ -212,7 +212,7 @@ class Command
             ai.setState(AI_STATE_IDLE);
         }
 
-      game.log('You order your followers to leave.');
+      game.log(T('You order your followers to leave.'));
       exit();
       return true;
     }

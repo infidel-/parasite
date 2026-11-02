@@ -20,7 +20,7 @@ class TeamBaseDefense extends ProfaneOrdeal
   public override function init()
     {
       super.init();
-      name = 'Defend Cor Nefandum (The Group)';
+      name = N('Defend Cor Nefandum (The Group)');
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;

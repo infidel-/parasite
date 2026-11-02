@@ -89,7 +89,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       base.activeDefenseMissionID = ordeal.missions[0].id;
       base.activeDefenseTimer = ordeal.timer;
       game.message({
-        text: 'The team closes on Cor Nefandum. Defend the base before the timer expires.',
+        text: T('The team closes on Cor Nefandum. Defend the base before the timer expires.'),
         col: 'alert'
       });
       return true;
@@ -151,7 +151,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
         {
           game.scene.sounds.play('watcher-ambush');
           game.message({
-            text: "The watcher warns they are waiting for me.",
+            text: T("The watcher warns they are waiting for me."),
             img: 'pedia/team_ambush',
             col: 'alert'
           });
@@ -200,7 +200,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           game.turns - lastAlertTurn > 10)
         {
           game.message({
-            text: "They are getting very close to me.",
+            text: T("They are getting very close to me."),
             col: 'alert'
           });
           lastAlertTurn = game.turns;
@@ -222,7 +222,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           game.area.habitat == ambushedHabitat)
         {
           game.message({
-            text: "Something is wrong here... It's an ambush!",
+            text: T("Something is wrong here... It's an ambush!"),
             img: 'pedia/team_ambush',
             col: 'alert'
           });
@@ -253,7 +253,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
           var y = game.playerArea.y;
 
           game.message({
-            text: "Something is wrong here... They're after me!",
+            text: T("Something is wrong here... They're after me!"),
             img: 'pedia/team_basics',
             col: 'alert'
           });
@@ -381,7 +381,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
         };
       if (timer > 0)
         {
-          game.actionFailed('You try to leave but the exit is blocked! You can leave the area in ' + timer + ' turns.');
+          game.actionFailed(T('You try to leave but the exit is blocked! You can leave the area in {n, plural, one{# turn} other{# turns}}.', { n: timer }));
           return {
             canLeave: false,
             skipOutsiderCheck: true
@@ -441,7 +441,9 @@ class Team extends FSM<_TeamState, _TeamFlag>
         return;
       // no more free blackops, ambush failed
       game.message({
-        text: "I've " + (onDeath ? 'eliminated' : 'successfully evaded') + " the aggressors. It will be some time before they will be able to get on my trail again.",
+        text: (onDeath ?
+          T("I've eliminated the aggressors. It will be some time before they will be able to get on my trail again.") :
+          T("I've successfully evaded the aggressors. It will be some time before they will be able to get on my trail again.")),
         img: 'pedia/team_deactivation'
       });
       game.group.onRepelAmbush();
@@ -464,14 +466,14 @@ class Team extends FSM<_TeamState, _TeamFlag>
       // this one is for when some of them are alive - habitat is burned
       if (game.area.isHabitat)
         {
-          game.log("You've managed to escape the ambush.");
+          game.log(T("You've managed to escape the ambush."));
           destroyHabitat(game.area.parent);
         }
 
       // street ambush, avoidance
       else
         {
-          game.log("You've managed to avoid the ambush.");
+          game.log(T("You've managed to avoid the ambush."));
           // team distance is increased a little providing a buffer
           distance = 10;
           // team goes back to search
@@ -506,26 +508,23 @@ class Team extends FSM<_TeamState, _TeamFlag>
         {
           game.scene.sounds.play('event-habitat-destroy');
           game.message({
-            text: 'You sense that the habitat at ' +
-            area.x + ',' + area.y + ' was destroyed.',
+            text: T('You sense that the habitat at {x},{y} was destroyed.', { x: area.x, y: area.y }),
             img: 'pedia/habitat_destruction',
             col: 'alert'
           });
           return;
         }
 
-      var adjective = 'great';
-      if (watcherLevel >= 2)
-        adjective = 'nagging';
-      var msg = 'You feel ' + adjective + ' pain as the habitat at ' +
-        area.x + ',' + area.y + ' is destroyed. ';
+      var msg = (watcherLevel >= 2 ?
+        T('You feel nagging pain as the habitat at {x},{y} is destroyed.', { x: area.x, y: area.y }) :
+        T('You feel great pain as the habitat at {x},{y} is destroyed.', { x: area.x, y: area.y })) + ' ';
       var img = 'pedia/habitat_destruction';
       if (game.player.vars.habitatsLeft == 1)
         {
-          msg += 'This is the end...';
+          msg += T('This is the end...');
           img = 'event/death';
         }
-      else msg += 'This will leave a permanent mark.';
+      else msg += T('This will leave a permanent mark.');
       game.message({
         text: msg,
         img: img,
@@ -583,14 +582,14 @@ class Team extends FSM<_TeamState, _TeamFlag>
       if (game.player.state == PLR_STATE_HOST)
         {
           game.player.hostControl -= shock1;
-          game.log('You feel your control slipping.');
+          game.log(T('You feel your control slipping.'));
         }
 
       // attach hold reduced
       else if (game.player.state == PLR_STATE_ATTACHED)
         {
           game.playerArea.attachHold -= shock2;
-          game.log('You feel your grip slipping.');
+          game.log(T('You feel your grip slipping.'));
         }
       game.profile.addPediaArticle('habitatDestruction');
     }

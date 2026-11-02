@@ -15,9 +15,10 @@ class LowerAlertness extends Ordeal
   public static function priceHint(): String
     {
       return Const.smallgray(' (') +
-        '2x: ' +
-        Const.col('cult-power', 5) + ' PWR or ' +
-        Const.col('cult-power', '100k') + Icon.money +
+        T('2x: {power} PWR or {money}', {
+          power: Const.col('cult-power', 5),
+          money: Const.col('cult-power', '100k') + Icon.money,
+        }) +
         Const.smallgray(')');
     }
 
@@ -65,12 +66,12 @@ class LowerAlertness extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Placate the realm';
+      name = N('Placate the realm');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 2;
       requiredMemberLevels = 2;
       actions = requiredMembers;
-      note = 'Two seasoned devotees will still the tumult in the realm.';
+      note = N('Two seasoned devotees will still the tumult in the realm.');
     }
 
 // called after load or creation
@@ -101,7 +102,7 @@ class LowerAlertness extends Ordeal
 
       // show success message
       game.message({
-        text: 'The tumult wanes.',
+        text: T('The tumult wanes.'),
         col: 'cult'
       });
     }
@@ -117,7 +118,7 @@ class LowerAlertness extends Ordeal
       actions.push({
         id: 'lowerAlertness',
         type: ACTION_CULT,
-        name: 'Placate the realm' + priceHint(),
+        name: T('Placate the realm') + priceHint(),
         energy: 0,
         obj: {}
       });

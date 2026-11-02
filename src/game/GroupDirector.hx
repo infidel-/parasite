@@ -30,7 +30,7 @@ class GroupDirector
       else if (group.teamTimeout > 20)
         group.teamTimeout = 20;
       game.message({
-        text: 'I know who directs the hunt: a regional controller working out of a military base. They will know I am coming.',
+        text: T('I know who directs the hunt: a regional controller working out of a military base. They will know I am coming.'),
         img: 'pedia/group'
       });
       game.goals.receive(GOAL_GROUP_DIRECTOR);
@@ -72,7 +72,7 @@ class GroupDirector
 
       // the director
       var ai = game.area.spawnAI('agent', group.directorX, group.directorY);
-      ai.job = 'regional controller';
+      ai.job = N('regional controller');
       ai.isGuard = true;
       ai.guardTargetX = ai.x;
       ai.guardTargetY = ai.y;
@@ -124,7 +124,7 @@ class GroupDirector
         {
           group.directorAlert = true;
           game.message({
-            text: 'The alarm is up. I cannot leave this base until the controller is dealt with.',
+            text: T('The alarm is up. I cannot leave this base until the controller is dealt with.'),
             img: 'event/security_alert'
           });
         }
@@ -139,7 +139,7 @@ class GroupDirector
       if (area.id != game.group.directorAreaID ||
           !game.group.directorAlert)
         return true;
-      game.actionFailed('You cannot leave this base until the controller is dealt with.');
+      game.actionFailed(T('You cannot leave this base until the controller is dealt with.'));
       return false;
     }
 
@@ -148,7 +148,7 @@ class GroupDirector
     {
       var area = game.world.get(0).get(game.group.directorAreaID);
       return Const.col('gray', Const.small(
-        'Target location: (' + area.x + ',' + area.y + ')'));
+        T('Target location: ({x},{y})', { x: area.x, y: area.y })));
     }
 
 // blackops guards around the director, by group difficulty

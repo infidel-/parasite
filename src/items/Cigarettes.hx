@@ -14,9 +14,9 @@ class Cigarettes extends ItemInfo
     {
       super(game);
       id = 'cigarettes';
-      name = 'pack of cigarettes';
+      name = N('pack of cigarettes');
       type = 'junk';
-      unknown = 'small container';
+      unknown = N('small container');
     }
 
 // builds cigarette-specific inventory actions
@@ -27,7 +27,7 @@ class Cigarettes extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Smoke a ' + Const.col('inventory-item', 'cigarette'),
-        nameClean: 'Smoke one',
+        nameClean: T('Smoke one'),
         energy: 0,
         item: item
       });

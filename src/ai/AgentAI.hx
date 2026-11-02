@@ -30,8 +30,8 @@ class AgentAI extends HumanAI
     {
       super.init();
       type = 'agent';
-      name.unknown = 'agent';
-      name.unknownCapped = 'Agent';
+      name.unknown = N('agent');
+      name.unknownCapped = N('Agent');
       soundsID = 'agent';
       isAggressive = true;
 

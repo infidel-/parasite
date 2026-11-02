@@ -14,6 +14,6 @@ class Cauldron extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Caldarium';
+      name = N('Caldarium');
     }
 }

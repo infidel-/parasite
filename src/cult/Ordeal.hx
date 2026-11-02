@@ -1,6 +1,7 @@
 // ordeal base class for cult challenges
 package cult;
 
+import l10n.Loc;
 import game.Game;
 import cult.Cult;
 import _CultPower;
@@ -107,7 +108,7 @@ class Ordeal extends _SaveObject
 // get custom name for display
   public function customName(): String
     {
-      return name;
+      return Loc.tr(name);
     }
 
 // returns the initiate-menu price hint for this ordeal
@@ -199,7 +200,10 @@ class Ordeal extends _SaveObject
               actions.push({
                 id: 'spend.' + field,
                 type: ACTION_CULT,
-                name: 'Wield ' + displayName,
+                name: T('Wield {amount} {power} power', {
+                  amount: Const.col('cult-power', powerAmount),
+                  power: field,
+                }),
                 energy: 0,
                 f: function() {
                   cult.resources.dec(field, powerAmount);
@@ -222,7 +226,7 @@ class Ordeal extends _SaveObject
           actions.push({
             id: 'spend.money',
             type: ACTION_CULT,
-            name: 'Disburse ' + displayName,
+            name: T('Disburse {money}', { money: displayName }),
             energy: 0,
             f: function() {
               cult.resources.money -= power.money;
@@ -240,7 +244,7 @@ class Ordeal extends _SaveObject
         actions.push({
           id: 'annul',
           type: ACTION_CULT,
-          name: 'Annul ' + Const.smallgray('(results in failure)'),
+          name: T('Annul') + ' ' + Const.smallgray(T('(results in failure)')),
           energy: 0,
           f: function() {
             fail();

@@ -15,7 +15,7 @@ class SpineTurret extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Turris Spinarum';
+      name = N('Turris Spinarum');
     }
 
 // fires down the chosen cardinal line

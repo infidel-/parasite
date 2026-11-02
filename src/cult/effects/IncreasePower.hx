@@ -21,7 +21,7 @@ class IncreasePower extends Effect
   public override function init()
     {
       super.init();
-      name = 'power boost';
+      name = N('power boost');
       allowMultiple = true;
       
       // calculate random value: 1 base, 3 with 25% chance, 9 with 5% chance
@@ -42,6 +42,9 @@ class IncreasePower extends Effect
 // returns custom display name with value
   public override function customName(): String
     {
-      return '+' + value + ' ' + powerType + ' power';
+      return T('+{value} {power} power', {
+        value: value,
+        power: powerType,
+      });
     }
 }

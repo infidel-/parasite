@@ -17,8 +17,8 @@ class Watcher extends HabitatObject
   public override function init()
     {
       super.init();
-      name = 'watcher';
-      spawnMessage = 'The watcher blinks its eyes and joins you.';
+      name = N('watcher');
+      spawnMessage = T('The watcher blinks its eyes and joins you.');
       imageRow = Const.ROW_WATCHER;
       imageCol = level;
     }

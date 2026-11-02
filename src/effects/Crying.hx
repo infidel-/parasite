@@ -19,6 +19,6 @@ class Crying extends Effect
   public override function init()
     {
       super.init();
-      name = 'crying';
+      name = N('crying');
     }
 }

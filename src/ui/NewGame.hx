@@ -42,23 +42,23 @@ class NewGame extends UIWindow
       scenarios = [
         {
           id: 'alien',
-          name: 'Scenario A',
-          tag: '<span class="newgame-redact" aria-label="redacted">REDACTED</span> Parasite',
+          name: T('Scenario A'),
+          tag: '<span class="newgame-redact" aria-label="' + T('redacted') + '">' + T('REDACTED') + '</span> ' + T('Parasite'),
           accent: '#a45fe0',
           img: './img/scenario/a.jpg',
           filter: 'url(#msgEngram)',
           grid: false,
-          flavor: 'Something fell from the dark between stars. It wakes in the gut of the city &mdash; hungry, hunted, learning to wear men like coats.'
+          flavor: T('Something fell from the dark between stars. It wakes in the gut of the city &mdash; hungry, hunted, learning to wear men like coats.')
         },
         {
           id: 'sandbox',
-          name: 'Sandbox',
-          tag: 'Open World',
+          name: T('Sandbox'),
+          tag: T('Open World'),
           accent: '#3fd6c0',
           img: './img/scenario/sandbox.jpg',
           filter: 'url(#msgRecon)',
           grid: true,
-          flavor: 'No script. No leash. The whole city to infest at your own pace &mdash; every alley, every host, every quiet experiment.'
+          flavor: T('No script. No leash. The whole city to infest at your own pace &mdash; every alley, every host, every quiet experiment.')
         },
       ];
 
@@ -67,7 +67,7 @@ class NewGame extends UIWindow
       var title = Browser.document.createDivElement();
       title.id = 'window-newgame-title';
       title.className = 'win-title';
-      title.innerHTML = 'SELECT SCENARIO';
+      title.innerHTML = T('SELECT SCENARIO');
       window.appendChild(title);
 
       // body: scenario list (left) + preview image & flavor (right)
@@ -103,7 +103,7 @@ class NewGame extends UIWindow
       window.appendChild(foot);
       var start = Browser.document.createButtonElement();
       start.className = 'newgame-start';
-      start.innerHTML = 'START';
+      start.innerHTML = T('START');
       start.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         newGame(scenarios[activeIndex].id);

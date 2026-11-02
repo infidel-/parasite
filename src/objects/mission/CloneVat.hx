@@ -36,7 +36,7 @@ class CloneVat extends AreaObject
       vatPartIndex = 0;
       vatPartObjectIDs = [];
       type = 'clone_vat';
-      name = 'cloning vat';
+      name = N('cloning vat');
       imageName = UndergroundLab.OBJECTS_IMAGE;
       updateVatIcon();
       isStatic = true;
@@ -134,7 +134,7 @@ class CloneVat extends AreaObject
       game.ui.hud.addAction({
         id: 'flushCloneVat',
         type: ACTION_OBJECT,
-        name: 'Purge growth medium',
+        name: T('Purge growth medium'),
         energy: 10,
         obj: this,
       });
@@ -152,14 +152,14 @@ class CloneVat extends AreaObject
       var rootVat = getRootVat();
       if (rootVat.isFlushed)
         {
-          game.actionFailed('This vat is already draining.');
+          game.actionFailed(T('This vat is already draining.'));
           return true;
         }
 
       rootVat.flushVatGroup();
       game.scene.draw();
 
-      game.log('You trigger a purge cycle. Green slurry hisses into the drains.');
+      game.log(T('You trigger a purge cycle. Green slurry hisses into the drains.'));
 
       var mission = game.cults[0].ordeals.getMissionByID(missionID);
       if (mission == null ||

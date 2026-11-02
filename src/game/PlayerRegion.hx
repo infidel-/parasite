@@ -66,7 +66,7 @@ class PlayerRegion extends _SaveObject
         game.ui.hud.addAction({
           id: 'enterArea',
           type: ACTION_REGION,
-          name: 'Enter area',
+          name: T('Enter area'),
           energy: 0
         });
       var mission = game.cults[0].ordeals.getMarkerMission(currentArea);
@@ -75,7 +75,7 @@ class PlayerRegion extends _SaveObject
         game.ui.hud.addAction({
           id: 'enterMissionArea',
           type: ACTION_REGION,
-          name: 'Enter mission area',
+          name: T('Enter mission area'),
           energy: 0
         });
 
@@ -95,7 +95,7 @@ class PlayerRegion extends _SaveObject
               id: 'createHabitat',
               type: ACTION_REGION,
               name: (game.region.isSafeHabitat(currentArea) ?
-                'Create safe habitat' : 'Create habitat'),
+                T('Create safe habitat') : T('Create habitat')),
               energy: 10
             });
         }
@@ -114,7 +114,7 @@ class PlayerRegion extends _SaveObject
             game.ui.hud.addAction({
               id: 'createOvum',
               type: ACTION_REGION,
-              name: 'Create ovum',
+              name: T('Create ovum'),
               energy: 0
             });
         }
@@ -135,7 +135,7 @@ class PlayerRegion extends _SaveObject
         game.ui.hud.addAction({
           id: 'enterHabitat',
           type: ACTION_REGION,
-          name: 'Enter habitat',
+          name: T('Enter habitat'),
           energy: 0
         });
     }
@@ -196,7 +196,7 @@ class PlayerRegion extends _SaveObject
         {
           if (player.host.energy <= 0)
             {
-              game.player.onHostDeath('Your host has expired somewhere in the sewers. You have to find a new one.');
+              game.player.onHostDeath(T('Your host has expired somewhere in the sewers. You have to find a new one.'));
 
               // close window just in case
               if (game.ui.state != UISTATE_MESSAGE)
@@ -219,7 +219,7 @@ class PlayerRegion extends _SaveObject
       if (player.state == PLR_STATE_PARASITE &&
           currentArea.info.type == 'corp')
         {
-          game.actionFailed("You cannot enter this area without a host.");
+          game.actionFailed(T('You cannot enter this area without a host.'));
           return false;
         }
 
@@ -227,7 +227,7 @@ class PlayerRegion extends _SaveObject
       // the demo locks military bases (their art is not shipped)
       if (currentArea.typeID == AREA_MILITARY_BASE)
         {
-          game.actionFailed("Military bases are available in the full game.");
+          game.actionFailed(T('Military bases are available in the full game.'));
           return false;
         }
 #end
@@ -235,15 +235,15 @@ class PlayerRegion extends _SaveObject
       // cannot enter area with high alertness
       if (currentArea.alertness >= 75)
         {
-          game.actionFailed("This area is too dangerous at the moment.");
+          game.actionFailed(T('This area is too dangerous at the moment.'));
           return false;
         }
 
       target = null;
       game.log(currentArea.typeID == AREA_MILITARY_BASE ?
-        "You approach the base through the woods." :
+        T('You approach the base through the woods.') :
         currentArea.info.isInhabited ?
-        "You emerge from the sewers." : "You enter the area.");
+        T('You emerge from the sewers.') : T('You enter the area.'));
       game.setLocation(LOCATION_AREA);
 
       return true;
@@ -257,19 +257,19 @@ class PlayerRegion extends _SaveObject
           mission.isCompleted ||
           mission.areaID < 0)
         {
-          game.actionFailed("There is no active mission area here.");
+          game.actionFailed(T('There is no active mission area here.'));
           return false;
         }
 
       var area = game.region.get(mission.areaID);
       if (area == null)
         {
-          game.actionFailed("The mission area has collapsed.");
+          game.actionFailed(T('The mission area has collapsed.'));
           return false;
         }
 
       target = null;
-      game.log("You head toward the mission site.");
+      game.log(T('You head toward the mission site.'));
       game.setLocation(LOCATION_AREA, area);
       return true;
     }
@@ -289,8 +289,8 @@ class PlayerRegion extends _SaveObject
   function createHabitatAction()
     {
       game.log(currentArea.typeID == AREA_GROUND ?
-        "You have created a habitat in a mountain cave." :
-        "You have created a habitat in this area.");
+        T('You have created a habitat in a mountain cave.') :
+        T('You have created a habitat in this area.'));
       var area = game.region.createArea(AREA_HABITAT);
       area.isHabitat = true;
       area.habitat = new Habitat(game, area);
@@ -312,9 +312,9 @@ class PlayerRegion extends _SaveObject
           game.group.team.state == TEAM_AMBUSH &&
           game.group.team.ambushedHabitat != null &&
           currentArea.habitatAreaID == game.group.team.ambushedHabitat.area.id)
-        game.log("You enter the habitat. It looks like someone is in here!",
+        game.log(T('You enter the habitat. It looks like someone is in here!'),
           COLOR_ALERT);
-      else game.log("You enter the habitat. You feel much safer here.");
+      else game.log(T('You enter the habitat. You feel much safer here.'));
 
       game.setLocation(LOCATION_AREA, habitatArea);
     }
@@ -322,7 +322,7 @@ class PlayerRegion extends _SaveObject
 // action: create ovum
   function createOvumAction()
     {
-      game.log("You have spawned an ovum in this area.");
+      game.log(T('You have spawned an ovum in this area.'));
       game.scene.sounds.play('region-ovum');
       var o = new region.Ovum(game, x, y);
       game.region.addObject(o);
@@ -338,7 +338,7 @@ class PlayerRegion extends _SaveObject
         {
           if (player.energy < player.vars.regionEnergyPerTurn)
             {
-              game.actionFailed("Not enough energy to move in region mode.");
+              game.actionFailed(T('Not enough energy to move in region mode.'));
               return false;
             }
         }
@@ -348,7 +348,7 @@ class PlayerRegion extends _SaveObject
         {
           if (player.host.energy <= 0)
             {
-              game.player.onHostDeath('Your host has expired somewhere in the sewers. You have to find a new one.');
+              game.player.onHostDeath(T('Your host has expired somewhere in the sewers. You have to find a new one.'));
 
               // close window just in case
               if (game.ui.state != UISTATE_MESSAGE)

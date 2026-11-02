@@ -33,13 +33,13 @@ class Difficulty extends UIWindow
       diffImg = Browser.document.createImageElement();
       diffImg.className = 'difficulty-bg';
       strips.appendChild(diffImg);
-      noteEasy = addStrip(strips, 'easy', 'EASY', 1);
-      noteNormal = addStrip(strips, 'normal', 'NORMAL', 2);
-      noteHard = addStrip(strips, 'hard', 'HARD', 3);
+      noteEasy = addStrip(strips, 'easy', label(EASY), 1);
+      noteNormal = addStrip(strips, 'normal', label(NORMAL), 2);
+      noteHard = addStrip(strips, 'hard', label(HARD), 3);
       // NOOB wedge: diagonal split of the EASY strip, shown only for the save category
       noobStrip = Browser.document.createDivElement();
       noobStrip.className = 'difficulty-noob';
-      noobStrip.innerHTML = '<span class="difficulty-label">NOOB</span>' +
+      noobStrip.innerHTML = '<span class="difficulty-label">' + label(NOOB) + '</span>' +
         '<span class="difficulty-note"></span>';
       noobNote = cast noobStrip.querySelector('.difficulty-note');
       noobStrip.onclick = function (e) {
@@ -58,7 +58,7 @@ class Difficulty extends UIWindow
       // window title (with the choice name) glued to the bottom
       var title = Browser.document.createDivElement();
       title.className = 'difficulty-title';
-      title.innerHTML = "<span class='difficulty-title-pre'>Difficulty:</span> ";
+      title.innerHTML = "<span class='difficulty-title-pre'>" + T('Difficulty:') + "</span> ";
       diffName = Browser.document.createSpanElement();
       title.appendChild(diffName);
       window.appendChild(title);
@@ -171,7 +171,10 @@ class Difficulty extends UIWindow
       else if (currentChoice.id == 'chat')
         game.player.chat.difficulty = d;
 
-      game.system('Difficulty selected for ' + currentChoice.title + ': ' + d);
+      game.system(T('Difficulty selected for {title}: {level}', {
+        title: currentChoice.title,
+        level: label(d),
+      }));
 
       // the HUD reads some of these (the group mark waits on the group's), and closing the window
       // does not redraw it
@@ -179,65 +182,78 @@ class Difficulty extends UIWindow
       game.ui.closeWindow();
     }
 
+// display label of a difficulty value (the enum value itself is a saved key)
+  public static function label(d: _Difficulty): String
+    {
+      return switch (d)
+        {
+          case UNSET: T('UNSET');
+          case NOOB: T('NOOB');
+          case EASY: T('EASY');
+          case NORMAL: T('NORMAL');
+          case HARD: T('HARD');
+        };
+    }
+
   public static var choices: Map<String, _Choice> = [
     'survival' => {
       id: 'survival',
-      title: 'Survival',
+      title: T('Survival'),
       notes: [
-        'Humans call the law slower. You will stop them from doing that when you jump on them. Minor early invasion chance bonus.',
-        'Fast calling speed. Calls are not interrupted with attaching. Early invasion chance penalty.',
-        'Same calling rules as normal. No free dog on exiting the sewers. Larger penalty for early invasion chance.',
+        T('Humans call the law slower. You will stop them from doing that when you jump on them. Minor early invasion chance bonus.'),
+        T('Fast calling speed. Calls are not interrupted with attaching. Early invasion chance penalty.'),
+        T('Same calling rules as normal. No free dog on exiting the sewers. Larger penalty for early invasion chance.'),
       ]
     },
 
     'group' => {
       id: 'group',
-      title: 'The Group',
+      title: T('The Group'),
       notes: [
-        'Shows the exact numerical group and team information on the HUD group mark. Limited shock and energy loss from habitat destruction. Little intel needed to find the regional controller.',
-        'Shows group and team information described vaguely. Habitat destruction shock and energy loss is more severe. More intel needed to find the regional controller.',
-        'No group or team information available. Habitat destruction shock is harsh. Much more intel needed to find the regional controller.',
+        T('Shows the exact numerical group and team information on the HUD group mark. Limited shock and energy loss from habitat destruction. Little intel needed to find the regional controller.'),
+        T('Shows group and team information described vaguely. Habitat destruction shock and energy loss is more severe. More intel needed to find the regional controller.'),
+        T('No group or team information available. Habitat destruction shock is harsh. Much more intel needed to find the regional controller.'),
       ]
     },
 
     'evolution' => {
       id: 'evolution',
-      title: 'Evolution',
+      title: T('Evolution'),
       notes: [
-        'Gives 2 generic improvements. No limit for maximum improvement level. Host degradation is slower. No limit on total habitats amount.',
-        'Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe. Normal host degradation. Finite habitat amount per game.',
-        'Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe. Fast host degradation. Habitat limit decreased.',
+        T('Gives 2 generic improvements. No limit for maximum improvement level. Host degradation is slower. No limit on total habitats amount.'),
+        T('Gives 2 generic improvements. Maximum improvement level is 2, except for brain probe. Normal host degradation. Finite habitat amount per game.'),
+        T('Gives 1 generic improvement. Maximum improvement level is 1, except for brain probe. Fast host degradation. Habitat limit decreased.'),
       ]
     },
 
     'timeline' => {
       id: 'timeline',
-      title: 'Timeline',
+      title: T('Timeline'),
       notes: [
-        '1-3 clues on each learn attempt. Fast computer research.',
-        '1-2 clues on each learn attempt. Normal computer research.',
-        '1 clue on each learn attempt. Normal computer research.',
+        T('1-3 clues on each learn attempt. Fast computer research.'),
+        T('1-2 clues on each learn attempt. Normal computer research.'),
+        T('1 clue on each learn attempt. Normal computer research.'),
       ]
     },
 
     'save' => {
       id: 'save',
-      title: 'Saving',
+      title: T('Saving'),
       notes: [
-        'You can save your game anywhere, up to 10 times per one game.',
-        'You can only save in region mode, 3 times per game.',
-        'You can only save once per game while in region mode.',
-        'Save anywhere, as many times as you like. Unlimited saves.',
+        T('You can save your game anywhere, up to 10 times per one game.'),
+        T('You can only save in region mode, 3 times per game.'),
+        T('You can only save once per game while in region mode.'),
+        T('Save anywhere, as many times as you like. Unlimited saves.'),
       ]
     },
 
     'chat' => {
       id: 'chat',
-      title: 'Conversation',
+      title: T('Conversation'),
       notes: [
-        'Starting consent is high. High bonus to skill rolls. Bonus to consent growth. No max energy loss from full affinity hosts.',
-        'Medium starting consent. Medium bonus to skill rolls. Small bonus to consent growth. Leaving a full affinity host costs 1 max energy, its death 5.',
-        'Low consent at start. Nominal bonus to skill rolls. No bonus to consent growth. Leaving a full affinity host costs 2 max energy, its death 5.',
+        T('Starting consent is high. High bonus to skill rolls. Bonus to consent growth. No max energy loss from full affinity hosts.'),
+        T('Medium starting consent. Medium bonus to skill rolls. Small bonus to consent growth. Leaving a full affinity host costs 1 max energy, its death 5.'),
+        T('Low consent at start. Nominal bonus to skill rolls. No bonus to consent growth. Leaving a full affinity host costs 2 max energy, its death 5.'),
       ]
     },
   ];

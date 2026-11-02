@@ -19,7 +19,7 @@ class Pickup extends AreaObject
     {
       super.init();
       type = 'pickup';
-      name = 'pickup';
+      name = N('pickup');
     }
 
 // called after load or creation

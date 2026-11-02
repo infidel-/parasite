@@ -70,13 +70,13 @@ class CultBaseResources extends _SaveObject
     {
       var parts = [];
       if (flesh > 0)
-        parts.push(flesh + ' Flesh');
+        parts.push(T('{n} Flesh', { n: flesh }));
       if (blood > 0)
-        parts.push(blood + ' Blood');
+        parts.push(T('{n} Blood', { n: blood }));
       if (bone > 0)
-        parts.push(bone + ' Bone');
+        parts.push(T('{n} Bone', { n: bone }));
       if (parts.length == 0)
-        return 'free';
+        return T('free');
       return parts.join(', ');
     }
 

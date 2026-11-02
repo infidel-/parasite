@@ -1,6 +1,7 @@
 // region tooltip overlay for HUD (content + visibility; beam/placement in BeamTooltip)
 package ui;
 
+import l10n.Loc;
 import game.*;
 
 class RegionTooltip extends BeamTooltip
@@ -56,23 +57,23 @@ class RegionTooltip extends BeamTooltip
           buf.add('<span class="region-tip-xy">' + area.x + ',' + area.y + '</span></div>');
           var alertness = Std.int(area.alertness);
           buf.add('<div class="region-tip-alert alert-' + area.alertColor() + '">');
-          buf.add('<span class="region-tip-pip"></span><span class="region-tip-alabel">alertness</span>');
+          buf.add('<span class="region-tip-pip"></span><span class="region-tip-alabel">' + T('alertness') + '</span>');
           buf.add('<span class="region-tip-aval">' + getAlertnessLabel(alertness) + '</span></div>');
           var tags: Array<String> = [];
           if (area.highCrime)
-            tags.push('high crime');
+            tags.push(T('high crime'));
           if (area.hasHabitat)
-            tags.push('habitat');
+            tags.push(T('habitat'));
           if (!area.info.canEnter)
-            tags.push('inaccessible');
+            tags.push(T('inaccessible'));
 #if demo
           if (area.typeID == AREA_MILITARY_BASE)
-            tags.push('full game only');
+            tags.push(T('full game only'));
 #end
           if (area.info.isHighRisk)
-            tags.push('high risk');
+            tags.push(T('high risk'));
           if (missionLines.length > 0)
-            tags.push('ordeal');
+            tags.push(T('ordeal'));
           if (tags.length > 0)
             {
               buf.add('<div class="region-tip-tags">');
@@ -105,12 +106,12 @@ class RegionTooltip extends BeamTooltip
   inline function getAlertnessLabel(alertness: Int): String
     {
       if (alertness >= 75)
-        return 'high';
+        return T('high');
       if (alertness >= 50)
-        return 'medium';
+        return T('medium');
       if (alertness > 0)
-        return 'low';
-      return 'none';
+        return T('low');
+      return T('none');
     }
 
   // collect timeline event tooltip lines for region mode
@@ -127,7 +128,7 @@ class RegionTooltip extends BeamTooltip
         return lines;
       for (event in area.events)
         if (event.locationKnown)
-          lines.push('event ' + event.num);
+          lines.push(T('event {n}', { n: event.num }));
       return lines;
     }
 
@@ -163,9 +164,9 @@ class RegionTooltip extends BeamTooltip
             if (npc.nameKnown)
               label = npc.name;
             else if (npc.jobKnown && npc.job != null)
-              label = npc.job;
-            else label = 'unknown contact';
-            lines.push(Const.smallgray('[event ' + npc.event.num + ']') + ' <span class="region-tip-npcname">' + label + '</span>');
+              label = Loc.tr(npc.job);
+            else label = T('unknown contact');
+            lines.push(Const.smallgray(T('[event {n}]', { n: npc.event.num })) + ' <span class="region-tip-npcname">' + label + '</span>');
           }
       return lines;
     }

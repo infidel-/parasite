@@ -14,6 +14,6 @@ class Crusher extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Fractor';
+      name = N('Fractor');
     }
 }

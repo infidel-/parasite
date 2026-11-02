@@ -24,7 +24,7 @@ class SewerExit extends AreaObject
       missionID = -1;
       imageCol = Const.FRAME_SEWER_EXIT;
       type = 'sewer_exit';
-      name = 'sewer exit';
+      name = N('sewer exit');
       isStatic = true;
     }
 
@@ -40,7 +40,7 @@ class SewerExit extends AreaObject
       game.ui.hud.addAction({
         id: 'leaveArea',
         type: ACTION_OBJECT,
-        name: 'Leave area',
+        name: T('Leave area'),
         energy: 10,
         isAgreeable: true,
         obj: this
@@ -57,7 +57,7 @@ class SewerExit extends AreaObject
 
       var leavingAreaID = game.area.id;
       game.scene.sounds.play('object-sewers');
-      game.log("You leave the mission site through the sewers.");
+      game.log(T("You leave the mission site through the sewers."));
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
 

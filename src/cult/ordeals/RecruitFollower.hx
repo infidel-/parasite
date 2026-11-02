@@ -1,6 +1,7 @@
 // recruit follower ordeal - seek the pure
 package cult.ordeals;
 
+import l10n.Loc;
 import game.Game;
 import ai.*;
 import cult.Ordeal;
@@ -18,7 +19,7 @@ class RecruitFollower extends Ordeal
       return Const.smallgray(' (') +
         Const.col('cult-power', '10k') + Icon.money +
         Const.smallgray(', ') +
-        Const.col('cult-power', 2) + ' PWR' +
+        T('{power} PWR', { power: Const.col('cult-power', 2) }) +
         Const.smallgray(')');
     }
 
@@ -46,7 +47,7 @@ class RecruitFollower extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Seek the pure';
+      name = N('Seek the pure');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 1;
       requiredMemberLevels = 1;
@@ -101,7 +102,7 @@ class RecruitFollower extends Ordeal
 // get custom name for display
   public override function customName(): String
     {
-      return name + ' - ' + Const.capitalize(followerType);
+      return Loc.tr(name) + ' - ' + Const.capitalize(followerType);
     }
 
 // handle member death
@@ -132,7 +133,7 @@ class RecruitFollower extends Ordeal
       actions.push({
         id: 'recruit',
         type: ACTION_CULT,
-        name: 'Seek the pure' + priceHint(),
+        name: T('Seek the pure') + priceHint(),
         energy: 0,
         obj: { submenu: 'recruit' }
       });
@@ -147,7 +148,7 @@ class RecruitFollower extends Ordeal
       actions.push({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         obj: { submenu: 'back' }
       });

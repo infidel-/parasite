@@ -71,7 +71,7 @@ class HUD
       document.body.appendChild(overlay);
 
       blinkingText = document.createDivElement();
-      blinkingText.innerHTML = 'You feel someone is watching.';
+      blinkingText.innerHTML = T('You feel someone is watching.');
       blinkingText.className = 'highlight-text';
       blinkingText.id = 'blinking-text';
       blinkingText.style.opacity = '0';
@@ -486,7 +486,7 @@ public function onMouseLeave()
         {
           case HUD_CHAT:
             game.player.chat.finish();
-            game.log('The conversation was interrupted.');
+            game.log(T('The conversation was interrupted.'));
           case HUD_CONVERSE_MENU:
             state = HUD_DEFAULT;
           case HUD_TARGETING:

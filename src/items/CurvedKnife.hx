@@ -11,8 +11,8 @@ class CurvedKnife extends Weapon
     {
       super(game);
       id = 'curvedKnife';
-      name = 'curved knife';
-      unknown = 'curved piece of metal';
+      name = N('curved knife');
+      unknown = N('curved piece of metal');
       weapon = {
         isRanged: false,
         skill: SKILL_KNIFE,

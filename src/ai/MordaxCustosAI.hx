@@ -17,7 +17,7 @@ class MordaxCustosAI extends BaseCustosAI
   public override function init()
     {
       super.init();
-      initCustosBase('mordax', 'mordax');
+      initCustosBase('mordax', N('mordax'));
       soundsID = 'mordax';
       strength = 10 + Std.random(3) - 1;
       constitution = 7 + Std.random(3) - 1;

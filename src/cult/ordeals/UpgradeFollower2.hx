@@ -16,7 +16,7 @@ class UpgradeFollower2 extends UpgradeFollower
       return Const.smallgray(' (') +
         Const.col('cult-power', '100k') + Icon.money +
         Const.smallgray(', ') +
-        Const.col('cult-power', 5) + ' PWR' +
+        T('{power} PWR', { power: Const.col('cult-power', 5) }) +
         Const.smallgray(')');
     }
 
@@ -36,12 +36,12 @@ class UpgradeFollower2 extends UpgradeFollower
   public override function init()
     {
       super.init();
-      name = 'Elevate the faithful II';
+      name = N('Elevate the faithful II');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 2;
       requiredMemberLevels = 1;
       actions = requiredMembers;
-      note = 'Two seasoned devotees marshal greater influence to raise a chosen member to highest power.';
+      note = N('Two seasoned devotees marshal greater influence to raise a chosen member to highest power.');
 
       var targetMember = null;
       for (m in cult.members)
@@ -84,7 +84,10 @@ class UpgradeFollower2 extends UpgradeFollower
 
       // create choice window
       var params: _ChoiceParams = {
-        title: Const.col('occasio', 'Occasio') + ': ' + event.title,
+        title: T('{occasio}: {title}', {
+          occasio: Const.col('occasio', T('Occasio')),
+          title: event.title,
+        }),
         text: event.text,
         img: 'img/cult/occasio.jpg',
         choices: [],
@@ -96,7 +99,10 @@ class UpgradeFollower2 extends UpgradeFollower
           {
             var data: { event: _CultEvent, game: Game, cult: Cult } = cast src;
             var choice = data.event.choices[choiceID - 1];
-            game.log('You chose ' + Const.col('gray', choice.button) + ' in occasio ' + Const.col('occasio', event.title) + '.');
+            game.log(T('You chose {button} in occasio {title}.', {
+              button: Const.col('gray', choice.button),
+              title: Const.col('occasio', event.title),
+            }));
             choice.f(data.game, data.cult, targetID);
           }
       };
@@ -126,7 +132,7 @@ class UpgradeFollower2 extends UpgradeFollower
       actions.push({
         id: 'upgrade2',
         type: ACTION_CULT,
-        name: 'Elevate the faithful II' + priceHint(),
+        name: T('Elevate the faithful II') + priceHint(),
         energy: 0,
         obj: { submenu: 'upgrade2' }
       });
@@ -140,7 +146,7 @@ class UpgradeFollower2 extends UpgradeFollower
       actions.push({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         obj: { submenu: 'back' }
       });
@@ -173,9 +179,9 @@ class UpgradeFollower2 extends UpgradeFollower
           
           if (!canUpgrade)
             {
-              action.name += Const.smallgray(' [cannot elevate]');
+              action.name += Const.smallgray(' ' + T('[cannot elevate]'));
               action.f = function() {
-                game.actionFailed('This member cannot be elevated further.');
+                game.actionFailed(T('This member cannot be elevated further.'));
               };
             }
           

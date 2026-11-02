@@ -1,6 +1,7 @@
 // kill mission sample
 package cult.missions;
 
+import l10n.Loc;
 import game.Game;
 import cult.Mission;
 import ai.*;
@@ -41,8 +42,8 @@ class Kill extends Mission
     {
       super.init();
       type = MISSION_KILL;
-      name = 'Eliminate Target';
-      note = 'A specific target must be eliminated.';
+      name = N('Eliminate Target');
+      note = N('A specific target must be eliminated.');
     }
 
 // turn hook for kill mission
@@ -77,8 +78,8 @@ class Kill extends Mission
   public override function customName(): String
     {
       if (target != null)
-        return name + ' - ' + target.TheName();
-      return name;
+        return Loc.tr(name) + ' - ' + target.TheName();
+      return Loc.tr(name);
     }
 
 // handle mission target death

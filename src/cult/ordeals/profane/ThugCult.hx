@@ -9,10 +9,10 @@ class ThugCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Block Liturgy",
-        note: "The unaussprechliche kult maintains a street chapel in shuttered courtyards. Their katana priest leads block liturgy while shooters provide overwatch. The membrane grows thick where territory marks flesh.",
-        success: "The block liturgy collapses. The katana priest falls, shooters scatter into static, and the street altar bleeds out into rainwater.",
-        fail: "You are pinned by crossfire and rushed by howling steel. The kult keeps the block and recruits another night, their territory marked in fresh scar.",
+        name: N("Block Liturgy"),
+        note: N("The unaussprechliche kult maintains a street chapel in shuttered courtyards. Their katana priest leads block liturgy while shooters provide overwatch. The membrane grows thick where territory marks flesh."),
+        success: T("The block liturgy collapses. The katana priest falls, shooters scatter into static, and the street altar bleeds out into rainwater."),
+        fail: T("You are pinned by crossfire and rushed by howling steel. The kult keeps the block and recruits another night, their territory marked in fresh scar."),
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,
@@ -20,7 +20,7 @@ class ThugCult
           targets: [
             {
               target: {
-                job: "thug lieutenant",
+                job: N("thug lieutenant"),
                 isMale: true,
                 type: "thug",
                 icon: "thug",
@@ -32,7 +32,7 @@ class ThugCult
             },
             {
               target: {
-                job: "thug bruiser",
+                job: N("thug bruiser"),
                 type: "thug",
                 icon: "thug",
                 location: AREA_CITY_LOW,
@@ -43,7 +43,7 @@ class ThugCult
             },
             {
               target: {
-                job: "thug gunman",
+                job: N("thug gunman"),
                 type: "thug",
                 icon: "thug",
                 location: AREA_CITY_LOW,

@@ -27,8 +27,8 @@ class Mods extends UIWindow
       // titlebar: MODS + subtitle + loaded-count stat
       var titlebar = Browser.document.createDivElement();
       titlebar.className = 'mods-titlebar';
-      titlebar.innerHTML = '<span class="mods-title">MODS</span>' +
-        '<span class="mods-sub">extensions registry</span>';
+      titlebar.innerHTML = '<span class="mods-title">' + T('MODS') + '</span>' +
+        '<span class="mods-sub">' + T('extensions registry') + '</span>';
       stat = Browser.document.createDivElement();
       stat.className = 'mods-stat';
       titlebar.appendChild(stat);
@@ -45,16 +45,16 @@ class Mods extends UIWindow
       var notice = Browser.document.createDivElement();
       notice.className = 'mods-notice';
       notice.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="13"/><line x1="12" y1="16" x2="12" y2="16"/></svg>' +
-        'Toggle changes apply after restart.';
+        T('Toggle changes apply after restart.');
       foot.appendChild(notice);
       var actions = Browser.document.createDivElement();
       actions.className = 'mods-actions';
       foot.appendChild(actions);
       addButton(actions,
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9H3z"/></svg>OPEN MODS FOLDER',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M3 7h6l2 2h10v9H3z"/></svg>' + T('OPEN MODS FOLDER'),
         function(e) { HostBridge.modsOpenFolder(); });
       addButton(actions,
-        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>BROWSE WORKSHOP',
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>' + T('BROWSE WORKSHOP'),
         function(e) { HostBridge.shellOpenExternal(BROWSE_URL); });
 
       addWinClose(function (e) {
@@ -78,19 +78,19 @@ class Mods extends UIWindow
         {
           var empty = Browser.document.createDivElement();
           empty.className = 'win-empty';
-          empty.innerHTML = 'No mods installed. Use the buttons below to add some.';
+          empty.innerHTML = T('No mods installed. Use the buttons below to add some.');
           body.appendChild(empty);
         }
 
       if (local.length > 0)
         {
-          var bd = addCard('LOCAL', local.length);
+          var bd = addCard(T('LOCAL'), local.length);
           for (m in local)
             addRow(bd, m);
         }
       if (workshop.length > 0)
         {
-          var bd = addCard('WORKSHOP', workshop.length);
+          var bd = addCard(T('WORKSHOP'), workshop.length);
           for (m in workshop)
             addRow(bd, m);
         }
@@ -153,18 +153,18 @@ class Mods extends UIWindow
         '<span class="mods-ver">v' + m.version + '</span>';
       main.appendChild(line);
       if (failReason != null)
-        addReason(main, 'failed: ' + failReason);
+        addReason(main, T('failed: {reason}', { reason: failReason }));
       else if (shadowed)
-        addReason(main, 'shadowed by ' + m.shadowedBy);
+        addReason(main, T('shadowed by {mod}', { mod: m.shadowedBy }));
       row.appendChild(main);
 
       // status pill
       var status = Browser.document.createDivElement();
       status.className = 'mods-status';
       if (failReason != null)
-        setStatusClass(status, 'st-failed', 'FAILED');
+        setStatusClass(status, 'st-failed', T('FAILED'));
       else if (shadowed)
-        setStatusClass(status, 'st-shadowed', 'SHADOWED');
+        setStatusClass(status, 'st-shadowed', T('SHADOWED'));
       else
         setStatus(status, !disabled);
       row.appendChild(status);
@@ -186,7 +186,7 @@ class Mods extends UIWindow
         {
           var link = Browser.document.createDivElement();
           link.className = 'mods-link';
-          link.title = 'Open on Steam Workshop';
+          link.title = T('Open on Steam Workshop');
           link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>';
           link.onclick = function (e) {
             HostBridge.shellOpenExternal('steam://url/CommunityFilePage/' + m.workshopID);
@@ -207,7 +207,7 @@ class Mods extends UIWindow
 // set the status pill to active/off (with flip animation)
   function setStatus(status: DivElement, on: Bool)
     {
-      setStatusClass(status, (on ? 'st-active' : 'st-off'), (on ? 'ACTIVE' : 'OFF'));
+      setStatusClass(status, (on ? 'st-active' : 'st-off'), (on ? T('ACTIVE') : T('OFF')));
     }
 
 // apply a status pill class + label, replaying the flip animation
@@ -230,7 +230,7 @@ class Mods extends UIWindow
             ModRegistry.failed.get(m.id) == null &&
             m.shadowedBy == null)
           loaded++;
-      stat.innerHTML = loaded + ' / ' + total + ' LOADED';
+      stat.innerHTML = T('{loaded} / {total} LOADED', { loaded: loaded, total: total });
     }
 
   function isDisabled(id: String): Bool

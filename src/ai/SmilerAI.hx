@@ -34,8 +34,8 @@ class SmilerAI extends HumanAI
     {
       super.init();
       type = 'smiler';
-      name.unknown = 'office worker';
-      name.unknownCapped = 'Office worker';
+      name.unknown = N('office worker');
+      name.unknownCapped = N('Office worker');
       soundsID = 'civilian';
       var jobData = game.jobs.getRandom(type);
       job = jobData.name;
@@ -59,7 +59,7 @@ class SmilerAI extends HumanAI
     {
       if (chat.consent < 100)
         {
-          game.actionFailed('You are dazed by the potency of the smile and pull back.');
+          game.actionFailed(T('You are dazed by the potency of the smile and pull back.'));
           return false;
         }
       return true;

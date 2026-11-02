@@ -39,7 +39,7 @@ class RivalBaseOrgan extends _SaveObject
     {
       id = 0;
       type = RIVAL_SANCTUM;
-      name = 'rival sanctum';
+      name = N('rival sanctum');
       areaID = -1;
       x = 0;
       y = 0;

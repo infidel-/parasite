@@ -26,8 +26,8 @@ class BaseDefense extends Mission
     {
       super.init();
       type = MISSION_COMBAT;
-      name = 'Base Defense';
-      note = 'Defeat all attackers before Cor Nefandum falls.';
+      name = N('Base Defense');
+      note = N('Defeat all attackers before Cor Nefandum falls.');
       targetIDs = [];
       spawned = false;
       cultID = -1;
@@ -113,9 +113,9 @@ class BaseDefense extends Mission
         }
       var rival = game.getCultByID(cultID);
       if (rival != null)
-        game.logsg(rival.customName() + ' attackers enter the base.');
+        game.logsg(T('{cult} attackers enter the base.', { cult: rival.customName() }));
       else
-        game.logsg('Attackers enter the base.');
+        game.logsg(T('Attackers enter the base.'));
     }
 
 // spawns one rival cultist or generic fallback attacker

@@ -56,8 +56,8 @@ class Profile
       if (showMessage)
         {
           game.scene.sounds.play('pedia-new');
-          game.log(Const.small('New pedia article available: ' +
-            PediaConst.getName(id) + '.'), COLOR_PEDIA);
+          game.log(Const.small(T('New pedia article available: {name}.',
+            { name: PediaConst.getName(id) })), COLOR_PEDIA);
         }
       game.ui.pedia.newArticle(id);
       save();

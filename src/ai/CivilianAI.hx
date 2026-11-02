@@ -68,8 +68,8 @@ class CivilianAI extends HumanAI
     {
       super.init();
       type = 'civilian';
-      name.unknown = 'random civilian';
-      name.unknownCapped = 'Random civilian';
+      name.unknown = N('random civilian');
+      name.unknownCapped = N('Random civilian');
       soundsID = 'civilian';
       createIcon();
     }

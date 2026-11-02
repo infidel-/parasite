@@ -1,6 +1,7 @@
 // combat mission with clustered and ritual templates
 package cult.missions;
 
+import l10n.Loc;
 import ai.*;
 import cult.Mission;
 import game.AreaGame;
@@ -80,8 +81,8 @@ class Combat extends Mission
     {
       super.init();
       type = MISSION_COMBAT;
-      name = 'Combat Mission';
-      note = 'Multiple targets guard a single location.';
+      name = N('Combat Mission');
+      note = N('Multiple targets guard a single location.');
       targets = [];
       targetIDs = [];
       clusterX = -1;
@@ -194,8 +195,8 @@ class Combat extends Mission
   public override function customName(): String
     {
       if (primaryTarget != null)
-        return name + ' - ' + primaryTarget.TheName();
-      return name;
+        return Loc.tr(name) + ' - ' + primaryTarget.TheName();
+      return Loc.tr(name);
     }
 
 // handle mission target death

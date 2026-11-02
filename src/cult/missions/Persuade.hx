@@ -1,5 +1,6 @@
 package cult.missions;
 
+import l10n.Loc;
 import game.Game;
 import ai.*;
 
@@ -38,8 +39,8 @@ class Persuade extends Mission
     {
       super.init();
       type = MISSION_PERSUADE;
-      name = 'Persuade Target';
-      note = 'A specific target must be persuaded to join your cause.';
+      name = N('Persuade Target');
+      note = N('A specific target must be persuaded to join your cause.');
     }
 
   // turn hook for persuade mission
@@ -73,8 +74,8 @@ class Persuade extends Mission
   public override function customName(): String
     {
       if (target != null)
-        return name + ' - ' + target.TheName();
-      return name;
+        return Loc.tr(name) + ' - ' + target.TheName();
+      return Loc.tr(name);
     }
 
   // handle AI events

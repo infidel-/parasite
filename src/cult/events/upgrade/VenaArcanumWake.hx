@@ -16,22 +16,22 @@ class VenaArcanumWake
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Vena Arcanum Wake',
-        text: 'Sealed railyard infirmary glows with emergency lanterns as the newly ranked striker kneels beside a chilled Vena Arcanum cistern. Masked confessors murmur prayers through respirator hoods while trauma techs stitch synth sinew under blackout tarps. Only the inner circle watches the monitors flicker.',
+        title: T('Vena Arcanum Wake'),
+        text: T('Sealed railyard infirmary glows with emergency lanterns as the newly ranked striker kneels beside a chilled Vena Arcanum cistern. Masked confessors murmur prayers through respirator hoods while trauma techs stitch synth sinew under blackout tarps. Only the inner circle watches the monitors flicker.'),
         choices: [
           {
-            button: 'Pulse Bank',
-            text: 'Channel pressurized plasma caches toward the upgraded squadron.',
+            button: T('Pulse Bank'),
+            text: T('Channel pressurized plasma caches toward the upgraded squadron.'),
             f: choice1
           },
           {
-            button: 'Veil Chant',
-            text: 'Let chaplains sync electro-psalms with drone shielding routines.',
+            button: T('Veil Chant'),
+            text: T('Let chaplains sync electro-psalms with drone shielding routines.'),
             f: choice2
           },
           {
-            button: 'Bone Seal',
-            text: 'Brand the promoted fighter with marrow seals that bind fresh doctrine.',
+            button: T('Bone Seal'),
+            text: T('Brand the promoted fighter with marrow seals that bind fresh doctrine.'),
             f: choice3
           }
         ]

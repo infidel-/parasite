@@ -20,7 +20,7 @@ class Slime extends Effect
   public override function init()
     {
       super.init();
-      name = 'slime';
+      name = N('slime');
     }
 
 // slime restrains AI each turn

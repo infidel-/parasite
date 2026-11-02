@@ -48,12 +48,12 @@ class Evolution extends UIWindow
       nextState = new Map();
 
       // shared HUD chrome: scrim + DNA helix glyph, frame, corners, veins, "EVO" watermark
-      addHudChrome('EVO', UISvg.helix());
+      addHudChrome(T('EVO'), UISvg.helix());
 
       // title row: name left, stat-chip strip right
       var title = Browser.document.createDivElement();
       title.className = 'win-title win-titlebar';
-      title.innerHTML = '<span class="wt">EVOLUTION</span>';
+      title.innerHTML = '<span class="wt">' + T('EVOLUTION') + '</span>';
       stats = Browser.document.createSpanElement();
       stats.className = 'win-stats';
       title.appendChild(stats);
@@ -152,13 +152,15 @@ class Evolution extends UIWindow
       var survive = __Math.hostSurvivalTurns(game.player.evolutionManager.isActive ? 0 : energyPerTurn);
 
       // stat chips: energy/turn, ep/turn, host survival turns
+      // tr: "per turn" suffix after a number, "t" = turn
+      var perTurn = T('/t');
       stats.innerHTML =
-        '<span class="statchip evolution-tip energy" data-tip="Energy spent per turn while evolving">' +
-          UISvg.bolt() + energyPerTurn + '<i>/t</i></span>' +
-        '<span class="statchip evolution-tip ep" data-tip="Evolution points gained per turn">' +
-          UISvg.star() + ept + '<i>/t</i></span>' +
+        '<span class="statchip evolution-tip energy" data-tip="' + T('Energy spent per turn while evolving') + '">' +
+          UISvg.bolt() + energyPerTurn + '<i>' + perTurn + '</i></span>' +
+        '<span class="statchip evolution-tip ep" data-tip="' + T('Evolution points gained per turn') + '">' +
+          UISvg.star() + ept + '<i>' + perTurn + '</i></span>' +
         '<span class="statchip evolution-tip host' + (survive >= 0 && survive <= __Math.HOST_LOW_TURNS ? ' low' : '') +
-          '" data-tip="Turns the host survives while evolving">' +
+          '" data-tip="' + T('Turns the host survives while evolving') + '">' +
           UISvg.clockSmall() + (survive < 0 ? '&infin;' : '' + survive) + '</span>';
 
       // cards
@@ -168,7 +170,7 @@ class Evolution extends UIWindow
 
       // stop action occupies hotkey 1 while evolving
       if (isActive)
-        listActions.push({ id: 'stop', type: ACTION_EVOLUTION, name: 'Stop evolution', energy: 0 });
+        listActions.push({ id: 'stop', type: ACTION_EVOLUTION, name: T('Stop evolution'), energy: 0 });
 
       var buf = new StringBuf();
       var i = 0;
@@ -197,15 +199,16 @@ class Evolution extends UIWindow
           // head: name + level indicator (or MAX) + CUR/NEXT toggle
           buf.add('<span class="evolution-head"><span class="evolution-name">' + imp.info.name + '</span>');
           if (isMax)
-            buf.add('<span class="evolution-max">&#10003; MAX</span>');
+            buf.add('<span class="evolution-max">&#10003; ' + T('MAX') + '</span>');
           else
             {
               buf.add('<span class="evolution-lv">' +
                 (imp.info.maxLevel > 1 ? imp.level + ' ' : '') +
                 '<span class="arr">&rarr;</span> ' + (imp.level + 1) + '</span>');
-              buf.add('<span class="evolution-tg" role="group" aria-label="level detail">' +
-                '<span class="seg' + (!next ? ' on' : '') + '" data-s="cur">CUR</span>' +
-                '<span class="seg' + (next ? ' on' : '') + '" data-s="next">NEXT</span></span>');
+              // tr: CUR / NEXT switch the card between the current and the next level's details, short
+              buf.add('<span class="evolution-tg" role="group" aria-label="' + T('level detail') + '">' +
+                '<span class="seg' + (!next ? ' on' : '') + '" data-s="cur">' + T('CUR') + '</span>' +
+                '<span class="seg' + (next ? ' on' : '') + '" data-s="next">' + T('NEXT') + '</span></span>');
             }
           buf.add('</span>');
 
@@ -230,12 +233,12 @@ class Evolution extends UIWindow
 
           buf.add('<span class="evolution-more" aria-hidden="true"><i></i><i></i><i></i></span>');
           if (isNow)
-            buf.add('<span class="evolution-tag">EVOLVING</span>');
+            buf.add('<span class="evolution-tag">' + T('EVOLVING') + '</span>');
           buf.add('</button>');
           i++;
         }
       if (i == 0)
-        buf.add('<div class="evolution-empty">No improvements available.</div>');
+        buf.add('<div class="evolution-empty">' + T('No improvements available.') + '</div>');
       // entry animation only on open; action-driven refreshes rebuild the grid
       // too, so suppress the staggered rise then (else clicking repaints all)
       if (introPending)
@@ -248,7 +251,7 @@ class Evolution extends UIWindow
 
       // footer stop button (shown while evolving)
       if (isActive)
-        footer.innerHTML = '<button class="evolution-stop"><span class="sq"></span>Stop evolution</button>';
+        footer.innerHTML = '<button class="evolution-stop"><span class="sq"></span>' + T('Stop evolution') + '</button>';
       else footer.innerHTML = '';
 
       // re-flag has-more / no-lvl once laid out (note overflow needs real metrics)
@@ -275,7 +278,7 @@ class Evolution extends UIWindow
       // shifting every card's number)
       listActions = [];
       if (isActive)
-        listActions.push({ id: 'stop', type: ACTION_EVOLUTION, name: 'Stop evolution', energy: 0 });
+        listActions.push({ id: 'stop', type: ACTION_EVOLUTION, name: T('Stop evolution'), energy: 0 });
       var keyMap = new Map<String, Int>();
       for (imp in em)
         if (imp.level < maxLevelOf(imp))
@@ -296,7 +299,7 @@ class Evolution extends UIWindow
             {
               var t = Browser.document.createSpanElement();
               t.className = 'evolution-tag';
-              t.textContent = 'EVOLVING';
+              t.textContent = T('EVOLVING');
               card.appendChild(t);
             }
           else if (!isNow && tag != null)
@@ -307,7 +310,7 @@ class Evolution extends UIWindow
         }
       // footer stop button (shown while evolving)
       footer.innerHTML = (isActive ?
-        '<button class="evolution-stop"><span class="sq"></span>Stop evolution</button>' : '');
+        '<button class="evolution-stop"><span class="sq"></span>' + T('Stop evolution') + '</button>' : '');
     }
 
 // run an upgrade/stop action and refresh

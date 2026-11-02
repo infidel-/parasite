@@ -21,7 +21,7 @@ class Bleeding extends Effect
   public override function init()
     {
       super.init();
-      name = 'bleeding';
+      name = N('bleeding');
     }
 
 // deals periodic damage while bleeding is active

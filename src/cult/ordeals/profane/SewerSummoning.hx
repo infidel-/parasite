@@ -9,17 +9,17 @@ class SewerSummoning
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Subterranean Hymn",
-        note: "The unaussprechliche kult gathers below the city, chanting around a membrane gate in wet stone. Their cantor leads the hymn while zealots guard the circle. Cut the ritual before the membrane tears.",
-        success: "The choir gutters out. The chamber exhales, pipes fall quiet, and the membrane holds.",
-        fail: "You falter in the tunnels. The kult completes their hymn and something answers from the far side.",
+        name: N("Subterranean Hymn"),
+        note: N("The unaussprechliche kult gathers below the city, chanting around a membrane gate in wet stone. Their cantor leads the hymn while zealots guard the circle. Cut the ritual before the membrane tears."),
+        success: T("The choir gutters out. The chamber exhales, pipes fall quiet, and the membrane holds."),
+        fail: T("You falter in the tunnels. The kult completes their hymn and something answers from the far side."),
         mission: MISSION_COMBAT,
         combat: {
           template: SUMMONING_RITUAL,
           targets: [
             {
               target: {
-                job: "ritual cantor",
+                job: N("ritual cantor"),
                 type: "civilian",
                 icon: "cultist",
                 location: AREA_CITY_LOW,
@@ -30,7 +30,7 @@ class SewerSummoning
             },
             {
               target: {
-                job: "ritual guard",
+                job: N("ritual guard"),
                 type: "civilian",
                 icon: "cultist",
                 location: AREA_CITY_LOW,
@@ -41,7 +41,7 @@ class SewerSummoning
             },
             {
               target: {
-                job: "ritual zealot",
+                job: N("ritual zealot"),
                 type: "civilian",
                 icon: "cultist",
                 location: AREA_CITY_LOW,

@@ -163,7 +163,7 @@ class AreaObject extends _SaveObject
       // habitat objects return level
       if (known())
         return name;
-      else return 'unknown object';
+      else return N('unknown object');
     }
 
 // get name + article depending on whether its known or not

@@ -1,6 +1,7 @@
 // area object wrapper for cult base organs
 package objects.base;
 
+import l10n.Loc;
 import ai.AI;
 import const.CultBaseConst;
 import cult.base.CultBaseOrgan;
@@ -28,7 +29,7 @@ class BaseOrganObject extends AreaObject
     {
       super.init();
       type = 'base_organ';
-      name = 'base organ';
+      name = N('base organ');
       isStatic = true;
       basePartIndex = 0;
       imageName = CultBaseConst.IMAGE_NAME;
@@ -105,7 +106,7 @@ class BaseOrganObject extends AreaObject
             game.ui.hud.addAction({
               id: 'upgradeHeart',
               type: ACTION_OBJECT,
-              name: 'Upgrade Cor Nefandum',
+              name: T('Upgrade Cor Nefandum'),
               energy: 0,
               obj: this
             });
@@ -114,7 +115,7 @@ class BaseOrganObject extends AreaObject
         game.ui.hud.addAction({
           id: 'repairBaseOrgan',
           type: ACTION_OBJECT,
-          name: 'Repair ' + CultBaseConst.name(organ.type),
+          name: T('Repair {organ}', { organ: Loc.tr(CultBaseConst.name(organ.type)) }),
           energy: 0,
           obj: this
         });

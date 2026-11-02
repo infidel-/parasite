@@ -14,22 +14,22 @@ class VoteVein
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Vote Vein',
-        text: 'In the chambers legislative, the newly appointed floor manager kneels before veins that pump votes through party arteries. Roll call throbs with living blood, each clot sending votes through arterial networks. Whips press palms to vein-walls, counting votes through arterial pressure. Outside observers never feel the true pulse, but trusted blood delivers the hidden tally.',
+        title: T('Vote Vein'),
+        text: T('In the chambers legislative, the newly appointed floor manager kneels before veins that pump votes through party arteries. Roll call throbs with living blood, each clot sending votes through arterial networks. Whips press palms to vein-walls, counting votes through arterial pressure. Outside observers never feel the true pulse, but trusted blood delivers the hidden tally.'),
         choices: [
           {
-            button: 'Pump Votes',
-            text: 'Pump votes through party veins.',
+            button: T('Pump Votes'),
+            text: T('Pump votes through party veins.'),
             f: choice1
           },
           {
-            button: 'Clot Tally',
-            text: 'Count clot-bursts for passage.',
+            button: T('Clot Tally'),
+            text: T('Count clot-bursts for passage.'),
             f: choice2
           },
           {
-            button: 'Vein Whip',
-            text: 'Bind manager into vein-whip.',
+            button: T('Vein Whip'),
+            text: T('Bind manager into vein-whip.'),
             f: choice3
           }
         ]

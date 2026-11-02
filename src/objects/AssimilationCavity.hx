@@ -17,8 +17,8 @@ class AssimilationCavity extends HabitatObject
   public override function init()
     {
       super.init();
-      name = 'assimilation cavity';
-      spawnMessage = 'The assimilation cavity opens its maw.';
+      name = N('assimilation cavity');
+      spawnMessage = T('The assimilation cavity opens its maw.');
       imageRow = Const.ROW_ASSIMILATION;
       imageCol = level;
     }
@@ -49,7 +49,7 @@ class AssimilationCavity extends HabitatObject
         game.ui.hud.addAction({
           id: 'assimilate',
           type: ACTION_OBJECT,
-          name: 'Assimilate host',
+          name: T('Assimilate host'),
           energy: 0,
           obj: this
         });
@@ -59,10 +59,10 @@ class AssimilationCavity extends HabitatObject
 // assimilate host
   override function onAction(action: _PlayerAction): Bool
     {
-      game.narrative("Twisting tendrils wrap around the host, starting the assimilation process.", COLOR_ORGAN);
+      game.narrative(T("Twisting tendrils wrap around the host, starting the assimilation process."), COLOR_ORGAN);
       game.scene.sounds.play('object-assimilation');
       game.player.host.emitSound({
-        text: '*GASP*',
+        text: T('*GASP*'),
         kind: 'bark',
         radius: 5,
         alertness: 10

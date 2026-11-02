@@ -48,8 +48,8 @@ class CombatUndergroundLabPurge extends Combat
   public override function init()
     {
       super.init();
-      name = 'Break Clone Program';
-      note = 'Kill the target scientists and purge every clone vat.';
+      name = N('Break Clone Program');
+      note = N('Kill the target scientists and purge every clone vat.');
 
       vatObjectIDs = [];
       flushedVatObjectIDs = [];
@@ -109,12 +109,15 @@ class CombatUndergroundLabPurge extends Combat
       var remaining = vatObjectIDs.length - flushedVatObjectIDs.length;
       if (remaining > 0)
         game.message({
-          text: 'Purged vat ' + flushedVatObjectIDs.length + '/' + REQUIRED_VAT_COUNT + '. The lab stinks of bleach and protein rot.',
+          text: T('Purged vat {n}/{total}. The lab stinks of bleach and protein rot.', {
+            n: flushedVatObjectIDs.length,
+            total: REQUIRED_VAT_COUNT,
+          }),
           col: 'cult',
         });
       else
         game.message({
-          text: 'All vats are draining. The clone floor goes silent.',
+          text: T('All vats are draining. The clone floor goes silent.'),
           col: 'cult',
         });
 
@@ -147,7 +150,7 @@ class CombatUndergroundLabPurge extends Combat
   public override function onSuccess()
     {
       game.message({
-        text: 'The scientists are dead and the vats are ruined. The underground program collapses.',
+        text: T('The scientists are dead and the vats are ruined. The underground program collapses.'),
         col: 'cult',
       });
     }
@@ -306,7 +309,7 @@ class CombatUndergroundLabPurge extends Combat
 
       leadTriggerDone = true;
       game.message({
-        text: "We're so close, dammit!",
+        text: T("We're so close, dammit!"),
         col: 'cult',
       });
 

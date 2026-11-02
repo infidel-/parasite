@@ -2,6 +2,7 @@
 
 package game;
 
+import l10n.Loc;
 import ai.*;
 import objects.*;
 import gen._GenNode;
@@ -1526,10 +1527,13 @@ class AreaGame extends _SaveObject
   public function getAreaLabel(?abbrev: Bool = false): String
     {
       if (!isNameKnown())
-        return 'unknown location';
+        return T('unknown location');
       if (districtName != null)
-        return (abbrev ? 'Sec. ' : 'Sector ') + districtSector;
-      return name;
+        return (abbrev ?
+          T('Sec. {n}', { n: districtSector }) :
+          T('Sector {n}', { n: districtSector }));
+      // a plain WorldConst name is an N string; a generated (NameConst) one stays as it is
+      return (name == info.name ? Loc.tr(name) : name);
     }
 
 // alertness severity color word (red/yellow/white/gray) for name tint + tooltip
@@ -3243,7 +3247,7 @@ class Test {
       // block leaving mission areas
       if (isMissionArea())
         {
-          game.actionFailed("You cannot leave until you complete the mission.");
+          game.actionFailed(T('You cannot leave until you complete the mission.'));
           return false;
         }
 

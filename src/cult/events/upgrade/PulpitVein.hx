@@ -14,22 +14,22 @@ class PulpitVein
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Pulpit Vein',
-        text: 'Executive auditorium echoes as the newly promoted VP kneels before a pulpit forged from thigh veins. Each heartbeat sends quarterly forecasts scrolling across translucent sinew. Around the chamber, other executives press palms against the membrane, feeling the market\'s arterial pulse. The outside shareholders never hear the true sermon, but trusted veins carry the inside truth.',
+        title: T('Pulpit Vein'),
+        text: T('Executive auditorium echoes as the newly promoted VP kneels before a pulpit forged from thigh veins. Each heartbeat sends quarterly forecasts scrolling across translucent sinew. Around the chamber, other executives press palms against the membrane, feeling the market\'s arterial pulse. The outside shareholders never hear the true sermon, but trusted veins carry the inside truth.'),
         choices: [
           {
-            button: 'Preach Gains',
-            text: 'Deliver bullish sermon to pump the quarterly forecasts through the vein-pulpit.',
+            button: T('Preach Gains'),
+            text: T('Deliver bullish sermon to pump the quarterly forecasts through the vein-pulpit.'),
             f: choice1
           },
           {
-            button: 'Seal Sermon',
-            text: 'Encrypt the pulpit-vein to broadcast forecasts only to trusted insiders.',
+            button: T('Seal Sermon'),
+            text: T('Encrypt the pulpit-vein to broadcast forecasts only to trusted insiders.'),
             f: choice2
           },
           {
-            button: 'Vein Vow',
-            text: 'Suture the promoted VP into the pulpit-flesh to swear eternal market fealty.',
+            button: T('Vein Vow'),
+            text: T('Suture the promoted VP into the pulpit-flesh to swear eternal market fealty.'),
             f: choice3
           }
         ]

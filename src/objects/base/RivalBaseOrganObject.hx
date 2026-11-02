@@ -32,7 +32,7 @@ class RivalBaseOrganObject extends AreaObject
     {
       super.init();
       type = 'rival_base_organ';
-      name = 'rival sanctum';
+      name = N('rival sanctum');
       isStatic = true;
       missionID = -1;
       organID = -1;

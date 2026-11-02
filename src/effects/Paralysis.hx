@@ -19,7 +19,7 @@ class Paralysis extends Effect
   public override function init()
     {
       super.init();
-      name = 'paralysis';
+      name = N('paralysis');
     }
 
 // returns true if effect should skip default AI turn logic

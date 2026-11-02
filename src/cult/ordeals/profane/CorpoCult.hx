@@ -9,17 +9,17 @@ class CorpoCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "C-Suite Sacrament",
-        note: "The unaussprechliche kult keeps its head in a corner office, executing quarterly flesh dividends. Two armed guardians maintain the perimeter. Disrupt the executive function before the merger closes.",
-        success: "The head falls. His vertical integration collapses into static. The boardroom exhales, and the suite goes dark.",
-        fail: "You are repelled through glass doors. The head slips away, calling hostile takeover. The kult absorbs another subsidiary.",
+        name: N("C-Suite Sacrament"),
+        note: N("The unaussprechliche kult keeps its head in a corner office, executing quarterly flesh dividends. Two armed guardians maintain the perimeter. Disrupt the executive function before the merger closes."),
+        success: T("The head falls. His vertical integration collapses into static. The boardroom exhales, and the suite goes dark."),
+        fail: T("You are repelled through glass doors. The head slips away, calling hostile takeover. The kult absorbs another subsidiary."),
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,
           targets: [
             {
               target: {
-                job: "cult head",
+                job: N("cult head"),
                 type: "smiler",
                 icon: "smiler",
                 location: AREA_CORP,
@@ -30,7 +30,7 @@ class CorpoCult
             },
             {
               target: {
-                job: "security guard",
+                job: N("security guard"),
                 type: "security",
                 icon: "security",
                 location: AREA_CORP,

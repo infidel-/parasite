@@ -18,7 +18,7 @@ class DecreaseTradeCost extends Effect
   public override function init()
     {
       super.init();
-      name = 'trade cost decrease';
+      name = N('trade cost decrease');
       allowMultiple = true;
       
       // calculate random percentage: 15% base, 25% with 25% chance, 50% with 5% chance
@@ -33,6 +33,6 @@ class DecreaseTradeCost extends Effect
 // returns custom display name with percentage
   public override function customName(): String
     {
-      return '-' + percent + '% trade cost';
+      return T('-{percent}% trade cost', { percent: percent });
     }
 }

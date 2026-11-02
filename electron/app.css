@@ -5485,7 +5485,7 @@ fieldset {
   background: var(--timeline-redact);
 }
 .timeline-note.redacted::after {
-  content: "LEADS";
+  content: attr(data-leads);
   margin-left: 2px;
   font-family: var(--text-font-title), sans-serif;
   font-size: calc(var(--text-font-size) * 0.6);

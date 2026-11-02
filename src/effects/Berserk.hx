@@ -19,6 +19,6 @@ class Berserk extends Effect
   public override function init()
     {
       super.init();
-      name = 'berserk';
+      name = N('berserk');
     }
 }

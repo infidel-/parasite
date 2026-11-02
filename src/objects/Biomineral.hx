@@ -17,8 +17,8 @@ class Biomineral extends HabitatObject
   public override function init()
     {
       super.init();
-      name = 'biomineral formation';
-      spawnMessage = 'The biomineral formation is ready to feed the habitat.';
+      name = N('biomineral formation');
+      spawnMessage = T('The biomineral formation is ready to feed the habitat.');
       imageRow = Const.ROW_GROWTH1;
       imageCol = Const.FRAME_BIOMINERAL + level;
     }
@@ -49,20 +49,20 @@ class Biomineral extends HabitatObject
       var h = game.area.habitat;
       return [
         {
-          name: 'energy',
-          value: h.energyUsed + ' / ' + h.energy + ' used',
+          name: T('energy'),
+          value: T('{used} / {total} used', { used: h.energyUsed, total: h.energy }),
         },
         {
-          name: 'host energy',
-          value: '+' + h.hostEnergyRestored + ' / turn',
+          name: T('host energy'),
+          value: T('+{n} / turn', { n: h.hostEnergyRestored }),
         },
         {
-          name: 'parasite energy',
-          value: '+' + h.parasiteEnergyRestored + ' / turn',
+          name: T('parasite energy'),
+          value: T('+{n} / turn', { n: h.parasiteEnergyRestored }),
         },
         {
-          name: 'parasite health',
-          value: '+' + h.parasiteHealthRestored + ' / turn',
+          name: T('parasite health'),
+          value: T('+{n} / turn', { n: h.parasiteHealthRestored }),
         },
       ];
     }

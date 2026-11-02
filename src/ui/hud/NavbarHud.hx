@@ -29,12 +29,12 @@ class NavbarHud
       document.body.appendChild(buttons);
       buttons.style.visibility = 'hidden';
       menuButtons = [];
-      addMenuButton(UISTATE_GOALS, UISvg.hudNavGoals(), 'Goals');
-      addMenuButton(UISTATE_BODY, UISvg.hudNavBody(), 'Body');
-      addMenuButton(UISTATE_LOG, UISvg.hudNavLog(), 'Log');
-      addMenuButton(UISTATE_TIMELINE, UISvg.hudNavTimeline(), 'Timeline');
-      addMenuButton(UISTATE_EVOLUTION, UISvg.hudNavEvo(), 'Evo');
-      addMenuButton(UISTATE_CULT, UISvg.hudNavCult(), 'Cult');
+      addMenuButton(UISTATE_GOALS, UISvg.hudNavGoals(), T('Goals'));
+      addMenuButton(UISTATE_BODY, UISvg.hudNavBody(), T('Body'));
+      addMenuButton(UISTATE_LOG, UISvg.hudNavLog(), T('Log'));
+      addMenuButton(UISTATE_TIMELINE, UISvg.hudNavTimeline(), T('Timeline'));
+      addMenuButton(UISTATE_EVOLUTION, UISvg.hudNavEvo(), T('Evo'));
+      addMenuButton(UISTATE_CULT, UISvg.hudNavCult(), T('Cult'));
     }
 
 // add icon cell to navbar menu

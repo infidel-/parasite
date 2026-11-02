@@ -20,7 +20,7 @@ class Book extends Pickup
     {
       super.init();
       type = 'book';
-      name = 'book';
+      name = N('book');
       imageCol = Const.FRAME_BOOK;
     }
 

@@ -16,7 +16,7 @@ class BloodTrap extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Tardans';
+      name = N('Tardans');
     }
 
 // walkable sludge slows enemies

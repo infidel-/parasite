@@ -16,11 +16,11 @@ class Goals extends UIWindow
       super(g, 'window-goals');
 
       // shared HUD chrome: scrim + reticle glyph, frame, corners, veins, "GOALS" watermark
-      addHudChrome('GOALS', UISvg.reticle());
+      addHudChrome(T('GOALS'), UISvg.reticle());
 
       var title = Browser.document.createDivElement();
       title.className = 'win-title';
-      title.innerHTML = 'GOALS';
+      title.innerHTML = T('GOALS');
       window.appendChild(title);
 
       // sections live in a flex-column body so update() can rebuild them in place
@@ -36,9 +36,9 @@ class Goals extends UIWindow
     {
       var buf = new StringBuf();
       var i = 0;
-      i = addSection(buf, 'cur', 'CURRENT GOALS', 3, game.goals.iteratorCurrent(), i);
-      i = addSection(buf, 'done', 'COMPLETED GOALS', 4, game.goals.iteratorCompleted(), i);
-      i = addSection(buf, 'fail', 'FAILED GOALS', 2, game.goals.iteratorFailed(), i);
+      i = addSection(buf, 'cur', T('CURRENT GOALS'), 3, game.goals.iteratorCurrent(), i);
+      i = addSection(buf, 'done', T('COMPLETED GOALS'), 4, game.goals.iteratorCompleted(), i);
+      i = addSection(buf, 'fail', T('FAILED GOALS'), 2, game.goals.iteratorFailed(), i);
       body.innerHTML = buf.toString();
     }
 
@@ -64,7 +64,7 @@ class Goals extends UIWindow
               entries.add(info.name);
               entries.add("</span>");
               if (info.isOptional == true)
-                entries.add(" <span class='goals-opt'>optional</span>");
+                entries.add(" <span class='goals-opt'>" + T('optional') + "</span>");
             }
           else
             {
@@ -96,7 +96,7 @@ class Goals extends UIWindow
         buf.add(" style='color:var(--text-color-red)'");
       buf.add(">");
       if (count == 0)
-        buf.add("<div class='goals-empty'>None so far</div>");
+        buf.add("<div class='goals-empty'>" + T('None so far') + "</div>");
       else
         buf.add(entries.toString());
       buf.add("</div></div>");

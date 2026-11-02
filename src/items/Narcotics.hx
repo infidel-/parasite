@@ -14,9 +14,9 @@ class Narcotics extends ItemInfo
     {
       super(game);
       id = 'narcotics';
-      name = 'white powder';
+      name = N('white powder');
       type = 'junk';
-      unknown = 'small plastic bag';
+      unknown = N('small plastic bag');
     }
 
 // builds narcotics-specific inventory actions
@@ -28,7 +28,7 @@ class Narcotics extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Snort ' + Const.col('inventory-item', itemName),
-        nameClean: 'Snort',
+        nameClean: T('Snort'),
         energy: 0,
         item: item
       });
@@ -51,7 +51,7 @@ class Narcotics extends ItemInfo
       var host = game.player.host;
       game.scene.sounds.play('item-' + item.id);
       host.emitSound({
-        text: '*snort*',
+        text: T('*snort*'),
         kind: 'bark',
         radius: 5,
         alertness: 5
@@ -64,7 +64,7 @@ class Narcotics extends ItemInfo
       if (powder != null && powder.points > 30)
         {
           host.log('convulses as the powder overwhelms their body.');
-          game.player.onHostDeath('Your host overdoses on the white powder and perishes.');
+          game.player.onHostDeath(T('Your host overdoses on the white powder and perishes.'));
         }
       return true;
     }

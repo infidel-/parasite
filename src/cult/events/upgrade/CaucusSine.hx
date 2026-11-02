@@ -14,22 +14,22 @@ class CaucusSine
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Caucus Sine',
-        text: 'Behind closed caucus doors, the newly appointed whip kneels before sine-wave ribs that resonate with party discipline. Legislative chambers thrum with skeletal harmonics, converting dissent into consonant votes. Aides press ears to the bone-curves, hearing whip counts through harmonic resonance. Outside caucus never feels the true pulse, but trusted bone enforces hidden unity.',
+        title: T('Caucus Sine'),
+        text: T('Behind closed caucus doors, the newly appointed whip kneels before sine-wave ribs that resonate with party discipline. Legislative chambers thrum with skeletal harmonics, converting dissent into consonant votes. Aides press ears to the bone-curves, hearing whip counts through harmonic resonance. Outside caucus never feels the true pulse, but trusted bone enforces hidden unity.'),
         choices: [
           {
-            button: 'Bone Whip',
-            text: 'Crack bone resonance for discipline.',
+            button: T('Bone Whip'),
+            text: T('Crack bone resonance for discipline.'),
             f: choice1
           },
           {
-            button: 'Spine Count',
-            text: 'Count votes through spine resonance.',
+            button: T('Spine Count'),
+            text: T('Count votes through spine resonance.'),
             f: choice2
           },
           {
-            button: 'Sine Bind',
-            text: 'Bind whip to sine-bone structure.',
+            button: T('Sine Bind'),
+            text: T('Bind whip to sine-bone structure.'),
             f: choice3
           }
         ]

@@ -20,7 +20,7 @@ class Paper extends Pickup
     {
       super.init();
       type = 'paper';
-      name = 'paper';
+      name = N('paper');
       imageCol = Const.FRAME_PAPER;
     }
 

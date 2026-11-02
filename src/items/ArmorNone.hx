@@ -11,9 +11,9 @@ class ArmorNone extends ItemInfo
     {
       super(game);
       id = 'armorNone';
-      name = 'no armor';
+      name = N('no armor');
       type = 'clothing';
-      unknown = 'clothing';
+      unknown = N('clothing');
       armor = {
         canAttach: true,
         damage: 0,

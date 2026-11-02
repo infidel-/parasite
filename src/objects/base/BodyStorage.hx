@@ -14,6 +14,6 @@ class BodyStorage extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Cadaverum';
+      name = N('Cadaverum');
     }
 }

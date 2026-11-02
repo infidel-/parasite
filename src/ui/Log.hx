@@ -16,12 +16,12 @@ class Log extends UIWindow
       super(g, 'window-log');
 
       // shared HUD chrome: scrim + document glyph, frame, corners, veins, "LOG" watermark
-      addHudChrome('LOG', UISvg.doc());
+      addHudChrome(T('LOG'), UISvg.doc());
 
       // Cruiser title with hairline divider
       var title = Browser.document.createDivElement();
       title.className = 'win-title';
-      title.innerHTML = 'LOG';
+      title.innerHTML = T('LOG');
       window.appendChild(title);
 
       // scrolling turn ledger

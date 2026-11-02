@@ -60,12 +60,12 @@ class Finish extends UIWindow
 
       var hint = Browser.document.createDivElement();
       hint.className = 'finish-hint';
-      hint.innerHTML = 'Close the window to restart the game.';
+      hint.innerHTML = T('Close the window to restart the game.');
       body.appendChild(hint);
 
       closeBtn = Browser.document.createDivElement();
       closeBtn.className = 'finish-close';
-      closeBtn.innerHTML = 'CLOSE';
+      closeBtn.innerHTML = T('CLOSE');
       closeBtn.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         game.scene.sounds.play('window-close');
@@ -80,7 +80,7 @@ class Finish extends UIWindow
       var p: _FinishParams = cast obj;
 
       // title by outcome; cult death gets the psychedelic swanky font
-      titleEl.innerHTML = (p.result == 'lose') ? 'GAME OVER' : 'THE END';
+      titleEl.innerHTML = (p.result == 'lose') ? T('GAME OVER') : T('THE END');
       titleEl.className = 'finish-title' + (p.filter == 'cult' ? ' finish-title-cult' : '');
 
       // hero image, graded by the requested filter

@@ -22,10 +22,10 @@ class ChoirOfDiscord extends AI
     {
       super.init();
       type = 'choirOfDiscord';
-      name.real = 'choir of discord';
-      name.realCapped = 'Choir of discord';
-      name.unknown = 'choir of discord';
-      name.unknownCapped = 'Choir of discord';
+      name.real = N('choir of discord');
+      name.realCapped = N('Choir of discord');
+      name.unknown = N('choir of discord');
+      name.unknownCapped = N('Choir of discord');
       isNameKnown = true;
       isJobKnown = true;
       soundsID = 'choir';

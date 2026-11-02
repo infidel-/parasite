@@ -1,6 +1,7 @@
 // persistent Cultus Carnis living base state
 package cult.base;
 
+import l10n.Loc;
 import ai.AI;
 import ai.CustosAIData;
 import const.CultBaseConst;
@@ -40,7 +41,7 @@ class CultBase extends _SaveObject
       var heart = new CultBaseOrgan(COR_NEFANDUM, areaID, heartX, heartY);
       organs.push(heart);
       createOrganObject(heart);
-      game.logsg('Cor Nefandum begins to pulse with eldritch energy.');
+      game.logsg(T('Cor Nefandum begins to pulse with eldritch energy.'));
     }
 
 // init base fields
@@ -134,7 +135,7 @@ class CultBase extends _SaveObject
       // run rival turns
       runRivalTurn();
       if (!income.isEmpty())
-        game.logsg('Base income: ' + income.text() + '.');
+        game.logsg(T('Base income: {income}.', { income: income.text() }));
     }
 
 // returns current stockpile cap
@@ -178,7 +179,7 @@ class CultBase extends _SaveObject
       activeDefenseMissionID = ordeal.missions[0].id;
       activeDefenseTimer = ordeal.timer;
       game.message({
-        text: 'Heretics close on Cor Nefandum. Defend the base before the timer expires.',
+        text: T('Heretics close on Cor Nefandum. Defend the base before the timer expires.'),
         col: 'alert'
       });
     }
@@ -196,7 +197,7 @@ class CultBase extends _SaveObject
       var cost = CultBaseConst.buildCost(type);
       if (!resources.canAfford(cost))
         {
-          game.actionFailed('Not enough base resources.');
+          game.actionFailed(T('Not enough base resources.'));
           return false;
         }
       resources.spend(cost);
@@ -206,7 +207,7 @@ class CultBase extends _SaveObject
         selectedDirection);
       organs.push(organ);
       createOrganObject(organ);
-      game.log('You shape ' + CultBaseConst.name(type) + '.');
+      game.log(T('You shape {organ}.', { organ: Loc.tr(CultBaseConst.name(type)) }));
       game.updateHUD();
       return true;
     }
@@ -217,19 +218,19 @@ class CultBase extends _SaveObject
       var organ = getOrganAt(cursorX, cursorY);
       if (organ == null)
         {
-          game.actionFailed('No base organ at cursor.');
+          game.actionFailed(T('No base organ at cursor.'));
           return false;
         }
       var maxLevel = CultBaseConst.info(organ.type).maxLevel;
       if (organ.level >= maxLevel)
         {
-          game.actionFailed('This organ cannot grow further.');
+          game.actionFailed(T('This organ cannot grow further.'));
           return false;
         }
       var cost = organ.upgradeCost();
       if (!resources.canAfford(cost))
         {
-          game.actionFailed('Not enough base resources.');
+          game.actionFailed(T('Not enough base resources.'));
           return false;
         }
       resources.spend(cost);
@@ -237,7 +238,7 @@ class CultBase extends _SaveObject
       organ.broken = false;
       organ.health = organ.maxHealth();
       refreshOrganObject(organ);
-      game.log('You strengthen ' + CultBaseConst.name(organ.type) + '.');
+      game.log(T('You strengthen {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
     }
@@ -248,25 +249,25 @@ class CultBase extends _SaveObject
       var organ = getOrganAt(cursorX, cursorY);
       if (organ == null)
         {
-          game.actionFailed('No base organ at cursor.');
+          game.actionFailed(T('No base organ at cursor.'));
           return false;
         }
       if (organ.health >= organ.maxHealth() && !organ.broken)
         {
-          game.actionFailed('This organ is whole.');
+          game.actionFailed(T('This organ is whole.'));
           return false;
         }
       var cost = organ.repairCost();
       if (!resources.canAfford(cost))
         {
-          game.actionFailed('Not enough base resources.');
+          game.actionFailed(T('Not enough base resources.'));
           return false;
         }
       resources.spend(cost);
       organ.health = organ.maxHealth();
       organ.broken = false;
       refreshOrganObject(organ);
-      game.log('You mend ' + CultBaseConst.name(organ.type) + '.');
+      game.log(T('You mend {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
     }
@@ -278,7 +279,7 @@ class CultBase extends _SaveObject
       if (organ.health > 0)
         {
           if (organ.type == COR_NEFANDUM)
-            game.log(Const.col('alert', 'Cor Nefandum is wounded!'));
+            game.log(Const.col('alert', T('Cor Nefandum is wounded!')));
           refreshOrganObject(organ);
           return;
         }
@@ -316,24 +317,24 @@ class CultBase extends _SaveObject
     {
       if (!hasWorkingOrgan(CAULDRON))
         {
-          game.actionFailed('A working Caldarium is required.');
+          game.actionFailed(T('A working Caldarium is required.'));
           return false;
         }
       if (custodes.length >= custosCap())
         {
-          game.actionFailed('Custodes capacity reached.');
+          game.actionFailed(T('Custodes capacity reached.'));
           return false;
         }
       var cost = new CultBaseResources(10, 8, 0);
       if (!resources.canAfford(cost))
         {
-          game.actionFailed('Not enough base resources.');
+          game.actionFailed(T('Not enough base resources.'));
           return false;
         }
       if (!area().isWalkable(cursorX, cursorY) ||
           area().hasAI(cursorX, cursorY))
         {
-          game.actionFailed('Custos needs a free tile.');
+          game.actionFailed(T('Custos needs a free tile.'));
           return false;
         }
       resources.spend(cost);
@@ -345,7 +346,7 @@ class CultBase extends _SaveObject
         'on custos creation');
       custodes.push(data);
       game.area.addAI(ai);
-      game.log('A new Custos takes shape.');
+      game.log(T('A new Custos takes shape.'));
       game.updateHUD();
       game.scene.draw();
       return true;
@@ -398,7 +399,7 @@ class CultBase extends _SaveObject
 // populates HUD actions while base-building mode is active
   public function updateActionList()
     {
-      game.ui.hud.addKeyAction(action('baseExit', 'Exit Forma', function() {
+      game.ui.hud.addKeyAction(action('baseExit', T('Exit Forma'), function() {
         game.ui.hud.state = HUD_DEFAULT;
         game.scene.view3d.setTactical(false);
         game.updateHUD();
@@ -412,7 +413,7 @@ class CultBase extends _SaveObject
       for (type in buildableTypes)
         {
           var organType = type;
-          var label = CultBaseConst.name(type);
+          var label = Loc.tr(CultBaseConst.name(type));
           if (selectedType == type)
             label = Const.col('white', label);
           game.ui.hud.addAction(action('baseSelect.' + type, label,
@@ -429,21 +430,21 @@ class CultBase extends _SaveObject
             game.updateHUD();
             return true;
           }));
-      game.ui.hud.addAction(action('baseBuild', 'Build ' +
-        CultBaseConst.name(selectedType), function() return buildSelected()));
+      game.ui.hud.addAction(action('baseBuild', T('Build {organ}', { organ: Loc.tr(CultBaseConst.name(selectedType)) }),
+        function() return buildSelected()));
       var organ = getOrganAt(cursorX, cursorY);
       if (organ != null)
         {
-          game.ui.hud.addAction(action('baseUpgrade', 'Upgrade ' +
-            CultBaseConst.name(organ.type), function() return upgradeAtCursor()));
-          game.ui.hud.addAction(action('baseRepair', 'Repair ' +
-            CultBaseConst.name(organ.type), function() return repairAtCursor()));
+          game.ui.hud.addAction(action('baseUpgrade', T('Upgrade {organ}', { organ: Loc.tr(CultBaseConst.name(organ.type)) }),
+            function() return upgradeAtCursor()));
+          game.ui.hud.addAction(action('baseRepair', T('Repair {organ}', { organ: Loc.tr(CultBaseConst.name(organ.type)) }),
+            function() return repairAtCursor()));
         }
       if (hasWorkingOrgan(CAULDRON))
         {
-          game.ui.hud.addAction(action('baseFirmus', 'Craft Firmus',
+          game.ui.hud.addAction(action('baseFirmus', T('Craft Firmus'),
             function() return createCustos('firmus')));
-          game.ui.hud.addAction(action('baseMordax', 'Craft Mordax',
+          game.ui.hud.addAction(action('baseMordax', T('Craft Mordax'),
             function() return createCustos('mordax')));
         }
     }
@@ -491,35 +492,56 @@ class CultBase extends _SaveObject
   public function hudInfo(): String
     {
       var organ = getOrganAt(cursorX, cursorY);
-      var selected = CultBaseConst.name(selectedType) + ' cost ' +
-        CultBaseConst.buildCost(selectedType).text();
-      var ret = 'Base: F ' + resources.flesh +
-        ', Bld ' + resources.blood +
-        ', Bone ' + resources.bone +
-        ' / ' + stockpileCap() +
-        '<br/>Bodies: ' + storedBodies + '/' + bodyCapacity() +
-        ', Pressure: ' + attackPressure +
-        '<br/>Cursor: (' + cursorX + ',' + cursorY + ') ' + selected;
+      var selected = T('{organ} cost {cost}', {
+        organ: Loc.tr(CultBaseConst.name(selectedType)),
+        cost: CultBaseConst.buildCost(selectedType).text(),
+      });
+      var ret = T('Base: F {flesh}, Bld {blood}, Bone {bone} / {cap}', {
+          flesh: resources.flesh,
+          blood: resources.blood,
+          bone: resources.bone,
+          cap: stockpileCap(),
+        }) +
+        '<br/>' + T('Bodies: {bodies}/{capacity}, Pressure: {pressure}', {
+          bodies: storedBodies,
+          capacity: bodyCapacity(),
+          pressure: attackPressure,
+        }) +
+        '<br/>' + T('Cursor: ({x},{y}) {selected}', {
+          x: cursorX,
+          y: cursorY,
+          selected: selected,
+        });
       if (organ != null)
-        ret += '<br/>Here: ' + CultBaseConst.name(organ.type) +
-          ' L' + organ.level + ' HP ' + organ.health + '/' +
-          organ.maxHealth() + (organ.broken ? ' [broken]' : '');
+        ret += '<br/>' + T('Here: {organ} L{level} HP {health}/{maxHealth}', {
+            organ: Loc.tr(CultBaseConst.name(organ.type)),
+            level: organ.level,
+            health: organ.health,
+            maxHealth: organ.maxHealth(),
+          }) +
+          (organ.broken ? ' ' + T('[broken]') : '');
       return ret + '<br/>' + readinessText();
     }
 
 // returns base status text for cult window
   public function statusText(): String
     {
-      return 'Level 2 base at area ' + areaID +
-        '<br/>Flesh ' + resources.flesh +
-        ', Blood ' + resources.blood +
-        ', Bone ' + resources.bone +
-        ' / ' + stockpileCap() +
-        '<br/>Bodies ' + storedBodies + '/' + bodyCapacity() +
-        ', Custodes ' + custodes.length + '/' + custosCap() +
-        ', Pressure ' + attackPressure +
+      return T('Level 2 base at area {area}', { area: areaID }) +
+        '<br/>' + T('Flesh {flesh}, Blood {blood}, Bone {bone} / {cap}', {
+          flesh: resources.flesh,
+          blood: resources.blood,
+          bone: resources.bone,
+          cap: stockpileCap(),
+        }) +
+        '<br/>' + T('Bodies {bodies}/{capacity}, Custodes {custodes}/{custosCap}, Pressure {pressure}', {
+          bodies: storedBodies,
+          capacity: bodyCapacity(),
+          custodes: custodes.length,
+          custosCap: custosCap(),
+          pressure: attackPressure,
+        }) +
         (activeDefenseMissionID >= 0 ?
-          '<br/>' + Const.col('alert', 'Base defense timer: ' + activeDefenseTimer) :
+          '<br/>' + Const.col('alert', T('Base defense timer: {timer}', { timer: activeDefenseTimer })) :
           '') +
         '<br/>' + readinessText();
     }
@@ -558,27 +580,27 @@ class CultBase extends _SaveObject
       x: Int, y: Int): String
     {
       if (type == COR_NEFANDUM)
-        return 'Cor Nefandum already exists.';
+        return T('Cor Nefandum already exists.');
       if (type == RIBGATE)
         {
           var existing = getOrganAt(x, y);
           if (existing == null ||
               existing.type != RIBWALL)
-            return 'Porta Costarum must replace a ribwall.';
+            return T('Porta Costarum must replace a ribwall.');
         }
       else if (getOrganAt(x, y) != null)
-        return 'Tile already holds a base organ.';
+        return T('Tile already holds a base organ.');
 
       var area = area();
       var fp = CultBaseConst.footprint(type, x, y);
       for (pt in fp)
         {
           if (!isBuildFloorWalkable(pt.x, pt.y))
-            return 'Footprint must be on walkable floor.';
+            return T('Footprint must be on walkable floor.');
           if (area.hasAI(pt.x, pt.y))
-            return 'Footprint is occupied.';
+            return T('Footprint is occupied.');
           if (hasBlockingObject(pt.x, pt.y, type))
-            return 'Footprint is blocked.';
+            return T('Footprint is blocked.');
         }
       return '';
     }
@@ -607,12 +629,17 @@ class CultBase extends _SaveObject
             defenses++;
         }
       var heart = getHeartUpgradeCount();
-      return Const.smallgray('Corpus Basilica: Heart ' + heart + '/3, organs ' +
-        organLevels + '/10<br/>Growth ' + yes(hasGrowth) +
-        ', storage ' + yes(hasStorage) +
-        ', cauldron ' + yes(hasCauldron) +
-        '<br/>Defenses ' + defenses + '/5, survived ' +
-        defensesSurvived + '/2');
+      return Const.smallgray(T('Corpus Basilica: Heart {heart}/3, organs {organs}/10<br/>' +
+        'Growth {growth}, storage {storage}, cauldron {cauldron}<br/>' +
+        'Defenses {defenses}/5, survived {survived}/2', {
+        heart: heart,
+        organs: organLevels,
+        growth: yes(hasGrowth),
+        storage: yes(hasStorage),
+        cauldron: yes(hasCauldron),
+        defenses: defenses,
+        survived: defensesSurvived,
+      }));
     }
 
 // creates object for organ record
@@ -777,12 +804,12 @@ class CultBase extends _SaveObject
       if (rival.rivalTactic == RIVAL_COMBAT)
         {
           addPressure(10, rival.id);
-          game.logsg(rival.name + ' drives heathens toward the base.');
+          game.logsg(T('{cult} drives heathens toward the base.', { cult: Loc.tr(rival.name) }));
         }
       else
         {
           addPressure(5, rival.id);
-          game.logsg(rival.name + ' spreads indirect pressure.');
+          game.logsg(T('{cult} spreads indirect pressure.', { cult: Loc.tr(rival.name) }));
         }
     }
 
@@ -833,15 +860,15 @@ class CultBase extends _SaveObject
       switch (selectedDirection)
         {
           case 0:
-            return 'Direction: north';
+            return T('Direction: north');
           case 1:
-            return 'Direction: east';
+            return T('Direction: east');
           case 2:
-            return 'Direction: south';
+            return T('Direction: south');
           case 3:
-            return 'Direction: west';
+            return T('Direction: west');
           default:
-            return 'Direction: north';
+            return T('Direction: north');
         }
     }
 
@@ -898,6 +925,6 @@ class CultBase extends _SaveObject
 // returns yes/no text
   function yes(value: Bool): String
     {
-      return value ? 'yes' : 'no';
+      return value ? T('yes') : T('no');
     }
 }

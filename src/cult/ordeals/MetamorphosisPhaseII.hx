@@ -26,12 +26,12 @@ class MetamorphosisPhaseII extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Metamorphosis, Phase II';
+      name = N('Metamorphosis, Phase II');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 1;
       requiredMemberLevels = 3;
       actions = 0;
-      note = 'Perform the ritual in the current habitat.';
+      note = N('Perform the ritual in the current habitat.');
     }
 
 // adds ritual completion action
@@ -41,7 +41,7 @@ class MetamorphosisPhaseII extends Ordeal
       actions.push({
         id: 'performMetamorphosis',
         type: ACTION_CULT,
-        name: 'Perform metamorphosis ritual',
+        name: T('Perform metamorphosis ritual'),
         energy: 0,
         f: function() {
           success();
@@ -51,7 +51,7 @@ class MetamorphosisPhaseII extends Ordeal
       actions.push({
         id: 'annul',
         type: ACTION_CULT,
-        name: 'Annul ' + Const.smallgray('(results in failure)'),
+        name: T('Annul') + ' ' + Const.smallgray(T('(results in failure)')),
         energy: 0,
         f: function() {
           fail();
@@ -69,7 +69,7 @@ class MetamorphosisPhaseII extends Ordeal
           game.area == null ||
           !game.area.isHabitat)
         {
-          game.actionFailed('The ritual must finish in a habitat.');
+          game.actionFailed(T('The ritual must finish in a habitat.'));
           return;
         }
       cult.level = 2;
@@ -81,7 +81,7 @@ class MetamorphosisPhaseII extends Ordeal
         CultConst.randomRivalID(RIVAL_NON_COMBAT)));
       game.profile.addPediaArticle('cultBase');
       game.message({
-        text: 'Cor Nefandum opens. Cultus Carnis enters its second form.',
+        text: T('Cor Nefandum opens. Cultus Carnis enters its second form.'),
         col: 'cult'
       });
     }
@@ -100,7 +100,7 @@ class MetamorphosisPhaseII extends Ordeal
       actions.push({
         id: 'metamorphosisPhaseII',
         type: ACTION_CULT,
-        name: 'Metamorphosis, Phase II',
+        name: T('Metamorphosis, Phase II'),
         energy: 0,
         obj: {}
       });

@@ -12,22 +12,22 @@ class FleshTissueBrief
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Flesh Tissue Brief',
-        text: 'Subterranean drafting chamber breathes as the newly promoted counsel kneels before a podium of living membrane. Law clerks chant citation numbers through respirators while brief pages pulse with arterial ink. Vein-scribed margins grip each argument, keeping the chambers hidden from public dockets. The air thickens with the scent of binding fluid as precedent awakens beneath fluorescent hum.',
+        title: T('Flesh Tissue Brief'),
+        text: T('Subterranean drafting chamber breathes as the newly promoted counsel kneels before a podium of living membrane. Law clerks chant citation numbers through respirators while brief pages pulse with arterial ink. Vein-scribed margins grip each argument, keeping the chambers hidden from public dockets. The air thickens with the scent of binding fluid as precedent awakens beneath fluorescent hum.'),
         choices: [
           {
-            button: 'Vein Ink',
-            text: 'Route arguments through living ink to seal brief authority.',
+            button: T('Vein Ink'),
+            text: T('Route arguments through living ink to seal brief authority.'),
             f: choice1
           },
           {
-            button: 'Tissue Bind',
-            text: 'Mesh membrane pages with ongoing cases to spread influence.',
+            button: T('Tissue Bind'),
+            text: T('Mesh membrane pages with ongoing cases to spread influence.'),
             f: choice2
           },
           {
-            button: 'Mark Bar',
-            text: 'Brand the counsel with brief sigils to anchor secret knowledge.',
+            button: T('Mark Bar'),
+            text: T('Brand the counsel with brief sigils to anchor secret knowledge.'),
             f: choice3
           }
         ]

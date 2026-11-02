@@ -17,22 +17,22 @@ class UterusSusurroDrill
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Uterus Susurro Drill',
-        text: 'Rain-battered med hangar sits sealed behind blackout screens as the newly sworn squad leader sinks into an Uterus Susurro pod. Chaplain-engineers whisper fetal psalms through scrub masks while biotech interns braid fiber umbilicals along his spine. Only trusted handlers monitor the bio telemetry.',
+        title: T('Uterus Susurro Drill'),
+        text: T('Rain-battered med hangar sits sealed behind blackout screens as the newly sworn squad leader sinks into an Uterus Susurro pod. Chaplain-engineers whisper fetal psalms through scrub masks while biotech interns braid fiber umbilicals along his spine. Only trusted handlers monitor the bio telemetry.'),
         choices: [
           {
-            button: 'Umbil Feed',
-            text: 'Shunt donor stipends into the fighter\'s tactical muscle accounts.',
+            button: T('Umbil Feed'),
+            text: T('Shunt donor stipends into the fighter\'s tactical muscle accounts.'),
             f: choice1
           },
           {
-            button: 'Tank Hymn',
-            text: 'Sync the tank\'s resonance with urban drone interdiction grids.',
+            button: T('Tank Hymn'),
+            text: T('Sync the tank\'s resonance with urban drone interdiction grids.'),
             f: choice2
           },
           {
-            button: 'Spine Code',
-            text: 'Etch neural scripture across his vertebrae to lock the new rank.',
+            button: T('Spine Code'),
+            text: T('Etch neural scripture across his vertebrae to lock the new rank.'),
             f: choice3
           }
         ]

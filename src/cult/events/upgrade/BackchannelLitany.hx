@@ -14,22 +14,22 @@ class BackchannelLitany
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Backchannel Litany',
-        text: 'Basement newsroom sinks into red standby as the newly lifted herald stands before a living broadcast rack. Flesh-cooled routers bead condensation while editors whisper instructions through respirator foam. The outside airwaves never catch the pulse, but trusted backchannels await new directives.',
+        title: T('Backchannel Litany'),
+        text: T('Basement newsroom sinks into red standby as the newly lifted herald stands before a living broadcast rack. Flesh-cooled routers bead condensation while editors whisper instructions through respirator foam. The outside airwaves never catch the pulse, but trusted backchannels await new directives.'),
         choices: [
           {
-            button: 'Signal Fog',
-            text: 'Release decoy traffic across private mesh channels to cloak the real drop.',
+            button: T('Signal Fog'),
+            text: T('Release decoy traffic across private mesh channels to cloak the real drop.'),
             f: choice1
           },
           {
-            button: 'Covert Ad',
-            text: 'Bill sympathetic agencies through shell vendors and reroute the spend into war funds.',
+            button: T('Covert Ad'),
+            text: T('Bill sympathetic agencies through shell vendors and reroute the spend into war funds.'),
             f: choice2
           },
           {
-            button: 'Litany Seal',
-            text: 'Fold the new rank into a hidden mantra archive for vetted ears only.',
+            button: T('Litany Seal'),
+            text: T('Fold the new rank into a hidden mantra archive for vetted ears only.'),
             f: choice3
           }
         ]

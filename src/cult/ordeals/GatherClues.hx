@@ -21,7 +21,7 @@ class GatherClues extends Ordeal
       return Const.smallgray(' (') +
         Const.col('cult-power', '200k') + Icon.money +
         Const.smallgray(', ') +
-        Const.col('cult-power', 10) + ' PWR' +
+        T('{power} PWR', { power: Const.col('cult-power', 10) }) +
         Const.smallgray(')');
     }
 
@@ -50,12 +50,12 @@ class GatherClues extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Anthropomancy';
+      name = N('Anthropomancy');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 1;
       requiredMemberLevels = 3;
       actions = requiredMembers;
-      note = 'A master haruspex reads the entrails of fate to uncover hidden knowledge.';
+      note = N('A master haruspex reads the entrails of fate to uncover hidden knowledge.');
     }
 
 // called after load or creation
@@ -189,7 +189,7 @@ class GatherClues extends Ordeal
       actions.push({
         id: 'gatherClues',
         type: ACTION_CULT,
-        name: 'Anthropomancy' + priceHint(),
+        name: T('Anthropomancy') + priceHint(),
         energy: 0,
         obj: {}
       });

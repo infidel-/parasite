@@ -28,7 +28,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "That host is agitated, I need to flee to avoid trouble.",
+      messageComplete: T("That host is agitated, I need to flee to avoid trouble."),
     },
 
     GOAL_TUTORIAL_BODY => {
@@ -37,7 +37,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "This host has expired and its body will be found. Troublesome.",
+      messageComplete: T("This host has expired and its body will be found. Troublesome."),
     },
 
     GOAL_TUTORIAL_BODY_SEWERS => {
@@ -46,7 +46,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "This host has expired in the sewers and its body will not bring problems.",
+      messageComplete: T("This host has expired in the sewers and its body will not bring problems."),
     },
 
     GOAL_TUTORIAL_ENERGY => {
@@ -55,7 +55,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "This host will soon expire, time to look for another one.",
+      messageComplete: T("This host will soon expire, time to look for another one."),
     },
 
     GOAL_TUTORIAL_AREA_ALERT => {
@@ -64,7 +64,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "This area is getting dangerous to enter. Better to wait until things calm down.",
+      messageComplete: T("This area is getting dangerous to enter. Better to wait until things calm down."),
     },
 
     GOAL_TUTORIAL_COMMS => {
@@ -73,7 +73,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "They use devices like these to communicate. I can force the hosts to drop them and deny that.",
+      messageComplete: T("They use devices like these to communicate. I can force the hosts to drop them and deny that."),
     },
 
     GOAL_TUTORIAL_DEGRADE => {
@@ -82,7 +82,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "The evolution has almost completely degraded this host. It will expire soon unless I stop.",
+      messageComplete: T("The evolution has almost completely degraded this host. It will expire soon unless I stop."),
     },
 
     GOAL_TUTORIAL_AFFINITY => {
@@ -91,7 +91,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "My connection with this host allows for meaningful discourse now.",
+      messageComplete: T("My connection with this host allows for meaningful discourse now."),
     },
 
     GOAL_TUTORIAL_MAX_AFFINITY => {
@@ -100,7 +100,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "I have reached the perfect connection level with this host. I will suffer if it expires while I am attached.",
+      messageComplete: T("I have reached the perfect connection level with this host. I will suffer if it expires while I am attached."),
     },
 
     GOAL_TUTORIAL_CONSENT => {
@@ -109,7 +109,7 @@ class Goals
       isStarting: true,
       name: '',
       note: '',
-      messageComplete: "I have obtained the utmost consent of this host. I can speak with others through their mouth.",
+      messageComplete: T("I have obtained the utmost consent of this host. I can speak with others through their mouth."),
     },
 
     // ========================= main branch
@@ -117,9 +117,9 @@ class Goals
     GOAL_INVADE_HOST => {
       id: GOAL_INVADE_HOST,
       isStarting: true,
-      name: 'Find and invade a host',
-      note: 'You need to find and invade a host or you will die from the lack of energy.',
-      messageComplete: 'The bipedal hosts look like a dominant life form. They may be more useful.',
+      name: T('Find and invade a host'),
+      note: T('You need to find and invade a host or you will die from the lack of energy.'),
+      messageComplete: T('The bipedal hosts look like a dominant life form. They may be more useful.'),
       onComplete: function (game, player) {
         game.goals.receive(GOAL_INVADE_HUMAN);
         game.ui.event({
@@ -132,9 +132,9 @@ class Goals
 
     GOAL_INVADE_HUMAN => {
       id: GOAL_INVADE_HUMAN,
-      name: 'Find and invade a bipedal host',
-      note: 'You need to find and invade a bipedal host',
-      messageComplete: 'This host is intelligent. I need to evolve and understand it further.',
+      name: T('Find and invade a bipedal host'),
+      note: T('You need to find and invade a bipedal host'),
+      messageComplete: T('This host is intelligent. I need to evolve and understand it further.'),
       onComplete: function (game, player) {
         player.evolutionManager.state = 1;
         player.evolutionManager.addImprov(IMP_BRAIN_PROBE);
@@ -149,10 +149,10 @@ class Goals
 
     GOAL_EVOLVE_PROBE => {
       id: GOAL_EVOLVE_PROBE,
-      name: 'Evolve brain probe',
-      note: 'You need to evolve the brain probe improvement.',
-      messageReceive: 'Evolution degrades the host. I need to be careful.',
-      messageComplete: 'I can probe the host brains now. I should also evolve further.',
+      name: T('Evolve brain probe'),
+      note: T('You need to evolve the brain probe improvement.'),
+      messageReceive: T('Evolution degrades the host. I need to be careful.'),
+      messageComplete: T('I can probe the host brains now. I should also evolve further.'),
       onComplete: function (game, player) {
         player.evolutionManager.state = 2;
         game.player.vars.organsEnabled = true;
@@ -175,9 +175,9 @@ class Goals
     GOAL_EVOLVE_CAMO => {
       id: GOAL_EVOLVE_CAMO,
       isOptional: true,
-      name: 'Evolve camouflage layer',
-      note: 'You need to evolve the camouflage layer improvement.',
-      messageReceive: 'These areas are much more dangerous to me. I need to be less visible on the host body.',
+      name: T('Evolve camouflage layer'),
+      note: T('You need to evolve the camouflage layer improvement.'),
+      messageReceive: T('These areas are much more dangerous to me. I need to be less visible on the host body.'),
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_CAMO_LAYER);
       },
@@ -189,8 +189,8 @@ class Goals
     GOAL_GROW_CAMO => {
       id: GOAL_GROW_CAMO,
       isOptional: true,
-      name: 'Grow camouflage layer',
-      note: 'You need to grow the camouflage layer body feature.',
+      name: T('Grow camouflage layer'),
+      note: T('You need to grow the camouflage layer body feature.'),
     },
 
     // fake goal: the first time base personnel eye an outsider host (ai.DefaultLogic.visionIdle)
@@ -199,7 +199,7 @@ class Goals
       isHidden: true,
       name: '-',
       note: '-',
-      messageComplete: 'These are trained professionals. Anyone out of place draws their eye at once. I must blend in better.',
+      messageComplete: T('These are trained professionals. Anyone out of place draws their eye at once. I must blend in better.'),
       imageComplete: 'pedia/area_military',
     },
 
@@ -208,9 +208,9 @@ class Goals
     GOAL_EVOLVE_DOPAMINE => {
       id: GOAL_EVOLVE_DOPAMINE,
       isOptional: true,
-      name: 'Evolve dopamine regulation',
-      note: 'You need to evolve the dopamine regulation improvement.',
-      messageReceive: 'The addiction to chemicals of this host can be useful to me.',
+      name: T('Evolve dopamine regulation'),
+      note: T('You need to evolve the dopamine regulation improvement.'),
+      messageReceive: T('The addiction to chemicals of this host can be useful to me.'),
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_DOPAMINE);
       },
@@ -225,9 +225,9 @@ class Goals
       id: GOAL_EVOLVE_ORGAN,
       isOptional: true,
 //      isHidden: true,
-      name: 'Evolve any body feature',
-      note: 'You need to evolve any body feature.',
-      messageComplete: 'Evolving allows me to force changes in the host body. I should try it now.',
+      name: T('Evolve any body feature'),
+      note: T('You need to evolve any body feature.'),
+      messageComplete: T('Evolving allows me to force changes in the host body. I should try it now.'),
       onComplete: function (game, player) {
         game.goals.receive(GOAL_GROW_ORGAN);
       }
@@ -236,9 +236,9 @@ class Goals
     GOAL_GROW_ORGAN => {
       id: GOAL_GROW_ORGAN,
       isOptional: true,
-      name: 'Grow any body feature',
-      note: 'You need to grow any body feature.',
-      messageComplete: 'Growing body features and evolving is very inefficient in a hostile environment. I need a microhabitat.',
+      name: T('Grow any body feature'),
+      note: T('You need to grow any body feature.'),
+      messageComplete: T('Growing body features and evolving is very inefficient in a hostile environment. I need a microhabitat.'),
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_MICROHABITAT);
         game.goals.receive(GOAL_EVOLVE_MICROHABITAT);
@@ -248,9 +248,9 @@ class Goals
     GOAL_EVOLVE_MICROHABITAT => {
       id: GOAL_EVOLVE_MICROHABITAT,
       isOptional: true,
-      name: 'Evolve the microhabitat knowledge',
-      note: 'You need to evolve the knowledge of microhabitat.',
-      messageComplete: 'Now that I have the knowledge I must find a place somewhere in the sewers for a habitat.',
+      name: T('Evolve the microhabitat knowledge'),
+      note: T('You need to evolve the knowledge of microhabitat.'),
+      messageComplete: T('Now that I have the knowledge I must find a place somewhere in the sewers for a habitat.'),
       onReceive: function (game, player) {
         game.profile.addPediaArticle('habitat');
       },
@@ -263,9 +263,9 @@ class Goals
     GOAL_CREATE_HABITAT => {
       id: GOAL_CREATE_HABITAT,
       isOptional: true,
-      name: 'Create a new habitat',
-      note: 'You need to create a microhabitat.',
-      messageComplete: 'My microhabitat is complete. It allows me some degree of calm and safety.',
+      name: T('Create a new habitat'),
+      note: T('You need to create a microhabitat.'),
+      messageComplete: T('My microhabitat is complete. It allows me some degree of calm and safety.'),
       onComplete: function (game, player) {
         player.evolutionManager.addImprov(IMP_BIOMINERAL);
         game.goals.receive(GOAL_PUT_BIOMINERAL);
@@ -282,10 +282,10 @@ class Goals
     GOAL_PUT_BIOMINERAL => {
       id: GOAL_PUT_BIOMINERAL,
       isOptional: true,
-      name: 'Construct biomineral formation',
-      note: 'You need to evolve, grow and construct a biomineral formation. It can only be constructed in a habitat.',
-      messageReceive: 'I can improve it further. But I will need energy for that.',
-      messageComplete: 'Ah, yes. I can feel the energy surge. A little more and I can begin the assimilation process.',
+      name: T('Construct biomineral formation'),
+      note: T('You need to evolve, grow and construct a biomineral formation. It can only be constructed in a habitat.'),
+      messageReceive: T('I can improve it further. But I will need energy for that.'),
+      messageComplete: T('Ah, yes. I can feel the energy surge. A little more and I can begin the assimilation process.'),
       onReceive: function (game, player) {
         game.profile.addPediaArticle('habitatBiomineral');
       },
@@ -301,9 +301,9 @@ class Goals
     GOAL_PUT_ASSIMILATION => {
       id: GOAL_PUT_ASSIMILATION,
       isOptional: true,
-      name: 'Construct assimilation cavity',
-      note: 'You need to evolve, grow and construct the assimilation cavity. You can only construct it in a habitat.',
-      messageComplete: 'Finally. I can begin the host assimilation process.',
+      name: T('Construct assimilation cavity'),
+      note: T('You need to evolve, grow and construct the assimilation cavity. You can only construct it in a habitat.'),
+      messageComplete: T('Finally. I can begin the host assimilation process.'),
       onReceive: function (game, player) {
         game.profile.addPediaArticle('habitatCavity');
       },
@@ -316,9 +316,9 @@ class Goals
     GOAL_PUT_WATCHER => {
       id: GOAL_PUT_WATCHER,
       isOptional: true,
-      name: 'Construct watcher',
-      note: 'You need to evolve, grow and construct the watcher. You can only construct it in a habitat.',
-      messageReceive: 'They might try to ambush me in the habitat. I will need something to warn me.',
+      name: T('Construct watcher'),
+      note: T('You need to evolve, grow and construct the watcher. You can only construct it in a habitat.'),
+      messageReceive: T('They might try to ambush me in the habitat. I will need something to warn me.'),
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_WATCHER);
         game.profile.addPediaArticle('habitatWatcher');
@@ -333,7 +333,7 @@ class Goals
       isHidden: true,
       name: '-',
       note: '-',
-      messageReceive: 'Sleep is very important for hosts. I can exploit that by making a habitat growth inducing the state of deep sleep in hosts to preserve them for later use.',
+      messageReceive: T('Sleep is very important for hosts. I can exploit that by making a habitat growth inducing the state of deep sleep in hosts to preserve them for later use.'),
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_PRESERVATOR);
         game.profile.addPediaArticle('habitatPreservator');
@@ -348,7 +348,7 @@ class Goals
       isHidden: true,
       name: '-',
       note: '-',
-      messageReceive: 'This is one of the humans that are on my trail. If I could implant some false memories about our encounter into their head...',
+      messageReceive: T('This is one of the humans that are on my trail. If I could implant some false memories about our encounter into their head...'),
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_FALSE_MEMORIES);
         game.profile.addPediaArticle('impFalseMemories');
@@ -360,11 +360,13 @@ class Goals
     GOAL_GROUP_INTEL => {
       id: GOAL_GROUP_INTEL,
       isOptional: true,
-      name: 'Gather intel on the Group',
-      note: 'Probe the brains of Group agents and read their dossiers to learn more.',
+      name: T('Gather intel on the Group'),
+      note: T('Probe the brains of Group agents and read their dossiers to learn more.'),
       noteFunc: function (game) {
-        return Const.col('gray', Const.small(
-          'Intel: ' + game.group.intel + '/' + game.group.intelNeeded()));
+        return Const.col('gray', Const.small(T('Intel: {intel}/{needed}', {
+          intel: game.group.intel,
+          needed: game.group.intelNeeded(),
+        })));
       },
       onReceive: function (game, player) {
         game.profile.addPediaArticle('groupNeutralize');
@@ -381,8 +383,8 @@ class Goals
     GOAL_GROUP_DIRECTOR => {
       id: GOAL_GROUP_DIRECTOR,
       isOptional: true,
-      name: 'Deal with the regional controller',
-      note: 'Planting false memories into them will close my file. Killing will do too.',
+      name: T('Deal with the regional controller'),
+      note: T('Planting false memories into them will close my file. Killing will do too.'),
       noteFunc: GroupDirector.noteFunc,
       markAreaFunc: function (game) {
         return game.group.directorAreaID;
@@ -399,7 +401,7 @@ class Goals
       isHidden: true,
       name: '-',
       note: '-',
-      messageReceive: 'While investigating humans I\'ve used their maps. If I could reliably store that data in the host brain...',
+      messageReceive: T('While investigating humans I\'ve used their maps. If I could reliably store that data in the host brain...'),
       onReceive: function (game, player) {
         player.evolutionManager.addImprov(IMP_ENGRAM);
 //        game.profile.addPediaArticle('impEngram');
@@ -410,9 +412,9 @@ class Goals
 
     GOAL_PROBE_BRAIN => {
       id: GOAL_PROBE_BRAIN,
-      name: 'Probe the host brain',
-      note: 'You need to probe the brain of any host.',
-      messageComplete: 'Some of the objects the hosts carry can be useful.',
+      name: T('Probe the host brain'),
+      note: T('You need to probe the brain of any host.'),
+      messageComplete: T('Some of the objects the hosts carry can be useful.'),
       onReceive: function (game, player) {
         game.profile.addPediaArticle('hostBrainProbe');
       },
@@ -429,9 +431,9 @@ class Goals
 
     GOAL_LEARN_ITEMS => {
       id: GOAL_LEARN_ITEMS,
-      name: 'Learn about any item',
-      note: 'You need to learn information about any item.',
-      messageComplete: 'I can learn how to use items effectively by improving the probe.',
+      name: T('Learn about any item'),
+      note: T('You need to learn information about any item.'),
+      messageComplete: T('I can learn how to use items effectively by improving the probe.'),
       onComplete: function (game, player) {
         game.player.vars.skillsEnabled = true;
 
@@ -445,9 +447,9 @@ class Goals
 
     GOAL_PROBE_BRAIN_ADVANCED => {
       id: GOAL_PROBE_BRAIN_ADVANCED,
-      name: 'Improve the brain probe',
-      note: 'Your brain probe is not advanced enough to gain information about host skills. You need to improve it.',
-      messageComplete: 'My brain probe has improved significantly.',
+      name: T('Improve the brain probe'),
+      note: T('Your brain probe is not advanced enough to gain information about host skills. You need to improve it.'),
+      messageComplete: T('My brain probe has improved significantly.'),
       onReceive: function (game, player) {
         game.profile.addPediaArticle('hostSkills');
       },
@@ -458,25 +460,26 @@ class Goals
 
     GOAL_LEARN_SKILLS => {
       id: GOAL_LEARN_SKILLS,
-      name: 'Use the brain probe to learn any skill',
-      note: 'Probe the host brain to learn useful skills.',
+      name: T('Use the brain probe to learn any skill'),
+      note: T('Probe the host brain to learn useful skills.'),
     },
 
     GOAL_LEARN_SOCIETY => {
       id: GOAL_LEARN_SOCIETY,
-      name: 'Learn more about the human society',
-      note: 'Probe host brains to raise the human society knowledge to 25%. This might require multiple hosts.',
-      messageReceive: 'The humans have evolved a large and intricate society. I must study it some more.',
+      name: T('Learn more about the human society'),
+      note: T('Probe host brains to raise the human society knowledge to 25%. This might require multiple hosts.'),
+      messageReceive: T('The humans have evolved a large and intricate society. I must study it some more.'),
       noteFunc: function (game) {
-        return Const.col('gray', Const.small('Current level: ' +
-          game.player.skills.getLevel(KNOW_SOCIETY) + '%'));
+        return Const.col('gray', Const.small(T('Current level: {level}%', {
+          level: game.player.skills.getLevel(KNOW_SOCIETY),
+        })));
       },
       onComplete: function (game, player) {
         game.player.vars.objectsEnabled = true;
         if (game.scenarioStringID == 'alien')
           {
             game.message({
-              text: 'What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there and learn.',
+              text: T('What am I? What is my purpose? I must know. I remember a place vaguely. I should travel there and learn.'),
               img: 'event/what_am_i'
             });
             player.vars.timelineEnabled = true;
@@ -489,7 +492,7 @@ class Goals
           }
         else if (game.scenarioStringID == 'sandbox')
           game.message({
-            text: 'I have learned enough to leave this place.',
+            text: T('I have learned enough to leave this place.'),
             img: 'event/sandbox'
           });
         game.goals.receive(GOAL_ENTER_SEWERS);
@@ -499,14 +502,14 @@ class Goals
     // finish of the tutorial in sandbox mode
     GOAL_ENTER_SEWERS => {
       id: GOAL_ENTER_SEWERS,
-      name: 'Enter the sewers',
-      note: 'Find a sewers hatch and enter the sewers.',
+      name: T('Enter the sewers'),
+      note: T('Find a sewers hatch and enter the sewers.'),
       onComplete: function (game, player) {
         if (game.scenarioStringID == 'alien')
           game.goals.receive(GOAL_TRAVEL_EVENT);
         else if (game.scenarioStringID == 'sandbox')
           game.message({
-            text: 'I am now free to do as I see fit.',
+            text: T('I am now free to do as I see fit.'),
             img: 'event/sandbox2'
           });
         game.profile.addPediaArticle('regionMode');
@@ -515,9 +518,9 @@ class Goals
 
     GOAL_TRAVEL_EVENT => {
       id: GOAL_TRAVEL_EVENT,
-      name: 'Travel to the location you remember',
-      note: 'Find the location you remember on region map and travel there.',
-      messageComplete: 'I found the location. There should be some clues here.',
+      name: T('Travel to the location you remember'),
+      note: T('Find the location you remember on region map and travel there.'),
+      messageComplete: T('I found the location. There should be some clues here.'),
       onComplete: function (game, player) {
         game.goals.receive(GOAL_LEARN_CLUE);
       }
@@ -525,9 +528,9 @@ class Goals
 
     GOAL_LEARN_CLUE => {
       id: GOAL_LEARN_CLUE,
-      name: 'Find a clue',
-      note: 'Find any clue about the events that happened.',
-      messageComplete: 'The chain of events that led to my current state is long. There were many humans involved.',
+      name: T('Find a clue'),
+      note: T('Find any clue about the events that happened.'),
+      messageComplete: T('The chain of events that led to my current state is long. There were many humans involved.'),
       onComplete: function (game, player) {
         player.vars.npcEnabled = true;
         game.goals.receive(GOAL_LEARN_NPC);
@@ -543,9 +546,9 @@ class Goals
 
     GOAL_LEARN_NPC => {
       id: GOAL_LEARN_NPC,
-      name: 'Learn a clue about any human',
-      note: 'Find a clue about any event participant.',
-      messageComplete: 'I can investigate the involved humans further by using their computational devices.',
+      name: T('Learn a clue about any human'),
+      note: T('Find a clue about any event participant.'),
+      messageComplete: T('I can investigate the involved humans further by using their computational devices.'),
       onComplete: function (game, player) {
         player.vars.searchEnabled = true;
         game.goals.receive(GOAL_USE_COMPUTER);
@@ -554,9 +557,9 @@ class Goals
 
     GOAL_USE_COMPUTER => {
       id: GOAL_USE_COMPUTER,
-      name: 'Use a computer',
-      note: 'Find a laptop or a smartphone and use it successfully. You can only do that in a habitat.',
-      messageComplete: 'I will learn what happened to me.',
+      name: T('Use a computer'),
+      note: T('Find a laptop or a smartphone and use it successfully. You can only do that in a habitat.'),
+      messageComplete: T('I will learn what happened to me.'),
       onComplete: function (game, player) {
         game.goals.receive(GOAL_PROGRESS_TIMELINE);
       }
@@ -564,8 +567,8 @@ class Goals
 
     GOAL_PROGRESS_TIMELINE => {
       id: GOAL_PROGRESS_TIMELINE,
-      name: 'Uncover more events',
-      note: 'Continue your progress through the timeline.',
+      name: T('Uncover more events'),
+      note: T('Continue your progress through the timeline.'),
     },
     ];
 }

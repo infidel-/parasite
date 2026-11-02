@@ -10,9 +10,9 @@ class Katana extends Weapon
     {
       super(game);
       id = 'katana';
-      name = 'katana';
+      name = N('katana');
       type = 'weapon';
-      unknown = 'long curved blade';
+      unknown = N('long curved blade');
       weapon = {
         isRanged: false,
         minDamage: 1,

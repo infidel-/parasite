@@ -80,8 +80,11 @@ class NPC extends _SaveObject
       jobKnown = true;
       areaKnown = true;
       statusKnown = true;
-      game.player.log('You have found out everything about '  + name +
-        ' (' + (isDead ? 'deceased' : 'alive') + ').', COLOR_TIMELINE);
+      if (isDead)
+        game.player.log(T('You have found out everything about {name} (deceased).',
+          { name: name }), COLOR_TIMELINE);
+      else game.player.log(T('You have found out everything about {name} (alive).',
+          { name: name }), COLOR_TIMELINE);
     }
 
 
@@ -91,7 +94,7 @@ class NPC extends _SaveObject
       if (!nameKnown)
         {
           nameKnown = true;
-          game.player.log('You have found out a name: '  + name + '.',
+          game.player.log(T('You have found out a name: {name}.', { name: name }),
             COLOR_TIMELINE);
           return true;
         }
@@ -99,7 +102,7 @@ class NPC extends _SaveObject
       if (!jobKnown)
         {
           jobKnown = true;
-          game.player.log('You have found out the job and photo of '  + name + '.',
+          game.player.log(T('You have found out the job and photo of {name}.', { name: name }),
             COLOR_TIMELINE);
           return true;
         }
@@ -107,7 +110,7 @@ class NPC extends _SaveObject
       if (!areaKnown)
         {
           areaKnown = true;
-          game.player.log('You have found out the location of '  + name + '.',
+          game.player.log(T('You have found out the location of {name}.', { name: name }),
             COLOR_TIMELINE);
           return true;
         }
@@ -115,8 +118,11 @@ class NPC extends _SaveObject
       if (!statusKnown)
         {
           statusKnown = true;
-          game.player.log('You have found out that '  + name + ' is ' +
-            (isDead ? 'dead' : 'alive') + '.', COLOR_TIMELINE);
+          if (isDead)
+            game.player.log(T('You have found out that {name} is dead.',
+              { name: name }), COLOR_TIMELINE);
+          else game.player.log(T('You have found out that {name} is alive.',
+              { name: name }), COLOR_TIMELINE);
           return true;
         }
 

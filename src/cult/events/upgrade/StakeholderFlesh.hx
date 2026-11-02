@@ -14,22 +14,22 @@ class StakeholderFlesh
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Stakeholder Flesh',
-        text: 'Conference room leather bleeds as the newly promoted director kneels before a stakeholder table of living flesh. The surface pulses with buried capillaries. Around the slab, other stakeholders press palms to the membrane, feeling dividends whisper through arterial channels. The outside investors never hear the true returns, but trusted flesh carries the stakeholder flow.',
+        title: T('Stakeholder Flesh'),
+        text: T('Conference room leather bleeds as the newly promoted director kneels before a stakeholder table of living flesh. The surface pulses with buried capillaries. Around the slab, other stakeholders press palms to the membrane, feeling dividends whisper through arterial channels. The outside investors never hear the true returns, but trusted flesh carries the stakeholder flow.'),
         choices: [
           {
-            button: 'Proxy Rally',
-            text: 'Stage a midnight proxy rally, pumping adrenal hymnals through the corporate loudspeakers.',
+            button: T('Proxy Rally'),
+            text: T('Stage a midnight proxy rally, pumping adrenal hymnals through the corporate loudspeakers.'),
             f: choice1
           },
           {
-            button: 'Flesh Run',
-            text: 'Re-route flesh vans under police scanners to restock forward depots before the dawn curfew bites.',
+            button: T('Flesh Run'),
+            text: T('Re-route flesh vans under police scanners to restock forward depots before the dawn curfew bites.'),
             f: choice2
           },
           {
-            button: 'Stake Dark',
-            text: 'Seclude the promoted director with stakeholder handlers to stitch blackout routes and clandestine contact trees.',
+            button: T('Stake Dark'),
+            text: T('Seclude the promoted director with stakeholder handlers to stitch blackout routes and clandestine contact trees.'),
             f: choice3
           }
         ]

@@ -15,7 +15,7 @@ class Ribgate extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Porta Costarum';
+      name = N('Porta Costarum');
     }
 
 // lets allies through and blocks enemies while intact

@@ -9,10 +9,10 @@ class ProstituteCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Neon Sacrament",
-        note: "The unaussprechliche kult fields a shock ring in neon alleys, their madame carrying the deadly caress sacrament. Predatory liturgy stalks in ritual cadence beneath streetlight halos.",
-        success: "The ring shatters. The madam collapses and her escorts flee into neon rain, leaving only lipstick sigils fading on concrete.",
-        fail: "You are swarmed and pinned against wet brick while the madam's kiss rite leaves you reeling. The kult keeps the block.",
+        name: N("Neon Sacrament"),
+        note: N("The unaussprechliche kult fields a shock ring in neon alleys, their madame carrying the deadly caress sacrament. Predatory liturgy stalks in ritual cadence beneath streetlight halos."),
+        success: T("The ring shatters. The madam collapses and her escorts flee into neon rain, leaving only lipstick sigils fading on concrete."),
+        fail: T("You are swarmed and pinned against wet brick while the madam's kiss rite leaves you reeling. The kult keeps the block."),
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,
@@ -21,7 +21,7 @@ class ProstituteCult
             {
               target: {
                 isMale: false,
-                job: "ring madam",
+                job: N("ring madam"),
                 type: "prostitute",
                 icon: "prostitute",
                 location: AREA_CITY_LOW,
@@ -33,7 +33,7 @@ class ProstituteCult
             {
               target: {
                 isMale: false,
-                job: "shock escort",
+                job: N("shock escort"),
                 type: "prostitute",
                 icon: "prostitute",
                 location: AREA_CITY_LOW,
@@ -45,7 +45,7 @@ class ProstituteCult
             {
               target: {
                 isMale: false,
-                job: "ring bruiser",
+                job: N("ring bruiser"),
                 type: "prostitute",
                 icon: "prostitute",
                 location: AREA_CITY_LOW,

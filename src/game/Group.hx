@@ -91,7 +91,7 @@ class Group extends _SaveObject
           team == null ||
           team.distance > TEAM_VERY_CLOSE)
         return false;
-      buf.add('<div class=hud-team>TEAM IS VERY CLOSE!</div>');
+      buf.add('<div class=hud-team>' + T('TEAM IS VERY CLOSE!') + '</div>');
       return true;
     }
 
@@ -104,30 +104,32 @@ class Group extends _SaveObject
         return;
 
       // group info
-      buf.add(Const.col('group-title', 'Group info [' + difficulty + ']'));
+      buf.add(Const.col('group-title', T('Group info [{difficulty}]', { difficulty: ui.Difficulty.label(difficulty) })));
       if (difficulty == HARD)
         {
-          buf.add('<br/>  --- hidden ---');
+          buf.add('<br/>  ' + T('--- hidden ---'));
           return;
         }
       function row(k: String, v: String)
         buf.add('<tr><td>' + Const.col('group-note', k) + '</td><td>' + v + '</td></tr>');
       buf.add('<table class="tip-table">');
-      row('Group priority', (difficulty == EASY ? '' + Const.round(priority) :
+      row(T('Group priority'), (difficulty == EASY ? '' + Const.round(priority) :
         numToWord(Std.int(priority), 0, 100)));
       if (team == null &&
           isNeutralized)
-        row('Team', Const.col('white', 'file closed'));
+        row(T('Team'), Const.col('white', T('file closed')));
       else if (team == null)
-        row('Team timeout', (difficulty == EASY ? teamTimeout + 't' :
+        row(T('Team timeout'), (difficulty == EASY ?
+          // tr: t = turns
+          T('{n}t', { n: teamTimeout }) :
           numToWord(teamTimeout, 0, 100)));
       else
         {
-          row('Team level', (difficulty == EASY ? team.level + '' :
+          row(T('Team level'), (difficulty == EASY ? team.level + '' :
             numToWord(team.level, 1, 4)));
-          row('Team size', (difficulty == EASY ? team.size + '' :
+          row(T('Team size'), (difficulty == EASY ? team.size + '' :
             numToWord(team.size, 1, team.maxSize)));
-          row('Team distance', (difficulty == EASY ? Std.int(team.distance) + '' :
+          row(T('Team distance'), (difficulty == EASY ? Std.int(team.distance) + '' :
             numToWordDistance(team.distance)));
         }
       buf.add('</table>');
@@ -138,14 +140,14 @@ class Group extends _SaveObject
     {
       var percent = 100.0 * (val - min) / (max - min);
       if (percent < 20)
-        return Const.col('white', 'very low');
+        return Const.col('white', T('very low'));
       else if (percent < 40)
-        return Const.col('white', 'low');
+        return Const.col('white', T('low'));
       else if (percent < 60)
-        return Const.col('yellow', 'medium');
+        return Const.col('yellow', T('medium'));
       else if (percent < 80)
-        return Const.col('red', 'high');
-      else return Const.col('red', 'very high');
+        return Const.col('red', T('high'));
+      else return Const.col('red', T('very high'));
     }
 
 // team distance band over its 0-150 range: 0 very close .. 4 very far
@@ -159,11 +161,11 @@ class Group extends _SaveObject
   function numToWordDistance(val: Float): String
     {
       return [
-        Const.col('red', 'very close'),
-        Const.col('red', 'close'),
-        Const.col('yellow', 'medium'),
-        Const.col('white', 'far'),
-        Const.col('white', 'very far'),
+        Const.col('red', T('very close')),
+        Const.col('red', T('close')),
+        Const.col('yellow', T('medium')),
+        Const.col('white', T('far')),
+        Const.col('white', T('very far')),
       ][distanceBand(val)];
     }
 
@@ -317,7 +319,7 @@ class Group extends _SaveObject
     {
       team = null;
       game.message({
-        text: "I've slipped away from their last attempt. The Group has stopped hunting me.",
+        text: T("I've slipped away from their last attempt. The Group has stopped hunting me."),
         img: 'pedia/team_deactivation'
       });
     }
@@ -360,7 +362,7 @@ class Group extends _SaveObject
       game.goals.complete(GOAL_GROUP_DIRECTOR);
       neutralize();
       game.message({
-        text: 'The controller will remember closing my file themselves. The Group has stopped hunting me.',
+        text: T('The controller will remember closing my file themselves. The Group has stopped hunting me.'),
         img: 'pedia/team_deactivation'
       });
     }
@@ -380,7 +382,7 @@ class Group extends _SaveObject
           team.timer = 3;
         }
       game.message({
-        text: 'The controller is dead. Their people will throw everything they have left at me before the file closes.',
+        text: T('The controller is dead. Their people will throw everything they have left at me before the file closes.'),
         img: 'pedia/team_basics',
         col: 'alert'
       });
@@ -400,7 +402,7 @@ class Group extends _SaveObject
       game.goals.reset(GOAL_GROUP_INTEL);
       game.goals.reset(GOAL_GROUP_DIRECTOR);
       game.message({
-        text: 'They have reopened my file. The Group is hunting me again.',
+        text: T('They have reopened my file. The Group is hunting me again.'),
         img: 'pedia/group',
         col: 'alert'
       });
@@ -435,8 +437,10 @@ class Group extends _SaveObject
         return;
       intel += amount;
       game.goals.receive(GOAL_GROUP_INTEL);
-      game.log('I piece together more about the Group (intel: ' +
-        intel + '/' + intelNeeded() + ').');
+      game.log(T('I piece together more about the Group (intel: {intel}/{needed}).', {
+        intel: intel,
+        needed: intelNeeded(),
+      }));
       if (intel >= intelNeeded())
         game.goals.complete(GOAL_GROUP_INTEL);
     }
@@ -464,7 +468,7 @@ class Group extends _SaveObject
 
       // player becomes aware of the group existence
       game.message({
-        text: 'There is a group of humans that wants to destroy me.',
+        text: T('There is a group of humans that wants to destroy me.'),
         img: 'pedia/group'
       });
       // receive watcher goal if habitat was created already
@@ -484,7 +488,7 @@ class Group extends _SaveObject
       if (articleAdded)
         {
           game.scene.sounds.play('pedia-new');
-          game.log(Const.small('New pedia articles about the Group available.'), COLOR_PEDIA);
+          game.log(Const.small(T('New pedia articles about the Group available.')), COLOR_PEDIA);
         }
 
       isKnown = true;

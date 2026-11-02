@@ -20,7 +20,7 @@ class Withdrawal extends Effect
   public override function init()
     {
       super.init();
-      name = 'withdrawal';
+      name = N('withdrawal');
     }
 
 // lowers host energy each turn

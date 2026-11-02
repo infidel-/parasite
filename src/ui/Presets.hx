@@ -12,12 +12,12 @@ class Presets extends UIWindow
 {
   // level columns (ascending difficulty); NOOB (value 0) is save-category only
   static var LVL = [ 'noob', 'easy', 'norm', 'hard' ];
-  static var LVLNAME = [ 'NOOB', 'EASY', 'NORMAL', 'HARD' ];
+  static var LVLNAME = [ T('NOOB'), T('EASY'), T('NORMAL'), T('HARD') ];
   static var LVLVAL = [ 0, 1, 2, 3 ];
   // verdict thresholds on the 0..2 average severity
   static var VERDICTS: Array<{ t: Float, n: String }> = [
-    { t: 0.4, n: 'MERCIFUL' }, { t: 0.9, n: 'LENIENT' }, { t: 1.4, n: 'BALANCED' },
-    { t: 1.85, n: 'RUTHLESS' }, { t: 99, n: 'LETHAL' },
+    { t: 0.4, n: T('MERCIFUL') }, { t: 0.9, n: T('LENIENT') }, { t: 1.4, n: T('BALANCED') },
+    { t: 1.85, n: T('RUTHLESS') }, { t: 99, n: T('LETHAL') },
   ];
 
   var grid: DivElement;
@@ -39,8 +39,8 @@ class Presets extends UIWindow
 
       var titlebar = Browser.document.createDivElement();
       titlebar.className = 'presets-titlebar';
-      titlebar.innerHTML = '<span class="presets-title">CUSTOM DIFFICULTY</span>' +
-        '<span class="presets-sub">presets</span>';
+      titlebar.innerHTML = '<span class="presets-title">' + T('CUSTOM DIFFICULTY') + '</span>' +
+        '<span class="presets-sub">' + T('presets') + '</span>';
       window.appendChild(titlebar);
 
       // preset bar: select + name + new/save/delete
@@ -57,22 +57,22 @@ class Presets extends UIWindow
       nameInput = Browser.document.createInputElement();
       nameInput.type = 'text';
       nameInput.className = 'presets-name';
-      nameInput.placeholder = 'Preset name...';
+      nameInput.placeholder = T('Preset name...');
       bar.appendChild(nameInput);
-      addBtn(bar, 'presets-new', 'New preset',
+      addBtn(bar, 'presets-new', T('New preset'),
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
         newPreset);
-      addBtn(bar, 'presets-save', 'Save preset',
+      addBtn(bar, 'presets-save', T('Save preset'),
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4"/><rect x="8" y="13" width="8" height="6"/></svg>',
         savePreset);
-      addBtn(bar, 'presets-del', 'Delete preset',
+      addBtn(bar, 'presets-del', T('Delete preset'),
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>',
         deletePreset);
 
       // severity meter
       var sev = Browser.document.createDivElement();
       sev.className = 'presets-sev';
-      sev.innerHTML = '<div class="presets-sev-hd"><span class="presets-sev-lbl">SEVERITY</span>' +
+      sev.innerHTML = '<div class="presets-sev-hd"><span class="presets-sev-lbl">' + T('SEVERITY') + '</span>' +
         '<span class="presets-sev-verdict">&mdash;</span></div>' +
         '<div class="presets-sev-track"><div class="presets-sev-marker"></div></div>';
       window.appendChild(sev);
@@ -89,7 +89,7 @@ class Presets extends UIWindow
       var note = Browser.document.createDivElement();
       note.className = 'presets-note';
       note.innerHTML = '<span class="presets-note-pre">&gt;</span>' +
-        '<span class="presets-note-txt">Hover a level to read what it changes.</span>';
+        '<span class="presets-note-txt">' + T('Hover a level to read what it changes.') + '</span>';
       window.appendChild(note);
       noteTxt = cast note.querySelector('.presets-note-txt');
 
@@ -122,8 +122,8 @@ class Presets extends UIWindow
       var head = Browser.document.createDivElement();
       head.className = 'presets-head';
       head.innerHTML = '<span></span><div class="presets-head-cols">' +
-        '<span class="lv-noob">NOOB</span><span class="lv-easy">EASY</span>' +
-        '<span class="lv-norm">NORMAL</span><span class="lv-hard">HARD</span></div>';
+        '<span class="lv-noob">' + LVLNAME[0] + '</span><span class="lv-easy">' + LVLNAME[1] + '</span>' +
+        '<span class="lv-norm">' + LVLNAME[2] + '</span><span class="lv-hard">' + LVLNAME[3] + '</span></div>';
       grid.appendChild(head);
 
       for (key in Difficulty.choices.keys())
@@ -248,7 +248,7 @@ class Presets extends UIWindow
       sevMarker.style.left = (avg / 2 * 100) + '%';
       sevMarker.style.background = col;
       sevMarker.style.boxShadow = '0 0 12px 2px ' + col;
-      var label = 'LETHAL';
+      var label = T('LETHAL');
       for (vd in VERDICTS)
         if (avg < vd.t)
           {
@@ -265,7 +265,7 @@ class Presets extends UIWindow
       Browser.window.clearInterval(noteTimer);
       var has = (txt != null);
       noteTxt.classList.toggle('has', has);
-      var full = (has ? txt : 'Hover a level to read what it changes.');
+      var full = (has ? txt : T('Hover a level to read what it changes.'));
       noteTxt.textContent = '';
       var i = 0;
       noteTimer = Browser.window.setInterval(function() {
@@ -298,7 +298,7 @@ class Presets extends UIWindow
   function newPreset(e)
     {
       var presets = game.profile.object.difficultyPresets;
-      var p = { name: 'PRESET ' + (presets.length + 1), settings: new haxe.DynamicAccess<Int>() };
+      var p = { name: T('PRESET {n}', { n: presets.length + 1 }), settings: new haxe.DynamicAccess<Int>() };
       for (key in Difficulty.choices.keys())
         p.settings.set(key, 1);
       presets.push(p);

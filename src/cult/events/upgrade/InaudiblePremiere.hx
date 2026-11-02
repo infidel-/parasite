@@ -14,22 +14,22 @@ class InaudiblePremiere
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Inaudible Premiere',
-        text: 'Decommissioned amphitheater lies dark as the newly promoted anchor sits in a ring of whispering projectors. Warm mist coats their suit while techs layer pre-recorded testimonies into encrypted playlists. Above ground, rush-hour chatter unwittingly ferries the inaudible instructions.',
+        title: T('Inaudible Premiere'),
+        text: T('Decommissioned amphitheater lies dark as the newly promoted anchor sits in a ring of whispering projectors. Warm mist coats their suit while techs layer pre-recorded testimonies into encrypted playlists. Above ground, rush-hour chatter unwittingly ferries the inaudible instructions.'),
         choices: [
           {
-            button: 'Silent Cut',
-            text: 'Release the premiere as timed bursts in private feeds keyed to sleeper phrases.',
+            button: T('Silent Cut'),
+            text: T('Release the premiere as timed bursts in private feeds keyed to sleeper phrases.'),
             f: choice1
           },
           {
-            button: 'Echo Vault',
-            text: 'Store the testimonies in a sealed cache that pulses morale to loyal cells.',
+            button: T('Echo Vault'),
+            text: T('Store the testimonies in a sealed cache that pulses morale to loyal cells.'),
             f: choice2
           },
           {
-            button: 'Script Brand',
-            text: 'Brand the anchor\'s psyche with mnemonic cuts for future underground sermons.',
+            button: T('Script Brand'),
+            text: T('Brand the anchor\'s psyche with mnemonic cuts for future underground sermons.'),
             f: choice3
           }
         ]

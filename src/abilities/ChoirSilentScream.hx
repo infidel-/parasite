@@ -19,7 +19,7 @@ class ChoirSilentScream extends Ability
     {
       super.init();
       id = ABILITY_CHOIR_SILENT_SCREAM;
-      name = 'silent scream';
+      name = N('silent scream');
     }
 
 // handle silent scream pulse before regular attacks

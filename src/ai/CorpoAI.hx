@@ -20,8 +20,8 @@ class CorpoAI extends HumanAI
     {
       super.init();
       type = 'corpo';
-      name.unknown = 'office worker';
-      name.unknownCapped = 'Office worker';
+      name.unknown = N('office worker');
+      name.unknownCapped = N('Office worker');
       soundsID = 'civilian';
       var jobData = game.jobs.getRandom(type);
       job = jobData.name;

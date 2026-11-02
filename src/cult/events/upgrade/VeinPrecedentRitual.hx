@@ -12,22 +12,22 @@ class VeinPrecedentRitual
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Vein Precedent Ritual',
-        text: 'Hidden tribunal chamber throbs as the newly elevated magistrate stands before a bench carved from a single pulsing artery. Court reporters murmur testimony through veils while precedent scrolls unfurl in blood-warmed cascade. Ligature chandeliers sway overhead, casting moving shadows across the living docket that no public gallery could ever witness.',
+        title: T('Vein Precedent Ritual'),
+        text: T('Hidden tribunal chamber throbs as the newly elevated magistrate stands before a bench carved from a single pulsing artery. Court reporters murmur testimony through veils while precedent scrolls unfurl in blood-warmed cascade. Ligature chandeliers sway overhead, casting moving shadows across the living docket that no public gallery could ever witness.'),
         choices: [
           {
-            button: 'Blood Docket',
-            text: 'Siphon sealed verdicts through vein networks and feed the war chest.',
+            button: T('Blood Docket'),
+            text: T('Siphon sealed verdicts through vein networks and feed the war chest.'),
             f: choice1
           },
           {
-            button: 'Pulse Bind',
-            text: 'Weave the chamber rhythm with flowing verdicts to prime hidden rulings.',
+            button: T('Pulse Bind'),
+            text: T('Weave the chamber rhythm with flowing verdicts to prime hidden rulings.'),
             f: choice2
           },
           {
-            button: 'Artery Mark',
-            text: 'Inscribe the magistrate with precedent arteries carrying secret authority.',
+            button: T('Artery Mark'),
+            text: T('Inscribe the magistrate with precedent arteries carrying secret authority.'),
             f: choice3
           }
         ]

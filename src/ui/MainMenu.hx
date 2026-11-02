@@ -86,7 +86,7 @@ class MainMenu extends UIWindow
       title.id = 'window-mainmenu-title';
       var verText = 'v' + Version.getVersion()
 #if demo
-        + ' DEMO'
+        + ' ' + T('DEMO')
 #end
       ;
       title.innerHTML = '<span class="mainmenu-name" data-text="PARASITE">PARASITE</span>' +
@@ -106,27 +106,27 @@ class MainMenu extends UIWindow
       cursor.className = 'mainmenu-cursor';
       contents.appendChild(cursor);
 
-      addItem('NEW GAME', function(e) {
+      addItem(T('NEW GAME'), function(e) {
         game.ui.state = UISTATE_NEWGAME;
       });
-      loadItem = addItem('LOAD GAME', loadGame);
-      saveItem = addItem('SAVE GAME', saveGame);
-      addItem('PEDIA', function(e) {
+      loadItem = addItem(T('LOAD GAME'), loadGame);
+      saveItem = addItem(T('SAVE GAME'), saveGame);
+      addItem(T('PEDIA'), function(e) {
         game.ui.state = UISTATE_PEDIA;
       });
-      addItem('OPTIONS', function(e) {
+      addItem(T('OPTIONS'), function(e) {
         game.ui.state = UISTATE_OPTIONS;
       });
 #if electron
-      addItem('MODS', function(e) {
+      addItem(T('MODS'), function(e) {
         game.ui.state = UISTATE_MODS;
       });
 #end
-      addItem('ABOUT', function(e) {
+      addItem(T('ABOUT'), function(e) {
         game.ui.state = UISTATE_ABOUT;
       });
 #if electron
-      addItem('QUIT', function(e) {
+      addItem(T('QUIT'), function(e) {
         confirmQuit();
       });
 #end
@@ -201,8 +201,8 @@ class MainMenu extends UIWindow
   function confirmQuit()
     {
       var p: _YesNoParams = {
-        text: 'Quit to desktop?',
-        sub: 'This will end your current session.',
+        text: T('Quit to desktop?'),
+        sub: T('This will end your current session.'),
         danger: true,
         back: _UIState.UISTATE_MAINMENU,
         func: function(yes: Bool) {
@@ -478,14 +478,14 @@ override function update()
         var alert = false;
         if (game.player.inMissionArea())
           {
-            html = 'mission area';
+            html = T('mission area');
             alert = true;
           }
         var note = Browser.document.createSpanElement();
         // themed css tooltip (native title is swallowed by the menu-item hover)
         note.className = (alert ? 'mainmenu-sub alert evolution-tip' : 'mainmenu-sub evolution-tip');
         note.innerHTML = html;
-        note.setAttribute('data-tip', noob ? 'Unlimited saves' : game.player.vars.savesLeft + ' saves left');
+        note.setAttribute('data-tip', noob ? T('Unlimited saves') : T('{n, plural, one{# save left} other{# saves left}}', { n: game.player.vars.savesLeft }));
         saveItem.appendChild(note);
       }
 
@@ -528,8 +528,8 @@ override function update()
   function promptAutosave()
     {
       var p: _YesNoParams = {
-        text: 'Autosave exists. Load?',
-        sub: 'Resume from where you last left off.',
+        text: T('Autosave exists. Load?'),
+        sub: T('Resume from where you last left off.'),
         back: _UIState.UISTATE_MAINMENU,
         func: function(yes: Bool) {
           if (!yes)

@@ -5,6 +5,7 @@
 // see the constructor, that id belongs to ui.RegionTooltip
 package ui;
 
+import l10n.Loc;
 import ai.AI;
 import ai.DefaultLogic;
 import game.Game;
@@ -63,7 +64,7 @@ class AreaTooltip extends BeamTooltip
       if (ai.isCultist)
         buf.add('<div class="area-tip-sub">' + game.getCultByID(ai.cultID).Name() + '</div>');
       if (!ai.isIt() && ai.isJobKnown)
-        buf.add('<div class="area-tip-row"><span class="area-tip-rk">job</span>' + ai.job + '</div>');
+        buf.add('<div class="area-tip-row"><span class="area-tip-rk">' + T('job') + '</span>' + Loc.tr(ai.job) + '</div>');
 
       // attribute pills
       if (ai.isAttrsKnown)
@@ -81,7 +82,7 @@ class AreaTooltip extends BeamTooltip
           });
           buf.add('<div class="area-tip-effects">');
           for (effect in effects)
-            buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
+            buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + Loc.tr(effect.name) +
               (effect.isTimer ? '<span class="body-eff-t">' +
                 UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
               '</div>');
@@ -109,33 +110,34 @@ class AreaTooltip extends BeamTooltip
         buf.add('<tr><td>' + k + '</td><td>' + v + '</td></tr>');
       function signed(n: Int): String
         return (n >= 0 ? '+' : '') + n;
-      buf.add('<div class="area-tip-row"><span class="area-tip-rk">notice</span>');
+      buf.add('<div class="area-tip-row"><span class="area-tip-rk">' + T('notice') + '</span>');
 
       // not noticing at all
       if (ai.isAgreeable())
         {
-          buf.add(Const.smallgray('ignores you') + '</div>');
+          buf.add(Const.smallgray(T('ignores you')) + '</div>');
           return;
         }
       var v = DefaultLogic.playerVisibility(ai);
       if (!v.sees)
         {
           buf.add(Const.smallgray(game.player.invisibleToAI() ?
-            'you are hidden' : 'does not see you') + '</div>');
+            T('you are hidden') : T('does not see you')) + '</div>');
           return;
         }
 
       // name -> number table: multiplier x distance factor, flat bonuses, total per turn
       buf.add('</div><table class="tip-table area-tip-vision small">');
-      row('base', '' + v.base);
-      row('dist ' + v.distance, '&times;' + v.distMul);
+      row(T('base'), '' + v.base);
+      // tr: distance to the player in cells
+      row(T('dist {n}', { n: v.distance }), '&times;' + v.distMul);
       if (v.military)
-        row('outsider', '&times;' + DefaultLogic.MILITARY_SUSPICION);
+        row(T('outsider'), '&times;' + DefaultLogic.MILITARY_SUSPICION);
       if (v.cover != 0)
-        row('cover', signed(v.cover));
+        row(T('cover'), signed(v.cover));
       if (v.weapon != 0)
-        row('large weapon', signed(v.weapon));
-      row('per turn', signed(v.total));
+        row(T('large weapon'), signed(v.weapon));
+      row(T('per turn'), signed(v.total));
       buf.add('</table>');
     }
 
@@ -146,7 +148,7 @@ class AreaTooltip extends BeamTooltip
     {
       var buf = new StringBuf();
       buf.add('<div class="area-tip-head"><span class="area-tip-name">' +
-        Const.capitalize(o.getName()) + '</span></div>');
+        Const.capitalize(Loc.tr(o.getName())) + '</span></div>');
 
       // whatever the object wants to say about itself, but only once the player knows what it is
       if (o.known())
@@ -163,10 +165,11 @@ class AreaTooltip extends BeamTooltip
   function attrPills(str: Int, con: Int, int: Int, psy: Int): String
     {
       return '<div class="area-tip-attrs">' +
-        '<span class="area-tip-attr">STR<b>' + str + '</b></span>' +
-        '<span class="area-tip-attr">CON<b>' + con + '</b></span>' +
-        '<span class="area-tip-attr">INT<b>' + int + '</b></span>' +
-        '<span class="area-tip-attr">PSY<b>' + psy + '</b></span></div>';
+        // tr: three-letter abbreviations of strength, constitution, intellect, psyche
+        '<span class="area-tip-attr">' + T('STR') + '<b>' + str + '</b></span>' +
+        '<span class="area-tip-attr">' + T('CON') + '<b>' + con + '</b></span>' +
+        '<span class="area-tip-attr">' + T('INT') + '<b>' + int + '</b></span>' +
+        '<span class="area-tip-attr">' + T('PSY') + '<b>' + psy + '</b></span></div>';
     }
 
 // append the debug detail block

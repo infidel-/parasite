@@ -19,7 +19,7 @@ class Locker extends GunCabinet
     {
       super.init();
       type = 'locker';
-      name = 'locker';
+      name = N('locker');
     }
 
 // a locker's kit

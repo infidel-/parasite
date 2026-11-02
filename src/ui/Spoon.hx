@@ -28,8 +28,8 @@ class Spoon extends UIWindow
         'onerror="this.closest(\'.spoon-hero\').classList.add(\'noimg\')">' +
         '<div class="spoon-scan" aria-hidden="true"></div>' +
         '<figcaption class="spoon-cap">' +
-        '<span class="spoon-cap-k">anomaly &middot; do not bend</span>' +
-        '<span class="spoon-cap-q">THERE IS NO SPOON</span></figcaption>';
+        '<span class="spoon-cap-k">' + T('anomaly &middot; do not bend') + '</span>' +
+        '<span class="spoon-cap-q">' + T('THERE IS NO SPOON') + '</span></figcaption>';
       body.appendChild(hero);
 
       // panel: random title + toggle deck + forum note
@@ -38,12 +38,12 @@ class Spoon extends UIWindow
       body.appendChild(panel);
 
       var titles = [
-        'THERE IS NO SPOON',
-        'THERE IS NO SPOON?',
-        'THE SPOON IS THERE',
-        'CERTAINLY SPOON',
-        'NO SPOON AT ALL',
-        'WHY SO SPOON?',
+        T('THERE IS NO SPOON'),
+        T('THERE IS NO SPOON?'),
+        T('THE SPOON IS THERE'),
+        T('CERTAINLY SPOON'),
+        T('NO SPOON AT ALL'),
+        T('WHY SO SPOON?'),
       ];
       var title = Browser.document.createDivElement();
       title.className = 'spoon-title';
@@ -53,18 +53,18 @@ class Spoon extends UIWindow
       var deck = Browser.document.createDivElement();
       deck.className = 'spoon-deck';
       panel.appendChild(deck);
-      addToggle(deck, 'All basic improvements available',
+      addToggle(deck, T('All basic improvements available'),
         'spoonEvolutionBasic', game.config.spoonEvolutionBasic);
-      addToggle(deck, 'No energy loss on habitat destruction',
+      addToggle(deck, T('No energy loss on habitat destruction'),
         'spoonHabitats', game.config.spoonHabitats);
-      addToggle(deck, 'No ambushes in habitats',
+      addToggle(deck, T('No ambushes in habitats'),
         'spoonHabitatAmbush', game.config.spoonHabitatAmbush);
-      addToggle(deck, 'No saves limit',
+      addToggle(deck, T('No saves limit'),
         'spoonNoSavesLimit', game.config.spoonNoSavesLimit);
 
       var note = Browser.document.createDivElement();
       note.className = 'spoon-note';
-      note.innerHTML = "Not a lot here yet. Want anything added? Write on the forums and I'll see if I can make it happen.";
+      note.innerHTML = T("Not a lot here yet. Want anything added? Write on the forums and I'll see if I can make it happen.");
       panel.appendChild(note);
 
       addWinClose(function (e) {
@@ -101,7 +101,7 @@ class Spoon extends UIWindow
       if (game.config.isSpoonMode())
         {
           if (!game.player.vars.isSpoonGame)
-            game.log('Oh no. You have absolutely spooned the game.', COLOR_ALERT);
+            game.log(T('Oh no. You have absolutely spooned the game.'), COLOR_ALERT);
           game.player.vars.isSpoonGame = true;
         }
       if (game.config.spoonEvolutionBasic)

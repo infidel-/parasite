@@ -12,22 +12,22 @@ class HushLedgerConvocation
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Hush Ledger Convocation',
-        text: 'Night-shuttered policy cellar glows low as the newly ranked strategist stands amid racks of blood-warmed statutes. Analysts whisper precedent through gauze masks while flesh-bound ledgers inhale hush payments. Outside traffic drones past, unaware the verdict already beats beneath the floor.',
+        title: T('Hush Ledger Convocation'),
+        text: T('Night-shuttered policy cellar glows low as the newly ranked strategist stands amid racks of blood-warmed statutes. Analysts whisper precedent through gauze masks while flesh-bound ledgers inhale hush payments. Outside traffic drones past, unaware the verdict already beats beneath the floor.'),
         choices: [
           {
-            button: 'Proxy Net',
-            text: 'Route sealed settlements through layered shell firms and skim reserves.',
+            button: T('Proxy Net'),
+            text: T('Route sealed settlements through layered shell firms and skim reserves.'),
             f: choice1
           },
           {
-            button: 'Memo Choir',
-            text: 'Sync the memo choir with encrypted dashboards to amplify unseen leverage.',
+            button: T('Memo Choir'),
+            text: T('Sync the memo choir with encrypted dashboards to amplify unseen leverage.'),
             f: choice2
           },
           {
-            button: 'Vow Ledger',
-            text: 'Tattoo the strategist with ledger sigils carrying clandestine doctrines.',
+            button: T('Vow Ledger'),
+            text: T('Tattoo the strategist with ledger sigils carrying clandestine doctrines.'),
             f: choice3
           }
         ]

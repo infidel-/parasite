@@ -41,10 +41,10 @@ class ProfaneConst {
       if (cc != null)
         return cc.getInfo(index);
       return {
-        name: "Unknown Ordeal",
-        note: "This ordeal type is not properly configured.",
-        success: "The ordeal completed successfully.",
-        fail: "The ordeal failed.",
+        name: N("Unknown Ordeal"),
+        note: N("This ordeal type is not properly configured."),
+        success: T("The ordeal completed successfully."),
+        fail: T("The ordeal failed."),
         mission: MISSION_PERSUADE
       };
     }

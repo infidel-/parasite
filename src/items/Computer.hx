@@ -26,8 +26,8 @@ class Computer extends ItemInfo
         actions.push({
           id: 'absorbMap.' + item.id,
           type: ACTION_INVENTORY,
-          name: 'Absorb regional map',
-          nameClean: 'Absorb map',
+          name: T('Absorb regional map'),
+          nameClean: T('Absorb map'),
           energy: 15,
           item: item
         });
@@ -36,7 +36,7 @@ class Computer extends ItemInfo
           id: 'search.' + item.id,
           type: ACTION_INVENTORY,
           name: 'Use ' + Const.col('inventory-item', itemName) + ' to search',
-          nameClean: 'Search',
+          nameClean: T('Search'),
           energy: 10,
           item: item
         });
@@ -57,7 +57,7 @@ class Computer extends ItemInfo
 // performs absorb map action
   function absorbMapAction(item: _Item): Bool
     {
-      game.log('You absorb the regional map into the engram.');
+      game.log(T('You absorb the regional map into the engram.'));
       game.player.vars.mapAbsorbed = true;
       return true;
     }
@@ -68,15 +68,15 @@ class Computer extends ItemInfo
       var skillLevel = game.player.skills.getLevel(SKILL_COMPUTER);
       if (skillLevel == 0)
         {
-          itemFailed('You require the computer use skill to do that.');
+          itemFailed(T('You require the computer use skill to do that.'));
           return false;
         }
 
       if (!game.area.isHabitat)
         {
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
-            itemFailed("This action requires intense concentration and time. You can only do it in a habitat.");
-          else itemFailed("This action requires intense concentration and time. You cannot do it yet.");
+            itemFailed(T("This action requires intense concentration and time. You can only do it in a habitat."));
+          else itemFailed(T("This action requires intense concentration and time. You cannot do it yet."));
           game.profile.addPediaArticle('msgConcentration');
           return false;
         }
@@ -96,7 +96,7 @@ class Computer extends ItemInfo
 
       if (allKnown)
         {
-          itemFailed('You have already researched all known persons.');
+          itemFailed(T('You have already researched all known persons.'));
           return false;
         }
 
@@ -110,7 +110,7 @@ class Computer extends ItemInfo
         });
       if (!rollSuccess)
         {
-          itemFailed('You have failed to use the human device properly. You still gain some insight.');
+          itemFailed(T('You have failed to use the human device properly. You still gain some insight.'));
           game.player.skills.increase(SKILL_COMPUTER, 1);
           return true;
         }

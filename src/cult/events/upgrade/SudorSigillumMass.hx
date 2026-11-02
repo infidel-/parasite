@@ -16,22 +16,22 @@ class SudorSigillumMass
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Sudor Sigillum Mass',
-        text: 'Abandoned maintenance chapel hums as the newly promoted commando stands within a sealed Sudor Sigillum circle, heat lamps sweating runes across hidden flesh. Cloaked medics scrape condensate into reliquaries while tactical scribes pipe encrypted telemetry underground. No outsider hears the whispered vows.',
+        title: T('Sudor Sigillum Mass'),
+        text: T('Abandoned maintenance chapel hums as the newly promoted commando stands within a sealed Sudor Sigillum circle, heat lamps sweating runes across hidden flesh. Cloaked medics scrape condensate into reliquaries while tactical scribes pipe encrypted telemetry underground. No outsider hears the whispered vows.'),
         choices: [
           {
-            button: 'Altar Pump',
-            text: 'Divert undercity blood drives into the squad\'s combat stockpile.',
+            button: T('Altar Pump'),
+            text: T('Divert undercity blood drives into the squad\'s combat stockpile.'),
             f: choice1
           },
           {
-            button: 'LiturgyFX',
-            text: 'Weave the rite\'s bassline into shielded dampeners and riot shields.',
+            button: T('LiturgyFX'),
+            text: T('Weave the rite\'s bassline into shielded dampeners and riot shields.'),
             f: choice2
           },
           {
-            button: 'Blade Seal',
-            text: 'Graft a sanctified knife litany into the warrior\'s palm tissue.',
+            button: T('Blade Seal'),
+            text: T('Graft a sanctified knife litany into the warrior\'s palm tissue.'),
             f: choice3
           }
         ]

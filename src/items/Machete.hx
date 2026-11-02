@@ -10,8 +10,8 @@ class Machete extends Weapon
     {
       super(game);
       id = 'machete';
-      name = 'machete';
-      unknown = 'broad blade';
+      name = N('machete');
+      unknown = N('broad blade');
       weapon = {
         isRanged: false,
         skill: SKILL_MACHETE,

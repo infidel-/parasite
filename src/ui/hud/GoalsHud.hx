@@ -30,13 +30,13 @@ class GoalsHud
       // header bits are persistent: rebuild() clears the panel, these go back in
       eyebrow = document.createDivElement();
       eyebrow.className = 'hud-eyebrow';
-      eyebrow.textContent = 'Goals';
+      eyebrow.textContent = T('Goals');
       goals.appendChild(eyebrow);
 
       // compact-mode toggle: hides the goal notes, leaving the titles
       compactBtn = document.createDivElement();
       compactBtn.className = 'hud-compact-btn evolution-tip';
-      compactBtn.setAttribute('data-tip', 'Compact goals');
+      compactBtn.setAttribute('data-tip', T('Compact goals'));
       compactBtn.innerHTML = UISvg.hudCompact();
       compactBtn.onclick = function (e)
         {
@@ -94,7 +94,7 @@ class GoalsHud
       goals.classList.toggle('hud-collapsed', collapsed);
       compactBtn.classList.toggle('active', game.config.compactGoals);
       collapseBtn.textContent = (collapsed ? '+' : '−');
-      collapseBtn.setAttribute('data-tip', collapsed ? 'Expand goals' : 'Collapse goals');
+      collapseBtn.setAttribute('data-tip', collapsed ? T('Expand goals') : T('Collapse goals'));
       collapseBtn.classList.toggle('active', collapsed);
       if (!anim)
         return;
@@ -122,7 +122,7 @@ class GoalsHud
       buf.add(UISvg.hudDiamond(primary));
       buf.add('<div><div class="hud-ot">' + gi.name);
       if (gi.isOptional)
-        buf.add(' <span class="hud-opt">optional</span>');
+        buf.add(' <span class="hud-opt">' + T('optional') + '</span>');
       buf.add('</div><div class="hud-od">' + gi.note);
       if (gi.noteFunc != null)
         buf.add('<br/>' + gi.noteFunc(game));

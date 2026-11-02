@@ -120,8 +120,8 @@ class TraitsConst
       map.set('misc', [
         {
           id: TRAIT_DRUG_ADDICT,
-          name: 'drug addict',
-          note: 'Addicted to drugs.',
+          name: T('drug addict'),
+          note: T('Addicted to drugs.'),
           isNegative: true,
           turn: function(game: Game, ai: AIData)
             {
@@ -135,8 +135,8 @@ class TraitsConst
         },
         {
           id: TRAIT_ALCOHOLIC,
-          name: 'alcoholic',
-          note: 'Years of booze take their toll. Control impossible to maintain fully.',
+          name: T('alcoholic'),
+          note: T('Years of booze take their toll. Control impossible to maintain fully.'),
           isNegative: true,
           turn: function(game: Game, ai: AIData)
             {
@@ -147,8 +147,8 @@ class TraitsConst
         },
         {
           id: TRAIT_ASSIMILATED,
-          name: 'assimilated',
-          note: 'Has been assimilated.',
+          name: T('assimilated'),
+          note: T('Has been assimilated.'),
           isNegative: false
         }
       ]);
@@ -157,8 +157,8 @@ class TraitsConst
       map.set('skill', [
         {
           id: TRAIT_BRUISER,
-          name: 'bruiser',
-          note: 'Excels at fists combat.',
+          name: T('bruiser'),
+          note: T('Excels at fists combat.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -167,8 +167,8 @@ class TraitsConst
         },
         {
           id: TRAIT_KNIFE_EXPERT,
-          name: 'knife expert',
-          note: 'Practiced in knife combat.',
+          name: T('knife expert'),
+          note: T('Practiced in knife combat.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -177,8 +177,8 @@ class TraitsConst
         },
         {
           id: TRAIT_BATON_EXPERT,
-          name: 'baton expert',
-          note: 'Seasoned baton fighter.',
+          name: T('baton expert'),
+          note: T('Seasoned baton fighter.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -187,8 +187,8 @@ class TraitsConst
         },
         {
           id: TRAIT_BATTER,
-          name: 'batter',
-          note: 'Experienced with club weapons.',
+          name: T('batter'),
+          note: T('Experienced with club weapons.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -197,8 +197,8 @@ class TraitsConst
         },
         {
           id: TRAIT_GUERRERO,
-          name: 'guerrero',
-          note: 'Practiced with machetes.',
+          name: T('guerrero'),
+          note: T('Practiced with machetes.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -207,8 +207,8 @@ class TraitsConst
         },
         {
           id: TRAIT_KENDOKA,
-          name: 'kendoka',
-          note: 'Trained with katanas.',
+          name: T('kendoka'),
+          note: T('Trained with katanas.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -217,8 +217,8 @@ class TraitsConst
         },
         {
           id: TRAIT_PISTOL_MARKSMAN,
-          name: 'pistol marksman',
-          note: 'Sharpshooter with pistols.',
+          name: T('pistol marksman'),
+          note: T('Sharpshooter with pistols.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -227,8 +227,8 @@ class TraitsConst
         },
         {
           id: TRAIT_RIFLE_MARKSMAN,
-          name: 'rifle marksman',
-          note: 'Accurate with rifles.',
+          name: T('rifle marksman'),
+          note: T('Accurate with rifles.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -237,8 +237,8 @@ class TraitsConst
         },
         {
           id: TRAIT_BREACHER,
-          name: 'breacher',
-          note: 'Skilled with shotguns.',
+          name: T('breacher'),
+          note: T('Skilled with shotguns.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -247,8 +247,8 @@ class TraitsConst
         },
         {
           id: TRAIT_HACKER,
-          name: 'hacker',
-          note: 'Talented with computers.',
+          name: T('hacker'),
+          note: T('Talented with computers.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -257,8 +257,8 @@ class TraitsConst
         },
         {
           id: TRAIT_COUNSELOR,
-          name: 'counselor',
-          note: 'Understands psychology.',
+          name: T('counselor'),
+          note: T('Understands psychology.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -267,8 +267,8 @@ class TraitsConst
         },
         {
           id: TRAIT_NEGOTIATOR,
-          name: 'negotiator',
-          note: 'Expert at coercion.',
+          name: T('negotiator'),
+          note: T('Expert at coercion.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -277,8 +277,8 @@ class TraitsConst
         },
         {
           id: TRAIT_CONSULTANT,
-          name: 'consultant',
-          note: 'Gifted at coaxing.',
+          name: T('consultant'),
+          note: T('Gifted at coaxing.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -287,8 +287,8 @@ class TraitsConst
         },
         {
           id: TRAIT_HABITUAL_LIAR,
-          name: 'habitual liar',
-          note: 'Adept at deception.',
+          name: T('habitual liar'),
+          note: T('Adept at deception.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -301,8 +301,8 @@ class TraitsConst
       map.set('mind', [
         {
           id: TRAIT_DUMB,
-          name: 'dumb',
-          note: 'Slow to process new ideas.',
+          name: T('dumb'),
+          note: T('Slow to process new ideas.'),
           isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
@@ -311,14 +311,14 @@ class TraitsConst
         },
         {
           id: TRAIT_ILLITERATE,
-          name: 'illiterate',
-          note: 'Unable to read.',
+          name: T('illiterate'),
+          note: T('Unable to read.'),
           isNegative: true
         },
         {
           id: TRAIT_GENIUS,
-          name: 'genius',
-          note: 'Exceptionally sharp intellect.',
+          name: T('genius'),
+          note: T('Exceptionally sharp intellect.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -327,8 +327,8 @@ class TraitsConst
         },
         {
           id: TRAIT_WEAK_WILLED,
-          name: 'weak-willed',
-          note: 'Struggles with resolve.',
+          name: T('weak-willed'),
+          note: T('Struggles with resolve.'),
           isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
@@ -337,8 +337,8 @@ class TraitsConst
         },
         {
           id: TRAIT_STRONG_WILLED,
-          name: 'strong-willed',
-          note: 'Mentally resilient.',
+          name: T('strong-willed'),
+          note: T('Mentally resilient.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -351,8 +351,8 @@ class TraitsConst
       map.set('body', [
         {
           id: TRAIT_ANOREXIC,
-          name: 'anorexic',
-          note: 'Extremely underweight and frail.',
+          name: T('anorexic'),
+          note: T('Extremely underweight and frail.'),
           isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
@@ -362,8 +362,8 @@ class TraitsConst
         },
         {
           id: TRAIT_WEAK,
-          name: 'weak',
-          note: 'Noticeably lacking muscle.',
+          name: T('weak'),
+          note: T('Noticeably lacking muscle.'),
           isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
@@ -373,8 +373,8 @@ class TraitsConst
         },
         {
           id: TRAIT_OBESE,
-          name: 'obese',
-          note: 'Carries significant extra weight.',
+          name: T('obese'),
+          note: T('Carries significant extra weight.'),
           isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
@@ -384,8 +384,8 @@ class TraitsConst
         },
         {
           id: TRAIT_HEAVILY_OBESE,
-          name: 'heavily obese',
-          note: 'Massively overweight frame.',
+          name: T('heavily obese'),
+          note: T('Massively overweight frame.'),
           isNegative: true,
           onInit: function(game: Game, ai: AIData)
             {
@@ -395,8 +395,8 @@ class TraitsConst
         },
         {
           id: TRAIT_MUSCULAR,
-          name: 'muscular',
-          note: 'Well-developed physique.',
+          name: T('muscular'),
+          note: T('Well-developed physique.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -406,8 +406,8 @@ class TraitsConst
         },
         {
           id: TRAIT_HERCULEAN,
-          name: 'herculean',
-          note: 'Peak physical power.',
+          name: T('herculean'),
+          note: T('Peak physical power.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -421,8 +421,8 @@ class TraitsConst
       map.set('cultBasic', [
         {
           id: TRAIT_DEVOUT_BRUTE,
-          name: 'devout brute',
-          note: 'Zealous strength overtakes thoughtful study.',
+          name: T('devout brute'),
+          note: T('Zealous strength overtakes thoughtful study.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -432,8 +432,8 @@ class TraitsConst
         },
         {
           id: TRAIT_PENITENT_BASTION,
-          name: 'penitent bastion',
-          note: 'Endures rites through sheer fortitude, fraying the mind.',
+          name: T('penitent bastion'),
+          note: T('Endures rites through sheer fortitude, fraying the mind.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -443,8 +443,8 @@ class TraitsConst
         },
         {
           id: TRAIT_VEILED_SCHOLAR,
-          name: 'veiled scholar',
-          note: 'Contemplates doctrine instead of honing muscle.',
+          name: T('veiled scholar'),
+          note: T('Contemplates doctrine instead of honing muscle.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -454,8 +454,8 @@ class TraitsConst
         },
         {
           id: TRAIT_HUSHED_SEER,
-          name: 'hushed seer',
-          note: 'Withdrawn frame shelters an awakened psyche.',
+          name: T('hushed seer'),
+          note: T('Withdrawn frame shelters an awakened psyche.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -465,8 +465,8 @@ class TraitsConst
         },
         {
           id: TRAIT_TITHE_HUSTLER,
-          name: 'tithe hustler',
-          note: 'Extracts steady tithes at the cost of fraying nerves.',
+          name: T('tithe hustler'),
+          note: T('Extracts steady tithes at the cost of fraying nerves.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -484,8 +484,8 @@ class TraitsConst
         },
         {
           id: TRAIT_VORACIOUS_ACCOUNTS,
-          name: 'voracious accounts',
-          note: 'Turns offerings into profit, burning through resolve.',
+          name: T('voracious accounts'),
+          note: T('Turns offerings into profit, burning through resolve.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -503,8 +503,8 @@ class TraitsConst
         },
         {
           id: TRAIT_RITUAL_ENFORCER,
-          name: 'ritual enforcer',
-          note: 'Coerces compliance, neglecting combat drills.',
+          name: T('ritual enforcer'),
+          note: T('Coerces compliance, neglecting combat drills.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -523,8 +523,8 @@ class TraitsConst
         },
         {
           id: TRAIT_INFIRM_WHISPERER,
-          name: 'infirm whisperer',
-          note: 'Specializes in coaxing doubters, letting weapons rust.',
+          name: T('infirm whisperer'),
+          note: T('Specializes in coaxing doubters, letting weapons rust.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -543,8 +543,8 @@ class TraitsConst
         },
         {
           id: TRAIT_MASKED_LIAR,
-          name: 'masked liar',
-          note: 'Glides through lies while martial practice withers.',
+          name: T('masked liar'),
+          note: T('Glides through lies while martial practice withers.'),
           isNegative: false,
           onInit: function(game: Game, ai: AIData)
             {
@@ -563,8 +563,8 @@ class TraitsConst
         },
         {
           id: TRAIT_VIGOROUS_FLAGELLANT,
-          name: 'vigorous flagellant',
-          note: 'Refreshes flesh through painful fervor, draining vitality.',
+          name: T('vigorous flagellant'),
+          note: T('Refreshes flesh through painful fervor, draining vitality.'),
           isNegative: false,
           turn: function(game: Game, ai: AIData)
             {

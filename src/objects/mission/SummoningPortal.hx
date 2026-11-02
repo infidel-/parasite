@@ -40,7 +40,7 @@ class SummoningPortal extends AreaObject
       portalPartIndex = 0;
       portalPartObjectIDs = [];
       type = 'summoning_portal';
-      name = 'summoning portal';
+      name = N('summoning portal');
       imageName = Sewers.OBJECTS_IMAGE;
       updatePortalIcon();
       isStatic = true;

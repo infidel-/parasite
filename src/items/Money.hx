@@ -14,9 +14,9 @@ class Money extends ItemInfo
     {
       super(game);
       id = 'money';
-      name = 'wad of money';
+      name = N('wad of money');
       type = 'junk';
-      unknown = 'pack of thin objects';
+      unknown = N('pack of thin objects');
     }
 
 // adds throw money action when item is known
@@ -27,7 +27,7 @@ class Money extends ItemInfo
           id: 'use.' + item.id,
           type: ACTION_INVENTORY,
           item: item,
-          name: 'Throw money',
+          name: T('Throw money'),
           energy: 5,
           isAgreeable: true,
         });
@@ -52,7 +52,7 @@ class Money extends ItemInfo
         game.playerArea.x, game.playerArea.y,
         range, false);
 
-      game.log('Your host throws money around.');
+      game.log(T('Your host throws money around.'));
       game.scene.sounds.play('item-money');
       game.player.host.inventory.removeItem(item);
 

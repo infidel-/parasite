@@ -25,7 +25,7 @@ class Readable extends ItemInfo
         id: 'read.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Read ' + Const.col('inventory-item', itemName),
-        nameClean: 'Read',
+        nameClean: T('Read'),
         energy: 10,
         isAgreeable: true,
         item: item
@@ -49,7 +49,7 @@ class Readable extends ItemInfo
       // check if player host is illiterate
       if (game.player.host.hasTrait(TRAIT_ILLITERATE))
         {
-          itemFailed("This host cannot read.");
+          itemFailed(T("This host cannot read."));
           return false;
         }
 
@@ -57,15 +57,15 @@ class Readable extends ItemInfo
       // it would complete the first clue goal ahead of the goal that unlocks the timeline
       if (!game.player.vars.timelineEnabled)
         {
-          itemFailed("You cannot make sense of this yet.");
+          itemFailed(T("You cannot make sense of this yet."));
           return false;
         }
 
       if (item.id == 'book' && !game.area.isHabitat)
         {
           if (game.player.evolutionManager.getLevel(IMP_MICROHABITAT) > 0)
-            itemFailed("This action requires intense concentration and time. You can only do it in a habitat.");
-          else itemFailed("This action requires intense concentration and time. You cannot do it yet.");
+            itemFailed(T("This action requires intense concentration and time. You can only do it in a habitat."));
+          else itemFailed(T("This action requires intense concentration and time. You cannot do it yet."));
           game.profile.addPediaArticle('msgConcentration');
           return false;
         }
@@ -82,7 +82,7 @@ class Readable extends ItemInfo
         cnt += (game.timeline.learnSingleClue(event, true) ? 1 : 0);
 
       if (cnt == 0)
-        game.player.log('You have not been able to gain any clues.',
+        game.player.log(T('You have not been able to gain any clues.'),
           COLOR_TIMELINE);
       game.scene.sounds.play('item-' + item.id);
 

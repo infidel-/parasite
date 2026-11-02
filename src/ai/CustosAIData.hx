@@ -30,10 +30,10 @@ class CustosAIData extends AIData
       isRelentless = true;
       soundsID = 'dog';
       name = {
-        real: 'custos',
-        realCapped: 'Custos',
-        unknown: 'custos',
-        unknownCapped: 'Custos'
+        real: N('custos'),
+        realCapped: N('Custos'),
+        unknown: N('custos'),
+        unknownCapped: N('Custos')
       };
       areaID = -1;
       x = 0;

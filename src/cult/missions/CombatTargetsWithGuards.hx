@@ -16,8 +16,8 @@ class CombatTargetsWithGuards extends Combat
   public override function init()
     {
       super.init();
-      name = 'Eliminate Targets';
-      note = 'Multiple targets guard a single location.';
+      name = N('Eliminate Targets');
+      note = N('Multiple targets guard a single location.');
     }
 
 // template-specific initialization

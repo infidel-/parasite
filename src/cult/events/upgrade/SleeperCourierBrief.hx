@@ -14,22 +14,22 @@ class SleeperCourierBrief
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Sleeper Courier Brief',
-        text: 'Forgotten telecom exchange throbs as the upgraded voice posts watch within a ring of skin-bound terminals. Frosted glass hides the glow while analysts queue muted briefings into private inboxes. No bulletin leaks; only card-carrying congregants feel the vibration in their pockets.',
+        title: T('Sleeper Courier Brief'),
+        text: T('Forgotten telecom exchange throbs as the upgraded voice posts watch within a ring of skin-bound terminals. Frosted glass hides the glow while analysts queue muted briefings into private inboxes. No bulletin leaks; only card-carrying congregants feel the vibration in their pockets.'),
         choices: [
           {
-            button: 'Pulse Lists',
-            text: 'Cleanse subscriber rolls and prime vetted couriers for synchronized alerts.',
+            button: T('Pulse Lists'),
+            text: T('Cleanse subscriber rolls and prime vetted couriers for synchronized alerts.'),
             f: choice1
           },
           {
-            button: 'Inbox Hex',
-            text: 'Embed disposable malware into enemy tip lines to choke their monitoring grids.',
+            button: T('Inbox Hex'),
+            text: T('Embed disposable malware into enemy tip lines to choke their monitoring grids.'),
             f: choice2
           },
           {
-            button: 'Courier Vow',
-            text: 'Bind the promoted voice to encrypted pledgewords reserved for sleeper hubs.',
+            button: T('Courier Vow'),
+            text: T('Bind the promoted voice to encrypted pledgewords reserved for sleeper hubs.'),
             f: choice3
           }
         ]

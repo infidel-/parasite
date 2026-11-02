@@ -10,7 +10,7 @@ class Laptop extends Computer
     {
       super(game);
       id = 'laptop';
-      name = 'laptop';
-      unknown = 'plastic rectangular object';
+      name = N('laptop');
+      unknown = N('plastic rectangular object');
     }
 }

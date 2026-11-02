@@ -132,7 +132,7 @@ class UI
       var l = date + ' v' + Version.getVersion() + ' ' + msg + ', ' +
         stack + ', line ' + line + ', col ' + col + '\n';
       trace(l);
-      game.log('An exception has occured and was logged. Please send the log-YYYY-MM-DD.txt file to me (starinfidel@gmail.com).', COLOR_ALERT);
+      game.log(T('An exception has occurred and was logged. Please send the log-YYYY-MM-DD.txt file to me ({email}).', { email: 'starinfidel@gmail.com' }), COLOR_ALERT);
       try {
         HostBridge.logAppend(l);
       }
@@ -502,8 +502,8 @@ class UI
             type: UIEVENT_STATE,
             state: UISTATE_YESNO,
             obj: {
-              text: 'Exit the game?',
-              sub: 'This will end your current session.',
+              text: T('Exit the game?'),
+              sub: T('This will end your current session.'),
               danger: true,
               func: function(yes: Bool) {
 #if electron
@@ -645,13 +645,13 @@ class UI
       switch (hud.state)
         {
           case HUD_CHAT, HUD_CONVERSE_MENU:
-            game.actionFailed('You cannot move during a conversation.');
+            game.actionFailed(T('You cannot move during a conversation.'));
           case HUD_TARGETING:
             // no message
           case HUD_COMMAND_MENU:
-            game.actionFailed('You cannot move while commanding followers.');
+            game.actionFailed(T('You cannot move while commanding followers.'));
           case HUD_PICKUP_MENU:
-            game.actionFailed('You cannot move while picking up items.');
+            game.actionFailed(T('You cannot move while picking up items.'));
           default:
         }
       return true;

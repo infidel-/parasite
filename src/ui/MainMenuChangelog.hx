@@ -32,7 +32,7 @@ class MainMenuChangelog
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">' +
         '<line x1="9" y1="7" x2="20" y2="7"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="17" x2="16" y2="17"/>' +
         '<circle cx="4.5" cy="7" r="1.2"/><circle cx="4.5" cy="12" r="1.2"/><circle cx="4.5" cy="17" r="1.2"/></svg>' +
-        '<span>CHANGELOG</span>';
+        '<span>' + T('CHANGELOG') + '</span>';
       // glowing dot until this version's changelog is opened
       button.classList.toggle('new', game.profile.object.changelogSeen != Version.getVersion());
       button.onclick = function(e) {
@@ -45,7 +45,7 @@ class MainMenuChangelog
       panel = Browser.document.createDivElement();
       panel.className = 'mm-cl';
       panel.innerHTML = UISvg.corners() +
-        '<div class="mm-cl-head"><span class="mm-cl-title">CHANGELOG</span></div>' +
+        '<div class="mm-cl-head"><span class="mm-cl-title">' + T('CHANGELOG') + '</span></div>' +
         '<div class="mm-cl-body">' + render(Version.getChangelog()) + '</div>';
       bg.appendChild(panel);
 
@@ -55,7 +55,7 @@ class MainMenuChangelog
       x.innerHTML =
         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">' +
         '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>' +
-        '<span class="esc">ESC</span>';
+        '<span class="esc">' + T('ESC') + '</span>';
       x.onclick = function(e) {
         game.scene.sounds.play('click-menu');
         close();
@@ -84,7 +84,7 @@ class MainMenuChangelog
               var ver = StringTools.trim(line.substr(3));
               out.add('<div class="mm-cl-vh"><span class="mm-cl-vnum">v' +
                 StringTools.htmlEscape(ver) + '</span>' +
-                (ver == current ? '<span class="mm-cl-cur">current</span>' : '') + '</div>');
+                (ver == current ? '<span class="mm-cl-cur">' + T('current') + '</span>' : '') + '</div>');
               section = null;
             }
           // section heading, held back until its first entry

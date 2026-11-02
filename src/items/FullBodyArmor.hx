@@ -11,9 +11,9 @@ class FullBodyArmor extends ItemInfo
     {
       super(game);
       id = 'fullBodyArmor';
-      name = 'full-body armor';
+      name = N('full-body armor');
       type = 'clothing';
-      unknown = 'bulky plated garment';
+      unknown = N('bulky plated garment');
       armor = {
         canAttach: false,
         damage: 8,

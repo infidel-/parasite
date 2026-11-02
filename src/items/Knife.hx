@@ -10,8 +10,8 @@ class Knife extends Weapon
     {
       super(game);
       id = 'knife';
-      name = 'knife';
-      unknown = 'small blade';
+      name = N('knife');
+      unknown = N('small blade');
       weapon = {
         isRanged: false,
         skill: SKILL_KNIFE,

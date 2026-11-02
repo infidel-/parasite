@@ -13,10 +13,12 @@ class BuryTheFile extends Ordeal
   public static function priceHint(): String
     {
       return Const.smallgray(' (') +
-        Const.col('cult-power', 20) + ' political, ' +
-        Const.col('cult-power', 20) + ' lawfare, ' +
-        Const.col('cult-power', 10) + ' media, ' +
-        Const.col('cult-power', '500k') + Icon.money +
+        T('{political} political, {lawfare} lawfare, {media} media, {money}', {
+          political: Const.col('cult-power', 20),
+          lawfare: Const.col('cult-power', 20),
+          media: Const.col('cult-power', 10),
+          money: Const.col('cult-power', '500k') + Icon.money,
+        }) +
         Const.smallgray(')');
     }
 
@@ -46,12 +48,12 @@ class BuryTheFile extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Bury the File';
+      name = N('Bury the File');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 3;
       requiredMemberLevels = 2;
       actions = requiredMembers;
-      note = 'Inter the dread dossier beneath seals and statutes, and let the Group forget.';
+      note = N('Inter the dread dossier beneath seals and statutes, and let the Group forget.');
     }
 
 // called after load or creation
@@ -86,7 +88,7 @@ class BuryTheFile extends Ordeal
       if (game.group.team == null)
         return false;
       game.message({
-        text: 'The Group moved first. A new team has already taken up my file.',
+        text: T('The Group moved first. A new team has already taken up my file.'),
         img: 'pedia/team_basics',
         col: 'alert'
       });
@@ -99,7 +101,7 @@ class BuryTheFile extends Ordeal
     {
       game.group.neutralize();
       game.message({
-        text: 'The file lies buried. The Group has forgotten me, for now.',
+        text: T('The file lies buried. The Group has forgotten me, for now.'),
         img: 'pedia/group',
         col: 'cult'
       });
@@ -119,7 +121,7 @@ class BuryTheFile extends Ordeal
       actions.push({
         id: 'buryTheFile',
         type: ACTION_CULT,
-        name: 'Bury the File' + priceHint(),
+        name: T('Bury the File') + priceHint(),
         energy: 0,
         obj: {}
       });

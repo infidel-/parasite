@@ -2,24 +2,24 @@ package const;
 
 class PediaConst
 {
-  public static inline var hostAttrNoteStrength =
-    '<li>Increases maximum health and energy</li>' +
-    '<li>Increases melee damage</li>' +
-    '<li>Decreases grip efficiency</li>' +
-    '<li>Decreases paralysis efficiency</li>' +
-    '<li>Increases speed of freeing from mucus</li>' +
-    '<li>Limits the amount of inventory items</li>';
-  public static inline var hostAttrNoteConstitution =
-    '<li>Increases maximum health and energy</li>' +
-    '<li>Limits the amount of body features</li>';
-  public static inline var hostAttrNoteIntellect =
-    '<li>Increases skills and society knowledge learning efficiency</li>' +
-    '<li>Boosts skill training when consulting agreeable hosts</li>';
-  public static inline var hostAttrNotePsyche =
-    '<li>Measures host mental will</li>' +
-    '<li>Increases energy needed to probe brain</li>' +
-    '<li>Reduces the efficiency of reinforcing control</li>' +
-    '<li>Makes conversations and gaining consent harder</li>';
+  public static var hostAttrNoteStrength =
+    T('<li>Increases maximum health and energy</li>') +
+    T('<li>Increases melee damage</li>') +
+    T('<li>Decreases grip efficiency</li>') +
+    T('<li>Decreases paralysis efficiency</li>') +
+    T('<li>Increases speed of freeing from mucus</li>') +
+    T('<li>Limits the amount of inventory items</li>');
+  public static var hostAttrNoteConstitution =
+    T('<li>Increases maximum health and energy</li>') +
+    T('<li>Limits the amount of body features</li>');
+  public static var hostAttrNoteIntellect =
+    T('<li>Increases skills and society knowledge learning efficiency</li>') +
+    T('<li>Boosts skill training when consulting agreeable hosts</li>');
+  public static var hostAttrNotePsyche =
+    T('<li>Measures host mental will</li>') +
+    T('<li>Increases energy needed to probe brain</li>') +
+    T('<li>Reduces the efficiency of reinforcing control</li>') +
+    T('<li>Makes conversations and gaining consent harder</li>');
 
   public static var initialArticles = [
     'hudActions',
@@ -45,35 +45,35 @@ class PediaConst
   public static var builtinContents: Array<_PediaGroupInfo> = [
     {
       id: 'basics',
-      name: 'BASICS',
+      name: T('BASICS'),
       articles: [
         {
           id: 'hostAffinity',
-          name: 'Host: Affinity',
+          name: T('Host: Affinity'),
           img: 'event/goal_tutorial_affinity_complete',
-          text: "Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green icon of two interlocking rings after it in the HUD in case of the maximum affinity. On normal and hard conversation difficulty, leaving a host with full affinity will result in parasite losing some maximum energy (1 or 2). That reduction is small enough. However, if such host dies while the parasite is on it, for any reason, the loss will be much higher (5). Therefore if you intend to lose the host, leave it before it dies. On easy conversation difficulty there is no loss at all. Note also, that hosts that have both full affinity and consent do not get alerted when they see the parasite. In fact, you can quickly hop onto such a host again after leaving them.",
+          text: T("Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green icon of two interlocking rings after it in the HUD in case of the maximum affinity. On normal and hard conversation difficulty, leaving a host with full affinity will result in parasite losing some maximum energy (1 or 2). That reduction is small enough. However, if such host dies while the parasite is on it, for any reason, the loss will be much higher (5). Therefore if you intend to lose the host, leave it before it dies. On easy conversation difficulty there is no loss at all. Note also, that hosts that have both full affinity and consent do not get alerted when they see the parasite. In fact, you can quickly hop onto such a host again after leaving them."),
         },
         {
           id: 'hostAssimilation',
-          name: 'Host: Assimilation',
+          name: T('Host: Assimilation'),
           img: 'imp/imp_assimilation',
-          text: "Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots.",
+          text: T("Once you evolve the knowledge of microhabitats and create one, you can set up the assimilation cavity habitat growth inside. It allows you to assimilate the hosts making them way more adapted to the parasite's needs. In gameplay terms, assimilated hosts will not lose energy passively on movement, only when you do actions. You will have more control over them after you invade them. Plus they will restore the energy while being in a habitat if there is free biomineral energy available. Finally, they gain additional body feature and inventory slots."),
         },
         {
           id: 'hostAttributes',
-          name: 'Host: Attributes',
+          name: T('Host: Attributes'),
           img: 'pedia/attributes',
-          text: "<p>Each host has four base attributes: strength, constitution, intellect and psyche. You can only find out the attributes for the host if you evolve the maximum level of brain probe and use it.</p>" +
-            "<p><b>Strength</b></p><ul>" + hostAttrNoteStrength + "</ul>" +
-            "<p><b>Constitution</b></p><ul>" + hostAttrNoteConstitution + "</ul>" +
-            "<p><b>Intellect</b></p><ul>" + hostAttrNoteIntellect + "</ul>" +
-            "<p><b>Psyche</b></p><ul>" + hostAttrNotePsyche + "</ul>",
+          text: T("<p>Each host has four base attributes: strength, constitution, intellect and psyche. You can only find out the attributes for the host if you evolve the maximum level of brain probe and use it.</p>") +
+            "<p><b>" + T("Strength") + "</b></p><ul>" + hostAttrNoteStrength + "</ul>" +
+            "<p><b>" + T("Constitution") + "</b></p><ul>" + hostAttrNoteConstitution + "</ul>" +
+            "<p><b>" + T("Intellect") + "</b></p><ul>" + hostAttrNoteIntellect + "</ul>" +
+            "<p><b>" + T("Psyche") + "</b></p><ul>" + hostAttrNotePsyche + "</ul>",
         },
         {
           id: 'hostConversation',
-          name: 'Host: Conversation',
+          name: T('Host: Conversation'),
           img: 'difficulty/chat',
-          text: "<p>Having high affinity with the host opens up the conversation action. The main purpose of the conversation is to gain host consent. Maximum consent is marked with a green &#127282; icon in the HUD near the host name and makes significant changes to the gameplay. Firstly, the agreeable host uses way less energy to do some actions (and movement in region mode). Secondly, passive energy loss in area mode is reduced to zero, which essentially means that movement becomes free. Thirdly, the host control grows by itself every turn for agreeable hosts. Fourthly, an agreeable host restores energy in a habitat with free biomineral energy, just like an assimilated one. Lastly, and most importantly, the host consent gives the parasite an ability to converse with humans using the mouth of the host. The second purpose of the consent is to open up secondary actions. Those include questioning for gathering clues, requesting items, consulting for learning skills, area alert de-escalation for police officers and subversion for the group members to raise the team distance (if you're bold enough to talk to them). Note that group members always have knowledge about some timeline event. Moreover, police officers will always have clues about the event if this area is an event location.</p>
+          text: T("<p>Having high affinity with the host opens up the conversation action. The main purpose of the conversation is to gain host consent. Maximum consent is marked with a green &#127282; icon in the HUD near the host name and makes significant changes to the gameplay. Firstly, the agreeable host uses way less energy to do some actions (and movement in region mode). Secondly, passive energy loss in area mode is reduced to zero, which essentially means that movement becomes free. Thirdly, the host control grows by itself every turn for agreeable hosts. Fourthly, an agreeable host restores energy in a habitat with free biomineral energy, just like an assimilated one. Lastly, and most importantly, the host consent gives the parasite an ability to converse with humans using the mouth of the host. The second purpose of the consent is to open up secondary actions. Those include questioning for gathering clues, requesting items, consulting for learning skills, area alert de-escalation for police officers and subversion for the group members to raise the team distance (if you're bold enough to talk to them). Note that group members always have knowledge about some timeline event. Moreover, police officers will always have clues about the event if this area is an event location.</p>
 
 <p>The conversation uses four skills: psychology, and three skills from the manipulation group: coaxing, coercion and deception. Each of the manipulative actions requires a successful roll to be used properly. Psychology is used to roll for Analyze action. This action will report a textual description of the interlocutor state giving hints on how to progress. Each NPC has a basic need and a character aspect. The need changes which actions are treated as positive or negative for gaining consent. The aspect makes further changes into the basic conversation routine.</p>
 
@@ -81,24 +81,24 @@ class PediaConst
 
 <p>Some of the actions (especially the coercive ones) risk making the interlocutor emotional. In this case, some manipulative actions can be used to calm them down. If that does not happen, the emotion will become stronger and eventually result in a negative conversation outcome. Emotions behavior almost always depends on character aspects.</p>
 
-<p>You cannot move or save during the conversation and it will be interrupted if something happens nearby putting it on a timeout. Reaching maximum fatigue will do the same thing. Note that during the conversation the AI is alerted using the same rules as before. However, positive and negative manipulative actions will respectively lower or raise the alertness of the interlocutor allowing them not to become alerted in case of successful conversation. The most important bit of knowledge is saved for last: during the conversation the parasite energy is always used instead of the host energy. That means that you can die during the conversation in the worst-case scenario. Have fun!</p>",
+<p>You cannot move or save during the conversation and it will be interrupted if something happens nearby putting it on a timeout. Reaching maximum fatigue will do the same thing. Note that during the conversation the AI is alerted using the same rules as before. However, positive and negative manipulative actions will respectively lower or raise the alertness of the interlocutor allowing them not to become alerted in case of successful conversation. The most important bit of knowledge is saved for last: during the conversation the parasite energy is always used instead of the host energy. That means that you can die during the conversation in the worst-case scenario. Have fun!</p>"),
         },
         {
           id: 'hostExpiry',
-          name: 'Host: Expiry',
+          name: T('Host: Expiry'),
           img: 'event/goal_tutorial_body_sewers_complete',
-          text: "Once your host loses all their energy or health, they die. Death of a host is an important part of gameplay and you should plan for it accordingly. The best way to get rid of a dying host lies in the sewers. Their body will not be found and it won't raise any problems. On the other hand, leaving the body lying around in any area will inevitably lead to it being discovered which in turn raises the alert level of the location (which is visible in the region mode map). A body with extra features will also bring the attention of the Group.",
+          text: T("Once your host loses all their energy or health, they die. Death of a host is an important part of gameplay and you should plan for it accordingly. The best way to get rid of a dying host lies in the sewers. Their body will not be found and it won't raise any problems. On the other hand, leaving the body lying around in any area will inevitably lead to it being discovered which in turn raises the alert level of the location (which is visible in the region mode map). A body with extra features will also bring the attention of the Group."),
         },
         {
           id: 'hostInvading',
-          name: 'Host: Invading',
+          name: T('Host: Invading'),
           img: 'event/goal_invade_human_complete',
-          text: "Once you attach the parasite to the potential host, you will need to subdue them struggling before invading. This is done through the repeated use of \"Harden Grip\" action that takes time and parasite energy. Normally you need to have the grip at full 100 before invading but if your energy is low enough, another action opens up that is called \"Early Invasion\". This makes the parasite to take a risky attempt with the host not fully subdued. In the case of failure the parasite will take damage. Actually, the parasite will take damage even in the case of success but less so.",
+          text: T("Once you attach the parasite to the potential host, you will need to subdue them struggling before invading. This is done through the repeated use of \"Harden Grip\" action that takes time and parasite energy. Normally you need to have the grip at full 100 before invading but if your energy is low enough, another action opens up that is called \"Early Invasion\". This makes the parasite to take a risky attempt with the host not fully subdued. In the case of failure the parasite will take damage. Actually, the parasite will take damage even in the case of success but less so."),
         },
         {
           id: 'keyboardShortcuts',
-          name: 'Keyboard shortcuts',
-          text: "Space - toggle tactical mode<br>
+          name: T('Keyboard shortcuts'),
+          text: T("Space - toggle tactical mode<br>
 ESC/Enter - close any window, including message dialog<br>
 NumPad - movement<br>
 NumPad5, Z - wait a turn<br>
@@ -120,374 +120,374 @@ Enter / NumPad5 / LMB on target - confirm selected target<br>
 ESC - clear target<br>
 <br>
 <b>Inspection:</b><br>
-Hover over an NPC or an object - show a tooltip with what you know about it<br>",
+Hover over an NPC or an object - show a tooltip with what you know about it<br>"),
         },
         {
           id: 'lifeParasite',
-          name: 'Life of a Parasite',
+          name: T('Life of a Parasite'),
           img: 'pedia/parasite',
-          text: "You are a parasite of unknown origins. You can only survive for a little while without a host. Every action, every movement you make requires you to spend your energy which is in a short supply. Once it goes down to zero, it's game over. You need to find and gain control of a host you can use as a sort of a battery. The actions will then spend the host energy instead and the energy of the parasite will go up passively until it reaches maximum.",
+          text: T("You are a parasite of unknown origins. You can only survive for a little while without a host. Every action, every movement you make requires you to spend your energy which is in a short supply. Once it goes down to zero, it's game over. You need to find and gain control of a host you can use as a sort of a battery. The actions will then spend the host energy instead and the energy of the parasite will go up passively until it reaches maximum."),
         },
         {
           id: 'movement',
-          name: 'Movement',
-          text: "You can use the numpad or mouse for movement. Moving the mouse cursor around the screen you can see the path that you will take. The number at the end of the path shows how much energy the move will cost your parasite or host, and turns red if it would drain them completely. Clicking the LMB on the screen will start the movement if it is possible. Note that you cannot click and move to the black tiles on the screen because what is actually on them is not known to you. Since movement requires energy, be careful or you might end up dead.",
+          name: T('Movement'),
+          text: T("You can use the numpad or mouse for movement. Moving the mouse cursor around the screen you can see the path that you will take. The number at the end of the path shows how much energy the move will cost your parasite or host, and turns red if it would drain them completely. Clicking the LMB on the screen will start the movement if it is possible. Note that you cannot click and move to the black tiles on the screen because what is actually on them is not known to you. Since movement requires energy, be careful or you might end up dead."),
         },
         {
           id: 'npcAlertness',
-          name: 'NPCs: Alertness',
+          name: T('NPCs: Alertness'),
           img: 'event/goal_tutorial_alert_complete',
-          text: "<p>No humans or animals react particularly well when they see the parasite. A ? icon appears on top of them that can be either white, yellow or become a red !. This signifies the alertness status of an NPC. They have a limited vision and hearing and will react when their alertness rises. Once it reaches maximum (the red !), the NPC becomes fully aware that they're witnessing something weird and reacts accordingly by running away, calling the police or attacking you.</p>
+          text: T("<p>No humans or animals react particularly well when they see the parasite. A ? icon appears on top of them that can be either white, yellow or become a red !. This signifies the alertness status of an NPC. They have a limited vision and hearing and will react when their alertness rises. Once it reaches maximum (the red !), the NPC becomes fully aware that they're witnessing something weird and reacts accordingly by running away, calling the police or attacking you.</p>
 
-<p>While a calm NPC keeps you in sight, its alertness rises every turn. The closer you are, the faster it grows, and from more than ten tiles away the distance alone no longer raises it. A camouflage layer on the host slows the growth down, while the armor plates of a protective cover and a large weapon carried in plain sight speed it up. Soldiers on a military base are more suspicious of anyone out of uniform. With the extended gameplay information turned on in the options, hovering over an NPC shows this breakdown under NOTICE, ending with the alertness it gains per turn.</p>",
+<p>While a calm NPC keeps you in sight, its alertness rises every turn. The closer you are, the faster it grows, and from more than ten tiles away the distance alone no longer raises it. A camouflage layer on the host slows the growth down, while the armor plates of a protective cover and a large weapon carried in plain sight speed it up. Soldiers on a military base are more suspicious of anyone out of uniform. With the extended gameplay information turned on in the options, hovering over an NPC shows this breakdown under NOTICE, ending with the alertness it gains per turn.</p>"),
         },
         {
           id: 'npcInteraction',
-          name: 'NPCs: Interaction',
-          text: "If you stand on the tile next to an NPC, you can use the keyboard to move to the tile they occupy. If the parasite is not attached to a host, then it will attach itself to the NPC at that point and the action menu will show you a list of context actions you can take. If you are already attached to a host and control them, your host will try to push the NPC away from that tile using their strength instead. You can use the mouse to click on the NPC for the same results with one exception. Clicking on the AI that is on the next tile with an active host will attack them with a melee weapon or bare hands (or claws). If your host has a ranged weapon then clicking on the AI at a distance will make an attack with that weapon.",
+          name: T('NPCs: Interaction'),
+          text: T("If you stand on the tile next to an NPC, you can use the keyboard to move to the tile they occupy. If the parasite is not attached to a host, then it will attach itself to the NPC at that point and the action menu will show you a list of context actions you can take. If you are already attached to a host and control them, your host will try to push the NPC away from that tile using their strength instead. You can use the mouse to click on the NPC for the same results with one exception. Clicking on the AI that is on the next tile with an active host will attack them with a melee weapon or bare hands (or claws). If your host has a ranged weapon then clicking on the AI at a distance will make an attack with that weapon."),
         },
       ],
     },
 
     {
       id: 'gameplay',
-      name: 'GAMEPLAY',
+      name: T('GAMEPLAY'),
       articles: [
         {
           id: 'eventTimeline',
-          name: 'Event Timeline',
+          name: T('Event Timeline'),
           img: 'pedia/timeline',
-          text: "<p>Once you complete the tutorial, you get to the meat of the game - collecting clues to open up the timeline of events that have led to the present state. You can see the currently known events list in the Timeline window. Each event has a location, a text and NPC participants attached to it. Researching the more recent events through the clues allows you to open up earlier events until you get to the key event which will allow you to progress further into the final part of the game. Note that the events are numbered relatively to the first one known. Every event location is marked with an icon in the center of its tile on the regional map. An orange torn note means that there are clues you can gather in that area. A gray note with a tick means that you have already gathered everything you could. When a location with clues left is off-screen, its torn note waits at the edge of the screen in its direction.</p>
+          text: T("<p>Once you complete the tutorial, you get to the meat of the game - collecting clues to open up the timeline of events that have led to the present state. You can see the currently known events list in the Timeline window. Each event has a location, a text and NPC participants attached to it. Researching the more recent events through the clues allows you to open up earlier events until you get to the key event which will allow you to progress further into the final part of the game. Note that the events are numbered relatively to the first one known. Every event location is marked with an icon in the center of its tile on the regional map. An orange torn note means that there are clues you can gather in that area. A gray note with a tick means that you have already gathered everything you could. When a location with clues left is off-screen, its torn note waits at the edge of the screen in its direction.</p>
 
 <p>There are two types of readable clues - short ones like documents and notes, and long ones like journals and books. The first type can be read anywhere while the second one requires being in a habitat but gives you more clues.</p>
 
 <p>The other source of event clues are NPCs. They must first be researched themselves (their name, photo and location must be known) through other clues or computer research. Areas that contain known event NPCs are marked with a smiley icon. And once you research the NPC, their icon in the area mode will be marked with a smiley, too. You can find out what the NPC knows through the brain probe once you locate them in the area and invade.<p>
 
-<p>Computer research (more like internet research) is a source of clues on NPCs. Due to it being an action requiring high concentration it can only be done in a habitat. You can leave the computer device lying there and, by the way, laptops are more efficient for research.</p>",
+<p>Computer research (more like internet research) is a source of clues on NPCs. Due to it being an action requiring high concentration it can only be done in a habitat. You can leave the computer device lying there and, by the way, laptops are more efficient for research.</p>"),
         },
         {
           id: 'evolution',
-          name: 'Evolution',
+          name: T('Evolution'),
           img: 'pedia/evolution',
-          text: "To survive in the hostile world of humanity you will need to evolve new knowledge and improvements through the process of controlled evolution. You receive the starting set of basic improvements during the tutorial but the others you will have to hunt for. The list of available improvements and their cost to research is shown in the Evolution window. You can start and stop evolving at any time (there is even a static keyboard shortcut for it). In addition to spending the host's energy, evolution will slowly degrade the host. When the host is close to dying, you will receive a message: \"Your host degrades to a breaking point and might expire soon.\" It means that if you do not stop the process, the host might die right on the next turn. Whether to stop evolving or not at this point is entirely up to you.",
+          text: T("To survive in the hostile world of humanity you will need to evolve new knowledge and improvements through the process of controlled evolution. You receive the starting set of basic improvements during the tutorial but the others you will have to hunt for. The list of available improvements and their cost to research is shown in the Evolution window. You can start and stop evolving at any time (there is even a static keyboard shortcut for it). In addition to spending the host's energy, evolution will slowly degrade the host. When the host is close to dying, you will receive a message: \"Your host degrades to a breaking point and might expire soon.\" It means that if you do not stop the process, the host might die right on the next turn. Whether to stop evolving or not at this point is entirely up to you."),
         },
         {
           id: 'habitat',
-          name: 'Habitat',
+          name: T('Habitat'),
           img: 'imp/imp_microhabitat',
-          text: "Once you grow your first body feature, the parasite realizes that this dangerous process is better done inside of the habitat. This fact opens up the microhabitat knowledge improvement. There is a limit to the amount of habitats that the parasite can have active at any moment. There is also a total amount of habitats that can be created during a single game. Habitats can be created in the region mode with a special action in any inhabited area, where the parasite settles in the sewers below. In the wilderness only the mountains will do: there the habitat is a natural cave, while plains and forests cannot hold one at all. A cave at least three steps away from the nearest city or corporate area is a safe habitat: the Group's teams never find it, and the region mode offers to \"Create safe habitat\" on such a tile. The price is the journey there, since travelling the wilderness drains an ordinary host twice as fast as the sewers under the city do. This does not require any resources and the empty habitat will already give you the ability to read journals and use computers to research event NPCs. To have further uses for a habitat, you must evolve and produce various habitat growths. Each growth mold is a body feature that upon activation converts the host into the habitat growth leaving the parasite without a host.",
+          text: T("Once you grow your first body feature, the parasite realizes that this dangerous process is better done inside of the habitat. This fact opens up the microhabitat knowledge improvement. There is a limit to the amount of habitats that the parasite can have active at any moment. There is also a total amount of habitats that can be created during a single game. Habitats can be created in the region mode with a special action in any inhabited area, where the parasite settles in the sewers below. In the wilderness only the mountains will do: there the habitat is a natural cave, while plains and forests cannot hold one at all. A cave at least three steps away from the nearest city or corporate area is a safe habitat: the Group's teams never find it, and the region mode offers to \"Create safe habitat\" on such a tile. The price is the journey there, since travelling the wilderness drains an ordinary host twice as fast as the sewers under the city do. This does not require any resources and the empty habitat will already give you the ability to read journals and use computers to research event NPCs. To have further uses for a habitat, you must evolve and produce various habitat growths. Each growth mold is a body feature that upon activation converts the host into the habitat growth leaving the parasite without a host."),
         },
         {
           id: 'habitatCavity',
-          name: 'Habitat: Assim. Cavity',
+          name: T('Habitat: Assim. Cavity'),
           img: 'imp/imp_assimilation',
-          text: "The assimilation cavity can be used to turn the normal hosts into the assimilated ones. Assimilation is a process that makes the host more compatible with the needs of the parasite. The most important feature of assimilated hosts is that they do not lose the energy passively, only through actions. If the assimilated host is in a habitat with free energy available, their energy will be restored gradually. Also, assimilated hosts have more body features and inventory slots available and you will have more control over them after you invade.",
+          text: T("The assimilation cavity can be used to turn the normal hosts into the assimilated ones. Assimilation is a process that makes the host more compatible with the needs of the parasite. The most important feature of assimilated hosts is that they do not lose the energy passively, only through actions. If the assimilated host is in a habitat with free energy available, their energy will be restored gradually. Also, assimilated hosts have more body features and inventory slots available and you will have more control over them after you invade."),
         },
         {
           id: 'habitatBiomineral',
-          name: 'Habitat: Biomineral',
+          name: T('Habitat: Biomineral'),
           img: 'imp/imp_biomineral',
-          text: "Biomineral formation serves as a battery for your habitat. You can build multiple of these to gain more energy. Free energy will be used to restore the parasite energy and health, and if your host is assimilated or fully consenting, to restore their energy as well. In addition, free energy is used to increase the speed of organ growth and evolution. All these numbers can be seen in the log if you step on the biomineral.",
+          text: T("Biomineral formation serves as a battery for your habitat. You can build multiple of these to gain more energy. Free energy will be used to restore the parasite energy and health, and if your host is assimilated or fully consenting, to restore their energy as well. In addition, free energy is used to increase the speed of organ growth and evolution. All these numbers can be seen in the log if you step on the biomineral."),
         },
         {
           id: 'habitatDestruction',
-          name: 'Habitat: Destruction',
+          name: T('Habitat: Destruction'),
           img: 'pedia/habitat_destruction',
-          text: "Habitats are not permanent. Once the active team for the Group gets onto your trail, they can find one of your habitats and put an ambush there. If it happens that you are inside, they might literally fall on top of your head. While it is possible to dispose of the attacking team members, this is not a certainty in any case. Moreover, the habitat will be destroyed even if you are successful. The destruction of the habitat is a highly painful process for the parasite. The most damaging result is that the maximum amount of energy for the parasite will be reduced permanently. The lowest possible amount varies according to the difficulty setting. ",
+          text: T("Habitats are not permanent. Once the active team for the Group gets onto your trail, they can find one of your habitats and put an ambush there. If it happens that you are inside, they might literally fall on top of your head. While it is possible to dispose of the attacking team members, this is not a certainty in any case. Moreover, the habitat will be destroyed even if you are successful. The destruction of the habitat is a highly painful process for the parasite. The most damaging result is that the maximum amount of energy for the parasite will be reduced permanently. The lowest possible amount varies according to the difficulty setting. "),
         },
         {
           id: 'habitatWatcher',
-          name: 'Habitat: Watcher',
+          name: T('Habitat: Watcher'),
           img: 'imp/imp_watcher',
-          text: "The primary responsibility of the watcher is to alert the parasite to any imminent ambushes within the habitat. Additionally, when the watcher reaches the second level, it gains the capability to actively draw the ambush towards its current location within the habitat, thereby serving a dual function of both detection and strategic diversion.",
+          text: T("The primary responsibility of the watcher is to alert the parasite to any imminent ambushes within the habitat. Additionally, when the watcher reaches the second level, it gains the capability to actively draw the ambush towards its current location within the habitat, thereby serving a dual function of both detection and strategic diversion."),
         },
         {
           id: 'habitatPreservator',
-          name: 'Habitat: Preservator',
+          name: T('Habitat: Preservator'),
           img: 'imp/imp_preservator',
-          text: "The preservator growth is used to preserve the hosts in a habitat. The amount of hosts depends on the growth level. To preserve the host, move to any free side of the growth (not a corner) and use the \"Preserve Host\" action that appears in the action list. Note that re-attaching to preserved hosts is much more smooth than to free ones. In addition, if the host is assimilated, the initial control value will be much higher.",
+          text: T("The preservator growth is used to preserve the hosts in a habitat. The amount of hosts depends on the growth level. To preserve the host, move to any free side of the growth (not a corner) and use the \"Preserve Host\" action that appears in the action list. Note that re-attaching to preserved hosts is much more smooth than to free ones. In addition, if the host is assimilated, the initial control value will be much higher."),
         },
         {
           id: 'hostOrgans',
-          name: 'Host: Body Features',
+          name: T('Host: Body Features'),
           img: 'pedia/organs',
-          text: "Some of the improvements you evolve will allow you to grow additional organs and body features on the host. You can see the list of body features and start growing new ones in the Body window. These features each give a unique ingame advantage, whether offensive, defensive or utilitarian. Feature growth like everything else requires host energy and you might end up with a half-dead host after you finish growing the feature you desire (or even with a dead one that has died in the process). Moreover, you cannot stop the growth process once started, unlike evolution. That is why growing is best done in the safety of a habitat. There are limits to the amount of features on a host, too.",
+          text: T("Some of the improvements you evolve will allow you to grow additional organs and body features on the host. You can see the list of body features and start growing new ones in the Body window. These features each give a unique ingame advantage, whether offensive, defensive or utilitarian. Feature growth like everything else requires host energy and you might end up with a half-dead host after you finish growing the feature you desire (or even with a dead one that has died in the process). Moreover, you cannot stop the growth process once started, unlike evolution. That is why growing is best done in the safety of a habitat. There are limits to the amount of features on a host, too."),
         },
         {
           id: 'hostBrainProbe',
-          name: 'Host: Brain Probe',
+          name: T('Host: Brain Probe'),
           img: 'imp/imp_brain_probe',
-          text: "One of the earliest and heavily used tools in your arsenal, the brain probe allows the parasite to access the brain of the host gaining access to all sorts of knowledge in return for spending a lot of their energy and some of their health. You can kill your host with enough probes if you're not careful (and, in fact, that is in itself useful at various times). The basic probe of first level returns the name of the host, some human society knowledge and some event timeline clues if the host is involved in the conspiracy. The second level of the probe opens up access to host skills and knowledges. And the last level shows numerical values for host attributes and lists their traits if there are any.",
+          text: T("One of the earliest and heavily used tools in your arsenal, the brain probe allows the parasite to access the brain of the host gaining access to all sorts of knowledge in return for spending a lot of their energy and some of their health. You can kill your host with enough probes if you're not careful (and, in fact, that is in itself useful at various times). The basic probe of first level returns the name of the host, some human society knowledge and some event timeline clues if the host is involved in the conspiracy. The second level of the probe opens up access to host skills and knowledges. And the last level shows numerical values for host attributes and lists their traits if there are any."),
         },
         {
           id: 'hostInventory',
-          name: 'Host: Inventory',
+          name: T('Host: Inventory'),
           img: 'event/goal_probe_brain_complete',
-          text: "NPCs possess inventory and when the parasite controls a host, it can be used. The inventory items are visible in the Body window. Each of the items needs to be learned about using the host brain before using. You can drop items to the ground if you wish to. Weapons will be used in the main window, and clues can be read in the Body window, just like the computer devices can be used there for research.",
+          text: T("NPCs possess inventory and when the parasite controls a host, it can be used. The inventory items are visible in the Body window. Each of the items needs to be learned about using the host brain before using. You can drop items to the ground if you wish to. Weapons will be used in the main window, and clues can be read in the Body window, just like the computer devices can be used there for research."),
         },
         {
           id: 'hostSkills',
-          name: 'Host: Skills',
+          name: T('Host: Skills'),
           img: 'event/goal_learn_items_complete',
-          text: "Every host has an assortment of skills and knowledges. You can read their list in the Body window. Some have unique traits that are useful for you. While probing their brains you can learn what the hosts know. Some of the skills and knowledges are situational, others will be used more often. Knowledges are binary but skills are on a 1-100 scale and when used, the success is determined through the percentage roll. There is a special knowledge of human society that every human NPC possesses which will be used in the early part of game.",
+          text: T("Every host has an assortment of skills and knowledges. You can read their list in the Body window. Some have unique traits that are useful for you. While probing their brains you can learn what the hosts know. Some of the skills and knowledges are situational, others will be used more often. Knowledges are binary but skills are on a 1-100 scale and when used, the success is determined through the percentage roll. There is a special knowledge of human society that every human NPC possesses which will be used in the early part of game."),
         },
         {
           id: 'msgConcentration',
-          name: '<i>It requires immense concentration and time</i>',
+          name: T('<i>It requires immense concentration and time</i>'),
           font: 90,
-          text: "This message will appear in the log if you try to do something that must be done in a habitat, like access a computer device or read a long readable (a journal or a book of some kind).",
+          text: T("This message will appear in the log if you try to do something that must be done in a habitat, like access a computer device or read a long readable (a journal or a book of some kind)."),
         },
         {
           id: 'impOvum',
-          name: 'Parthenogenesis',
+          name: T('Parthenogenesis'),
           img: 'imp/imp_ovum',
-          text: "<p>After you evolve the Parthenogenesis improvement, the parasite gains access to the rebirth process. Normally, if it dies, it's game over but if you have the rebirth set up, the parasite will just move on to the \"next life\" with some losses. The first thing you need is to create the ovum object in region mode. It is a process similar to the microhabitat spawning. Go to the nearest sewers, pick a good spot on region map and activate the \"Create ovum\" action. Pick the place carefully because you will need to travel there to change settings and the parasite will be reborn there each time. The ovum itself is not in any danger from the antagonists at the moment and you can only build one.</p>
+          text: T("<p>After you evolve the Parthenogenesis improvement, the parasite gains access to the rebirth process. Normally, if it dies, it's game over but if you have the rebirth set up, the parasite will just move on to the \"next life\" with some losses. The first thing you need is to create the ovum object in region mode. It is a process similar to the microhabitat spawning. Go to the nearest sewers, pick a good spot on region map and activate the \"Create ovum\" action. Pick the place carefully because you will need to travel there to change settings and the parasite will be reborn there each time. The ovum itself is not in any danger from the antagonists at the moment and you can only build one.</p>
 
 <p>Once the ovum is created, stepping on its tile will show you the info about its level and what improvements are marked for rebirth. There are two actions available. \"Set improvements\" opens the interface to lock and unlock which of the basic improvements you want to be reborn with. The second action, \"Nurture ovum\", allows you to feed your current host to the ovum, adding points to the next level. Each new level requires more points and there is a maximum ovum level. Different types of hosts will give you different amount of points. In general, the more dangerous the host type is, the more points the ovum will receive.</p>
 
-<p>The rebirth process happens automatically on parasite death. At this point a new parasite will appear on the ovum location. The ovum level will be reduced by one. If the current ovum level is zero, it is the final death and game over. The basic improvements that were locked will stay with you, the rest will be discarded and you will receive another set of starting improvements. The basic improvements are the ones that can be received when you first open the evolution process in tutorial. All the ones that you've acquired during the gameplay after that will not be discarded. However, there is a large chance that some of them will degrade by one level to a minimum of one. Any evolution points that you've gained over the current improvement level will also be reset.</p>",
+<p>The rebirth process happens automatically on parasite death. At this point a new parasite will appear on the ovum location. The ovum level will be reduced by one. If the current ovum level is zero, it is the final death and game over. The basic improvements that were locked will stay with you, the rest will be discarded and you will receive another set of starting improvements. The basic improvements are the ones that can be received when you first open the evolution process in tutorial. All the ones that you've acquired during the gameplay after that will not be discarded. However, there is a large chance that some of them will degrade by one level to a minimum of one. Any evolution points that you've gained over the current improvement level will also be reset.</p>"),
         },
         {
           id: 'regionMode',
-          name: 'Region Mode',
+          name: T('Region Mode'),
           img: 'pedia/region',
-          text: "<p>After you first get into the sewers through the sewers hatch, the game switches into the region mode. Every area you can visit becomes a single tile on a grid. Time passes much faster in this mode, so your host can die quickly leaving you bare. The wilderness is harder still: an ordinary host spends twice as much energy travelling there as it does in the sewers under the city. In that case get out of the sewers with the \"Enter Area\" action and find another one. The movement is done the same way as in the area mode, with mouse and keyboard. Note that some areas have a colored ? symbol in the corner (or red ! in some cases). This shows the area alertness. High alertness increases police activity and the amount of armed civilians. If the alertness is close to maximum, you cannot enter this area until it subsides. Every turn the alertness lowers until the area is completely calm.</p>
+          text: T("<p>After you first get into the sewers through the sewers hatch, the game switches into the region mode. Every area you can visit becomes a single tile on a grid. Time passes much faster in this mode, so your host can die quickly leaving you bare. The wilderness is harder still: an ordinary host spends twice as much energy travelling there as it does in the sewers under the city. In that case get out of the sewers with the \"Enter Area\" action and find another one. The movement is done the same way as in the area mode, with mouse and keyboard. Note that some areas have a colored ? symbol in the corner (or red ! in some cases). This shows the area alertness. High alertness increases police activity and the amount of armed civilians. If the alertness is close to maximum, you cannot enter this area until it subsides. Every turn the alertness lowers until the area is completely calm.</p>
 
-<p>Some areas might be marked with an orange torn note in a dark circle in the middle. This means that the area has clues to the event timeline that you can find. When you gather all the clues in the area, the note turns gray and gets a tick. If the area has a head and shoulders icon in the upper left corner, it means that there are one or more event NPCs there.</p>",
+<p>Some areas might be marked with an orange torn note in a dark circle in the middle. This means that the area has clues to the event timeline that you can find. When you gather all the clues in the area, the note turns gray and gets a tick. If the area has a head and shoulders icon in the upper left corner, it means that there are one or more event NPCs there.</p>"),
         },
         {
           id: 'sandboxMode',
-          name: 'Sandbox Mode',
-          text: "You can start the game in sandbox mode instead of the scenario. In this case event timeline is disabled and after you finish the tutorial, you're free to run around the city and do as you will. Clues, clue-related items and event NPCs do not spawn anywhere. There is no defined ending to the game as well. The Group still sends their operatives after you according to normal rules.",
+          name: T('Sandbox Mode'),
+          text: T("You can start the game in sandbox mode instead of the scenario. In this case event timeline is disabled and after you finish the tutorial, you're free to run around the city and do as you will. Clues, clue-related items and event NPCs do not spawn anywhere. There is no defined ending to the game as well. The Group still sends their operatives after you according to normal rules."),
         },
         {
           id: 'spoonMode',
-          name: 'Spoon Mode',
+          name: T('Spoon Mode'),
           img: 'pedia/spoon',
-          text: "The spoon mode is hidden in the options menu. It contains various flags and tweaks that can drastically change the gameplay from the intended one. Once it is activated, you cannot turn it off for the current game, it is considered irreversibly spooned. To activate the spoon mode, you need to click the letters in the OPTIONS title of the options window to form the word SPOON. Have fun!",
+          text: T("The spoon mode is hidden in the options menu. It contains various flags and tweaks that can drastically change the gameplay from the intended one. Once it is activated, you cannot turn it off for the current game, it is considered irreversibly spooned. To activate the spoon mode, you need to click the letters in the OPTIONS title of the options window to form the word SPOON. Have fun!"),
         },
         {
           id: 'msgWatching',
-          name: '<i>You feel someone is watching</i>',
+          name: T('<i>You feel someone is watching</i>'),
           font: 90,
-          text: "This message appears when you linger too much in one area and the Group is on your trail. You need to get out of there or you risk being ambushed.",
+          text: T("This message appears when you linger too much in one area and the Group is on your trail. You need to get out of there or you risk being ambushed."),
         },
       ],
     },
 
     {
       id: 'areas',
-      name: 'AREAS',
+      name: T('AREAS'),
       articles: [
         {
           id: 'areaCity',
-          name: 'City Area',
+          name: T('City Area'),
           img: 'pedia/area_city',
-          text: "<p>The city is divided into three distinct area types based on density: low, medium, and downtown. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. Downtown districts are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering downtown will give the parasite an idea...</p>
+          text: T("<p>The city is divided into three distinct area types based on density: low, medium, and downtown. Low-density areas feature minimal civilian presence and limited police patrols, creating a calm and safe environment for the parasite. Medium-density areas exhibit moderate pedestrian traffic and a balanced police presence, ensuring orderly activity. Downtown districts are characterized by high pedestrian volumes and frequent police patrols, maintaining security in a bustling urban setting. These are most dangerous and entering downtown will give the parasite an idea...</p>
 
-<p>Some city blocks have their alley entrances fenced off, leaving only a hole broken through one fence to get in. Fences cannot be crossed, but the holes can. Downtown uses chain-link fences that you can see through, while the residential streets and the slums use wooden board fences that also block sight. The slum fences are in worse repair and have several holes.</p>",
+<p>Some city blocks have their alley entrances fenced off, leaving only a hole broken through one fence to get in. Fences cannot be crossed, but the holes can. Downtown uses chain-link fences that you can see through, while the residential streets and the slums use wooden board fences that also block sight. The slum fences are in worse repair and have several holes.</p>"),
         },
         {
           id: 'areaHighCrime',
-          name: 'High Crime Area',
+          name: T('High Crime Area'),
           img: 'pedia/high_crime',
-          text: "<p>High-crime blocks are choked with uncollected garbage, broken glass and improvised burn barrels. The air is foul and the inhabitants are the city's undesirables: bums staking out doorways, armed thugs guarding their corners and prostitutes trying to survive another night.</p>
+          text: T("<p>High-crime blocks are choked with uncollected garbage, broken glass and improvised burn barrels. The air is foul and the inhabitants are the city's undesirables: bums staking out doorways, armed thugs guarding their corners and prostitutes trying to survive another night.</p>
 
-<p>The thugs are aggressive and respond immediately if attacked, escalating to lethal force without hesitation. Police patrols are almost non-existent and even if someone manages to call them, the response rarely materializes.</p>",
+<p>The thugs are aggressive and respond immediately if attacked, escalating to lethal force without hesitation. Police patrols are almost non-existent and even if someone manages to call them, the response rarely materializes.</p>"),
         },
         {
           id: 'areaCorp',
-          name: 'Corporate HQ',
+          name: T('Corporate HQ'),
           img: 'pedia/area_corphq',
-          text: "The corporate headquarters floor is a dynamic environment populated by office workers and management. The parasite begins its operations from the elevator, providing a strategic point of entry. Both the elevator and stairs are available for efficient egress, allowing it to navigate the area with agility. Some of the doors might be locked electronically, adding an additional layer of complexity to the environment.",
+          text: T("The corporate headquarters floor is a dynamic environment populated by office workers and management. The parasite begins its operations from the elevator, providing a strategic point of entry. Both the elevator and stairs are available for efficient egress, allowing it to navigate the area with agility. Some of the doors might be locked electronically, adding an additional layer of complexity to the environment."),
         },
         {
           id: 'areaMilitary',
-          name: 'Military Base',
+          name: T('Military Base'),
           img: 'pedia/area_military',
-          text: "<p>All military base areas are actively patrolled by soldiers and officers, ensuring a constant state of vigilance and security. The presence of well-trained personnel underscores the importance of maintaining order and readiness at all times. Routine inspections and drills are conducted to ensure that protocols are strictly followed, contributing to the overall efficiency and preparedness of the base. This disciplined environment is crucial for the effective operation and rapid response capabilities of the military.</p>
+          text: T("<p>All military base areas are actively patrolled by soldiers and officers, ensuring a constant state of vigilance and security. The presence of well-trained personnel underscores the importance of maintaining order and readiness at all times. Routine inspections and drills are conducted to ensure that protocols are strictly followed, contributing to the overall efficiency and preparedness of the base. This disciplined environment is crucial for the effective operation and rapid response capabilities of the military.</p>
 
 <p>Base personnel are trained to spot anyone out of place. A host that is not in uniform draws their attention much faster than on the streets. Wearing a soldier or an officer, or a well-grown camouflage layer, helps the parasite blend in.</p>
 
-<p>Officers are rarer than soldiers and carry a sidearm. They are well informed and always know something about the events that took place on their base.</p>",
+<p>Officers are rarer than soldiers and carry a sidearm. They are well informed and always know something about the events that took place on their base.</p>"),
         },
         {
           id: 'areaLab',
-          name: 'Research Facility',
+          name: T('Research Facility'),
           img: 'pedia/area_lab',
-          text: "The laboratories and research facilities are primarily populated with sophisticated lab equipment and highly skilled scientists, all working diligently on advanced projects. Security personnel maintain a vigilant presence, patrolling the premises to ensure the safety and integrity of the sensitive research being conducted. These facilities are designed to foster innovation while adhering to stringent safety and security protocols.",
+          text: T("The laboratories and research facilities are primarily populated with sophisticated lab equipment and highly skilled scientists, all working diligently on advanced projects. Security personnel maintain a vigilant presence, patrolling the premises to ensure the safety and integrity of the sensitive research being conducted. These facilities are designed to foster innovation while adhering to stringent safety and security protocols."),
         },
         {
           id: 'areaUninhabited',
-          name: 'Uninhabited Area',
+          name: T('Uninhabited Area'),
           img: 'pedia/area_uninhabited',
-          text: "The uninhabited area consists solely of greenery, providing a natural space without any residential or commercial development. This area supports various plant species and serves as a crucial part of the local ecosystem. Its preservation is important for maintaining environmental balance and biodiversity. The lack of human activity helps ensure that the area remains undisturbed and protected. Be careful, there are no hosts wandering around. Crossing the wilderness in the region mode also tires an ordinary host twice as fast as the sewers do. In the mountains you can make a habitat in a natural cave, and one far enough from the city is out of the Group's reach.",
+          text: T("The uninhabited area consists solely of greenery, providing a natural space without any residential or commercial development. This area supports various plant species and serves as a crucial part of the local ecosystem. Its preservation is important for maintaining environmental balance and biodiversity. The lack of human activity helps ensure that the area remains undisturbed and protected. Be careful, there are no hosts wandering around. Crossing the wilderness in the region mode also tires an ordinary host twice as fast as the sewers do. In the mountains you can make a habitat in a natural cave, and one far enough from the city is out of the Group's reach."),
         },
       ],
     },
 
     {
       id: 'hud',
-      name: 'HUD',
+      name: T('HUD'),
       articles: [
         {
           id: 'hudActions',
-          name: 'Actions List',
-          text: "This HUD window shows a list of context-appropriate actions with the keyboard shortcuts on the left. Some actions have static keyboard shortcuts that do not change. The others will be attached to 1-9 keys dynamically. Every action can have an energy cost and it will be indicated in the list. If you press and hold the Shift key, you will see that some actions will change their shortcut to S-[number]. This means that this action is repeatable and pressing its number with the Shift key modifier held will repeat it until the special action-related condition will be met. For example, repeating the Harden Grip action will stop when it reaches maximum grip, and so on. Note that the brain probe can kill the host when repeated.",
+          name: T('Actions List'),
+          text: T("This HUD window shows a list of context-appropriate actions with the keyboard shortcuts on the left. Some actions have static keyboard shortcuts that do not change. The others will be attached to 1-9 keys dynamically. Every action can have an energy cost and it will be indicated in the list. If you press and hold the Shift key, you will see that some actions will change their shortcut to S-[number]. This means that this action is repeatable and pressing its number with the Shift key modifier held will repeat it until the special action-related condition will be met. For example, repeating the Harden Grip action will stop when it reaches maximum grip, and so on. Note that the brain probe can kill the host when repeated."),
         },
         {
           id: 'hudGoals',
-          name: 'Goals List',
-          text: "This HUD window shows a list of currently active goals with the optional ones marked. Some of the goals might feature additional information.",
+          name: T('Goals List'),
+          text: T("This HUD window shows a list of currently active goals with the optional ones marked. Some of the goals might feature additional information."),
         },
         {
           id: 'hudInfoParasite',
-          name: 'Info: Parasite',
-          text: "When the parasite is running around without a host, the information window is shortened to display the common information and its stats. The first line has the following information: turns passed since game start, current sub-turn number in square brackets (1 or 2 since parasite is always twice as fast as the NPCs), and x, y position in the area or region, depending on the current mode. The next line in the region mode shows the name of the area. After the separator the parasite stats begin: energy line, which shows the current and max energy and energy spend/increase per turn in square brackets. The next line shows the current and maximum parasite health. When the parasite is attached to a host but have not yet invaded it, the next line shows the current and maximum grip values. Once you know about the Group, its mark (a triangle over a bar) sits on top of the information window. Hover over it to see the Group information. Its color tells how close the Group team is, and a red TEAM IS VERY CLOSE! warning appears in the window when the team is almost on you.",
+          name: T('Info: Parasite'),
+          text: T("When the parasite is running around without a host, the information window is shortened to display the common information and its stats. The first line has the following information: turns passed since game start, current sub-turn number in square brackets (1 or 2 since parasite is always twice as fast as the NPCs), and x, y position in the area or region, depending on the current mode. The next line in the region mode shows the name of the area. After the separator the parasite stats begin: energy line, which shows the current and max energy and energy spend/increase per turn in square brackets. The next line shows the current and maximum parasite health. When the parasite is attached to a host but have not yet invaded it, the next line shows the current and maximum grip values. Once you know about the Group, its mark (a triangle over a bar) sits on top of the information window. Hover over it to see the Group information. Its color tells how close the Group team is, and a red TEAM IS VERY CLOSE! warning appears in the window when the team is almost on you."),
         },
         {
           id: 'hudInfoHost',
-          name: 'Info: Host',
-          text: "When the parasite is controlling a host, the information window becomes bigger and adds the following information after another separator: the host type or name if it is known, host attributes (if they were brain probed by the maximum level probe), current and maximum host health values, current and maximum control values, and energy values. The energy line has host energy increase or spend and turns left to live with the current spending in the square brackets. If you're currently evolving, the evolution direction and turns left will be shown next. If you're growing a body feature, it will be shown next with turns left to completion. The icons after the host name mark full affinity, full consent, a cultist host or a breaking host. Hover over one to see what it means.",
+          name: T('Info: Host'),
+          text: T("When the parasite is controlling a host, the information window becomes bigger and adds the following information after another separator: the host type or name if it is known, host attributes (if they were brain probed by the maximum level probe), current and maximum host health values, current and maximum control values, and energy values. The energy line has host energy increase or spend and turns left to live with the current spending in the square brackets. If you're currently evolving, the evolution direction and turns left will be shown next. If you're growing a body feature, it will be shown next with turns left to completion. The icons after the host name mark full affinity, full consent, a cultist host or a breaking host. Hover over one to see what it means."),
         },
         {
           id: 'hudLog',
-          name: 'Log',
-          text: "The HUD log window by default shows the last six messages. Don't forget to read the messages, they will give you a lot of background or important information. Especially the lines marked by red color. These are really important and can easily lead to the parasite getting killed so be sure to read them.",
+          name: T('Log'),
+          text: T("The HUD log window by default shows the last six messages. Don't forget to read the messages, they will give you a lot of background or important information. Especially the lines marked by red color. These are really important and can easily lead to the parasite getting killed so be sure to read them."),
         },
       ],
     },
 
     {
       id: 'group',
-      name: 'GROUP',
+      name: T('GROUP'),
       articles: [
         {
           id: 'groupBasics',
           groupAddFlag: true,
-          name: 'Group: Basics',
+          name: T('Group: Basics'),
           img: 'pedia/group',
-          text: "So, you've just found out about the existence of the group of humans that are actively trying to destroy you. For the simplicity's sake we're gonna call them the Group onwards. This concept requires some explanation since the mechanic is complex enough and mostly hidden. Once you know about the Group, its mark appears on top of the HUD information window. Hover over it to see the Group information. Selecting the difficulty level will change the amount of that information. Choosing easy difficulty will show concrete numbers, normal difficulty will use word descriptions and hard difficulty will not show anything at all.",
+          text: T("So, you've just found out about the existence of the group of humans that are actively trying to destroy you. For the simplicity's sake we're gonna call them the Group onwards. This concept requires some explanation since the mechanic is complex enough and mostly hidden. Once you know about the Group, its mark appears on top of the HUD information window. Hover over it to see the Group information. Selecting the difficulty level will change the amount of that information. Choosing easy difficulty will show concrete numbers, normal difficulty will use word descriptions and hard difficulty will not show anything at all."),
         },
         {
           id: 'groupPriority',
           groupAddFlag: true,
-          name: 'Group: Priority',
+          name: T('Group: Priority'),
           img: 'pedia/group_priority',
-          text: "The Group is a government conspiracy dedicated to protecting the ordinary citizens from all sorts of unconventional threats: extraterrestrial, paranormal, Mythos, etc. The main game parameter of the Group is \"priority\". That is the priority of parasite threat. Since there are a lot of other threats that the Group has to deal with and its resources are limited (contrary to popular belief), the priority is low at start. Right from the beginning of the game some of the player's actions will raise the priority. The examples of such actions are: someone sees the parasite and alerts the police, body with anomalies was found or the former host runs away and tells everybody that they were possessed by an alien creature. The severity of each action is different but the priority rises.",
+          text: T("The Group is a government conspiracy dedicated to protecting the ordinary citizens from all sorts of unconventional threats: extraterrestrial, paranormal, Mythos, etc. The main game parameter of the Group is \"priority\". That is the priority of parasite threat. Since there are a lot of other threats that the Group has to deal with and its resources are limited (contrary to popular belief), the priority is low at start. Right from the beginning of the game some of the player's actions will raise the priority. The examples of such actions are: someone sees the parasite and alerts the police, body with anomalies was found or the former host runs away and tells everybody that they were possessed by an alien creature. The severity of each action is different but the priority rises."),
         },
         {
           id: 'teamAmbush',
           groupAddFlag: true,
-          name: 'Team: Ambush',
+          name: T('Team: Ambush'),
           img: 'pedia/team_ambush',
-          text: "<p>Once the team distance is sufficiently low, the team will discover one of your habitats if you have them. Safe habitats, the mountain caves far enough from the city, are never discovered. At this point the team will hide in an ambush. They will wait for some time and then just burn everything cowboy style. Destruction of the habitat is a deeply traumatic event for the parasite and reduces its maximum energy permanently with more temporary drawbacks. If you walk into an ambush, the fight starts. You need to survive for three turns before you can leave the ambushed habitat. Leaving the habitat will also result in its immediate destruction. The only positive thing about this event is that it will increase the team distance giving you some breathing room.</p>
+          text: T("<p>Once the team distance is sufficiently low, the team will discover one of your habitats if you have them. Safe habitats, the mountain caves far enough from the city, are never discovered. At this point the team will hide in an ambush. They will wait for some time and then just burn everything cowboy style. Destruction of the habitat is a deeply traumatic event for the parasite and reduces its maximum energy permanently with more temporary drawbacks. If you walk into an ambush, the fight starts. You need to survive for three turns before you can leave the ambushed habitat. Leaving the habitat will also result in its immediate destruction. The only positive thing about this event is that it will increase the team distance giving you some breathing room.</p>
 
-<p>Killing the ambushers, while possible, is very hard to manage. In this case the habitat will not be destroyed. Instead, the group priority increases but the team timeout restarts. Note that if you don't have any habitats, or only safe ones, the logic stays the same, except that the ambush will now happen right on the city street and ambush evasion will result in the same distance increase as when you escape from the habitat ambush.</p>",
+<p>Killing the ambushers, while possible, is very hard to manage. In this case the habitat will not be destroyed. Instead, the group priority increases but the team timeout restarts. Note that if you don't have any habitats, or only safe ones, the logic stays the same, except that the ambush will now happen right on the city street and ambush evasion will result in the same distance increase as when you escape from the habitat ambush.</p>"),
         },
         {
           id: 'teamBasics',
           groupAddFlag: true,
-          name: 'Team: Basics',
+          name: T('Team: Basics'),
           img: 'pedia/team_basics',
-          text: "<p>The priority determines the level of the team of agents that the Group will task with the parasite problem. At the beginning of the game the player has some downtime until the team is spawned and each team wipe will also result in downtime. Once the team is activated, its members will start investigating the weird phenomena and occurences, and instead of raising the Group priority, the described player actions will count towards decreasing the distance between the team and the player. The longer the time the player spends in a given area, the more is the chance of one of the team members spawning around.</p>
+          text: T("<p>The priority determines the level of the team of agents that the Group will task with the parasite problem. At the beginning of the game the player has some downtime until the team is spawned and each team wipe will also result in downtime. Once the team is activated, its members will start investigating the weird phenomena and occurences, and instead of raising the Group priority, the described player actions will count towards decreasing the distance between the team and the player. The longer the time the player spends in a given area, the more is the chance of one of the team members spawning around.</p>
 
 <p>Once the team member sees the player, the following message will be shown in a log: \"You feel someone is watching.\" This means that one of the NPCs currently visible on screen is a team member. At this point the best thing to do is to leave the area. If the team member is not alerted after seeing the player and despawns, this counts as evasion. Evading team members raises the distance to the team a little.</p>
 
-<p>The Group mark on top of the HUD information window follows the team. It is gray while there is no team, then green when the team is far away, yellow at medium distance, orange when it is close and red when it is very close. When the team is almost on you, the mark pulses and a TEAM IS VERY CLOSE! warning appears. During a fight with the team, or once a habitat watcher spots an ambush, the mark flashes rapidly. On hard difficulty the mark stays dim and tells nothing.</p>",
+<p>The Group mark on top of the HUD information window follows the team. It is gray while there is no team, then green when the team is far away, yellow at medium distance, orange when it is close and red when it is very close. When the team is almost on you, the mark pulses and a TEAM IS VERY CLOSE! warning appears. During a fight with the team, or once a habitat watcher spots an ambush, the mark flashes rapidly. On hard difficulty the mark stays dim and tells nothing.</p>"),
         },
         {
           id: 'teamDeactivation',
           groupAddFlag: true,
           img: 'pedia/team_deactivation',
-          name: 'Team: Deactivation',
-          text: "Once the distance is raised to a large number, the team is deactivated, the group priority is decreased and the downtime starts. Basically, the threat is considered to be low by the Group and it stops worrying about the parasite for some time. Then again, you're free to attack the team member or possess them. Be prepared for some blackops backup, though. Killing the team member reduces the active team size but increases the group priority. Wiping the whole team out still gives you some downtime but decreases the starting distance of the next team. Planting false memories in a blackops agent of the active team deactivates it on the spot.",
+          name: T('Team: Deactivation'),
+          text: T("Once the distance is raised to a large number, the team is deactivated, the group priority is decreased and the downtime starts. Basically, the threat is considered to be low by the Group and it stops worrying about the parasite for some time. Then again, you're free to attack the team member or possess them. Be prepared for some blackops backup, though. Killing the team member reduces the active team size but increases the group priority. Wiping the whole team out still gives you some downtime but decreases the starting distance of the next team. Planting false memories in a blackops agent of the active team deactivates it on the spot."),
         },
         {
           id: 'impFalseMemories',
-          name: 'Pseudocampus',
+          name: T('Pseudocampus'),
           img: 'imp/imp_false_memories',
-          text: 'Pseudocampus body feature allows the parasite to implant false memories into the host brain and then safely detach from the host confusing them for a short period of time. A host with false memories never reports the encounter, so leaving them behind does not raise the group priority or bring the team closer. In case of the host being a Group team agent, this will also result in a team distance increase. A blackops agent of the active team is worth far more: they report a false trail, the whole team is deactivated and the group priority drops, though the other blackops on the scene stay hostile. Note that if the rest of the team was wiped at the time of planting false memories, the team timeout increases instead. Planted into the Group regional controller, false memories close the parasite file altogether.',
+          text: T('Pseudocampus body feature allows the parasite to implant false memories into the host brain and then safely detach from the host confusing them for a short period of time. A host with false memories never reports the encounter, so leaving them behind does not raise the group priority or bring the team closer. In case of the host being a Group team agent, this will also result in a team distance increase. A blackops agent of the active team is worth far more: they report a false trail, the whole team is deactivated and the group priority drops, though the other blackops on the scene stay hostile. Note that if the rest of the team was wiped at the time of planting false memories, the team timeout increases instead. Planted into the Group regional controller, false memories close the parasite file altogether.'),
         },
         {
           id: 'groupNeutralize',
           groupAddFlag: true,
           img: 'pedia/team_deactivation',
-          name: 'Group: Closing the File',
-          text: "<p>The Group can be made to stop hunting the parasite, though never for good. There are two ways to close the parasite file.</p>" +
-            "<p><b>The regional controller.</b> The first brain probe of every Group agent gives you some intel on the Group: a team member gives one point and a blackops agent gives two. The blackops of the more experienced teams also carry a dossier that gives three points when read in a habitat. Once you have gathered enough (the amount depends on the Group difficulty), you learn which military base the regional controller works from. The leak does not go unnoticed: the Group priority jumps to the maximum and the active team gets much closer. The controller waits in a locked room under blackops guard. The guard posted outside the door carries the keycard, and so does every officer on that base. Once the alarm is raised, you cannot leave the base until the controller is dealt with. Planting false memories into the controller closes the file quietly. Killing them closes it too, but only after their people make one last attempt on you with the strongest team they have.</p>" +
-            "<p><b>Bury the File.</b> A cult with a level 3 member can bury the parasite file deep in the bureaucracy instead (see the communal ordeals).</p>" +
-            "<p>While the file is closed, the Group mark dims and no teams come for you. Every incident you cause still raises the Group priority, though, and once it reaches the maximum, the Group reopens the file and the hunt starts again.</p>",
+          name: T('Group: Closing the File'),
+          text: T("<p>The Group can be made to stop hunting the parasite, though never for good. There are two ways to close the parasite file.</p>") +
+            T("<p><b>The regional controller.</b> The first brain probe of every Group agent gives you some intel on the Group: a team member gives one point and a blackops agent gives two. The blackops of the more experienced teams also carry a dossier that gives three points when read in a habitat. Once you have gathered enough (the amount depends on the Group difficulty), you learn which military base the regional controller works from. The leak does not go unnoticed: the Group priority jumps to the maximum and the active team gets much closer. The controller waits in a locked room under blackops guard. The guard posted outside the door carries the keycard, and so does every officer on that base. Once the alarm is raised, you cannot leave the base until the controller is dealt with. Planting false memories into the controller closes the file quietly. Killing them closes it too, but only after their people make one last attempt on you with the strongest team they have.</p>") +
+            T("<p><b>Bury the File.</b> A cult with a level 3 member can bury the parasite file deep in the bureaucracy instead (see the communal ordeals).</p>") +
+            T("<p>While the file is closed, the Group mark dims and no teams come for you. Every incident you cause still raises the Group priority, though, and once it reaches the maximum, the Group reopens the file and the hunt starts again.</p>"),
         },
       ],
     },
 
     {
       id: 'cult',
-      name: 'CULT',
+      name: T('CULT'),
       articles: [
         {
           id: 'cultBasics',
-          name: 'Basics',
+          name: T('Basics'),
           img: 'pedia/cult',
-          text: "<p><span class=cult>Cultus Carnis</span> is a secret organization that the parasite can establish and lead. To create a cult, you must first gain a leader - a host who becomes the founding member. The cult leader is essential; if they die, the cult is destroyed and must be rebuilt from scratch.</p>" +
-            "<p>The cult can have up to 10 members organized into three hierarchical levels based on their job influence. Level 1 members are the most common (up to 10 allowed), level 2 members hold greater sway (up to 3 allowed), and level 3 members wield the highest power (only 1 allowed). Each member's job determines which power type they contribute to: combat, media, lawfare, corporate, or political.</p>" +
-            "<p>Members exist in different states that affect their availability. Free members contribute power to the cult and can be assigned to new ordeals. Locked members are currently participating in an active ordeal and cannot be used elsewhere. Blocked members are temporarily unavailable due to effects - they appear as \"in recessu\" in the cult window. Various temporary effects can modify cult behavior: blocking trade, reducing income, preventing new ordeals, or locking specific members.</p>" +
-            "<p>When in area mode, you can call for help to summon available cultists to your location. This brings a small amount of free members to assist you, though certain effects may cause some calls to fail. You can also summon a specific member if needed.</p>",
+          text: T("<p><span class=cult>Cultus Carnis</span> is a secret organization that the parasite can establish and lead. To create a cult, you must first gain a leader - a host who becomes the founding member. The cult leader is essential; if they die, the cult is destroyed and must be rebuilt from scratch.</p>") +
+            T("<p>The cult can have up to 10 members organized into three hierarchical levels based on their job influence. Level 1 members are the most common (up to 10 allowed), level 2 members hold greater sway (up to 3 allowed), and level 3 members wield the highest power (only 1 allowed). Each member's job determines which power type they contribute to: combat, media, lawfare, corporate, or political.</p>") +
+            T("<p>Members exist in different states that affect their availability. Free members contribute power to the cult and can be assigned to new ordeals. Locked members are currently participating in an active ordeal and cannot be used elsewhere. Blocked members are temporarily unavailable due to effects - they appear as \"in recessu\" in the cult window. Various temporary effects can modify cult behavior: blocking trade, reducing income, preventing new ordeals, or locking specific members.</p>") +
+            T("<p>When in area mode, you can call for help to summon available cultists to your location. This brings a small amount of free members to assist you, though certain effects may cause some calls to fail. You can also summon a specific member if needed.</p>"),
         },
         {
           id: 'cultPowerResources',
-          name: 'Power and Resources',
+          name: T('Power and Resources'),
           img: 'pedia/cult_power',
-          text: "<p>The cult operates on an economy of power and money. There are five power types that correspond to spheres of influence: combat, media, lawfare, corporate, and political. Each free member contributes power based on their job group and level. Level 1 members provide 1 point, level 2 members provide 3 points, and level 3 members provide 10 points to their respective power type. Note that some members (mostly civilians) do not provide any power, only income.</p>" +
-            "<p>Every cult turn (which occurs every 10 player turns outside of mission areas), resources accumulate. For each power type, you gain resources equal to one-third of your total power in that category. Money accumulates at 50% of your total member income. Free members also slowly regenerate energy and health on each cult turn.</p>" +
-            "<p>Resources are spent to complete ordeals. Each ordeal requires specific amounts of power and money to resolve. You can trade money for other power types at a base cost of 10,000 per point and you can trade resource from one to another at 3 to 1 ratio. Some effects can increase or decrease this trade cost, and certain burdens may block trading entirely.</p>" +
-            "<p>The cult window displays your current power levels, accumulated resources, active ordeals, and member roster. Managing your resources efficiently is key to growing the cult and surviving the tribulations that will inevitably arise.</p>",
+          text: T("<p>The cult operates on an economy of power and money. There are five power types that correspond to spheres of influence: combat, media, lawfare, corporate, and political. Each free member contributes power based on their job group and level. Level 1 members provide 1 point, level 2 members provide 3 points, and level 3 members provide 10 points to their respective power type. Note that some members (mostly civilians) do not provide any power, only income.</p>") +
+            T("<p>Every cult turn (which occurs every 10 player turns outside of mission areas), resources accumulate. For each power type, you gain resources equal to one-third of your total power in that category. Money accumulates at 50% of your total member income. Free members also slowly regenerate energy and health on each cult turn.</p>") +
+            T("<p>Resources are spent to complete ordeals. Each ordeal requires specific amounts of power and money to resolve. You can trade money for other power types at a base cost of 10,000 per point and you can trade resource from one to another at 3 to 1 ratio. Some effects can increase or decrease this trade cost, and certain burdens may block trading entirely.</p>") +
+            T("<p>The cult window displays your current power levels, accumulated resources, active ordeals, and member roster. Managing your resources efficiently is key to growing the cult and surviving the tribulations that will inevitably arise.</p>"),
         },
         {
           id: 'cultCommunalOrdeals',
-          name: 'Communal Ordeals',
+          name: T('Communal Ordeals'),
           img: 'pedia/cult_communal',
-          text: "<p>Communal ordeals are rituals you initiate to grow and strengthen the cult. They require free members and resources to complete. While an ordeal is active, the assigned members are locked and cannot contribute power or be used elsewhere.</p>" +
-            "<p><span class=window-cult-ordeals-title>Seek the Pure</span> recruits new members into the cult. You choose which power type to seek, and the ordeal finds a suitable candidate. Requires 1 free member, 2 power of the chosen type, and 10,000 money.</p>" +
-            "<p><span class=window-cult-ordeals-title>Elevate the Faithful</span> promotes a level 1 member to level 2. Two other members must assist in the ritual, so you need 3 free members total (2 helpers plus the target). Costs 3 power matching the target's job group and 20,000 money.</p>" +
-            "<p><span class=window-cult-ordeals-title>Elevate the Faithful II</span> promotes a level 2 member to the highest tier. Requires 3 free level-2 members (2 helpers plus the target). Costs 5 power and 100,000 money. Upon completion, an Occasio event triggers - a narrative moment presenting choices that can grant benefits or impose burdens on the cult.</p>" +
-            "<p><span class=window-cult-ordeals-title>Anthropomancy</span> (only in scenario A) uses a level 3 member to divine hidden knowledge from the timeline. The master haruspex reads the entrails of fate to uncover clues about past events. Requires 1 free level-3 member, 10 power of their type, and 200,000 money. Reveals random timeline event clues.</p>" +
-            "<p><span class=window-cult-ordeals-title>Bury the File</span> uses a level 3 member and two level 2 helpers to bury the parasite file deep in the bureaucracy, so that the Group stops hunting you. Costs 20 political, 20 lawfare and 10 media power, plus 500,000 money. It can only be started while no Group team is active, and it fails if a new team takes up the hunt before it is complete. Every incident you cause afterwards raises the Group priority again, and at the maximum the file is reopened.</p>" +
-            "<p>To complete any ordeal, you must spend the required resources by using the \"Wield\" actions in the ordeal menu. Each assigned member allows one action per cult turn. You can also annul an ordeal to cancel it, though this counts as failure.</p>",
+          text: T("<p>Communal ordeals are rituals you initiate to grow and strengthen the cult. They require free members and resources to complete. While an ordeal is active, the assigned members are locked and cannot contribute power or be used elsewhere.</p>") +
+            T("<p><span class=window-cult-ordeals-title>Seek the Pure</span> recruits new members into the cult. You choose which power type to seek, and the ordeal finds a suitable candidate. Requires 1 free member, 2 power of the chosen type, and 10,000 money.</p>") +
+            T("<p><span class=window-cult-ordeals-title>Elevate the Faithful</span> promotes a level 1 member to level 2. Two other members must assist in the ritual, so you need 3 free members total (2 helpers plus the target). Costs 3 power matching the target's job group and 20,000 money.</p>") +
+            T("<p><span class=window-cult-ordeals-title>Elevate the Faithful II</span> promotes a level 2 member to the highest tier. Requires 3 free level-2 members (2 helpers plus the target). Costs 5 power and 100,000 money. Upon completion, an Occasio event triggers - a narrative moment presenting choices that can grant benefits or impose burdens on the cult.</p>") +
+            T("<p><span class=window-cult-ordeals-title>Anthropomancy</span> (only in scenario A) uses a level 3 member to divine hidden knowledge from the timeline. The master haruspex reads the entrails of fate to uncover clues about past events. Requires 1 free level-3 member, 10 power of their type, and 200,000 money. Reveals random timeline event clues.</p>") +
+            T("<p><span class=window-cult-ordeals-title>Bury the File</span> uses a level 3 member and two level 2 helpers to bury the parasite file deep in the bureaucracy, so that the Group stops hunting you. Costs 20 political, 20 lawfare and 10 media power, plus 500,000 money. It can only be started while no Group team is active, and it fails if a new team takes up the hunt before it is complete. Every incident you cause afterwards raises the Group priority again, and at the maximum the file is reopened.</p>") +
+            T("<p>To complete any ordeal, you must spend the required resources by using the \"Wield\" actions in the ordeal menu. Each assigned member allows one action per cult turn. You can also annul an ordeal to cancel it, though this counts as failure.</p>"),
         },
         {
           id: 'cultProfaneOrdeals',
-          name: 'Profane Ordeals',
+          name: T('Profane Ordeals'),
           img: 'pedia/cult_profane',
-          text: "<p>Profane ordeals are tribulations that descend upon the cult unbidden. They appear periodically as challenges when conditions are met. Larger cults can face up to two simultaneous profane ordeals.</p>" +
-            "<p>Each profane ordeal has a timer in cult turns. If you fail to complete it before time runs out, the ordeal fails and inflicts a random burden on the cult for several turns. While active, profane ordeals also impose negative effects on the cult.</p>" +
-            "<p>Profane ordeals require both resources and a mission to complete. The resource requirements (power and money) scale with your cult's strength - more powerful cults face steeper demands. You must spend these resources through the ordeal menu, just like communal ordeals.</p>" +
-            "<p>The mission component, called a clavis, requires you personal physical action in the game world. Mission areas are marked on the regional map, and the target will spawn when you enter and remain in the area. Note that once you enter the mission area, you cannot save and cannot leave until the mission succeeds or fails. At this point the cult time also stops passing until the mission is over.</p>" +
-            "<p>Some claves are combat missions. In those, the ordeal points you at heavily contested objectives where hostile targets must be eliminated or a dangerous operation must be disrupted before it escalates. These missions are less about stealth and more about committing to a decisive strike in a prepared battlefield.</p>" +
-            "<p>Both the resource requirements and the mission must be completed to succeed. If the target dies during a persuade mission, or if the timer expires, the ordeal fails. Success removes the ordeal and its negative effects, while failure adds a new burden to the cult.</p>",
+          text: T("<p>Profane ordeals are tribulations that descend upon the cult unbidden. They appear periodically as challenges when conditions are met. Larger cults can face up to two simultaneous profane ordeals.</p>") +
+            T("<p>Each profane ordeal has a timer in cult turns. If you fail to complete it before time runs out, the ordeal fails and inflicts a random burden on the cult for several turns. While active, profane ordeals also impose negative effects on the cult.</p>") +
+            T("<p>Profane ordeals require both resources and a mission to complete. The resource requirements (power and money) scale with your cult's strength - more powerful cults face steeper demands. You must spend these resources through the ordeal menu, just like communal ordeals.</p>") +
+            T("<p>The mission component, called a clavis, requires you personal physical action in the game world. Mission areas are marked on the regional map, and the target will spawn when you enter and remain in the area. Note that once you enter the mission area, you cannot save and cannot leave until the mission succeeds or fails. At this point the cult time also stops passing until the mission is over.</p>") +
+            T("<p>Some claves are combat missions. In those, the ordeal points you at heavily contested objectives where hostile targets must be eliminated or a dangerous operation must be disrupted before it escalates. These missions are less about stealth and more about committing to a decisive strike in a prepared battlefield.</p>") +
+            T("<p>Both the resource requirements and the mission must be completed to succeed. If the target dies during a persuade mission, or if the timer expires, the ordeal fails. Success removes the ordeal and its negative effects, while failure adds a new burden to the cult.</p>"),
         },
         {
           id: 'cultCombatMissions',
-          name: 'Combat Missions',
-          text: "<p>Combat missions are special clavis operations attached to profane ordeals. Instead of persuasion or simple interception, these tasks escalate into direct violence: you are sent to neutralize marked enemies or break a hostile process before it matures.</p>" +
-            "<p>The cult window lists these missions under active ordeals, while the region map marks where to deploy. Once you enter the mission area, you are committed until the operation is resolved. Retreat and save restrictions apply for the duration, and cult time pauses while the mission is active.</p>" +
-            "<p>In practice, combat missions reward preparation: arrive with a stable host, a well-equipped team, and an exit plan. Clearing the mission objective is only one side of success, because the parent ordeal still expects its required resources to be paid through cult actions.</p>",
+          name: T('Combat Missions'),
+          text: T("<p>Combat missions are special clavis operations attached to profane ordeals. Instead of persuasion or simple interception, these tasks escalate into direct violence: you are sent to neutralize marked enemies or break a hostile process before it matures.</p>") +
+            T("<p>The cult window lists these missions under active ordeals, while the region map marks where to deploy. Once you enter the mission area, you are committed until the operation is resolved. Retreat and save restrictions apply for the duration, and cult time pauses while the mission is active.</p>") +
+            T("<p>In practice, combat missions reward preparation: arrive with a stable host, a well-equipped team, and an exit plan. Clearing the mission objective is only one side of success, because the parent ordeal still expects its required resources to be paid through cult actions.</p>"),
         },
         {
           id: 'cultBazaarNet',
-          name: 'BazaarNet',
-          text: "<p>BazaarNet is the cult's procurement and training channel inside the Cult window. It is used to shape your followers into reliable field assets by improving their loadouts and sharpening their weapon skills.</p>" +
-            "<p><span class=window-cult-ordeals-title>Equip member</span> lets you pick a free member and purchase gear for key slots. Weapons and armor are handled as practical replacements, so a new purchase can redefine that follower's battlefield role immediately. Note that better equipment will require you to spend combat resources in addition to money.</p>" +
-            "<p><span class=window-cult-ordeals-title>Train member</span> focuses on weapon handling. Training options appear for the member's currently equipped melee and ranged weapons, then apply directly to those skill lanes. This makes equipment choices and training choices tightly linked.</p>" +
-            "<p>BazaarNet spends money and combat resources, and it is unavailable while trade is blocked by cult effects. Keep an eye on member status as well: only free members can be equipped or trained through this menu.</p>",
+          name: T('BazaarNet'),
+          text: T("<p>BazaarNet is the cult's procurement and training channel inside the Cult window. It is used to shape your followers into reliable field assets by improving their loadouts and sharpening their weapon skills.</p>") +
+            T("<p><span class=window-cult-ordeals-title>Equip member</span> lets you pick a free member and purchase gear for key slots. Weapons and armor are handled as practical replacements, so a new purchase can redefine that follower's battlefield role immediately. Note that better equipment will require you to spend combat resources in addition to money.</p>") +
+            T("<p><span class=window-cult-ordeals-title>Train member</span> focuses on weapon handling. Training options appear for the member's currently equipped melee and ranged weapons, then apply directly to those skill lanes. This makes equipment choices and training choices tightly linked.</p>") +
+            T("<p>BazaarNet spends money and combat resources, and it is unavailable while trade is blocked by cult effects. Keep an eye on member status as well: only free members can be equipped or trained through this menu.</p>"),
         },
         {
           id: 'cultCommands',
-          name: 'Cultist Commands',
-          text: "<p>When cult followers are physically present in area mode, you can issue tactical orders through the command menu. This interface is separate from normal actions and is built for quick battlefield coordination.</p>" +
-            "<p>The command set is intentionally compact: order followers to attack the current visible target, order them to leave the area, or abort. Attack orders are refused against fellow cultists, and leave orders clear current aggression so your followers disengage and withdraw.</p>" +
-            "<p>Commanding is strongest when paired with targeting. Select or confirm a target first, then direct the squad to focus it down while you reposition. Remember that movement is blocked while the command menu is open, so issue orders deliberately and exit back to normal control.</p>",
+          name: T('Cultist Commands'),
+          text: T("<p>When cult followers are physically present in area mode, you can issue tactical orders through the command menu. This interface is separate from normal actions and is built for quick battlefield coordination.</p>") +
+            T("<p>The command set is intentionally compact: order followers to attack the current visible target, order them to leave the area, or abort. Attack orders are refused against fellow cultists, and leave orders clear current aggression so your followers disengage and withdraw.</p>") +
+            T("<p>Commanding is strongest when paired with targeting. Select or confirm a target first, then direct the squad to focus it down while you reposition. Remember that movement is blocked while the command menu is open, so issue orders deliberately and exit back to normal control.</p>"),
         },
       ],
     },

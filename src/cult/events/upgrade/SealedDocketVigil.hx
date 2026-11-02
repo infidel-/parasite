@@ -12,22 +12,22 @@ class SealedDocketVigil
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Sealed Docket Vigil',
-        text: 'Underground docket vault hums as the newly elevated advocate kneels before a magistrate bench upholstered in living hide. Masked clerks murmur citations into respirators while filings pulse under ligature wraps. Flesh sutures trace the statute shelves, keeping city cameras blind to the oath.',
+        title: T('Sealed Docket Vigil'),
+        text: T('Underground docket vault hums as the newly elevated advocate kneels before a magistrate bench upholstered in living hide. Masked clerks murmur citations into respirators while filings pulse under ligature wraps. Flesh sutures trace the statute shelves, keeping city cameras blind to the oath.'),
         choices: [
           {
-            button: 'Seal Bank',
-            text: 'Sweep hush retainers through bonded trusts to feed the legal war chest.',
+            button: T('Seal Bank'),
+            text: T('Sweep hush retainers through bonded trusts to feed the legal war chest.'),
             f: choice1
           },
           {
-            button: 'Clerk Sync',
-            text: 'Mesh the clerk choir with encrypted case flows to prime covert rulings.',
+            button: T('Clerk Sync'),
+            text: T('Mesh the clerk choir with encrypted case flows to prime covert rulings.'),
             f: choice2
           },
           {
-            button: 'Oath Mark',
-            text: 'Brand the advocate with living statutes to anchor the hidden mandate.',
+            button: T('Oath Mark'),
+            text: T('Brand the advocate with living statutes to anchor the hidden mandate.'),
             f: choice3
           }
         ]

@@ -22,7 +22,7 @@ class BlackNoise extends Effect
   public override function init()
     {
       super.init();
-      name = 'black noise';
+      name = N('black noise');
     }
 
 // drop black blood each turn while effect is active

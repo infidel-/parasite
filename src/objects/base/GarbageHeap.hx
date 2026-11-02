@@ -14,6 +14,6 @@ class GarbageHeap extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Cumulus';
+      name = N('Cumulus');
     }
 }

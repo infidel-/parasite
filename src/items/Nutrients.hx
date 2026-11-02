@@ -14,9 +14,9 @@ class Nutrients extends ItemInfo
     {
       super(game);
       id = 'nutrients';
-      name = 'nutrients';
+      name = N('nutrients');
       type = 'nutrients';
-      unknown = 'uneven dark-red object';
+      unknown = N('uneven dark-red object');
       isKnown = true;
     }
 
@@ -29,7 +29,7 @@ class Nutrients extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Consume ' + Const.col('inventory-item', itemName),
-        nameClean: 'Consume',
+        nameClean: T('Consume'),
         energy: 0,
         item: item
       });
@@ -49,7 +49,7 @@ class Nutrients extends ItemInfo
 // performs nutrient consumption effects
   function useAction(item: _Item): Bool
     {
-      game.log('Your host gnaws the delicious nutrients recovering health and energy.');
+      game.log(T('Your host gnaws the delicious nutrients recovering health and energy.'));
       game.scene.sounds.play('item-nutrients');
       game.player.host.health += 10;
       game.player.host.energy += 50;

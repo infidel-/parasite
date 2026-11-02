@@ -97,8 +97,8 @@ class BlackopsAI extends HumanAI
     {
       super.init();
       type = 'blackops';
-      name.unknown = 'blackops agent';
-      name.unknownCapped = 'Blackops agent';
+      name.unknown = N('blackops agent');
+      name.unknownCapped = N('Blackops agent');
       soundsID = 'team';
       isAggressive = true;
       isRelentless = true;

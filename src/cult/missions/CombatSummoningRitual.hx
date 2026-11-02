@@ -39,8 +39,8 @@ class CombatSummoningRitual extends Combat
   public override function init()
     {
       super.init();
-      name = 'Stop Ritual';
-      note = 'A summoning ritual must be interrupted before it completes.';
+      name = N('Stop Ritual');
+      note = N('A summoning ritual must be interrupted before it completes.');
       state = PENDING_INIT;
       ritualTimer = 0;
       ritualBreakTimer = 0;
@@ -319,7 +319,7 @@ class CombatSummoningRitual extends Combat
             state = ACTIVE;
             ritualTimer = 10;
             game.message({
-              text: 'The chant tightens around the stone. Completion is near. Fewer cultists alive, weaker chance to break through.',
+              text: T('The chant tightens around the stone. Completion is near. Fewer cultists alive, weaker chance to break through.'),
               col: 'cult',
             });
 
@@ -342,7 +342,7 @@ class CombatSummoningRitual extends Combat
       state = BREAKING;
       ritualBreakTimer = 2;
       game.message({
-        text: 'The ritual flow is broken. Unforeseen consequences gather.',
+        text: T('The ritual flow is broken. Unforeseen consequences gather.'),
         col: 'cult',
       });
     }
@@ -357,7 +357,7 @@ class CombatSummoningRitual extends Combat
       removePortal();
       spawnChoirOfDiscord();
       game.message({
-        text: 'The chant closes. The membrane tears.',
+        text: T('The chant closes. The membrane tears.'),
         col: 'cult',
       });
     }
@@ -373,13 +373,13 @@ class CombatSummoningRitual extends Combat
         {
           spawnChoirOfDiscord();
           game.message({
-            text: 'The membrane tears. A choir of discord spills through.',
+            text: T('The membrane tears. A choir of discord spills through.'),
             col: 'cult',
           });
         }
       else
         game.message({
-          text: 'The membrane yet holds.',
+          text: T('The membrane yet holds.'),
           col: 'cult',
         });
     }
@@ -541,13 +541,13 @@ class CombatSummoningRitual extends Combat
         {
           spawnChoirOfDiscord();
           game.message({
-            text: 'The ritual is complete. The membrane tears and a discordant hymn spills through.',
+            text: T('The ritual is complete. The membrane tears and a discordant hymn spills through.'),
             col: 'cult',
           });
         }
       else
         game.message({
-          text: 'The circle is silent. The membrane shudders in the dark.',
+          text: T('The circle is silent. The membrane shudders in the dark.'),
           col: 'cult',
         });
     }

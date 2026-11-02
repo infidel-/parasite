@@ -24,7 +24,7 @@ class Stairs extends AreaObject
       missionID = -1;
       imageCol = Const.FRAME_STAIRS;
       type = 'stairs';
-      name = 'stairs';
+      name = N('stairs');
       isStatic = true;
     }
 
@@ -42,7 +42,7 @@ class Stairs extends AreaObject
       game.ui.hud.addAction({
         id: 'leaveArea',
         type: ACTION_OBJECT,
-        name: 'Leave area',
+        name: T('Leave area'),
         energy: 10,
         isAgreeable: true,
         obj: this
@@ -61,9 +61,9 @@ class Stairs extends AreaObject
       var leavingAreaID = game.area.id;
       game.scene.sounds.play('object-stairs');
       if (missionID >= 0)
-        game.log("You leave the mission site.");
+        game.log(T("You leave the mission site."));
       else
-        game.log("You leave the corporate building entering the sewers.");
+        game.log(T("You leave the corporate building entering the sewers."));
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
 

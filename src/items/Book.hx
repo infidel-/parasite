@@ -10,8 +10,8 @@ class Book extends Readable
     {
       super(game);
       id = 'book';
-      unknown = 'object with many markings';
-      names = [ 'notebook', 'diary', 'journal', 'logbook', 'organizer', 'book' ];
+      unknown = N('object with many markings');
+      names = [ N('notebook'), N('diary'), N('journal'), N('logbook'), N('organizer'), N('book') ];
       areaObjectClass = objects.Book;
     }
 }

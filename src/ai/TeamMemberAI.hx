@@ -20,20 +20,20 @@ class TeamMemberAI extends HumanAI
       if (game.area.typeID == AREA_FACILITY)
         {
           type = 'scientist';
-          name.unknown = 'random scientist';
-          name.unknownCapped = 'Random scientist';
+          name.unknown = N('random scientist');
+          name.unknownCapped = N('Random scientist');
         }
       else if (game.area.typeID == AREA_MILITARY_BASE)
         {
           type = 'soldier';
-          name.unknown = 'soldier';
-          name.unknownCapped = 'Soldier';
+          name.unknown = N('soldier');
+          name.unknownCapped = N('Soldier');
         }
       else
         {
           type = 'civilian';
-          name.unknown = 'random civilian';
-          name.unknownCapped = 'Random civilian';
+          name.unknown = N('random civilian');
+          name.unknownCapped = N('Random civilian');
         }
       var jobData = game.jobs.getRandom(type);
       job = jobData.name;
@@ -191,7 +191,7 @@ class TeamMemberAI extends HumanAI
       if (game.turns - game.group.teamMemberLastNoticed < 8 + Std.random(4))
         return;
       game.group.teamMemberLastNoticed = game.turns;
-      game.log('You feel someone is watching.', COLOR_ALERT);
+      game.log(T('You feel someone is watching.'), COLOR_ALERT);
       game.profile.addPediaArticle('msgWatching');
       game.ui.hud.showBlinkingText();
       game.scene.sounds.play('team-notify');

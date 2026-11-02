@@ -212,7 +212,7 @@ class Images
           return {
             x: 0,
             y: 0,
-            job: 'unemployed',
+            job: N('unemployed'),
             income: 0,
             isMale: isMale,
             jobInfo: null,

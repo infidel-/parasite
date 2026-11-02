@@ -19,7 +19,7 @@ class CorpHQ extends RegionObject
     {
       super.init();
       type = 'corpHQ';
-      name = 'Corporate HQ';
+      name = N('Corporate HQ');
     }
 
 // called after load or creation

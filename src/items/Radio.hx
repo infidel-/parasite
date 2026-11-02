@@ -11,8 +11,8 @@ class Radio extends ItemInfo
     {
       super(game);
       id = 'radio';
-      name = 'police radio';
+      name = N('police radio');
       type = 'radio';
-      unknown = 'small plastic object';
+      unknown = N('small plastic object');
     }
 }

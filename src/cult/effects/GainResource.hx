@@ -20,7 +20,7 @@ class GainResource extends Effect
   public override function init()
     {
       super.init();
-      name = 'resource gain';
+      name = N('resource gain');
       allowMultiple = true;
     }
 
@@ -41,6 +41,6 @@ class GainResource extends Effect
 // returns custom display name
   public override function customName(): String
     {
-      return '+1-3 ' + resourceType + ' income';
+      return T('+1-3 {resource} income', { resource: resourceType });
     }
 }

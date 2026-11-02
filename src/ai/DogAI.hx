@@ -20,10 +20,10 @@ class DogAI extends AI
       super.init();
       type = 'dog';
       name = {
-        real: 'dog',
-        realCapped: 'dog',
-        unknown: 'dog',
-        unknownCapped: 'dog'
+        real: N('dog'),
+        realCapped: N('dog'),
+        unknown: N('dog'),
+        unknownCapped: N('dog')
       };
       soundsID = 'dog';
 
@@ -68,7 +68,7 @@ class DogAI extends AI
       game.ui.hud.addAction({
         id: 'bark',
         type: ACTION_HOST,
-        name: 'Bark',
+        name: T('Bark'),
         canRepeat: true,
         energy: 5
       });

@@ -16,13 +16,13 @@ class NoTrade extends Effect
   public override function init()
     {
       super.init();
-      name = 'trade silence';
+      name = N('trade silence');
       allowMultiple = false;
     }
 
   // returns effect description
   public override function note(): String
     {
-      return 'blocks all trading';
+      return T('blocks all trading');
     }
 }

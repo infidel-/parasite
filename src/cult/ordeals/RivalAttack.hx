@@ -1,6 +1,7 @@
 // attack a revealed rival cult base
 package cult.ordeals;
 
+import l10n.Loc;
 import cult.Cult;
 import cult.Ordeal;
 import cult.missions.RivalBase;
@@ -25,11 +26,11 @@ class RivalAttack extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Attack Rival Base';
+      name = N('Attack Rival Base');
       type = ORDEAL_COMMUNAL;
       actions = 0;
       rivalCultID = -1;
-      note = 'Destroy the rival sanctum.';
+      note = N('Destroy the rival sanctum.');
     }
 
 // get custom name for display
@@ -37,8 +38,8 @@ class RivalAttack extends Ordeal
     {
       var rival = game.getRivalCultByID(rivalCultID);
       if (rival != null)
-        return name + ' (' + rival.customName() + ')';
-      return name;
+        return Loc.tr(name) + ' (' + rival.customName() + ')';
+      return Loc.tr(name);
     }
 
 // adds attack actions for fully revealed rivals
@@ -52,7 +53,7 @@ class RivalAttack extends Ordeal
           actions.push({
             id: 'rivalAttack',
             type: ACTION_CULT,
-            name: 'Attack ' + rival.name,
+            name: T('Attack {cult}', { cult: Loc.tr(rival.name) }),
             energy: 0,
             obj: { rivalCultID: rival.id }
           });

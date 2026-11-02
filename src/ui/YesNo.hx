@@ -48,7 +48,7 @@ class YesNo extends UIWindow
       var yes = Browser.document.createDivElement();
       yes.className = 'yesno-btn yesno-yes';
       yes.id = 'window-yesno-yes';
-      yes.innerHTML = 'YES';
+      yes.innerHTML = T('YES');
       yes.onclick = function (e) {
         func(true);
         game.scene.sounds.play('click-menu');
@@ -59,7 +59,7 @@ class YesNo extends UIWindow
       var no = Browser.document.createDivElement();
       no.className = 'yesno-btn yesno-no';
       no.id = 'window-yesno-no';
-      no.innerHTML = 'NO';
+      no.innerHTML = T('NO');
       no.onclick = function (e) {
         func(false);
         game.scene.sounds.play('click-menu');
@@ -77,7 +77,7 @@ class YesNo extends UIWindow
       backState = (o.back != null ? o.back : UISTATE_DEFAULT);
       var danger = (o.danger == true);
       window.classList.toggle('danger', danger);
-      kickerEl.innerHTML = (o.kicker != null ? o.kicker : (danger ? 'Confirm exit' : 'Confirm'));
+      kickerEl.innerHTML = (o.kicker != null ? o.kicker : (danger ? T('Confirm exit') : T('Confirm')));
       textEl.innerHTML = o.text;
       subEl.innerHTML = (o.sub != null ? o.sub : '');
       subEl.style.display = (o.sub != null ? '' : 'none');

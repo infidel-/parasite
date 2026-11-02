@@ -20,7 +20,7 @@ class Drunk extends Effect
   public override function init()
     {
       super.init();
-      name = 'drunk';
+      name = N('drunk');
     }
 
 // reduces control or scrambles host each turn

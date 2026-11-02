@@ -20,7 +20,7 @@ class Panic extends Effect
   public override function init()
     {
       super.init();
-      name = 'panic';
+      name = N('panic');
     }
 
 // panic causes AI to run away or tear parasite away

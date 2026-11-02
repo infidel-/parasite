@@ -20,7 +20,7 @@ class Vent extends AreaObject
       imageRow = Const.ROW_OBJECT2;
       imageCol = Const.FRAME_VENTILATION;
       type = 'vent';
-      name = 'vent';
+      name = N('vent');
       isStatic = true;
     }
 
@@ -36,7 +36,7 @@ class Vent extends AreaObject
       game.ui.hud.addAction({
         id: 'enterVent',
         type: ACTION_OBJECT,
-        name: 'Enter ventilation',
+        name: T('Enter ventilation'),
         energy: 10,
         obj: this
       });
@@ -47,7 +47,7 @@ class Vent extends AreaObject
     {
       if (game.player.state != PLR_STATE_PARASITE)
         {
-          game.actionFailed("You can only enter the ventilation without a host.");
+          game.actionFailed(T("You can only enter the ventilation without a host."));
           return false;
         }
 
@@ -68,10 +68,10 @@ class Vent extends AreaObject
         y + Const.dir4y[idxto]);
       if (!ret)
         {
-          game.actionFailed("There is something blocking the exit on the other side.");
+          game.actionFailed(T("There is something blocking the exit on the other side."));
           return false;
         }
-      game.log("You quietly slither through the ventilation emerging outside after some time.");
+      game.log(T("You quietly slither through the ventilation emerging outside after some time."));
 
       return true;
     }

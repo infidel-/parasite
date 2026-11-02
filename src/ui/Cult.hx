@@ -2,6 +2,7 @@
 
 package ui;
 
+import l10n.Loc;
 import js.Browser;
 import js.html.DivElement;
 import js.html.SpanElement;
@@ -44,7 +45,7 @@ class Cult extends UIWindow
       trade = new CultTrade(g, this);
 
       // shared HUD chrome: scrim + pentagram glyph, frame, corners, veins, "CULT" watermark
-      addHudChrome('CULT', UISvg.pentagram());
+      addHudChrome(T('CULT'), UISvg.pentagram());
 
       // title row: insane FontdinerSwanky name (per-letter jitter) + stat-chip strip
       var title = Browser.document.createDivElement();
@@ -89,7 +90,7 @@ class Cult extends UIWindow
       var actionsSec = Browser.document.createDivElement();
       actionsSec.className = 'cult-section cult-actions-sec cult-rise';
       actionsSec.style.setProperty('--i', '1');
-      actionsSec.innerHTML = '<div class="cult-bk">ACTIONS</div>';
+      actionsSec.innerHTML = '<div class="cult-bk">' + T('ACTIONS') + '</div>';
       actions = Browser.document.createDivElement();
       actions.className = 'cult-actions';
       actionsSec.appendChild(actions);
@@ -98,7 +99,7 @@ class Cult extends UIWindow
       var ordealsSec = Browser.document.createDivElement();
       ordealsSec.className = 'cult-section cult-ordeals cult-rise';
       ordealsSec.style.setProperty('--i', '2');
-      ordealsSec.innerHTML = '<div class="cult-bk">ORDEALS</div>';
+      ordealsSec.innerHTML = '<div class="cult-bk">' + T('ORDEALS') + '</div>';
       ordeals = Browser.document.createDivElement();
       ordeals.className = 'cult-rites';
       ordealsSec.appendChild(ordeals);
@@ -151,8 +152,8 @@ class Cult extends UIWindow
     {
       var cult = game.cults[0];
       statsEl.innerHTML =
-        '<span class="cult-lvl">LVL ' + cult.level + '</span>' +
-        '<span class="statchip cult-members evolution-tip" data-tip="Members / maximum congregation">' +
+        '<span class="cult-lvl">' + T('LVL {n}', { n: cult.level }) + '</span>' +
+        '<span class="statchip cult-members evolution-tip" data-tip="' + T('Members / maximum congregation') + '">' +
         UISvg.cultMembers() + cult.members.length + '/' + cult.maxSize() + '</span>';
     }
 
@@ -164,25 +165,26 @@ class Cult extends UIWindow
 
       // base
       if (cult.base != null)
-        buf.add('<div class="cult-line"><span class="cult-k">Base</span> ' +
+        buf.add('<div class="cult-line"><span class="cult-k">' + T('Base') + '</span> ' +
           cult.base.statusText() + '</div>');
 
       // rival cults
       var rivals = game.getRivalCults();
       if (rivals.length > 0)
         {
-          buf.add('<div class="cult-line"><span class="cult-k">Rival cults</span></div>');
+          buf.add('<div class="cult-line"><span class="cult-k">' + T('Rival cults') + '</span></div>');
           for (rival in rivals)
-            buf.add('<div class="cult-line cult-rival">' + rival.name + ' ' +
-              Const.smallgray('[revealed ' + rival.rivalRevealedLevel +
-              '/3' + (rival.state == CULT_STATE_DEAD ? ', destroyed' : '') + ']') +
+            buf.add('<div class="cult-line cult-rival">' + Loc.tr(rival.name) + ' ' +
+              Const.smallgray(rival.state == CULT_STATE_DEAD ?
+                T('[revealed {n}/3, destroyed]', { n: rival.rivalRevealedLevel }) :
+                T('[revealed {n}/3]', { n: rival.rivalRevealedLevel })) +
               '</div>');
         }
 
       // active effects
       var effectsText = collectEffects();
       if (effectsText.length > 0)
-        buf.add('<div class="cult-line"><span class="cult-k">Effects</span> ' +
+        buf.add('<div class="cult-line"><span class="cult-k">' + T('Effects') + '</span> ' +
           effectsText.join(', ') + '</div>');
 
       buf.add('</div>');
@@ -245,7 +247,7 @@ class Cult extends UIWindow
           var a: _PlayerAction = {
             id: 'callHelp',
             type: ACTION_CULT,
-            name: 'Summon the faithful',
+            name: T('Summon the faithful'),
             energy: 0,
           };
 
@@ -259,7 +261,7 @@ class Cult extends UIWindow
           addPlayerAction({
             id: 'callMember',
             type: ACTION_CULT,
-            name: 'Summon member',
+            name: T('Summon member'),
             energy: 0,
             f: function() {
               menuState = STATE_CALL_MEMBER;
@@ -276,7 +278,7 @@ class Cult extends UIWindow
           addPlayerAction({
             id: 'trade',
             type: ACTION_CULT,
-            name: 'Trade ' + Icon.money,
+            name: T('Trade') + ' ' + Icon.money,
             energy: 0,
             f: function() {
               menuState = STATE_TRADE;
@@ -304,7 +306,7 @@ class Cult extends UIWindow
             addPlayerAction({
               id: 'tradeResources',
               type: ACTION_CULT,
-              name: 'Trade resources',
+              name: T('Trade resources'),
               energy: 0,
               f: function() {
                 menuState = STATE_SELECT_RESOURCE;
@@ -336,7 +338,7 @@ class Cult extends UIWindow
         addPlayerAction({
           id: 'initiateOrdeal',
           type: ACTION_CULT,
-          name: 'Initiate communal ordeal',
+          name: T('Initiate communal ordeal'),
           energy: 0,
           f: function() {
             menuState = STATE_INITIATE;
@@ -351,7 +353,7 @@ class Cult extends UIWindow
             var ordealAction: _PlayerAction = {
               id: 'ordeal_' + ordeal.name,
               type: ACTION_CULT,
-              name: Const.smallgray('[Ordeal] ') + ordeal.customName(),
+              name: Const.smallgray(T('[Ordeal]') + ' ') + ordeal.customName(),
               energy: 0,
               obj: { ordeal: ordeal }
             };
@@ -376,7 +378,7 @@ class Cult extends UIWindow
       addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           menuState = STATE_ROOT;
@@ -520,7 +522,7 @@ class Cult extends UIWindow
       addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           menuState = STATE_ROOT;
@@ -578,7 +580,7 @@ class Cult extends UIWindow
       buf.add('<th class="cult-money">' + Icon.money + '</th></tr>');
 
       // power row (white values + bar)
-      buf.add('<tr class="cult-prow"><td class="cult-rl">Power</td>');
+      buf.add('<tr class="cult-prow"><td class="cult-rl">' + T('Power') + '</td>');
       for (name in _CultPower.names)
         {
           var p = cult.power.get(name);
@@ -587,7 +589,7 @@ class Cult extends UIWindow
       buf.add('<td>' + cult.power.money + '</td></tr>');
 
       // income row (green)
-      buf.add('<tr class="cult-income"><td class="cult-rl">Income</td>');
+      buf.add('<tr class="cult-income"><td class="cult-rl">' + T('Income') + '</td>');
       for (name in _CultPower.names)
         {
           var income = Std.int(cult.power.get(name) / 3);
@@ -597,7 +599,7 @@ class Cult extends UIWindow
       buf.add('<td>' + (moneyIncome > 0 ? '+' + moneyIncome : '-') + '</td></tr>');
 
       // resources row (gray)
-      buf.add('<tr class="cult-res"><td class="cult-rl">Resources</td>');
+      buf.add('<tr class="cult-res"><td class="cult-rl">' + T('Resources') + '</td>');
       for (name in _CultPower.names)
         buf.add('<td>' + cult.resources.getShort(name) + '</td>');
       buf.add('<td>' + cult.resources.getShort('money') + '</td></tr>');
@@ -611,23 +613,23 @@ class Cult extends UIWindow
       var cult = game.cults[0];
       buf.add('<div class="cult-panel cult-roster-wrap">');
       buf.add('<table class="cult-roster"><thead><tr>');
-      buf.add('<th>name</th><th>occupation</th><th>income</th><th>health</th>' +
-        '<th>energy</th><th>status</th><th>armor / ranged / melee</th>');
+      buf.add('<th>' + T('name') + '</th><th>' + T('occupation') + '</th><th>' + T('income') + '</th><th>' + T('health') + '</th>' +
+        '<th>' + T('energy') + '</th><th>' + T('status') + '</th><th>' + T('armor / ranged / melee') + '</th>');
       buf.add('</tr></thead><tbody>');
       for (i => m in cult.members)
         {
           var status = cult.getMemberStatus(m.id);
-          var isHost = (status == '[host]');
+          var isHost = (status == T('[host]'));
           var rowCls = (i == 0 ? ' class="cult-leader"' : (isHost ? ' class="cult-host"' : ''));
           buf.add('<tr' + rowCls + '>');
 
           // name (+ leader tag)
           buf.add('<td><span class="cult-mn">' + m.TheName() + '</span>' +
-            (i == 0 ? ' <span class="cult-tag">(leader)</span>' : '') + '</td>');
+            (i == 0 ? ' <span class="cult-tag">' + T('(leader)') + '</span>' : '') + '</td>');
 
           // occupation
           var jobInfo = game.jobs.getJobInfo(m.job);
-          buf.add('<td class="cult-sg">[' + jobInfo.level + '] ' + m.job + '</td>');
+          buf.add('<td class="cult-sg">[' + jobInfo.level + '] ' + Loc.tr(m.job) + '</td>');
 
           // income (struck when inactive)
           if (status != '')
@@ -657,8 +659,10 @@ class Cult extends UIWindow
           buf.add('</tr>');
         }
       buf.add('</tbody></table></div>');
-      buf.add('<div class="cult-count">Members: ' +
-        cult.members.length + '/' + cult.maxSize() + '</div>');
+      buf.add('<div class="cult-count">' + T('Members: {n}/{max}', {
+        n: cult.members.length,
+        max: cult.maxSize(),
+      }) + '</div>');
     }
 
 // builds the three gear slots (armor / ranged / melee) for a member row
@@ -710,7 +714,8 @@ class Cult extends UIWindow
       for (e in cult.effects)
         {
           var t = '<span class="cult-fx">' + e.customName() + '</span> ' +
-            Const.smallgray('(' + e.turns + ' t)');
+            // tr: turns left on a cult effect, "t" = turns
+            Const.smallgray(T('({n} t)', { n: e.turns }));
           var note = e.note();
           if (note != '')
             t += Const.smallgray(' (' + note + ')');
@@ -722,7 +727,7 @@ class Cult extends UIWindow
         for (e in ordeal.effects)
           {
             var t = '<span class="cult-fx">' + e.customName() + '</span> ' +
-              Const.smallgray('(' + e.turns + ' t)');
+              Const.smallgray(T('({n} t)', { n: e.turns }));
             var note = e.note();
             if (note != '')
               t += Const.smallgray(' (' + note + ')');
@@ -740,7 +745,7 @@ class Cult extends UIWindow
       addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           menuState = STATE_ROOT;
@@ -826,7 +831,7 @@ class Cult extends UIWindow
         addOrdealCard(buf, ordeal, false, true);
 
       ordeals.innerHTML = (buf.length == 0 ?
-        '<div class="cult-empty">No active ordeals</div>' : buf.toString());
+        '<div class="cult-empty">' + T('No active ordeals') + '</div>' : buf.toString());
 
       // snapshot the live list; prune the seen set to currently-active ordeals
       ordealsPrev = [for (o in list) o];
@@ -843,7 +848,7 @@ class Cult extends UIWindow
       // title + note
       buf.add('<div class="cult-rt">' + ordeal.customName() + '</div>');
       if (ordeal.note != '')
-        buf.add('<div class="cult-rnote">' + ordeal.note + '</div>');
+        buf.add('<div class="cult-rnote">' + Loc.tr(ordeal.note) + '</div>');
 
       buf.add('<table class="cult-rtab">');
 
@@ -857,29 +862,29 @@ class Cult extends UIWindow
               memberNames.push(m.TheName());
               break;
             }
-      buf.add('<tr><th>Members</th><td>' +
-        (memberNames.length > 0 ? memberNames.join(', ') : 'None') + '</td></tr>');
+      buf.add('<tr><th>' + T('Members') + '</th><td>' +
+        (memberNames.length > 0 ? memberNames.join(', ') : T('None')) + '</td></tr>');
 
       // power requirements
       var powerParts = [];
       if (ordeal.power.combat > 0)
-        powerParts.push('COMBAT <span class="cult-w">' + ordeal.power.combat + '</span>');
+        powerParts.push(T('COMBAT') + ' <span class="cult-w">' + ordeal.power.combat + '</span>');
       if (ordeal.power.media > 0)
-        powerParts.push('MEDIA <span class="cult-w">' + ordeal.power.media + '</span>');
+        powerParts.push(T('MEDIA') + ' <span class="cult-w">' + ordeal.power.media + '</span>');
       if (ordeal.power.lawfare > 0)
-        powerParts.push('LAWFARE <span class="cult-w">' + ordeal.power.lawfare + '</span>');
+        powerParts.push(T('LAWFARE') + ' <span class="cult-w">' + ordeal.power.lawfare + '</span>');
       if (ordeal.power.corporate > 0)
-        powerParts.push('CORPORATE <span class="cult-w">' + ordeal.power.corporate + '</span>');
+        powerParts.push(T('CORPORATE') + ' <span class="cult-w">' + ordeal.power.corporate + '</span>');
       if (ordeal.power.political > 0)
-        powerParts.push('POLITICAL <span class="cult-w">' + ordeal.power.political + '</span>');
+        powerParts.push(T('POLITICAL') + ' <span class="cult-w">' + ordeal.power.political + '</span>');
       if (ordeal.power.money > 0)
         powerParts.push('<span class="cult-w">' + ordeal.power.money + '</span>' + Icon.money);
-      buf.add('<tr><th>Power</th><td>' +
+      buf.add('<tr><th>' + T('Power') + '</th><td>' +
         (powerParts.length > 0 ? powerParts.join(', ') :
-          '<span class="cult-sg">No power requirements</span>') + '</td></tr>');
+          '<span class="cult-sg">' + T('No power requirements') + '</span>') + '</td></tr>');
 
       // actions counter
-      buf.add('<tr><th>Actions</th><td>' + ordeal.actions + '/' + ordeal.members.length + '</td></tr>');
+      buf.add('<tr><th>' + T('Actions') + '</th><td>' + ordeal.actions + '/' + ordeal.members.length + '</td></tr>');
 
       // claves (missions)
       if (ordeal.missions.length > 0)
@@ -889,19 +894,22 @@ class Cult extends UIWindow
             {
               var name = mission.coloredName();
               if (mission.isCompleted)
-                name += Const.col('gray', ' [completed]');
-              else name += ' ' + Const.smallgray('at (' + mission.x + ', ' + mission.y + ')');
+                name += Const.col('gray', ' ' + T('[completed]'));
+              else name += ' ' + Const.smallgray(T('at ({x}, {y})', {
+                x: mission.x,
+                y: mission.y,
+              }));
               missionNames.push(name);
             }
-          buf.add('<tr><th>Claves</th><td>' + missionNames.join(', ') + '</td></tr>');
+          buf.add('<tr><th>' + T('Claves') + '</th><td>' + missionNames.join(', ') + '</td></tr>');
         }
 
       // profane timer
       if (isProfane)
         {
           var prof: ProfaneOrdeal = cast ordeal;
-          buf.add('<tr class="cult-timer"><th>Time left</th><td><span class="cult-w">' +
-            prof.timer + '</span> turns</td></tr>');
+          buf.add('<tr class="cult-timer"><th>' + T('Time left') + '</th><td><span class="cult-w">' +
+            prof.timer + '</span> ' + T('{n, plural, one{turn} other{turns}}', { n: prof.timer }) + '</td></tr>');
         }
 
       buf.add('</table></div>');

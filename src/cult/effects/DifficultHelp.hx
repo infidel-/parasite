@@ -1,6 +1,7 @@
 // effect that makes calling help harder
 package cult.effects;
 
+import l10n.Loc;
 import cult.Effect;
 import game.Game;
 
@@ -18,7 +19,7 @@ class DifficultHelp extends Effect
   public override function init()
     {
       super.init();
-      name = 'summoning disruption';
+      name = N('summoning disruption');
       allowMultiple = false;
       
       percent = 25;
@@ -34,17 +35,17 @@ class DifficultHelp extends Effect
     {
       var level = '';
       if (percent <= 25)
-        level = 'low';
+        level = T('low');
       else if (percent <= 50)
-        level = 'medium';
+        level = T('medium');
       else
-        level = 'impossible';
-      return name + ' (' + level + ')';
+        level = T('impossible');
+      return Loc.tr(name) + ' (' + level + ')';
     }
 
   // returns effect description
   public override function note(): String
     {
-      return 'calling help is harder';
+      return T('calling help is harder');
     }
 }

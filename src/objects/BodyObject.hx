@@ -35,7 +35,7 @@ class BodyObject extends AreaObject
       super.init();
       inventory = new Inventory(game);
       type = 'body';
-      name = 'body';
+      name = N('body');
       wasSeen = false;
       isSearched = false;
       organPoints = 0;
@@ -120,7 +120,7 @@ class BodyObject extends AreaObject
         game.ui.hud.addAction({
           id: 'searchBody',
           type: ACTION_OBJECT,
-          name: 'Search body',
+          name: T('Search body'),
           energy: 10,
           obj: this
         });
@@ -191,9 +191,9 @@ class BodyObject extends AreaObject
   function searchAction()
     {
       if (Std.random(100) < game.player.hostControl)
-        game.log("Your host resists your command.");
+        game.log(T("Your host resists your command."));
 
-      game.log("You've thoroughly searched the body.");
+      game.log(T("You've thoroughly searched the body."));
       isSearched = true;
     }
 
@@ -240,7 +240,7 @@ class BodyObject extends AreaObject
           var o = new Nutrient(game, game.area.id, x, y);
           game.area.addObject(o);
           game.scene.sounds.play('object-nutrients');
-          game.log("The body decays fast leaving nutrients behind.");
+          game.log(T("The body decays fast leaving nutrients behind."));
         }
     }
 

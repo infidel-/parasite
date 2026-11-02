@@ -38,8 +38,8 @@ class Necronomicon extends Mission
     {
       super.init();
       type = MISSION_COMBAT;
-      name = 'Necronomicon';
-      note = 'Recover the forbidden book and leave with it.';
+      name = N('Necronomicon');
+      note = N('Recover the forbidden book and leave with it.');
       spawned = false;
     }
 
@@ -52,15 +52,16 @@ class Necronomicon extends Mission
           game.area.x != x ||
           game.area.y != y)
         return;
-      var loc = game.area.findUnseenEmptyLocation();
-      if (loc == null ||
-          loc.x < 0)
-        loc = game.area.findEmptyLocationNear(game.playerArea.x,
+      // not named loc: a local loc shadows the loc package the T() macro expands to
+      var pos = game.area.findUnseenEmptyLocation();
+      if (pos == null ||
+          pos.x < 0)
+        pos = game.area.findEmptyLocationNear(game.playerArea.x,
           game.playerArea.y, 5);
-      if (loc == null)
+      if (pos == null)
         return;
-      new objects.Necronomicon(game, game.area.id, loc.x, loc.y, id);
+      new objects.Necronomicon(game, game.area.id, pos.x, pos.y, id);
       spawned = true;
-      game.logsg('The Necronomicon is somewhere nearby.');
+      game.logsg(T('The Necronomicon is somewhere nearby.'));
     }
 }

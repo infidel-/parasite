@@ -109,7 +109,7 @@ class PlayerArea extends _SaveObject
               player.host.onDetach('default');
               onDetach();
 
-              log("You've lost control of the host.");
+              log(T("You've lost control of the host."));
             }
         }
 
@@ -136,7 +136,7 @@ class PlayerArea extends _SaveObject
           game.ui.hud.addAction({
             id: 'climbOut',
             type: ACTION_AREA,
-            name: 'Climb out',
+            name: T('Climb out'),
             energy: 0,
           });
           return;
@@ -150,7 +150,7 @@ class PlayerArea extends _SaveObject
         game.ui.hud.addKeyAction({
           id: 'forma',
           type: ACTION_AREA,
-          name: 'Forma',
+          name: T('Forma'),
           energy: 0,
           isVirtual: true,
           key: 'f'
@@ -162,7 +162,7 @@ class PlayerArea extends _SaveObject
             game.ui.hud.addAction({
               id: 'attachHost',
               type: ACTION_AREA,
-              name: 'Attach To Host',
+              name: T('Attach To Host'),
               energy: 0
             });
         }
@@ -174,14 +174,14 @@ class PlayerArea extends _SaveObject
             game.ui.hud.addAction({
               id: 'invadeHost',
               type: ACTION_AREA,
-              name: 'Invade Host',
+              name: T('Invade Host'),
               energy: 10
             });
           if (attachHold < 90)
             game.ui.hud.addAction({
               id: 'hardenGrip',
               type: ACTION_AREA,
-              name: 'Harden Grip',
+              name: T('Harden Grip'),
               canRepeat: true,
               energy: 5
             });
@@ -189,7 +189,7 @@ class PlayerArea extends _SaveObject
             game.ui.hud.addAction({
               id: 'invadeEarly',
               type: ACTION_AREA,
-              name: 'Early Invasion',
+              name: T('Early Invasion'),
               energy: 1
             });
         }
@@ -201,7 +201,7 @@ class PlayerArea extends _SaveObject
             game.ui.hud.addAction({
               id: 'reinforceControl',
               type: ACTION_AREA,
-              name: 'Reinforce Control',
+              name: T('Reinforce Control'),
               canRepeat: true,
               energy: 5
             });
@@ -223,7 +223,7 @@ class PlayerArea extends _SaveObject
           game.ui.hud.addKeyAction({
             id: 'leaveHost',
             type: ACTION_AREA,
-            name: 'Leave host',
+            name: T('Leave host'),
             key: 'x'
           });
 
@@ -261,7 +261,7 @@ class PlayerArea extends _SaveObject
               game.ui.hud.addAction({
                 id: 'learnObject',
                 type: ACTION_AREA,
-                name: 'Learn About Object',
+                name: T('Learn About Object'),
                 energy: 10,
                 isAgreeable: true,
                 obj: o,
@@ -281,7 +281,7 @@ class PlayerArea extends _SaveObject
         game.ui.hud.addAction({
           id: 'pickupMenu',
           type: ACTION_AREA,
-          name: 'Pick up items… ' + Const.col('inventory-item', '(' + items.length + ')'),
+          name: T('Pick up items…') + ' ' + Const.col('inventory-item', '(' + items.length + ')'),
           isVirtual: true,
         });
 
@@ -290,7 +290,7 @@ class PlayerArea extends _SaveObject
         game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_AREA,
-          name: 'Leave Area',
+          name: T('Leave Area'),
           energy: 0
         });
 
@@ -337,7 +337,7 @@ class PlayerArea extends _SaveObject
           player.host.effects.has(EFFECT_PARALYSIS) &&
           (action.type == ACTION_OBJECT || action.id == 'leaveArea'))
         {
-          game.actionFailed('Your host is paralyzed.');
+          game.actionFailed(T('Your host is paralyzed.'));
           game.updateHUD();
           return;
         }
@@ -380,7 +380,7 @@ class PlayerArea extends _SaveObject
       // try to leave current host
       else if (action.id == 'leaveHost')
         {
-          log('You release the host.');
+          log(T('You release the host.'));
           leaveHostAction('default');
         }
       // probe host brain
@@ -455,7 +455,7 @@ class PlayerArea extends _SaveObject
           (player.host.state == AI_STATE_DEAD ||
            player.host.energy <= 0))
         {
-          game.player.onHostDeath('Your host has expired. You have to find a new one.');
+          game.player.onHostDeath(T('Your host has expired. You have to find a new one.'));
 
           // close window just in case
           if (game.ui.state != UISTATE_MESSAGE)
@@ -520,7 +520,7 @@ class PlayerArea extends _SaveObject
       // cannot move while in paralysis
       if (state == PLR_STATE_HOST && player.host.effects.has(EFFECT_PARALYSIS))
         {
-          game.actionFailed('Your host is paralyzed.');
+          game.actionFailed(T('Your host is paralyzed.'));
           return false;
         }
 
@@ -651,7 +651,7 @@ class PlayerArea extends _SaveObject
       // cannot attack when paralyzed
       if (player.host.effects.has(EFFECT_PARALYSIS))
         {
-          game.actionFailed('Your host is paralyzed.');
+          game.actionFailed(T('Your host is paralyzed.'));
           return;
         }
 
@@ -684,7 +684,7 @@ class PlayerArea extends _SaveObject
       // cannot attack when paralyzed
       if (player.host.effects.has(EFFECT_PARALYSIS))
         {
-          game.actionFailed('Your host is paralyzed.');
+          game.actionFailed(T('Your host is paralyzed.'));
           return;
         }
 
@@ -742,12 +742,12 @@ class PlayerArea extends _SaveObject
       if (ai.inventory.clothing.info.armor != null &&
           !ai.inventory.clothing.info.armor.canAttach)
         {
-          game.actionFailed('You cannot attach to this host due to its clothing.');
+          game.actionFailed(T('You cannot attach to this host due to its clothing.'));
           return false;
         }
       if (!ai.canAttach())
         {
-          game.actionFailed('You cannot attach to this host.');
+          game.actionFailed(T('You cannot attach to this host.'));
           return false;
         }
 
@@ -766,19 +766,19 @@ class PlayerArea extends _SaveObject
       if (ai.isAgreeable())
         {
           attachHold = 99;
-          log('The host is agreeable to your actions.');
+          log(T('The host is agreeable to your actions.'));
         }
       else if (ai.state == AI_STATE_PRESERVED)
         {
           attachHold = 99;
-          log('You smoothly attach to the preserved host.');
+          log(T('You smoothly attach to the preserved host.'));
         }
       else
         {
           // improv: attach efficiency
           var params = player.evolutionManager.getParams(IMP_ATTACH);
           attachHold = params.attachHoldBase;
-          log('You have managed to attach to the host.');
+          log(T('You have managed to attach to the host.'));
         }
 
       game.profile.addPediaArticle('hostInvading');
@@ -795,7 +795,7 @@ class PlayerArea extends _SaveObject
 // action: harden grip when attached to host
   function hardenGripAction()
     {
-      log('You harden your grip on the host.');
+      log(T('You harden your grip on the host.'));
 
       // 3D view: parasite + host shake against each other (the struggle)
       game.scene.view3d.playGripStruggle(entity, attachHost.entity);
@@ -834,16 +834,16 @@ class PlayerArea extends _SaveObject
       if (roll > chance)
         {
           player.health -= 2;
-          log('The host wrestles with you frantically, injuring you in the process.');
+          log(T('The host wrestles with you frantically, injuring you in the process.'));
           return;
         }
       player.health -= 1;
       if (player.health == 0)
         {
-          log('The host violently wrestles with you which results in a fatal injury.');
+          log(T('The host violently wrestles with you which results in a fatal injury.'));
           return;
         }
-      log('Your proboscis painfully penetrates the warm flesh. You are now in control of the host.');
+      log(T('Your proboscis painfully penetrates the warm flesh. You are now in control of the host.'));
       invadeHostAction(true);
     }
 
@@ -856,7 +856,7 @@ class PlayerArea extends _SaveObject
       if (attachHost == null)
         return;
       if (!fromInvadeEarly)
-        log('Your proboscis penetrates the warm flesh. You are now in control of the host.');
+        log(T('Your proboscis penetrates the warm flesh. You are now in control of the host.'));
       game.scene.sounds.play('parasite-invade');
 
       // save AI link
@@ -893,7 +893,7 @@ class PlayerArea extends _SaveObject
 // action: try to reinforce control over host
   function reinforceControlAction()
     {
-      log('You reinforce mental control over the host.');
+      log(T('You reinforce mental control over the host.'));
 
       // improv: control efficiency
       var params = player.evolutionManager.getParams(IMP_REINFORCE);
@@ -966,7 +966,7 @@ class PlayerArea extends _SaveObject
                   }
               if (!ok)
                 {
-                  game.actionFailed('You cannot leave the habitat with outsiders in it!');
+                  game.actionFailed(T('You cannot leave the habitat with outsiders in it!'));
                   return false;
                 }
             }
@@ -975,7 +975,7 @@ class PlayerArea extends _SaveObject
           if (state == PLR_STATE_HOST &&
               player.host.organs.hasMold())
             {
-              game.actionFailed('You cannot leave the habitat with a mold.');
+              game.actionFailed(T('You cannot leave the habitat with a mold.'));
               return false;
             }
         }
@@ -984,8 +984,8 @@ class PlayerArea extends _SaveObject
           !game.area.canLeaveBase(x, y))
         {
           game.actionFailed(game.area.isOutsideBase(x, y) ?
-            'You cannot slip away while the soldiers are alerted.' :
-            'You have to get outside the fence first.');
+            T('You cannot slip away while the soldiers are alerted.') :
+            T('You have to get outside the fence first.'));
           return false;
         }
       if (!game.area.canLeave())
@@ -993,7 +993,7 @@ class PlayerArea extends _SaveObject
       if (!cultLeavePre(action))
         return false;
 
-      log('You leave the area.');
+      log(T('You leave the area.'));
       path = null; // clear path
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
@@ -1016,7 +1016,7 @@ class PlayerArea extends _SaveObject
         type: UIEVENT_STATE,
         state: UISTATE_YESNO,
         obj: {
-          text: Const.col('cult', 'There are followers still in combat. If you leave now, they may die. Leave anyway?'),
+          text: Const.col('cult', T('There are followers still in combat. If you leave now, they may die. Leave anyway?')),
           func: function(yes: Bool) {
             if (!yes)
               return;
@@ -1038,7 +1038,7 @@ class PlayerArea extends _SaveObject
         attachHost.entity.setMask(-1);
       onDetach();
 
-      log('You detach from the potential host.');
+      log(T('You detach from the potential host.'));
     }
 
 // updates probe brain action color
@@ -1062,7 +1062,7 @@ class PlayerArea extends _SaveObject
                 col = 'skill-title';
             }
         }
-      return Const.col(col, 'Probe brain');
+      return Const.col(col, T('Probe brain'));
     }
 
 // action: probe host brain
@@ -1071,11 +1071,11 @@ class PlayerArea extends _SaveObject
       // animals do not have any useful memories
       if (!player.host.isHuman)
         {
-          game.actionFailed('This host is not intelligent enough.');
+          game.actionFailed(T('This host is not intelligent enough.'));
           return;
         }
 
-      log('You probe the brain of the host and learn its contents. The host grows weaker.');
+      log(T('You probe the brain of the host and learn its contents. The host grows weaker.'));
       game.scene.sounds.play('action-probe');
 
       // skills and knowledge
@@ -1091,7 +1091,7 @@ class PlayerArea extends _SaveObject
               !player.host.isAttrsKnown)
             {
               player.host.isAttrsKnown = true;
-              log('You have learned the parameters of this host.');
+              log(T('You have learned the parameters of this host.'));
               game.profile.addPediaArticle('hostAttributes');
 
               // drug addict goal chain
@@ -1133,7 +1133,7 @@ class PlayerArea extends _SaveObject
           // no more clues
           if (!ret)
             {
-              game.log('You did not learn any new information.', COLOR_TIMELINE);
+              game.log(T('You did not learn any new information.'), COLOR_TIMELINE);
               player.host.chat.clues = 0;
             }
           else player.host.chat.clues--;
@@ -1145,7 +1145,7 @@ class PlayerArea extends _SaveObject
             {
               var ret = game.timeline.learnClues(player.host.event, true);
               if (!ret)
-                log('You did not learn any new information.', COLOR_TIMELINE);
+                log(T('You did not learn any new information.'), COLOR_TIMELINE);
 
               // knowledge about group timer
               game.group.brainProbe();
@@ -1157,7 +1157,7 @@ class PlayerArea extends _SaveObject
             {
               player.host.npc.memoryKnown = true;
 
-              log('This human does not know anything else.', COLOR_TIMELINE);
+              log(T('This human does not know anything else.'), COLOR_TIMELINE);
             }
           player.host.brainProbed++; // increase counter
         }
@@ -1182,10 +1182,10 @@ class PlayerArea extends _SaveObject
     {
       if (game.area.isHabitat)
         {
-          game.actionFailed('You cannot do this in a habitat.');
+          game.actionFailed(T('You cannot do this in a habitat.'));
           return false;
         }
-      var msg = 'You release the host triggering the pseudocampus.';
+      var msg = T('You release the host triggering the pseudocampus.');
       var deactivated = false;
       if (player.host.isGroup() &&
           !player.host.hasFalseMemories)
@@ -1204,7 +1204,7 @@ class PlayerArea extends _SaveObject
                 player.host.organs.getParams(IMP_FALSE_MEMORIES);
               game.group.raiseTeamDistance(params.distanceBonus);
             }
-          msg += ' A set of implanted false memories about the encounter will help your survival.';
+          msg += ' ' + T('A set of implanted false memories about the encounter will help your survival.');
         }
       // false memories in the group regional controller close the parasite file
       if (player.host.id == game.group.directorID &&
@@ -1214,7 +1214,7 @@ class PlayerArea extends _SaveObject
       game.log(msg);
       if (deactivated)
         game.message({
-          text: "The agent will report a false trail. It will be some time before they get on my trail again.",
+          text: T("The agent will report a false trail. It will be some time before they get on my trail again."),
           img: 'pedia/team_deactivation'
         });
       leaveHostAction('memories');
@@ -1224,7 +1224,7 @@ class PlayerArea extends _SaveObject
 // action: learn about area object
   function learnObjectAction(o: AreaObject)
     {
-      log('You probe the brain of the host and learn what that object is for.');
+      log(T('You probe the brain of the host and learn what that object is for.'));
 
       knownObjects.add(o.type);
       if (o.item != null)
@@ -1267,7 +1267,7 @@ class PlayerArea extends _SaveObject
           player.hostControl < 90 &&
           Std.random(100) < 0.75 * (100 - player.hostControl))
         {
-          log('The host resists your command.');
+          log(T('The host resists your command.'));
           var dir = game.area.getRandomDirection(x, y);
           if (dir == -1)
             throw 'nowhere to move!';
@@ -1397,7 +1397,7 @@ class PlayerArea extends _SaveObject
       if (!game.area.isWalkable(nx, ny) ||
           game.area.hasAI(nx, ny))
         {
-          game.actionFailed('Something blocks the way out.');
+          game.actionFailed(T('Something blocks the way out.'));
           return false;
         }
       log('You climb out of the ' + game.area.getObject(hiddenIn).getName() + '.');
@@ -1418,7 +1418,7 @@ class PlayerArea extends _SaveObject
               !game.area.hasAI(nx, ny))
             return climbOut(nx, ny, false);
         }
-      game.actionFailed('Something blocks the way out.');
+      game.actionFailed(T('Something blocks the way out.'));
       return false;
     }
 
@@ -1614,7 +1614,7 @@ class PlayerArea extends _SaveObject
           var pain = player.affinityLoss(true);
           onDetach();
 
-          log('Your host has died from injuries.' + (pain != null ? ' ' + pain : ''));
+          log(T('Your host has died from injuries.') + (pain != null ? ' ' + pain : ''));
 
           return;
         }

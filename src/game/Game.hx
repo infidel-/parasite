@@ -113,9 +113,9 @@ class Game extends _SaveObject
       trace('init');
       var scen = '';
       if (scenarioStringID == 'alien')
-        scen = '[scenario a]';
+        scen = T('[scenario a]');
       else if (scenarioStringID == 'sandbox')
-        scen = '[sandbox]';
+        scen = T('[sandbox]');
       var s = 'Parasite v' + Version.getVersion() + ' ' + Const.smallgray(scen);
 //        ' (build: ' + Version.getBuild() + ')';
 #if demo
@@ -217,7 +217,7 @@ class Game extends _SaveObject
         {
           // initial goals
           message({
-            text: 'You are alone. You are scared. You need to find a host or you will die soon.',
+            text: T('You are alone. You are scared. You need to find a host or you will die soon.'),
             img: 'event/start'
           });
           var silent = (config.skipTutorial && config.difficulty > 0);
@@ -230,7 +230,7 @@ class Game extends _SaveObject
             if (profile.addPediaArticle(a, false))
               articleAdded = true;
           if (articleAdded)
-            log(Const.small('New pedia articles available.'), COLOR_PEDIA);
+            log(Const.small(T('New pedia articles available.')), COLOR_PEDIA);
 
           // skip tutorial flag
           if (config.skipTutorial)
@@ -249,7 +249,7 @@ class Game extends _SaveObject
       // only with overall difficulty
       if (config.difficulty == 0)
         {
-          system('Cannot skip tutorial with overall difficulty unset.');
+          system(T('Cannot skip tutorial with overall difficulty unset.'));
           return;
         }
       importantMessagesEnabled = false;
@@ -273,7 +273,7 @@ class Game extends _SaveObject
       group.teamTimeout = 50;
       player.energy = 100;
       importantMessagesEnabled = true;
-      system('Tutorial skipped.');
+      system(T('Tutorial skipped.'));
     }
 
 // clear all game stuff
@@ -515,10 +515,10 @@ class Game extends _SaveObject
       // rebirth target
       var ovumObj = region.getObjectsWithType('ovum')[0];
       var msgs = [
-        'I am reborn.',
-        'I live again.',
-        'Birth, death and rebirth. The purifying rhythm of the universe.',
-        'I am alive. Alive.',
+        T('I am reborn.'),
+        T('I live again.'),
+        T('Birth, death and rebirth. The purifying rhythm of the universe.'),
+        T('I am alive. Alive.'),
       ];
       var msg: _MessageParams = {
         text: '<center>' + msgs[Std.random(msgs.length)] + '</center>',
@@ -550,11 +550,11 @@ class Game extends _SaveObject
 // condition - noHost, etc
 // if result is win, text is displayed
   static var deathText = [
-    'noHost' => 'You cannot survive without a host for long.',
-    'noEnergy' => 'Your energy was completely depleted.',
-    'noHealth' => "You have succumbed to injuries. It's not wise to go into the direct confrontation.",
-    'habitatShock' => 'You have received your final shock from the habitat destruction.',
-    'corNefandum' => 'Cor Nefandum is destroyed. <span class=cult>Cultus Carnis</span> dies its final death.',
+    'noHost' => T('You cannot survive without a host for long.'),
+    'noEnergy' => T('Your energy was completely depleted.'),
+    'noHealth' => T("You have succumbed to injuries. It's not wise to go into the direct confrontation."),
+    'habitatShock' => T('You have received your final shock from the habitat destruction.'),
+    'corNefandum' => T('Cor Nefandum is destroyed. <span class=cult>Cultus Carnis</span> dies its final death.'),
   ];
   public function finish(p: _FinishParams)
     {
@@ -569,11 +569,11 @@ class Game extends _SaveObject
       // game lost
       if (p.result == 'lose')
         {
-          log('You have lost the game.');
+          log(T('You have lost the game.'));
           finishText = deathText[p.text];
 #if demo
           if (p.text == 'demo')
-            finishText = 'Demo finished.';
+            finishText = T('Demo finished.');
 #end
 
           // parasite death
@@ -583,7 +583,7 @@ class Game extends _SaveObject
         }
       else
         {
-          log('You have completed the game.');
+          log(T('You have completed the game.'));
           finishText = p.text;
           scene.sounds.play('game-win');
         }
@@ -782,12 +782,12 @@ class Game extends _SaveObject
         }
       if (ui.hud.state == HUD_CHAT)
         {
-          actionFailed('You cannot save during a conversation.');
+          actionFailed(T('You cannot save during a conversation.'));
           return;
         }
       if (player.inMissionArea())
         {
-          actionFailed('You cannot save your game during a mission.');
+          actionFailed(T('You cannot save your game during a mission.'));
           return;
         }
       if (player.saveDifficulty == UNSET)
@@ -805,7 +805,7 @@ class Game extends _SaveObject
       if (player.saveDifficulty != NOOB &&
           player.vars.savesLeft < 1)
         {
-          actionFailed('You cannot save anymore in this game.');
+          actionFailed(T('You cannot save anymore in this game.'));
           return;
         }
       if (player.saveDifficulty != NOOB)
@@ -816,15 +816,13 @@ class Game extends _SaveObject
       Saver.save(this, slotID);
       if (player.saveDifficulty == NOOB)
         {
-          log('Game saved to slot ' + slotID + '. Unlimited saves.');
+          log(T('Game saved to slot {slot}. Unlimited saves.', { slot: slotID }));
           return;
         }
-      var remaining = player.vars.savesLeft + ' saves';
-      if (player.vars.savesLeft == 0)
-        remaining = 'No saves';
-      else if (player.vars.savesLeft == 1)
-        remaining = 'Last save';
-      log('Game saved to slot ' + slotID + '. ' + remaining + ' remaining.');
+      log(T('Game saved to slot {slot}. {n, plural, =0{No saves} =1{Last save} other{# saves}} remaining.', {
+        slot: slotID,
+        n: player.vars.savesLeft,
+      }));
     }
 
 // reserved autosave slot (exit-save safety net); manual slots are 1..MANUAL_SLOTS
@@ -856,7 +854,7 @@ class Game extends _SaveObject
         return;
       Saver.save(this, AUTOSAVE_SLOT);
       lastAutosaveTurn = turns;
-      log('Autosaved.', COLOR_HINT);
+      log(T('Autosaved.'), COLOR_HINT);
     }
 
 // check if save exists
@@ -881,20 +879,27 @@ class Game extends _SaveObject
 
       // build warning message
       var buf = new StringBuf();
-      buf.add('This save was made with a different mod set:<br><br>');
+      buf.add(T('This save was made with a different mod set:') + '<br><br>');
       for (w in warnings)
         {
           if (w.kind == 'missing')
-            buf.add(Const.smallgray('- <b>' + w.id + ' v' + w.saveVersion +
-              '</b> was active when saved but is no longer enabled<br>'));
+            buf.add(Const.smallgray(T('- <b>{mod} v{version}</b> was active when saved but is no longer enabled', {
+              mod: w.id,
+              version: w.saveVersion,
+            }) + '<br>'));
           else if (w.kind == 'added')
-            buf.add(Const.smallgray('- <b>' + w.id + ' v' + w.activeVersion +
-              '</b> is now enabled but was not when saved<br>'));
+            buf.add(Const.smallgray(T('- <b>{mod} v{version}</b> is now enabled but was not when saved', {
+              mod: w.id,
+              version: w.activeVersion,
+            }) + '<br>'));
           else if (w.kind == 'mismatch')
-            buf.add(Const.smallgray('- <b>' + w.id + '</b> version differs: save v' +
-              w.saveVersion + ', active v' + w.activeVersion + '<br>'));
+            buf.add(Const.smallgray(T('- <b>{mod}</b> version differs: save v{saveVersion}, active v{activeVersion}', {
+              mod: w.id,
+              saveVersion: w.saveVersion,
+              activeVersion: w.activeVersion,
+            }) + '<br>'));
         }
-      buf.add('<br>State may be inconsistent or load may fail. Load anyway?');
+      buf.add('<br>' + T('State may be inconsistent or load may fail. Load anyway?'));
       var self = this;
       ui.event({
         type: UIEVENT_STATE,
@@ -943,7 +948,7 @@ class Game extends _SaveObject
   public function finishDemo()
     {
       message({
-        text: 'Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.',
+        text: T('Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.'),
         img: 'event/sandbox'
       });
       ui.event({

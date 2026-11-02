@@ -13,9 +13,10 @@ class ReapTheUnwary extends Ordeal
   public static function priceHint(): String
     {
       return Const.smallgray(' (') +
-        '2x: ' +
-        Const.col('cult-power', 2) + ' PWR or ' +
-        Const.col('cult-power', '100k') + Icon.money +
+        T('2x: {power} PWR or {money}', {
+          power: Const.col('cult-power', 2),
+          money: Const.col('cult-power', '100k') + Icon.money,
+        }) +
         Const.smallgray(')');
     }
 
@@ -43,12 +44,12 @@ class ReapTheUnwary extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Reap the Unwary';
+      name = N('Reap the Unwary');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 2;
       requiredMemberLevels = 1;
       actions = requiredMembers;
-      note = 'The faithful gather bodies for Cadaverum.';
+      note = N('The faithful gather bodies for Cadaverum.');
       powerTypes = [];
     }
 
@@ -72,7 +73,7 @@ class ReapTheUnwary extends Ordeal
       actions.push({
         id: 'reapTheUnwary',
         type: ACTION_CULT,
-        name: 'Reap the Unwary' + priceHint(),
+        name: T('Reap the Unwary') + priceHint(),
         energy: 0,
         obj: {}
       });

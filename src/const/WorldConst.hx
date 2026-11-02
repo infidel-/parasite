@@ -14,7 +14,7 @@ class WorldConst
         // the beds are render.wild.WildSounds' own, per terrain band and on the highway
         ambient: AMBIENT_NONE,
         type: 'wilderness',
-        name: 'Uninhabited area',
+        name: N('Uninhabited area'),
         pediaArticle: 'areaUninhabited',
         exit: '-',
         alertnessMod: 0.50,
@@ -43,7 +43,7 @@ class WorldConst
         // the beds are render.CitySounds' own, per tier and per street kind
         ambient: AMBIENT_NONE,
         type: 'city',
-        name: 'Low-density city area',
+        name: N('Low-density city area'),
         pediaArticle: 'areaCity',
         exit: 'sewer_hatch',
         alertnessMod: 0.75,
@@ -76,7 +76,7 @@ class WorldConst
         // the beds are render.CitySounds' own, per tier and per street kind
         ambient: AMBIENT_NONE,
         type: 'city',
-        name: 'Medium-density city area',
+        name: N('Medium-density city area'),
         pediaArticle: 'areaCity',
         exit: 'sewer_hatch',
         alertnessMod: 1.0,
@@ -110,7 +110,7 @@ class WorldConst
         // the beds are render.CitySounds' own, per tier and per street kind
         ambient: AMBIENT_NONE,
         type: 'city',
-        name: 'Downtown district',
+        name: N('Downtown district'),
         pediaArticle: 'areaCity',
         exit: 'sewer_hatch',
         alertnessMod: 1.25,
@@ -144,7 +144,7 @@ class WorldConst
         id: AREA_MILITARY_BASE,
         ambient: AMBIENT_NONE,
         type: 'militaryBase',
-        name: 'Military base',
+        name: N('Military base'),
         pediaArticle: 'areaMilitary',
         exit: '-',
         alertnessMod: 1.5,
@@ -176,7 +176,7 @@ class WorldConst
         // room kind and two outdoors
         ambient: AMBIENT_NONE,
         type: 'facility',
-        name: 'Facility',
+        name: N('Facility'),
         pediaArticle: 'areaLab',
         exit: 'sewer_hatch',
         alertnessMod: 2.0,
@@ -208,7 +208,7 @@ class WorldConst
         // the beds are render.sewer.SewerSounds'
         ambient: AMBIENT_NONE,
         type: 'sewers',
-        name: 'Sewers',
+        name: N('Sewers'),
         pediaArticle: 'areaHabitat', // unused
         exit: 'sewer_exit',
         alertnessMod: 1.0,
@@ -235,7 +235,7 @@ class WorldConst
         id: AREA_UNDERGROUND_LAB,
         ambient: AMBIENT_NONE,
         type: 'undergroundLab',
-        name: 'Underground Laboratory',
+        name: N('Underground Laboratory'),
         pediaArticle: 'areaLab',
         exit: 'elevator',
         alertnessMod: 1.0,
@@ -264,7 +264,7 @@ class WorldConst
         id: AREA_HABITAT,
         ambient: AMBIENT_HABITAT,
         type: 'habitat',
-        name: 'Habitat area',
+        name: N('Habitat area'),
         pediaArticle: 'areaHabitat', // unused
         exit: '-',
         alertnessMod: 1.0,
@@ -292,7 +292,7 @@ class WorldConst
         // the bed is render.corp.CorpSounds' own: ambient-corp in corridors, corp/room in rooms
         ambient: AMBIENT_NONE,
         type: 'corp',
-        name: 'Corporate HQ',
+        name: N('Corporate HQ'),
         pediaArticle: 'areaCorp',
         exit: 'elevator',
         alertnessMod: 1.5,

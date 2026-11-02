@@ -10,18 +10,18 @@ class Paper extends Readable
     {
       super(game);
       id = 'paper';
-      unknown = 'thin object with markings';
+      unknown = N('thin object with markings');
       names = [
-        'piece of paper',
-        'report',
-        'document',
-        'note',
-        'dossier',
-        'sheet of paper',
-        'page',
-        'analysis',
-        'receipt',
-        'article'
+        N('piece of paper'),
+        N('report'),
+        N('document'),
+        N('note'),
+        N('dossier'),
+        N('sheet of paper'),
+        N('page'),
+        N('analysis'),
+        N('receipt'),
+        N('article')
       ];
       areaObjectClass = objects.Paper;
     }

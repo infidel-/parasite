@@ -16,7 +16,7 @@ class DeadlyCaress extends Ability
     {
       super.init();
       id = ABILITY_DEADLY_CARESS;
-      name = 'deadly caress';
+      name = N('deadly caress');
     }
 
 // handles deadly caress attack logic

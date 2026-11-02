@@ -115,10 +115,10 @@ class EvolutionManager extends _SaveObject
             {
               if (val == 1)
                 {
-                  player.log('Your host degrades to a breaking point and might expire soon.', COLOR_ALERT);
+                  player.log(T('Your host degrades to a breaking point and might expire soon.'), COLOR_ALERT);
                   game.goals.complete(GOAL_TUTORIAL_DEGRADE);
                 }
-              else player.log('Your host degrades.');
+              else player.log(T('Your host degrades.'));
               game.info(attr + ': ' + val);
             }
 
@@ -128,7 +128,7 @@ class EvolutionManager extends _SaveObject
               player.host.recalc();
               player.host.health = 0;
 
-              player.onHostDeath('Your host has degraded completely.');
+              player.onHostDeath(T('Your host has degraded completely.'));
 
               return;
             }
@@ -148,8 +148,10 @@ class EvolutionManager extends _SaveObject
     {
       imp.level++;
       game.scene.sounds.play('evolution-complete');
-      player.log('You have improved your understanding of ' + imp.info.name +
-        ' to level ' + imp.level + '.', COLOR_EVOLUTION);
+      player.log(T('You have improved your understanding of {improvement} to level {level}.', {
+        improvement: imp.info.name,
+        level: imp.level,
+      }), COLOR_EVOLUTION);
 
       // clear
       imp.ep = 0;
@@ -209,7 +211,7 @@ class EvolutionManager extends _SaveObject
       if (!skipMessage && game.importantMessagesEnabled)
         {
           game.scene.sounds.play('evolution-gained');
-          game.log(Const.small('Improvement gained: ' + imp.info.name + '.'), COLOR_EVOLUTION);
+          game.log(Const.small(T('Improvement gained: {improvement}.', { improvement: imp.info.name })), COLOR_EVOLUTION);
         }
 
       return imp;
@@ -221,7 +223,7 @@ class EvolutionManager extends _SaveObject
       var imp = getImprov(id);
       _list.remove(imp);
       if (!skipMessage)
-        game.log(Const.small('Improvement lost: ' + imp.info.name + '.'), COLOR_EVOLUTION);
+        game.log(Const.small(T('Improvement lost: {improvement}.', { improvement: imp.info.name })), COLOR_EVOLUTION);
     }
 
 // stop the evolution
@@ -302,7 +304,7 @@ class EvolutionManager extends _SaveObject
   public function getEvolutionDirectionInfo(): String
     {
       if (!isActive)
-        return "<font style='color:var(--text-color-red)'>None</font>";
+        return "<font style='color:var(--text-color-red)'>" + T('None') + "</font>";
 
       // evolution feature row: helix glyph + name + turn-eta pill
       var imp = getImprov((taskID : _Improv));
@@ -368,7 +370,7 @@ class EvolutionManager extends _SaveObject
       if (game.importantMessagesEnabled)
         {
           game.scene.sounds.play('evolution-gained');
-          game.log(Const.small('Improvements gained: ' + gained.join(', ') + '.'), COLOR_EVOLUTION);
+          game.log(Const.small(T('Improvements gained: {list}.', { list: gained.join(', ') })), COLOR_EVOLUTION);
         }
     }
 
@@ -380,7 +382,7 @@ class EvolutionManager extends _SaveObject
         game.ui.hud.addKeyAction({
           id: 'stop',
           type: ACTION_EVOLUTION,
-          name: 'Stop evolution',
+          name: T('Stop evolution'),
           energy: 0,
           key: 's',
         });

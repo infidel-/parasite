@@ -989,7 +989,7 @@ public function show()
               var pain = game.player.affinityLoss(true);
               game.playerArea.onDetach();
               game.scene.clearPath();
-              game.player.log('Your host has died from injuries.' + (pain != null ? ' ' + pain : ''));
+              game.player.log(T('Your host has died from injuries.') + (pain != null ? ' ' + pain : ''));
             }
 
           return;
@@ -1174,7 +1174,7 @@ public function show()
         affinity = 100;
       if (old < 75 && affinity >= 75)
         {
-          game.log(Const.hl('You feel you are deepening the affinity with this host.'), COLOR_SYMBIOSIS);
+          game.log(Const.hl(T('You feel you are deepening the affinity with this host.')), COLOR_SYMBIOSIS);
           game.goals.complete(GOAL_TUTORIAL_AFFINITY);
           if (game.player.chat.difficulty == UNSET)
             game.ui.event({
@@ -1187,7 +1187,7 @@ public function show()
         }
       else if (old < 100 && affinity >= 100)
         {
-          game.log(Const.hl('You have reached the full affinity with this host.'), COLOR_SYMBIOSIS);
+          game.log(Const.hl(T('You have reached the full affinity with this host.')), COLOR_SYMBIOSIS);
           game.goals.complete(GOAL_TUTORIAL_MAX_AFFINITY);
         }
     }

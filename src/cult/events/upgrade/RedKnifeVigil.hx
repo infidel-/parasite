@@ -15,22 +15,22 @@ class RedKnifeVigil
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Red Knife Vigil',
-        text: 'Portable floodlights glare through the condemned cathedral nave as armored acolytes kneel beside the newly sworn Warmaker. Heart-rate monitors throb beneath tactical robes while medics arrange sealed scalpels and combat tourniquets, waiting to learn whether tonight\'s rite spills blood, ordinance, or bonded scars.',
+        title: T('Red Knife Vigil'),
+        text: T('Portable floodlights glare through the condemned cathedral nave as armored acolytes kneel beside the newly sworn Warmaker. Heart-rate monitors throb beneath tactical robes while medics arrange sealed scalpels and combat tourniquets, waiting to learn whether tonight\'s rite spills blood, ordinance, or bonded scars.'),
         choices: [
           {
-            button: 'Stockpile',
-            text: 'Route confiscated ordnance into vacuum-sealed lockers so the strike team rolls into the next ordeal fully loaded.',
+            button: T('Stockpile'),
+            text: T('Route confiscated ordnance into vacuum-sealed lockers so the strike team rolls into the next ordeal fully loaded.'),
             f: choice1
           },
           {
-            button: 'Mentor Up',
-            text: 'Assign the Warmaker to run live-fire drills with a rookie, hammering doctrine into muscle memory before the patrol redeploys.',
+            button: T('Mentor Up'),
+            text: T('Assign the Warmaker to run live-fire drills with a rookie, hammering doctrine into muscle memory before the patrol redeploys.'),
             f: choice2
           },
           {
-            button: 'Night Sweep',
-            text: 'Spin up sensor drones and run night-long perimeter sweeps, tightening every choke point against reprisal crews.',
+            button: T('Night Sweep'),
+            text: T('Spin up sensor drones and run night-long perimeter sweeps, tightening every choke point against reprisal crews.'),
             f: choice3
           }
         ]

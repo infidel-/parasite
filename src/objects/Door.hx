@@ -38,7 +38,7 @@ class Door extends AreaObject
       super.init();
       imageCol = Const.FRAME_SEWER_HATCH;
       type = 'door';
-      name = 'door';
+      name = N('door');
       isStatic = true;
       isOpen = false;
       isLocked = false;
@@ -82,7 +82,7 @@ class Door extends AreaObject
                 {
                   isLocked = false;
                   syncLinkedLockState();
-                  game.log('You command the host to unlock the door.');
+                  game.log(T('You command the host to unlock the door.'));
                   game.scene.sounds.play('door-keycard-unlock');
                   return 0;
                 }
@@ -91,7 +91,7 @@ class Door extends AreaObject
           if (isLocked)
             {
               if (isPlayer)
-                game.actionFailed('The door is locked.');
+                game.actionFailed(T('The door is locked.'));
               return 0;
             }
         }

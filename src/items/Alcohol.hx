@@ -14,9 +14,9 @@ class Alcohol extends ItemInfo
     {
       super(game);
       id = 'alcohol';
-      name = 'bottle of alcohol';
+      name = N('bottle of alcohol');
       type = 'junk';
-      unknown = 'glass container of liquid';
+      unknown = N('glass container of liquid');
     }
 
 // builds alcohol-specific inventory actions
@@ -28,7 +28,7 @@ class Alcohol extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Imbibe ' + Const.col('inventory-item', itemName),
-        nameClean: 'Imbibe',
+        nameClean: T('Imbibe'),
         energy: 2,
         item: item
       });
@@ -54,7 +54,7 @@ class Alcohol extends ItemInfo
 
       game.scene.sounds.play('item-' + item.id);
       host.emitSound({
-        text: '*glug*',
+        text: T('*glug*'),
         kind: 'bark',
         radius: 2,
         alertness: 2

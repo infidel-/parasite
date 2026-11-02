@@ -19,7 +19,7 @@ class Ovum extends RegionObject
     {
       super.init();
       type = 'ovum';
-      name = 'ovum';
+      name = N('ovum');
     }
 
 // called after load or creation
@@ -38,7 +38,7 @@ class Ovum extends RegionObject
       game.ui.hud.addAction({
         id: 'setImprovements',
         type: ACTION_OBJECT,
-        name: 'Set improvements',
+        name: T('Set improvements'),
         energy: 0,
         obj: this
       });
@@ -47,7 +47,7 @@ class Ovum extends RegionObject
         game.ui.hud.addAction({
           id: 'nurtureOvum',
           type: ACTION_OBJECT,
-          name: 'Nurture ovum',
+          name: T('Nurture ovum'),
           energy: 0,
           obj: this
         });
@@ -90,7 +90,7 @@ class Ovum extends RegionObject
       var maxxp = EvolutionConst.ovumXP[EvolutionConst.ovumXP.length - 1];
       if (ovum.xp > maxxp)
         {
-          game.actionFailed('The ovum is fully nurtured.');
+          game.actionFailed(T('The ovum is fully nurtured.'));
           return false;
         }
       ovum.xp += pts;
@@ -99,12 +99,12 @@ class Ovum extends RegionObject
       if (ovum.xp < EvolutionConst.ovumXP[ovum.level])
         {
           // show info
-          game.log('You nurture the ovum with the life of your host.');
+          game.log(T('You nurture the ovum with the life of your host.'));
           onMoveTo();
           return true;
         }
       // new level
-      game.log('You nurture the ovum with the life of your host. It blooms with new power.');
+      game.log(T('You nurture the ovum with the life of your host. It blooms with new power.'));
       for (i in 0...(EvolutionConst.ovumXP.length - 1))
         if (ovum.xp >= EvolutionConst.ovumXP[i] &&
             ovum.xp < EvolutionConst.ovumXP[i + 1])
@@ -120,15 +120,15 @@ class Ovum extends RegionObject
       var ovum = game.player.evolutionManager.ovum;
       var xpInfo = '';
       if (ovum.level < 5)
-        xpInfo = ' (' + ovum.xp + '/' + EvolutionConst.ovumXP[ovum.level] + ' pts)';
+        xpInfo = ' ' + T('({xp}/{next} pts)', { xp: ovum.xp, next: EvolutionConst.ovumXP[ovum.level] });
       var marked = [];
       for (imp in game.player.evolutionManager)
         if (imp.isLocked)
           marked.push(imp.info.name);
-      var markedstr = 'No improvements are marked for parthenogenesis.';
+      var markedstr = T('No improvements are marked for parthenogenesis.');
       if (marked.length > 0)
-        markedstr = 'Marked for parthenogenesis: ' + marked.join(', ') + '.';
-      game.log(Const.col('gray', Const.small('[Ovum level ' + ovum.level +
+        markedstr = T('Marked for parthenogenesis: {list}.', { list: marked.join(', ') });
+      game.log(Const.col('gray', Const.small('[' + T('Ovum level {level}', { level: ovum.level }) +
         xpInfo + '. ' + markedstr + ']')));
     }
 }

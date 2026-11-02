@@ -9,10 +9,10 @@ class BumCult
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Gutter Choir Sacrament",
-        note: "The unaussprechliche kult has seeded a gutter chapel in the low-city shell. Their congregation chants the wet flesh liturgy among rusted carts and bedroll altars. The membrane bleeds into concrete. Break their sacrament before the street crusade hardens.",
-        success: "The alley choir gutters out. Bedroll altars burn, and the low-city flock scatters into static hunger. The concrete stops bleeding.",
-        fail: "You are driven back through broken glass and rusted carts. The kult claims the district and recruits in daylight, their liturgy echoing louder.",
+        name: N("Gutter Choir Sacrament"),
+        note: N("The unaussprechliche kult has seeded a gutter chapel in the low-city shell. Their congregation chants the wet flesh liturgy among rusted carts and bedroll altars. The membrane bleeds into concrete. Break their sacrament before the street crusade hardens."),
+        success: T("The alley choir gutters out. Bedroll altars burn, and the low-city flock scatters into static hunger. The concrete stops bleeding."),
+        fail: T("You are driven back through broken glass and rusted carts. The kult claims the district and recruits in daylight, their liturgy echoing louder."),
         mission: MISSION_COMBAT,
         combat: {
           template: TARGET_WITH_GUARDS,
@@ -21,7 +21,7 @@ class BumCult
             {
               target: {
                 isMale: true,
-                job: "bum preacher",
+                job: N("bum preacher"),
                 type: "bum",
                 icon: "bum",
                 location: AREA_CITY_LOW,
@@ -32,7 +32,7 @@ class BumCult
             },
             {
               target: {
-                job: "bum shivman",
+                job: N("bum shivman"),
                 type: "bum",
                 icon: "bum",
                 location: AREA_CITY_LOW,
@@ -43,7 +43,7 @@ class BumCult
             },
             {
               target: {
-                job: "bum zealot",
+                job: N("bum zealot"),
                 type: "bum",
                 icon: "bum",
                 location: AREA_CITY_LOW,
@@ -54,7 +54,7 @@ class BumCult
             },
             {
               target: {
-                job: "bum bruiser",
+                job: N("bum bruiser"),
                 type: "bum",
                 icon: "bum",
                 location: AREA_CITY_LOW,
@@ -65,7 +65,7 @@ class BumCult
             },
             {
               target: {
-                job: "bum scavenger",
+                job: N("bum scavenger"),
                 type: "bum",
                 icon: "bum",
                 location: AREA_CITY_LOW,

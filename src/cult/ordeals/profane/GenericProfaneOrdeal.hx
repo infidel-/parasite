@@ -153,7 +153,7 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
   // called on ordeal failure
   override function onFail() {
     game.message({
-      title: 'Ordeal Failed',
+      title: T('Ordeal Failed'),
       titleCol: 'red',
       text: info.fail,
       col: 'cult'
@@ -165,7 +165,7 @@ class GenericProfaneOrdeal extends ProfaneOrdeal
   // called on ordeal success
   override function onSuccess() {
     game.message({
-      title: 'Ordeal Succeeded',
+      title: T('Ordeal Succeeded'),
       titleCol: 'white',
       text: info.success,
       col: 'cult'

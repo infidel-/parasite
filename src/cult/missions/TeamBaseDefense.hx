@@ -24,8 +24,8 @@ class TeamBaseDefense extends Mission
     {
       super.init();
       type = MISSION_COMBAT;
-      name = 'Base Defense (Group)';
-      note = 'Defeat the team before Cor Nefandum falls.';
+      name = N('Base Defense (Group)');
+      note = N('Defeat the team before Cor Nefandum falls.');
       targetIDs = [];
       spawned = false;
     }
@@ -107,7 +107,7 @@ class TeamBaseDefense extends Mission
           ai.setState(AI_STATE_ALERT);
           targetIDs.push(ai.id);
         }
-      game.logsg('The team breaches the base.');
+      game.logsg(T('The team breaches the base.'));
     }
 
 // completes mission when all attackers are gone

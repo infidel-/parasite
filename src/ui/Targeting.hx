@@ -35,7 +35,7 @@ class Targeting
       list = buildList();
       if (list.length == 0)
         {
-          game.actionFailed('No visible targets.');
+          game.actionFailed(T('No visible targets.'));
           return false;
         }
       // no active target: start on the closest target, not the smallest-angle entry

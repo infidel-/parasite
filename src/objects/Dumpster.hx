@@ -20,7 +20,7 @@ class Dumpster extends AreaObject
       imageRow = Const.ROW_OBJECT2;
       imageCol = Const.FRAME_DUMPSTER;
       type = 'dumpster';
-      name = 'dumpster';
+      name = N('dumpster');
       isStatic = true;
     }
 
@@ -39,7 +39,7 @@ class Dumpster extends AreaObject
       game.ui.hud.addAction({
         id: 'hideDumpster',
         type: ACTION_OBJECT,
-        name: 'Hide in dumpster',
+        name: T('Hide in dumpster'),
         energy: 5,
         obj: this,
       });
@@ -52,17 +52,17 @@ class Dumpster extends AreaObject
       var pa = game.playerArea;
       if (game.area.hostileSees(pa.x, pa.y))
         {
-          game.actionFailed('You cannot hide while someone is watching you.');
+          game.actionFailed(T('You cannot hide while someone is watching you.'));
           return false;
         }
       if (game.player.state == PLR_STATE_HOST)
         {
-          game.log('You release the host.');
+          game.log(T('You release the host.'));
           pa.leaveHostAction('default');
         }
       pa.hideIn(this);
       game.scene.sounds.play('city/dumpster-open');
-      game.log('You slither into the dumpster and go still under the refuse.');
+      game.log(T('You slither into the dumpster and go still under the refuse.'));
       return true;
     }
 

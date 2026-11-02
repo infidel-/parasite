@@ -10,8 +10,8 @@ class Pistol extends Weapon
     {
       super(game);
       id = 'pistol';
-      name = 'pistol';
-      unknown = 'metallic object';
+      name = N('pistol');
+      unknown = N('metallic object');
       weapon = {
         isRanged: true,
         skill: SKILL_PISTOL,

@@ -46,7 +46,7 @@ class ActionsHud
           addKeyAction({
             id: 'restart',
             type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
-            name: Const.col('red', 'RESTART'),
+            name: Const.col('red', T('RESTART')),
             energy: 0,
             // fake
             key: 'r'
@@ -68,7 +68,7 @@ class ActionsHud
           addAction({
             id: 'pickupMenu.abort',
             type: ACTION_AREA,
-            name: 'Back',
+            name: T('Back'),
             isVirtual: true,
           });
           return;
@@ -91,7 +91,7 @@ class ActionsHud
           addKeyAction({
             id: 'skipTurn',
             type: (game.location == LOCATION_AREA ? ACTION_AREA : ACTION_REGION),
-            name: 'Wait',
+            name: T('Wait'),
             energy: 0,
             // fake
             key: 'z'
@@ -103,7 +103,7 @@ class ActionsHud
               addKeyAction({
                 id: 'targetMode',
                 type: ACTION_AREA,
-                name: 'Target',
+                name: T('Target'),
                 key: 't',
                 isVirtual: true,
               });
@@ -112,7 +112,7 @@ class ActionsHud
                 addKeyAction({
                   id: 'shootTarget',
                   type: ACTION_AREA,
-                  name: 'Shoot',
+                  name: T('Shoot'),
                   key: 's',
                   isVirtual: true,
                 });
@@ -121,7 +121,7 @@ class ActionsHud
                 addKeyAction({
                   id: 'attackTarget',
                   type: ACTION_AREA,
-                  name: 'Attack',
+                  name: T('Attack'),
                   key: 'a',
                   isVirtual: true,
                 });
@@ -132,7 +132,7 @@ class ActionsHud
             addKeyAction({
               id: 'commandMenu',
               type: ACTION_AREA,
-              name: 'Command',
+              name: T('Command'),
               key: 'c',
               isVirtual: true,
             });
@@ -182,7 +182,7 @@ class ActionsHud
         {
           var btn = document.createDivElement();
           btn.className = 'hud-act hud-act-hint';
-          btn.innerHTML = '<b>↑↓</b> Rotate · <b>Enter</b> Select · <b>Esc</b> Clear';
+          btn.innerHTML = T('<b>↑↓</b> Rotate · <b>Enter</b> Select · <b>Esc</b> Clear');
           actions.appendChild(btn);
           return;
         }
@@ -244,7 +244,7 @@ class ActionsHud
             n++;
           }
       if (n == 1)
-        actions.innerHTML = '<div class="hud-act hud-act-none">No available actions.</div>';
+        actions.innerHTML = '<div class="hud-act hud-act-none">' + T('No available actions.') + '</div>';
 
       // action set changed -> play the staggered entrance cascade once
       if (sig != listSig)

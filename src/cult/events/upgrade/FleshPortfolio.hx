@@ -14,22 +14,22 @@ class FleshPortfolio
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Flesh Portfolio',
-        text: 'Asset management vault hums as the newly promoted portfolio manager kneels before a ledger woven from living dermal tissue. Each trade sends portfolio allocations scrolling across translucent skin. Around the safe room, other managers press palms against the membrane, reading the market\'s dermal patterns. The outside auditors never see the true holdings, but trusted skin carries the insider trades.',
+        title: T('Flesh Portfolio'),
+        text: T('Asset management vault hums as the newly promoted portfolio manager kneels before a ledger woven from living dermal tissue. Each trade sends portfolio allocations scrolling across translucent skin. Around the safe room, other managers press palms against the membrane, reading the market\'s dermal patterns. The outside auditors never see the true holdings, but trusted skin carries the insider trades.'),
         choices: [
           {
-            button: 'Skin Trade',
-            text: 'Trade derivatives through the dermal-ledger to arbitrage price differentials.',
+            button: T('Skin Trade'),
+            text: T('Trade derivatives through the dermal-ledger to arbitrage price differentials.'),
             f: choice1
           },
           {
-            button: 'Flesh Fund',
-            text: 'Allocate capital through the skin-membrane to fund covert operations.',
+            button: T('Flesh Fund'),
+            text: T('Allocate capital through the skin-membrane to fund covert operations.'),
             f: choice2
           },
           {
-            button: 'Tissue Trust',
-            text: 'Inscribe the promoted manager into the skin-ledger to manage eternal assets.',
+            button: T('Tissue Trust'),
+            text: T('Inscribe the promoted manager into the skin-ledger to manage eternal assets.'),
             f: choice3
           }
         ]

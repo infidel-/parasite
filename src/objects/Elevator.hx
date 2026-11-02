@@ -30,7 +30,7 @@ class Elevator extends AreaObject
       missionID = -1;
       elevatorPartIndex = 0;
       type = 'elevator';
-      name = 'elevator';
+      name = N('elevator');
       isStatic = true;
       updateElevatorIcon();
     }
@@ -68,7 +68,7 @@ class Elevator extends AreaObject
         game.ui.hud.addAction({
           id: 'leaveArea',
           type: ACTION_OBJECT,
-          name: 'Leave area',
+          name: T('Leave area'),
           energy: 5,
           isAgreeable: true,
           obj: this
@@ -106,9 +106,9 @@ class Elevator extends AreaObject
     {
       var leavingAreaID = game.area.id;
       if (missionID >= 0)
-        game.log("You leave the mission site.");
+        game.log(T("You leave the mission site."));
       else
-        game.log("You leave the corporate building entering the sewers.");
+        game.log(T("You leave the corporate building entering the sewers."));
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
 

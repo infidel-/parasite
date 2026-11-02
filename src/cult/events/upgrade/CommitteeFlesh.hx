@@ -15,22 +15,22 @@ class CommitteeFlesh
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Committee Flesh',
-        text: 'The newly appointed committee chair kneels before dais forged from layered dermal tissue, each fold concealing witness testimony and classified briefs. Hearing chambers pulse with living skin, absorbing testimony into dermal memory. Staffers press palms to the tissue-pulpit, reading witness truth through dermal impressions. Outside observers see only wooden panels, but trusted flesh records the hidden minutes.',
+        title: T('Committee Flesh'),
+        text: T('The newly appointed committee chair kneels before dais forged from layered dermal tissue, each fold concealing witness testimony and classified briefs. Hearing chambers pulse with living skin, absorbing testimony into dermal memory. Staffers press palms to the tissue-pulpit, reading witness truth through dermal impressions. Outside observers see only wooden panels, but trusted flesh records the hidden minutes.'),
         choices: [
           {
-            button: 'Skin Minutes',
-            text: 'Record testimony in dermal folds.',
+            button: T('Skin Minutes'),
+            text: T('Record testimony in dermal folds.'),
             f: choice1
           },
           {
-            button: 'Flesh Gavel',
-            text: 'Gavel strikes skin-pulpit.',
+            button: T('Flesh Gavel'),
+            text: T('Gavel strikes skin-pulpit.'),
             f: choice2
           },
           {
-            button: 'Dermal Bind',
-            text: 'Bind chair into dermal dais.',
+            button: T('Dermal Bind'),
+            text: T('Bind chair into dermal dais.'),
             f: choice3
           }
         ]

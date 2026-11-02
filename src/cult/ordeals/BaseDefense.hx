@@ -1,6 +1,7 @@
 // timed base-defense ordeal
 package cult.ordeals;
 
+import l10n.Loc;
 import cult.ProfaneOrdeal;
 import cult.missions.BaseDefense as BaseDefenseMission;
 import game.Game;
@@ -23,7 +24,7 @@ class BaseDefense extends ProfaneOrdeal
   public override function init()
     {
       super.init();
-      name = 'Defend Cor Nefandum';
+      name = N('Defend Cor Nefandum');
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
@@ -37,8 +38,8 @@ class BaseDefense extends ProfaneOrdeal
     {
       var rival = game.getCultByID(cultID);
       if (rival != null)
-        return name + ' (' + rival.customName() + ')';
-      return name;
+        return Loc.tr(name) + ' (' + rival.customName() + ')';
+      return Loc.tr(name);
     }
 
 // called after load or creation

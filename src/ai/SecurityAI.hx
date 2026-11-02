@@ -39,8 +39,8 @@ class SecurityAI extends HumanAI
     {
       super.init();
       type = 'security';
-      name.unknown = 'security guard';
-      name.unknownCapped = 'Security guard';
+      name.unknown = N('security guard');
+      name.unknownCapped = N('Security guard');
       soundsID = 'security';
       isAggressive = true;
       var jobData = game.jobs.getRandom(type);

@@ -1,6 +1,7 @@
 // base class for cult effects
 package cult;
 
+import l10n.Loc;
 import game.Game;
 
 class Effect extends _SaveObject
@@ -54,7 +55,7 @@ class Effect extends _SaveObject
 // returns custom display name for effect
   public function customName(): String
     {
-      return name;
+      return Loc.tr(name);
     }
 
   // returns a short note with effect explanation

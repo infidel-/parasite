@@ -43,9 +43,9 @@ class BumAI extends HumanAI
     {
       super.init();
       type = 'bum';
-      job = 'unemployed';
-      name.unknown = 'bum';
-      name.unknownCapped = 'Bum';
+      job = N('unemployed');
+      name.unknown = N('bum');
+      name.unknownCapped = N('Bum');
       soundsID = 'civilian';
     }
 

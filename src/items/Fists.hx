@@ -10,8 +10,8 @@ class Fists extends Weapon
     {
       super(game);
       id = 'fists';
-      name = 'fists';
-      unknown = 'fists';
+      name = N('fists');
+      unknown = N('fists');
       weapon = {
         isRanged: false,
         skill: SKILL_FISTS,

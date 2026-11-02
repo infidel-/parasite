@@ -98,7 +98,7 @@ class Inventory extends _SaveObject
               id: 'learn.' + item.id,
               type: ACTION_INVENTORY,
               name: 'Learn about ' + Const.col('inventory-item', itemName),
-              nameClean: 'Learn about',
+              nameClean: T('Learn about'),
               energy: 10,
               isAgreeable: true,
               item: item
@@ -116,7 +116,7 @@ class Inventory extends _SaveObject
                   id: (worn ? 'takeOff.' : 'wear.') + item.id,
                   type: ACTION_INVENTORY,
                   name: (worn ? 'Take off ' : 'Wear ') + Const.col('inventory-item', itemName),
-                  nameClean: (worn ? 'Take off' : 'Wear'),
+                  nameClean: (worn ? T('Take off') : T('Wear')),
                   energy: 5,
                   item: item
                 });
@@ -128,7 +128,7 @@ class Inventory extends _SaveObject
               id: 'drop.' + item.id,
               type: ACTION_INVENTORY,
               name: 'Drop ' + Const.col('inventory-item', itemName),
-              nameClean: 'Drop',
+              nameClean: T('Drop'),
               energy: 0,
               item: item
             });
@@ -247,7 +247,7 @@ class Inventory extends _SaveObject
     {
       if (_list.length >= game.player.host.maxItems)
         {
-          clothing.info.itemFailed('Your host cannot carry any more.');
+          clothing.info.itemFailed(T('Your host cannot carry any more.'));
           return false;
         }
       game.player.log('You take off the ' + Const.col('inventory-item', clothing.getName()) + '.');

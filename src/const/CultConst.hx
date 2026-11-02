@@ -20,7 +20,7 @@ class CultConst
   public static var infos: Map<String, CultInfo> = [
     RIVAL_CULTUS_FERRI => {
       id: RIVAL_CULTUS_FERRI,
-      name: 'Cultus Ferri',
+      name: N('Cultus Ferri'),
       note: 'A rival cult built around violence, discipline, and iron.',
       sanctumIcon: { row: 4, col: 2 },
       memberTemplate: 'combat',
@@ -28,7 +28,7 @@ class CultConst
     },
     RIVAL_CHOIR_BELOW => {
       id: RIVAL_CHOIR_BELOW,
-      name: 'The Choir Below',
+      name: N('The Choir Below'),
       note: 'A rival cult built around hidden rites and resonant doctrine.',
       sanctumIcon: { row: 4, col: 4 },
       memberTemplate: 'occult',
@@ -36,7 +36,7 @@ class CultConst
     },
     RIVAL_PHARAONIC_SLUMBER => {
       id: RIVAL_PHARAONIC_SLUMBER,
-      name: 'Pharaonic Slumber',
+      name: N('Pharaonic Slumber'),
       note: 'Abhumans who want the world asleep so they can feed on nightmares. Dimensionally adjacent abhumans once traded power with ancient Egypt in exchange for control over sleeping minds. They now seek permanent global slumber.',
       sanctumIcon: { row: 4, col: 6 },
       memberTemplate: 'occult',
@@ -44,7 +44,7 @@ class CultConst
     },
     RIVAL_BLOODED_MASK => {
       id: RIVAL_BLOODED_MASK,
-      name: 'Blooded Mask',
+      name: N('Blooded Mask'),
       note: 'Cult devoted to tearing away consensus reality and revealing the insane truth beyond it. The Blooded Mask studies the abyss behind ordinary reality. Its revelations cause madness and compel victims to spread the vision.',
       sanctumIcon: { row: 6, col: 0 },
       memberTemplate: 'occult',

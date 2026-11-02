@@ -19,7 +19,7 @@ class SewerHatch extends AreaObject
       super.init();
       imageCol = Const.FRAME_SEWER_HATCH;
       type = 'sewer_hatch';
-      name = 'sewer hatch';
+      name = N('sewer hatch');
       isStatic = true;
     }
 
@@ -37,7 +37,7 @@ class SewerHatch extends AreaObject
         game.ui.hud.addAction({
           id: 'enterSewers',
           type: ACTION_OBJECT,
-          name: 'Enter sewers',
+          name: T('Enter sewers'),
           energy: 10,
           isAgreeable: true,
           obj: this
@@ -51,7 +51,7 @@ class SewerHatch extends AreaObject
       if (game.player.state == PLR_STATE_HOST &&
           !game.player.host.isHuman)
         {
-          game.actionFailed("This host cannot open the sewer hatch.");
+          game.actionFailed(T("This host cannot open the sewer hatch."));
           return false;
         }
 
@@ -61,7 +61,7 @@ class SewerHatch extends AreaObject
         return false;
 
       game.scene.sounds.play('object-sewers');
-      game.log("You enter the damp fetid sewers escaping the prying eyes.");
+      game.log(T("You enter the damp fetid sewers escaping the prying eyes."));
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
       game.goals.complete(GOAL_ENTER_SEWERS);

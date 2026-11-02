@@ -20,7 +20,7 @@ class WhitePowder extends Effect
   public override function init()
     {
       super.init();
-      name = 'white powder';
+      name = N('white powder');
     }
 
 // restores host energy each turn

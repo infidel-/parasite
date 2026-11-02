@@ -2,6 +2,7 @@
 
 package ui;
 
+import l10n.Loc;
 import js.Browser;
 import js.html.DivElement;
 
@@ -28,7 +29,7 @@ class Saves extends UIWindow
       title.className = 'mods-title';
       var sub = Browser.document.createDivElement();
       sub.className = 'mods-sub';
-      sub.innerHTML = 'memory slots';
+      sub.innerHTML = T('memory slots');
       titlebar.appendChild(title);
       titlebar.appendChild(sub);
       window.appendChild(titlebar);
@@ -57,7 +58,7 @@ class Saves extends UIWindow
     {
       body.innerHTML = '';
       rowEls = [];
-      title.innerHTML = (mode == 'save' ? 'SAVE GAME' : 'LOAD GAME');
+      title.innerHTML = (mode == 'save' ? T('SAVE GAME') : T('LOAD GAME'));
 
       // load mode: autosave slot pinned on top (load only) if present
       if (mode == 'load' &&
@@ -81,7 +82,7 @@ class Saves extends UIWindow
         {
           var empty = Browser.document.createDivElement();
           empty.className = 'win-empty';
-          empty.innerHTML = 'No saved games yet.';
+          empty.innerHTML = T('No saved games yet.');
           body.appendChild(empty);
         }
     }
@@ -113,17 +114,21 @@ class Saves extends UIWindow
       main.className = 'mods-main';
       var line = Browser.document.createDivElement();
       line.className = 'mods-line';
-      var name = (meta != null ? meta.scenario : (exists ? 'Saved game' : 'Empty slot'));
+      var name = (meta != null ? Loc.tr(meta.scenario) : (exists ? T('Saved game') : T('Empty slot')));
       line.innerHTML = '<span class="mods-name">' + name + '</span>';
       main.appendChild(line);
       var sub = Browser.document.createDivElement();
       sub.className = 'mods-reason saves-meta';
       if (meta != null)
-        sub.innerHTML = meta.area + ' · turn ' + meta.turns + ' · ' + relTime(meta.time);
+        sub.innerHTML = T('{area} · turn {turns} · {time}', {
+          area: meta.area,
+          turns: meta.turns,
+          time: relTime(meta.time),
+        });
       else if (exists)
-        sub.innerHTML = 'no preview info';
+        sub.innerHTML = T('no preview info');
       else
-        sub.innerHTML = 'click to save here';
+        sub.innerHTML = T('click to save here');
       main.appendChild(sub);
       row.appendChild(main);
 
@@ -131,7 +136,7 @@ class Saves extends UIWindow
       var status = Browser.document.createDivElement();
       status.className = 'mods-status ' +
         (isAuto ? 'st-active' : exists ? 'st-active' : 'st-off');
-      status.innerHTML = (isAuto ? 'AUTOSAVE' : exists ? 'SAVED' : 'EMPTY');
+      status.innerHTML = (isAuto ? T('AUTOSAVE') : exists ? T('SAVED') : T('EMPTY'));
       row.appendChild(status);
 
       // click: load (any existing slot) or save (manual slots, save mode)
@@ -176,13 +181,13 @@ class Saves extends UIWindow
   function confirmOverwrite(slot: Int)
     {
       var p: _YesNoParams = {
-        text: 'Overwrite slot ' + slot + '?',
-        sub: 'The save currently in this slot will be replaced.',
+        text: T('Overwrite slot {slot}?', { slot: slot }),
+        sub: T('The save currently in this slot will be replaced.'),
         danger: true,
         // `danger` is the RED DESTRUCTIVE STYLING and nothing else here — ui.YesNo derives its
         // default kicker from that same flag ('Confirm exit'), which is right for the two real
         // exit dialogs and wrong for a slot overwrite. this is what _YesNoParams.kicker is for
-        kicker: 'Confirm overwrite',
+        kicker: T('Confirm overwrite'),
         back: _UIState.UISTATE_SAVES,
         func: function(yes: Bool) {
           if (yes)
@@ -199,12 +204,13 @@ class Saves extends UIWindow
     {
       var secs = Std.int((Date.now().getTime() - time) / 1000);
       if (secs < 60)
-        return 'just now';
+        return T('just now');
       if (secs < 3600)
-        return Std.int(secs / 60) + 'm ago';
+        // tr: compact relative times: m = minutes, h = hours, d = days
+        return T('{n}m ago', { n: Std.int(secs / 60) });
       if (secs < 86400)
-        return Std.int(secs / 3600) + 'h ago';
-      return Std.int(secs / 86400) + 'd ago';
+        return T('{n}h ago', { n: Std.int(secs / 3600) });
+      return T('{n}d ago', { n: Std.int(secs / 86400) });
     }
 
 // number key 1..9 = nth visible row; pressButton dispatches its click for us

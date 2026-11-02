@@ -17,7 +17,7 @@ class FirmusCustosAI extends BaseCustosAI
   public override function init()
     {
       super.init();
-      initCustosBase('firmus', 'firmus');
+      initCustosBase('firmus', N('firmus'));
       soundsID = 'firmus';
       strength = 8 + Std.random(3) - 1;
       constitution = 12 + Std.random(3) - 1;

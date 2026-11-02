@@ -23,7 +23,7 @@ class CultTrade
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_ROOT);
@@ -45,9 +45,10 @@ class CultTrade
           cultWindow.addPlayerAction({
             id: 'trade.' + power,
             type: ACTION_CULT,
-            name: 'To ' + Const.col('cult-power', power) +
-              ' resource (' +
-              Const.col('cult-power', cost) + Icon.money + ')',
+            name: T('To {power} resource ({cost})', {
+              power: Const.col('cult-power', _CultPower.namesCap[i].toLowerCase()),
+              cost: Const.col('cult-power', cost) + Icon.money,
+            }),
             energy: 0,
             f: function() {
               cult.trade(powerType);
@@ -64,7 +65,7 @@ class CultTrade
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_ROOT);
@@ -104,7 +105,7 @@ class CultTrade
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_SELECT_RESOURCE);
@@ -129,9 +130,11 @@ class CultTrade
           cultWindow.addPlayerAction({
             id: 'trade.' + from + '.' + to,
             type: ACTION_CULT,
-            name: 'To ' + Const.col('cult-power', _CultPower.names[i]) +
-              ' resource (' + cost + ' ' +
-              Const.col('cult-power', from) + ')',
+            name: T('To {power} resource ({cost} {from})', {
+              power: Const.col('cult-power', _CultPower.namesCap[i].toLowerCase()),
+              cost: cost,
+              from: Const.col('cult-power', _CultPower.namesCap[_CultPower.names.indexOf(from)].toLowerCase()),
+            }),
             energy: 0,
             f: function() {
               cult.tradeResource(from, toType);

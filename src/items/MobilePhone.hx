@@ -11,8 +11,8 @@ class MobilePhone extends ItemInfo
     {
       super(game);
       id = 'mobilePhone';
-      name = 'mobile phone';
+      name = N('mobile phone');
       type = 'phone';
-      unknown = 'small plastic object';
+      unknown = N('small plastic object');
     }
 }

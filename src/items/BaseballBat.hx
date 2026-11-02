@@ -10,8 +10,8 @@ class BaseballBat extends Weapon
     {
       super(game);
       id = 'baseballBat';
-      name = 'baseball bat';
-      unknown = 'wooden club';
+      name = N('baseball bat');
+      unknown = N('wooden club');
       weapon = {
         isRanged: false,
         skill: SKILL_CLUB,

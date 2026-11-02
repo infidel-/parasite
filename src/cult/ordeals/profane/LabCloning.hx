@@ -9,17 +9,17 @@ class LabCloning
   public static function getInfo(): _OrdealInfo
     {
       return {
-        name: "Vessel Program",
-        note: "The unaussprechliche kult maintains a clandestine cistern of green meat vessels below the city. Their lead science triad tends the clone line while security maintains sterile perimeter. Purge every vat and eliminate the keepers.",
-        success: "The clone line collapses in hissing drains. Dead scientists lie among empty glass, and the underground lab goes sterile.",
-        fail: "You are pushed out before the purge finishes. The unaussprechliche kult seals their notes and the vessel program keeps breathing.",
+        name: N("Vessel Program"),
+        note: N("The unaussprechliche kult maintains a clandestine cistern of green meat vessels below the city. Their lead science triad tends the clone line while security maintains sterile perimeter. Purge every vat and eliminate the keepers."),
+        success: T("The clone line collapses in hissing drains. Dead scientists lie among empty glass, and the underground lab goes sterile."),
+        fail: T("You are pushed out before the purge finishes. The unaussprechliche kult seals their notes and the vessel program keeps breathing."),
         mission: MISSION_COMBAT,
         combat: {
           template: UNDERGROUND_LAB_PURGE,
           targets: [
             {
               target: {
-                job: "lead scientist",
+                job: N("lead scientist"),
                 type: "scientist",
                 icon: "scientist",
                 location: AREA_UNDERGROUND_LAB,
@@ -30,7 +30,7 @@ class LabCloning
             },
             {
               target: {
-                job: "clone scientist",
+                job: N("clone scientist"),
                 type: "scientist",
                 icon: "scientist",
                 location: AREA_UNDERGROUND_LAB,
@@ -41,7 +41,7 @@ class LabCloning
             },
             {
               target: {
-                job: "lab security guard",
+                job: N("lab security guard"),
                 type: "security",
                 icon: "security",
                 location: AREA_UNDERGROUND_LAB,

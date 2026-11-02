@@ -29,7 +29,7 @@ class Pedia extends UIWindow
       // titlebar with breadcrumb
       var titlebar = Browser.document.createDivElement();
       titlebar.className = 'pedia-titlebar';
-      titlebar.innerHTML = '<span class="pedia-title">PEDIA</span>';
+      titlebar.innerHTML = '<span class="pedia-title">' + T('PEDIA') + '</span>';
       crumb = Browser.document.createDivElement();
       crumb.className = 'pedia-crumb';
       titlebar.appendChild(crumb);
@@ -49,7 +49,7 @@ class Pedia extends UIWindow
       search = Browser.document.createInputElement();
       search.className = 'pedia-search';
       search.type = 'text';
-      search.placeholder = 'Search topics...';
+      search.placeholder = T('Search topics...');
       search.oninput = function (e) {
         searchWrap.classList.toggle('has', search.value != '');
         filter();
@@ -74,7 +74,7 @@ class Pedia extends UIWindow
       content.className = 'pedia-content';
       pediaInner = Browser.document.createDivElement();
       pediaInner.className = 'pedia-inner pedia-empty';
-      pediaInner.innerHTML = 'Pick an article to read.';
+      pediaInner.innerHTML = T('Pick an article to read.');
       content.appendChild(pediaInner);
       body.appendChild(content);
 
@@ -286,7 +286,7 @@ class Pedia extends UIWindow
   override function update()
     {
       pediaInner.className = 'pedia-inner pedia-empty';
-      pediaInner.innerHTML = 'Pick an article to read.';
+      pediaInner.innerHTML = T('Pick an article to read.');
       crumb.innerHTML = '';
       if (activeTopic != null)
         {

@@ -12,22 +12,22 @@ class EffigyArbitrament
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Effigy Arbitrament',
-        text: 'Windowless arbitration suite hums as the newly promoted advocate rehearses before a jury of still-breathing effigies. Fiber veins coil beneath the table, syncing plea scripts with encrypted archives. Elevator chimes upstairs swallow each whispered precedent before it can escape into daylight.',
+        title: T('Effigy Arbitrament'),
+        text: T('Windowless arbitration suite hums as the newly promoted advocate rehearses before a jury of still-breathing effigies. Fiber veins coil beneath the table, syncing plea scripts with encrypted archives. Elevator chimes upstairs swallow each whispered precedent before it can escape into daylight.'),
         choices: [
           {
-            button: 'Case Draw',
-            text: 'Draft shadow amicus briefs to siphon precedent into private files.',
+            button: T('Case Draw'),
+            text: T('Draft shadow amicus briefs to siphon precedent into private files.'),
             f: choice1
           },
           {
-            button: 'Echo Seal',
-            text: 'Bind the effigy choir to pulse covert rulings through secure relays.',
+            button: T('Echo Seal'),
+            text: T('Bind the effigy choir to pulse covert rulings through secure relays.'),
             f: choice2
           },
           {
-            button: 'Script Lash',
-            text: 'Carve mnemonic lashes across the advocate to brand deeper compliance.',
+            button: T('Script Lash'),
+            text: T('Carve mnemonic lashes across the advocate to brand deeper compliance.'),
             f: choice3
           }
         ]

@@ -16,7 +16,7 @@ class CorNefandum extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Cor Nefandum';
+      name = N('Cor Nefandum');
     }
 
 // alerts custodes when the heart takes combat damage

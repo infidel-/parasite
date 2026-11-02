@@ -15,22 +15,22 @@ class LinguaMareTelecast
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Lingua Mare Telecast',
-        text: 'Windowless relay chapel hums as the freshly elevated anchor kneels before a living teleprompter of plated flesh. Lingua Mare membranes ripple beneath blackout visors while editors splice riot surveillance for covert drops. Only verified cells receive the muted feed. Encrypted carriers pulse once before vanishing beyond the city grid.',
+        title: T('Lingua Mare Telecast'),
+        text: T('Windowless relay chapel hums as the freshly elevated anchor kneels before a living teleprompter of plated flesh. Lingua Mare membranes ripple beneath blackout visors while editors splice riot surveillance for covert drops. Only verified cells receive the muted feed. Encrypted carriers pulse once before vanishing beyond the city grid.'),
         choices: [
           {
-            button: 'Hot Take',
-            text: 'Flood sealed trend clusters with sanctified clips and let outrage cycle unseen.',
+            button: T('Hot Take'),
+            text: T('Flood sealed trend clusters with sanctified clips and let outrage cycle unseen.'),
             f: choice1
           },
           {
-            button: 'Echo Sync',
-            text: 'Phase confession mics with hijacked siren tests so fear loops never name us.',
+            button: T('Echo Sync'),
+            text: T('Phase confession mics with hijacked siren tests so fear loops never name us.'),
             f: choice2
           },
           {
-            button: 'Vox Seal',
-            text: 'Press a living sigil across the anchor\'s throat to bind clandestine sermons.',
+            button: T('Vox Seal'),
+            text: T('Press a living sigil across the anchor\'s throat to bind clandestine sermons.'),
             f: choice3
           }
         ]

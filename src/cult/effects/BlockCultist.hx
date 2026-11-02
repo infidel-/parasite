@@ -1,6 +1,7 @@
 // effect that blocks a specific cultist
 package cult.effects;
 
+import l10n.Loc;
 import cult.Effect;
 import game.Game;
 
@@ -49,7 +50,7 @@ class BlockCultist extends Effect
   public override function init()
     {
       super.init();
-      name = 'recessu';
+      name = N('recessu');
       allowMultiple = true;
     }
 
@@ -59,13 +60,13 @@ class BlockCultist extends Effect
       var cult = game.cults[0];
       var member = cult.getMemberByID(targetID);
       if (member == null)
-        return name;
-      return name + ' - ' + member.TheName();
+        return Loc.tr(name);
+      return Loc.tr(name) + ' - ' + member.TheName();
     }
 
   // returns effect description
   public override function note(): String
     {
-      return 'blocks member actions';
+      return T('blocks member actions');
     }
 }

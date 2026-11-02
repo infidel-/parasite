@@ -19,7 +19,7 @@ class CannotTearAway extends Effect
   public override function init()
     {
       super.init();
-      name = 'cannot tear away';
+      name = N('cannot tear away');
       isHidden = true;
     }
 }

@@ -11,9 +11,9 @@ class KevlarArmor extends ItemInfo
     {
       super(game);
       id = 'kevlarArmor';
-      name = 'kevlar armor';
+      name = N('kevlar armor');
       type = 'clothing';
-      unknown = 'padded garment';
+      unknown = N('padded garment');
       armor = {
         canAttach: true,
         damage: 4,

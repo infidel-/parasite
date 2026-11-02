@@ -24,12 +24,12 @@ class MetamorphosisPhaseI extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Metamorphosis, Phase I';
+      name = N('Metamorphosis, Phase I');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 1;
       requiredMemberLevels = 3;
       actions = requiredMembers;
-      note = 'A perfected follower seeks the most forbidden of knowledges.';
+      note = N('A perfected follower seeks the most forbidden of knowledges.');
     }
 
 // fail if bound member dies
@@ -42,7 +42,7 @@ class MetamorphosisPhaseI extends Ordeal
   public override function onSuccess()
     {
       cult.metamorphosisPhaseIComplete = true;
-      game.logsg('Metamorphosis Phase II is now possible.');
+      game.logsg(T('Metamorphosis Phase II is now possible.'));
     }
 
 // adds initiate action when level 3 follower exists
@@ -60,7 +60,7 @@ class MetamorphosisPhaseI extends Ordeal
       actions.push({
         id: 'metamorphosisPhaseI',
         type: ACTION_CULT,
-        name: 'Metamorphosis, Phase I',
+        name: T('Metamorphosis, Phase I'),
         energy: 0,
         obj: {}
       });

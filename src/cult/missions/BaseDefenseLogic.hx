@@ -81,8 +81,10 @@ class BaseDefenseLogic
           bodies++;
       var lost = base.addBodies(bodies);
       if (bodies > 0)
-        game.logsg('Body storage receives ' + (bodies - lost) +
-          ' remains; ' + lost + ' are lost.');
+        game.logsg(T('Body storage receives {received} remains; {lost} are lost.', {
+          received: bodies - lost,
+          lost: lost,
+        }));
     }
 
 // calms living area AI after base defense ends

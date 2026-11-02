@@ -46,7 +46,7 @@ class GunCabinet extends AreaObject
     {
       super.init();
       type = 'gunCabinet';
-      name = 'gun cabinet';
+      name = N('gun cabinet');
       isStatic = true;
       imageRow = Const.CORP_CABINET[0].row;
       imageCol = 0;
@@ -112,9 +112,9 @@ class GunCabinet extends AreaObject
   public override function getTooltipRows(): Array<objects.AreaObject.TooltipRow>
     {
       return [ {
-        name: 'state',
-        value: (!isOpen ? 'closed' : !isSearched ? 'open' :
-          inventory.length() == 0 ? 'empty' : 'searched'),
+        name: T('state'),
+        value: (!isOpen ? T('closed') : !isSearched ? T('open') :
+          inventory.length() == 0 ? T('empty') : T('searched')),
       } ];
     }
 

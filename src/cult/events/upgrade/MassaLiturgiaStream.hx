@@ -16,22 +16,22 @@ class MassaLiturgiaStream
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Massa Liturgia Stream',
-        text: 'Sub-basement streaming nave thrums as the upgrade briefing coils around the journalist newly sworn to their next tier of witness. Massa Liturgia consoles sweat light across curtain walls while editors queue encrypted drops for sleeper cells. Above, commuter static masks the whisper-fed transmission.',
+        title: T('Massa Liturgia Stream'),
+        text: T('Sub-basement streaming nave thrums as the upgrade briefing coils around the journalist newly sworn to their next tier of witness. Massa Liturgia consoles sweat light across curtain walls while editors queue encrypted drops for sleeper cells. Above, commuter static masks the whisper-fed transmission.'),
         choices: [
           {
-            button: 'Warm Feed',
-            text: 'Uncork backup syndication nodes and drip the ordeal cut through vetted smartwalls.',
+            button: T('Warm Feed'),
+            text: T('Uncork backup syndication nodes and drip the ordeal cut through vetted smartwalls.'),
             f: choice1
           },
           {
-            button: 'Grey Choir',
-            text: 'Draft choir drones to braid hymn loops behind anonymous billboards.',
+            button: T('Grey Choir'),
+            text: T('Draft choir drones to braid hymn loops behind anonymous billboards.'),
             f: choice2
           },
           {
-            button: 'Clip Rite',
-            text: 'Carve a private catechism reel to rehearse the upgraded witness before future trials.',
+            button: T('Clip Rite'),
+            text: T('Carve a private catechism reel to rehearse the upgraded witness before future trials.'),
             f: choice3
           }
         ]

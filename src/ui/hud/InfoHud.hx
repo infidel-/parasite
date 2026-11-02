@@ -63,7 +63,7 @@ class InfoHud
       // compact-mode toggle: persistent, survives in-place updates
       compactBtn = document.createDivElement();
       compactBtn.className = 'hud-compact-btn evolution-tip';
-      compactBtn.setAttribute('data-tip', 'Compact info');
+      compactBtn.setAttribute('data-tip', T('Compact info'));
       compactBtn.innerHTML = UISvg.hudCompact();
       compactBtn.onclick = function (e)
         {
@@ -93,10 +93,10 @@ class InfoHud
       playerSection.className = 'hud-stats-player';
       var eb = document.createDivElement();
       eb.className = 'hud-eyebrow';
-      eb.textContent = 'Parasite';
+      eb.textContent = T('Parasite');
       playerSection.appendChild(eb);
-      bars['ph'] = makeBar('ph', UISvg.hudEye(), 'Health', 'health');
-      bars['pe'] = makeBar('pe', UISvg.hudBolt(), 'Energy', 'energy');
+      bars['ph'] = makeBar('ph', UISvg.hudEye(), T('Health'), 'health');
+      bars['pe'] = makeBar('pe', UISvg.hudBolt(), T('Energy'), 'energy');
       playerSection.appendChild(bars['ph'].box);
       playerSection.appendChild(bars['pe'].box);
       info.appendChild(playerSection);
@@ -105,7 +105,7 @@ class InfoHud
       hostSection = document.createDivElement();
       hostEyebrow = document.createDivElement();
       hostEyebrow.className = 'hud-eyebrow';
-      hostEyebrow.textContent = 'Host';
+      hostEyebrow.textContent = T('Host');
       hostSection.appendChild(hostEyebrow);
       hostname = document.createDivElement();
       hostname.className = 'hud-hostname';
@@ -116,9 +116,9 @@ class InfoHud
       hostname.appendChild(hostnameText);
       hostname.appendChild(hostnameBadges);
       hostSection.appendChild(hostname);
-      bars['hh'] = makeBar('hh', UISvg.hudHeart(), 'Health', 'health');
-      bars['he'] = makeBar('he', UISvg.hudBolt(), 'Energy', 'energy');
-      bars['hc'] = makeBar('hc', UISvg.hudControl(), 'Control', 'control');
+      bars['hh'] = makeBar('hh', UISvg.hudHeart(), T('Health'), 'health');
+      bars['he'] = makeBar('he', UISvg.hudBolt(), T('Energy'), 'energy');
+      bars['hc'] = makeBar('hc', UISvg.hudControl(), T('Control'), 'control');
       hostSection.appendChild(bars['hh'].box);
       hostSection.appendChild(bars['he'].box);
       hostSection.appendChild(bars['hc'].box);
@@ -470,11 +470,12 @@ class InfoHud
       function res(lbl: String, v: String): String
         return '<span class="r">' + (lbl != '' ? '<span class="l">' + lbl + '</span>' : '') +
           '<span class="v">' + v + '</span></span>';
-      return res('COM', r.getShort('combat')) +
-        res('MED', r.getShort('media')) +
-        res('LAW', r.getShort('lawfare')) +
-        res('COR', r.getShort('corporate')) +
-        res('POL', r.getShort('political')) +
+      // tr: three-letter abbreviations of the cult resources: combat, media, lawfare, corporate, political
+      return res(T('COM'), r.getShort('combat')) +
+        res(T('MED'), r.getShort('media')) +
+        res(T('LAW'), r.getShort('lawfare')) +
+        res(T('COR'), r.getShort('corporate')) +
+        res(T('POL'), r.getShort('political')) +
         res('', r.getShort('money') + Icon.money);
     }
 
@@ -503,7 +504,8 @@ class InfoHud
       // parasite bars
       var ppt = __Math.parasiteEnergyPerTurn(time);
       var pdelta = (ppt != 0 ?
-        '<small class="' + (ppt > 0 ? 'up' : 'down') + '">' + (ppt > 0 ? '+' : '') + ppt + '/t</small>' : '');
+        // tr: energy change per turn, "t" = turn
+        '<small class="' + (ppt > 0 ? 'up' : 'down') + '">' + T('{n}/t', { n: (ppt > 0 ? '+' : '') + ppt }) + '</small>' : '');
       updateBar(bars['ph'], 'ph', game.player.health, game.player.maxHealth);
       updateBar(bars['pe'], 'pe', game.player.energy, game.player.maxEnergy, pdelta);
 
@@ -515,7 +517,7 @@ class InfoHud
           setShown(hostname, false);
           setShown(bars['hh'].box, false);
           setShown(bars['he'].box, false);
-          updateBar(bars['hc'], 'hc', game.playerArea.attachHold, 100, '', 'Grip');
+          updateBar(bars['hc'], 'hc', game.playerArea.attachHold, 100, '', T('Grip'));
         }
 
       // host bars + name
@@ -534,9 +536,11 @@ class InfoHud
             {
               var leave = game.player.chat.affinityLoss(false);
               badges += Icon.affinity(leave == 0 ?
-                'Full affinity: losing this host costs no maximum energy.' :
-                'Full affinity: leaving this host costs ' + leave + ' maximum energy, its death costs ' +
-                game.player.chat.affinityLoss(true) + '.');
+                T('Full affinity: losing this host costs no maximum energy.') :
+                T('Full affinity: leaving this host costs {leave} maximum energy, its death costs {death}.', {
+                  leave: leave,
+                  death: game.player.chat.affinityLoss(true),
+                }));
             }
           if (host.chat.consent >= 100)
             badges += Icon.consent;
@@ -552,11 +556,12 @@ class InfoHud
           var hpt = __Math.fullHostEnergyPerTurn(time);
           var hdelta = '';
           if (hpt != 0)
-            hdelta = '<small class="' + (hpt > 0 ? 'up' : 'down') + '">' + (hpt > 0 ? '+' : '') + hpt + '/t</small>';
+            hdelta = '<small class="' + (hpt > 0 ? 'up' : 'down') + '">' + T('{n}/t', { n: (hpt > 0 ? '+' : '') + hpt }) + '</small>';
           if (hpt < 0)
-            hdelta += '<small class="down">' + Math.ceil(host.energy / (- hpt)) + 't</small>';
+            // tr: turns left until the host's energy runs out, "t" = turns
+            hdelta += '<small class="down">' + T('{n}t', { n: Math.ceil(host.energy / (- hpt)) }) + '</small>';
           updateBar(bars['he'], 'he', host.energy, host.maxEnergy, hdelta);
-          updateBar(bars['hc'], 'hc', game.player.hostControl, 100, '', 'Control');
+          updateBar(bars['hc'], 'hc', game.player.hostControl, 100, '', T('Control'));
         }
 
       // free parasite: no host section
@@ -567,16 +572,16 @@ class InfoHud
       if (game.location == LOCATION_AREA)
         {
           if (game.area.isMissionArea())
-            ctx += '<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>';
+            ctx += '<center>' + Const.smallcol('profane-ordeal', T('mission area')) + '</center>';
         }
       else if (game.location == LOCATION_REGION)
         {
           var area = game.playerRegion.currentArea;
           if (area.highCrime)
-            ctx += '<center>' + Const.smallgray('high crime') + '</center>';
+            ctx += '<center>' + Const.smallgray(T('high crime')) + '</center>';
           if (game.cults.length > 0 &&
               game.cults[0].ordeals.getMarkerMission(area) != null)
-            ctx += '<center>' + Const.smallcol('profane-ordeal', 'mission area') + '</center>';
+            ctx += '<center>' + Const.smallcol('profane-ordeal', T('mission area')) + '</center>';
         }
       var gbuf = new StringBuf();
       game.group.hudInfo(gbuf);
@@ -609,7 +614,7 @@ class InfoHud
         flashCult();
 
       // spoon marker
-      var spoonHtml = (game.player.vars.isSpoonGame ? Const.col('yellow', 'SPOONED') : '');
+      var spoonHtml = (game.player.vars.isSpoonGame ? Const.col('yellow', T('SPOONED')) : '');
       var shownSpoon = setRegion(spoonMark, 'spoon', spoonHtml);
 
       setShown(extraWrap, shownCtx || shownEvo || shownCult || shownSpoon);

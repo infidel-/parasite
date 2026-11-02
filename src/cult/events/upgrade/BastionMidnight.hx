@@ -16,22 +16,22 @@ class BastionMidnight
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Bastion Midnight',
-        text: 'Midnight rain needles the subterranean muster as the honored fighter kneels before a carbon-fiber reliquary. Penitents whisper flesh psalms over diesel generators, medics map ordeal scars with biometric scanners, and scouts radio rival crews testing perimeter gaps the promotion might have opened.',
+        title: T('Bastion Midnight'),
+        text: T('Midnight rain needles the subterranean muster as the honored fighter kneels before a carbon-fiber reliquary. Penitents whisper flesh psalms over diesel generators, medics map ordeal scars with biometric scanners, and scouts radio rival crews testing perimeter gaps the promotion might have opened.'),
         choices: [
           {
-            button: 'Depot Run',
-            text: 'Re-route supply vans under police scanners to restock forward depots before the dawn curfew bites.',
+            button: T('Depot Run'),
+            text: T('Re-route supply vans under police scanners to restock forward depots before the dawn curfew bites.'),
             f: choice1
           },
           {
-            button: 'Vow Rally',
-            text: 'Stage a midnight oath rally, pumping adrenal hymnals through the barracks loudspeakers.',
+            button: T('Vow Rally'),
+            text: T('Stage a midnight oath rally, pumping adrenal hymnals through the barracks loudspeakers.'),
             f: choice2
           },
           {
-            button: 'Brief Dark',
-            text: 'Seclude the promoted fighter with scout handlers to stitch blackout routes and clandestine contact trees.',
+            button: T('Brief Dark'),
+            text: T('Seclude the promoted fighter with scout handlers to stitch blackout routes and clandestine contact trees.'),
             f: choice3
           }
         ]

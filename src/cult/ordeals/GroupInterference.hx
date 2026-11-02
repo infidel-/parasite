@@ -15,9 +15,10 @@ class GroupInterference extends Ordeal
   public static function priceHint(): String
     {
       return Const.smallgray(' (') +
-        '3x: ' +
-        Const.col('cult-power', 10) + ' PWR or ' +
-        Const.col('cult-power', '100k') + Icon.money +
+        T('3x: {power} PWR or {money}', {
+          power: Const.col('cult-power', 10),
+          money: Const.col('cult-power', '100k') + Icon.money,
+        }) +
         Const.smallgray(')');
     }
 
@@ -65,12 +66,12 @@ class GroupInterference extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Group interference';
+      name = N('Group interference');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 3;
       requiredMemberLevels = 2;
       actions = requiredMembers;
-      note = 'Sunder the Group\'s designs to forestall judgment and dim their fervor.';
+      note = N('Sunder the Group\'s designs to forestall judgment and dim their fervor.');
     }
 
 // called after load or creation
@@ -93,7 +94,7 @@ class GroupInterference extends Ordeal
           game.group.team.state == TEAM_AMBUSH)
         {
           game.message({
-            text: 'My followers warn someone is waiting for me in ambush.',
+            text: T('My followers warn someone is waiting for me in ambush.'),
             img: 'pedia/team_ambush',
             col: 'alert'
           });
@@ -105,7 +106,7 @@ class GroupInterference extends Ordeal
 
       // show success message
       game.message({
-        text: 'The Group\'s designs lie sundered. Their fervor wanes.',
+        text: T('The Group\'s designs lie sundered. Their fervor wanes.'),
         col: 'cult'
       });
     }
@@ -122,7 +123,7 @@ class GroupInterference extends Ordeal
       actions.push({
         id: 'groupInterference',
         type: ACTION_CULT,
-        name: 'Group interference' + priceHint(),
+        name: T('Group interference') + priceHint(),
         energy: 0,
         obj: {}
       });

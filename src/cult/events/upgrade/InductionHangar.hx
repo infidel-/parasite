@@ -19,22 +19,22 @@ class InductionHangar
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Induction Hangar',
-        text: 'Cargo drones idle over the repurposed hangar while the elevation banquet hisses on induction grills. Veteran cantors tape reinforced grips, rookies laser-etch ordeal sigils into riot shields, and the council waits to hear if this vigil yields new tactics, lean logistics, or dangers disguised as applause.',
+        title: T('Induction Hangar'),
+        text: T('Cargo drones idle over the repurposed hangar while the elevation banquet hisses on induction grills. Veteran cantors tape reinforced grips, rookies laser-etch ordeal sigils into riot shields, and the council waits to hear if this vigil yields new tactics, lean logistics, or dangers disguised as applause.'),
         choices: [
           {
-            button: 'Cash Grab',
-            text: 'Auction ritual trophies through darknet brokers and launder the bids straight into hardened gear budgets.',
+            button: T('Cash Grab'),
+            text: T('Auction ritual trophies through darknet brokers and launder the bids straight into hardened gear budgets.'),
             f: choice1
           },
           {
-            button: 'Share Docs',
-            text: 'Swap encrypted playbooks with allied cells so squads can cross-train on each other\'s breach patterns.',
+            button: T('Share Docs'),
+            text: T('Swap encrypted playbooks with allied cells so squads can cross-train on each other\'s breach patterns.'),
             f: choice2
           },
           {
-            button: 'Peer Audit',
-            text: 'Pair veterans with recruits for a brutal after-action autopsy, annotating every flaw from the ordeal footage.',
+            button: T('Peer Audit'),
+            text: T('Pair veterans with recruits for a brutal after-action autopsy, annotating every flaw from the ordeal footage.'),
             f: choice3
           }
         ]

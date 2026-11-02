@@ -9,7 +9,7 @@ class ScenarioAlienCrashLanding extends Scenario
   public function new()
     {
       super();
-      name = 'Alien Crash Landing';
+      name = N('Alien Crash Landing');
       startEvent = 'alienMission';
       playerStartEvent = 'parasiteTransportation';
       defaultAlertness = 50;
@@ -116,10 +116,10 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_GROUND,
             },
           npc: [
-            'civilian' => 20,
-            'reporter:civilian' => 5,
-            'ufologist:civilian' => 5,
-            'conspirologist:civilian' => 3 ],
+            N('civilian') => 20,
+            N('reporter') + ':civilian' => 5,
+            N('ufologist') + ':civilian' => 5,
+            N('conspirologist') + ':civilian' => 3 ],
           },
 
         'shipSpottedMil' => {
@@ -135,7 +135,7 @@ class ScenarioAlienCrashLanding extends Scenario
             id: 'base1',
             near: 'shipSpottedCiv'
             },
-          npc: [ 'soldier' => 20 ],
+          npc: [ N('soldier') => 20 ],
           },
 
         'dogfight' => {
@@ -147,7 +147,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'The plane suffered heavy damage in a fight.',
             'The pilot is on psychic evaluation and extended leave.'
             ],
-          npc: [ 'soldier' => 5 ],
+          npc: [ N('soldier') => 5 ],
           },
 
         'shipLanded' => {
@@ -163,7 +163,7 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             near: 'shipSpottedCiv',
             },
-          npc: [ 'soldier' => 10 ],
+          npc: [ N('soldier') => 10 ],
           },
 
         'shipShotDown' => {
@@ -179,7 +179,7 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             near: 'shipSpottedCiv',
             },
-          npc: [ 'soldier' => 10 ],
+          npc: [ N('soldier') => 10 ],
           },
 
         'shipLandingInvestigation' => {
@@ -193,7 +193,7 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             sameAs: 'shipLanded'
             },
-          npc: [ 'soldier' => 20, 'agent' => 5 ],
+          npc: [ N('soldier') => 20, N('agent') => 5 ],
           },
 
         'crashLandingInvestigation' => {
@@ -207,7 +207,7 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             sameAs: 'shipShotDown'
             },
-          npc: [ 'soldier' => 20, 'agent' => 5 ],
+          npc: [ N('soldier') => 20, N('agent') => 5 ],
           },
 
         'alienShipTransportation' => {
@@ -217,7 +217,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'Everything recovered from the scene was successfully transported to %facility1%.',
             'The largest object has received a speficic codename for future reference: %shipCode%.'
             ],
-          npc: [ 'agent' => 5 ],
+          npc: [ N('agent') => 5 ],
         },
 
         'alienShipStudy' => {
@@ -233,7 +233,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility1%'
           },
-          npc: [ 'researcher:scientist' => 10, 'agent' => 5 ],
+          npc: [ N('researcher') + ':scientist' => 10, N('agent') => 5 ],
           onLearnLocation: function (game) {
             game.goals.receive(SCENARIO_ALIEN_FIND_SHIP);
             game.goals.complete(SCENARIO_ALIEN_FIND_SHIP);
@@ -251,7 +251,7 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             near: 'shipSpottedCiv' // cant make it near landing because of branching
             },
-          npc: [ 'agent' => 10 ],
+          npc: [ N('agent') => 10 ],
           },
 
         'alienCaptured' => {
@@ -265,7 +265,7 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             sameAs: 'alienCaptureMission'
             },
-          npc: [ 'agent' => 5 ],
+          npc: [ N('agent') => 5 ],
           },
 
         'alienKilled' => {
@@ -279,7 +279,7 @@ class ScenarioAlienCrashLanding extends Scenario
           location: {
             sameAs: 'alienCaptureMission'
             },
-          npc: [ 'agent' => 5 ],
+          npc: [ N('agent') => 5 ],
           },
 
         'liveAlienTransportation' => {
@@ -293,7 +293,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'The captured organism was transported to %facility2% for further study. Project %projectCode% initiated.',
             'Captured organism has received a special code: %alienCode%.',
             ],
-          npc: [ 'agent' => 2 ],
+          npc: [ N('agent') => 2 ],
           },
 
         'deadAlienTransportation' => {
@@ -307,7 +307,7 @@ class ScenarioAlienCrashLanding extends Scenario
             'The acquired cadaver was transported to %facility2% for further study. Project %projectCode% initiated.',
             'The body of possibly extraterrestrial origins has received a special code: %alienCode%.',
             ],
-          npc: [ 'agent' => 2 ],
+          npc: [ N('agent') => 2 ],
           },
 
         'liveAlienStudy' => {
@@ -324,7 +324,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher:scientist' => 10, 'agent' => 2 ],
+          npc: [ N('researcher') + ':scientist' => 10, N('agent') => 2 ],
           onLearnNote: function(game, noteID)
             {
               game.goals.complete(GOAL_PROGRESS_TIMELINE);
@@ -350,7 +350,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher:scientist' => 5 ],
+          npc: [ N('researcher') + ':scientist' => 5 ],
           onLearnNote: function(game, noteID)
             {
               game.goals.complete(GOAL_PROGRESS_TIMELINE);
@@ -371,7 +371,7 @@ class ScenarioAlienCrashLanding extends Scenario
             type: AREA_FACILITY,
             name: '%facility2%'
             },
-          npc: [ 'researcher:scientist' => 5 ],
+          npc: [ N('researcher') + ':scientist' => 5 ],
           },
 
         'parasiteTransportation' => {
@@ -383,7 +383,7 @@ class ScenarioAlienCrashLanding extends Scenario
             ],
           location: {
             },
-          npc: [ 'agent' => 2 ],
+          npc: [ N('agent') => 2 ],
           },
 /*
 

@@ -14,9 +14,9 @@ class Wallet extends ItemInfo
     {
       super(game);
       id = 'wallet';
-      name = 'wallet';
+      name = N('wallet');
       type = 'junk';
-      unknown = 'small leather object';
+      unknown = N('small leather object');
     }
 
 // builds wallet-specific inventory actions
@@ -28,7 +28,7 @@ class Wallet extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Open ' + Const.col('inventory-item', itemName),
-        nameClean: 'Open',
+        nameClean: T('Open'),
         energy: 3,
         isAgreeable: true,
         item: item

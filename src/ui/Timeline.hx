@@ -1,6 +1,7 @@
 // player timeline GUI window — declassified case-file dossier
 package ui;
 
+import l10n.Loc;
 import js.Browser;
 import js.html.DivElement;
 
@@ -16,7 +17,7 @@ class Timeline extends UIWindow
       super(g, 'window-timeline');
 
       // shared HUD chrome: scrim + clock glyph, frame, corners, veins, "TIME" watermark
-      addHudChrome('TIME', UISvg.clock());
+      addHudChrome(T('TIME'), UISvg.clock());
 
       titlebar = Browser.document.createDivElement();
       titlebar.className = 'win-title win-titlebar';
@@ -78,10 +79,10 @@ class Timeline extends UIWindow
           buf.add("<li class='" + cls + "' style='--i:" + i + "'>");
           buf.add("<span class='timeline-node'></span><div class='timeline-card'><div class='timeline-fx'></div>");
           if (redactedEv)
-            buf.add("<div class='timeline-stamp'>SEALED</div>");
+            buf.add("<div class='timeline-stamp'>" + T('SEALED') + "</div>");
 
           // header: event id + location (name + coords, or blackout bar + (?,?))
-          buf.add("<div class='timeline-ehead'><span class='timeline-en'>EVENT " + event.num + "</span><span class='timeline-loc'>");
+          buf.add("<div class='timeline-ehead'><span class='timeline-en'>" + T('EVENT {n}', { n: event.num }) + "</span><span class='timeline-loc'>");
           if (event.location != null)
             {
               if (event.locationKnown)
@@ -101,7 +102,7 @@ class Timeline extends UIWindow
                 buf.add("<li class='timeline-note'>" + n.text + "</li>");
               else if (n.clues > 0)
                 {
-                  buf.add("<li class='timeline-note redacted'><span class='timeline-q'>?</span><span class='timeline-clues'>");
+                  buf.add("<li class='timeline-note redacted' data-leads=\"" + T('LEADS') + "\"><span class='timeline-q'>?</span><span class='timeline-clues'>");
                   for (c in 0...4)
                     buf.add(c < n.clues ? "<i class='on'></i>" : "<i></i>");
                   buf.add("</span><span class='timeline-cn'>" + n.clues + "/4</span></li>");
@@ -110,7 +111,7 @@ class Timeline extends UIWindow
           buf.add("</ul>");
 
           // participants: per-field redactable ID tags; alive-probed / deceased rolled up
-          buf.add("<div class='timeline-parts'><div class='timeline-ptitle'>Participants</div>");
+          buf.add("<div class='timeline-parts'><div class='timeline-ptitle'>" + T('Participants') + "</div>");
           var numProbed = 0;
           var numDeceased = 0;
           if (npcKnown)
@@ -131,26 +132,26 @@ class Timeline extends UIWindow
                 buf.add("<div class='timeline-row" + (npc.nameKnown ? "" : " redacted") + "'>");
                 buf.add(npc.jobKnown ? "<span class='timeline-photo'>" + UISvg.face() + "</span>" : "<span class='timeline-photo none'></span>");
                 buf.add("<span class='timeline-pname'>" + (npc.nameKnown ? npc.name : "<span class='timeline-bar'></span>") + "</span>");
-                buf.add("<span class='timeline-job'>" + (npc.jobKnown ? npc.job : "?") + "</span>");
+                buf.add("<span class='timeline-job'>" + (npc.jobKnown ? Loc.tr(npc.job) : "?") + "</span>");
                 buf.add("<span class='timeline-pxy'>" + (npc.areaKnown ? "(" + npc.area.x + "," + npc.area.y + ")" : "(?,?)") + "</span>");
                 if (!npc.statusKnown)
-                  buf.add("<span class='timeline-status unknown'>status ?</span>");
+                  buf.add("<span class='timeline-status unknown'>" + T('status ?') + "</span>");
                 else if (npc.isDead)
-                  buf.add("<span class='timeline-status deceased'>deceased</span>");
-                else buf.add("<span class='timeline-status ok'>active</span>");
+                  buf.add("<span class='timeline-status deceased'>" + T('deceased') + "</span>");
+                else buf.add("<span class='timeline-status ok'>" + T('active') + "</span>");
                 buf.add("</div>");
               }
           if (!npcKnown && event.npc.length > 0)
-            buf.add("<div class='timeline-none'>unknown</div>");
+            buf.add("<div class='timeline-none'>" + T('unknown') + "</div>");
           else if (event.npc.length == 0)
-            buf.add("<div class='timeline-none'>none</div>");
+            buf.add("<div class='timeline-none'>" + T('none') + "</div>");
           if (numProbed > 0 || numDeceased > 0)
             {
               buf.add("<div class='timeline-roll'>");
               if (numProbed > 0)
-                buf.add("<span class='timeline-chip'>+" + numProbed + " probed</span>");
+                buf.add("<span class='timeline-chip'>" + T('{n, plural, one{+# probed} other{+# probed}}', { n: numProbed }) + "</span>");
               if (numDeceased > 0)
-                buf.add("<span class='timeline-chip dead'>+" + numDeceased + " deceased</span>");
+                buf.add("<span class='timeline-chip dead'>" + T('{n, plural, one{+# deceased} other{+# deceased}}', { n: numDeceased }) + "</span>");
               buf.add("</div>");
             }
           buf.add("</div></div></li>");
@@ -168,10 +169,10 @@ class Timeline extends UIWindow
       // titlebar with live event/lead counts
       var clk = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='9'/><path d='M12 7v5l3.5 2'/></svg>";
       var mag = "<svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='16' y1='16' x2='21' y2='21'/></svg>";
-      titlebar.innerHTML = "<span class='wt'>TIMELINE</span><span class='win-stats'>" +
-        "<span class='timeline-live'>LIVE</span>" +
-        "<span class='statchip evolution-tip timeline-ev' data-tip='Timeline events revealed'>" + clk + eventsShown + "</span>" +
-        "<span class='statchip evolution-tip timeline-leads' data-tip='Leads still open to investigate'>" + mag + totalLeads + "</span></span>";
+      titlebar.innerHTML = "<span class='wt'>" + T('TIMELINE') + "</span><span class='win-stats'>" +
+        "<span class='timeline-live'>" + T('LIVE') + "</span>" +
+        "<span class='statchip evolution-tip timeline-ev' data-tip=\"" + T('Timeline events revealed') + "\">" + clk + eventsShown + "</span>" +
+        "<span class='statchip evolution-tip timeline-leads' data-tip=\"" + T('Leads still open to investigate') + "\">" + mag + totalLeads + "</span></span>";
     }
 
 // anonymous, event-sized REDACTED placeholder for a run of undiscovered events
@@ -180,7 +181,7 @@ class Timeline extends UIWindow
       return "<li class='timeline-event redacted-block' style='--i:" + i + "'>" +
         "<span class='timeline-node'></span>" +
         "<div class='timeline-card'><div class='timeline-fx'></div>" +
-        "<div class='timeline-stamp'>REDACTED</div>" +
+        "<div class='timeline-stamp'>" + T('REDACTED') + "</div>" +
         "<div class='redacted-block-bars'><span class='timeline-bar wide'></span><span class='timeline-bar'></span></div>" +
         "</div></li>";
     }

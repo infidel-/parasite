@@ -10,7 +10,7 @@ class Smartphone extends Computer
     {
       super(game);
       id = 'smartphone';
-      name = 'smartphone';
-      unknown = 'small plastic object';
+      name = N('smartphone');
+      unknown = N('small plastic object');
     }
 }

@@ -14,6 +14,6 @@ class FleshBlock extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Quadrum';
+      name = N('Quadrum');
     }
 }

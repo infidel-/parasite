@@ -18,7 +18,7 @@ class BurningBarrel extends Decoration
       imageRow = Const.ROW_OBJECT2;
       imageCol = Const.FRAME_BURNING_BARREL;
       type = 'burning_barrel';
-      name = 'burning barrel';
+      name = N('burning barrel');
     }
 
 // stand upright in the 3D street view instead of lying flat like ground clutter

@@ -136,7 +136,7 @@ class Goals extends _SaveObject
 
       if (info.isHidden == null || info.isHidden == false)
         if (silent == SILENT_NONE)
-          game.log('You have received a new goal: ' + info.name + '.',
+          game.log(T('You have received a new goal: {goal}.', { goal: info.name }),
             COLOR_GOAL);
 
       // queue the HUD appear animation (plays after any event message closes);
@@ -166,7 +166,7 @@ class Goals extends _SaveObject
       var info = getInfo(id);
       if (info.isHidden == null || info.isHidden == false)
         if (silent == SILENT_NONE)
-          game.log('You have completed a goal: ' + info.name + '.',
+          game.log(T('You have completed a goal: {goal}.', { goal: info.name }),
             COLOR_GOAL);
 
       // completion message
@@ -206,7 +206,7 @@ class Goals extends _SaveObject
 
       var info = getInfo(id);
       if (info.isHidden == null || info.isHidden == false)
-        game.log('You have failed a goal: ' + info.name + '.', COLOR_GOAL);
+        game.log(T('You have failed a goal: {goal}.', { goal: info.name }), COLOR_GOAL);
 
       if (info.messageFailure != null) // failure message
         {

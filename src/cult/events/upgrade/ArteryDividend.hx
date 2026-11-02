@@ -14,22 +14,22 @@ class ArteryDividend
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Artery Dividend',
-        text: 'Shareholder assembly throbs as the newly promoted CFO kneels before a dividend channel forged from coronary arteries. Each heartbeat sends distributions pumping through the arterial network. Around the forum, other shareholders press palms against the membrane, feeling the dividend\'s arterial flow. The outside investors never receive the true payout, but trusted arteries carry the inside return.',
+        title: T('Artery Dividend'),
+        text: T('Shareholder assembly throbs as the newly promoted CFO kneels before a dividend channel forged from coronary arteries. Each heartbeat sends distributions pumping through the arterial network. Around the forum, other shareholders press palms against the membrane, feeling the dividend\'s arterial flow. The outside investors never receive the true payout, but trusted arteries carry the inside return.'),
         choices: [
           {
-            button: 'Pump Payout',
-            text: 'Accelerate the arterial pump to increase dividend distributions.',
+            button: T('Pump Payout'),
+            text: T('Accelerate the arterial pump to increase dividend distributions.'),
             f: choice1
           },
           {
-            button: 'Artery Audit',
-            text: 'Seal the arterial network to audit distributions through secure channels.',
+            button: T('Artery Audit'),
+            text: T('Seal the arterial network to audit distributions through secure channels.'),
             f: choice2
           },
           {
-            button: 'Dividend Vow',
-            text: 'Suture the promoted CFO into the artery-ledger to manage eternal dividends.',
+            button: T('Dividend Vow'),
+            text: T('Suture the promoted CFO into the artery-ledger to manage eternal dividends.'),
             f: choice3
           }
         ]

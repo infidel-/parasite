@@ -2,6 +2,7 @@
 
 package ui;
 
+import l10n.Loc;
 import js.Browser;
 import js.html.DivElement;
 import js.html.SpanElement;
@@ -38,12 +39,12 @@ class Body extends UIWindow
       listOrgansActions = [];
 
       // shared HUD chrome: scrim + cell glyph, frame, corners, veins, "BODY" watermark
-      addHudChrome('BODY', UISvg.cell());
+      addHudChrome(T('BODY'), UISvg.cell());
 
       // title row: name left, growth stat-chip strip right
       var title = Browser.document.createDivElement();
       title.className = 'win-title win-titlebar';
-      title.innerHTML = '<span class="wt">BODY</span><span class="body-host-name"></span>';
+      title.innerHTML = '<span class="wt">' + T('BODY') + '</span><span class="body-host-name"></span>';
       nameEl = cast title.querySelector('.body-host-name');
       statsEl = Browser.document.createSpanElement();
       statsEl.className = 'win-stats';
@@ -63,7 +64,7 @@ class Body extends UIWindow
       invBlock.className = 'body-block body-block-inv';
       invBlock.style.setProperty('--i', '0');
       invBlock.innerHTML =
-        '<div class="body-block-title">INVENTORY <span class="body-cnt"></span></div>' +
+        '<div class="body-block-title">' + T('INVENTORY') + ' <span class="body-cnt"></span></div>' +
         '<div class="hud-scroll body-scroll"><div class="body-inv-grid"></div></div>';
       col1.appendChild(invBlock);
       invCount = invBlock.querySelector('.body-cnt');
@@ -72,7 +73,7 @@ class Body extends UIWindow
       parBlock.className = 'body-block body-block-par';
       parBlock.style.setProperty('--i', '1');
       parBlock.innerHTML =
-        '<div class="body-kn-h">PARASITE</div>' +
+        '<div class="body-kn-h">' + T('PARASITE') + '</div>' +
         '<div class="hud-scroll body-scroll"></div>';
       col1.appendChild(parBlock);
       parScroll = parBlock.querySelector('.body-scroll');
@@ -85,7 +86,7 @@ class Body extends UIWindow
       hostBlock.className = 'body-block';
       hostBlock.style.setProperty('--i', '2');
       hostBlock.innerHTML =
-        '<div class="body-block-title">HOST <span class="body-cnt" style="visibility:hidden">0</span></div>' +
+        '<div class="body-block-title">' + T('HOST') + ' <span class="body-cnt" style="visibility:hidden">0</span></div>' +
         '<div class="hud-scroll body-scroll"></div>';
       col2.appendChild(hostBlock);
       hostScroll = hostBlock.querySelector('.body-scroll');
@@ -98,7 +99,7 @@ class Body extends UIWindow
       featBlock.className = 'body-block';
       featBlock.style.setProperty('--i', '3');
       featBlock.innerHTML =
-        '<div class="body-block-title">FEATURES <span class="body-cnt"></span></div>' +
+        '<div class="body-block-title">' + T('FEATURES') + ' <span class="body-cnt"></span></div>' +
         '<div class="hud-scroll body-scroll"></div>';
       col3.appendChild(featBlock);
       featCount = featBlock.querySelector('.body-cnt');
@@ -131,13 +132,15 @@ class Body extends UIWindow
       var energyPT = __Math.growthEnergyPerTurn();
       var gpPT = __Math.gpPerTurn();
       var survive = __Math.hostSurvivalTurns(game.player.host.organs.isGrowing ? 0 : energyPT);
+      // tr: "per turn" suffix after a number, "t" = turn
+      var perTurn = T('/t');
       statsEl.innerHTML =
-        '<span class="statchip evolution-tip energy" data-tip="Energy spent per turn while growing body features">' +
-          UISvg.bolt() + energyPT + '<i>/t</i></span>' +
-        '<span class="statchip evolution-tip gp" data-tip="Growth points gained per turn">' +
-          UISvg.star() + gpPT + '<i>/t</i></span>' +
+        '<span class="statchip evolution-tip energy" data-tip="' + T('Energy spent per turn while growing body features') + '">' +
+          UISvg.bolt() + energyPT + '<i>' + perTurn + '</i></span>' +
+        '<span class="statchip evolution-tip gp" data-tip="' + T('Growth points gained per turn') + '">' +
+          UISvg.star() + gpPT + '<i>' + perTurn + '</i></span>' +
         '<span class="statchip evolution-tip host' + (survive >= 0 && survive <= __Math.HOST_LOW_TURNS ? ' low' : '') +
-          '" data-tip="Turns the host survives while growing">' +
+          '" data-tip="' + T('Turns the host survives while growing') + '">' +
           UISvg.clockSmall() + (survive < 0 ? '&infin;' : '' + survive) + '</span>';
     }
 
@@ -152,7 +155,7 @@ class Body extends UIWindow
       if (disabled)
         {
           invCount.innerHTML = '';
-          invGrid.innerHTML = '<div class="body-empty">Unavailable</div>';
+          invGrid.innerHTML = '<div class="body-empty">' + T('Unavailable') + '</div>';
           return;
         }
       var inv = game.player.host.inventory;
@@ -165,8 +168,8 @@ class Body extends UIWindow
         {
           hasItems = true;
           var knows = game.player.knowsItem(item.id);
-          var name = (item == inv.clothing ? Const.smallgray('[worn]') + ' ' : '') +
-            (knows ? item.name : item.info.unknown);
+          var name = (item == inv.clothing ? Const.smallgray(T('[worn]')) + ' ' : '') +
+            Loc.tr(knows ? item.name : item.info.unknown);
           var isActive = (item.id == inv.weaponID && !activeMarked);
           if (isActive)
             activeMarked = true;
@@ -201,12 +204,12 @@ class Body extends UIWindow
           buf.add('<span class="body-inv-thumb' + (isActive ? ' active' : '') + '">' + UISvg.bodyItem() + '</span>');
           buf.add('<span class="body-inv-main">');
           buf.add('<span class="body-inv-item' + (knows ? '' : ' body-inv-unknown') + '">' + name +
-            (isActive ? ' <span class="body-inv-active">[active]</span>' : '') + '</span>');
+            (isActive ? ' <span class="body-inv-active">' + T('[active]') + '</span>' : '') + '</span>');
           buf.add('<span class="body-inv-acts">' + actBuf.toString() + '</span>');
           buf.add('</span></div>');
         }
       if (!hasItems)
-        buf.add('<div class="body-empty">no items</div>');
+        buf.add('<div class="body-empty">' + T('no items') + '</div>');
       invGrid.innerHTML = buf.toString();
     }
 
@@ -222,13 +225,13 @@ class Body extends UIWindow
           i++;
         }
       if (i == 0)
-        buf.add('<div class="body-empty">no skills</div>');
+        buf.add('<div class="body-empty">' + T('no skills') + '</div>');
 
       // habitats remaining
       if (game.player.evolutionManager.isKnown(IMP_MICROHABITAT) &&
           game.player.vars.habitatsLeft < 100)
         buf.add('<div class="body-kn-line hab gray">' + UISvg.bodyHabitat() +
-          ' Habitats left: ' + game.player.vars.habitatsLeft + '</div>');
+          ' ' + T('Habitats left: {n}', { n: game.player.vars.habitatsLeft }) + '</div>');
 
       parScroll.innerHTML = buf.toString();
     }
@@ -245,16 +248,16 @@ class Body extends UIWindow
       var buf = new StringBuf();
 
       // job + income line
-      buf.add('<div class="body-sub-h">JOB</div>');
+      buf.add('<div class="body-sub-h">' + T('JOB') + '</div>');
       if (jobKnown)
         buf.add('<div class="body-host-jobline">' + UISvg.bodyJob() +
-          '<span class="body-host-job">' + host.job + '</span>' +
-          '<span class="gray">&middot; income ' + host.income + '</span></div>');
+          '<span class="body-host-job">' + Loc.tr(host.job) + '</span>' +
+          '<span class="gray">&middot; ' + T('income {n}', { n: host.income }) + '</span></div>');
       else
-        buf.add('<div class="body-empty">unknown</div>');
+        buf.add('<div class="body-empty">' + T('unknown') + '</div>');
 
       // host skills (hidden animal attack skill skipped)
-      buf.add('<div class="body-sub-h body-sub-h-gap">SKILLS</div>');
+      buf.add('<div class="body-sub-h body-sub-h-gap">' + T('SKILLS') + '</div>');
       if (attrsKnown)
         {
           var i = 0;
@@ -266,13 +269,13 @@ class Body extends UIWindow
               i++;
             }
           if (i == 0)
-            buf.add('<div class="body-empty">none</div>');
+            buf.add('<div class="body-empty">' + T('none') + '</div>');
         }
       else
-        buf.add('<div class="body-empty">unknown</div>');
+        buf.add('<div class="body-empty">' + T('unknown') + '</div>');
 
       // traits panel (alphabetical)
-      buf.add('<div class="body-sub-h body-sub-h-gap">TRAITS</div>');
+      buf.add('<div class="body-sub-h body-sub-h-gap">' + T('TRAITS') + '</div>');
       if (attrsKnown)
         {
           if (host.traits.length > 0)
@@ -293,22 +296,23 @@ class Body extends UIWindow
               buf.add('</div>');
             }
           else
-            buf.add('<div class="body-empty">none</div>');
+            buf.add('<div class="body-empty">' + T('none') + '</div>');
         }
       else
-        buf.add('<div class="body-empty">unknown</div>');
+        buf.add('<div class="body-empty">' + T('unknown') + '</div>');
 
       // attribute tiles (always shown; '-' when not probed)
-      buf.add('<div class="body-sub-h body-sub-h-gap">ATTRIBUTES</div>');
+      buf.add('<div class="body-sub-h body-sub-h-gap">' + T('ATTRIBUTES') + '</div>');
       buf.add('<div class="body-attr-grid">');
-      buf.add(attrTile('str', 'STR', UISvg.attrStr(), (host != null ? host.strength : 0), attrsKnown));
-      buf.add(attrTile('con', 'CON', UISvg.attrCon(), (host != null ? host.constitution : 0), attrsKnown));
-      buf.add(attrTile('int', 'INT', UISvg.attrInt(), (host != null ? host.intellect : 0), attrsKnown));
-      buf.add(attrTile('psy', 'PSY', UISvg.attrPsy(), (host != null ? host.psyche : 0), attrsKnown));
+      // tr: three-letter abbreviations of strength, constitution, intellect, psyche
+      buf.add(attrTile('str', T('STR'), UISvg.attrStr(), (host != null ? host.strength : 0), attrsKnown));
+      buf.add(attrTile('con', T('CON'), UISvg.attrCon(), (host != null ? host.constitution : 0), attrsKnown));
+      buf.add(attrTile('int', T('INT'), UISvg.attrInt(), (host != null ? host.intellect : 0), attrsKnown));
+      buf.add(attrTile('psy', T('PSY'), UISvg.attrPsy(), (host != null ? host.psyche : 0), attrsKnown));
       buf.add('</div>');
 
       // effects panel
-      buf.add('<div class="body-eff-h body-sub-h-gap">EFFECTS</div>');
+      buf.add('<div class="body-eff-h body-sub-h-gap">' + T('EFFECTS') + '</div>');
       if (attrsKnown)
         {
           var effects = new Array<Effect>();
@@ -322,17 +326,17 @@ class Body extends UIWindow
               });
               buf.add('<div class="body-host-panel">');
               for (effect in effects)
-                buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + effect.name +
+                buf.add('<div class="body-eff-row">' + UISvg.bodyEffect() + ' ' + Loc.tr(effect.name) +
                   (effect.isTimer ? '<span class="body-eff-t">' +
                     UISvg.clockSmall('body-ico body-ico-time') + effect.points + '</span>' : '') +
                   '</div>');
               buf.add('</div>');
             }
           else
-            buf.add('<div class="body-empty">none</div>');
+            buf.add('<div class="body-empty">' + T('none') + '</div>');
         }
       else
-        buf.add('<div class="body-empty">unknown</div>');
+        buf.add('<div class="body-empty">' + T('unknown') + '</div>');
 
       hostScroll.innerHTML = buf.toString();
     }
@@ -341,14 +345,19 @@ class Body extends UIWindow
   function skillRow(skill: Dynamic, parasite: Bool, i: Int): String
     {
       var isKnow = (parasite && skill.info.isKnowledge == true);
-      var name = (skill.info.group != null ? skill.info.group + ': ' : '') + skill.info.name;
+      var name = (skill.info.group != null ?
+        T('{group}: {name}', {
+          group: Loc.tr(skill.info.group),
+          name: skill.info.name,
+        }) : skill.info.name);
       var isBool = (skill.info.isBool != null && skill.info.isBool);
       var buf = new StringBuf();
       buf.add('<div class="body-sk' + (isKnow ? ' know' : '') + '" style="--i:' + i + '">');
       buf.add(UISvg.bodySkill());
       buf.add('<span class="body-sk-name">' + name + '</span>');
       if (isKnow)
-        buf.add('<span class="body-sk-tag">KNOW</span>');
+        // tr: tag on a knowledge (as opposed to a skill), short
+        buf.add('<span class="body-sk-tag">' + T('KNOW') + '</span>');
       if (!isBool)
         buf.add('<span class="body-sk-bar"><span class="fill" style="--p:' + skill.level + '%"></span></span>' +
           '<span class="body-sk-pct">' + skill.level + '%</span>');
@@ -377,7 +386,7 @@ class Body extends UIWindow
       if (disabled)
         {
           featCount.innerHTML = '';
-          featScroll.innerHTML = '<div class="body-empty">Unavailable</div>';
+          featScroll.innerHTML = '<div class="body-empty">' + T('Unavailable') + '</div>';
           return;
         }
       var host = game.player.host;
@@ -401,15 +410,15 @@ class Body extends UIWindow
           hasFeature = true;
         }
       if (!hasFeature)
-        buf.add('<div class="body-empty">no body features</div>');
+        buf.add('<div class="body-empty">' + T('no body features') + '</div>');
 
       // available features not yet started; a free slot is required to begin.
       // a 0-gp in-progress organ counts as free (replacing it prunes it on switch)
-      buf.add('<div class="body-sub-h body-sub-h-gap">AVAILABLE FEATURES</div>');
+      buf.add('<div class="body-sub-h body-sub-h-gap">' + T('AVAILABLE FEATURES') + '</div>');
       var cur = host.organs.getCurrentID();
       var freeable = (cur != null && host.organs.get(cur).gp == 0);
       if (host.organs.length() >= host.maxOrgans && !freeable)
-        buf.add('<div class="body-empty">all slots taken</div>');
+        buf.add('<div class="body-empty">' + T('all slots taken') + '</div>');
       else
         {
           var hasAvail = false;
@@ -426,7 +435,7 @@ class Body extends UIWindow
               hasAvail = true;
             }
           if (!hasAvail)
-            buf.add('<div class="body-empty">No features available</div>');
+            buf.add('<div class="body-empty">' + T('No features available') + '</div>');
         }
 
       featScroll.innerHTML = buf.toString();
@@ -488,7 +497,7 @@ class Body extends UIWindow
       buf.add('<span class="body-organ-body">');
       buf.add('<span class="body-organ-h"><span class="body-organ-name">' + organInfo.name + '</span>' +
         '<span class="body-organ-lv">' + imp.level + '</span>' +
-        (isNow ? '<span class="body-organ-growing">GROWING</span>' : '') + '</span>');
+        (isNow ? '<span class="body-organ-growing">' + T('GROWING') + '</span>' : '') + '</span>');
       buf.add('<span class="body-organ-note">' + organInfo.note + '</span>');
       buf.add('<span class="body-organ-foot">');
       buf.add('<span class="body-organ-bar"><span class="fill" style="width:' + fill + '%"></span></span>');
@@ -562,7 +571,7 @@ class Body extends UIWindow
   public override function action(index: Int)
     {
       if (actionPrefix == null)
-        game.actionFailed('No prefix selected.');
+        game.actionFailed(T('No prefix selected.'));
       else if (actionPrefix == 'inventory')
         {
           if (!game.player.vars.inventoryEnabled)

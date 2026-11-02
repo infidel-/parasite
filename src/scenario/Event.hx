@@ -80,7 +80,7 @@ class Event extends _SaveObject
 
       game.timeline.update(); // update event numbering
 
-      game.player.log('You have gained a clue for event ' + num + '.',
+      game.player.log(T('You have gained a clue for event {num}.', { num: num }),
         COLOR_TIMELINE);
       if (note != null)
         {
@@ -142,8 +142,8 @@ class Event extends _SaveObject
               n.areaKnown = true;
 
             game.timeline.update(); // update event numbering
-            game.player.log('You have gained a clue about an event ' +
-              num + ' participant.', COLOR_TIMELINE);
+            game.player.log(T('You have gained a clue about an event {num} participant.', { num: num }),
+              COLOR_TIMELINE);
 
             // goal completed: learn about any npc
             game.goals.complete(GOAL_LEARN_NPC);
@@ -173,7 +173,7 @@ class Event extends _SaveObject
           }
 
       game.timeline.update(); // update event numbering
-      game.player.log('You have gained a major clue for event ' + num + '.',
+      game.player.log(T('You have gained a major clue for event {num}.', { num: num }),
         COLOR_TIMELINE);
       game.player.log(Const.narrative(note.text), COLOR_TIMELINE);
 
@@ -200,7 +200,7 @@ class Event extends _SaveObject
       locationKnown = true;
 
       game.timeline.update(); // update event numbering
-      game.player.log('You have gained the location for event ' + num + '.',
+      game.player.log(T('You have gained the location for event {num}.', { num: num }),
         COLOR_TIMELINE);
 
       // event hook

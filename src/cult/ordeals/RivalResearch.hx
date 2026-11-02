@@ -1,6 +1,7 @@
 // research a rival cult
 package cult.ordeals;
 
+import l10n.Loc;
 import cult.Cult;
 import cult.Ordeal;
 import game.AreaGame;
@@ -38,12 +39,12 @@ class RivalResearch extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Research Rival Cult';
+      name = N('Research Rival Cult');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 2;
       actions = requiredMembers;
       rivalCultID = -1;
-      note = 'Find names, habits, and finally the rival base.';
+      note = N('Find names, habits, and finally the rival base.');
     }
 
 // get custom name for display
@@ -51,8 +52,8 @@ class RivalResearch extends Ordeal
     {
       var rival = game.getRivalCultByID(rivalCultID);
       if (rival != null)
-        return name + ' (' + rival.customName() + ')';
-      return name;
+        return Loc.tr(name) + ' (' + rival.customName() + ')';
+      return Loc.tr(name);
     }
 
 // increases reveal level and creates base area when fully known
@@ -115,7 +116,7 @@ class RivalResearch extends Ordeal
           actions.push({
             id: 'rivalResearch',
             type: ACTION_CULT,
-            name: 'Research ' + rival.name,
+            name: T('Research {cult}', { cult: Loc.tr(rival.name) }),
             energy: 0,
             obj: { rivalCultID: rival.id }
           });

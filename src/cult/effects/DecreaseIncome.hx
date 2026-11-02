@@ -19,7 +19,7 @@ class DecreaseIncome extends Effect
   public override function init()
     {
       super.init();
-      name = 'income drain';
+      name = N('income drain');
       allowMultiple = true;
       
       // calculate random percentage: 10% base, 20% with 25% chance, 30% with 5% chance

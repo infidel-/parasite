@@ -30,8 +30,8 @@ class OfficerAI extends HumanAI
     {
       super.init();
       type = 'officer';
-      name.unknown = 'officer';
-      name.unknownCapped = 'Officer';
+      name.unknown = N('officer');
+      name.unknownCapped = N('Officer');
       soundsID = 'soldier';
       isAggressive = true;
       var jobData = game.jobs.getRandom(type);

@@ -18,8 +18,8 @@ class Preservator extends HabitatObject
   public override function init()
     {
       super.init();
-      name = 'preservator';
-      spawnMessage = 'You feel cold signaling the activation of the host preservator.';
+      name = N('preservator');
+      spawnMessage = T('You feel cold signaling the activation of the host preservator.');
       imageRow = Const.ROW_GROWTH1;
       imageCol = Const.FRAME_PRESERVATOR + level;
     }
@@ -62,7 +62,7 @@ class Preservator extends HabitatObject
   public override function getTooltipRows(): Array<objects.AreaObject.TooltipRow>
     {
       return [ {
-        name: 'preserved',
+        name: T('preserved'),
         value: getLinkedAI().length + ' / ' + getParams().hostAmount,
       } ];
     }
@@ -86,7 +86,7 @@ class Preservator extends HabitatObject
       game.ui.hud.addAction({
         id: 'preserveHost',
         type: ACTION_OBJECT,
-        name: 'Preserve host',
+        name: T('Preserve host'),
         energy: 10,
         obj: this
       });
@@ -102,26 +102,26 @@ class Preservator extends HabitatObject
           // diagonal was preserved but never held (getLinkedAI), so no tether, no tooltip, no capacity
           if (Math.abs(x - game.playerArea.x) + Math.abs(y - game.playerArea.y) != 1)
             {
-              game.actionFailed('Move to any free side of the preservator first.');
+              game.actionFailed(T('Move to any free side of the preservator first.'));
               return true;
             }
           // cannot preserve cultists
           // NOTE: this brings a bunch of problems: summoning, cult destroying while the player in other area and maybe more
           if (game.player.host.isCultist)
             {
-              game.actionFailed('You cannot preserve cultists.');
+              game.actionFailed(T('You cannot preserve cultists.'));
               return true;
             }
           // count preserved hosts around
           var params = getParams();
           if (getLinkedAI().length >= params.hostAmount)
             {
-              game.actionFailed('This preservator is full.');
+              game.actionFailed(T('This preservator is full.'));
               return true;
             }
 
           game.scene.sounds.play('object-preservator');
-          game.log('You release the host into the cold embrace of the preservator.');
+          game.log(T('You release the host into the cold embrace of the preservator.'));
           game.playerArea.leaveHostAction('preservator');
           return true;
         }

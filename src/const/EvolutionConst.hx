@@ -16,24 +16,24 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_DECAY_ACCEL,
-        name: 'Decay acceleration',
-        note: 'Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death. Moreover, the decomposition produces highly nutritional residue.',
+        name: T('Decay acceleration'),
+        note: T('Body feature. Special bacteria and enzymes accelerate autolysis and putrefaction allowing significantly more efficient tissue decomposition of the host body after death. Moreover, the decomposition produces highly nutritional residue.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Bodies will disappear in " + l.turns +
-            (l2 != null ? ' (&rarr; ' + l2.turns + ')' : '') +
-            " turns";
+          return T('Bodies will disappear in {turns} turns', {
+            turns: l.turns + (l2 != null ? ' (&rarr; ' + l2.turns + ')' : ''),
+          });
         },
         organ: {
-          name: 'Decay accelerant cysts',
-          note: 'Cysts of specialized bacteria and enzymes spread throughout the body to accelerate its decay after death and transform it into a dry nutritional residue',
+          name: T('Decay accelerant cysts'),
+          note: T('Cysts of specialized bacteria and enzymes spread throughout the body to accelerate its decay after death and transform it into a dry nutritional residue'),
           gp: 50
         },
         levelNotes: [
-          'Only natural decomposition occurs',
-          'Host body takes a lot of time to decompose',
-          'Host body takes some time to decompose',
-          'Host body takes a little time to decompose',
+          T('Only natural decomposition occurs'),
+          T('Host body takes a lot of time to decompose'),
+          T('Host body takes some time to decompose'),
+          T('Host body takes a little time to decompose'),
         ],
         levelParams: [
           { turns: 1000 },
@@ -46,26 +46,26 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_PROT_COVER,
-        name: 'Protective cover',
-        note: 'Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance.',
+        name: T('Protective cover'),
+        note: T('Body feature. Heavy epidermis keratinization and dermis densification later allows for an armor-like body cover on the host with the downside of significantly altered host appearance.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Host armor bonus (minus to damage): " +
-            l.armor + (l2 != null ? ' &rarr; ' + l2.armor : '') +
-            "<br/>" +
-            "AI alertness bonus: " + l.alertness +
-            (l2 != null ? ' &rarr; ' + l2.alertness : '');
+          return T('Host armor bonus (minus to damage): {armor}<br/>' +
+            'AI alertness bonus: {alertness}', {
+            armor: l.armor + (l2 != null ? ' &rarr; ' + l2.armor : ''),
+            alertness: l.alertness + (l2 != null ? ' &rarr; ' + l2.alertness : ''),
+          });
         },
         organ: {
-          name: 'Protective cover',
-          note: 'Armor-like host body cover providing protection against damage at the expense of appearance',
+          name: T('Protective cover'),
+          note: T('Armor-like host body cover providing protection against damage at the expense of appearance'),
           gp: 120
         },
         levelNotes: [
-          'Normal host skin',
-          'Pigmented skin layer looks grayish to the eye',
-          'Collagen fibres running through the dermis layer',
-          'Heavily keratinized and densified skin provides the body with an effective armor',
+          T('Normal host skin'),
+          T('Pigmented skin layer looks grayish to the eye'),
+          T('Collagen fibres running through the dermis layer'),
+          T('Heavily keratinized and densified skin provides the body with an effective armor'),
         ],
         levelParams: [
           { armor: 0, alertness: 0 },
@@ -78,24 +78,24 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_WOUND_REGEN,
-        name: 'Stem cell reservoirs',
-        note: 'Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process.',
+        name: T('Stem cell reservoirs'),
+        note: T('Body feature. Microreservoirs of adult stem cells form in many tissues of the host body greatly increasing the efficacy and speed of wound healing process.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return l.turns +
-            (l2 != null ? ' (&rarr; ' + l2.turns + ')' : '') +
-            " turns to restore 1 health of host and parasite";
+          return T('{turns} turns to restore 1 health of host and parasite', {
+            turns: l.turns + (l2 != null ? ' (&rarr; ' + l2.turns + ')' : ''),
+          });
         },
         organ: {
-          name: 'Stem cell reservoirs',
-          note: 'Microreservoirs of adult stem cells that increase wound recovery speed',
+          name: T('Stem cell reservoirs'),
+          note: T('Microreservoirs of adult stem cells that increase wound recovery speed'),
           gp: 100
         },
         levelNotes: [
-          'Normal wound recovery',
-          'Wound recovery speed is slightly increased',
-          'Wound recovery speed is moderately increased',
-          'Wound recovery speed is greatly increased',
+          T('Normal wound recovery'),
+          T('Wound recovery speed is slightly increased'),
+          T('Wound recovery speed is moderately increased'),
+          T('Wound recovery speed is greatly increased'),
         ],
         levelParams: [
           { turns: 100 },
@@ -108,24 +108,24 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_HEALTH,
-        name: 'Antibody generators',
-        note: 'Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health.',
+        name: T('Antibody generators'),
+        note: T('Body feature. Direct synthesis of antibodies through specialized biofactories increases the responce speed of adaptive immune system adding to overall host health.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "+" + l.health +
-            (l2 != null ? ' (&rarr; ' + l2.health + ')' : '') +
-            " health to host";
+          return T('+{health} health to host', {
+            health: l.health + (l2 != null ? ' (&rarr; ' + l2.health + ')' : ''),
+          });
         },
         organ: {
-          name: 'Antibody generators',
-          note: 'Specialized producers of antibodies that increase overall host health',
+          name: T('Antibody generators'),
+          note: T('Specialized producers of antibodies that increase overall host health'),
           gp: 80
         },
         levelNotes: [
-          'Normal health',
-          'Health is slightly increased',
-          'Health is moderately increased',
-          'Health is greatly increased',
+          T('Normal health'),
+          T('Health is slightly increased'),
+          T('Health is moderately increased'),
+          T('Health is greatly increased'),
         ],
         levelParams: [
           { health: 0 },
@@ -138,24 +138,25 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_ENERGY,
-        name: 'Adipose tissue layer',
-        note: 'Body feature. Modifications to metabolism allow for adipose tissue outgrowths on the host body for storing energy surplus.',
+        name: T('Adipose tissue layer'),
+        note: T('Body feature. Modifications to metabolism allow for adipose tissue outgrowths on the host body for storing energy surplus.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Host maximum energy multiplier: " + l.hostEnergyMod +
-            (l2 != null ? ' &rarr; ' + l2.hostEnergyMod : '') +
-            "<br/>Restores energy to maximum on completion";
+          return T('Host maximum energy multiplier: {mod}<br/>' +
+            'Restores energy to maximum on completion', {
+            mod: l.hostEnergyMod + (l2 != null ? ' &rarr; ' + l2.hostEnergyMod : ''),
+          });
         },
         organ: {
-          name: 'Adipose tissue layer',
-          note: 'Additional layer of adipose tissue allows for having energy surplus',
+          name: T('Adipose tissue layer'),
+          note: T('Additional layer of adipose tissue allows for having energy surplus'),
           gp: 180
         },
         levelNotes: [
-          'Normal host subcutaneous tissue',
-          'Increased adipose tissue in abdominal area',
-          'Clusters of adipose tissue on the body',
-          'Enormous protrusions of adipose tissue',
+          T('Normal host subcutaneous tissue'),
+          T('Increased adipose tissue in abdominal area'),
+          T('Clusters of adipose tissue on the body'),
+          T('Enormous protrusions of adipose tissue'),
         ],
         levelParams: [
           { hostEnergyMod: 1.0 },
@@ -168,24 +169,24 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_MUSCLE,
-        name: 'Microvascular networks',
-        note: 'Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength.',
+        name: T('Microvascular networks'),
+        note: T('Body feature. Neovascularization within muscles enhances the ability to move waste products out and maintain contraction reducing the accumulated metabolic fatigue which results in increased host strength.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "+" + l.strength +
-            (l2 != null ? ' (&rarr; ' + l2.strength + ')' : '') +
-            " strength to host";
+          return T('+{strength} strength to host', {
+            strength: l.strength + (l2 != null ? ' (&rarr; ' + l2.strength + ')' : ''),
+          });
         },
         organ: {
-          name: 'Microvascular networks',
-          note: 'Functional miscrovascular networks throughout the muscle tissue enhance host body strength',
+          name: T('Microvascular networks'),
+          note: T('Functional miscrovascular networks throughout the muscle tissue enhance host body strength'),
           gp: 120
         },
         levelNotes: [
-          'Normal host strength',
-          'Basic muscle neovascularization',
-          'Enhanced muscle neovascularization',
-          'Improved neovascularization with additional substrate storage',
+          T('Normal host strength'),
+          T('Basic muscle neovascularization'),
+          T('Enhanced muscle neovascularization'),
+          T('Improved neovascularization with additional substrate storage'),
         ],
         levelParams: [
           { strength: 0 },
@@ -198,31 +199,32 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_ACID_SPIT,
-        name: 'Gastric hypersecretion',
-        note: 'Body feature. Recalibration of gastric glands results in increased potency and volume of produced acid, allowing the host to forcibly eject it as a sort of weapon.',
+        name: T('Gastric hypersecretion'),
+        note: T('Body feature. Recalibration of gastric glands results in increased potency and volume of produced acid, allowing the host to forcibly eject it as a sort of weapon.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Emesis damage: " + l.minDamage + "-" + l.maxDamage +
-            (l2 != null ? ' &rarr; ' + l2.minDamage + '-' + l2.maxDamage : '') +
-            "<br/>Emesis range: " + l.range +
-            (l2 != null ? ' &rarr; ' + l2.range :  '');
+          return T('Emesis damage: {damage}<br/>Emesis range: {range}', {
+            damage: l.minDamage + '-' + l.maxDamage +
+              (l2 != null ? ' &rarr; ' + l2.minDamage + '-' + l2.maxDamage : ''),
+            range: l.range + (l2 != null ? ' &rarr; ' + l2.range : ''),
+          });
         },
         organ: {
-          name: 'Improved gastric glands',
-          note: 'Recalibrated gastric glands secrete enormous amounts of acid for hyperemesis attack',
+          name: T('Improved gastric glands'),
+          note: T('Recalibrated gastric glands secrete enormous amounts of acid for hyperemesis attack'),
           gp: 150,
           action: {
             id: 'acidSpit',
             type: ACTION_ORGAN,
-            name: 'Emesis',
+            name: T('Emesis'),
             energy: 5
           },
         },
         levelNotes: [
-          'Normal host gastric glands',
-          'Enlarged gastric glands',
-          'Improved gastric glands with specialized abdominal muscles',
-          'Highly-effective gastric glands with additional abdominal and neck muscles',
+          T('Normal host gastric glands'),
+          T('Enlarged gastric glands'),
+          T('Improved gastric glands with specialized abdominal muscles'),
+          T('Highly-effective gastric glands with additional abdominal and neck muscles'),
         ],
         levelParams: [
           {
@@ -251,31 +253,31 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_SLIME_SPIT,
-        name: 'Mucilaginous fluid',
-        note: 'Body feature. Restructuring of salivary glands and surrounding buccal cavity. Mucosal fluid secreted in open air exhibits highly adhesive properties of mucilage produced by some plants and will force the opponent to stop.',
+        name: T('Mucilaginous fluid'),
+        note: T('Body feature. Restructuring of salivary glands and surrounding buccal cavity. Mucosal fluid secreted in open air exhibits highly adhesive properties of mucilage produced by some plants and will force the opponent to stop.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Mucus strength: " + l.strength +
-            (l2 != null ? ' &rarr; ' + l2.strength : '') +
-            "<br/>Discharge range: " + l.range +
-            (l2 != null ? ' &rarr; ' + l2.range :  '');
+          return T('Mucus strength: {strength}<br/>Discharge range: {range}', {
+            strength: l.strength + (l2 != null ? ' &rarr; ' + l2.strength : ''),
+            range: l.range + (l2 != null ? ' &rarr; ' + l2.range : ''),
+          });
         },
         organ: {
-          name: 'Salivary gland extension',
-          note: 'Enhanced salivary glands produce viscous mucosal fluid useful for slowing opponents down',
+          name: T('Salivary gland extension'),
+          note: T('Enhanced salivary glands produce viscous mucosal fluid useful for slowing opponents down'),
           gp: 100,
           action: {
             id: 'slimeSpit',
             type: ACTION_ORGAN,
-            name: 'Salivate',
+            name: T('Salivate'),
             energy: 5
           },
         },
         levelNotes: [
-          'Normal host salivary glands',
-          'Enlarged salivary glands and buccal cavity',
-          'Expanded salivary glands and further widened buccal cavity',
-          'Expanded salivary glands, enormous buccal cavity and enhanced cheek muscles',
+          T('Normal host salivary glands'),
+          T('Enlarged salivary glands and buccal cavity'),
+          T('Expanded salivary glands and further widened buccal cavity'),
+          T('Expanded salivary glands, enormous buccal cavity and enhanced cheek muscles'),
         ],
         levelParams: [
           {
@@ -300,31 +302,31 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_PARALYSIS_SPIT,
-        name: 'Neurotoxin projectiles',
-        note: 'Body feature. Hard needle-like missiles containing potent paralyzing neurotoxin can be shot with precision from a specialized organ resembling a segmented tail. The toxin can potentially be lethal.',
+        name: T('Neurotoxin projectiles'),
+        note: T('Body feature. Hard needle-like missiles containing potent paralyzing neurotoxin can be shot with precision from a specialized organ resembling a segmented tail. The toxin can potentially be lethal.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Paralysis effect time: " + l.time +
-            (l2 != null ? ' &rarr; ' + l2.time : '') +
-            "<br/>Needle range: " + l.range +
-            (l2 != null ? ' &rarr; ' + l2.range :  '');
+          return T('Paralysis effect time: {time}<br/>Needle range: {range}', {
+            time: l.time + (l2 != null ? ' &rarr; ' + l2.time : ''),
+            range: l.range + (l2 != null ? ' &rarr; ' + l2.range : ''),
+          });
         },
         organ: {
-          name: 'Neurotoxin cirrus',
-          note: 'The cirrus shoots paralyzing needles into the opponents that can sometimes be lethal',
+          name: T('Neurotoxin cirrus'),
+          note: T('The cirrus shoots paralyzing needles into the opponents that can sometimes be lethal'),
           gp: 100,
           action: {
             id: 'paralysisSpit',
             type: ACTION_ORGAN,
-            name: 'Needle',
+            name: T('Needle'),
             energy: 5
           },
         },
         levelNotes: [
-          'No modications',
-          'Small cirrus and weak neurotoxin resulting in limited effectiveness',
-          'Strengthened cirrus and more potent neurotoxin',
-          'Highly enhanced cirrus and strong neurotoxin',
+          T('No modications'),
+          T('Small cirrus and weak neurotoxin resulting in limited effectiveness'),
+          T('Strengthened cirrus and more potent neurotoxin'),
+          T('Highly enhanced cirrus and strong neurotoxin'),
         ],
         levelParams: [
           {
@@ -349,34 +351,34 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_PANIC_GAS,
-        name: 'Hallucinogen gas',
-        note: 'Body feature. Host stomach is increased in size and separated into two sections, with one reserved for synthesis and storage of compressed hallucinogen gas that can be released into air if necessary. When inhaled by the opponents, the gas results in fear and anxiety.',
+        name: T('Hallucinogen gas'),
+        note: T('Body feature. Host stomach is increased in size and separated into two sections, with one reserved for synthesis and storage of compressed hallucinogen gas that can be released into air if necessary. When inhaled by the opponents, the gas results in fear and anxiety.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Cloud range: " + l.range +
-            (l2 != null ? ' &rarr; ' + l2.range : '') +
-            "<br/>Gas release timeout: " + l.timeout +
-            (l2 != null ? ' &rarr; ' + l2.timeout : '') +
-            "<br/>Panic effect time: " + l.time +
-            (l2 != null ? ' &rarr; ' + l2.time : '');
+          return T('Cloud range: {range}<br/>Gas release timeout: {timeout}<br/>' +
+            'Panic effect time: {time}', {
+            range: l.range + (l2 != null ? ' &rarr; ' + l2.range : ''),
+            timeout: l.timeout + (l2 != null ? ' &rarr; ' + l2.timeout : ''),
+            time: l.time + (l2 != null ? ' &rarr; ' + l2.time : ''),
+          });
         },
         organ: {
-          name: 'Gas section',
-          note: 'Hallucinogenic gas section synthesizes and stores the gas. Releasing it causes the opponents in range to panic and run away',
+          name: T('Gas section'),
+          note: T('Hallucinogenic gas section synthesizes and stores the gas. Releasing it causes the opponents in range to panic and run away'),
           gp: 150,
           hasTimeout: true,
           action: {
             id: 'panicGas',
             type: ACTION_ORGAN,
-            name: 'Release gas',
+            name: T('Release gas'),
             energy: 10
           },
         },
         levelNotes: [
-          'No modications',
-          'Small gas section with low effective radius and strength',
-          'Moderate gas section with increased effective radius and strength',
-          'Large gas section with high effective radius and strength',
+          T('No modications'),
+          T('Small gas section with low effective radius and strength'),
+          T('Moderate gas section with increased effective radius and strength'),
+          T('Large gas section with high effective radius and strength'),
         ],
         levelParams: [
           {
@@ -405,34 +407,34 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_PARALYSIS_GAS,
-        name: 'Ballistospores',
-        note: 'Body feature. Clusters of sporangiums designed to produce multitudes of fungal-like ballistospores in the surrounding air. When inhaled by the hosts, the ballistospores act as a mild neurotoxin paralyzing them temporarily.',
+        name: T('Ballistospores'),
+        note: T('Body feature. Clusters of sporangiums designed to produce multitudes of fungal-like ballistospores in the surrounding air. When inhaled by the hosts, the ballistospores act as a mild neurotoxin paralyzing them temporarily.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Cloud range: " + l.range +
-            (l2 != null ? ' &rarr; ' + l2.range : '') +
-            "<br/>Gas release time: " + l.timeout +
-            (l2 != null ? ' &rarr; ' + l2.timeout : '') +
-            "<br/>Panic effect time: " + l.time +
-            (l2 != null ? ' &rarr; ' + l2.time : '');
+          return T('Cloud range: {range}<br/>Gas release time: {timeout}<br/>' +
+            'Panic effect time: {time}', {
+            range: l.range + (l2 != null ? ' &rarr; ' + l2.range : ''),
+            timeout: l.timeout + (l2 != null ? ' &rarr; ' + l2.timeout : ''),
+            time: l.time + (l2 != null ? ' &rarr; ' + l2.time : ''),
+          });
         },
         organ: {
-          name: 'Sporangium',
-          note: 'Releases a cloud of ballistospores which paralyze the opponents for a limited amount of time',
+          name: T('Sporangium'),
+          note: T('Releases a cloud of ballistospores which paralyze the opponents for a limited amount of time'),
           gp: 180,
           hasTimeout: true,
           action: {
             id: 'paralysisGas',
             type: ACTION_ORGAN,
-            name: 'Emit spores',
+            name: T('Emit spores'),
             energy: 12
           },
         },
         levelNotes: [
-          'No modications',
-          'Low amount of emitter organs with limited range and repeatability',
-          'Medium amount of emitters with increased range and time between emissions',
-          'High amount of efficient emitters that have a wider range. Spores have faster effect',
+          T('No modications'),
+          T('Low amount of emitter organs with limited range and repeatability'),
+          T('Medium amount of emitters with increased range and time between emissions'),
+          T('High amount of efficient emitters that have a wider range. Spores have faster effect'),
         ],
         levelParams: [
           {
@@ -461,18 +463,19 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_ATTACH,
-        name: 'Sudden leap',
-        note: 'Knowledge. Lulling the host into a false sense of security then making a sudden unexpected jump at key moment allows the parasite to gain initial advantage when attaching to it.',
+        name: T('Sudden leap'),
+        note: T('Knowledge. Lulling the host into a false sense of security then making a sudden unexpected jump at key moment allows the parasite to gain initial advantage when attaching to it.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Base attach grip: " + l.attachHoldBase +
-            (l2 != null ? ' &rarr; ' + l2.attachHoldBase : '');
+          return T('Base attach grip: {grip}', {
+            grip: l.attachHoldBase + (l2 != null ? ' &rarr; ' + l2.attachHoldBase : ''),
+          });
         },
         levelNotes: [
-          'Natural attaching method',
-          'Small gains in grip',
-          'Medium gains due to well-researched procedure',
-          'The initial attach action is fast and precise',
+          T('Natural attaching method'),
+          T('Small gains in grip'),
+          T('Medium gains due to well-researched procedure'),
+          T('The initial attach action is fast and precise'),
         ],
         levelParams: [
           { attachHoldBase: 10 },
@@ -485,18 +488,19 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_HARDEN_GRIP,
-        name: 'Constriction',
-        note: 'Knowledge. Advanced constriction technique allows you to rapidly subdue the host before the invasion process.',
+        name: T('Constriction'),
+        note: T('Knowledge. Advanced constriction technique allows you to rapidly subdue the host before the invasion process.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Base harden grip: " + l.attachHoldBase +
-            (l2 != null ? ' &rarr; ' + l2.attachHoldBase : '');
+          return T('Base harden grip: {grip}', {
+            grip: l.attachHoldBase + (l2 != null ? ' &rarr; ' + l2.attachHoldBase : ''),
+          });
         },
         levelNotes: [
-          'Natural grip hardening process',
-          'Minor constriction bonus to the grip',
-          'Significant bonus to the grip',
-          'Superb constriction bonus',
+          T('Natural grip hardening process'),
+          T('Minor constriction bonus to the grip'),
+          T('Significant bonus to the grip'),
+          T('Superb constriction bonus'),
         ],
         levelParams: [
           { attachHoldBase: 20 },
@@ -509,18 +513,19 @@ class EvolutionConst
       { // ***
         type: TYPE_BASIC,
         id: IMP_REINFORCE,
-        name: 'Regulated neurotransmission',
-        note: 'Knowledge. Correctly timing the neurotransmitters release allows the parasite to more efficiently control and override the actions of the host.',
+        name: T('Regulated neurotransmission'),
+        note: T('Knowledge. Correctly timing the neurotransmitters release allows the parasite to more efficiently control and override the actions of the host.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Base reinforce control: " + l.reinforceControlBase +
-            (l2 != null ? ' &rarr; ' + l2.reinforceControlBase : '');
+          return T('Base reinforce control: {control}', {
+            control: l.reinforceControlBase + (l2 != null ? ' &rarr; ' + l2.reinforceControlBase : ''),
+          });
         },
         levelNotes: [
-          'Natural control reinforcing process',
-          'Increased control reinforcing mechanism',
-          'Improved control reinforcement',
-          'Efficient control reinfocement',
+          T('Natural control reinforcing process'),
+          T('Increased control reinforcing mechanism'),
+          T('Improved control reinforcement'),
+          T('Efficient control reinfocement'),
         ],
         levelParams: [
           { reinforceControlBase: 20 },
@@ -536,27 +541,32 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_BRAIN_PROBE,
-        name: 'Brain probe',
-        note: 'Knowledge. Temporarily joining with the host consciousness allows to partially learn its contents.',
+        name: T('Brain probe'),
+        note: T('Knowledge. Temporarily joining with the host consciousness allows to partially learn its contents.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          var s = "Human society knowledge multiplier: " + l.humanSociety + (l2 != null ? ' &rarr; ' + l2.humanSociety : '') +
-            "<br/>Base host energy cost: " + l.hostEnergyBase + (l2 != null ? ' &rarr; ' + l2.hostEnergyBase : '') +
-            "<br/>Base host health cost: " + l.hostHealthBase + (l2 != null ? ' &rarr; ' + l2.hostHealthBase: '') +
-            "<br/>Host skills learning multiplier: " + l.hostSkillsMod + (l2 != null ? ' &rarr; ' + l2.hostSkillsMod : '') + '<br/>';
+          var s = T('Human society knowledge multiplier: {society}<br/>' +
+            'Base host energy cost: {energy}<br/>' +
+            'Base host health cost: {health}<br/>' +
+            'Host skills learning multiplier: {skills}', {
+            society: l.humanSociety + (l2 != null ? ' &rarr; ' + l2.humanSociety : ''),
+            energy: l.hostEnergyBase + (l2 != null ? ' &rarr; ' + l2.hostEnergyBase : ''),
+            health: l.hostHealthBase + (l2 != null ? ' &rarr; ' + l2.hostHealthBase : ''),
+            skills: l.hostSkillsMod + (l2 != null ? ' &rarr; ' + l2.hostSkillsMod : ''),
+          }) + '<br/>';
           if (l.hostAttrsMod == 0)
-            s += "Host attributes unknown ";
+            s += T('Host attributes unknown') + ' ';
           if (l2 != null && l2.hostAttrsMod == 1)
-            s += "&rarr; Probe shows host attributes";
+            s += '&rarr; ' + T('Probe shows host attributes');
           else if (l.hostAttrsMod == 1)
-            s += "Probe shows host attributes";
+            s += T('Probe shows host attributes');
           return s;
         },
         levelNotes: [
-          'Cannot probe host brain',
-          'Access with severe problems (basic knowledge)',
-          'Limited access with some problems (extensive knowledge and basic skills)',
-          'Full access',
+          T('Cannot probe host brain'),
+          T('Access with severe problems (basic knowledge)'),
+          T('Limited access with some problems (extensive knowledge and basic skills)'),
+          T('Full access'),
         ],
         levelParams: [
           {
@@ -595,7 +605,7 @@ class EvolutionConst
         action: {
           id: 'probeBrain',
           type: ACTION_AREA,
-          name: 'Probe Brain',
+          name: T('Probe Brain'),
           canRepeat: true,
           energyFunc: function (player) {
             if (player.state != PLR_STATE_HOST)
@@ -620,16 +630,17 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_CAMO_LAYER,
-        name: 'Camouflage layer',
-        note: 'Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing.',
+        name: T('Camouflage layer'),
+        note: T('Body feature. Allows the covering of parasite body with a self-regenerating camouflage layer that looks like host skin and clothing.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "AI alertness multiplier: " + l.alertness +
-            (l2 != null ? ' &rarr; ' + l2.alertness : '');
+          return T('AI alertness multiplier: {alertness}', {
+            alertness: l.alertness + (l2 != null ? ' &rarr; ' + l2.alertness : ''),
+          });
         },
         organ: {
-          name: 'Camouflage layer',
-          note: 'Self-regenerating camouflage layer that covers parasite body changing its appearance',
+          name: T('Camouflage layer'),
+          note: T('Self-regenerating camouflage layer that covers parasite body changing its appearance'),
           gp: 100,
           onGrow: function(game, player) {
             // complete goals
@@ -637,10 +648,10 @@ class EvolutionConst
           }
         },
         levelNotes: [
-          'A perfectly visible huge purple blob on the head and upper body of the host',
-          'Streaks of purple running through the partly grown camouflage layer',
-          'Parasite body is mostly covered by camouflage layer',
-          'Camouflage layer fully covers the parasite. Only close inspection will alert bystanders',
+          T('A perfectly visible huge purple blob on the head and upper body of the host'),
+          T('Streaks of purple running through the partly grown camouflage layer'),
+          T('Parasite body is mostly covered by camouflage layer'),
+          T('Camouflage layer fully covers the parasite. Only close inspection will alert bystanders'),
         ],
         levelParams: [
           { alertness: 3 },
@@ -658,12 +669,12 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_DOPAMINE,
-        name: 'Dopamine regulation',
-        note: 'Knowledge. Direct control of the host\'s adrenal glands alows regulating the amount of produced dopamine which in turn removes the need to reinforce control of the host.',
+        name: T('Dopamine regulation'),
+        note: T('Knowledge. Direct control of the host\'s adrenal glands alows regulating the amount of produced dopamine which in turn removes the need to reinforce control of the host.'),
         maxLevel: 1,
         levelNotes: [
-          'No regulation',
-          'Direct control',
+          T('No regulation'),
+          T('Direct control'),
           '',
           '',
         ],
@@ -683,17 +694,18 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_FALSE_MEMORIES,
-        name: 'Pseudocampus',
-        note: 'Body feature. A short-term interface into the human brain allows the parasite to engrain the host with false memories also resulting in the short-term host confusion after activation.',
+        name: T('Pseudocampus'),
+        note: T('Body feature. A short-term interface into the human brain allows the parasite to engrain the host with false memories also resulting in the short-term host confusion after activation.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Team timeout/distance increase: " + l.distanceBonus +
-            (l2 != null ? ' &rarr; ' + l2.distanceBonus : '') +
-            '<br/>Blackops: team deactivated, group priority -25';
+          return T('Team timeout/distance increase: {bonus}<br/>' +
+            'Blackops: team deactivated, group priority -25', {
+            bonus: l.distanceBonus + (l2 != null ? ' &rarr; ' + l2.distanceBonus : ''),
+          });
         },
         organ: {
-          name: 'Pseudocampus',
-          note: 'A small interface outgrowth on the side of hippocampus allows for one-time projection of a set of false memories into the host brain',
+          name: T('Pseudocampus'),
+          note: T('A small interface outgrowth on the side of hippocampus allows for one-time projection of a set of false memories into the host brain'),
           gp: 100,
 /*
           onGrow: function(game, player) {
@@ -703,7 +715,7 @@ class EvolutionConst
           action: {
             id: 'plantMemories',
             type: ACTION_AREA,
-            name: 'Plant Memories',
+            name: T('Plant Memories'),
             energyFunc: function (player) {
               if (player.state != PLR_STATE_HOST)
                 return -1;
@@ -715,10 +727,10 @@ class EvolutionConst
           },
         },
         levelNotes: [
-          'No organ',
-          'Low-detail memory design resulting in poor believability',
-          'Advanced memory design allowing for higher believability',
-          'Highly-nuanced and detailed memory design leading to best believability',
+          T('No organ'),
+          T('Low-detail memory design resulting in poor believability'),
+          T('Advanced memory design allowing for higher believability'),
+          T('Highly-nuanced and detailed memory design leading to best believability'),
         ],
         levelParams: [
           // NOTE: blackops deactivate the team instead (PlayerArea.plantMemoriesAction)
@@ -741,12 +753,13 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_MICROHABITAT,
-        name: 'Microhabitat',
-        note: 'Knowledge. Better understanding of the urban sewage system gives the parasite an ability to build microhabitats. The natural caves of the mountains will serve as well.',
+        name: T('Microhabitat'),
+        note: T('Knowledge. Better understanding of the urban sewage system gives the parasite an ability to build microhabitats. The natural caves of the mountains will serve as well.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return "Maximum number of microhabitats: " + l.numHabitats +
-            (l2 != null ? ' &rarr; ' + l2.numHabitats : '');
+          return T('Maximum number of microhabitats: {num}', {
+            num: l.numHabitats + (l2 != null ? ' &rarr; ' + l2.numHabitats : ''),
+          });
         },
         levelNotes: [
           '(todo fluff)',
@@ -778,24 +791,25 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_BIOMINERAL,
-        name: 'Biomineral formation',
-        note: 'Habitat growth. Gives the parasite an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated and consenting hosts.',
+        name: T('Biomineral formation'),
+        note: T('Habitat growth. Gives the parasite an ability to supply microhabitat with energy. Unused biomineral energy increases the speed of organ growth and evolution, slowly restores the health and energy of the parasite, plus the energy of assimilated and consenting hosts.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return
-            "Energy units per formation: " + l.energy +
-            (l2 != null ? ' &rarr; ' + l2.energy : '') +
-            "<br/>Bonus organ and evolution points per turn: +" +
-              l.evolutionBonus + "%" +
-              (l2 != null ? ' &rarr; ' + l2.evolutionBonus + '%' : '') +
-            "<br/>Assimilated or consenting host energy restored per turn: +" + l.hostEnergyRestored +
-            (l2 != null ? ' &rarr; +' + l2.hostEnergyRestored : '') +
-            "<br/>Parasite energy restored per turn: +" +
-            l.parasiteEnergyRestored +
-            (l2 != null ? ' &rarr; +' + l2.parasiteEnergyRestored : '') +
-            "<br/>Parasite health restored per turn: +" +
-            l.parasiteHealthRestored +
-            (l2 != null ? ' &rarr; +' + l2.parasiteHealthRestored : '');
+          return T('Energy units per formation: {energy}<br/>' +
+            'Bonus organ and evolution points per turn: +{bonus}<br/>' +
+            'Assimilated or consenting host energy restored per turn: +{hostEnergy}<br/>' +
+            'Parasite energy restored per turn: +{parasiteEnergy}<br/>' +
+            'Parasite health restored per turn: +{parasiteHealth}', {
+            energy: l.energy + (l2 != null ? ' &rarr; ' + l2.energy : ''),
+            bonus: l.evolutionBonus + '%' +
+              (l2 != null ? ' &rarr; ' + l2.evolutionBonus + '%' : ''),
+            hostEnergy: l.hostEnergyRestored +
+              (l2 != null ? ' &rarr; +' + l2.hostEnergyRestored : ''),
+            parasiteEnergy: l.parasiteEnergyRestored +
+              (l2 != null ? ' &rarr; +' + l2.parasiteEnergyRestored : ''),
+            parasiteHealth: l.parasiteHealthRestored +
+              (l2 != null ? ' &rarr; +' + l2.parasiteHealthRestored : ''),
+          });
         },
         levelNotes: [
           '',
@@ -804,21 +818,21 @@ class EvolutionConst
           '',
         ],
         organ: {
-          name: 'Biomineral mold',
-          note: 'Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed!',
+          name: T('Biomineral mold'),
+          note: T('Mold for a biomineral formation. You can only grow that in a habitat. Host and its inventory will be destroyed!'),
           gp: 150,
           isMold: true,
           action: {
             id: 'formBiomineral',
             type: ACTION_ORGAN,
-            name: 'Produce biomineral formation',
+            name: T('Produce biomineral formation'),
             energy: 0
           },
           onAction: function(game, player) {
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.actionFailed('This action only works in a habitat.');
+                game.actionFailed(T('This action only works in a habitat.'));
                 return false;
               }
             return game.area.habitat.putObject(IMP_BIOMINERAL);
@@ -868,14 +882,13 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_ASSIMILATION,
-        name: 'Assimilation cavity',
-        note: 'Habitat growth. Gives the parasite an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.',
+        name: T('Assimilation cavity'),
+        note: T('Habitat growth. Gives the parasite an ability to assimilate hosts. Assimilated hosts do not lose energy passively and regenerate it from biominerals.'),
         maxLevel: 1,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return
-            "Assimilated hosts have 2 more body features<br/>" +
-            "Assimilated hosts can hold 2 more inventory items<br/>" +
-            "When you invade assimilated hosts, you start with more control over them<br/>";
+          return T('Assimilated hosts have 2 more body features<br/>' +
+            'Assimilated hosts can hold 2 more inventory items<br/>' +
+            'When you invade assimilated hosts, you start with more control over them') + '<br/>';
         },
         levelNotes: [
           '',
@@ -884,21 +897,21 @@ class EvolutionConst
           '',
         ],
         organ: {
-          name: 'Assimilation mold',
-          note: 'Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed!',
+          name: T('Assimilation mold'),
+          note: T('Mold for an assimilation cavity. You can only grow that in a habitat. Host and its inventory will be destroyed!'),
           gp: 120,
           isMold: true,
           action: {
             id: 'formAssimilation',
             type: ACTION_ORGAN,
-            name: 'Form assimilation cavity',
+            name: T('Form assimilation cavity'),
             energy: 0
           },
           onAction: function(game, player): Bool {
             // only in a habitat
             if (!game.area.isHabitat)
               {
-                game.actionFailed('This action only works in a habitat.');
+                game.actionFailed(T('This action only works in a habitat.'));
                 return false;
               }
             return game.area.habitat.putObject(IMP_ASSIMILATION);
@@ -915,41 +928,40 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_WATCHER,
-        name: 'Watcher',
-        note: 'Watcher growth. Will warn of the ambush in the habitat and reduce the max energy loss on habitat destruction.',
+        name: T('Watcher'),
+        note: T('Watcher growth. Will warn of the ambush in the habitat and reduce the max energy loss on habitat destruction.'),
         maxLevel: 2,
         levelNotes: [
-          'Unavailable',
-          'Watcher will warn about the ambush and give more distance',
-          'Watcher will attract the ambush, reduce max energy loss and give even more distance',
+          T('Unavailable'),
+          T('Watcher will warn about the ambush and give more distance'),
+          T('Watcher will attract the ambush, reduce max energy loss and give even more distance'),
           '',
         ],
         organ: {
-          name: 'Watcher mold',
-          note: 'Mold for a watcher. You can only grow that in a habitat. Host inventory will be destroyed when it becomes the watcher!',
+          name: T('Watcher mold'),
+          note: T('Mold for a watcher. You can only grow that in a habitat. Host inventory will be destroyed when it becomes the watcher!'),
           gp: 120,
           isMold: true,
           action: {
             id: 'formWatcher',
             type: ACTION_ORGAN,
-            name: 'Form watcher',
+            name: T('Form watcher'),
             energy: 0
           },
           onAction: function(game, player): Bool {
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.actionFailed('This action only works in a habitat.');
+                game.actionFailed(T('This action only works in a habitat.'));
                 return false;
               }
             return game.area.habitat.putObject(IMP_WATCHER);
           }
         },
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return
-            "<br/>Distance bonus: " +
-            l.distanceBonus +
-            (l2 != null ? ' &rarr; ' + l2.distanceBonus: '');
+          return '<br/>' + T('Distance bonus: {bonus}', {
+            bonus: l.distanceBonus + (l2 != null ? ' &rarr; ' + l2.distanceBonus : ''),
+          });
         },
         levelParams: [
           {
@@ -970,14 +982,13 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_PRESERVATOR,
-        name: 'Host preservator',
-        note: 'Habitat growth. Allows preserving hosts in a suspended state until further need.',
+        name: T('Host preservator'),
+        note: T('Habitat growth. Allows preserving hosts in a suspended state until further need.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return
-            "<br/>Amount of hosts per unit: " +
-            l.hostAmount +
-            (l2 != null ? ' &rarr; ' + l2.hostAmount : '');
+          return '<br/>' + T('Amount of hosts per unit: {amount}', {
+            amount: l.hostAmount + (l2 != null ? ' &rarr; ' + l2.hostAmount : ''),
+          });
         },
         levelNotes: [
           '',
@@ -986,21 +997,21 @@ class EvolutionConst
           '',
         ],
         organ: {
-          name: 'Preservator mold',
-          note: 'Mold for a host preservator. You can only grow that in a habitat. Host and its inventory will be destroyed!',
+          name: T('Preservator mold'),
+          note: T('Mold for a host preservator. You can only grow that in a habitat. Host and its inventory will be destroyed!'),
           gp: 120,
           isMold: true,
           action: {
             id: 'formPreservator',
             type: ACTION_ORGAN,
-            name: 'Produce host preservator',
+            name: T('Produce host preservator'),
             energy: 0
           },
           onAction: function(game, player) {
             // only in habitat
             if (!game.area.isHabitat)
               {
-                game.actionFailed('This action only works in a habitat.');
+                game.actionFailed(T('This action only works in a habitat.'));
                 return false;
               }
             return game.area.habitat.putObject(IMP_PRESERVATOR);
@@ -1025,12 +1036,12 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_OVUM,
-        name: 'Parthenogenesis',
-        note: 'Knowledge. Allows the parasite the access to a form of asexual reproduction that results in what is essentially eternal life with some limitations.',
+        name: T('Parthenogenesis'),
+        note: T('Knowledge. Allows the parasite the access to a form of asexual reproduction that results in what is essentially eternal life with some limitations.'),
         maxLevel: 1,
         levelNotes: [
-          'No access to ovum',
-          'Ability to place ovum in region mode',
+          T('No access to ovum'),
+          T('Ability to place ovum in region mode'),
           '',
           '',
         ],
@@ -1050,13 +1061,13 @@ class EvolutionConst
       { // ***
         type: TYPE_SPECIAL,
         id: IMP_ENGRAM,
-        name: 'Limited engram encoding',
-        note: "Knowledge. Enhancing synaptic plasticity and integrating targeted engrams allows storage and retrieval of specific information within the host's neural circuits without disrupting normal cognitive functions.",
+        name: T('Limited engram encoding'),
+        note: T("Knowledge. Enhancing synaptic plasticity and integrating targeted engrams allows storage and retrieval of specific information within the host's neural circuits without disrupting normal cognitive functions."),
 
         maxLevel: 1,
         levelNotes: [
-          'No additional memory access',
-          'Access to minimap (use computer)',
+          T('No additional memory access'),
+          T('Access to minimap (use computer)'),
           '',
           '',
         ],

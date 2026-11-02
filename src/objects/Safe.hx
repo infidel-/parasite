@@ -24,7 +24,7 @@ class Safe extends GunCabinet
     {
       super.init();
       type = 'safe';
-      name = 'safe';
+      name = N('safe');
     }
 
 // one roll off its table, and its papers. A paper is a clue about a timeline event, so it is made

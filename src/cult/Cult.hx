@@ -158,7 +158,7 @@ class Cult extends _SaveObject
       // check for max cultists
       if (members.length >= maxSize())
         {
-          game.actionFailed('Maximum number of members reached.');
+          game.actionFailed(T('Maximum number of members reached.'));
           return false;
         }
 
@@ -166,7 +166,7 @@ class Cult extends _SaveObject
       var jobInfo = game.jobs.getJobInfo(aidata.job);
       if (jobInfo == null)
         {
-          game.actionFailed('Unknown job.');
+          game.actionFailed(T('Unknown job.'));
           return false;
         }
       var level = jobInfo.level;
@@ -174,7 +174,7 @@ class Cult extends _SaveObject
       if (levelLimit >= 0 &&
           countMembers(level) >= levelLimit)
         {
-          game.actionFailed('Maximum number of level ' + level + ' members reached.');
+          game.actionFailed(T('Maximum number of level {level} members reached.', { level: level }));
           return false;
         }
 
@@ -433,7 +433,7 @@ class Cult extends _SaveObject
         }
 
       if (lockedIDs.exists(memberID))
-        return '[in ordeal]';
+        return T('[in ordeal]');
 
       // check if member is blocked by effect
       if (effects.has(CULT_EFFECT_BLOCK_CULTIST))
@@ -443,12 +443,12 @@ class Cult extends _SaveObject
             {
               var blockEffect = cast(effect, BlockCultist);
               if (blockEffect.targetID == memberID)
-                return '[in recessu]';
+                return T('[in recessu]');
             }
         }
 
       if (isTraining(memberID))
-        return '[training]';
+        return T('[training]');
 
       // check if cultist is on area
       if (game.location == LOCATION_AREA &&
@@ -456,13 +456,13 @@ class Cult extends _SaveObject
         {
           var tmp = game.area.getAIByID(memberID);
           if (tmp != null)
-            return '[on location]';
+            return T('[on location]');
         }
 
       // check if cultist is player host (region mostly)
       if (game.player.state == PLR_STATE_HOST &&
           game.player.host.id == memberID)
-        return '[host]';
+        return T('[host]');
 
       return '';
     }
@@ -474,10 +474,10 @@ class Cult extends _SaveObject
       var free = getFreeMembers(1);
       if (free.length == 0)
         {
-          game.actionFailed('There are no more faithful available.');
+          game.actionFailed(T('There are no more faithful available.'));
           return false;
         }
-      game.log('You send out a call to the faithful.');
+      game.log(T('You send out a call to the faithful.'));
 
       // roll a number
       var num = Const.roll(1, 4);
@@ -524,7 +524,7 @@ class Cult extends _SaveObject
               var roll = Std.random(100);
               if (roll <= e.percent)
                 {
-                  game.logsg('The call has failed to reach some of the faithful.');
+                  game.logsg(T('The call has failed to reach some of the faithful.'));
                   return;
                 }
             }
@@ -958,14 +958,14 @@ class Cult extends _SaveObject
     {
       if (effects.has(CULT_EFFECT_NOTRADE))
         {
-          game.actionFailed('Trade rites are sealed at the moment.');
+          game.actionFailed(T('Trade rites are sealed at the moment.'));
           return false;
         }
 
       var cost = getTradeCost();
       if (resources.money < cost)
         {
-          game.actionFailed('Not enough money for trade.');
+          game.actionFailed(T('Not enough money for trade.'));
           return false;
         }
 
@@ -986,14 +986,14 @@ class Cult extends _SaveObject
     {
       if (effects.has(CULT_EFFECT_NOTRADE))
         {
-          game.actionFailed('Trade rites are sealed at the moment.');
+          game.actionFailed(T('Trade rites are sealed at the moment.'));
           return false;
         }
 
       var cost = getTradeResourceCost();
       if (resources.get(from) < cost)
         {
-          game.actionFailed('Not enough ' + from + ' resources for trade.');
+          game.actionFailed(T('Not enough {resource} resources for trade.', { resource: from }));
           return false;
         }
 
@@ -1018,7 +1018,7 @@ class Cult extends _SaveObject
           var mission = ordeals.getAreaMission(game.area);
           if (mission != null)
             {
-              game.logsg('This area is a mission area for ' + mission.coloredName() + '.');
+              game.logsg(T('This area is a mission area for {mission}.', { mission: mission.coloredName() }));
             }
         }
       recalc();

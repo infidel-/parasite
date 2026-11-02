@@ -30,14 +30,14 @@ class Ovum extends UIWindow
       impByID = new Map();
 
       // shared HUD chrome (amber), faint ovum image backdrop in place of the glyph
-      addHudChrome('OVA', '');
+      addHudChrome(T('OVA'), '');
       window.insertAdjacentHTML('afterbegin',
         '<div class="ovum-backdrop"><img src="' + AssetPath.resolve('img/imp/imp_ovum.jpg') + '" alt=""></div>');
 
       // title row: name left, ovum stat pills right
       var title = Browser.document.createDivElement();
       title.className = 'win-title win-titlebar';
-      title.innerHTML = '<span class="wt">PARTHENOGENESIS</span>';
+      title.innerHTML = '<span class="wt">' + T('PARTHENOGENESIS') + '</span>';
       stats = Browser.document.createSpanElement();
       stats.className = 'win-stats';
       title.appendChild(stats);
@@ -71,11 +71,14 @@ class Ovum extends UIWindow
       // info pills: ovum level + points (xp/next) + marked/cap
       var pts = (ovum.level < 5
         ? ovum.xp + '/' + EvolutionConst.ovumXP[ovum.level]
-        : 'MAX');
+        : T('MAX'));
       stats.innerHTML =
-        '<span class="statchip evolution-tip ovum-lvl" data-tip="Ovum level — how many improvements you may mark">' + UISvg.star() + 'LVL ' + ovum.level + '</span>' +
-        '<span class="statchip evolution-tip ovum-pts" data-tip="Nurture points toward the next ovum level">' + pts + ' pts</span>' +
-        '<span class="statchip evolution-tip ovum-mark" data-tip="Improvements marked to carry through parthenogenesis">' + cntLocked + '/' + cap + ' marked</span>';
+        '<span class="statchip evolution-tip ovum-lvl" data-tip="' + T('Ovum level — how many improvements you may mark') + '">' + UISvg.star() + T('LVL {n}', { n: ovum.level }) + '</span>' +
+        '<span class="statchip evolution-tip ovum-pts" data-tip="' + T('Nurture points toward the next ovum level') + '">' + T('{pts} pts', { pts: pts }) + '</span>' +
+        '<span class="statchip evolution-tip ovum-mark" data-tip="' + T('Improvements marked to carry through parthenogenesis') + '">' + T('{n}/{cap} marked', {
+          n: cntLocked,
+          cap: cap,
+        }) + '</span>';
 
       // cards: every basic improvement, click toggles its mark (capped at ovum level)
       impByID = new Map();
@@ -110,9 +113,9 @@ class Ovum extends UIWindow
           // head: name + level + marked tag / hotkey
           buf.add('<span class="evolution-head"><span class="evolution-name">' + imp.info.name + '</span>');
           if (imp.info.maxLevel > 1)
-            buf.add('<span class="evolution-lv">Lv ' + imp.level + '</span>');
+            buf.add('<span class="evolution-lv">' + T('Lv {n}', { n: imp.level }) + '</span>');
           buf.add('<span class="ovum-badge">' +
-            (marked ? '&#10003; MARKED' : (key > 0 ? '<span class="evolution-key">' + key + '</span>' : '')) +
+            (marked ? '&#10003; ' + T('MARKED') : (key > 0 ? '<span class="evolution-key">' + key + '</span>' : '')) +
             '</span>');
           buf.add('</span>');
 
@@ -122,7 +125,7 @@ class Ovum extends UIWindow
           i++;
         }
       if (i == 0)
-        buf.add('<div class="evolution-empty">No improvements available.</div>');
+        buf.add('<div class="evolution-empty">' + T('No improvements available.') + '</div>');
       grid.innerHTML = buf.toString();
 
       // a toggle rebuild skips the entrance stagger; only the changed card pulses

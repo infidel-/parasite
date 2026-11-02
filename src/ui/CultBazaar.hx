@@ -51,7 +51,7 @@ class CultBazaar
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_ROOT);
@@ -60,8 +60,8 @@ class CultBazaar
       });
 
       var canAfford = hasAffordableItems();
-      var equipLabel = (canAfford ? 'Equip member' :
-        Const.col('gray', 'Equip member'));
+      var equipLabel = (canAfford ? T('Equip member') :
+        Const.col('gray', T('Equip member')));
       cultWindow.addPlayerAction({
         id: 'bazaarEquip',
         type: ACTION_CULT,
@@ -76,7 +76,7 @@ class CultBazaar
       cultWindow.addPlayerAction({
         id: 'bazaarTrain',
         type: ACTION_CULT,
-        name: 'Train member',
+        name: T('Train member'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_BAZAAR_TRAIN_MEMBER);
@@ -91,7 +91,7 @@ class CultBazaar
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_BAZAAR);
@@ -126,7 +126,7 @@ class CultBazaar
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_BAZAAR);
@@ -161,7 +161,7 @@ class CultBazaar
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_BAZAAR_TRAIN_MEMBER);
@@ -207,7 +207,7 @@ class CultBazaar
         cultWindow.addPlayerAction({
           id: 'bazaarTrainNone',
           type: ACTION_CULT,
-          name: Const.col('gray', 'No trainable weapon skills'),
+          name: Const.col('gray', T('No trainable weapon skills')),
           energy: 0,
         });
     }
@@ -280,9 +280,13 @@ class CultBazaar
       var canAfford =
         (cult.resources.money >= option.moneyCost &&
          cult.resources.combat >= option.combatCost);
-      var text = weaponName + ' +' + option.amount + '% (' +
-        Const.col('cult-power', option.moneyCost) + Icon.money + ', ' +
-        Const.col('cult-power', option.combatCost) + ' COM)';
+      // tr: COM = combat resource (the cult resource abbreviation)
+      var text = T('{weapon} +{amount}% ({money}, {combat} COM)', {
+        weapon: weaponName,
+        amount: option.amount,
+        money: Const.col('cult-power', option.moneyCost) + Icon.money,
+        combat: Const.col('cult-power', option.combatCost),
+      });
       var label = (canAfford ? text : Const.col('gray', text));
       cultWindow.addPlayerAction({
         id: args.idPrefix + '.' + option.amount,
@@ -317,36 +321,36 @@ class CultBazaar
       var cult = game.cults[0];
       if (cult.hasEffect(CULT_EFFECT_NOTRADE))
         {
-          game.actionFailed('Trade rites are sealed at the moment.');
+          game.actionFailed(T('Trade rites are sealed at the moment.'));
           return;
         }
       if (cult.resources.money < option.moneyCost)
         {
-          game.actionFailed('Not enough money for training.');
+          game.actionFailed(T('Not enough money for training.'));
           return;
         }
       if (cult.resources.combat < option.combatCost)
         {
-          game.actionFailed('Not enough combat resources for training.');
+          game.actionFailed(T('Not enough combat resources for training.'));
           return;
         }
 
       var member = cult.getMemberByID(args.member.id);
       if (member == null)
         {
-          game.actionFailed('No such member.');
+          game.actionFailed(T('No such member.'));
           return;
         }
       if (cult.getMemberStatus(args.member.id) != '')
         {
-          game.actionFailed('Only free members can train.');
+          game.actionFailed(T('Only free members can train.'));
           return;
         }
 
       if (args.weapon == null ||
           args.weapon.info.weapon == null)
         {
-          game.actionFailed('No valid weapon for training.');
+          game.actionFailed(T('No valid weapon for training.'));
           return;
         }
 
@@ -354,7 +358,7 @@ class CultBazaar
       var currentLevel = member.skills.getLevel(skillID);
       if (currentLevel >= 70)
         {
-          game.actionFailed('This skill is already at the training cap.');
+          game.actionFailed(T('This skill is already at the training cap.'));
           return;
         }
       var trainAmount: Float = option.amount;
@@ -362,13 +366,13 @@ class CultBazaar
         trainAmount = 70 - currentLevel;
       if (trainAmount <= 0)
         {
-          game.actionFailed('This skill is already at the training cap.');
+          game.actionFailed(T('This skill is already at the training cap.'));
           return;
         }
 
       if (!cult.setTraining(args.member.id))
         {
-          game.actionFailed('Only free members can train.');
+          game.actionFailed(T('Only free members can train.'));
           return;
         }
 
@@ -392,7 +396,7 @@ class CultBazaar
       cultWindow.addPlayerAction({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         f: function() {
           cultWindow.setMenuState(STATE_BAZAAR_MEMBER);
@@ -407,35 +411,35 @@ class CultBazaar
 
       var items = [
         {
-          name: 'Random Melee',
+          name: T('Random Melee'),
           itemID: 'randomMelee',
           price: getPrice('randomMelee'),
           slot: 'melee',
           isRandom: true
         },
         {
-          name: 'Pistol',
+          name: T('Pistol'),
           itemID: 'pistol',
           price: getPrice('pistol'),
           slot: 'ranged',
           isRandom: false
         },
         {
-          name: 'Assault Rifle',
+          name: T('Assault Rifle'),
           itemID: 'assaultRifle',
           price: getPrice('assaultRifle'),
           slot: 'ranged',
           isRandom: false
         },
         {
-          name: 'Combat Shotgun',
+          name: T('Combat Shotgun'),
           itemID: 'combatShotgun',
           price: getPrice('combatShotgun'),
           slot: 'ranged',
           isRandom: false
         },
         {
-          name: 'Kevlar Armor',
+          name: T('Kevlar Armor'),
           itemID: 'kevlarArmor',
           price: getPrice('kevlarArmor'),
           slot: 'armor',
@@ -452,9 +456,12 @@ class CultBazaar
           var canAfford =
             (cult.resources.money >= entry.price.money &&
              cult.resources.combat >= entry.price.combat);
-          var text = entry.name + ' (' +
-            Const.col('cult-power', entry.price.money) + Icon.money + ', ' +
-            Const.col('cult-power', entry.price.combat) + ' COM)';
+          // tr: COM = combat resource (the cult resource abbreviation)
+          var text = T('{name} ({money}, {combat} COM)', {
+            name: entry.name,
+            money: Const.col('cult-power', entry.price.money) + Icon.money,
+            combat: Const.col('cult-power', entry.price.combat),
+          });
           var label = (canAfford ? text : Const.col('gray', text));
           var itemID = entry.itemID;
           var price = entry.price;
@@ -544,29 +551,29 @@ class CultBazaar
       var cult = game.cults[0];
       if (cult.hasEffect(CULT_EFFECT_NOTRADE))
         {
-          game.actionFailed('Trade rites are sealed at the moment.');
+          game.actionFailed(T('Trade rites are sealed at the moment.'));
           return;
         }
       if (cult.resources.money < price.money)
         {
-          game.actionFailed('Not enough money for purchase.');
+          game.actionFailed(T('Not enough money for purchase.'));
           return;
         }
       if (cult.resources.combat < price.combat)
         {
-          game.actionFailed('Not enough combat resources for purchase.');
+          game.actionFailed(T('Not enough combat resources for purchase.'));
           return;
         }
 
       var member = cult.getMemberByID(memberID);
       if (member == null)
         {
-          game.actionFailed('No such member.');
+          game.actionFailed(T('No such member.'));
           return;
         }
       if (cult.getMemberStatus(memberID) != '')
         {
-          game.actionFailed('Only free members can be equipped.');
+          game.actionFailed(T('Only free members can be equipped.'));
           return;
         }
 
@@ -577,7 +584,7 @@ class CultBazaar
       if (!isRandom &&
           memberHasItem(member, finalID))
         {
-          game.actionFailed('This member already has this item.');
+          game.actionFailed(T('This member already has this item.'));
           return;
         }
 

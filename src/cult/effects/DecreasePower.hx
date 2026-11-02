@@ -21,7 +21,7 @@ class DecreasePower extends Effect
   public override function init()
     {
       super.init();
-      name = 'power drain';
+      name = N('power drain');
       allowMultiple = true;
       
       // calculate random value: 1 base, 3 with 25% chance, 9 with 5% chance
@@ -42,6 +42,9 @@ class DecreasePower extends Effect
 // returns custom display name with value
   public override function customName(): String
     {
-      return '-' + value + ' ' + powerType + ' power';
+      return T('-{value} {power} power', {
+        value: value,
+        power: powerType,
+      });
     }
 }

@@ -10,8 +10,8 @@ class CombatShotgun extends Weapon
     {
       super(game);
       id = 'combatShotgun';
-      name = 'combat shotgun';
-      unknown = 'elongated metallic object';
+      name = N('combat shotgun');
+      unknown = N('elongated metallic object');
       weapon = {
         isRanged: true,
         skill: SKILL_SHOTGUN,

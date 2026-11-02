@@ -63,8 +63,10 @@ class GoalsAlienCrashLanding
         area = game.region.get(state.studyAreaID);
       else if (state.location == 'hidden')
         area = game.region.get(state.hiddenAreaID);
-      return Const.col('gray', Const.small(
-        'Target location: (' + area.x + ',' + area.y + ')'));
+      return Const.col('gray', Const.small(T('Target location: ({x},{y})', {
+        x: area.x,
+        y: area.y,
+      })));
     }
 
   public static var eventObjectActionsFuncs: _EventObjectActionsFuncs = [
@@ -99,7 +101,7 @@ class GoalsAlienCrashLanding
           state.part3Installed = true;
         else 
           {
-            game.actionFailed('This item does not fit into this slot.');
+            game.actionFailed(T('This item does not fit into this slot.'));
             return false;
           }
         player.log('You successfully install the ' +
@@ -124,7 +126,7 @@ class GoalsAlienCrashLanding
       action: {
         id: 'startShip',
         type: ACTION_OBJECT,
-        name: 'Initiate startup sequence',
+        name: T('Initiate startup sequence'),
         energy: 0
         // NOTE: obj field will be set up on init
       },
@@ -143,7 +145,7 @@ class GoalsAlienCrashLanding
             !state.part2Installed ||
             !state.part3Installed)
           {
-            game.actionFailed('The startup sequence fails to initialize. Not all of the necessary ship parts are installed.');
+            game.actionFailed(T('The startup sequence fails to initialize. Not all of the necessary ship parts are installed.'));
             return;
           }
         game.goals.complete(SCENARIO_ALIEN_STEAL_SHIP);
@@ -155,14 +157,14 @@ class GoalsAlienCrashLanding
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
-        name: 'Enter spaceship',
+        name: T('Enter spaceship'),
         energy: 0
         // NOTE: obj field will be set up on init
       },
       func: function (game, player, id) {
         if (game.goals.completed(SCENARIO_ALIEN_ENTER_SHIP))
           {
-            game.actionFailed('You need to complete the mission first.');
+            game.actionFailed(T('You need to complete the mission first.'));
             return;
           }
         game.goals.complete(SCENARIO_ALIEN_ENTER_SHIP);
@@ -180,7 +182,7 @@ class GoalsAlienCrashLanding
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
-        name: 'Enter spaceship',
+        name: T('Enter spaceship'),
         energy: 0
         // NOTE: obj field will be set up on init
       },
@@ -203,7 +205,7 @@ class GoalsAlienCrashLanding
       action: {
         id: 'enterShip',
         type: ACTION_OBJECT,
-        name: 'Enter spaceship',
+        name: T('Enter spaceship'),
         energy: 0
         // NOTE: obj field will be set up on init
       },
@@ -217,10 +219,10 @@ class GoalsAlienCrashLanding
   public static var map: Map<_Goal, GoalInfo> = [
     SCENARIO_ALIEN_FIND_SHIP => {
       id: SCENARIO_ALIEN_FIND_SHIP,
-      name: 'Find your ship',
-      note: 'You need to find out where your ship is. It should contain more useful information.',
-      messageReceive: 'Now I remember. I came here on a ship from somewhere far away. But where is it now?',
-      messageComplete: 'Now I know the location of the ship. I should enter it and find out more about myself.',
+      name: T('Find your ship'),
+      note: T('You need to find out where your ship is. It should contain more useful information.'),
+      messageReceive: T('Now I remember. I came here on a ship from somewhere far away. But where is it now?'),
+      messageComplete: T('Now I know the location of the ship. I should enter it and find out more about myself.'),
       onReceive: function (game, player) {
 #if demo
         game.finishDemo();
@@ -236,16 +238,16 @@ class GoalsAlienCrashLanding
 
     SCENARIO_ALIEN_SAVE_ALIEN => {
       id: SCENARIO_ALIEN_SAVE_ALIEN,
-      name: 'Save your original host',
-      note: 'Your original host survived. You need to find it.',
-      messageReceive: 'My original host still functions. I will need to find it and retrieve it.',
-      messageComplete: 'I feel some attachment to it.',
+      name: T('Save your original host'),
+      note: T('Your original host survived. You need to find it.'),
+      messageReceive: T('My original host still functions. I will need to find it and retrieve it.'),
+      messageComplete: T('I feel some attachment to it.'),
     },
 
     SCENARIO_ALIEN_STEAL_SHIP => {
       id: SCENARIO_ALIEN_STEAL_SHIP,
-      name: 'Relocate the ship',
-      note: 'You need to activate the ship and relocate it to a safer spot.',
+      name: T('Relocate the ship'),
+      note: T('You need to activate the ship and relocate it to a safer spot.'),
       noteFunc: alienShipLocationFunc,
 /*
       messageComplete:
@@ -256,8 +258,11 @@ class GoalsAlienCrashLanding
         // dynamic completion message
         var languageID = getLanguageID(game);
         game.message({
-          text: '<span class=alien' + languageID + '>' + 'Glut</span>! After initiating the startup sequence you board the ship. ' +
-          'You activate the engine and move the ship away to a safer location.',
+          // tr: {word} is an untranslated alien exclamation
+          text: T('{word}! After initiating the startup sequence you board the ship. ' +
+            'You activate the engine and move the ship away to a safer location.', {
+            word: '<span class=alien' + languageID + '>Glut</span>',
+          }),
           img: 'event/scenario_alien_steal_ship_complete'
         });
 
@@ -279,7 +284,10 @@ class GoalsAlienCrashLanding
             state.alertRaised = true;
             var languageID = getLanguageID(game);
             game.message({
-              text: '<span class=alien' + languageID + '>' + 'Shnakorkwa</span>! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.',
+              // tr: {word} is an untranslated alien exclamation
+              text: T('{word}! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.', {
+                word: '<span class=alien' + languageID + '>Shnakorkwa</span>',
+              }),
               img: 'event/security_alert'
             });
           }
@@ -293,7 +301,7 @@ class GoalsAlienCrashLanding
           return true;
         if (state.alertRaised)
           {
-            game.actionFailed('You cannot leave this area without your ship.');
+            game.actionFailed(T('You cannot leave this area without your ship.'));
             return false;
           }
         return true;
@@ -302,12 +310,12 @@ class GoalsAlienCrashLanding
 
     SCENARIO_ALIEN_ENTER_SHIP => {
       id: SCENARIO_ALIEN_ENTER_SHIP,
-      name: 'Enter the ship',
-      note: 'You need to enter the ship and activate the onboard computer.',
+      name: T('Enter the ship'),
+      note: T('You need to enter the ship and activate the onboard computer.'),
       noteFunc: alienShipLocationFunc,
       messageComplete:
-        'Spending some time on the computer you remember what was your initial goal on this planet. ' +
-        'You have a mission. You need to complete it.',
+        T('Spending some time on the computer you remember what was your initial goal on this planet. ' +
+        'You have a mission. You need to complete it.'),
       onComplete: function (game, player) {
         var missionType = game.timeline.getStringVar('alienMissionType');
         var goalID: _Goal = null;
@@ -326,10 +334,10 @@ class GoalsAlienCrashLanding
 
     SCENARIO_ALIEN_MISSION_ABDUCTION => {
       id: SCENARIO_ALIEN_MISSION_ABDUCTION,
-      name: 'Mission: Abduction',
-      note: 'You need to locate the target host and invade it.',
-      messageComplete: 'Target invaded. I need to return to my spaceship.',
-      messageFailure: 'Mission failed. I will return to the HQ now.',
+      name: T('Mission: Abduction'),
+      note: T('You need to locate the target host and invade it.'),
+      messageComplete: T('Target invaded. I need to return to my spaceship.'),
+      messageFailure: T('Mission failed. I will return to the HQ now.'),
       imageComplete: 'event/scenario_alien_return',
       imageFailure: 'event/scenario_alien_return',
 
@@ -352,11 +360,11 @@ class GoalsAlienCrashLanding
 
     SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP => {
       id: SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
-      name: 'Mission: Abduction',
-      note: 'You need to bring the target host to the spaceship.',
+      name: T('Mission: Abduction'),
+      note: T('You need to bring the target host to the spaceship.'),
       noteFunc: alienShipLocationFunc,
-      messageComplete: 'Mission accomplished. I can return to the HQ now. Goodbye, Earth. For now.',
-      messageFailure: 'Mission failed. I will return to the HQ now.',
+      messageComplete: T('Mission accomplished. I can return to the HQ now. Goodbye, Earth. For now.'),
+      messageFailure: T('Mission failed. I will return to the HQ now.'),
       imageComplete: 'event/scenario_alien_return',
       imageFailure: 'event/scenario_alien_return',
 
@@ -378,7 +386,7 @@ class GoalsAlienCrashLanding
         // finish game
         game.finish({
           result: 'win',
-          text: 'You have completed your mission.',
+          text: T('You have completed your mission.'),
           filter: 'alien'
         });
       },
@@ -390,10 +398,10 @@ class GoalsAlienCrashLanding
 
     SCENARIO_ALIEN_MISSION_LIQUIDATION => {
       id: SCENARIO_ALIEN_MISSION_LIQUIDATION,
-      name: 'Mission: Liquidation',
-      note: 'You need to locate the target host and liquidate it.',
-      messageComplete: 'Target liquidated. I need to return to my spaceship.',
-      messageFailure: 'Mission failed. I will return to the HQ now.',
+      name: T('Mission: Liquidation'),
+      note: T('You need to locate the target host and liquidate it.'),
+      messageComplete: T('Target liquidated. I need to return to my spaceship.'),
+      messageFailure: T('Mission failed. I will return to the HQ now.'),
       imageComplete: 'event/scenario_alien_return',
       imageFailure: 'event/scenario_alien_return',
 
@@ -416,10 +424,10 @@ class GoalsAlienCrashLanding
 
     SCENARIO_ALIEN_MISSION_INTEL => {
       id: SCENARIO_ALIEN_MISSION_INTEL,
-      name: 'Mission: Intel Collection',
-      note: 'You need to locate the target host and probe its brain.',
-      messageComplete: 'Target scanned. I need to return to my spaceship.',
-      messageFailure: 'Mission failed. I will return to the HQ now.',
+      name: T('Mission: Intel Collection'),
+      note: T('You need to locate the target host and probe its brain.'),
+      messageComplete: T('Target scanned. I need to return to my spaceship.'),
+      messageFailure: T('Mission failed. I will return to the HQ now.'),
       imageComplete: 'event/scenario_alien_return',
       imageFailure: 'event/scenario_alien_return',
 
@@ -443,10 +451,10 @@ class GoalsAlienCrashLanding
 // common success goal for some missions
     SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP => {
       id: SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP,
-      name: 'Return to spaceship',
-      note: 'You need to return to the spaceship.',
+      name: T('Return to spaceship'),
+      note: T('You need to return to the spaceship.'),
       noteFunc: alienShipLocationFunc,
-      messageComplete: 'Returning to the HQ now...',
+      messageComplete: T('Returning to the HQ now...'),
       imageComplete: 'event/scenario_alien_mission_complete',
 
       onReceive: function (game, player) {
@@ -459,7 +467,7 @@ class GoalsAlienCrashLanding
         // finish game
         game.finish({
           result: 'win',
-          text: 'You have succeeded in your mission.',
+          text: T('You have succeeded in your mission.'),
           img: 'event/scenario_alien_finish_win' + (1 + Std.random(5)),
           filter: 'alien'
         });
@@ -469,10 +477,10 @@ class GoalsAlienCrashLanding
 // common failure goal for all missions
     SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP => {
       id: SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
-      name: 'Return to spaceship',
-      note: 'You need to return to the spaceship.',
+      name: T('Return to spaceship'),
+      note: T('You need to return to the spaceship.'),
       noteFunc: alienShipLocationFunc,
-      messageComplete: 'Returning to the HQ now...',
+      messageComplete: T('Returning to the HQ now...'),
       imageComplete: 'event/scenario_alien_mission_complete',
 
       onReceive: function (game, player) {
@@ -485,7 +493,7 @@ class GoalsAlienCrashLanding
         // finish game
         game.finish({
           result: 'win',
-          text: 'You have failed in your mission.',
+          text: T('You have failed in your mission.'),
           img: 'event/scenario_alien_finish_lose',
           filter: 'alien'
         });

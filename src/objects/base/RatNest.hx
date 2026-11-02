@@ -14,6 +14,6 @@ class RatNest extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Nidus Murium';
+      name = N('Nidus Murium');
     }
 }

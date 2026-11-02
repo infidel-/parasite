@@ -20,7 +20,7 @@ class LoseResource extends Effect
   public override function init()
     {
       super.init();
-      name = 'resource drain';
+      name = N('resource drain');
       allowMultiple = true;
     }
 
@@ -41,6 +41,6 @@ class LoseResource extends Effect
 // returns custom display name
   public override function customName(): String
     {
-      return '-1-3 ' + resourceType + ' income';
+      return T('-1-3 {resource} income', { resource: resourceType });
     }
 }

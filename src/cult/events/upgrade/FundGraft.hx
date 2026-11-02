@@ -14,22 +14,22 @@ class FundGraft
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Fund Graft',
-        text: 'In a sub-basement vault, the newly appointed treasurer kneels before grafted veins that pump PAC money through political arteries. Campaign war chests throb with living blood, each heartbeat sending contributions through arterial networks. Fundraisers press palms to vein-walls, feeling donor pressure build. Outside watchdogs never trace the true flow, but trusted blood delivers the dark money.',
+        title: T('Fund Graft'),
+        text: T('In a sub-basement vault, the newly appointed treasurer kneels before grafted veins that pump PAC money through political arteries. Campaign war chests throb with living blood, each heartbeat sending contributions through arterial networks. Fundraisers press palms to vein-walls, feeling donor pressure build. Outside watchdogs never trace the true flow, but trusted blood delivers the dark money.'),
         choices: [
           {
-            button: 'Artery Pump',
-            text: 'Pump PAC through arteries.',
+            button: T('Artery Pump'),
+            text: T('Pump PAC through arteries.'),
             f: choice1
           },
           {
-            button: 'Graft Count',
-            text: 'Count dark money flow.',
+            button: T('Graft Count'),
+            text: T('Count dark money flow.'),
             f: choice2
           },
           {
-            button: 'Vein Ledger',
-            text: 'Bind treasurer to vein-books.',
+            button: T('Vein Ledger'),
+            text: T('Bind treasurer to vein-books.'),
             f: choice3
           }
         ]

@@ -39,8 +39,8 @@ class RivalBase extends Mission
     {
       super.init();
       type = MISSION_COMBAT;
-      name = 'Rival Base';
-      note = 'Destroy the rival sanctum.';
+      name = N('Rival Base');
+      note = N('Destroy the rival sanctum.');
       rivalCultID = -1;
       spawned = false;
       organs = [];
@@ -379,7 +379,7 @@ class RivalBase extends Mission
   function spawnSanctumGroup(x: Int, y: Int): RivalBaseOrgan
     {
       var icon = getSanctumIcon();
-      var organ = new RivalBaseOrgan(RIVAL_SANCTUM, 'rival sanctum',
+      var organ = new RivalBaseOrgan(RIVAL_SANCTUM, N('rival sanctum'),
         game.area.id, x, y, SANCTUM_W, SANCTUM_H, SANCTUM_HEALTH, icon);
       organs.push(organ);
 
@@ -418,7 +418,7 @@ class RivalBase extends Mission
       if (organ.health > 0)
         {
           refreshOrganObjects(organ);
-          game.log('The sanctum shudders.');
+          game.log(T('The sanctum shudders.'));
           return;
         }
       organ.health = 0;
@@ -426,7 +426,7 @@ class RivalBase extends Mission
       refreshOrganObjects(organ);
       if (!isCompleted)
         success();
-      game.log('The rival sanctum collapses.');
+      game.log(T('The rival sanctum collapses.'));
     }
 
 // refreshes visible object parts linked to rival organ

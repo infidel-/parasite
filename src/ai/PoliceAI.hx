@@ -49,8 +49,8 @@ class PoliceAI extends HumanAI
     {
       super.init();
       type = 'police';
-      name.unknown = 'police officer';
-      name.unknownCapped = 'Police officer';
+      name.unknown = N('police officer');
+      name.unknownCapped = N('Police officer');
       soundsID = 'police';
       isAggressive = true;
 

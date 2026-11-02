@@ -13,9 +13,9 @@ class RawSmash extends ItemInfo
     {
       super(game);
       id = 'rawSmash';
-      name = 'raw smash';
+      name = N('raw smash');
       type = 'junk';
-      unknown = 'jagged red crystal';
+      unknown = N('jagged red crystal');
     }
 
 // builds raw smash-specific inventory actions
@@ -27,7 +27,7 @@ class RawSmash extends ItemInfo
         id: 'use.' + item.id,
         type: ACTION_INVENTORY,
         name: 'Inject ' + Const.col('inventory-item', itemName),
-        nameClean: 'Inject',
+        nameClean: T('Inject'),
         energy: 0,
         item: item
       });
@@ -54,7 +54,7 @@ class RawSmash extends ItemInfo
 
       game.scene.sounds.play('item-' + action.item.id);
       host.emitSound({
-        text: '*WAIL*',
+        text: T('*WAIL*'),
         kind: 'bark',
         radius: 6,
         alertness: 12

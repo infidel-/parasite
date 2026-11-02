@@ -10,7 +10,7 @@ class ScenarioSandbox extends Scenario
   public function new()
     {
       super();
-      name = 'Sandbox';
+      name = N('Sandbox');
       startEvent = 'dummy';
       playerStartEvent = 'dummy';
       defaultAlertness = 0;

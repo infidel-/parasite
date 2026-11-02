@@ -10,8 +10,8 @@ class Stunner extends Weapon
     {
       super(game);
       id = 'stunner';
-      name = 'stunner';
-      unknown = 'elongated object';
+      name = N('stunner');
+      unknown = N('elongated object');
       weapon = {
         isRanged: false,
         skill: SKILL_FISTS,

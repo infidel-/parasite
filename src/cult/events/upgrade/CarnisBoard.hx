@@ -14,22 +14,22 @@ class CarnisBoard
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Carnis Board',
-        text: 'Mahogany paneling bleeds at the edges as the newly promoted director kneels before a boardroom table of living flesh. The surface pulses with buried arteries. Around the slab, other executives press ears to the membrane, listening to dividends whispered through capillary channels. The outside shareholders never hear the true votes, but trusted tissue carries the quorum.',
+        title: T('Carnis Board'),
+        text: T('Mahogany paneling bleeds at the edges as the newly promoted director kneels before a boardroom table of living flesh. The surface pulses with buried arteries. Around the slab, other executives press ears to the membrane, listening to dividends whispered through capillary channels. The outside shareholders never hear the true votes, but trusted tissue carries the quorum.'),
         choices: [
           {
-            button: 'Pulp Agenda',
-            text: 'Inject enzyme into the board-table to digest old minutes and spawn new motions.',
+            button: T('Pulp Agenda'),
+            text: T('Inject enzyme into the board-table to digest old minutes and spawn new motions.'),
             f: choice1
           },
           {
-            button: 'Vein Quorum',
-            text: 'Suture rival directors into the board-flesh, merging their voting rights into our tissue.',
+            button: T('Vein Quorum'),
+            text: T('Suture rival directors into the board-flesh, merging their voting rights into our tissue.'),
             f: choice2
           },
           {
-            button: 'Seal Minutes',
-            text: 'Carve the promoted director into a hidden board-node for executive sessions only.',
+            button: T('Seal Minutes'),
+            text: T('Carve the promoted director into a hidden board-node for executive sessions only.'),
             f: choice3
           }
         ]

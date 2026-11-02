@@ -12,22 +12,22 @@ class CarnisSpeculumFeed
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Carnis Speculum Feed',
-        text: 'Repurposed news bunker glows only by emergency strips as the newly ranked voice stands waist-deep in a plexiglass baptistry lined with murmuring flesh cables. A Carnis Speculum mirrors encrypted overlays while drones circle out of sight, relaying packets to sleeper accounts. Accounting ghosts mask the spend.',
+        title: T('Carnis Speculum Feed'),
+        text: T('Repurposed news bunker glows only by emergency strips as the newly ranked voice stands waist-deep in a plexiglass baptistry lined with murmuring flesh cables. A Carnis Speculum mirrors encrypted overlays while drones circle out of sight, relaying packets to sleeper accounts. Accounting ghosts mask the spend.'),
         choices: [
           {
-            button: 'Ad Buy',
-            text: 'Bundle the rite as a midnight shell slot and invoice brands through proxy trusts.',
+            button: T('Ad Buy'),
+            text: T('Bundle the rite as a midnight shell slot and invoice brands through proxy trusts.'),
             f: choice1
           },
           {
-            button: 'Pulse Loop',
-            text: 'Wire syndicate servers into the reliquary to skim devotion from sealed loopbacks.',
+            button: T('Pulse Loop'),
+            text: T('Wire syndicate servers into the reliquary to skim devotion from sealed loopbacks.'),
             f: choice2
           },
           {
-            button: 'Saint Clip',
-            text: 'Cut a relic reel for the vault to script future testimonies and training.',
+            button: T('Saint Clip'),
+            text: T('Cut a relic reel for the vault to script future testimonies and training.'),
             f: choice3
           }
         ]

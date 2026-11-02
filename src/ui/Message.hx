@@ -38,7 +38,7 @@ class Message extends UIWindow
 
       var close = Browser.document.createDivElement();
       close.className = 'message-close';
-      close.innerHTML = 'CLOSE';
+      close.innerHTML = T('CLOSE');
       close.onclick = function (e) {
         game.scene.sounds.play('click-menu');
         game.ui.closeWindow();

@@ -23,7 +23,7 @@ class Document extends Pickup
     {
       super.init();
       type = 'document';
-      name = 'document';
+      name = N('document');
       imageCol = Const.FRAME_PAPER;
     }
 

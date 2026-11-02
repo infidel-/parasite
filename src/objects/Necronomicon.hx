@@ -20,7 +20,7 @@ class Necronomicon extends AreaObject
     {
       super.init();
       type = 'necronomicon';
-      name = 'Necronomicon';
+      name = N('Necronomicon');
       imageRow = Const.ROW_OBJECT;
       imageCol = Const.FRAME_BOOK;
       isStatic = true;
@@ -44,7 +44,7 @@ class Necronomicon extends AreaObject
       game.ui.hud.addAction({
         id: 'takeNecronomicon',
         type: ACTION_OBJECT,
-        name: 'Take Necronomicon',
+        name: T('Take Necronomicon'),
         energy: 0,
         obj: this
       });
@@ -58,7 +58,7 @@ class Necronomicon extends AreaObject
           !mission.isCompleted)
         mission.success();
       game.area.removeObject(this);
-      game.log('You secure the Necronomicon into your possession. You can now proceed with the next phase.');
+      game.log(T('You secure the Necronomicon into your possession. You can now proceed with the next phase.'));
       return true;
     }
 }

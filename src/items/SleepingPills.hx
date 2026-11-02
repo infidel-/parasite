@@ -11,9 +11,9 @@ class SleepingPills extends ItemInfo
     {
       super(game);
       id = 'sleepingPills';
-      name = 'bottle of sleeping pills';
+      name = N('bottle of sleeping pills');
       type = 'junk';
-      unknown = 'small plastic container';
+      unknown = N('small plastic container');
     }
 
 // unlocks preservator goal sequence when conditions met

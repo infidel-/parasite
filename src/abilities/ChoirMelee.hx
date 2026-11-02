@@ -13,7 +13,7 @@ class ChoirMelee extends BasicMelee
     {
       super.init();
       id = ABILITY_CHOIR_MELEE;
-      name = 'choir melee';
+      name = N('choir melee');
       attackMessage = 'XX vibrates, rending flesh of YY';
       skill = 70;
       sound = {

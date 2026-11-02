@@ -160,7 +160,7 @@ class Player extends _SaveObject
             host.energy += delta;
 
           if (host.energy <= 0)
-            onHostDeath('Your host has expired. You have to find a new one.');
+            onHostDeath(T('Your host has expired. You have to find a new one.'));
 
           // tutorial if host is alive
           else if (host.energy < 0.3 * host.maxEnergy &&
@@ -223,7 +223,7 @@ class Player extends _SaveObject
       // detach
       if (state == PLR_STATE_ATTACHED)
         game.playerArea.detachAction();
-      game.log('You fade into the darkness...');
+      game.log(T('You fade into the darkness...'));
       // restore health
       health = maxHealth;
       energy = maxEnergy; // bug fix?
@@ -258,9 +258,9 @@ class Player extends _SaveObject
           removed.push(imp.info.name);
         }
       if (degraded.length > 0)
-        game.log(Const.small('Improvements degraded: ' + degraded.join(', ') + '.'), COLOR_EVOLUTION);
+        game.log(Const.small(T('Improvements degraded: {list}.', { list: degraded.join(', ') })), COLOR_EVOLUTION);
       if (removed.length > 0)
-        game.log(Const.small('Improvements lost: ' + removed.join(', ') + '.'), COLOR_EVOLUTION);
+        game.log(Const.small(T('Improvements lost: {list}.', { list: removed.join(', ') })), COLOR_EVOLUTION);
       // add new improvements
       evolutionManager.giveStartingImprovements();
       // ovum loses a level (after improvements reset)
@@ -376,7 +376,9 @@ class Player extends _SaveObject
         return null;
       maxEnergy -= val;
       energy = energy; // clamp current value
-      return 'You feel ' + (isDeath ? 'great ' : '') + 'pain due to the affinity (-' + val + ' max energy).';
+      return (isDeath ?
+        T('You feel great pain due to the affinity (-{val} max energy).', { val: val }) :
+        T('You feel pain due to the affinity (-{val} max energy).', { val: val }));
     }
 
 
@@ -424,13 +426,12 @@ class Player extends _SaveObject
       var skill = skills.get(targetSkill.id);
       if (skill == null)
         {
-          log('You have learned the basics of ' + targetSkill.info.name + ' skill.');
+          log(T('You have learned the basics of {skill} skill.', { skill: targetSkill.info.name }));
           skills.addID(targetSkill.id, amount);
         }
       else if (!targetSkill.info.isBool)
         {
-          log('You have increased your proficiency in ' + targetSkill.info.name +
-            ' skill.');
+          log(T('You have increased your proficiency in {skill} skill.', { skill: targetSkill.info.name }));
           var val = Const.clampFloat(skill.level + amount, 0, targetSkill.level);
           skills.increase(targetSkill.id, val - skill.level);
         }

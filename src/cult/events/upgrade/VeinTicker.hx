@@ -14,22 +14,22 @@ class VeinTicker
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Vein Ticker',
-        text: 'Trading floor neon stutters red as the newly promoted analyst kneels before a ticker woven from pulsing forearm veins. Each heartbeat sends stock symbols scrolling across translucent flesh. Around the pit, other brokers press palms against the membrane, reading the market\'s arterial rhythm. The outside exchanges never hear the true price, but trusted veins carry the insider flow.',
+        title: T('Vein Ticker'),
+        text: T('Trading floor neon stutters red as the newly promoted analyst kneels before a ticker woven from pulsing forearm veins. Each heartbeat sends stock symbols scrolling across translucent flesh. Around the pit, other brokers press palms against the membrane, reading the market\'s arterial rhythm. The outside exchanges never hear the true price, but trusted veins carry the insider flow.'),
         choices: [
           {
-            button: 'Pump Ticker',
-            text: 'Inject adrenaline into the vein-ticker to accelerate the pulse and push favorable trades.',
+            button: T('Pump Ticker'),
+            text: T('Inject adrenaline into the vein-ticker to accelerate the pulse and push favorable trades.'),
             f: choice1
           },
           {
-            button: 'Short Veins',
-            text: 'Drain rival veins from the ticker network, consolidating flow into our arterial channels.',
+            button: T('Short Veins'),
+            text: T('Drain rival veins from the ticker network, consolidating flow into our arterial channels.'),
             f: choice2
           },
           {
-            button: 'Seal Ticker',
-            text: 'Suture the promoted broker into a hidden ticker node for vetted trades only.',
+            button: T('Seal Ticker'),
+            text: T('Suture the promoted broker into a hidden ticker node for vetted trades only.'),
             f: choice3
           }
         ]

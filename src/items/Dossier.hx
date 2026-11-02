@@ -13,8 +13,8 @@ class Dossier extends Readable
       id = 'dossier';
       // own type: a 'readable' lying around counts as a timeline clue in AreaGame
       type = 'dossier';
-      unknown = 'thin folder with markings';
-      name = 'dossier';
+      unknown = N('thin folder with markings');
+      name = N('dossier');
       areaObjectClass = objects.Paper;
     }
 
@@ -23,12 +23,12 @@ class Dossier extends Readable
     {
       if (game.player.host.hasTrait(TRAIT_ILLITERATE))
         {
-          itemFailed("This host cannot read.");
+          itemFailed(T("This host cannot read."));
           return false;
         }
       if (!game.area.isHabitat)
         {
-          itemFailed("This action requires intense concentration and time. You can only do it in a habitat.");
+          itemFailed(T("This action requires intense concentration and time. You can only do it in a habitat."));
           game.profile.addPediaArticle('msgConcentration');
           return false;
         }

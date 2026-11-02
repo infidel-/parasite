@@ -19,7 +19,7 @@ class IncreaseIncome extends Effect
   public override function init()
     {
       super.init();
-      name = 'income boost';
+      name = N('income boost');
       allowMultiple = true;
       
       // calculate random percentage: 10% base, 20% with 25% chance, 30% with 5% chance

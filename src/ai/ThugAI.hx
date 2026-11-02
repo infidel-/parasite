@@ -108,8 +108,8 @@ class ThugAI extends HumanAI
     {
       super.init();
       type = 'thug';
-      name.unknown = 'street thug';
-      name.unknownCapped = 'Street thug';
+      name.unknown = N('street thug');
+      name.unknownCapped = N('Street thug');
       soundsID = 'thug';
       isAggressive = true;
       var jobData = game.jobs.getRandom(type);
@@ -145,7 +145,7 @@ class ThugAI extends HumanAI
           if (state == AI_STATE_IDLE)
             setState(AI_STATE_ALERT, REASON_NPC_FIGHT);
           emitSound({
-            text: 'PIG!',
+            text: T('PIG!'),
             kind: 'shout',
             radius: 5,
             alertness: 10

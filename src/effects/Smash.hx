@@ -21,7 +21,7 @@ class Smash extends Effect
   public override function init()
     {
       super.init();
-      name = 'smash';
+      name = N('smash');
     }
 
 // emits unsettling wail while smash is active
@@ -34,7 +34,7 @@ class Smash extends Effect
         return;
 
       ai.emitSound({
-        text: '*WAIL*',
+        text: T('*WAIL*'),
         kind: 'bark',
         radius: 6,
         alertness: 12

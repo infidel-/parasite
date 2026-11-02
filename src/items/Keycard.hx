@@ -11,8 +11,8 @@ class Keycard extends ItemInfo
     {
       super(game);
       id = 'keycard';
-      name = 'keycard';
+      name = N('keycard');
       type = 'key';
-      unknown = 'flat rectangular object';
+      unknown = N('flat rectangular object');
     }
 }

@@ -48,7 +48,7 @@ class GenSpawner
               // sewer habitat leaves by; the name is what the renderer and the HUD tell it apart by
               case 'caveMouth':
                 var exit = new objects.mission.HabitatExit(game, area.id, s.x, s.y);
-                exit.name = 'cave mouth';
+                exit.name = N('cave mouth');
                 exit;
               case 'sewerHatch':
                 new SewerHatch(game, area.id, s.x, s.y);

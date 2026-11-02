@@ -71,12 +71,12 @@ class UpgradeFollowerEvents
       if (events == null || events.length == 0)
         return {
           type: TYPE_OCCASIO,
-          title: 'Quiet Rite',
-          text: 'The faithful fall into thoughtful silence. Nothing remarkable occurs.',
+          title: T('Quiet Rite'),
+          text: T('The faithful fall into thoughtful silence. Nothing remarkable occurs.'),
           choices: [
             {
-              button: 'Dismiss',
-              text: 'Accept the stillness.',
+              button: T('Dismiss'),
+              text: T('Accept the stillness.'),
               f: function(game: Game, cult: Cult, targetID: Int) {}
             }
           ]

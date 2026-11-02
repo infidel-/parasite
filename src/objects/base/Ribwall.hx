@@ -14,6 +14,6 @@ class Ribwall extends BaseOrganObject
   public override function init()
     {
       super.init();
-      name = 'Murus Costarum';
+      name = N('Murus Costarum');
     }
 }

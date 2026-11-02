@@ -17,7 +17,7 @@ class SoundConst
   public static var dog: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [
       {
-        text: '*WHIMPER*',
+        text: T('*WHIMPER*'),
         kind: 'bark',
         file: 'dog-whimper',
         radius: 2,
@@ -25,7 +25,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*WHINE*',
+        text: T('*WHINE*'),
         kind: 'bark',
         file: 'dog-whine',
         radius: 2,
@@ -33,7 +33,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*YELP*',
+        text: T('*YELP*'),
         kind: 'bark',
         file: 'dog-yelp',
         radius: 3,
@@ -43,7 +43,7 @@ class SoundConst
     ],
     '' + AI_STATE_IDLE => [
       {
-        text: '*GROWL*',
+        text: T('*GROWL*'),
         kind: 'bark',
         file: 'dog-growl',
         radius: 2,
@@ -53,7 +53,7 @@ class SoundConst
     ],
     '' + AI_STATE_ALERT => [
       {
-        text: '*BARK*',
+        text: T('*BARK*'),
         kind: 'bark',
         file: 'dog-bark',
         radius: 5,
@@ -63,7 +63,7 @@ class SoundConst
     ],
     '' + AI_STATE_HOST => [
       {
-        text: '*whimper*',
+        text: T('*whimper*'),
         kind: 'bark',
         file: 'dog-whimper',
         radius: 2,
@@ -71,7 +71,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*whine*',
+        text: T('*whine*'),
         kind: 'bark',
         file: 'dog-whine',
         radius: 2,
@@ -79,7 +79,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*growl*',
+        text: T('*growl*'),
         kind: 'bark',
         file: 'dog-growl',
         radius: 2,
@@ -87,7 +87,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*GROWL*',
+        text: T('*GROWL*'),
         kind: 'bark',
         file: 'dog-growl',
         radius: 2,
@@ -97,7 +97,7 @@ class SoundConst
     ],
     '' + AI_STATE_DEAD => [
       {
-        text: '*whine*',
+        text: T('*whine*'),
         kind: 'bark',
         file: 'dog-die',
         radius: 2,
@@ -111,7 +111,7 @@ class SoundConst
   public static var firmus: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [
       {
-        text: '*HRMM*',
+        text: T('*HRMM*'),
         kind: 'bark',
         file: 'firmus-hrmm',
         radius: 2,
@@ -119,7 +119,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*HURR*',
+        text: T('*HURR*'),
         kind: 'bark',
         file: 'firmus-hurr',
         radius: 2,
@@ -127,7 +127,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*HRRGH*',
+        text: T('*HRRGH*'),
         kind: 'bark',
         file: 'firmus-hrrgh',
         radius: 3,
@@ -137,7 +137,7 @@ class SoundConst
     ],
     '' + AI_STATE_IDLE => [
       {
-        text: '*HRMM*',
+        text: T('*HRMM*'),
         kind: 'bark',
         file: 'firmus-hrmm',
         radius: 2,
@@ -147,7 +147,7 @@ class SoundConst
     ],
     '' + AI_STATE_ALERT => [
       {
-        text: '*HURR*',
+        text: T('*HURR*'),
         kind: 'bark',
         file: 'firmus-hurr',
         radius: 5,
@@ -157,7 +157,7 @@ class SoundConst
     ],
     '' + AI_STATE_HOST => [
       {
-        text: '*hrmm*',
+        text: T('*hrmm*'),
         kind: 'bark',
         file: 'firmus-hrmm',
         radius: 2,
@@ -165,7 +165,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*hurr*',
+        text: T('*hurr*'),
         kind: 'bark',
         file: 'firmus-hurr',
         radius: 2,
@@ -175,7 +175,7 @@ class SoundConst
     ],
     '' + AI_STATE_DEAD => [
       {
-        text: '*hrrgh*',
+        text: T('*hrrgh*'),
         kind: 'bark',
         file: 'firmus-die',
         radius: 2,
@@ -189,7 +189,7 @@ class SoundConst
   public static var mordax: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [
       {
-        text: '*CHUMP*',
+        text: T('*CHUMP*'),
         kind: 'bark',
         file: 'mordax-chump',
         radius: 2,
@@ -197,7 +197,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*CHORR*',
+        text: T('*CHORR*'),
         kind: 'bark',
         file: 'mordax-chorr',
         radius: 2,
@@ -205,7 +205,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*CHOMP*',
+        text: T('*CHOMP*'),
         kind: 'bark',
         file: 'mordax-chomp',
         radius: 3,
@@ -215,7 +215,7 @@ class SoundConst
     ],
     '' + AI_STATE_IDLE => [
       {
-        text: '*CHORR*',
+        text: T('*CHORR*'),
         kind: 'bark',
         file: 'mordax-chorr',
         radius: 2,
@@ -225,7 +225,7 @@ class SoundConst
     ],
     '' + AI_STATE_ALERT => [
       {
-        text: '*CHOMP*',
+        text: T('*CHOMP*'),
         kind: 'bark',
         file: 'mordax-chomp',
         radius: 5,
@@ -235,7 +235,7 @@ class SoundConst
     ],
     '' + AI_STATE_HOST => [
       {
-        text: '*chump*',
+        text: T('*chump*'),
         kind: 'bark',
         file: 'mordax-chump',
         radius: 2,
@@ -243,7 +243,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*chorr*',
+        text: T('*chorr*'),
         kind: 'bark',
         file: 'mordax-chorr',
         radius: 2,
@@ -253,7 +253,7 @@ class SoundConst
     ],
     '' + AI_STATE_DEAD => [
       {
-        text: '*chorr*',
+        text: T('*chorr*'),
         kind: 'bark',
         file: 'mordax-die',
         radius: 2,
@@ -318,7 +318,7 @@ class SoundConst
   // common human sounds
   static var humanDamage: Array<AISound> = [
     {
-      text: 'Ouch!',
+      text: T('Ouch!'),
       kind: 'shout',
       file: 'male-ouch',
       radius: 2,
@@ -326,7 +326,7 @@ class SoundConst
       params: null
     },
     {
-      text: '*GROAN*',
+      text: T('*GROAN*'),
       kind: 'bark',
       file: 'male-grunt',
       radius: 2,
@@ -336,7 +336,7 @@ class SoundConst
   ];
   static var humanIdle: Array<AISound> = [
     {
-      text: 'Huh?',
+      text: T('Huh?'),
       kind: 'say',
       file: 'male-huh',
       radius: 0,
@@ -344,7 +344,7 @@ class SoundConst
       params: { minAlertness: 25 }
     },
     {
-      text: 'Whu?',
+      text: T('Whu?'),
       kind: 'say',
       file: 'male-whu',
       radius: 0,
@@ -352,7 +352,7 @@ class SoundConst
       params: { minAlertness: 25 }
     },
     {
-      text: 'What the?',
+      text: T('What the?'),
       kind: 'say',
       file: 'male-what',
       radius: 0,
@@ -360,7 +360,7 @@ class SoundConst
       params: { minAlertness: 50 }
     },
     {
-      text: '*GASP*',
+      text: T('*GASP*'),
       kind: 'bark',
       file: 'male-gasp',
       radius: 0,
@@ -371,7 +371,7 @@ class SoundConst
   static var humanHost: Array<AISound> = [
     {
       file: 'male-choke',
-      text: '*choke*',
+      text: T('*choke*'),
       kind: 'bark',
       radius: 2,
       alertness: 3,
@@ -379,7 +379,7 @@ class SoundConst
     },
     {
       file: 'male-moan',
-      text: '*moan*',
+      text: T('*moan*'),
       kind: 'bark',
       radius: 2,
       alertness: 5,
@@ -387,7 +387,7 @@ class SoundConst
     },
     {
       file: 'male-moan-loud',
-      text: '*MOAN*',
+      text: T('*MOAN*'),
       kind: 'bark',
       radius: 3,
       alertness: 5,
@@ -397,7 +397,7 @@ class SoundConst
   static var genericAlert: Array<AISound> = [
     {
       file: 'human-stop',
-      text: 'STOP!',
+      text: T('STOP!'),
       kind: 'shout',
       radius: 7,
       alertness: 10,
@@ -406,7 +406,7 @@ class SoundConst
   ];
   static var humanDie: Array<AISound> = [
     {
-      text: '*death*',
+      text: T('*death*'),
       kind: 'bark',
       file: 'male-die',
       radius: 6,
@@ -416,7 +416,7 @@ class SoundConst
   ];
   static var humanCrying: Array<AISound> = [
     {
-      text: '*sob*',
+      text: T('*sob*'),
       kind: 'bark',
       file: 'male-crying',
       radius: 2,
@@ -424,7 +424,7 @@ class SoundConst
       params: null
     },
     {
-      text: '*weep*',
+      text: T('*weep*'),
       kind: 'bark',
       file: 'male-crying',
       radius: 2,
@@ -432,7 +432,7 @@ class SoundConst
       params: null
     },
     {
-      text: '*sniff*',
+      text: T('*sniff*'),
       kind: 'bark',
       file: 'male-crying',
       radius: 2,
@@ -440,7 +440,7 @@ class SoundConst
       params: null
     },
     {
-      text: '*bawl*',
+      text: T('*bawl*'),
       kind: 'bark',
       file: 'male-crying-loud',
       radius: 3,
@@ -450,7 +450,7 @@ class SoundConst
   ];
   static var humanChatFail: Array<AISound> = [
     {
-      text: '*urk*',
+      text: T('*urk*'),
       kind: 'bark',
       file: 'male-chat-fail',
       radius: 3,
@@ -466,7 +466,7 @@ class SoundConst
     '' + AI_STATE_ALERT => [
       {
         file: 'male-scream',
-        text: '*SCREAM*',
+        text: T('*SCREAM*'),
         kind: 'bark',
         radius: 7,
         alertness: 15,
@@ -483,7 +483,7 @@ class SoundConst
   public static var cultist: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [
       {
-        text: 'More!',
+        text: T('More!'),
         kind: 'shout',
         file: 'male-ouch',
         radius: 2,
@@ -491,7 +491,7 @@ class SoundConst
         params: null
       },
       {
-        text: 'YES!',
+        text: T('YES!'),
         kind: 'shout',
         file: 'male-grunt',
         radius: 2,
@@ -503,7 +503,7 @@ class SoundConst
     '' + AI_STATE_ALERT => [
       {
         file: 'male-scream',
-        text: 'DIE!',
+        text: T('DIE!'),
         kind: 'shout',
         radius: 7,
         alertness: 15,
@@ -540,7 +540,7 @@ class SoundConst
   public static var team: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [
       {
-        text: '*GRUNT*',
+        text: T('*GRUNT*'),
         kind: 'bark',
         file: 'male-grunt',
         radius: 2,
@@ -548,7 +548,7 @@ class SoundConst
         params: null
       },
       {
-        text: '*GROAN*',
+        text: T('*GROAN*'),
         kind: 'bark',
         file: 'male-grunt',
         radius: 2,
@@ -558,7 +558,7 @@ class SoundConst
     ],
     '' + AI_STATE_IDLE => [
       {
-        text: 'Huh?',
+        text: T('Huh?'),
         kind: 'say',
         file: 'male-huh',
         radius: 0,
@@ -566,7 +566,7 @@ class SoundConst
         params: { minAlertness: 25 }
       },
       {
-        text: 'Whu?',
+        text: T('Whu?'),
         kind: 'say',
         file: 'male-whu',
         radius: 0,
@@ -574,7 +574,7 @@ class SoundConst
         params: { minAlertness: 25 }
       },
       {
-        text: 'What the?',
+        text: T('What the?'),
         kind: 'say',
         file: 'male-what',
         radius: 0,
@@ -582,7 +582,7 @@ class SoundConst
         params: { minAlertness: 50 }
       },
       {
-        text: 'BOGEY!',
+        text: T('BOGEY!'),
         kind: 'shout',
         file: 'human-alert',
         radius: 0,
@@ -593,7 +593,7 @@ class SoundConst
     '' + AI_STATE_ALERT => [
       {
         file: 'human-stop',
-        text: 'TANGO!',
+        text: T('TANGO!'),
         kind: 'shout',
         radius: 7,
         alertness: 10,
@@ -610,7 +610,7 @@ class SoundConst
   public static var thug: Map<String, Array<AISound>> = [
     '' + REASON_DAMAGE => [
       {
-        text: 'Fuck!',
+        text: T('Fuck!'),
         kind: 'shout',
         file: 'male-ouch',
         radius: 2,
@@ -618,7 +618,7 @@ class SoundConst
         params: null
       },
       {
-        text: 'Shit!',
+        text: T('Shit!'),
         kind: 'shout',
         file: 'male-grunt',
         radius: 2,
@@ -630,7 +630,7 @@ class SoundConst
     '' + AI_STATE_ALERT => [
       {
         file: 'male-scream',
-        text: 'Die!',
+        text: T('Die!'),
         kind: 'shout',
         radius: 7,
         alertness: 15,
@@ -638,7 +638,7 @@ class SoundConst
       },
       {
         file: 'male-scream',
-        text: 'Bitch!',
+        text: T('Bitch!'),
         kind: 'shout',
         radius: 7,
         alertness: 15,

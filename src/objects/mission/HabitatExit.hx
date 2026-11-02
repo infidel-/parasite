@@ -20,7 +20,7 @@ class HabitatExit extends AreaObject
       super.init();
       imageCol = Const.FRAME_SEWER_EXIT;
       type = 'habitat_exit';
-      name = 'sewer exit';
+      name = N('sewer exit');
       isStatic = true;
     }
 
@@ -36,7 +36,7 @@ class HabitatExit extends AreaObject
       game.ui.hud.addAction({
         id: 'leaveArea',
         type: ACTION_OBJECT,
-        name: 'Leave area',
+        name: T('Leave area'),
         energy: 0,
         isAgreeable: true,
         obj: this

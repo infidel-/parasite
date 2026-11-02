@@ -209,7 +209,7 @@ class Ordeals extends _SaveObject
 
       list.push(o);
       game.message({
-        text: 'A tribulation most foul has descended upon us: ' + o.coloredName() + '.',
+        text: T('A tribulation most foul has descended upon us: {ordeal}.', { ordeal: o.coloredName() }),
         col: 'white'
       });
     }

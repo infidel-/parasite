@@ -14,22 +14,22 @@ class BillSuture
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Bill Suture',
-        text: 'In a legislative drafting room, the newly appointed chief drafter kneels before sutured parchment made from skin grafts. Each amendment is stitched with surgical thread, bill clauses pulsing like healing wounds. Legislative aides press fingers to suture-lines, tracing policy changes through scar tissue. Outside drafters never see the true text, but trusted flesh writes the hidden law.',
+        title: T('Bill Suture'),
+        text: T('In a legislative drafting room, the newly appointed chief drafter kneels before sutured parchment made from skin grafts. Each amendment is stitched with surgical thread, bill clauses pulsing like healing wounds. Legislative aides press fingers to suture-lines, tracing policy changes through scar tissue. Outside drafters never see the true text, but trusted flesh writes the hidden law.'),
         choices: [
           {
-            button: 'Suture Text',
-            text: 'Stitch amendments in skin-paper.',
+            button: T('Suture Text'),
+            text: T('Stitch amendments in skin-paper.'),
             f: choice1
           },
           {
-            button: 'Graft Clause',
-            text: 'Graft clause into drafter.',
+            button: T('Graft Clause'),
+            text: T('Graft clause into drafter.'),
             f: choice2
           },
           {
-            button: 'Scar Archive',
-            text: 'Bind drafter into scar-tissue.',
+            button: T('Scar Archive'),
+            text: T('Bind drafter into scar-tissue.'),
             f: choice3
           }
         ]

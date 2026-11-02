@@ -12,22 +12,22 @@ class OsNativitasHearing
     {
       return {
         type: TYPE_OCCASIO,
-        title: 'Os Nativitas Hearing',
-        text: 'Bone-walled hearing chamber resonates as the newly elevated judge stands before a podium grown from fused vertebrae. Bailiffs murmur procedural codes through filtered masks while case files rustle between rib-spaced shelves. The chamber exhales formaldehyde warmth as living calcium frameworks channel verdicts that no court reporter could transcribe for public record.',
+        title: T('Os Nativitas Hearing'),
+        text: T('Bone-walled hearing chamber resonates as the newly elevated judge stands before a podium grown from fused vertebrae. Bailiffs murmur procedural codes through filtered masks while case files rustle between rib-spaced shelves. The chamber exhales formaldehyde warmth as living calcium frameworks channel verdicts that no court reporter could transcribe for public record.'),
         choices: [
           {
-            button: 'Marrow Vault',
-            text: 'Route sealed settlements through bone trusts and feed the legal cache.',
+            button: T('Marrow Vault'),
+            text: T('Route sealed settlements through bone trusts and feed the legal cache.'),
             f: choice1
           },
           {
-            button: 'Skeleton Sync',
-            text: 'Bind the chamber bones with encrypted rulings to fortify covert justice.',
+            button: T('Skeleton Sync'),
+            text: T('Bind the chamber bones with encrypted rulings to fortify covert justice.'),
             f: choice2
           },
           {
-            button: 'Vertebra Mark',
-            text: 'Carve the judge with marrow sigils to anchor the secret bench.',
+            button: T('Vertebra Mark'),
+            text: T('Carve the judge with marrow sigils to anchor the secret bench.'),
             f: choice3
           }
         ]

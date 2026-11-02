@@ -23,7 +23,7 @@ class AlienMissionCommon
       npc.isMale = true;
       npc.tileAtlasX = 3;
       npc.tileAtlasY = 4;
-      npc.job = 'corporate executive';
+      npc.job = N('corporate executive');
       npc.jobKnown = true;
       npc.type = 'corpo';
       npc.areaID = area.id;
@@ -86,7 +86,10 @@ class AlienMissionCommon
                 game.area.alertness = 100;
                 var languageID = getLanguageID(game);
                 game.message({
-                  text: '<span class=alien' + languageID + '>' + 'Galbuzp</span>! The alert was raised. I cannot leave this location without completing the mission.',
+                  // tr: {word} is an untranslated alien exclamation
+                  text: T('{word}! The alert was raised. I cannot leave this location without completing the mission.', {
+                    word: '<span class=alien' + languageID + '>Galbuzp</span>',
+                  }),
                   img: 'event/security_alert'
                 });
                 break;
@@ -138,7 +141,7 @@ class AlienMissionCommon
         return true;
       if (missionState.alertRaised)
         {
-          game.actionFailed('You cannot leave this area without completing the mission.');
+          game.actionFailed(T('You cannot leave this area without completing the mission.'));
           return false;
         }
       return true;
@@ -295,7 +298,9 @@ class AlienMissionCommon
     {
       var missionState = getMissionState(game);
       var area = game.world.get(0).get(missionState.areaID);
-      return Const.col('gray', Const.small(
-        'Target location: (' + area.x + ',' + area.y + ')'));
+      return Const.col('gray', Const.small(T('Target location: ({x},{y})', {
+        x: area.x,
+        y: area.y,
+      })));
     }
 }

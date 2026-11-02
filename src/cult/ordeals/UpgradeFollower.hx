@@ -1,6 +1,7 @@
 // upgrade follower ordeal - elevate the faithful
 package cult.ordeals;
 
+import l10n.Loc;
 import game.Game;
 import ai.*;
 import cult.Cult;
@@ -17,7 +18,7 @@ class UpgradeFollower extends Ordeal
       return Const.smallgray(' (') +
         Const.col('cult-power', '20k') + Icon.money +
         Const.smallgray(', ') +
-        Const.col('cult-power', 3) + ' PWR' +
+        T('{power} PWR', { power: Const.col('cult-power', 3) }) +
         Const.smallgray(')');
     }
 
@@ -41,12 +42,12 @@ class UpgradeFollower extends Ordeal
   public override function init()
     {
       super.init();
-      name = 'Elevate the faithful';
+      name = N('Elevate the faithful');
       type = ORDEAL_COMMUNAL;
       requiredMembers = 2;
       requiredMemberLevels = 1;
       actions = requiredMembers;
-      note = 'Two pious followers pour their devotion to elevate a chosen member to a seat of greater influence.';
+      note = N('Two pious followers pour their devotion to elevate a chosen member to a seat of greater influence.');
 
       // set power requirements based on target member's group
       var targetMember = null;
@@ -107,7 +108,7 @@ class UpgradeFollower extends Ordeal
   public override function customName(): String
     {
       var aidata = cult.getMemberByID(targetID);
-      return name + ' - ' + aidata.TheName();
+      return Loc.tr(name) + ' - ' + aidata.TheName();
     }
 
 // upgrade member to next job level if available
@@ -145,7 +146,7 @@ class UpgradeFollower extends Ordeal
       actions.push({
         id: 'upgrade',
         type: ACTION_CULT,
-        name: 'Elevate the faithful' + priceHint(),
+        name: T('Elevate the faithful') + priceHint(),
         energy: 0,
         obj: { submenu: 'upgrade' }
       });
@@ -160,7 +161,7 @@ class UpgradeFollower extends Ordeal
       actions.push({
         id: 'back',
         type: ACTION_CULT,
-        name: 'Back',
+        name: T('Back'),
         energy: 0,
         obj: { submenu: 'back' }
       });

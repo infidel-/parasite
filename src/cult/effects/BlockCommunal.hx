@@ -16,13 +16,13 @@ class BlockCommunal extends Effect
   public override function init()
     {
       super.init();
-      name = 'vain probation';
+      name = N('vain probation');
       allowMultiple = false;
     }
 
   // returns effect description
   public override function note(): String
     {
-      return 'blocks communal ordeals';
+      return T('blocks communal ordeals');
     }
 }

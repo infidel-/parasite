@@ -144,7 +144,7 @@ class Organs extends _SaveObject
         return;
 
       currentOrgan.isActive = true;
-      game.log(currentOrgan.info.name + ' growth completed.', COLOR_ORGAN);
+      game.log(T('{organ} growth completed.', { organ: currentOrgan.info.name }), COLOR_ORGAN);
       game.scene.sounds.play('organ-complete');
 
       _ai.recalc(); // recalc all stats and mods
@@ -399,7 +399,7 @@ class Organs extends _SaveObject
       var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
-          game.actionFailed("Maximum range of " + params.range + " exceeded.");
+          game.actionFailed(T('Maximum range of {range} exceeded.', { range: params.range }));
           return false;
         }
 
@@ -436,7 +436,7 @@ class Organs extends _SaveObject
       var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
-          game.actionFailed("Maximum range of " + params.range + " exceeded.");
+          game.actionFailed(T('Maximum range of {range} exceeded.', { range: params.range }));
           return false;
         }
 
@@ -475,7 +475,7 @@ class Organs extends _SaveObject
       var distance = game.playerArea.distance(ai.x, ai.y);
       if (distance > params.range)
         {
-          game.actionFailed("Maximum range of " + params.range + " exceeded.");
+          game.actionFailed(T('Maximum range of {range} exceeded.', { range: params.range }));
           return false;
         }
 
@@ -489,7 +489,7 @@ class Organs extends _SaveObject
       var chance = ai.inventory.clothing.info.armor.needleDeathChance;
       if (Std.random(100) < chance)
         {
-          game.log(msg + ' The toxin works quickly and lethally.');
+          game.log(msg + ' ' + T('The toxin works quickly and lethally.'));
           ai.onDamage(ai.health);
           return true;
         }
@@ -521,7 +521,7 @@ class Organs extends _SaveObject
       var ai = game.area.getAI(pos.x, pos.y);
       if (ai == null)
         {
-          game.actionFailed("Select a target (T/Enter) or target with mouse first.");
+          game.actionFailed(T('Select a target (T/Enter) or target with mouse first.'));
           return null;
         }
       return ai;
@@ -535,7 +535,7 @@ class Organs extends _SaveObject
       var tmp = game.area.getAIinRadius(game.playerArea.x, game.playerArea.y,
         params.range, false);
 
-      game.log('Your host emits a noxious fear-inducing gas cloud.');
+      game.log(T('Your host emits a noxious fear-inducing gas cloud.'));
       game.scene.sounds.play('action-gas');
 
       // set timeout
@@ -577,7 +577,7 @@ class Organs extends _SaveObject
       var tmp = game.area.getAIinRadius(game.playerArea.x, game.playerArea.y,
         params.range, false);
 
-      game.log('Your host emits a cloud of paralysis-inducing spores.');
+      game.log(T('Your host emits a cloud of paralysis-inducing spores.'));
       game.scene.sounds.play('action-gas');
 
       // set timeout
@@ -625,7 +625,7 @@ class Organs extends _SaveObject
   public function getGrowInfo(): String
     {
       if (currentOrgan == null)
-        return "<span style='color:var(--text-color-red)'>None</span>";
+        return "<span style='color:var(--text-color-red)'>" + T('None') + "</span>";
       else return "<span style='color:var(--text-color-organ-title)'>" +
         currentOrgan.info.name + "</span>";
     }

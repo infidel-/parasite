@@ -20,7 +20,7 @@ class FloorDrain extends AreaObject
       imageRow = Const.ROW_OBJECT2;
       imageCol = Const.FRAME_FLOOR_DRAIN;
       type = 'floor_drain';
-      name = 'floor drain';
+      name = N('floor drain');
       isStatic = true;
     }
 
@@ -36,7 +36,7 @@ class FloorDrain extends AreaObject
       game.ui.hud.addAction({
         id: 'enterDrain',
         type: ACTION_OBJECT,
-        name: 'Enter drain',
+        name: T('Enter drain'),
         energy: 10,
         obj: this
       });
@@ -47,7 +47,7 @@ class FloorDrain extends AreaObject
     {
       if (game.player.state != PLR_STATE_PARASITE)
         {
-          game.actionFailed("You can only enter the drain without a host.");
+          game.actionFailed(T("You can only enter the drain without a host."));
           return false;
         }
       if (!game.area.canLeave())
@@ -55,7 +55,7 @@ class FloorDrain extends AreaObject
       if (!game.playerArea.cultLeavePre(action))
         return false;
 
-      game.log("You slither through the drain escaping the prying eyes.");
+      game.log(T("You slither through the drain escaping the prying eyes."));
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
       game.goals.complete(GOAL_ENTER_SEWERS);

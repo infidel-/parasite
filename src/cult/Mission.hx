@@ -1,6 +1,7 @@
 // base class for cult missions (missio/clavis)
 package cult;
 
+import l10n.Loc;
 import game.Game;
 import ai.AI;
 
@@ -63,7 +64,7 @@ class Mission extends _SaveObject
 // get custom name for display
   public function customName(): String
     {
-      return name;
+      return Loc.tr(name);
     }
 
 // get colored name for display
@@ -73,21 +74,21 @@ class Mission extends _SaveObject
       if (diffVal == null ||
           diffVal == UNSET)
         diffVal = NORMAL;
-      var diffLabel = 'NORMAL';
+      var diffLabel = T('NORMAL');
       var diffCol = 'diff-normal';
       switch (diffVal)
         {
           case EASY:
-            diffLabel = 'EASY';
+            diffLabel = T('EASY');
             diffCol = 'diff-easy';
           case NORMAL:
-            diffLabel = 'NORMAL';
+            diffLabel = T('NORMAL');
             diffCol = 'diff-normal';
           case HARD:
-            diffLabel = 'HARD';
+            diffLabel = T('HARD');
             diffCol = 'diff-hard';
           default:
-            diffLabel = 'NORMAL';
+            diffLabel = T('NORMAL');
             diffCol = 'diff-normal';
         }
       return Const.col('profane-ordeal', customName()) + ' ' +
@@ -99,7 +100,7 @@ class Mission extends _SaveObject
     {
       onSuccess(); // call subclass hook
       isCompleted = true; // mark mission as completed
-      game.logsg('Mission completed: ' + coloredName() + '.');
+      game.logsg(T('Mission completed: {mission}.', { mission: coloredName() }));
       if (ordeal != null)
         ordeal.check(); // check if ordeal is complete
     }

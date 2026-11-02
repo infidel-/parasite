@@ -11,9 +11,9 @@ class Contraceptives extends ItemInfo
     {
       super(game);
       id = 'contraceptives';
-      name = 'pack of contraceptives';
+      name = N('pack of contraceptives');
       type = 'junk';
-      unknown = 'small container';
+      unknown = N('small container');
     }
 
 // grants ovum improv and message when learned
@@ -21,7 +21,7 @@ class Contraceptives extends ItemInfo
     {
       var player = game.player;
       game.message({
-        text: 'Humans use these to control their breeding habits. However, there is a way that I can reproduce as well.',
+        text: T('Humans use these to control their breeding habits. However, there is a way that I can reproduce as well.'),
         img: 'event/goal_evolve_dopamine_receive'
       });
       player.evolutionManager.addImprov(IMP_OVUM);

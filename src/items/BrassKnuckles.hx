@@ -10,8 +10,8 @@ class BrassKnuckles extends Weapon
     {
       super(game);
       id = 'brassKnuckles';
-      name = 'brass knuckles';
-      unknown = 'heavy rings';
+      name = N('brass knuckles');
+      unknown = N('heavy rings');
       weapon = {
         isRanged: false,
         skill: SKILL_FISTS,

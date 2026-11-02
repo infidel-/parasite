@@ -17,7 +17,7 @@ class OrdealActions extends Effect
   public override function init()
     {
       super.init();
-      name = 'grievous burdens';
+      name = N('grievous burdens');
       allowMultiple = true;
     }
 
@@ -75,6 +75,6 @@ class OrdealActions extends Effect
   // returns effect description
   public override function note(): String
     {
-      return 'progresses random ordeals';
+      return T('progresses random ordeals');
     }
 }
