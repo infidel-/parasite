@@ -355,10 +355,17 @@ def parse_reply(text: str) -> tuple:
     return got, doubts, terms
 
 
-def problem(src: str, tr: str) -> str | None:
-    """Why a translation is rejected, or None."""
+RE_NOTE_SELECT = re.compile(r"ALWAYS write \{(\w+), select")
+
+
+def problem(src: str, tr: str, note: str = "") -> str | None:
+    """Why a translation is rejected, or None. A translator note that says `ALWAYS write {x, select,`
+    makes that select required (a raw English key would otherwise show through)."""
     if not tr.strip():
         return "empty"
+    for name in RE_NOTE_SELECT.findall(note or ""):
+        if not re.search(r"\{\s*" + name + r"\s*,\s*select\s*,", tr):
+            return f"the note requires a {{{name}, select, …}} on the key"
     bad = locfmt.check(src, tr)
     if bad:
         return bad
@@ -366,8 +373,9 @@ def problem(src: str, tr: str) -> str | None:
         return "English noun form {x:the}/{x:The} in the translation: use the forms of the style sheet"
     if starts_upper(src) and not starts_upper(tr):
         return "starts lowercase: the English starts with a capital (or a capitalized {x:Form}); a log line that starts lowercase is taken for a 1.0 mod predicate"
-    if len(src) >= RATIO_MIN_CHARS:
-        ratio = len(tr) / len(src)
+    vs, vt = locfmt.visible(src), locfmt.visible(tr)
+    if len(vs) >= RATIO_MIN_CHARS:
+        ratio = len(vt) / len(vs)
         if not RATIO_MIN <= ratio <= RATIO_MAX:
             return f"length ratio {ratio:.2f} outside {RATIO_MIN}-{RATIO_MAX}"
     return None
@@ -409,7 +417,7 @@ def translate_batch(code: str, system: str, batch: list, bno: int, total: int,
             if i not in got:
                 reasons[i] = "missing"
                 continue
-            why = problem(batch[i - 1]["s"], got[i])
+            why = problem(batch[i - 1]["s"], got[i], batch[i - 1].get("note", ""))
             if why:
                 reasons[i] = why
             else:
@@ -448,7 +456,7 @@ def revise_batch(code: str, system: str, batch: list, recs: list, bno: int, tota
         r = dict(r)
         new = got.get(i)
         if new is not None and new != r["t"]:
-            why = problem(e["s"], new)
+            why = problem(e["s"], new, e.get("note", ""))
             if why:
                 warn(f"batch {bno}: revision of [{i}] dropped ({why})")
                 new = None
@@ -634,7 +642,7 @@ def apply_review(code: str, path: str | None) -> int:
             warn(f"line {ln}: unknown id (the English changed since the sheet was written?)")
             bad += 1
             continue
-        why = problem(r["s"], fix)
+        why = problem(r["s"], fix, r.get("note", ""))
         if why:
             warn(f"line {ln}: rejected ({why}): {fix[:80]}")
             bad += 1
@@ -825,6 +833,9 @@ def selftest() -> int:
     assert problem("{s} hits {t}.", "{s} frappe.").startswith("missing")
     assert problem("A fairly long English sentence here.", "Ok.").startswith("length")
     assert problem("Hi", "") == "empty"
+    nt = "ALWAYS write {power, select, combat{…} other{…}} with your words"
+    assert problem("+{v} {power} power", "+{v} pouvoir {power}", nt).startswith("the note requires")
+    assert problem("+{value} {power} power", "+{value} pouvoir {power, select, media{médias} other{x}}", nt) is None
     assert problem("{s:The} hits.", "{s:def} frappe.").startswith("starts lowercase")
     assert problem("<b>Yes</b>", "<b>oui</b>").startswith("starts lowercase")
     assert problem("{n} turns", "{n} tours") is None and starts_upper("« Oui")

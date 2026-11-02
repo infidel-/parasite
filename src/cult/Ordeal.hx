@@ -206,7 +206,7 @@ class Ordeal extends _SaveObject
               actions.push({
                 id: 'spend.' + field,
                 type: ACTION_CULT,
-                // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+                // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are
                 name: T('Wield {amount} {power} power', {
                   amount: Const.col('cult-power', powerAmount),
                   power: field,
@@ -216,7 +216,7 @@ class Ordeal extends _SaveObject
                   cult.resources.dec(field, powerAmount);
                   power.set(field, 0);
                   this.actions++;
-                  // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+                  // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are
                   cult.log(T('{cult} exerted {amount} {power} power on {ordeal} ordeal.', {
                     cult: cult,
                     amount: Const.col('cult-power', powerAmount),

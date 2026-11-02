@@ -165,6 +165,8 @@ def call(text: str, i: int, kind: str, path: str, line: int) -> tuple:
             continue
         break
     s = "".join(parts)
+    if not s.strip():
+        return None, f"{path}:{line}: {kind}('') marks an empty string (nothing to translate)", i
     try:
         vars_ = locfmt.names(s)
     except locfmt.FmtError as e:

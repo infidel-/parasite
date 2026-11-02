@@ -4,6 +4,7 @@
 
 ### Changes
 - mods: mods can ship translations (lang/<code>.json) and translate their text through l10n.Loc
+- ui: French translation, and a language option in Options (Interface)
 
 ### Fixes
 - ui: log lines read "1 turn" / "5 resources", use "a"/"an" correctly and no longer end in a double full stop

@@ -994,7 +994,7 @@ class Cult extends _SaveObject
       // add power based on type
       resources.inc(powerType, 1);
 
-      // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+      // tr: {power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are
       log(T('{cult} trades {cost} for {gain} {power} power.', {
         cult: this,
         cost: Const.col('cult-power', cost) + Icon.money,
@@ -1016,7 +1016,7 @@ class Cult extends _SaveObject
       var cost = getTradeResourceCost();
       if (resources.get(from) < cost)
         {
-          // tr: {resource} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+          // tr: {resource} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are
           game.actionFailed(T('Not enough {resource} resources for trade.', { resource: from }));
           return false;
         }
@@ -1027,7 +1027,7 @@ class Cult extends _SaveObject
       // add target resource
       resources.inc(to, 1);
 
-      // tr: {from} and {power} are cult power keys, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement
+      // tr: {from} and {power} are cult power keys, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are
       log(T('{cult} trades {cost} {from} for {gain} {power} power.', {
         cult: this,
         cost: Const.col('cult-power', cost),

@@ -231,6 +231,16 @@
    "note": "the last join of a list (\"a, b and c\"); {list} is the rest, joined with \", \""
   },
   {
+   "s": "warmup phase",
+   "kind": "T",
+   "loc": [
+    "src/Main.hx:42"
+   ],
+   "vars": [],
+   "where": "Main.init",
+   "field": "nodeValue"
+  },
+  {
    "s": "New pedia article available: {name}.",
    "kind": "T",
    "loc": [
@@ -814,7 +824,7 @@
    "s": "{attacker:The} hesitates to attack you.",
    "kind": "T",
    "loc": [
-    "src/ai/CommonLogic.hx:143"
+    "src/ai/CommonLogic.hx:158"
    ],
    "vars": [
     "attacker"
@@ -826,7 +836,7 @@
    "s": "Shit!",
    "kind": "T",
    "loc": [
-    "src/ai/CommonLogic.hx:147",
+    "src/ai/CommonLogic.hx:162",
     "src/const/SoundConst.hx:621"
    ],
    "vars": [],
@@ -837,7 +847,7 @@
    "s": "You're losing control.",
    "kind": "T",
    "loc": [
-    "src/ai/CommonLogic.hx:315"
+    "src/ai/CommonLogic.hx:330"
    ],
    "vars": [],
    "where": "CommonLogic.melee"
@@ -14823,7 +14833,7 @@
    ],
    "where": "Cult.trade",
    "field": "log",
-   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "Not enough {resource} resources for trade.",
@@ -14836,7 +14846,7 @@
    ],
    "where": "Cult.tradeResource",
    "field": "actionFailed",
-   "note": "{resource} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{resource} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "{cult} trades {cost} {from} for {gain} {power} power.",
@@ -14853,7 +14863,7 @@
    ],
    "where": "Cult.tradeResource",
    "field": "log",
-   "note": "{from} and {power} are cult power keys, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{from} and {power} are cult power keys, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "This area is a mission area for {mission}.",
@@ -14955,7 +14965,7 @@
    ],
    "where": "Ordeal.getActions",
    "field": "name",
-   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "{cult} exerted {amount} {power} power on {ordeal} ordeal.",
@@ -14971,7 +14981,7 @@
    ],
    "where": "Ordeal.getActions",
    "field": "log",
-   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "Disburse {money}",
@@ -15738,7 +15748,7 @@
     "power"
    ],
    "where": "DecreasePower.customName",
-   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "trade cost decrease",
@@ -15835,7 +15845,7 @@
     "resource"
    ],
    "where": "GainResource.customName",
-   "note": "{resource} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{resource} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "income boost",
@@ -15868,7 +15878,7 @@
     "power"
    ],
    "where": "IncreasePower.customName",
-   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "trade cost increase",
@@ -15911,7 +15921,7 @@
     "resource"
    ],
    "where": "LoseResource.customName",
-   "note": "{resource} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{resource} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {resource, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "trade silence",
@@ -21592,7 +21602,7 @@
     "power"
    ],
    "where": "RecruitFollower.getNote",
-   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political (English shows the key itself). Write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} where your language needs a different word or agreement"
+   "note": "{power} is a cult power key, one of: combat, media, lawfare, corporate, political. ALWAYS write {power, select, combat{…} media{…} lawfare{…} corporate{…} political{…} other{…}} with your words: the keys are English and must never show as they are"
   },
   {
    "s": "Back",
@@ -28624,6 +28634,58 @@
    "field": "log"
   },
   {
+   "s": "Hello.",
+   "kind": "T",
+   "loc": [
+    "src/l10n/LocTest.hx:25",
+    "src/l10n/LocTest.hx:74"
+   ],
+   "vars": [],
+   "where": "LocTest.english"
+  },
+  {
+   "s": "{s:The} hesitates.",
+   "kind": "T",
+   "loc": [
+    "src/l10n/LocTest.hx:75"
+   ],
+   "vars": [
+    "s"
+   ],
+   "where": "LocTest.french"
+  },
+  {
+   "s": "Not translated.",
+   "kind": "T",
+   "loc": [
+    "src/l10n/LocTest.hx:99"
+   ],
+   "vars": [],
+   "where": "LocTest.french"
+  },
+  {
+   "s": "Hello {n} <b class=x>bold</b> &rarr; %name%",
+   "kind": "T",
+   "loc": [
+    "src/l10n/LocTest.hx:108"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "LocTest.pseudo"
+  },
+  {
+   "s": "{n, plural, one{# turn} other{# turns}}",
+   "kind": "T",
+   "loc": [
+    "src/l10n/LocTest.hx:117"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "LocTest.pseudo"
+  },
+  {
    "s": "unknown object",
    "kind": "N",
    "loc": [
@@ -30807,17 +30869,6 @@
    "vars": [],
    "where": "ScenarioSandbox.new",
    "field": "name"
-  },
-  {
-   "s": "",
-   "kind": "N",
-   "loc": [
-    "src/scenario/ScenarioSandbox.hx:25",
-    "src/scenario/ScenarioSandbox.hx:25",
-    "src/scenario/ScenarioSandbox.hx:25"
-   ],
-   "vars": [],
-   "where": "ScenarioSandbox.new"
   },
   {
    "s": "specimen &middot; unclassified",

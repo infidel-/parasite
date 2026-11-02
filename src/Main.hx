@@ -37,7 +37,11 @@ class Main
       // on purpose, so the load fonts.ready waits on is the configured one and not the :root default
       var warm = Browser.document.getElementById('warmup');
       if (warm != null)
-        untyped Browser.document.fonts.ready.then(function(_) warm.classList.add('ready'));
+        {
+          // still transparent: swap in the translated words before they show (the dots are spans)
+          warm.firstChild.nodeValue = T('warmup phase');
+          untyped Browser.document.fonts.ready.then(function(_) warm.classList.add('ready'));
+        }
       // exit-save: flush a forced autosave on any graceful exit (in-game quit,
       // OS window close, reload). saveWrite is sync IPC so it completes here.
 #if electron

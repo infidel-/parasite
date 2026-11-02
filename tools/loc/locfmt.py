@@ -136,6 +136,23 @@ def text_parts(s: str) -> str:
     return "".join(out)
 
 
+def visible(s: str) -> str:
+    """What a player could see of a template: each placeholder as its name, each choice as its
+    longest case (the select/plural syntax itself is not text and must not count as length)."""
+    def render(segs):
+        out = []
+        for seg in segs:
+            if seg[0] == "text":
+                out.append(seg[1])
+            elif seg[0] == "var":
+                out.append(seg[1])
+            else:
+                out.append(max((render(body) for _, body in seg[3]), key=len, default=""))
+        return "".join(out)
+
+    return render(parse(s))
+
+
 def markup(s: str) -> Counter:
     """Multiset of what a translation must keep: placeholder names (+forms are free), html tag
     names, entities and %tokens%."""
@@ -187,6 +204,8 @@ def selftest() -> None:
     assert check("x &rarr; y", "x &rarr; y") is None
     assert check("<span class=a>x</span>", "<span class=b>y</span>") is None
     assert sha("abc") == sha("abc") and len(sha("abc")) == 16
+    assert visible("+{v} {p, select, media{médias} other{x}} power") == "+v médias power"
+    assert visible("{n, plural, one{# turn} other{# turns}}") == "# turns"
 
 
 if __name__ == "__main__":

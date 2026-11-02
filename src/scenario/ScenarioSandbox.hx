@@ -22,7 +22,7 @@ class ScenarioSandbox extends Scenario
       flow = [
         'dummy' => {
           name: 'dummy',
-          notes: [ N(''), N(''), N('') ],
+          notes: [ '', '', '' ],
           location: {},
           npc: [],
         },

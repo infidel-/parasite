@@ -44,3 +44,4 @@ ai-src
 # localization tool scratch: raw model replies, term suggestions, claude cwd
 loc/.logs/
 loc/.cache/
+loc/review/
