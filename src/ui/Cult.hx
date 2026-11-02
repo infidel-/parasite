@@ -629,7 +629,7 @@ class Cult extends UIWindow
 
           // occupation
           var jobInfo = game.jobs.getJobInfo(m.job);
-          buf.add('<td class="cult-sg">[' + jobInfo.level + '] ' + Loc.tr(m.job) + '</td>');
+          buf.add('<td class="cult-sg">[' + jobInfo.level + '] ' + Loc.form(m.getJobLocNoun(), '') + '</td>');
 
           // income (struck when inactive)
           if (status != '')

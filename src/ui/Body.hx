@@ -117,7 +117,7 @@ class Body extends UIWindow
       nameEl.innerHTML = '';
       if (game.player.state == PLR_STATE_HOST)
         nameEl.innerHTML = (host.isNameKnown ? host.getName() :
-          T('{host:the}', { host: Loc.thing(host.name.unknown) }));
+          T('{host:the}', { host: host.getTypeLocNoun() }));
       updateStats();
       updateInventory();
       updateParasite();
@@ -254,7 +254,7 @@ class Body extends UIWindow
       buf.add('<div class="body-sub-h">' + T('JOB') + '</div>');
       if (jobKnown)
         buf.add('<div class="body-host-jobline">' + UISvg.bodyJob() +
-          '<span class="body-host-job">' + Loc.tr(host.job) + '</span>' +
+          '<span class="body-host-job">' + Loc.form(host.getJobLocNoun(), '') + '</span>' +
           '<span class="gray">&middot; ' + T('income {n}', { n: host.income }) + '</span></div>');
       else
         buf.add('<div class="body-empty">' + T('unknown') + '</div>');

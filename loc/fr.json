@@ -41084,8 +41084,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "{cult} pousse des mécréants vers la base.",
-   "status": "done",
+   "t": "Le culte {cult} pousse des mécréants vers la base.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -41108,8 +41108,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "{cult} répand une pression indirecte.",
-   "status": "done",
+   "t": "Le culte {cult} exerce une pression indirecte.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -44160,8 +44160,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "{cult} : des attaquants pénètrent dans la base.",
-   "status": "done",
+   "t": "Les attaquants du culte {cult} pénètrent dans la base.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -44171,8 +44171,7 @@
      "pass": 2,
      "t": "{cult} : des attaquants pénètrent dans la base."
     }
-   ],
-   "doubt": "The English uses « {cult} » as a log prefix, as in the other logsg lines of this batch. « {cult} lance ses attaquants » made the cult the one launching the attack, which is wrong if {cult} is the defending player cult. I rewrote it in the « {cult} : … » pattern used by the batch."
+   ]
   },
   "e55fb3420d7fea26": {
    "s": "Attackers enter the base.",
@@ -44978,8 +44977,8 @@
     "rival"
    ],
    "kind": "T",
-   "t": "{rival} attaque Cor Nefandum. Si le délai expire, Cor Nefandum est détruit et tout sera perdu.",
-   "status": "done",
+   "t": "Le culte {rival} attaque Cor Nefandum. Si le délai expire, Cor Nefandum est détruit et tout sera perdu.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -45746,8 +45745,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "Attaquer {cult}",
-   "status": "done",
+   "t": "Attaquer le culte {cult}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -45813,8 +45812,8 @@
     "rival"
    ],
    "kind": "T",
-   "t": "{cult} révèle de nouveaux éléments sur {rival}.",
-   "status": "done",
+   "t": "{cult} en apprend davantage sur le culte {rival}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -45837,8 +45836,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "Enquêter sur {cult}",
-   "status": "done",
+   "t": "Enquêter sur le culte {cult}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -72109,116 +72108,6 @@
     }
    ]
   },
-  "9b56d519ccd9e1e5": {
-   "s": "Hello.",
-   "loc": [
-    "src/l10n/LocTest.hx:25",
-    "src/l10n/LocTest.hx:74"
-   ],
-   "where": "LocTest.english",
-   "kind": "T",
-   "t": "Bonjour.",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Bonjour."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "7bff0b8b6c0ce518": {
-   "s": "{s:The} hesitates.",
-   "loc": [
-    "src/l10n/LocTest.hx:75"
-   ],
-   "where": "LocTest.french",
-   "vars": [
-    "s"
-   ],
-   "kind": "T",
-   "t": "{s:Def} hésite.",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "{s:Def} hésite."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "dc2ff55416be1c5b": {
-   "s": "Not translated.",
-   "loc": [
-    "src/l10n/LocTest.hx:99"
-   ],
-   "where": "LocTest.french",
-   "kind": "T",
-   "t": "Non traduit.",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Non traduit."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "98f213fae59e70b0": {
-   "s": "Hello {n} <b class=x>bold</b> &rarr; %name%",
-   "loc": [
-    "src/l10n/LocTest.hx:108"
-   ],
-   "where": "LocTest.pseudo",
-   "vars": [
-    "n"
-   ],
-   "kind": "T",
-   "t": "Bonjour {n} <b class=x>gras</b> &rarr; %name%",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Bonjour {n} <b class=x>gras</b> &rarr; %name%"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "cf469ebbafee4b33": {
-   "s": "{n, plural, one{# turn} other{# turns}}",
-   "loc": [
-    "src/l10n/LocTest.hx:117"
-   ],
-   "where": "LocTest.pseudo",
-   "vars": [
-    "n"
-   ],
-   "kind": "T",
-   "t": "{n, plural, one{# tour} other{# tours}}",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "{n, plural, one{# tour} other{# tours}}"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
   "2cf6105ea6f555ea": {
    "s": "{cult} trades {cost} {from} for {gain} {power} power.",
    "loc": [
@@ -72441,11 +72330,120 @@
     }
    ],
    "doubt": "The English says \"proxy dark\" but the button (37) is \"Stake Dark\". The translation uses « la part obscure » in both, so the log line matches the button. This looks like a slip in the source."
+  },
+  "17443727203f7aa8": {
+   "s": "Revulsion is a striking color in my palette.",
+   "loc": [
+    "src/game/Game.hx:126"
+   ],
+   "where": "Game.init",
+   "kind": "T",
+   "t": "La répulsion est une couleur saisissante de ma palette.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "La répulsion est une couleur saisissante de ma palette."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "The speaker is unclear (loading quote, flavour line or parasite voice). I kept it neutral and first person, like the English."
+  },
+  "6900a064deb17648": {
+   "s": "spaceship",
+   "loc": [
+    "src/scenario/GoalsAlienCrashLanding.hx:545",
+    "src/scenario/GoalsAlienCrashLanding.hx:836"
+   ],
+   "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject",
+   "kind": "N",
+   "t": "vaisseau spatial",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "vaisseau spatial"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e2346381bb8eb382": {
+   "s": "console",
+   "loc": [
+    "src/scenario/GoalsAlienCrashLanding.hx:552"
+   ],
+   "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject",
+   "kind": "N",
+   "t": "console",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "console"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "462854f9c73adf5f": {
+   "s": "slot",
+   "loc": [
+    "src/scenario/GoalsAlienCrashLanding.hx:553",
+    "src/scenario/GoalsAlienCrashLanding.hx:554",
+    "src/scenario/GoalsAlienCrashLanding.hx:555"
+   ],
+   "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject",
+   "kind": "N",
+   "t": "emplacement",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "emplacement"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "\"slot\" here is a part of the crashed spaceship, not a body-feature slot. « emplacement » fits a socket on the console, so I kept it. If it is a physical opening (card or data slot), « fente » would be more precise."
+  },
+  "5eadb8acf2a6adfb": {
+   "s": "{redacted} Parasite",
+   "loc": [
+    "src/ui/NewGame.hx:46"
+   ],
+   "where": "NewGame.new",
+   "field": "tag",
+   "vars": [
+    "redacted"
+   ],
+   "kind": "T",
+   "t": "Parasite {redacted}",
+   "status": "reviewed",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{redacted} Parasite"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
   }
  },
  "totals": {
-  "calls": 153,
-  "input": 1691066,
-  "output": 544843
+  "calls": 156,
+  "input": 1710595,
+  "output": 546090
  }
 }

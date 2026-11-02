@@ -164,7 +164,7 @@ class RegionTooltip extends BeamTooltip
             if (npc.nameKnown)
               label = npc.name;
             else if (npc.jobKnown && npc.job != null)
-              label = Loc.tr(npc.job);
+              label = Loc.form(npc.getJobLocNoun(), '');
             else label = T('unknown contact');
             lines.push(Const.smallgray(T('[event {n}]', { n: npc.event.num })) + ' <span class="region-tip-npcname">' + label + '</span>');
           }

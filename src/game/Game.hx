@@ -123,7 +123,7 @@ class Game extends _SaveObject
 #else
       log(s);
 #end
-      log('<font style="font-size: 6px">Revulsion is a striking color in my palette.</font>', COLOR_DEBUG);
+      log('<font style="font-size: 6px">' + T('Revulsion is a striking color in my palette.') + '</font>', COLOR_DEBUG);
       turns = 0;
       state = GAMESTATE_RUNNING;
       isInited = false;

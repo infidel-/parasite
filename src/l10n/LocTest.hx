@@ -93,12 +93,17 @@ class LocTest
       // an untranslated English template stays English, nouns included
       eq(Loc.fmt('{a:The} rips {t:the}.', { a: noun('soldier', 'm'), t: phrase('your host', 'm') }),
         'The soldier rips your host.');
+      // whatever forms it uses: {x:a} is not the French à, a select goes by natural gender, plurals by English rules
+      var mod = Loc.tr('You find {i:a}; {d, select, m{his} f{her} other{its}} {n, plural, one{# turn} other{# turns}}.');
+      eq(Loc.fmt(mod, { i: noun('soldier', 'm'), d: noun('soldier', 'n'), n: 0 }), 'You find a soldier; its 0 turns.');
+      // a colored value selects by what it wraps
+      eq(Loc.fmt('{p, select, media{médias} other{autre}}', { p: Loc.colored('cult-power', 'media') }), 'médias');
       var tours = '{n, plural, one{# tour} other{# tours}}';
       eq(Loc.fmt(tours, { n: 0 }), '0 tour');
       eq(Loc.fmt(tours, { n: 2 }), '2 tours');
       Loc.tr('Not translated.');
       Loc.fmt('{s:def}', { s: noun('missing noun', 'm') });
-      eq(Loc.missingList().join('|'), '1× Not translated.|1× noun: missing noun|1× missing noun');
+      eq(Loc.missingList().join('|'), '1× ' + mod + '|1× Not translated.|1× noun: missing noun|1× missing noun');
     }
 
 // pseudo: letters accented, syntax and markup intact, marked and padded

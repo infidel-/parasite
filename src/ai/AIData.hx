@@ -453,7 +453,17 @@ class AIData extends _SaveObject
       game.log(Const.smallgray(legacyLog(s)));
     }
 
-// the job as a noun of this AI's gender (a female form where the language has one), for {job:form}
+// the creature or profession noun (name.unknown) in the entity's gender, for a window that names it
+  public function getTypeLocNoun(): _LocNoun
+    {
+      return {
+        key: name.unknown,
+        kind: LOC_NOUN,
+        gender: (isIt() ? 'n' : (isMale ? 'm' : 'f')),
+      };
+    }
+
+// the job title as a noun (the feminine form for a woman) for a {job:form} placeholder
   public function getJobLocNoun(): _LocNoun
     {
       return {

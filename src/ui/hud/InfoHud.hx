@@ -531,7 +531,7 @@ class InfoHud
           if (host.isNameKnown)
             hostnameText.innerHTML = host.getNameCapped();
           else if (host.isHuman)
-            hostnameText.innerHTML = Const.capitalize(Loc.tr(host.name.unknown));
+            hostnameText.innerHTML = Loc.form(host.getTypeLocNoun(), 'Bare');
           else hostnameText.innerHTML = T('{host:A}', { host: Loc.thing(host.name.unknown) });
           var badges = '';
           // close to collapsing from degradation

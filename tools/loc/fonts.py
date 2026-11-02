@@ -24,6 +24,8 @@ import argparse
 import json
 import os
 import re
+
+import locfmt
 import subprocess
 import sys
 from collections import Counter
@@ -66,11 +68,22 @@ def font_file(name: str) -> Path | None:
     return None
 
 
+def every_case(s: str) -> str:
+    """The text of a template with every plural/select case kept and placeholder names dropped."""
+    def walk(segs):
+        return "".join(seg[1] if seg[0] == "text" else "" if seg[0] == "var" else
+                       "".join(walk(body) for _, body in seg[3]) for seg in segs)
+    try:
+        return walk(locfmt.parse(s))
+    except ValueError:
+        return re.sub(r"\{[^{}]*\}", "", s)
+
+
 def needed(strings: list) -> Counter:
     """Character use counts of the translations, markup and whitespace stripped."""
     c = Counter()
     for s in strings:
-        s = re.sub(r"<[^>]*>|&#?\w+;|\{[^{}]*\}|%\w+%", "", s)
+        s = re.sub(r"<[^>]*>|&#?\w+;|%\w+%", "", every_case(s))
         c.update(ch for ch in s if not ch.isspace())
     return c
 

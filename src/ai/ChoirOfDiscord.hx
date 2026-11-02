@@ -61,6 +61,12 @@ class ChoirOfDiscord extends AI
     }
 
 // check if this AI should use "it" pronouns
+  public override function getLocNoun(): _LocNoun
+    {
+      return getTypeLocNoun();
+    }
+
+// not a person: neuter pronouns
   public override function isIt(): Bool
     {
       return true;

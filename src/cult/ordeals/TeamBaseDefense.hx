@@ -8,6 +8,8 @@ import game.Game;
 
 class TeamBaseDefense extends ProfaneOrdeal
 {
+  // the note, also on load: a 1.0 save holds it as colored English, which no lookup finds
+  static var NOTE = N('The team attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.');
   public function new(g: Game)
     {
       super(g);
@@ -25,14 +27,14 @@ class TeamBaseDefense extends ProfaneOrdeal
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
-      note = N('The team attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.');
+      note = NOTE;
       timer = 12;
     }
 
 // the note, in the alert color
   public override function getNote(): String
     {
-      return Const.col('alert', Loc.tr(note));
+      return Const.col('alert', Loc.tr(NOTE));
     }
 
 // syncs base status timer after central profane timer tick

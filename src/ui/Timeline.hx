@@ -133,7 +133,7 @@ class Timeline extends UIWindow
                 buf.add("<div class='timeline-row" + (npc.nameKnown ? "" : " redacted") + "'>");
                 buf.add(npc.jobKnown ? "<span class='timeline-photo'>" + UISvg.face() + "</span>" : "<span class='timeline-photo none'></span>");
                 buf.add("<span class='timeline-pname'>" + (npc.nameKnown ? npc.name : "<span class='timeline-bar'></span>") + "</span>");
-                buf.add("<span class='timeline-job'>" + (npc.jobKnown ? Loc.tr(npc.job) : "?") + "</span>");
+                buf.add("<span class='timeline-job'>" + (npc.jobKnown ? Loc.form(npc.getJobLocNoun(), '') : "?") + "</span>");
                 buf.add("<span class='timeline-pxy'>" + (npc.areaKnown ? "(" + npc.area.x + "," + npc.area.y + ")" : "(?,?)") + "</span>");
                 if (!npc.statusKnown)
                   buf.add("<span class='timeline-status unknown'>" + T('status ?') + "</span>");

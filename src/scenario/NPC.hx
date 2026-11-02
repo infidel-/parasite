@@ -142,4 +142,14 @@ class NPC extends _SaveObject
         ', statusKnown: ' + statusKnown +
         ', event: ' + (event != null ? event.id : 'null') + ' }';
     }
+
+// the job title as a noun in this NPC's gender, for a window that shows it on its own
+  public function getJobLocNoun(): _LocNoun
+    {
+      return {
+        key: job,
+        kind: LOC_NOUN,
+        gender: (isMale ? 'm' : 'f'),
+      };
+    }
 }

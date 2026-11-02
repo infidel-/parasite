@@ -166,7 +166,7 @@ class RecruitFollower extends Ordeal
           actions.push({
             id: 'recruit',
             type: ACTION_CULT,
-            name: Const.capitalize(type),
+            name: _CultPower.namesCap[_CultPower.names.indexOf(type)],
             energy: 0,
             obj: { type: type }
           });

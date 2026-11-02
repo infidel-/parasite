@@ -5,10 +5,10 @@ typedef WeaponInfo = {
   var skill: _Skill;
   var minDamage: Int;
   var maxDamage: Int;
-  var textMiss: String; // T() template: {attacker:The} misses {target}
-  var textMissYou: String; // T() template: {attacker:The} misses you (the parasite: French puts the pronoun before the verb)
-  var textHit: String; // T() template: {attacker:The} hits {target} for {damage}
-  var textHitYou: String; // T() template: {attacker:The} hits you for {damage}
+  @:optional var textMiss: String; // T() template: {attacker:The} misses {target}
+  @:optional var textMissYou: String; // T() template: {attacker:The} misses you (the parasite: French puts the pronoun before the verb)
+  @:optional var textHit: String; // T() template: {attacker:The} hits {target} for {damage}
+  @:optional var textHitYou: String; // T() template: {attacker:The} hits you for {damage}
   @:optional var textStun: String; // T() template, stun weapons: {attacker:The} stuns {target} for {rounds}
   @:optional var verb1: String; // 1.0 mod API, instead of the text* templates: 'rip' (English only)
   @:optional var verb2: String; // 1.0 mod API, instead of the text* templates: 'rips' (English only)

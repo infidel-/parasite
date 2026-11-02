@@ -18,6 +18,8 @@ class Loc
   static var file: _LocFile; // the parsed lang file (font lists etc.), null for en/pseudo
   static var missing: Map<String, Int>; // tr() keys with no translation, with hit counts
   static var pluralRules: js.lib.intl.PluralRules; // plural categories of the active language
+  static var pluralRulesEn: js.lib.intl.PluralRules; // English ones, for an untranslated template
+  static var untranslated: Bool; // fmt is rendering an English template tr() found no translation for
 
   // native names for the language select
   public static var NAMES = [
@@ -80,14 +82,29 @@ class Loc
       if (s == null ||
           s.indexOf('{') < 0)
         return s;
+      // an English template with no translation (newer than the table, a mod without a lang file)
+      // reads as English throughout: article forms, gender selects and plurals by English rules
+      var was = untranslated;
+      untranslated = (missing != null &&
+        missing.exists(s));
       // a lang file is external data: a broken template shows as is instead of throwing
       try {
-        return render(parse(s), args, null);
+        var out = render(parse(s), args, null);
+        untranslated = was;
+        return out;
       }
       catch (e: Dynamic)
         {
+          untranslated = was;
           return s;
         }
+    }
+
+// one noun in a form outside any template ('' bare, 'def', 'the', …; a capitalised form name
+// capitalises it): a name or a job a window shows on its own, in the entity's gender
+  public static function form(n: _LocNoun, f: String): String
+    {
+      return value(n, f);
     }
 
 // a common noun from its English key (an N() item, object or creature name) for a {x:form} placeholder,
@@ -251,13 +268,18 @@ class Loc
     {
       if (pluralRules == null)
         pluralRules = new js.lib.intl.PluralRules(code == 'pseudo' ? 'en' : code);
+      if (pluralRulesEn == null)
+        pluralRulesEn = new js.lib.intl.PluralRules('en');
       // the extern types the argument Int; Intl takes any number (1.5 is 'other' in English)
-      return '' + pluralRules.select(cast v);
+      return '' + (untranslated ? pluralRulesEn : pluralRules).select(cast v);
     }
 
 // select key: a noun's grammatical gender, else the value itself
   static function selectKey(v: Dynamic): String
     {
+      // a colored value selects by what it wraps
+      if (Std.isOfType(v, LocColored))
+        return selectKey((v: LocColored).value);
       var n = noun(v);
       if (n != null)
         return genderOf(n);
@@ -302,7 +324,7 @@ class Loc
       var s = switch (code)
         {
           case 'en', 'pseudo': english(n, f, false);
-          case _ if (f == 'the'): english(n, f, true);
+          case _ if (f == 'the' || untranslated): english(n, f, true);
           case 'fr': french(n, f);
           default: generic(n, f);
         };
@@ -380,7 +402,8 @@ class Loc
     {
       if (n.kind != LOC_NOUN ||
           code == 'en' ||
-          code == 'pseudo')
+          code == 'pseudo' ||
+          untranslated)
         return n.gender;
       var e = entry(n);
       return ((n.gender == 'f' && e.fs != null) ? 'f' : e.g);
@@ -447,7 +470,7 @@ class Loc
           var end = (close != null ? s.indexOf(close, i + 1) : -1);
           // keep a tag, an entity (&rarr;) or a %token% whole
           if (end > i &&
-              (c == '<' || end - i < 12))
+              (c == '<' || end - i < 32))
             {
               buf.add(s.substring(i, end + 1));
               i = end + 1;

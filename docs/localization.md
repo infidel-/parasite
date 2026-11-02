@@ -143,10 +143,18 @@ translation of the key.
   SDK page: `parasite-mod-sdk/docs/12-localization.md`; example: `examples/testmod/lang/fr.json`.
 - `extract.py --root <moddir>` lists a mod's `Loc.tr('…')` literals (printed, nothing written).
 - An untranslated template in another language (a mod with no lang file, a string newer than the
-  table) renders as plain English, nouns included: `{x:the}` is a form no translation uses, so it
-  marks the template as English. `translate.py` rejects a translation that keeps `{x:the}`/`{x:The}`.
-- 1.0 mod API kept working: bare-predicate logs (see above) and weapons with only `verb1`/`verb2`
-  (`CommonLogic.legacyWeaponText` builds English templates from them once).
+  table) renders as plain English throughout: `fmt` knows `tr()` found no translation for it, so
+  every `{x:form}` takes the English form (`{x:a}` is "a/an", never the French à), a select goes by
+  the natural gender and plurals by English rules. `translate.py` rejects a translation that keeps
+  `{x:the}`/`{x:The}`.
+- A name or job a window shows on its own goes through `Loc.form(noun, form)` with the entity's
+  gendered noun (`AIData.getTypeLocNoun()`, `getJobLocNoun()`, `NPC.getJobLocNoun()`), never
+  `Loc.tr(ai.job)`: the bare string is the masculine form, and a woman would read « policier ».
+- A colored value (`Loc.colored`) still drives a select by what it wraps; a `Const.col` span does
+  not (it is a string, so the select falls to `other`).
+- 1.0 mod API kept working: bare-predicate logs (`AIData.log`, `Cult.log`/`logNoDot`,
+  `Attacker.log`; see above) and weapons with only `verb1`/`verb2` (the `text*` fields are optional;
+  `CommonLogic.legacyWeaponText` builds English templates from the verbs once).
 
 ## Fonts
 
@@ -179,7 +187,8 @@ translation of the key.
   `loc: N strings (+a -b since last build) · fr: x new (y changed), z removed`. That line is the
   notification that a string changed and needs translating.
 - `make steam-upload` runs `extract.py --strict`: it fails, naming up to 30 untranslated strings per
-  language, unless `allow-stale=1`.
+  language, or noun keys missing from `loc/nouns-<lang>.json` (run `translate.py nouns`), unless
+  `allow-stale=1`.
 - Console (debug): `loc` (current + available), `loc <code>`, `loc pseudo` (accented, +30%
   length, `⟦…⟧`: any plain English left on screen is a string that skipped the markers, and
   overflow shows), `loc missing` (strings shown without a translation this session).

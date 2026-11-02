@@ -14800,8 +14800,8 @@
    "s": "Trade rites are sealed at the moment.",
    "kind": "T",
    "loc": [
-    "src/cult/Cult.hx:980",
-    "src/cult/Cult.hx:1012",
+    "src/cult/Cult.hx:987",
+    "src/cult/Cult.hx:1019",
     "src/ui/CultBazaar.hx:323",
     "src/ui/CultBazaar.hx:556"
    ],
@@ -14813,7 +14813,7 @@
    "s": "Not enough money for trade.",
    "kind": "T",
    "loc": [
-    "src/cult/Cult.hx:987"
+    "src/cult/Cult.hx:994"
    ],
    "vars": [],
    "where": "Cult.trade",
@@ -14823,7 +14823,7 @@
    "s": "{cult} trades {cost} for {gain} {power} power.",
    "kind": "T",
    "loc": [
-    "src/cult/Cult.hx:998"
+    "src/cult/Cult.hx:1005"
    ],
    "vars": [
     "cult",
@@ -14839,7 +14839,7 @@
    "s": "Not enough {resource} resources for trade.",
    "kind": "T",
    "loc": [
-    "src/cult/Cult.hx:1020"
+    "src/cult/Cult.hx:1027"
    ],
    "vars": [
     "resource"
@@ -14852,7 +14852,7 @@
    "s": "{cult} trades {cost} {from} for {gain} {power} power.",
    "kind": "T",
    "loc": [
-    "src/cult/Cult.hx:1031"
+    "src/cult/Cult.hx:1038"
    ],
    "vars": [
     "cult",
@@ -14869,7 +14869,7 @@
    "s": "This area is a mission area for {mission}.",
    "kind": "T",
    "loc": [
-    "src/cult/Cult.hx:1050"
+    "src/cult/Cult.hx:1057"
    ],
    "vars": [
     "mission"
@@ -14881,7 +14881,7 @@
    "s": "{cult} gains a new burden: {effect}.",
    "kind": "T",
    "loc": [
-    "src/cult/Cult.hx:1172"
+    "src/cult/Cult.hx:1179"
    ],
    "vars": [
     "cult",
@@ -21234,30 +21234,30 @@
    "field": "logsg"
   },
   {
+   "s": "If the timer expires, Cor Nefandum is destroyed and all will be lost.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/BaseDefense.hx:12"
+   ],
+   "vars": [],
+   "where": "BaseDefense.NOTE",
+   "field": "NOTE"
+  },
+  {
    "s": "Defend Cor Nefandum",
    "kind": "N",
    "loc": [
-    "src/cult/ordeals/BaseDefense.hx:27"
+    "src/cult/ordeals/BaseDefense.hx:29"
    ],
    "vars": [],
    "where": "BaseDefense.init",
    "field": "name"
   },
   {
-   "s": "If the timer expires, Cor Nefandum is destroyed and all will be lost.",
-   "kind": "N",
-   "loc": [
-    "src/cult/ordeals/BaseDefense.hx:31"
-   ],
-   "vars": [],
-   "where": "BaseDefense.init",
-   "field": "note"
-  },
-  {
    "s": "{rival} attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.",
    "kind": "T",
    "loc": [
-    "src/cult/ordeals/BaseDefense.hx:50"
+    "src/cult/ordeals/BaseDefense.hx:52"
    ],
    "vars": [
     "rival"
@@ -21696,24 +21696,24 @@
    "field": "name"
   },
   {
+   "s": "The team attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/TeamBaseDefense.hx:12"
+   ],
+   "vars": [],
+   "where": "TeamBaseDefense.NOTE",
+   "field": "NOTE"
+  },
+  {
    "s": "Defend Cor Nefandum (The Group)",
    "kind": "N",
    "loc": [
-    "src/cult/ordeals/TeamBaseDefense.hx:24"
+    "src/cult/ordeals/TeamBaseDefense.hx:26"
    ],
    "vars": [],
    "where": "TeamBaseDefense.init",
    "field": "name"
-  },
-  {
-   "s": "The team attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.",
-   "kind": "N",
-   "loc": [
-    "src/cult/ordeals/TeamBaseDefense.hx:28"
-   ],
-   "vars": [],
-   "where": "TeamBaseDefense.init",
-   "field": "note"
   },
   {
    "s": "Elevate the faithful",
@@ -24878,6 +24878,15 @@
    "vars": [],
    "where": "Game.init",
    "field": "scen"
+  },
+  {
+   "s": "Revulsion is a striking color in my palette.",
+   "kind": "T",
+   "loc": [
+    "src/game/Game.hx:126"
+   ],
+   "vars": [],
+   "where": "Game.init"
   },
   {
    "s": "You are alone. You are scared. You need to find a host or you will die soon.",
@@ -28634,58 +28643,6 @@
    "field": "log"
   },
   {
-   "s": "Hello.",
-   "kind": "T",
-   "loc": [
-    "src/l10n/LocTest.hx:25",
-    "src/l10n/LocTest.hx:74"
-   ],
-   "vars": [],
-   "where": "LocTest.english"
-  },
-  {
-   "s": "{s:The} hesitates.",
-   "kind": "T",
-   "loc": [
-    "src/l10n/LocTest.hx:75"
-   ],
-   "vars": [
-    "s"
-   ],
-   "where": "LocTest.french"
-  },
-  {
-   "s": "Not translated.",
-   "kind": "T",
-   "loc": [
-    "src/l10n/LocTest.hx:99"
-   ],
-   "vars": [],
-   "where": "LocTest.french"
-  },
-  {
-   "s": "Hello {n} <b class=x>bold</b> &rarr; %name%",
-   "kind": "T",
-   "loc": [
-    "src/l10n/LocTest.hx:108"
-   ],
-   "vars": [
-    "n"
-   ],
-   "where": "LocTest.pseudo"
-  },
-  {
-   "s": "{n, plural, one{# turn} other{# turns}}",
-   "kind": "T",
-   "loc": [
-    "src/l10n/LocTest.hx:117"
-   ],
-   "vars": [
-    "n"
-   ],
-   "where": "LocTest.pseudo"
-  },
-  {
    "s": "unknown object",
    "kind": "N",
    "loc": [
@@ -30253,6 +30210,36 @@
    "field": "text"
   },
   {
+   "s": "spaceship",
+   "kind": "N",
+   "loc": [
+    "src/scenario/GoalsAlienCrashLanding.hx:545",
+    "src/scenario/GoalsAlienCrashLanding.hx:836"
+   ],
+   "vars": [],
+   "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject"
+  },
+  {
+   "s": "console",
+   "kind": "N",
+   "loc": [
+    "src/scenario/GoalsAlienCrashLanding.hx:552"
+   ],
+   "vars": [],
+   "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject"
+  },
+  {
+   "s": "slot",
+   "kind": "N",
+   "loc": [
+    "src/scenario/GoalsAlienCrashLanding.hx:553",
+    "src/scenario/GoalsAlienCrashLanding.hx:554",
+    "src/scenario/GoalsAlienCrashLanding.hx:555"
+   ],
+   "vars": [],
+   "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject"
+  },
+  {
    "s": "You have found out everything about {name} (deceased).",
    "kind": "T",
    "loc": [
@@ -30864,7 +30851,7 @@
    "kind": "N",
    "loc": [
     "src/scenario/ScenarioSandbox.hx:13",
-    "src/ui/NewGame.hx:55"
+    "src/ui/NewGame.hx:57"
    ],
    "vars": [],
    "where": "ScenarioSandbox.new",
@@ -32851,10 +32838,22 @@
    "field": "name"
   },
   {
-   "s": "redacted",
+   "s": "{redacted} Parasite",
    "kind": "T",
    "loc": [
     "src/ui/NewGame.hx:46"
+   ],
+   "vars": [
+    "redacted"
+   ],
+   "where": "NewGame.new",
+   "field": "tag"
+  },
+  {
+   "s": "redacted",
+   "kind": "T",
+   "loc": [
+    "src/ui/NewGame.hx:47"
    ],
    "vars": [],
    "where": "NewGame.new"
@@ -32863,18 +32862,8 @@
    "s": "REDACTED",
    "kind": "T",
    "loc": [
-    "src/ui/NewGame.hx:46",
+    "src/ui/NewGame.hx:47",
     "src/ui/Timeline.hx:185"
-   ],
-   "vars": [],
-   "where": "NewGame.new"
-  },
-  {
-   "s": "Parasite",
-   "kind": "T",
-   "loc": [
-    "src/ui/NewGame.hx:46",
-    "src/ui/hud/InfoHud.hx:97"
    ],
    "vars": [],
    "where": "NewGame.new"
@@ -32883,7 +32872,7 @@
    "s": "Something fell from the dark between stars. It wakes in the gut of the city &mdash; hungry, hunted, learning to wear men like coats.",
    "kind": "T",
    "loc": [
-    "src/ui/NewGame.hx:51"
+    "src/ui/NewGame.hx:53"
    ],
    "vars": [],
    "where": "NewGame.new",
@@ -32893,7 +32882,7 @@
    "s": "Open World",
    "kind": "T",
    "loc": [
-    "src/ui/NewGame.hx:56"
+    "src/ui/NewGame.hx:58"
    ],
    "vars": [],
    "where": "NewGame.new",
@@ -32903,7 +32892,7 @@
    "s": "No script. No leash. The whole city to infest at your own pace &mdash; every alley, every host, every quiet experiment.",
    "kind": "T",
    "loc": [
-    "src/ui/NewGame.hx:61"
+    "src/ui/NewGame.hx:63"
    ],
    "vars": [],
    "where": "NewGame.new",
@@ -32913,7 +32902,7 @@
    "s": "SELECT SCENARIO",
    "kind": "T",
    "loc": [
-    "src/ui/NewGame.hx:70"
+    "src/ui/NewGame.hx:72"
    ],
    "vars": [],
    "where": "NewGame.new",
@@ -32923,7 +32912,7 @@
    "s": "START",
    "kind": "T",
    "loc": [
-    "src/ui/NewGame.hx:106"
+    "src/ui/NewGame.hx:108"
    ],
    "vars": [],
    "where": "NewGame.new",
@@ -34356,6 +34345,16 @@
    ],
    "vars": [],
    "where": "InfoHud.new"
+  },
+  {
+   "s": "Parasite",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/InfoHud.hx:97"
+   ],
+   "vars": [],
+   "where": "InfoHud.new",
+   "field": "textContent"
   },
   {
    "s": "Health",

@@ -8,6 +8,8 @@ import game.Game;
 
 class BaseDefense extends ProfaneOrdeal
 {
+  // the note, also on load: a 1.0 save holds it as colored English, which no lookup finds
+  static var NOTE = N('If the timer expires, Cor Nefandum is destroyed and all will be lost.');
   public var cultID: Int;
 
   public function new(g: Game, ?cultID: Int = -1)
@@ -28,7 +30,7 @@ class BaseDefense extends ProfaneOrdeal
       requiredMembers = 0;
       requiredMemberLevels = 0;
       actions = 0;
-      note = N('If the timer expires, Cor Nefandum is destroyed and all will be lost.');
+      note = NOTE;
       timer = 12;
       cultID = -1;
     }
@@ -48,7 +50,7 @@ class BaseDefense extends ProfaneOrdeal
       var rival = game.getCultByID(cultID);
       return Const.col('alert', rival != null ?
         T('{rival} attacks Cor Nefandum. If the timer expires, Cor Nefandum is destroyed and all will be lost.', { rival: rival.customName() }) :
-        Loc.tr(note));
+        Loc.tr(NOTE));
     }
 
 // syncs base status timer after central profane timer tick

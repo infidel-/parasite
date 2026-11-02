@@ -542,17 +542,17 @@ class GoalsAlienCrashLanding
       // the ship stands ON the pad: unwalkable concrete, and an infoID with no row in
       // eventObjectActions, so it offers nothing and never needs a cell the player can reach.
       // the console owns the startup action
-      var ship = area.addEventObject(shed.x, shed.y, 'spaceship', 'spaceshipStudyShip');
+      var ship = area.addEventObject(shed.x, shed.y, N('spaceship'), 'spaceshipStudyShip');
       // console and slots on the pad's own four corners, standing on the same unwalkable concrete
       // the ship does. THE CELLS ARE STILL TESTED, not computed — one that lands on a fitting or
       // against a wall would be unreachable rather than merely ugly — but the test is now "empty,
       // with something walkable beside it" rather than "standable": objects.EventObject answers
       // canActivateNear, so these are worked from the ring cell facing them
       var apron = apronCells(area, shed);
-      var console = area.addEventObject(apron[0].x, apron[0].y, 'console', 'spaceshipStudyStart');
-      var slot1 = area.addEventObject(apron[1].x, apron[1].y, 'slot', 'spaceshipStudySlot');
-      var slot2 = area.addEventObject(apron[2].x, apron[2].y, 'slot', 'spaceshipStudySlot');
-      var slot3 = area.addEventObject(apron[3].x, apron[3].y, 'slot', 'spaceshipStudySlot');
+      var console = area.addEventObject(apron[0].x, apron[0].y, N('console'), 'spaceshipStudyStart');
+      var slot1 = area.addEventObject(apron[1].x, apron[1].y, N('slot'), 'spaceshipStudySlot');
+      var slot2 = area.addEventObject(apron[2].x, apron[2].y, N('slot'), 'spaceshipStudySlot');
+      var slot3 = area.addEventObject(apron[3].x, apron[3].y, N('slot'), 'spaceshipStudySlot');
       // parts
       var parts = [];
       var languageID = getLanguageID(game);
@@ -833,7 +833,7 @@ class GoalsAlienCrashLanding
       // render.world.ObjModels)
       paintShipFootprint(newArea, loc.x, loc.y, Const.TILE_GRASS_UNWALKABLE);
       // event object
-      var obj = newArea.addEventObject(loc.x, loc.y, 'spaceship', 'spaceshipStart');
+      var obj = newArea.addEventObject(loc.x, loc.y, N('spaceship'), 'spaceshipStart');
       // clear tile just in case there is a tree or a rock
       newCells[loc.x][loc.y] = Const.TILE_GRASS;
       // teleport

@@ -889,6 +889,10 @@
   "s": "curateur de la conscience",
   "fs": "curatrice de la conscience"
  },
+ "console": {
+  "g": "f",
+  "s": "console"
+ },
  "conspirologist": {
   "g": "m",
   "s": "conspirationniste",
@@ -3360,6 +3364,10 @@
   "g": "m",
   "s": "mucus"
  },
+ "slot": {
+  "g": "m",
+  "s": "emplacement"
+ },
  "small blade": {
   "g": "f",
   "s": "petite lame"
@@ -3421,6 +3429,10 @@
   "g": "m",
   "s": "artiste solo",
   "fs": "artiste solo"
+ },
+ "spaceship": {
+  "g": "m",
+  "s": "vaisseau spatial"
  },
  "special agent": {
   "g": "m",

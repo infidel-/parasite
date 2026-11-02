@@ -56,7 +56,7 @@ class AreaTooltip extends BeamTooltip
       var buf = new StringBuf();
       // header: name + optional cultist mark
       buf.add('<div class="area-tip-head"><span class="area-tip-name">' +
-        (ai.isNameKnown ? ai.getNameCapped() : Const.capitalize(Loc.tr(ai.name.unknown))) + '</span>');
+        (ai.isNameKnown && ai.isHuman ? ai.getNameCapped() : Loc.form(ai.getTypeLocNoun(), 'Bare')) + '</span>');
       if (ai.isCultist)
         buf.add('<span class="area-tip-cultmark">' + Icon.cultist + '</span>');
       buf.add('</div>');
@@ -65,7 +65,7 @@ class AreaTooltip extends BeamTooltip
       if (ai.isCultist)
         buf.add('<div class="area-tip-sub">' + game.getCultByID(ai.cultID).Name() + '</div>');
       if (!ai.isIt() && ai.isJobKnown)
-        buf.add('<div class="area-tip-row"><span class="area-tip-rk">' + T('job') + '</span>' + Loc.tr(ai.job) + '</div>');
+        buf.add('<div class="area-tip-row"><span class="area-tip-rk">' + T('job') + '</span>' + Loc.form(ai.getJobLocNoun(), '') + '</div>');
 
       // attribute pills
       if (ai.isAttrsKnown)

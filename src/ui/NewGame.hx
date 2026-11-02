@@ -43,7 +43,9 @@ class NewGame extends UIWindow
         {
           id: 'alien',
           name: T('Scenario A'),
-          tag: '<span class="newgame-redact" aria-label="' + T('redacted') + '">' + T('REDACTED') + '</span> ' + T('Parasite'),
+          tag: T('{redacted} Parasite', {
+            redacted: '<span class="newgame-redact" aria-label="' + T('redacted') + '">' + T('REDACTED') + '</span>',
+          }),
           accent: '#a45fe0',
           img: './img/scenario/a.jpg',
           filter: 'url(#msgEngram)',

@@ -203,7 +203,14 @@ class Attacker
 // writes attacker log entry (a whole T() template with {attacker} in it)
   public function log(s: String, ?col: _TextColor = null)
     {
-      game.log(s, col);
+      if (ai != null)
+        {
+          ai.log(s, col);
+          return;
+        }
+      // 1.0 mod API: a bare predicate gets the object in front (English only)
+      var c = s.charAt(0);
+      game.log((c == ' ' || (c >= 'a' && c <= 'z')) ? Const.capitalize(theName()) + ' ' + s : s, col);
     }
 
 // the noun l10n.Loc renders for an {attacker:form} placeholder

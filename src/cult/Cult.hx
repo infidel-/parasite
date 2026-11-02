@@ -797,6 +797,13 @@ class Cult extends _SaveObject
         game.log(Const.smallgray(isPredicate(text) ? Name() + ' ' + text : text));
     }
 
+// 1.0 mod API: the cult name in front of a predicate, no full stop added
+  public function logNoDot(text: String)
+    {
+      if (isPlayer)
+        game.log(isPredicate(text) ? Name() + ' ' + text : text);
+    }
+
 // 1.0 mod API: is this a bare predicate instead of a whole sentence?
   static function isPredicate(text: String): Bool
     {
@@ -1031,7 +1038,7 @@ class Cult extends _SaveObject
       log(T('{cult} trades {cost} {from} for {gain} {power} power.', {
         cult: this,
         cost: Const.col('cult-power', cost),
-        from: Const.col('cult-power', from),
+        from: Loc.colored('cult-power', from),
         gain: Const.col('cult-power', 1),
         power: to,
       }));

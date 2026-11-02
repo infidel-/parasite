@@ -210,7 +210,8 @@ def build(root: str, rel_base: str) -> tuple:
     for dirpath, dirnames, filenames in os.walk(root):
         dirnames.sort()
         for f in sorted(filenames):
-            if not f.endswith(".hx"):
+            # LocTest's literals feed its own fake table, they are not game text
+            if not f.endswith(".hx") or f == "LocTest.hx":
                 continue
             path = os.path.join(dirpath, f)
             rel = os.path.relpath(path, rel_base)
@@ -288,6 +289,14 @@ def check(entries: list, before: list | None, strict: bool, list_lang: str | Non
             stale = stale or bool(d["new"])
         else:
             parts.append(f"{code}: up to date")
+        # the noun table too: a translated noun key with no entry ships as a bare masculine noun
+        if strict:
+            import translate
+            nouns = load_json(os.path.join(os.path.dirname(CATALOG), f"nouns-{code}.json")) or {}
+            lacking = [e for e in translate.noun_keys(entries) if e["s"] not in nouns]
+            for e in lacking[:30]:
+                print(f"  {code} noun missing  {e['loc'][0]}: {e['s']} (translate.py nouns --lang {code})")
+            stale = stale or bool(lacking)
         if strict and d["new"] and code != list_lang:
             for e in d["new"][:30]:
                 print(f"  {code} untranslated  {e['loc'][0]}: {e['s'][:100]}")
