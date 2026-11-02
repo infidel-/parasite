@@ -8,19 +8,19 @@
    "where": "VenaArcanumWake.create",
    "field": "title",
    "kind": "T",
-   "t": "Veillée de Vena Arcanum",
+   "t": "Veillée de la Vena Arcanum",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Veillée de Vena Arcanum"
+     "t": "Veillée de la Vena Arcanum"
     },
     {
      "pass": 2,
      "t": null
     }
    ],
-   "doubt": "\"Wake\" is read as a vigil (« Veillée »), which fits the kneeling scene in 2. If the event is meant as an awakening of Vena Arcanum, use « Réveil de Vena Arcanum »."
+   "doubt": "« Wake » could mean a funeral vigil or an awakening. I chose « Veillée » because the scene is a kneeling vigil with prayers. Use « Éveil de la Vena Arcanum » if awakening was meant."
   },
   "a453607a9eab7660": {
    "s": "Sealed railyard infirmary glows with emergency lanterns as the newly ranked striker kneels beside a chilled Vena Arcanum cistern. Masked confessors murmur prayers through respirator hoods while trauma techs stitch synth sinew under blackout tarps. Only the inner circle watches the monitors flicker.",
@@ -30,12 +30,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une citerne réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules respiratoires pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le premier cercle regarde les moniteurs vaciller.",
+   "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une citerne réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules à respirateur pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le cercle intérieur regarde vaciller les moniteurs.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une citerne réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules respiratoires pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le premier cercle regarde les moniteurs vaciller."
+     "t": "L’infirmerie scellée de la gare de triage luit sous les lanternes de secours tandis que l’assaillant fraîchement promu s’agenouille près d’une citerne réfrigérée de Vena Arcanum. Des confesseurs masqués murmurent des prières à travers leurs cagoules à respirateur pendant que des techniciens en traumatologie suturent des tendons synthétiques sous des bâches occultantes. Seul le cercle intérieur regarde vaciller les moniteurs."
     },
     {
      "pass": 2,
@@ -51,12 +51,12 @@
    "where": "VenaArcanumWake.create",
    "field": "button",
    "kind": "T",
-   "t": "Banque pulsatile",
+   "t": "Réserve pulsante",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Banque pulsatile"
+     "t": "Réserve pulsante"
     },
     {
      "pass": 2,
@@ -72,12 +72,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Canalise les réserves de plasma sous pression vers l’escouade renforcée.",
+   "t": "Acheminez les réserves de plasma pressurisé vers l’escouade promue.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Canalise les réserves de plasma sous pression vers l’escouade renforcée."
+     "t": "Acheminez les réserves de plasma pressurisé vers l’escouade promue."
     },
     {
      "pass": 2,
@@ -114,12 +114,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Laisse les aumôniers synchroniser leurs électro-psaumes avec les routines de bouclier des drones.",
+   "t": "Laissez les aumôniers accorder leurs électro-psaumes aux routines de bouclier des drones.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Laisse les aumôniers synchroniser leurs électro-psaumes avec les routines de bouclier des drones."
+     "t": "Laissez les aumôniers accorder leurs électro-psaumes aux routines de bouclier des drones."
     },
     {
      "pass": 2,
@@ -156,12 +156,12 @@
    "where": "VenaArcanumWake.create",
    "field": "text",
    "kind": "T",
-   "t": "Marque au fer le combattant promu de sceaux médullaires qui lient la nouvelle doctrine.",
+   "t": "Marquez le combattant promu de sceaux de moelle qui lient la doctrine nouvelle.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Marque au fer le combattant promu de sceaux médullaires qui lient la nouvelle doctrine."
+     "t": "Marquez le combattant promu de sceaux de moelle qui lient la doctrine nouvelle."
     },
     {
      "pass": 2,
@@ -301,12 +301,12 @@
    ],
    "where": "Body.updateStats",
    "kind": "T",
-   "t": "Énergie dépensée par tour pour faire croître les caractéristiques corporelles",
+   "t": "Énergie dépensée par tour pendant la croissance des caractéristiques corporelles",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Énergie dépensée par tour pour faire croître les caractéristiques corporelles"
+     "t": "Énergie dépensée par tour pendant la croissance des caractéristiques corporelles"
     },
     {
      "pass": 2,
@@ -524,7 +524,7 @@
      "t": null
     }
    ],
-   "doubt": "\"unknown\" is also reused in several places. I used the masculine « inconnu » (emploi, attribut)."
+   "doubt": "« unknown » appears in 5 places. The masculine « inconnu » fails if one of them labels a feminine noun (job title, for example « profession »). Check where it is used."
   },
   "d08a4929f718717e": {
    "s": "SKILLS",
@@ -557,19 +557,19 @@
    ],
    "where": "Body.updateHost",
    "kind": "T",
-   "t": "néant",
+   "t": "aucun",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "néant"
+     "t": "aucun"
     },
     {
      "pass": 2,
      "t": null
     }
    ],
-   "doubt": "\"none\" is reused in 5 places (skills, traits, effects…) with different genders. I chose « néant » to avoid aucun/aucune agreement."
+   "doubt": "« none » appears in 5 places, including likely SKILLS (« compétences », feminine) and TRAITS/EFFECTS (masculine). The masculine « aucun » is the default but is wrong under COMPÉTENCES. Use « aucune » there, or a neutral « néant » everywhere, if the call sites can be split."
   },
   "298dc05d5a9552e0": {
    "s": "TRAITS",
@@ -723,12 +723,12 @@
    ],
    "where": "Body.updateFeatures",
    "kind": "T",
-   "t": "tous les emplacements sont occupés",
+   "t": "tous les emplacements sont pris",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "tous les emplacements sont occupés"
+     "t": "tous les emplacements sont pris"
     },
     {
      "pass": 2,
@@ -1016,19 +1016,18 @@
    "where": "Options.new",
    "field": "addOptSelect",
    "kind": "T",
-   "t": "Lumières des lampadaires",
+   "t": "Éclairage des lampes",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Lumières des lampadaires"
+     "t": "Éclairage des lampes"
     },
     {
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« lampadaires » assumes the setting means street lamps. If it also covers indoor lamps, « Lumières des lampes » is safer."
+   ]
   },
   "e1a2b65df8ed2838": {
    "s": "Brightness",
@@ -1059,12 +1058,12 @@
    "where": "Options.new",
    "field": "addOptToggle",
    "kind": "T",
-   "t": "Flou lumineux",
+   "t": "Bloom",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Flou lumineux"
+     "t": "Bloom"
     },
     {
      "pass": 2,
@@ -1269,12 +1268,12 @@
    "where": "Options.new",
    "field": "addOptSelect",
    "kind": "T",
-   "t": "Difficulté globale",
+   "t": "Difficulté générale",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Difficulté globale"
+     "t": "Difficulté générale"
     },
     {
      "pass": 2,
@@ -1419,12 +1418,12 @@
    ],
    "where": "Options.new",
    "kind": "T",
-   "t": "Nécessite une difficulté globale définie",
+   "t": "Nécessite une difficulté générale définie",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Nécessite une difficulté globale définie"
+     "t": "Nécessite une difficulté générale définie"
     },
     {
      "pass": 2,
@@ -1460,12 +1459,12 @@
    ],
    "where": "Options.new",
    "kind": "T",
-   "t": "Prend effet au prochain lancement",
+   "t": "S’applique au prochain lancement",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Prend effet au prochain lancement"
+     "t": "S’applique au prochain lancement"
     },
     {
      "pass": 2,
@@ -1549,11 +1548,11 @@
    "passes": [
     {
      "pass": 1,
-     "t": "Touches de déplacement pour portable (uiojklm,.)"
+     "t": "Touches de déplacement portable (uiojklm,.)"
     },
     {
      "pass": 2,
-     "t": null
+     "t": "Touches de déplacement pour portable (uiojklm,.)"
     }
    ]
   },
@@ -1631,18 +1630,19 @@
     "lang"
    ],
    "kind": "T",
-   "t": "Changer la langue pour {lang} ?",
+   "t": "Passer la langue en {lang} ?",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Changer la langue pour {lang} ?"
+     "t": "Passer la langue en {lang} ?"
     },
     {
      "pass": 2,
      "t": null
     }
-   ]
+   ],
+   "doubt": "Whether « Passer la langue en {lang} ? » reads well depends on the form of {lang}. If it is the language's native name (« English », « Русский »), a neutral wording like « Changer la langue pour {lang} ? » may suit better."
   },
   "1cda5d47379ca3bc": {
    "s": "The game reloads; a game in progress is autosaved first.",
@@ -1652,12 +1652,12 @@
    "where": "Options.setLang",
    "field": "sub",
    "kind": "T",
-   "t": "Le jeu redémarre ; une partie en cours est d’abord sauvegardée automatiquement.",
+   "t": "Le jeu se recharge ; une partie en cours est d’abord sauvegardée automatiquement.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Le jeu redémarre ; une partie en cours est d’abord sauvegardée automatiquement."
+     "t": "Le jeu se recharge ; une partie en cours est d’abord sauvegardée automatiquement."
     },
     {
      "pass": 2,
@@ -1836,12 +1836,12 @@
    "where": "PediaConst.hostAttrNoteIntellect",
    "field": "hostAttrNoteIntellect",
    "kind": "T",
-   "t": "<li>Augmente l’efficacité de l’apprentissage des compétences et des connaissances sur la société</li>",
+   "t": "<li>Améliore l’apprentissage des compétences et des connaissances sur la société</li>",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "<li>Augmente l’efficacité de l’apprentissage des compétences et des connaissances sur la société</li>"
+     "t": "<li>Améliore l’apprentissage des compétences et des connaissances sur la société</li>"
     },
     {
      "pass": 2,
@@ -1856,19 +1856,19 @@
    ],
    "where": "PediaConst.hostAttrNoteIntellect",
    "kind": "T",
-   "t": "<li>Améliore l’entraînement des compétences quand tu consultes des hôtes conciliants</li>",
+   "t": "<li>Renforce l’entraînement des compétences lorsque vous consultez des hôtes conciliants</li>",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "<li>Améliore l’entraînement des compétences quand tu consultes des hôtes conciliants</li>"
+     "t": "<li>Renforce l’entraînement des compétences en consultant des hôtes conciliants</li>"
     },
     {
      "pass": 2,
-     "t": null
+     "t": "<li>Renforce l’entraînement des compétences lorsque vous consultez des hôtes conciliants</li>"
     }
    ],
-   "doubt": "\"agreeable hosts\" may mean hosts that have given consent, or simply cooperative hosts. I chose « hôtes conciliants », which is neutral. Switch to « hôtes consentants » if consent is the actual condition."
+   "doubt": "« agreeable hosts » probably means hosts who have given consent. « conciliants » is kept, but this could be checked against the game mechanic."
   },
   "b847c832143d2034": {
    "s": "<li>Measures host mental will</li>",
@@ -1878,19 +1878,18 @@
    "where": "PediaConst.hostAttrNotePsyche",
    "field": "hostAttrNotePsyche",
    "kind": "T",
-   "t": "<li>Mesure la volonté de l’hôte</li>",
+   "t": "<li>Mesure la volonté mentale de l’hôte</li>",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "<li>Mesure la volonté de l’hôte</li>"
+     "t": "<li>Mesure la volonté mentale de l’hôte</li>"
     },
     {
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "« mental will » is rendered as plain « volonté ». The word « mental » is implicit in French, so the string is kept as is."
+   ]
   },
   "274f3a7833c39639": {
    "s": "<li>Increases energy needed to probe brain</li>",
@@ -2002,19 +2001,18 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Utiliser le même hôte assez longtemps fait augmenter ton affinité avec lui. Quand l’affinité est assez élevée, tu peux entamer une conversation et obtenir le consentement de l’hôte. L’affinité finit par atteindre son maximum, et un message te l’annonce. Dans l’interface, une icône verte de deux anneaux entrelacés apparaît alors après le nom de l’hôte. En difficulté de conversation normale ou difficile, quitter un hôte à affinité maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si cet hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Si tu comptes perdre l’hôte, quitte-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Note aussi que les hôtes ayant à la fois une affinité maximale et donné leur consentement ne sont pas alertés en voyant le parasite. Tu peux même envahir de nouveau rapidement un tel hôte après l’avoir quitté.",
+   "t": "Utiliser le même hôte suffisamment longtemps augmente votre affinité avec lui. Lorsque l’affinité est assez élevée, la conversation et l’obtention du consentement de l’hôte deviennent possibles. L’affinité finit par atteindre son maximum, et un message vous en informe. Une fois l’affinité maximale atteinte, une icône verte représentant deux anneaux entrelacés apparaît après le nom de l’hôte dans l’interface. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si un tel hôte meurt pendant que le parasite s’y trouve, quelle qu’en soit la raison, la perte est bien plus élevée (5). Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez aussi que les hôtes dont l’affinité est maximale et qui ont donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez même vous réinstaller rapidement sur un tel hôte après l’avoir quitté.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Utiliser le même hôte assez longtemps fait augmenter ton affinité avec lui. Quand l’affinité est assez élevée, tu peux entamer une conversation et obtenir le consentement de l’hôte. L’affinité finit par atteindre son maximum, et un message te l’annonce. Dans l’interface, une icône verte de deux anneaux entrelacés apparaît alors après le nom de l’hôte. En difficulté de conversation normale ou difficile, quitter un hôte à affinité maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si cet hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Si tu comptes perdre l’hôte, quitte-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Note aussi que les hôtes ayant à la fois une affinité maximale et donné leur consentement ne sont pas alertés en voyant le parasite. Tu peux même envahir de nouveau rapidement un tel hôte après l’avoir quitté."
+     "t": "Utiliser le même hôte suffisamment longtemps augmente votre affinité avec lui. Lorsque l’affinité est assez élevée, la conversation et l’obtention du consentement de l’hôte deviennent possibles. L’affinité finit par atteindre son maximum, et un message vous en informe. Une fois l’affinité maximale atteinte, une icône verte représentant deux anneaux entrelacés apparaît après le nom de l’hôte dans l’interface. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette perte reste faible. En revanche, si un tel hôte meurt pendant que le parasite s’y trouve, quelle qu’en soit la raison, la perte est bien plus élevée (5). Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez aussi que les hôtes dont l’affinité est maximale et qui ont donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez même vous réinstaller rapidement sur un tel hôte après l’avoir quitté."
     },
     {
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"hop onto such a host again\": I used the glossary verb « envahir » (« envahir de nouveau ») rather than a colloquial verb."
+   ]
   },
   "8503d060505a291a": {
    "s": "Host: Assimilation",
@@ -2045,18 +2043,19 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Une fois que tu as fait évoluer la connaissance des microhabitats et que tu en as créé un, tu peux y installer l’excroissance d’habitat appelée cavité d’assimilation. Elle te permet d’assimiler les hôtes pour les rendre bien plus adaptés aux besoins du parasite. Concrètement, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, seulement quand tu effectues des actions. Tu as plus de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire.",
+   "t": "Une fois que vous avez fait évoluer la connaissance des microhabitats et en avez créé un, vous pouvez y installer une excroissance d’habitat : la cavité d’assimilation. Elle permet d’assimiler les hôtes pour les adapter bien mieux aux besoins du parasite. En termes de jeu, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, mais seulement lorsque vous effectuez des actions. Vous avez davantage de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire.",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "Une fois que tu as fait évoluer la connaissance des microhabitats et que tu en as créé un, tu peux y installer l’excroissance d’habitat appelée cavité d’assimilation. Elle te permet d’assimiler les hôtes pour les rendre bien plus adaptés aux besoins du parasite. Concrètement, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, seulement quand tu effectues des actions. Tu as plus de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire."
+     "t": "Une fois que vous avez évolué la connaissance des microhabitats et en avez créé un, vous pouvez y installer une excroissance d’habitat : la cavité d’assimilation. Elle permet d’assimiler les hôtes pour les adapter bien mieux aux besoins du parasite. En termes de jeu, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, mais seulement lorsque vous effectuez des actions. Vous avez davantage de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire."
     },
     {
      "pass": 2,
-     "t": null
+     "t": "Une fois que vous avez fait évoluer la connaissance des microhabitats et en avez créé un, vous pouvez y installer une excroissance d’habitat : la cavité d’assimilation. Elle permet d’assimiler les hôtes pour les adapter bien mieux aux besoins du parasite. En termes de jeu, les hôtes assimilés ne perdent pas d’énergie passivement en se déplaçant, mais seulement lorsque vous effectuez des actions. Vous avez davantage de contrôle sur eux après les avoir envahis. De plus, ils récupèrent de l’énergie dans un habitat si de l’énergie biominérale libre est disponible. Enfin, ils gagnent des emplacements supplémentaires de caractéristiques corporelles et d’inventaire."
     }
-   ]
+   ],
+   "doubt": "\"evolve the knowledge of microhabitats\": I wrote « avez évolué la connaissance », which mirrors the game's \"evolve\" wording but is non-standard French (\"évoluer\" is normally intransitive). If the glossary does not require \"évoluer\", I suggest « avez fait évoluer la connaissance » (the form used in 20) or « avez acquis par évolution la connaissance »."
   },
   "701733befe6a987d": {
    "s": "Host: Attributes",
@@ -2087,12 +2086,12 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "<p>Chaque hôte possède quatre attributs de base : force, constitution, intellect et psyché. Tu ne peux connaître les attributs d’un hôte qu’après avoir fait évoluer la sonde cérébrale jusqu’à son niveau maximal et l’avoir utilisée.</p>",
+   "t": "<p>Chaque hôte possède quatre attributs de base : force, constitution, intellect et psyché. Vous ne pouvez connaître les attributs d’un hôte qu’après avoir fait évoluer la sonde cérébrale jusqu’à son niveau maximal et l’avoir utilisée.</p>",
    "status": "done",
    "passes": [
     {
      "pass": 1,
-     "t": "<p>Chaque hôte possède quatre attributs de base : force, constitution, intellect et psyché. Tu ne peux connaître les attributs d’un hôte qu’après avoir fait évoluer la sonde cérébrale jusqu’à son niveau maximal et l’avoir utilisée.</p>"
+     "t": "<p>Chaque hôte possède quatre attributs de base : force, constitution, intellect et psyché. Vous ne pouvez connaître les attributs d’un hôte qu’après avoir fait évoluer la sonde cérébrale jusqu’à son niveau maximal et l’avoir utilisée.</p>"
     },
     {
      "pass": 2,
@@ -2203,8 +2202,8 @@
   }
  },
  "totals": {
-  "calls": 12,
-  "input": 103922,
-  "output": 24170
+  "calls": 16,
+  "input": 144046,
+  "output": 35285
  }
 }

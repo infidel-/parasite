@@ -1,18 +1,18 @@
 # STYLE SHEET — FRENCH (fr)
 
-Register (« tu ») confirmed by the developer. The glossary is corrected by hand after review.
+Register (« vous ») confirmed by the developer. The glossary is corrected by hand after review.
 
 ## Register and voice
 
-- **The player is addressed with « tu »** everywhere: log, interface, pedia, popups. Never
-  « vous » for the player (« vous » is fine for a group of NPCs).
-  "You slither through the drain." → « Tu te glisses dans la canalisation. »
-  Imperatives in the singular: « Choisis », « Appuie sur », not « Choisissez ».
+- **The player is addressed with « vous »** everywhere: log, interface, pedia, popups. Never
+  « tu » for the player.
+  "You slither through the drain." → « Vous vous glissez dans la canalisation. »
+  Imperatives in the « vous » form: « Choisissez », « Appuyez sur ».
 - **The parasite's goal messages** (first person, `const/Goals`, `messageComplete` and so on) stay
   in short, cold, practical first-person sentences. Use « je ». No exclamations, no softening.
   « Cet hôte est agité, je dois fuir pour éviter les ennuis. »
 - **Log lines:** present tense, compact, neutral. The game reports facts.
-- **Pedia:** plain, explanatory French, tu.
+- **Pedia:** plain, explanatory French, vous.
 - **Cult texts** (`cult/events`, ordeals): ritual and grotesque, biological imagery. Keep the
   rhythm, use precise anatomical words, no slang.
 - **UI labels and buttons:** infinitive or noun phrase, short, sentence case (capital on the first
@@ -42,10 +42,10 @@ NEVER write « le », « la », « l’ », « un », « du », « au » before 
 | `{x:a}` | au soldat / à la secrétaire / à l’agent / à Marc | to the |
 | `{x}` | soldat (bare) | bare noun |
 
-- Capitalize the form name at the start of a sentence: `{x:Def} hésite à t’attaquer.` →
+- Capitalize the form name at the start of a sentence: `{x:Def} hésite à vous attaquer.` →
   « Le soldat hésite… ». `{x:Indef}` gives « Un soldat… ».
-- People's names and phrases such as « ton hôte » never get an article: `{x:def}` gives just
-  « Marc » or « ton hôte ». The forms above stay correct for every case.
+- People's names and phrases such as « votre hôte » never get an article: `{x:def}` gives just
+  « Marc » or « votre hôte ». The forms above stay correct for every case.
 - English `{x:The}` → French `{x:Def}`, `{x:the}` → `{x:def}`, `{x:a}`/`{x:A}` → `{x:indef}`/`{x:Indef}`.
 - Agreement: anything that agrees with the noun goes in a select on that same placeholder:
   `{x:Def} est {x, select, f{blessée} other{blessé}}.` Pronouns too:
@@ -61,7 +61,7 @@ Write both cases, even where the English only needs `other`.
 | English | French | note |
 |---|---|---|
 | parasite | parasite (m) | |
-| host | hôte (m) | « ton hôte » for the player's host |
+| host | hôte (m) | « votre hôte » for the player's host |
 | invade (a host) | envahir | |
 | affinity | affinité | |
 | consent | consentement | |
