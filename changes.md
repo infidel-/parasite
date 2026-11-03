@@ -9,6 +9,7 @@
 
 ### Fixes
 - cult: a Stakeholder Flesh log line named the wrong choice
+- game: a host that dies on the region map (ovum, expiry) now leaves the cult and counts as a Group death
 - game: ship parts left behind or dropped no longer vanish, and lost ones reappear in the lab
 - ui: log lines read "1 turn" / "5 resources", use "a"/"an" correctly and no longer end in a double full stop
 

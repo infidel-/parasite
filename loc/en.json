@@ -599,7 +599,7 @@
    "s": "{ai:The} dies.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1043"
+    "src/ai/AI.hx:1056"
    ],
    "vars": [
     "ai"
@@ -611,8 +611,8 @@
    "s": "{ai:The} feels groggy and confused.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1145",
-    "src/ai/AI.hx:1147"
+    "src/ai/AI.hx:1158",
+    "src/ai/AI.hx:1160"
    ],
    "vars": [
     "ai"
@@ -623,7 +623,7 @@
    "s": "{ai:The} tears you away in panic. That hurt.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1149"
+    "src/ai/AI.hx:1162"
    ],
    "vars": [
     "ai"
@@ -634,7 +634,7 @@
    "s": "{ai:The} furiously tears you away. That hurt a lot.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1151"
+    "src/ai/AI.hx:1164"
    ],
    "vars": [
     "ai"
@@ -645,7 +645,7 @@
    "s": "{ai:The} stands still motionlessly.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1153"
+    "src/ai/AI.hx:1166"
    ],
    "vars": [
     "ai"
@@ -656,7 +656,7 @@
    "s": "{ai:The} feels unsure about their surroundings.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1156"
+    "src/ai/AI.hx:1169"
    ],
    "vars": [
     "ai"
@@ -667,7 +667,7 @@
    "s": "You feel you are deepening the affinity with this host.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1178"
+    "src/ai/AI.hx:1191"
    ],
    "vars": [],
    "where": "AI.gainAffinity",
@@ -677,7 +677,7 @@
    "s": "You have reached the full affinity with this host.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1191"
+    "src/ai/AI.hx:1204"
    ],
    "vars": [],
    "where": "AI.gainAffinity",

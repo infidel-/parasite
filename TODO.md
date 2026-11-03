@@ -18,3 +18,19 @@ Known open work, deferred on purpose. Remove an entry when it is done.
   player to click S-P-O-O-N in it. French keeps « OPTIONS », but a language whose title lacks those letters
   breaks both. Before such a language ships: build the letters from the translated title and translate the
   target word with it, or keep the English letters on purpose and say so in that pedia article.
+
+## Cult
+
+- **A host with a stale cult flag crashes on leaving an area.** `Cult.destroy()` clears `isCultist`
+  only on AIs in `game.area` and in habitats, so a host carried on the region map when its cult is
+  destroyed (a rival destroyed by an ordeal) keeps it. `AreaGame.removeAI` then calls
+  `Cult.onRemoveAI`, whose member lookup is null: `aidata.updateData` throws
+  (`src/cult/Cult.hx:216`). Seen live by flagging a non-member host by hand; `AI.dieRegion()` already
+  guards the same gap. Fix: clear the flag on `game.player.host` in `destroy()`, or guard there.
+
+## Mods
+
+- **`AI_DIE_PRE` / `AI_DIE` do not fire for a host that dies on the region map.** `AI.dieRegion()`
+  (ovum, expiry, degradation) runs the cult record and the `onDeath()` hook like `AI.die()`, but not
+  the mod events: their payload carries `area` and `entity`, and neither exists there. Needs either a
+  region-death event or a payload with both optional.

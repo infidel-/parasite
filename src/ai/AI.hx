@@ -1004,19 +1004,32 @@ public function show()
     }
 
 
-// AI death in the sewers
+// player host death on the region map (ovum, expiry, degradation): no area and no body, so only
+// the sound and the bookkeeping die() does after removeAI - the cult record, then the death hook
   public function dieRegion()
     {
       // dying sound
       var array = sounds['' + AI_STATE_DEAD];
-      if (array == null)
-        return;
-      var idx = Std.random(array.length);
-      var sound = array[idx];
-      var file = sound.file;
-      if (isHuman && !isMale && file.indexOf('male') == 0)
-        file = 'fe' + file;
-      game.scene.sounds.play(file);
+      if (array != null)
+        {
+          var sound = array[Std.random(array.length)];
+          var file = sound.file;
+          if (isHuman && !isMale && file.indexOf('male') == 0)
+            file = 'fe' + file;
+          game.scene.sounds.play(file);
+        }
+
+      // a cultist leaves its cult, as AreaGame.removeAI does for a death in an area. both records
+      // can be gone: Cult.destroy() clears the flag only on AIs in game.area and the habitats, so a
+      // host carried on the region map keeps it for a destroyed rival or a leaderless player cult
+      if (isCultist)
+        {
+          var cult = game.getCultByID(cultID);
+          var aidata = (cult != null ? cult.getMemberByID(id) : null);
+          if (aidata != null)
+            cult.onDeath(aidata);
+        }
+      onDeath(); // event hook
 
       // event stuff
       if (npc != null)
