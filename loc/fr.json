@@ -72439,11 +72439,32 @@
      "t": null
     }
    ]
+  },
+  "d06f681366a5752f": {
+   "s": "Spending enough time using the same host will result in raising affinity with it. When you reach high enough affinity, you will open the possibility of conversation and acquiring host consent. Eventually the affinity will reach maximum and you will receive a message about it. The host name will have a green icon of two interlocking rings after it in the HUD in case of the maximum affinity. On normal and hard conversation difficulty, leaving a host with full affinity will result in parasite losing some maximum energy (1 or 2). That reduction is small enough. However, if such host dies while the parasite is on it, for any reason, the loss will be much higher (5). Feeding the host to the ovum is the one exception: it costs no maximum energy. Therefore if you intend to lose the host, leave it before it dies. On easy conversation difficulty there is no loss at all. Note also, that hosts that have both full affinity and consent do not get alerted when they see the parasite. In fact, you can quickly hop onto such a host again after leaving them.",
+   "loc": [
+    "src/const/PediaConst.hx:54"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "text",
+   "kind": "T",
+   "t": "Passer suffisamment de temps dans le même hôte augmente votre affinité avec lui. Lorsque l’affinité est assez élevée, la conversation devient possible, de même que l’obtention du consentement de l’hôte. À terme, l’affinité atteint son maximum et vous recevez un message qui vous l’indique. Une fois l’affinité maximale atteinte, le nom de l’hôte est suivi dans l’interface d’une icône verte représentant deux anneaux entrelacés. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette réduction reste faible. En revanche, si un tel hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Seule exception : nourrir l’ovum avec l’hôte ne coûte aucune énergie maximale. Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez également que les hôtes dont l’affinité est maximale et qui ont donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez d’ailleurs remonter rapidement sur un tel hôte après l’avoir quitté.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Passer suffisamment de temps dans le même hôte augmente votre affinité avec lui. Lorsque l’affinité est assez élevée, la conversation devient possible, de même que l’obtention du consentement de l’hôte. À terme, l’affinité atteint son maximum et vous recevez un message qui vous l’indique. Une fois l’affinité maximale atteinte, le nom de l’hôte est suivi dans l’interface d’une icône verte représentant deux anneaux entrelacés. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette réduction reste faible. En revanche, si un tel hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Seule exception : nourrir l’ovum avec l’hôte ne coûte aucune énergie maximale. Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez également que les hôtes qui ont à la fois une affinité maximale et donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez d’ailleurs remonter rapidement sur un tel hôte après l’avoir quitté."
+    },
+    {
+     "pass": 2,
+     "t": "Passer suffisamment de temps dans le même hôte augmente votre affinité avec lui. Lorsque l’affinité est assez élevée, la conversation devient possible, de même que l’obtention du consentement de l’hôte. À terme, l’affinité atteint son maximum et vous recevez un message qui vous l’indique. Une fois l’affinité maximale atteinte, le nom de l’hôte est suivi dans l’interface d’une icône verte représentant deux anneaux entrelacés. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette réduction reste faible. En revanche, si un tel hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Seule exception : nourrir l’ovum avec l’hôte ne coûte aucune énergie maximale. Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez également que les hôtes dont l’affinité est maximale et qui ont donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez d’ailleurs remonter rapidement sur un tel hôte après l’avoir quitté."
+    }
+   ]
   }
  },
  "totals": {
-  "calls": 156,
-  "input": 1710595,
-  "output": 546090
+  "calls": 158,
+  "input": 1724692,
+  "output": 548351
  }
 }
