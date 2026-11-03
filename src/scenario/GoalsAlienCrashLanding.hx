@@ -231,6 +231,7 @@ class GoalsAlienCrashLanding
         addSpaceshipStudyObject(game);
 #end
       },
+      onEnter: respawnParts,
       onComplete: function (game, player) {
         game.goals.receive(SCENARIO_ALIEN_STEAL_SHIP);
       },
@@ -249,6 +250,7 @@ class GoalsAlienCrashLanding
       name: T('Relocate the ship'),
       note: T('You need to activate the ship and relocate it to a safer spot.'),
       noteFunc: alienShipLocationFunc,
+      onEnter: respawnParts,
 /*
       messageComplete:
         'After initiating the startup sequence you board the ship. ' +
@@ -553,41 +555,13 @@ class GoalsAlienCrashLanding
       var slot1 = area.addEventObject(apron[1].x, apron[1].y, N('slot'), 'spaceshipStudySlot');
       var slot2 = area.addEventObject(apron[2].x, apron[2].y, N('slot'), 'spaceshipStudySlot');
       var slot3 = area.addEventObject(apron[3].x, apron[3].y, N('slot'), 'spaceshipStudySlot');
-      // parts
+      // parts: the name is kept even when no cell was free, so respawnParts lays it on next entry
       var parts = [];
-      var languageID = getLanguageID(game);
       for (i in 0...3)
         {
-          // force unique parts
-          var item = null;
-          while (true)
-            {
-              item = ItemsConst.spawnItem(game, 'shipPart');
-              if (Lambda.has(parts, item.name))
-                continue;
-              break;
-            }
-
-          // the first case always spawns in the hangar, the second in a store room when the
-          // compound has one, and the third on a random table half the time
-          var pt = null;
-          if (i == 1)
-            pt = storeCell(area);
-          if (pt == null &&
-              (i == 1 || (i == 2 && Std.random(100) < 50)))
-            pt = clueCell(area);
-          if (pt == null)
-            pt = freeCell(area, shed.x1, shed.y1, shed.x2, shed.y2);
-          if (pt == null)
-            {
-              trace('cannot find free place for spawn');
-              continue;
-            }
-
-          var o = area.addItem(pt.x, pt.y, item, Const.FRAME_SHIP_PART, true);
-          o.name = '<span class=alien' + languageID + '>' + item.name + '</span>';
-          o.item.name = '<span class=alien' + languageID + '>' + o.item.name + '</span>';
-          parts.push(item.name);
+          var name = newPartName(game, parts);
+          spawnPart(game, area, shed, i, name);
+          parts.push(name);
         }
 
       // store state for later use
@@ -612,6 +586,92 @@ class GoalsAlienCrashLanding
         alertRaised: false,
       }
       game.timeline.setVar('spaceshipState', spaceshipState);
+    }
+
+// helper: a fresh ship part name, wrapped in the alien language span, that is not in taken
+  static function newPartName(game: Game, taken: Array<String>): String
+    {
+      var languageID = getLanguageID(game);
+      while (true)
+        {
+          var name = '<span class=alien' + languageID + '>' +
+            ItemsConst.spawnItem(game, 'shipPart').name + '</span>';
+          if (!Lambda.has(taken, name))
+            return name;
+        }
+    }
+
+// helper: lay ship part i (0..2) of the given name in the study area. the first case always spawns
+// in the hangar, the second in a store room when the compound has one, and the third on a random
+// table half the time
+  static function spawnPart(game: Game, area: AreaGame,
+      shed: { x: Int, y: Int, x1: Int, y1: Int, x2: Int, y2: Int }, i: Int, name: String)
+    {
+      var pt = null;
+      if (i == 1)
+        pt = storeCell(area);
+      if (pt == null &&
+          (i == 1 || (i == 2 && Std.random(100) < 50)))
+        pt = clueCell(area);
+      if (pt == null)
+        pt = freeCell(area, shed.x1, shed.y1, shed.x2, shed.y2);
+      if (pt == null)
+        {
+          trace('cannot find free place for spawn');
+          return;
+        }
+      var item = ItemsConst.spawnItem(game, 'shipPart');
+      item.name = name;
+      var o = area.addItem(pt.x, pt.y, item, Const.FRAME_SHIP_PART, true);
+      o.name = name;
+    }
+
+// on study area entry, lay again every ship part that no longer exists: not installed, not in the
+// host's hands, not on the ground of any area. a part used to be removed for good when the player
+// left the area it lay in, which left the ship unable to start
+  static function respawnParts(game: Game)
+    {
+      var state = getSpaceshipState(game);
+      if (state == null ||
+          state.location != 'study' ||
+          game.area.id != state.studyAreaID)
+        return;
+
+      // what still exists: the current host's inventory and every part on the ground
+      // ponytail: a part in a preserved AI's inventory is not seen and gets a twin, which is harmless
+      var found = [];
+      if (game.player.state == PLR_STATE_HOST)
+        for (item in game.player.host.inventory.iterator())
+          if (item.id == 'shipPart')
+            found.push(item.name);
+      for (area in game.region)
+        for (o in area.getObjects())
+          if (o.item != null &&
+              o.item.id == 'shipPart')
+            {
+              // a save from before parts were static still holds them as dynamic objects
+              o.isStatic = true;
+              found.push(o.item.name);
+            }
+
+      // lay the missing ones; a name lost to a failed spawn in an older save is rolled anew
+      var names = [ state.part1Name, state.part2Name, state.part3Name ];
+      var installed = [ state.part1Installed, state.part2Installed, state.part3Installed ];
+      var shed = null;
+      for (i in 0...3)
+        {
+          if (installed[i] ||
+              (names[i] != null && Lambda.has(found, names[i])))
+            continue;
+          if (names[i] == null)
+            names[i] = newPartName(game, names);
+          if (shed == null)
+            shed = findStudyPad(game.area);
+          spawnPart(game, game.area, shed, i, names[i]);
+        }
+      state.part1Name = names[0];
+      state.part2Name = names[1];
+      state.part3Name = names[2];
     }
 
 // helper: the hangar's study pad centre, plus the shed's interior box

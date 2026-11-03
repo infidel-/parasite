@@ -1086,6 +1086,8 @@ class AreaGame extends _SaveObject
       else o = untyped new GenericPickup(game, id, ox, oy, imageID);
       o.name = itemName;
       o.item = item;
+      // a scenario item (ship part) outlives the player leaving the area, or the scenario is stuck
+      o.isStatic = (item.info.type == 'scenario');
       // hide object if it's not in the current area
       if (game.area != this)
         o.hide();

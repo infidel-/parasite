@@ -23872,7 +23872,7 @@
    "s": "unknown location",
    "kind": "T",
    "loc": [
-    "src/game/AreaGame.hx:1530"
+    "src/game/AreaGame.hx:1532"
    ],
    "vars": [],
    "where": "AreaGame.getAreaLabel"
@@ -23881,7 +23881,7 @@
    "s": "Sec. {n}",
    "kind": "T",
    "loc": [
-    "src/game/AreaGame.hx:1533"
+    "src/game/AreaGame.hx:1535"
    ],
    "vars": [
     "n"
@@ -23892,7 +23892,7 @@
    "s": "Sector {n}",
    "kind": "T",
    "loc": [
-    "src/game/AreaGame.hx:1534"
+    "src/game/AreaGame.hx:1536"
    ],
    "vars": [
     "n"
@@ -23903,7 +23903,7 @@
    "s": "You cannot leave until you complete the mission.",
    "kind": "T",
    "loc": [
-    "src/game/AreaGame.hx:3250"
+    "src/game/AreaGame.hx:3252"
    ],
    "vars": [],
    "where": "Test.canLeave",
@@ -29900,7 +29900,7 @@
    "s": "Save your original host",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:241"
+    "src/scenario/GoalsAlienCrashLanding.hx:242"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -29910,7 +29910,7 @@
    "s": "Your original host survived. You need to find it.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:242"
+    "src/scenario/GoalsAlienCrashLanding.hx:243"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -29920,7 +29920,7 @@
    "s": "My original host still functions. I will need to find it and retrieve it.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:243"
+    "src/scenario/GoalsAlienCrashLanding.hx:244"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -29930,7 +29930,7 @@
    "s": "I feel some attachment to it.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:244"
+    "src/scenario/GoalsAlienCrashLanding.hx:245"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -29940,7 +29940,7 @@
    "s": "Relocate the ship",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:249"
+    "src/scenario/GoalsAlienCrashLanding.hx:250"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -29950,7 +29950,7 @@
    "s": "You need to activate the ship and relocate it to a safer spot.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:250"
+    "src/scenario/GoalsAlienCrashLanding.hx:251"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -29960,7 +29960,7 @@
    "s": "{word}! After initiating the startup sequence you board the ship. You activate the engine and move the ship away to a safer location.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:262"
+    "src/scenario/GoalsAlienCrashLanding.hx:264"
    ],
    "vars": [
     "word"
@@ -29973,7 +29973,7 @@
    "s": "{word}! The alert was raised. I cannot leave this location without my ship now or they will move it somewhere else.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:288"
+    "src/scenario/GoalsAlienCrashLanding.hx:290"
    ],
    "vars": [
     "word"
@@ -29986,7 +29986,7 @@
    "s": "You cannot leave this area without your ship.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:304"
+    "src/scenario/GoalsAlienCrashLanding.hx:306"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -29996,7 +29996,7 @@
    "s": "Enter the ship",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:313"
+    "src/scenario/GoalsAlienCrashLanding.hx:315"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30006,7 +30006,7 @@
    "s": "You need to enter the ship and activate the onboard computer.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:314"
+    "src/scenario/GoalsAlienCrashLanding.hx:316"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30016,7 +30016,7 @@
    "s": "Spending some time on the computer you remember what was your initial goal on this planet. You have a mission. You need to complete it.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:317"
+    "src/scenario/GoalsAlienCrashLanding.hx:319"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30026,8 +30026,8 @@
    "s": "Mission: Abduction",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:337",
-    "src/scenario/GoalsAlienCrashLanding.hx:363"
+    "src/scenario/GoalsAlienCrashLanding.hx:339",
+    "src/scenario/GoalsAlienCrashLanding.hx:365"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30037,7 +30037,7 @@
    "s": "You need to locate the target host and invade it.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:338"
+    "src/scenario/GoalsAlienCrashLanding.hx:340"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30047,7 +30047,7 @@
    "s": "Target invaded. I need to return to my spaceship.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:339"
+    "src/scenario/GoalsAlienCrashLanding.hx:341"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30057,10 +30057,10 @@
    "s": "Mission failed. I will return to the HQ now.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:340",
-    "src/scenario/GoalsAlienCrashLanding.hx:367",
-    "src/scenario/GoalsAlienCrashLanding.hx:404",
-    "src/scenario/GoalsAlienCrashLanding.hx:430"
+    "src/scenario/GoalsAlienCrashLanding.hx:342",
+    "src/scenario/GoalsAlienCrashLanding.hx:369",
+    "src/scenario/GoalsAlienCrashLanding.hx:406",
+    "src/scenario/GoalsAlienCrashLanding.hx:432"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30070,7 +30070,7 @@
    "s": "You need to bring the target host to the spaceship.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:364"
+    "src/scenario/GoalsAlienCrashLanding.hx:366"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30080,7 +30080,7 @@
    "s": "Mission accomplished. I can return to the HQ now. Goodbye, Earth. For now.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:366"
+    "src/scenario/GoalsAlienCrashLanding.hx:368"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30090,7 +30090,7 @@
    "s": "You have completed your mission.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:389"
+    "src/scenario/GoalsAlienCrashLanding.hx:391"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30100,7 +30100,7 @@
    "s": "Mission: Liquidation",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:401"
+    "src/scenario/GoalsAlienCrashLanding.hx:403"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30110,7 +30110,7 @@
    "s": "You need to locate the target host and liquidate it.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:402"
+    "src/scenario/GoalsAlienCrashLanding.hx:404"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30120,7 +30120,7 @@
    "s": "Target liquidated. I need to return to my spaceship.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:403"
+    "src/scenario/GoalsAlienCrashLanding.hx:405"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30130,7 +30130,7 @@
    "s": "Mission: Intel Collection",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:427"
+    "src/scenario/GoalsAlienCrashLanding.hx:429"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30140,7 +30140,7 @@
    "s": "You need to locate the target host and probe its brain.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:428"
+    "src/scenario/GoalsAlienCrashLanding.hx:430"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30150,7 +30150,7 @@
    "s": "Target scanned. I need to return to my spaceship.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:429"
+    "src/scenario/GoalsAlienCrashLanding.hx:431"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30160,8 +30160,8 @@
    "s": "Return to spaceship",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:454",
-    "src/scenario/GoalsAlienCrashLanding.hx:480"
+    "src/scenario/GoalsAlienCrashLanding.hx:456",
+    "src/scenario/GoalsAlienCrashLanding.hx:482"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30171,8 +30171,8 @@
    "s": "You need to return to the spaceship.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:455",
-    "src/scenario/GoalsAlienCrashLanding.hx:481"
+    "src/scenario/GoalsAlienCrashLanding.hx:457",
+    "src/scenario/GoalsAlienCrashLanding.hx:483"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30182,8 +30182,8 @@
    "s": "Returning to the HQ now...",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:457",
-    "src/scenario/GoalsAlienCrashLanding.hx:483"
+    "src/scenario/GoalsAlienCrashLanding.hx:459",
+    "src/scenario/GoalsAlienCrashLanding.hx:485"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30193,7 +30193,7 @@
    "s": "You have succeeded in your mission.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:470"
+    "src/scenario/GoalsAlienCrashLanding.hx:472"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30203,7 +30203,7 @@
    "s": "You have failed in your mission.",
    "kind": "T",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:496"
+    "src/scenario/GoalsAlienCrashLanding.hx:498"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.map",
@@ -30213,8 +30213,8 @@
    "s": "spaceship",
    "kind": "N",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:545",
-    "src/scenario/GoalsAlienCrashLanding.hx:836"
+    "src/scenario/GoalsAlienCrashLanding.hx:547",
+    "src/scenario/GoalsAlienCrashLanding.hx:896"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject"
@@ -30223,7 +30223,7 @@
    "s": "console",
    "kind": "N",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:552"
+    "src/scenario/GoalsAlienCrashLanding.hx:554"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject"
@@ -30232,9 +30232,9 @@
    "s": "slot",
    "kind": "N",
    "loc": [
-    "src/scenario/GoalsAlienCrashLanding.hx:553",
-    "src/scenario/GoalsAlienCrashLanding.hx:554",
-    "src/scenario/GoalsAlienCrashLanding.hx:555"
+    "src/scenario/GoalsAlienCrashLanding.hx:555",
+    "src/scenario/GoalsAlienCrashLanding.hx:556",
+    "src/scenario/GoalsAlienCrashLanding.hx:557"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject"
