@@ -8,7 +8,7 @@
 - ui: Cyrillic, Chinese, Japanese and Korean text shows in a sans face sized to match the chosen font
 
 ### Fixes
-- cult: a member death fails every ordeal it should, not every other one
+- cult: a member death fails only the ordeals that member takes part in
 - cult: a Stakeholder Flesh log line named the wrong choice
 - game: a host that dies on the region map (ovum, expiry) now leaves the cult and counts as a Group death
 - game: ship parts left behind or dropped no longer vanish, and lost ones reappear in the lab

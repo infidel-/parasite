@@ -38,12 +38,13 @@ class Ordeals extends _SaveObject
     {
     }
 
-// handle member death
+// handle member death: only the ordeals that cultist takes part in hear of it
   public function onDeath(aidata: AIData)
     {
       // a copy: an ordeal that fails here removes itself from the list
       for (ordeal in list.copy())
-        ordeal.onDeath(aidata);
+        if (ordeal.getLockedCultists().indexOf(aidata.id) >= 0)
+          ordeal.onDeath(aidata);
     }
 
 // fail an ordeal

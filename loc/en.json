@@ -15035,7 +15035,7 @@
    "s": "{cult} ordeal {ordeal} has failed.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeals.hx:52"
+    "src/cult/Ordeals.hx:53"
    ],
    "vars": [
     "cult",
@@ -15048,7 +15048,7 @@
    "s": "{cult} ordeal {ordeal} completed successfully.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeals.hx:71"
+    "src/cult/Ordeals.hx:72"
    ],
    "vars": [
     "cult",
@@ -15061,7 +15061,7 @@
    "s": "A tribulation most foul has descended upon us: {ordeal}.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeals.hx:219"
+    "src/cult/Ordeals.hx:220"
    ],
    "vars": [
     "ordeal"
