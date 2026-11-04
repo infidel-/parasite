@@ -41,7 +41,8 @@ class Ordeals extends _SaveObject
 // handle member death
   public function onDeath(aidata: AIData)
     {
-      for (ordeal in list)
+      // a copy: an ordeal that fails here removes itself from the list
+      for (ordeal in list.copy())
         ordeal.onDeath(aidata);
     }
 

@@ -654,14 +654,15 @@ class GoalsAlienCrashLanding
               found.push(o.item.name);
             }
 
-      // lay the missing ones; a name lost to a failed spawn in an older save is rolled anew
+      // lay the missing ones; a name lost to a failed spawn in an older save is rolled anew. each
+      // copy found covers one slot only, since older saves can hold two parts of the same name
       var names = [ state.part1Name, state.part2Name, state.part3Name ];
       var installed = [ state.part1Installed, state.part2Installed, state.part3Installed ];
       var shed = null;
       for (i in 0...3)
         {
           if (installed[i] ||
-              (names[i] != null && Lambda.has(found, names[i])))
+              (names[i] != null && found.remove(names[i])))
             continue;
           if (names[i] == null)
             names[i] = newPartName(game, names);

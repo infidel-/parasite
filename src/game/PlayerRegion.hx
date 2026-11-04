@@ -420,9 +420,8 @@ class PlayerRegion extends _SaveObject
 
 
 // event: host expired
-// in region mode we simply destroy it without any repercussions
-// simplifying that the body is somewhere in the sewers and probably won't be found
-// or if found won't be tied to parasite
+// in region mode the body is never found: it is somewhere in the sewers, or if found won't be tied
+// to parasite. the death itself still counts (cult roster, team member, Group controller)
 // if we add travel by car later, this would have to be changed to accomodate that
   public inline function onHostDeath()
     {

@@ -1014,7 +1014,9 @@ public function show()
         {
           var sound = array[Std.random(array.length)];
           var file = sound.file;
-          if (isHuman && !isMale && file.indexOf('male') == 0)
+          if (isHuman &&
+              !isMale &&
+              file.indexOf('male') == 0)
             file = 'fe' + file;
           game.scene.sounds.play(file);
         }
