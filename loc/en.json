@@ -34157,7 +34157,7 @@
    "s": "You cannot move during a conversation.",
    "kind": "T",
    "loc": [
-    "src/ui/UI.hx:648"
+    "src/ui/UI.hx:652"
    ],
    "vars": [],
    "where": "UI.cannotMove",
@@ -34167,7 +34167,7 @@
    "s": "You cannot move while commanding followers.",
    "kind": "T",
    "loc": [
-    "src/ui/UI.hx:652"
+    "src/ui/UI.hx:656"
    ],
    "vars": [],
    "where": "UI.cannotMove",
@@ -34177,7 +34177,7 @@
    "s": "You cannot move while picking up items.",
    "kind": "T",
    "loc": [
-    "src/ui/UI.hx:654"
+    "src/ui/UI.hx:658"
    ],
    "vars": [],
    "where": "UI.cannotMove",

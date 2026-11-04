@@ -548,6 +548,10 @@ class UI
       el.classList.add('pressed');
       Browser.window.setTimeout(function() {
         el.classList.remove('pressed');
+        // the list was rebuilt meanwhile (an earlier press ended the turn, the host tore free):
+        // the detached button still holds its old action, which may no longer be valid
+        if (!el.isConnected)
+          return;
         el.dispatchEvent(new js.html.MouseEvent('click',
           { bubbles: true, cancelable: true, shiftKey: shift }));
       }, 130);
