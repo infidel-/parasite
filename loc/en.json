@@ -599,7 +599,7 @@
    "s": "{ai:The} dies.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1056"
+    "src/ai/AI.hx:1058"
    ],
    "vars": [
     "ai"
@@ -611,8 +611,8 @@
    "s": "{ai:The} feels groggy and confused.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1158",
-    "src/ai/AI.hx:1160"
+    "src/ai/AI.hx:1160",
+    "src/ai/AI.hx:1162"
    ],
    "vars": [
     "ai"
@@ -623,7 +623,7 @@
    "s": "{ai:The} tears you away in panic. That hurt.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1162"
+    "src/ai/AI.hx:1164"
    ],
    "vars": [
     "ai"
@@ -634,7 +634,7 @@
    "s": "{ai:The} furiously tears you away. That hurt a lot.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1164"
+    "src/ai/AI.hx:1166"
    ],
    "vars": [
     "ai"
@@ -645,7 +645,7 @@
    "s": "{ai:The} stands still motionlessly.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1166"
+    "src/ai/AI.hx:1168"
    ],
    "vars": [
     "ai"
@@ -656,7 +656,7 @@
    "s": "{ai:The} feels unsure about their surroundings.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1169"
+    "src/ai/AI.hx:1171"
    ],
    "vars": [
     "ai"
@@ -667,7 +667,7 @@
    "s": "You feel you are deepening the affinity with this host.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1191"
+    "src/ai/AI.hx:1193"
    ],
    "vars": [],
    "where": "AI.gainAffinity",
@@ -677,7 +677,7 @@
    "s": "You have reached the full affinity with this host.",
    "kind": "T",
    "loc": [
-    "src/ai/AI.hx:1204"
+    "src/ai/AI.hx:1206"
    ],
    "vars": [],
    "where": "AI.gainAffinity",
@@ -15035,7 +15035,7 @@
    "s": "{cult} ordeal {ordeal} has failed.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeals.hx:51"
+    "src/cult/Ordeals.hx:52"
    ],
    "vars": [
     "cult",
@@ -15048,7 +15048,7 @@
    "s": "{cult} ordeal {ordeal} completed successfully.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeals.hx:70"
+    "src/cult/Ordeals.hx:71"
    ],
    "vars": [
     "cult",
@@ -15061,7 +15061,7 @@
    "s": "A tribulation most foul has descended upon us: {ordeal}.",
    "kind": "T",
    "loc": [
-    "src/cult/Ordeals.hx:218"
+    "src/cult/Ordeals.hx:219"
    ],
    "vars": [
     "ordeal"
@@ -30214,7 +30214,7 @@
    "kind": "N",
    "loc": [
     "src/scenario/GoalsAlienCrashLanding.hx:547",
-    "src/scenario/GoalsAlienCrashLanding.hx:896"
+    "src/scenario/GoalsAlienCrashLanding.hx:897"
    ],
    "vars": [],
    "where": "GoalsAlienCrashLanding.addSpaceshipStudyObject"
