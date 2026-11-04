@@ -10,6 +10,7 @@
 ### Fixes
 - cult: a member death fails only the ordeals that member takes part in
 - cult: a Stakeholder Flesh log line named the wrong choice
+- game: a dog host's bark costs its energy and a turn, and barks when repeated
 - game: a host that dies on the region map (ovum, expiry) now leaves the cult and counts as a Group death
 - game: ship parts left behind or dropped no longer vanish, and lost ones reappear in the lab
 - ui: an action key pressed twice quickly no longer crashes when the first press loses the host

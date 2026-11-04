@@ -355,6 +355,9 @@ class PlayerArea extends _SaveObject
       // host organ-based action
       else if (action.type == ACTION_ORGAN)
         ret = player.host.organs.areaAction(action);
+      // host-specific action (dog bark)
+      else if (action.type == ACTION_HOST)
+        player.host.action(action);
       // evolution manager action
       else if (action.type == ACTION_EVOLUTION)
         ret = player.evolutionManager.action(action);

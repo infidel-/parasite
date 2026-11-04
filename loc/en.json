@@ -589,7 +589,7 @@
    "kind": "T",
    "loc": [
     "src/ai/AI.hx:993",
-    "src/game/PlayerArea.hx:1619"
+    "src/game/PlayerArea.hx:1622"
    ],
    "vars": [],
    "where": "AI.onDamage",
@@ -24443,8 +24443,8 @@
    "loc": [
     "src/game/Chat.hx:779",
     "src/game/Chat.hx:790",
-    "src/game/PlayerArea.hx:1138",
-    "src/game/PlayerArea.hx:1150"
+    "src/game/PlayerArea.hx:1141",
+    "src/game/PlayerArea.hx:1153"
    ],
    "vars": [],
    "where": "Chat.question",
@@ -25774,7 +25774,7 @@
    "kind": "T",
    "loc": [
     "src/game/Player.hx:163",
-    "src/game/PlayerArea.hx:459"
+    "src/game/PlayerArea.hx:462"
    ],
    "vars": [],
    "where": "Player.turn",
@@ -25987,9 +25987,9 @@
    "kind": "T",
    "loc": [
     "src/game/PlayerArea.hx:341",
-    "src/game/PlayerArea.hx:524",
-    "src/game/PlayerArea.hx:655",
-    "src/game/PlayerArea.hx:688"
+    "src/game/PlayerArea.hx:527",
+    "src/game/PlayerArea.hx:658",
+    "src/game/PlayerArea.hx:691"
    ],
    "vars": [],
    "where": "PlayerArea.action",
@@ -25999,7 +25999,7 @@
    "s": "You release the host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:384",
+    "src/game/PlayerArea.hx:387",
     "src/objects/Dumpster.hx:60"
    ],
    "vars": [],
@@ -26010,7 +26010,7 @@
    "s": "Your host is unable to budge {ai:the}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:549"
+    "src/game/PlayerArea.hx:552"
    ],
    "vars": [
     "ai"
@@ -26022,7 +26022,7 @@
    "s": "Your host does not manage to push past {ai:the}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:555"
+    "src/game/PlayerArea.hx:558"
    ],
    "vars": [
     "ai"
@@ -26034,7 +26034,7 @@
    "s": "Your host pushes past {ai:the}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:566"
+    "src/game/PlayerArea.hx:569"
    ],
    "vars": [
     "ai"
@@ -26046,7 +26046,7 @@
    "s": "You cannot attach to this host due to its clothing.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:746"
+    "src/game/PlayerArea.hx:749"
    ],
    "vars": [],
    "where": "PlayerArea.attachToHostAction",
@@ -26056,7 +26056,7 @@
    "s": "You cannot attach to this host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:751"
+    "src/game/PlayerArea.hx:754"
    ],
    "vars": [],
    "where": "PlayerArea.attachToHostAction",
@@ -26066,7 +26066,7 @@
    "s": "The host is agreeable to your actions.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:770"
+    "src/game/PlayerArea.hx:773"
    ],
    "vars": [],
    "where": "PlayerArea.attachToHostAction",
@@ -26076,7 +26076,7 @@
    "s": "You smoothly attach to the preserved host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:775"
+    "src/game/PlayerArea.hx:778"
    ],
    "vars": [],
    "where": "PlayerArea.attachToHostAction",
@@ -26086,7 +26086,7 @@
    "s": "You have managed to attach to the host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:782"
+    "src/game/PlayerArea.hx:785"
    ],
    "vars": [],
    "where": "PlayerArea.attachToHostAction",
@@ -26096,7 +26096,7 @@
    "s": "You harden your grip on the host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:799"
+    "src/game/PlayerArea.hx:802"
    ],
    "vars": [],
    "where": "PlayerArea.hardenGripAction",
@@ -26106,7 +26106,7 @@
    "s": "The host wrestles with you frantically, injuring you in the process.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:838"
+    "src/game/PlayerArea.hx:841"
    ],
    "vars": [],
    "where": "PlayerArea.invadeEarlyAction",
@@ -26116,7 +26116,7 @@
    "s": "The host violently wrestles with you which results in a fatal injury.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:844"
+    "src/game/PlayerArea.hx:847"
    ],
    "vars": [],
    "where": "PlayerArea.invadeEarlyAction",
@@ -26126,7 +26126,7 @@
    "s": "Your proboscis painfully penetrates the warm flesh. You are now in control of the host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:847"
+    "src/game/PlayerArea.hx:850"
    ],
    "vars": [],
    "where": "PlayerArea.invadeEarlyAction",
@@ -26136,7 +26136,7 @@
    "s": "Your proboscis penetrates the warm flesh. You are now in control of the host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:860"
+    "src/game/PlayerArea.hx:863"
    ],
    "vars": [],
    "where": "PlayerArea.invadeHostAction",
@@ -26146,7 +26146,7 @@
    "s": "You reinforce mental control over the host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:897"
+    "src/game/PlayerArea.hx:900"
    ],
    "vars": [],
    "where": "PlayerArea.reinforceControlAction",
@@ -26156,7 +26156,7 @@
    "s": "You cannot leave the habitat with outsiders in it!",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:970"
+    "src/game/PlayerArea.hx:973"
    ],
    "vars": [],
    "where": "PlayerArea.leaveAreaAction",
@@ -26166,7 +26166,7 @@
    "s": "You cannot leave the habitat with a mold.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:979"
+    "src/game/PlayerArea.hx:982"
    ],
    "vars": [],
    "where": "PlayerArea.leaveAreaAction",
@@ -26176,7 +26176,7 @@
    "s": "You cannot slip away while the soldiers are alerted.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:988"
+    "src/game/PlayerArea.hx:991"
    ],
    "vars": [],
    "where": "PlayerArea.leaveAreaAction"
@@ -26185,7 +26185,7 @@
    "s": "You have to get outside the fence first.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:989"
+    "src/game/PlayerArea.hx:992"
    ],
    "vars": [],
    "where": "PlayerArea.leaveAreaAction"
@@ -26194,7 +26194,7 @@
    "s": "You leave the area.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:997"
+    "src/game/PlayerArea.hx:1000"
    ],
    "vars": [],
    "where": "PlayerArea.leaveAreaAction",
@@ -26204,7 +26204,7 @@
    "s": "There are followers still in combat. If you leave now, they may die. Leave anyway?",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1020"
+    "src/game/PlayerArea.hx:1023"
    ],
    "vars": [],
    "where": "PlayerArea.cultLeavePre"
@@ -26213,7 +26213,7 @@
    "s": "You detach from the potential host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1042"
+    "src/game/PlayerArea.hx:1045"
    ],
    "vars": [],
    "where": "PlayerArea.detachAction",
@@ -26223,7 +26223,7 @@
    "s": "Probe brain",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1066"
+    "src/game/PlayerArea.hx:1069"
    ],
    "vars": [],
    "where": "PlayerArea.getProbeBrainActionName"
@@ -26232,7 +26232,7 @@
    "s": "This host is not intelligent enough.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1075"
+    "src/game/PlayerArea.hx:1078"
    ],
    "vars": [],
    "where": "PlayerArea.probeBrainAction",
@@ -26242,7 +26242,7 @@
    "s": "You probe the brain of the host and learn its contents. The host grows weaker.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1079"
+    "src/game/PlayerArea.hx:1082"
    ],
    "vars": [],
    "where": "PlayerArea.probeBrainAction",
@@ -26252,7 +26252,7 @@
    "s": "You have learned the parameters of this host.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1095"
+    "src/game/PlayerArea.hx:1098"
    ],
    "vars": [],
    "where": "PlayerArea.probeBrainAction",
@@ -26262,7 +26262,7 @@
    "s": "You find out that the name of this host is {name}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1112"
+    "src/game/PlayerArea.hx:1115"
    ],
    "vars": [
     "name"
@@ -26274,7 +26274,7 @@
    "s": "You find out that this host works as {job} <span class=\"small gray\">(income: {income})</span>.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1120"
+    "src/game/PlayerArea.hx:1123"
    ],
    "vars": [
     "job",
@@ -26287,7 +26287,7 @@
    "s": "This human does not know anything else.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1162"
+    "src/game/PlayerArea.hx:1165"
    ],
    "vars": [],
    "where": "PlayerArea.probeBrainAction",
@@ -26297,7 +26297,7 @@
    "s": "You cannot do this in a habitat.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1187"
+    "src/game/PlayerArea.hx:1190"
    ],
    "vars": [],
    "where": "PlayerArea.plantMemoriesAction",
@@ -26307,7 +26307,7 @@
    "s": "You release the host triggering the pseudocampus.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1190"
+    "src/game/PlayerArea.hx:1193"
    ],
    "vars": [],
    "where": "PlayerArea.plantMemoriesAction",
@@ -26317,7 +26317,7 @@
    "s": "A set of implanted false memories about the encounter will help your survival.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1209"
+    "src/game/PlayerArea.hx:1212"
    ],
    "vars": [],
    "where": "PlayerArea.plantMemoriesAction"
@@ -26326,7 +26326,7 @@
    "s": "The agent will report a false trail. It will be some time before they get on my trail again.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1219"
+    "src/game/PlayerArea.hx:1222"
    ],
    "vars": [],
    "where": "PlayerArea.plantMemoriesAction",
@@ -26336,7 +26336,7 @@
    "s": "You probe the brain of the host and learn what that object is for.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1229"
+    "src/game/PlayerArea.hx:1232"
    ],
    "vars": [],
    "where": "PlayerArea.learnObjectAction",
@@ -26346,7 +26346,7 @@
    "s": "The host resists your command.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1272"
+    "src/game/PlayerArea.hx:1275"
    ],
    "vars": [],
    "where": "PlayerArea.moveBy",
@@ -26356,7 +26356,7 @@
    "s": "You can see the following objects here: {list}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1359"
+    "src/game/PlayerArea.hx:1362"
    ],
    "vars": [
     "list"
@@ -26367,7 +26367,7 @@
    "s": "You can see an object here: {obj}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1360"
+    "src/game/PlayerArea.hx:1363"
    ],
    "vars": [
     "obj"
@@ -26378,8 +26378,8 @@
    "s": "Something blocks the way out.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1402",
-    "src/game/PlayerArea.hx:1423"
+    "src/game/PlayerArea.hx:1405",
+    "src/game/PlayerArea.hx:1426"
    ],
    "vars": [],
    "where": "PlayerArea.climbOut",
@@ -26389,7 +26389,7 @@
    "s": "You climb out of {obj:the}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1405"
+    "src/game/PlayerArea.hx:1408"
    ],
    "vars": [
     "obj"
