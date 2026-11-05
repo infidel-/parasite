@@ -29,6 +29,9 @@ class Headless
   // exit codes the runner reads: a known failure (tests/known.json) is reported but not counted
   static inline var EXIT_FAILED = 1;
   static inline var EXIT_KNOWN = 3;
+  // the in-memory save slots the runs use
+  static inline var FIXTURE_SLOT = 5;
+  static inline var ROUNDTRIP_SLOT = 93;
 
   static function main()
     {
@@ -66,6 +69,8 @@ class Headless
           fuzz(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
           return;
         }
+      else if (parts[0] == 'roundtrip')
+        roundtrip(parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
       else
         {
           log('[test] unknown run id: ' + id);
@@ -75,7 +80,8 @@ class Headless
       finish(id);
     }
 
-// the run ids of the suite asked for; --quick is the cut `cd src && make` runs on every build
+// the run ids of the suite asked for; --quick is the cut `cd src && make` runs on every build.
+// a START is `new` (a new game), a stage preset (`s21`) or a fixture save (`save/<file>`)
   static function plan(): Array<String>
     {
       var quick = has('--quick');
@@ -83,25 +89,42 @@ class Headless
       var seed0 = intArg('--seed', 1);
       var count = intArg('--count', quick ? 5 : 20);
       var steps = intArg('--steps', quick ? 200 : 1000);
+      var start = strArg('--start', null);
+      var fixtures: Array<String> = js.Syntax.code("host.fixtures");
+      var saves = [ for (f in fixtures) 'save/' + f ];
+      // the quick cut loads three fixtures: the oldest, one in the old save format (2) and the newest
+      // that loads without mods
+      var quickSaves = [ for (f in saves) if (f.indexOf('-v0.19.') > 0 ||
+        f.indexOf('habitat-cult-base') > 0 ||
+        f.indexOf('region-corp-cult1') > 0) f ];
       var all = (suite == 'all');
       if (!all &&
           suite != 'smoke' &&
-          suite != 'fuzz')
+          suite != 'fuzz' &&
+          suite != 'compat' &&
+          suite != 'roundtrip')
         return null;
       var ids = [];
       if (all ||
           suite == 'smoke')
         ids.push('smoke:' + seed0 + ':' + count);
+      // random play from new games and the stage presets: the quick cut plays every start point
+      // once, the soak each of them on every seed
       if (all ||
           suite == 'fuzz')
-        {
-          var start = strArg('--start', null);
-          var starts = (start != null ? start.split(',') : [ 'new' ].concat(STAGES));
-          // the quick cut plays every start point once, the soak each of them on every seed
-          for (st in starts)
-            for (i in 0...(quick ? 1 : count))
-              ids.push('fuzz:' + st + ':' + (seed0 + i) + ':' + steps);
-        }
+        for (st in (start != null ? start.split(',') : [ 'new' ].concat(STAGES)))
+          for (i in 0...(quick ? 1 : count))
+            ids.push('fuzz:' + st + ':' + (seed0 + i) + ':' + steps);
+      // every fixture loads (old saves too) and plays on
+      if (all ||
+          suite == 'compat')
+        for (st in (start != null ? start.split(',') : (quick ? quickSaves : saves)))
+          ids.push('fuzz:' + st + ':' + seed0 + ':' + (quick ? 50 : 200));
+      // save, load, save again: the two saves must match
+      if (all ||
+          suite == 'roundtrip')
+        for (st in (start != null ? start.split(',') : (quick ? [ 'new', 's2' ].concat(quickSaves) : [ 'new' ].concat(STAGES).concat(saves))))
+          ids.push('roundtrip:' + st + ':' + seed0 + ':' + (quick ? 20 : 50));
       return ids;
     }
 
@@ -113,20 +136,42 @@ class Headless
           exit(0);
           return;
         }
-      var text = failures.join('\n  ');
-      var knownAs = knownMatch(text);
-      log((knownAs != null ? 'known ' : '') + id + ': ' + text);
-      exit(knownAs != null ? EXIT_KNOWN : EXIT_FAILED);
+      // each failure is filed on its own: a run is known only when every one of them is
+      var unknown = [];
+      for (f in failures)
+        {
+          var knownAs = knownMatch(f);
+          if (knownAs == null)
+            unknown.push(f);
+          else if (f.indexOf('both saves:') < 0)
+            log('known ' + id + ': ' + f.split('\n')[0] + ' (' + knownAs + ')');
+        }
+      // the pointer to the two saves is a failure only alongside one
+      if (unknown.length == 1 &&
+          unknown[0].indexOf('both saves:') >= 0)
+        unknown = [];
+      if (unknown.length == 0)
+        {
+          exit(EXIT_KNOWN);
+          return;
+        }
+      log(id + ': ' + unknown.join('\n  '));
+      exit(EXIT_FAILED);
     }
 
-// where a failure is filed, when tests/known.json has an entry whose `match` it contains
+// where a failure is filed, when tests/known.json has an entry one of whose `match` strings it
+// contains
   static function knownMatch(text: String): String
     {
-      // the runner's parse of tests/known.json: untyped JSON off disk, [{ match, todo }]
+      // the runner's parse of tests/known.json: untyped JSON off disk, [{ match: [..], todo }]
       var list: Array<Dynamic> = js.Syntax.code("host.known");
       for (k in list)
-        if (text.indexOf(k.match) >= 0)
-          return k.todo;
+        {
+          var matches: Array<String> = k.match;
+          for (m in matches)
+            if (text.indexOf(m) >= 0)
+              return k.todo;
+        }
       return null;
     }
 
@@ -147,6 +192,31 @@ class Headless
 
 // start a new game on this seed, as ui.NewGame.newGame does
   public static function newGame(seed: Int)
+    {
+      prepare(seed);
+      game.scenarioStringID = 'alien';
+      game.isStarted = true;
+      game.ui.closeWindow();
+      game.restart();
+    }
+
+// load a fixture save from tests/saves as the Saves window does, answering the different-mods
+// prompt (most fixtures were made with the chainsaw and pickpocket mods on) the way a player
+// without them would: load anyway
+  static function loadFixture(file: String, seed: Int)
+    {
+      prepare(seed);
+      js.Syntax.code("host.loadFixture({0}, {1})", FIXTURE_SLOT, 'tests/saves/' + file);
+      game.ui.closeWindow();
+      game.load(FIXTURE_SLOT);
+      if (game.ui.state == UISTATE_YESNO)
+        @:privateAccess game.ui.components[_UIState.UISTATE_YESNO].action(1);
+      if (!game.isStarted)
+        throw 'the save did not load';
+    }
+
+// the state a game starts from on this seed, whether it is a new one or a load
+  static function prepare(seed: Int)
     {
       reseed(seed);
       // Game.restartPre resets only the region and cult id counters; the rest carry on from the
@@ -172,10 +242,6 @@ class Headless
       game.config.repeatDelay = 0;
       // > 0 answers every Difficulty window on its own (ui.UI.closeWindow)
       game.config.difficulty = 1 + seed % 3;
-      game.scenarioStringID = 'alien';
-      game.isStarted = true;
-      game.ui.closeWindow();
-      game.restart();
     }
 
 // boot every seed into its starting area, wait out a few turns, and check that a seed is a replay.
@@ -262,9 +328,23 @@ class Headless
       var failure: String = null;
       try
         {
-          newGame(seed);
-          if (start != 'new')
-            game.console.run(start);
+          if (start.indexOf('save/') == 0)
+            loadFixture(start.substr(5), seed);
+          else
+            {
+              newGame(seed);
+              if (start != 'new')
+                game.console.run(start);
+            }
+          if (alerts.length > 0)
+            {
+              failure = 'alert while starting from ' + start + ': ' + alerts[0];
+              return {
+                failure: failure,
+                step: -1,
+                trail: [],
+              };
+            }
           bot = new Bot(game, seed);
           var lastTurn = game.turns;
           var still = 0;
@@ -305,6 +385,95 @@ class Headless
         step: step,
         trail: (bot != null ? bot.trail : []),
       };
+    }
+
+// play a few random steps from a start point, then save, load that save and save again: anything
+// a save does not carry, or a load changes, shows up as a difference between the two
+  static function roundtrip(start: String, seed: Int, steps: Int)
+    {
+      var res = play(start, seed, steps, -1);
+      if (res.failure != null)
+        {
+          fail(seed, 'broke before the roundtrip, at step ' + res.step + ': ' + res.failure);
+          return;
+        }
+      run(seed, function() {
+        Saver.save(game, ROUNDTRIP_SLOT);
+        var a = HostBridge.saveRead(ROUNDTRIP_SLOT);
+        game.load(ROUNDTRIP_SLOT);
+        if (game.ui.state == UISTATE_YESNO)
+          @:privateAccess game.ui.components[_UIState.UISTATE_YESNO].action(1);
+        Saver.save(game, ROUNDTRIP_SLOT + 1);
+        var b = HostBridge.saveRead(ROUNDTRIP_SLOT + 1);
+        if (a == b)
+          return;
+        // the save's own JSON parsed back: untyped by nature, compared field by field
+        var changed = new Map<String, String>();
+        diffPaths(haxe.Json.parse(a), haxe.Json.parse(b), 'save', changed);
+        if (!changed.keys().hasNext())
+          return;
+        // both halves written out, for a closer look (tests/README.md)
+        var name = 'roundtrip-' + start.split('/').join('-') + '-' + seed;
+        js.Syntax.code("host.writeOut({0}, {1})", name + '-a.json.gz', a);
+        js.Syntax.code("host.writeOut({0}, {1})", name + '-b.json.gz', b);
+        // one failure per kind of change, so tests/known.json can file each on its own
+        var paths = [ for (k in changed.keys()) k ];
+        paths.sort(Reflect.compare);
+        for (p in paths)
+          fail(seed, 'changed across a load: ' + p + ' (e.g. ' + changed[p] + ')');
+        fail(seed, 'both saves: tests/out/' + name + '-{a,b}.json.gz');
+      });
+    }
+
+// fields a load is allowed to change: it logs "Game loaded from slot N.", and visRev is the
+// renderer's sightline counter (AreaGame), bumped by the load's visibility pass
+  static var ROUNDTRIP_IGNORE = [ 'messageList', 'hudMessageList', 'visRev' ];
+
+// collect the paths where two parsed saves differ, ids folded (`_list.433` is `_list.N`, `[4]` is
+// `[]`) so one kind of change is one entry however many objects it touches; the value is the first
+// example seen
+  static function diffPaths(a: Dynamic, b: Dynamic, path: String, out: Map<String, String>)
+    {
+      if (Std.isOfType(a, Array) &&
+          Std.isOfType(b, Array))
+        {
+          var x: Array<Dynamic> = a;
+          var y: Array<Dynamic> = b;
+          if (x.length != y.length &&
+              !out.exists(path + '.length'))
+            out[path + '.length'] = x.length + ' -> ' + y.length;
+          for (i in 0...(x.length < y.length ? x.length : y.length))
+            diffPaths(x[i], y[i], path + '[]', out);
+          return;
+        }
+      if (Reflect.isObject(a) &&
+          Reflect.isObject(b) &&
+          !Std.isOfType(a, String) &&
+          !Std.isOfType(b, String))
+        {
+          var keys = Reflect.fields(a);
+          for (k in Reflect.fields(b))
+            if (keys.indexOf(k) < 0)
+              keys.push(k);
+          for (k in keys)
+            {
+              if (ROUNDTRIP_IGNORE.indexOf(k) >= 0)
+                continue;
+              var sub = path + '.' + (~/^[0-9]+$/.match(k) ? 'N' : k);
+              diffPaths(Reflect.field(a, k), Reflect.field(b, k), sub, out);
+            }
+          return;
+        }
+      if (a != b &&
+          !out.exists(path))
+        out[path] = short(a) + ' -> ' + short(b);
+    }
+
+// a value cut down for a report line
+  static function short(v: Dynamic): String
+    {
+      var s = Std.string(v);
+      return (s.length > 40 ? s.substr(0, 40) + '...' : s);
     }
 
 // write the current state out as a failure save; the run was stopped the step before it broke

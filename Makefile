@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main test report loc loc-probe loc-build mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+.PHONY: game-debug testmod main test fixture report loc loc-probe loc-build mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -19,6 +19,14 @@ gen:
 test:
 	cd src && haxe project_test.hxml
 	timeout 3600 node tools/test.mjs $(args)
+
+# pack a save slot as a test fixture: parasite/saveNN.json -> tests/saves/<name>-v<VERSION>.json.gz
+# (-n: no name or time in the gzip header, so one save packs to the same bytes). Then add its row
+# to tests/README.md. usage: make fixture name=<what-it-is> slot=<NN>
+fixture:
+	@test -n "$(name)" -a -n "$(slot)" || { echo "usage: make fixture name=<what-it-is> slot=<NN>"; exit 1; }
+	gzip -n -9 -c parasite/save$(slot).json > tests/saves/$(name)-v$$(cat src/VERSION).json.gz
+	@echo "added tests/saves/$(name)-v$$(cat src/VERSION).json.gz: add its row to tests/README.md"
 
 # dev: screenshot the running game over CDP -> sshot.jpg (game must run on debug port 9300)
 sshot:

@@ -1,10 +1,52 @@
 [
   {
-    "match": "game_PlayerArea.hardenGripAction",
+    "match": [
+      "game_PlayerArea.hardenGripAction"
+    ],
     "todo": "TODO.md: Harden grip offered after a move detached the parasite"
   },
   {
-    "match": "spaceshipStudySlot",
+    "match": [
+      "spaceshipStudySlot"
+    ],
     "todo": "TODO.md: spaceship slot actions read a host the parasite does not have"
+  },
+  {
+    "match": [
+      "Could not resolve class BurglarKingAI"
+    ],
+    "todo": "needs the pickpocket mod; headless runs without mods (tests/README.md)"
+  },
+  {
+    "match": [
+      "_ai[]._strength (",
+      "_ai[]._constitution (",
+      "_ai[]._intellect (",
+      "_ai[]._psyche (",
+      "_ai[].maxHealth (",
+      "_ai[].health (",
+      "_ai[].maxEnergy ("
+    ],
+    "todo": "TODO.md: prostitutes and blackops spawn with stale derived stats"
+  },
+  {
+    "match": [
+      "player.host.maxEnergy ("
+    ],
+    "todo": "TODO.md: the energy organ's host bonus applies only after a load"
+  },
+  {
+    "match": [
+      "_list.N._list.N.width (",
+      "_list.N._list.N.tiles.length (",
+      "_list.N._list.N._cells ("
+    ],
+    "todo": "TODO.md: an old save's unvisited city area is generated at its old shrunk size"
+  },
+  {
+    "match": [
+      "CityAreaGenerator.addCrosswalks"
+    ],
+    "todo": "TODO.md: re-migrating that city area on the next load crashes"
   }
 ]

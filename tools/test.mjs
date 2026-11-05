@@ -79,7 +79,9 @@ if (!args.includes('--run') && !args.includes('--plan')) {
       continue;
     if (r.code == 3) known++;
     else failed++;
-    process.stdout.write(r.out.split('\n').filter((l) => !l.startsWith('@')).join('\n'));
+    // the quick cut (every build) counts its known failures without listing them
+    if (r.code != 3 || !args.includes('--quick'))
+      process.stdout.write(r.out.split('\n').filter((l) => !l.startsWith('@')).join('\n'));
   }
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
   console.log('[test] ' + ids.length + ' runs, ' + failed + ' failed, ' + known + ' known (' + secs + ' s)' +
@@ -187,6 +189,8 @@ const host = {
     return true;
   },
 };
+// the fixture saves under tests/saves, which the compat and roundtrip suites load
+host.fixtures = readdirSync(resolve(root, 'tests', 'saves')).filter((f) => f.endsWith('.json.gz')).sort();
 const knownPath = resolve(root, 'tests', 'known.json');
 if (existsSync(knownPath))
   host.known = JSON.parse(readFileSync(knownPath, 'utf8'));
