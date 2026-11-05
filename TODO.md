@@ -47,3 +47,17 @@ suites stay green, and says so at the workaround.
   `._maxID` likewise carry on across a restart (`restartPre` resets only Region and Cult), which is
   harmless in play. Workaround: `test.Headless.newGame` zeroes them. Fix: move `turns = 0` above the
   first `log`, and reset the counters in `restartPre` if seed-for-seed replay inside the GUI matters.
+- **Harden grip stays on the action list after a blocked move detaches the parasite, and crashes.**
+  Moving while attached detaches first (`PlayerArea.moveBy` → `detachAction`), and when the step
+  itself is blocked `moveBy` returns before `actionPost`, so the HUD keeps the attached-state list.
+  Pressing 1 then runs `hardenGripAction` with `attachHost == null`
+  (`src/game/PlayerArea.hx:805`). 13 of 480 fuzz runs. Replay:
+  `make test args="--run fuzz:s21:11:1000 --full"` (step 17). Fix: refresh the HUD when
+  `moveBy` detaches, and/or guard the attached-only actions on `state == PLR_STATE_ATTACHED`.
+  Filed in `tests/known.json`.
+- **Spaceship slot actions read a host the parasite does not have.** A bare parasite on a spaceship
+  slot tile makes `EventObject.updateActionList` call `spaceshipStudySlot`
+  (`src/scenario/GoalsAlienCrashLanding.hx:77`), which reads `player.host.inventory`; every HUD
+  update then throws. 8 of 480 fuzz runs, all from the s3/s31 presets. Replay:
+  `make test args="--run fuzz:s3:11:1000 --full"` (step 24). Fix: return no actions when
+  `player.host == null`. Filed in `tests/known.json`.

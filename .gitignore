@@ -45,3 +45,6 @@ ai-src
 loc/.logs/
 loc/.cache/
 loc/review/
+
+# headless test failure saves (make test)
+tests/out/
