@@ -34,3 +34,16 @@ Known open work, deferred on purpose. Remove an entry when it is done.
   (ovum, expiry, degradation) runs the cult record and the `onDeath()` hook like `AI.die()`, but not
   the mod events: their payload carries `area` and `entity`, and neither exists there. Needs either a
   region-death event or a payload with both optional.
+
+## Found by the headless tests
+
+Each entry has the replay command; see `tests/README.md`. The harness works around these so the
+suites stay green, and says so at the workaround.
+
+- **A second New Game in one session logs its opening lines under the last game's turn.**
+  `Game.init` (`src/game/Game.hx` ~124) logs the version line and the hidden debug line before it sets
+  `turns = 0`, so those `_LogMessage`s carry the previous game's turn count. Cosmetic. The id counters
+  `AreaGame`/`AIData`/`AreaObject`/`Mission`/`CultBaseOrgan`/`RivalBaseOrgan`/`RegionObject`/`NPC`
+  `._maxID` likewise carry on across a restart (`restartPre` resets only Region and Cult), which is
+  harmless in play. Workaround: `test.Headless.newGame` zeroes them. Fix: move `turns = 0` above the
+  first `log`, and reset the counters in `restartPre` if seed-for-seed replay inside the GUI matters.

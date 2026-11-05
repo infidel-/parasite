@@ -26,12 +26,19 @@ electron: check-port
     mkdir -p ../app/lang ../electron/lang && cp -r ../electron/lang/. ../app/lang/ && \
     cp ../changes.md ../parasite/
 	$(MAKE) loc-test
+	$(MAKE) test-quick
 	python3 ../tools/loc/extract.py --check
 
 # loc.Loc self-check (formatter, noun forms, pseudo) under node
 loc-test: check-port
 	haxe -cp . -main l10n.LocTest -D js-es=6 -dce full -js ../bin/loctest.js --connect $(PORT) && \
     node ../bin/loctest.js
+
+# headless game tests (test.Headless under node, see ../tests/README.md): the quick cut on every
+# build; the full soak is `make test` at the root
+test-quick: check-port
+	haxe project_test.hxml --connect $(PORT) && \
+    timeout 300 node ../tools/test.mjs --quick
 
 electron-demo: check-port
 	haxe project_electron.hxml -debug \

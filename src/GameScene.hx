@@ -180,6 +180,12 @@ class GameScene
 // redraw scene
   public function draw()
     {
+#if headless
+      // nothing is drawn under the test runner; what a draw does for LOGIC is release the windows
+      // Game.setLocation held for the reveal, which the 3D enter would do once it presented
+      game.ui.resumeQueue();
+      return;
+#end
       // clear canvas
       var ctx = canvas.getContext('2d');
       ctx.fillStyle = '#000000';

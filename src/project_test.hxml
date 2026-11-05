@@ -1,0 +1,6 @@
+-D electron
+-D headless
+-D js-es=6
+-dce no
+-js ../bin/test.js
+-main test.Headless

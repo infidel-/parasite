@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main report loc loc-probe loc-build mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+.PHONY: game-debug testmod main test report loc loc-probe loc-build mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -12,6 +12,13 @@ game-debug:
 gen:
 	cd src && haxe project_gen.hxml
 	node tools/genrun.mjs --count $(or $(seeds),3000) $(args)
+
+# headless game tests: the real game logic under node with no renderer, played by bots. The quick
+# cut runs on every `cd src && make`; this is the full soak. See tests/README.md.
+# usage: make test [args="--suite smoke --seed 7 --count 1"]
+test:
+	cd src && haxe project_test.hxml
+	timeout 3600 node tools/test.mjs $(args)
 
 # dev: screenshot the running game over CDP -> sshot.jpg (game must run on debug port 9300)
 sshot:
