@@ -22,6 +22,7 @@ class Console
   var modsConsole: Mods;
   var locConsole: LocConsole;
   var perfConsole: Perf;
+  var botConsole: BotConsole;
   public var completion: ConsoleCompletion;
 
 
@@ -42,6 +43,7 @@ class Console
       modsConsole = new Mods(this);
       locConsole = new LocConsole(this);
       perfConsole = new Perf(this);
+      botConsole = new BotConsole(this);
       completion = new ConsoleCompletion(this);
     }
 
@@ -126,6 +128,7 @@ class Console
               'ai trace|untrace [id] - toggle AI browser-console trace,<br/>' +
               'area regen - regenerate the current area, '  +
               'area room - what the generator built where you stand,<br/>' +
+              'bot run [steps] [random|goal], bot step, bot stop, bot check, bot seed [n] - the test bot plays,<br/>' +
               'cfg|config, ' +
               'ch|chat - set chat stage,<br/>' +
               // debug
@@ -189,6 +192,11 @@ class Console
       // XXX perf turn|street - toggle profiler overlays
       else if (char0 == 'p' && arr[0] == 'perf')
         perfConsole.run(cmd);
+
+      // XXX bot - the headless tests' bot plays the live game
+      else if (Const.isDebug &&
+          arr[0] == 'bot')
+        botConsole.run(arr);
 
       // XXX info commands
       else if (Const.isDebug && char0 == 'i')

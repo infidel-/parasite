@@ -23,8 +23,8 @@
 //     nothing and mutes every sound
 //   - window.host: Config/Profile/Loader/Saver read real strings off it; a proxy there parses as
 //     garbage. saves live in an in-memory slot map the tests read back
-//   - Math.random: seeded (mulberry32), reseeded per run through globalThis.__seed, so a seed is a
-//     replayable game — Std.random compiles to Math.random
+//   - Math.random: seeded, fixed while the bundle loads and reseeded per run by test.Bot.seed, so a
+//     seed is a replayable game — Std.random compiles to Math.random
 //   - fetch: never resolves, like a texture that never finished loading. a real node fetch on a
 //     relative url rejects, and an unhandled rejection kills node
 import { spawn } from 'node:child_process';
@@ -160,7 +160,8 @@ const over = (o) => new Proxy(o, {
   has: () => true,
 });
 
-// seeded Math.random
+// a fixed Math.random while the bundle loads, so any static initializer that rolls rolls the same;
+// each run then reseeds it itself (test.Bot.seed, with gen.Rng's mulberry32)
 let rngState = 1;
 Math.random = () => {
   rngState = (rngState + 0x6D2B79F5) | 0;
@@ -169,7 +170,6 @@ Math.random = () => {
   t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
-globalThis.__seed = (n) => { rngState = n | 0; };
 
 const canvas = over({ id: 'canvas', width: 1920, height: 1080 });
 

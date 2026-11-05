@@ -37,6 +37,7 @@ class Bot
   var rng: Void -> Float;
   public var trail: Array<String>; // the last TRAIL steps taken, newest last
   public var policy: String; // random, or goal: work through the tutorial (random where it has no say)
+  var walkFailed = false; // the goal policy's last walk had no path: hand the next step to random
 
   public function new(g: Game, seed: Int, policy: String)
     {
@@ -44,6 +45,33 @@ class Bot
       rng = gen.Rng.mulberry32(seed);
       trail = [];
       this.policy = policy;
+    }
+
+// seed Math.random for a game about to start, and clear what the last game left behind, so a seed
+// is the same game whatever ran before it: the headless runs and `bot seed` both start here.
+// Std.random compiles to Math.random, so one stream covers every roll
+  public static function seed(g: Game, seed: Int)
+    {
+      js.Syntax.code("Math.random = {0}", gen.Rng.mulberry32(seed));
+      // Game.restartPre resets only the region and cult id counters; the rest carry on from the
+      // previous game, which a second New Game in one session shrugs off but which would make a
+      // seed's game depend on the games played before it
+      game.AreaGame._maxID = 0;
+      ai.AIData._maxID = 0;
+      objects.AreaObject._maxID = 0;
+      cult.Mission._maxID = 0;
+      cult.base.CultBaseOrgan._maxID = 0;
+      cult.base.RivalBaseOrgan._maxID = 0;
+      region.RegionObject._maxID = 1;
+      @:privateAccess scenario.NPC._maxID = 0;
+      // Game.init logs its first lines BEFORE it zeroes turns, so they carry the last game's turn
+      // (TODO.md)
+      g.turns = 0;
+      // the stage presets switch these off and only the Game constructor switches them back on
+      g.importantMessagesEnabled = true;
+      // the profile outlives a game by design (unlocked pedia articles and the like); headless, a new
+      // one is a fresh install, in the game it rereads the player's own
+      g.profile = new Profile(g);
     }
 
 // pick one option and do it; false when there is nothing left to do
@@ -278,6 +306,12 @@ class Bot
       if (ui.state != UISTATE_DEFAULT ||
           game.location != LOCATION_AREA)
         return null;
+      // the target was out of reach (behind a wall, a locked door): a random step moves things on
+      if (walkFailed)
+        {
+          walkFailed = false;
+          return null;
+        }
       // a walk under way goes on, one waypoint a step, as Game.update steps a clicked path
       if (pa.path != null)
         return {
@@ -374,13 +408,19 @@ class Bot
       return null;
     }
 
-// walk to a cell as a mouse click does (PlayerArea.setPath takes the first step)
+// walk to a cell as a mouse click does (PlayerArea.setPath takes the first step); a cell with no
+// path to it is noted, so the goal policy does not ask for it again straight away
   function walk(x: Int, y: Int): _BotOption
     {
       return {
         kind: 'move',
         label: 'walk ' + x + ',' + y,
-        f: function() game.playerArea.setPath(x, y),
+        f: function() {
+          var pa = game.playerArea;
+          if (game.area.getPath(pa.x, pa.y, x, y) == null)
+            walkFailed = true;
+          else pa.setPath(x, y);
+        },
       };
     }
 

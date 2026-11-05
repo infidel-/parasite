@@ -110,6 +110,13 @@ class ConsoleCompletion
             { lit: 'regen' },
             { lit: 'room' },
           ] });
+          rootChildren.push({ lit: 'bot', next: [
+            { lit: 'run', next: [ { slot: '[steps]', next: [ { slot: '[random|goal]', values: function() return [ 'random', 'goal' ] } ] } ] },
+            { lit: 'step' },
+            { lit: 'stop' },
+            { lit: 'check' },
+            { lit: 'seed', next: [ { slot: '[n]' } ] },
+          ] });
           rootChildren.push({ lit: 'give', next: [
             { lit: 'effect', next: [ { slot: '[effect]', values: effect } ] },
             { lit: 'item', next: [ { slot: '[item]', values: item } ] },

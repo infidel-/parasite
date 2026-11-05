@@ -14,7 +14,6 @@
 
 package test;
 
-import game.AreaGame;
 import game.Game;
 
 class Headless
@@ -230,26 +229,7 @@ class Headless
 // the state a game starts from on this seed, whether it is a new one or a load
   static function prepare(seed: Int)
     {
-      reseed(seed);
-      // Game.restartPre resets only the region and cult id counters; the rest carry on from the
-      // previous game, which a second New Game in one session shrugs off but which would make a
-      // seed's game depend on the seeds run before it in this process
-      AreaGame._maxID = 0;
-      ai.AIData._maxID = 0;
-      objects.AreaObject._maxID = 0;
-      cult.Mission._maxID = 0;
-      cult.base.CultBaseOrgan._maxID = 0;
-      cult.base.RivalBaseOrgan._maxID = 0;
-      region.RegionObject._maxID = 1;
-      @:privateAccess scenario.NPC._maxID = 0;
-      // Game.init logs its first lines BEFORE it zeroes turns, so they carry the last game's turn
-      // (TODO.md); zeroed here so a seed's game does not depend on the one before it
-      game.turns = 0;
-      // the stage presets switch these off and only the Game constructor switches them back on
-      game.importantMessagesEnabled = true;
-      // the profile outlives a game by design (unlocked pedia articles and the like), so a fresh one
-      // stands in for a fresh install — what a process sees on its first game
-      game.profile = new Profile(game);
+      Bot.seed(game, seed);
       // the path and repeat stepping is throttled by the wall clock; the tests step it themselves
       game.config.repeatDelay = 0;
       // > 0 answers every Difficulty window on its own (ui.UI.closeWindow)
@@ -592,10 +572,6 @@ class Headless
 // record a failure for this seed
   static function fail(seed: Int, msg: String)
     failures.push('seed ' + seed + ': ' + msg);
-
-// reseed the runner's Math.random
-  static inline function reseed(seed: Int)
-    js.Syntax.code("globalThis.__seed({0})", seed);
 
   static function has(name: String): Bool
     {
