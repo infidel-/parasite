@@ -6,6 +6,7 @@
 - `make main`: `cd electron && make`
 - `make loc-probe` / `make loc` / `make loc-build` (`lang=fr`): translate the string catalog with Claude and build `electron/lang/<lang>.json` — see `docs/localization.md`
 - `make entities`: rebuild `app/img/entities128.png` (the 128 px art of every `Const.HD128` frame, region map marks included) from the original kra/png art and the generated sheets — after any change to those sources
+- `make test`: the headless game tests' full soak (bots play the real game logic under node); `cd src && make` runs their quick cut on every build. `make fixture name= slot=` packs a save as a test fixture — see `tests/README.md`
 
 ## Where the rest of it lives
 
@@ -25,6 +26,7 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 | dressing or enhancing a 3D area | skill `3d-enhance` |
 | generating or baking a SOUND (fal-sfx MCP, `make sounds`) | [`docs/sound-gen.md`](docs/sound-gen.md) — every new sound gets a bake-off; never touch shipped sounds |
 | adding or changing ANY player-facing text, or translating it | [`docs/localization.md`](docs/localization.md) — `T()`/`N()` markers, placeholder syntax, nouns |
+| a headless test failed, or adding a test, a suite or a fixture save | [`tests/README.md`](tests/README.md) — replay by run id, `tests/known.json`, the fixture version table |
 
 **A NEW FINDING GOES IN THE DOC, NOT HERE.** This file went 1.7 KB → 61 KB in six months and 75% of
 that was two sections that are now docs. One line here when it must fire unprompted, the numbers and

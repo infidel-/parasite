@@ -5,8 +5,8 @@ states, broken invariants and saves that do not survive a load.
 
 | run | what it does |
 |---|---|
-| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, ~21 runs, ~5 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (~1 min on 6 cores) |
+| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 26 runs, ~6 s) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (311 runs, ~70 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
@@ -87,6 +87,16 @@ A failure prints:
 
 To look at that state in the game, gunzip it over a slot (`parasite/save03.json`) and load it from
 the Saves window.
+
+**The same bot plays the live game** through the debug console:
+- `bot run [steps] [random|goal]`, `bot step`, `bot stop`;
+- `bot check` (the invariants, now);
+- `bot seed [n]` (a new game on seed n's world).
+
+It runs one step per two turn animations and stops on the first broken invariant or throw. A seed
+gives the headless run's world but not its play, because the renderer draws from the same
+`Math.random` between turns; the failure save is the exact state. See
+[`docs/debug-surface.md`](../docs/debug-surface.md).
 
 **Known failures** are listed in `tests/known.json`: `{ "match": ["substring", ...], "todo": "where it
 is filed" }`. Each failure line of a run is matched on its own, and a run counts as known only when
