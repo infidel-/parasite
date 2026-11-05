@@ -29,6 +29,7 @@ class Headless
   // exit codes the runner reads: a known failure (tests/known.json) is reported but not counted
   static inline var EXIT_FAILED = 1;
   static inline var EXIT_KNOWN = 3;
+  static inline var EXIT_STALLED = 4; // the tutorial bot did not reach its goal: tallied, not failed
   // the in-memory save slots the runs use
   static inline var FIXTURE_SLOT = 5;
   static inline var ROUNDTRIP_SLOT = 93;
@@ -71,6 +72,11 @@ class Headless
         }
       else if (parts[0] == 'roundtrip')
         roundtrip(parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
+      else if (parts[0] == 'tutorial')
+        {
+          tutorial(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
+          return;
+        }
       else
         {
           log('[test] unknown run id: ' + id);
@@ -102,7 +108,8 @@ class Headless
           suite != 'smoke' &&
           suite != 'fuzz' &&
           suite != 'compat' &&
-          suite != 'roundtrip')
+          suite != 'roundtrip' &&
+          suite != 'tutorial')
         return null;
       var ids = [];
       if (all ||
@@ -125,6 +132,11 @@ class Headless
           suite == 'roundtrip')
         for (st in (start != null ? start.split(',') : (quick ? [ 'new', 's2' ].concat(quickSaves) : [ 'new' ].concat(STAGES).concat(saves))))
           ids.push('roundtrip:' + st + ':' + seed0 + ':' + (quick ? 20 : 50));
+      // the goal policy through the tutorial, on every seed
+      if (all ||
+          suite == 'tutorial')
+        for (i in 0...count)
+          ids.push('tutorial:' + strArg('--goal', 'GOAL_ENTER_SEWERS') + ':' + (seed0 + i) + ':' + (quick ? 1500 : 3000));
       return ids;
     }
 
@@ -281,7 +293,7 @@ class Headless
   static function fuzz(id: String, start: String, seed: Int, steps: Int)
     {
       var stop = intArg('--stop', -1);
-      var res = play(start, seed, steps, stop);
+      var res = play(start, seed, steps, stop, null);
       if (stop >= 0)
         {
           log('    save: ' + failSave(id));
@@ -315,8 +327,9 @@ class Headless
     }
 
 // one bot game from a start point: the step it broke at and why, or no failure. stopAt >= 0
-// stops cleanly before that step, which is how a failure is replayed up to the moment before
-  static function play(start: String, seed: Int, steps: Int, stopAt: Int): {
+// stops cleanly before that step, which is how a failure is replayed up to the moment before. A
+// goal plays the goal policy and stops the moment that goal is completed
+  static function play(start: String, seed: Int, steps: Int, stopAt: Int, goal: _Goal): {
       failure: String,
       step: Int,
       trail: Array<String>,
@@ -345,12 +358,14 @@ class Headless
                 trail: [],
               };
             }
-          bot = new Bot(game, seed);
+          bot = new Bot(game, seed, (goal != null ? 'goal' : 'random'));
           var lastTurn = game.turns;
           var still = 0;
           step = 0;
           while (step < steps &&
-              step != stopAt)
+              step != stopAt &&
+              (goal == null ||
+               !game.goals.completed(goal)))
             {
               var n = alerts.length;
               if (!bot.step())
@@ -387,11 +402,39 @@ class Headless
       };
     }
 
+// the goal policy through the tutorial from a new game: it reaches the goal (printing the turns it
+// took, for the runner's tally), stalls (exit EXIT_STALLED with what it was on), or breaks
+  static function tutorial(id: String, goal: _Goal, seed: Int, steps: Int)
+    {
+      var res = play('new', seed, steps, -1, goal);
+      if (res.failure != null)
+        {
+          fail(seed, 'at step ' + res.step + ' (turn ' + game.turns + '): ' + res.failure +
+            '\n    replay: make test args="--run ' + id + '"' +
+            '\n    last steps: ' + res.trail.join(' | '));
+          finish(id);
+          return;
+        }
+      if (game.goals.completed(goal))
+        {
+          log('@turns ' + game.turns);
+          exit(0);
+          return;
+        }
+      var on = [ for (g in game.goals.iteratorCurrent()) g ];
+      log('stalled ' + id + ' at turn ' + game.turns + ' (' + game.state + ', player ' + game.player.state +
+        '), current goals: ' + on.join(', ') +
+        '\n    replay: make test args="--run ' + id + '"' +
+        '\n    last steps: ' + res.trail.join(' | ') +
+        '\n    last log: ' + logTail(8).join(' | '));
+      exit(EXIT_STALLED);
+    }
+
 // play a few random steps from a start point, then save, load that save and save again: anything
 // a save does not carry, or a load changes, shows up as a difference between the two
   static function roundtrip(start: String, seed: Int, steps: Int)
     {
-      var res = play(start, seed, steps, -1);
+      var res = play(start, seed, steps, -1, null);
       if (res.failure != null)
         {
           fail(seed, 'broke before the roundtrip, at step ' + res.step + ': ' + res.failure);

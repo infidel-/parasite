@@ -18,6 +18,7 @@ typedef _BotOption = {
   var kind: String; // move, act, window, escape, answer: what the random policy weighs
   var label: String; // what it does, for the trail
   var f: Void -> Void; // do it
+  @:optional var id: String; // the action id behind it, for the goal policy to look for
 }
 
 class Bot
@@ -35,12 +36,14 @@ class Bot
   var game: Game;
   var rng: Void -> Float;
   public var trail: Array<String>; // the last TRAIL steps taken, newest last
+  public var policy: String; // random, or goal: work through the tutorial (random where it has no say)
 
-  public function new(g: Game, seed: Int)
+  public function new(g: Game, seed: Int, policy: String)
     {
       game = g;
       rng = gen.Rng.mulberry32(seed);
       trail = [];
+      this.policy = policy;
     }
 
 // pick one option and do it; false when there is nothing left to do
@@ -49,7 +52,9 @@ class Bot
       var list = options();
       if (list.length == 0)
         return false;
-      var o = pick(list);
+      var o = (policy == 'goal' ? goal(list) : null);
+      if (o == null)
+        o = pick(list);
       trail.push('T' + game.turns + ' ' + o.label);
       if (trail.length > TRAIL)
         trail.shift();
@@ -89,6 +94,7 @@ class Bot
             kind: 'act',
             label: 'act ' + index + ' ' + a.id,
             f: function() ui.hud.action(index, false),
+            id: a.id,
           });
         }
       for (a in @:privateAccess ui.hud.actions.listKeyActions)
@@ -103,6 +109,7 @@ class Bot
             kind: 'act',
             label: 'key ' + key + ' ' + a.id,
             f: function() ui.hud.keyAction(key),
+            id: a.id,
           });
         }
 
@@ -172,6 +179,7 @@ class Bot
                   kind: 'act',
                   label: 'window ' + index + ' ' + actions[i].id,
                   f: function() w.action(index),
+                  id: actions[i].id,
                 });
               }
             list.push(escape());
@@ -194,6 +202,7 @@ class Bot
                         @:privateAccess b.actionPrefix = prefix;
                         b.action(index);
                       },
+                      id: actions[i].id,
                     });
                   }
               }
@@ -215,6 +224,7 @@ class Bot
         kind: 'window',
         label: 'open ' + state,
         f: function() game.ui.state = state,
+        id: 'open.' + state,
       };
     }
 
@@ -224,6 +234,7 @@ class Bot
       return {
         kind: 'escape',
         label: 'escape',
+        id: 'escape',
         f: function() @:privateAccess game.ui.onKey(cast {
           key: 'Escape',
           code: 'Escape',
@@ -234,6 +245,194 @@ class Bot
           preventDefault: function() {},
         }),
       };
+    }
+
+// the goal policy: what a player working through the tutorial chain (const.Goals) would do next,
+// or null to leave the step to the random policy. It reads the game to choose, and acts only
+// through the options the player has
+  function goal(list: Array<_BotOption>): _BotOption
+    {
+      var ui = game.ui;
+      var p = game.player;
+      var pa = game.playerArea;
+      // a question or a message: say yes, close it
+      for (o in list)
+        if (o.kind == 'answer')
+          return o;
+      var probeLevel = (game.goals.has(GOAL_PROBE_BRAIN_ADVANCED) ? 2 : 1);
+      if (ui.state == UISTATE_EVOLUTION)
+        {
+          var o = find(list, 'set.' + _Improv.IMP_BRAIN_PROBE);
+          return (o != null &&
+            !p.evolutionManager.isActive ? o : find(list, 'escape'));
+        }
+      // the body window is where an item is learned
+      if (ui.state == UISTATE_BODY)
+        {
+          for (o in list)
+            if (o.id != null &&
+                StringTools.startsWith(o.id, 'learn.'))
+              return o;
+          return find(list, 'escape');
+        }
+      if (ui.state != UISTATE_DEFAULT ||
+          game.location != LOCATION_AREA)
+        return null;
+      // a walk under way goes on, one waypoint a step, as Game.update steps a clicked path
+      if (pa.path != null)
+        return {
+          kind: 'move',
+          label: 'follow path',
+          f: game.update,
+        };
+
+      var human = nearestAI(true);
+      if (p.state == PLR_STATE_PARASITE)
+        {
+          // a dog only when there is no human about: every goal past the first needs a human
+          var here = game.area.getAI(pa.x, pa.y);
+          var o = find(list, 'attachHost');
+          if (o != null &&
+              (human == null ||
+               (here != null &&
+                here.isHuman)))
+            return o;
+          var ai = (human != null ? human : nearestAI(false));
+          return (ai != null ? walk(ai.x, ai.y) : null);
+        }
+      if (p.state == PLR_STATE_ATTACHED)
+        return first(list, [ 'invadeHost', 'hardenGrip', 'invadeEarly' ]);
+
+      // in a host
+      var host = p.host;
+      if (p.hostControl < 50)
+        {
+          var o = find(list, 'reinforceControl');
+          if (o != null)
+            return o;
+        }
+      var evo = p.evolutionManager;
+      if (evo.state > 0 &&
+          evo.getLevel(IMP_BRAIN_PROBE) < probeLevel)
+        return (evo.isActive ? find(list, 'skipTurn') : find(list, 'open.' + _UIState.UISTATE_EVOLUTION));
+      // whatever the host carries, learned (in the body window) before its brain is wrung
+      // (a dog's inventory is unavailable there, as ui.Body.updateInventory has it)
+      if (p.vars.inventoryEnabled &&
+          host.isHuman)
+        for (item in host.inventory.withWorn())
+          if (!p.knowsItem(item.id))
+            return find(list, 'open.' + _UIState.UISTATE_BODY);
+      if (game.goals.has(GOAL_ENTER_SEWERS))
+        {
+          var o = first(list, [ 'enterSewers', 'learnObject' ]);
+          if (o != null)
+            return o;
+          var hatch = nearestObject('sewer_hatch');
+          if (hatch != null)
+            return walk(hatch.x, hatch.y);
+        }
+      // a probe takes health off the host: stop while it can still carry the parasite to the next one
+      var o = find(list, 'probeBrain');
+      if (o != null &&
+          host.isHuman &&
+          host.health > 3 &&
+          !game.goals.completed(GOAL_LEARN_SOCIETY))
+        return o;
+      // a spent host, or a dog, is a ride to the nearest human: walk it there, step out next to them
+      if (!host.isHuman ||
+          host.health <= 3 ||
+          host.energy < 20 ||
+          !game.goals.completed(GOAL_LEARN_SOCIETY))
+        {
+          if (human == null)
+            return null;
+          if (Math.max(Math.abs(human.x - pa.x), Math.abs(human.y - pa.y)) <= 1)
+            return find(list, 'leaveHost');
+          return walk(human.x, human.y);
+        }
+      return find(list, 'skipTurn');
+    }
+
+// the option with this id, or null
+  function find(list: Array<_BotOption>, id: String): _BotOption
+    {
+      for (o in list)
+        if (o.id == id)
+          return o;
+      return null;
+    }
+
+// the first of these ids on offer, in this order, or null
+  function first(list: Array<_BotOption>, ids: Array<String>): _BotOption
+    {
+      for (id in ids)
+        {
+          var o = find(list, id);
+          if (o != null)
+            return o;
+        }
+      return null;
+    }
+
+// walk to a cell as a mouse click does (PlayerArea.setPath takes the first step)
+  function walk(x: Int, y: Int): _BotOption
+    {
+      return {
+        kind: 'move',
+        label: 'walk ' + x + ',' + y,
+        f: function() game.playerArea.setPath(x, y),
+      };
+    }
+
+// the nearest living, unarmed AI to the player that is not its host; only humans when asked
+  function nearestAI(humanOnly: Bool): ai.AI
+    {
+      var pa = game.playerArea;
+      var best: ai.AI = null;
+      var bestD = 0;
+      for (ai in game.area.getAIinRadius(pa.x, pa.y, 25, false))
+        {
+          // the armed ones (police, security, soldiers) shoot an attached parasite dead
+          if (ai.state == AI_STATE_DEAD ||
+              ai == game.player.host ||
+              ai.isAggressive ||
+              (humanOnly &&
+               !ai.isHuman))
+            continue;
+          // an alerted AI tears the parasite away: a calm one counts as ten cells closer
+          var d = Std.int(Math.max(Math.abs(ai.x - pa.x), Math.abs(ai.y - pa.y))) +
+            (ai.state == AI_STATE_IDLE ? 0 : 10);
+          if (best == null ||
+              d < bestD)
+            {
+              best = ai;
+              bestD = d;
+            }
+        }
+      return best;
+    }
+
+// the nearest area object of a type
+  function nearestObject(type: String): objects.AreaObject
+    {
+      var pa = game.playerArea;
+      var best: objects.AreaObject = null;
+      var bestD = 0;
+      var it = game.area.getObjects();
+      while (it.hasNext())
+        {
+          var o = it.next();
+          if (o.type != type)
+            continue;
+          var d = Std.int(Math.max(Math.abs(o.x - pa.x), Math.abs(o.y - pa.y)));
+          if (best == null ||
+              d < bestD)
+            {
+              best = o;
+              bestD = d;
+            }
+        }
+      return best;
     }
 
 // the random policy: a kind by weight among those on offer, then one option of it uniformly

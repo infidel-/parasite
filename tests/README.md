@@ -10,8 +10,9 @@ states, broken invariants and saves that do not survive a load.
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
-Arguments are `--suite all|smoke|fuzz|compat|roundtrip`, `--start new,s1,save/<file>`, `--seed N`,
-`--count N` and `--steps N`. Add `--full` to print a known failure's whole report, `--stop N` to
+Arguments are `--suite all|smoke|fuzz|compat|roundtrip|tutorial`, `--start new,s1,save/<file>`,
+`--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
+`GOAL_ENTER_SEWERS`) and `--reach P`. Add `--full` to print a known failure's whole report, `--stop N` to
 write the state before step N as a save, and `--trace` to keep the game's own console output.
 
 ## How it works
@@ -37,7 +38,23 @@ write the state before step N as a save, and `--trace` to keep the game's own co
 - **The bot** (`src/test/Bot.hx`) uses the player's own entry points: `ActionsHud.action(i)`,
   `keyAction`, `UI.handleMovement` (numpad codes), Escape through `UI.onKey`, a window's
   `action(i)` and `UI.closeWindow`. The only UI rules it copies are the three navbar gates (Evo,
-  Cult, Body). Its choices come from its own `gen.Rng` stream.
+  Cult, Body). Its choices come from its own `gen.Rng` stream. It has two policies:
+  - **random**: weighted picks among moves, actions, windows and Escape;
+  - **goal**: walks the tutorial chain the way a player would.
+
+  The goal policy works like this:
+  - **Hosts.** It walks to the nearest calm, unarmed human the way a mouse click walks
+    (`setPath`), attaches, hardens its grip and invades. A dog is ridden to a human, and the
+    parasite steps out next to them.
+  - **Evolution.** It evolves Brain Probe in the Evolution window.
+  - **Learning.** It learns the host's items in the Body window, and probes the brain until the
+    host's health is down to 3.
+  - **Sewers.** For ENTER_SEWERS it learns the sewer hatch and uses it.
+
+  Wherever the goal policy has no opinion, the random policy picks. **Measured** (2026-11-05,
+  seeds 1-40): 53% reach ENTER_SEWERS, median 94 turns. Most failures die to police once the area's
+  alertness climbs, because the bot never changes area. Raising that rate means teaching it to
+  travel; raise `--reach` with it.
 
 ## Suites
 
@@ -47,6 +64,7 @@ write the state before step N as a save, and `--trace` to keep the game's own co
 | `fuzz` | `new` and the 11 console stage presets (`s1`..`s31`) × seeds | random play; after every step: no throw, no `UI.onError` alert, the invariants, not stuck (300 steps with no turn) |
 | `compat` | every fixture save | it loads through `Game.load` (old saves too), then 200 fuzz steps |
 | `roundtrip` | `new`, the presets and every fixture | play a little, save, load, save: the two saves must match field for field |
+| `tutorial` | new games × seeds, the GOAL policy | works through the tutorial chain to `--goal`; the suite fails when fewer than `--reach`% of the seeds get there (default 40, quick 20) and prints min/median/max turns |
 
 **Invariants** (`Bot.check`), which check only rules the code already implies:
 - no NaN in player health, energy and ap, `group.priority`, cult money, area alertness;

@@ -74,19 +74,43 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   await Promise.all(Array.from({ length: Math.min(availableParallelism(), ids.length) }, worker));
   let failed = 0;
   let known = 0;
-  for (const r of results) {
+  // the tutorial runs: how many reached the goal, in how many turns, and how many stalled (exit 4)
+  const turns = [];
+  let tutorials = 0;
+  for (let i = 0; i < ids.length; i++) {
+    const r = results[i];
+    if (ids[i].startsWith('tutorial:'))
+      tutorials++;
+    const at = /^@turns (\d+)$/m.exec(r.out);
+    if (at)
+      turns.push(+at[1]);
     if (r.code == 0)
       continue;
     if (r.code == 3) known++;
-    else failed++;
-    // the quick cut (every build) counts its known failures without listing them
-    if (r.code != 3 || !args.includes('--quick'))
+    else if (r.code != 4) failed++;
+    // the quick cut (every build) counts its known failures and stalls without listing them
+    if ((r.code != 3 && r.code != 4) || !args.includes('--quick'))
       process.stdout.write(r.out.split('\n').filter((l) => !l.startsWith('@')).join('\n'));
   }
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
   console.log('[test] ' + ids.length + ' runs, ' + failed + ' failed, ' + known + ' known (' + secs + ' s)' +
     (known > 0 ? ' — known failures are filed in tests/known.json' : ''));
-  process.exit(failed > 0 ? 1 : 0);
+  // the tutorial passes on a share of its seeds, not all: --reach is that share in percent. The
+  // defaults sit under what the goal bot measured (2026-11-05, GOAL_ENTER_SEWERS: the soak's 20
+  // seeds 11/20, the quick cut's 5 seeds 2/5): low enough for the bot's own deaths, high enough that
+  // a broken step in the chain, which reaches nothing, fails. Raise them as the bot improves
+  let low = false;
+  if (tutorials > 0) {
+    turns.sort((a, b) => a - b);
+    const pct = Math.round(100 * turns.length / tutorials);
+    const ri = args.indexOf('--reach');
+    const reach = (ri >= 0 ? +args[ri + 1] : (args.includes('--quick') ? 20 : 40));
+    low = pct < reach;
+    console.log('[test] tutorial: ' + turns.length + '/' + tutorials + ' reached (' + pct + '%, needs ' + reach + '%)' +
+      (turns.length > 0 ? ', turns min ' + turns[0] + ' / median ' + turns[turns.length >> 1] +
+        ' / max ' + turns[turns.length - 1] : '') + (low ? ' — TOO FEW' : ''));
+  }
+  process.exit(failed > 0 || low ? 1 : 0);
 }
 
 // the report goes out through __out; the game's own console chatter (debug dumps, [mods] lines) is
