@@ -36,7 +36,7 @@ class World extends _SaveObject
           for (o in @:privateAccess r._objects)
             {
               if (o.id > RegionObject._maxID)
-                RegionObject._maxID = r.id;
+                RegionObject._maxID = o.id;
             }
           for (a in @:privateAccess r._list)
             {
@@ -61,6 +61,7 @@ class World extends _SaveObject
       AreaGame._maxID++;
       AreaObject._maxID++;
       RegionGame._maxID++;
+      RegionObject._maxID++;
       AIData._maxID++;
     }
 

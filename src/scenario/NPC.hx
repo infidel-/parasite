@@ -28,7 +28,7 @@ class NPC extends _SaveObject
   public var tileAtlasY: Int;
 
   public var id: Int; // unique NPC id
-  static var _maxID: Int = 0; // current max ID
+  public static var _maxID: Int = 0; // current max ID
 
   public function new(g: Game)
     {

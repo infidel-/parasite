@@ -64,6 +64,9 @@ class Timeline extends _SaveObject
             {
               npc.area.npc.add(npc);
               npc.event = ev;
+              // a load starts the counter over: keep it past the ids in use
+              if (npc.id >= NPC._maxID)
+                NPC._maxID = npc.id + 1;
             }
         }
     }
