@@ -63,7 +63,12 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   const worker = async () => {
     while (next < ids.length) {
       const i = next++;
-      const r = await child(['--run', ids[i]]);
+      let r = await child(['--run', ids[i]]);
+      // a continue run's second half, in a fresh process of its own
+      if (/^@resume$/m.test(r.out)) {
+        const b = await child(['--run', ids[i], '--resume']);
+        r = { code: b.code, out: r.out + b.out };
+      }
       // a failure is played again in a fresh process, stopped the step before, for its save
       const at = /^@fail (\d+)$/m.exec(r.out);
       if (at && +at[1] > 0)
@@ -251,7 +256,8 @@ const host = {
   platform: 'linux',
   isDebug: true,
   settings: { read: () => null, write: () => true },
-  profile: { read: () => null, write: () => true, exists: () => false },
+  // a continue run's second half plays with the first half's profile (profileText)
+  profile: { read: () => host.profileText ?? null, write: () => true, exists: () => host.profileText != null },
   save: {
     read: (s) => saves.get(s) ?? null,
     write: (s, d) => { saves.set(s, d); return true; },
@@ -283,6 +289,7 @@ const host = {
     saves.set(slot, gunzipSync(readFileSync(resolve(root, path))).toString('utf8'));
     return true;
   },
+  readOut: (name) => gunzipSync(readFileSync(resolve(root, 'tests', 'out', name))).toString('utf8'),
   writeOut: (name, data) => {
     mkdirSync(resolve(root, 'tests', 'out'), { recursive: true });
     writeFileSync(resolve(root, 'tests', 'out', name), gzipSync(data));

@@ -104,6 +104,11 @@ class Headless
         }
       else if (parts[0] == 'roundtrip')
         roundtrip(parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
+      else if (parts[0] == 'continue')
+        {
+          continueRun(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]), Std.parseInt(parts[4]));
+          return;
+        }
       else if (parts[0] == 'tutorial')
         {
           tutorial(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
@@ -141,6 +146,7 @@ class Headless
           suite != 'fuzz' &&
           suite != 'compat' &&
           suite != 'roundtrip' &&
+          suite != 'continue' &&
           suite != 'tutorial')
         return null;
       var ids = [];
@@ -164,6 +170,13 @@ class Headless
           suite == 'roundtrip')
         for (st in (start != null ? start.split(',') : (quick ? [ 'new', 's2' ].concat(quickSaves) : [ 'new' ].concat(STAGES).concat(saves))))
           ids.push('roundtrip:' + st + ':' + seed0 + ':' + (quick ? 20 : 50));
+      // a quiet save loaded in a fresh process plays on as the game that made it does. From the
+      // presets only, and early: random play ends a new game (and most presets) before 200 steps
+      if (all ||
+          suite == 'continue')
+        for (st in (start != null ? start.split(',') : (quick ? [ 's1', 's2' ] : STAGES)))
+          for (i in 0...(quick ? 1 : 3))
+            ids.push('continue:' + st + ':' + (seed0 + i) + ':30:' + (quick ? 50 : 100));
       // the goal policy through the tutorial, the timeline and the habitat, on every seed, and on
       // twice the seeds in the soak: 20 leave the computer goal at two runs, too thin to gate on.
       // the quick cut stops at the remembered event area, which about half the seeds reach
@@ -251,10 +264,10 @@ class Headless
 // load a fixture save from tests/saves as the Saves window does, answering the different-mods
 // prompt (most fixtures were made with the chainsaw and pickpocket mods on) the way a player
 // without them would: load anyway
-  static function loadFixture(file: String, seed: Int)
+  static function loadFixture(path: String, seed: Int)
     {
       prepare(seed);
-      js.Syntax.code("host.loadFixture({0}, {1})", FIXTURE_SLOT, 'tests/saves/' + file);
+      js.Syntax.code("host.loadFixture({0}, {1})", FIXTURE_SLOT, path);
       game.ui.closeWindow();
       game.load(FIXTURE_SLOT);
       if (game.ui.state == UISTATE_YESNO)
@@ -368,8 +381,11 @@ class Headless
           // a new game (`new`, `sandbox`, or `mods` with every dev mod on), a stage preset or a
           // fixture save, then the console commands chained on with `+` (`_` for a space)
           var parts = [ for (x in start.split('+')) x.split('_').join(' ') ];
-          if (parts[0].indexOf('save/') == 0)
-            loadFixture(parts[0].substr(5), seed);
+          // `-` plays on from the game as it stands
+          if (parts[0] == '-')
+            {}
+          else if (parts[0].indexOf('save/') == 0)
+            loadFixture('tests/saves/' + parts[0].substr(5), seed);
           else
             {
               newGame(seed, (parts[0] == 'sandbox' ? 'sandbox' : 'alien'));
@@ -521,6 +537,99 @@ class Headless
           fail(seed, 'changed across a load: ' + p + ' (e.g. ' + changed[p] + ')');
         fail(seed, 'both saves: tests/out/' + name + '-{a,b}.json.gz');
       });
+    }
+
+// a save is the whole game: play to a quiet step past k, save there, then play m steps more on a
+// second seed and save again. --resume is the other half, run by tools/test.mjs in a fresh process:
+// load the quiet save, play the same m steps, and save. The two last saves must match; a difference
+// is state that play reads and a save drops, which roundtrip cannot see (the save it compares is the
+// one it just loaded)
+  static function continueRun(id: String, start: String, seed: Int, k: Int, m: Int)
+    {
+      var name = 'continue-' + id.split(':').join('-').split('/').join('-');
+      var seed2 = seed + 1000;
+      if (has('--resume'))
+        {
+          // the profile the first half played with, so a pedia unlock is not new again
+          js.Syntax.code("host.profileText = host.readOut({0})", name + '-profile.json.gz');
+          run(seed, function() loadFixture('tests/out/' + name + '-quiet.json.gz', seed));
+          if (failures.length == 0)
+            {
+              js.Syntax.code("Math.random = {0}", gen.Rng.mulberry32(seed2));
+              var res = play('-', seed2, m, -1, null);
+              if (res.failure != null)
+                fail(seed, 'the loaded game broke at step ' + res.step + ': ' + res.failure);
+              else run(seed, function() {
+                Saver.save(game, ROUNDTRIP_SLOT);
+                var b = HostBridge.saveRead(ROUNDTRIP_SLOT);
+                var a: String = js.Syntax.code("host.readOut({0})", name + '-a.json.gz');
+                if (a == b)
+                  return;
+                js.Syntax.code("host.writeOut({0}, {1})", name + '-b.json.gz', b);
+                var changed = new Map<String, String>();
+                diffPaths(haxe.Json.parse(a), haxe.Json.parse(b), 'save', changed);
+                var paths = [ for (p in changed.keys()) p ];
+                paths.sort(Reflect.compare);
+                for (p in paths)
+                  fail(seed, 'differs after a load and ' + m + ' steps: ' + p + ' (e.g. ' + changed[p] + ')');
+                if (paths.length > 0)
+                  fail(seed, 'both saves: tests/out/' + name + '-{a,b}.json.gz');
+              });
+            }
+          finish(id);
+          return;
+        }
+
+      var res = play(start, seed, k, -1, null);
+      if (res.failure != null)
+        {
+          fail(seed, 'broke before the quiet save, at step ' + res.step + ': ' + res.failure);
+          finish(id);
+          return;
+        }
+      var quiet = false;
+      run(seed, function() {
+        // a step with nothing under way that a save leaves out: a walk, a region trip, a repeated
+        // action, a window or one queued
+        var bot = new Bot(game, seed, 'random');
+        for (_ in 0...100)
+          {
+            quiet = (game.state == GAMESTATE_RUNNING &&
+              game.ui.state == UISTATE_DEFAULT &&
+              game.ui.hud.state == HUD_DEFAULT &&
+              @:privateAccess game.ui.uiQueue.length == 0 &&
+              game.playerArea.path == null &&
+              game.playerArea.currentAction == null &&
+              game.playerRegion.target == null);
+            if (quiet ||
+                !bot.step())
+              break;
+          }
+        if (!quiet)
+          return;
+        // only the stage presets switch these off, and only the Game constructor back on
+        game.importantMessagesEnabled = true;
+        Saver.save(game, ROUNDTRIP_SLOT);
+        js.Syntax.code("host.writeOut({0}, {1})", name + '-quiet.json.gz', HostBridge.saveRead(ROUNDTRIP_SLOT));
+        js.Syntax.code("host.writeOut({0}, {1})", name + '-profile.json.gz', haxe.Json.stringify(game.profile.object));
+        js.Syntax.code("Math.random = {0}", gen.Rng.mulberry32(seed2));
+        var res2 = play('-', seed2, m, -1, null);
+        if (res2.failure != null)
+          {
+            fail(seed, 'broke after the quiet save, at step ' + res2.step + ': ' + res2.failure);
+            return;
+          }
+        Saver.save(game, ROUNDTRIP_SLOT);
+        js.Syntax.code("host.writeOut({0}, {1})", name + '-a.json.gz', HostBridge.saveRead(ROUNDTRIP_SLOT));
+      });
+      if (failures.length == 0 &&
+          !quiet)
+        log('[test] ' + id + ': ' + (game.state == GAMESTATE_FINISH ? 'the game ended' : 'no quiet step in 100') +
+          ' before the quiet save, nothing compared');
+      // the runner plays the other half
+      else if (failures.length == 0)
+        log('@resume');
+      finish(id);
     }
 
 // fields a load is allowed to change: it logs "Game loaded from slot N.", and visRev is the
