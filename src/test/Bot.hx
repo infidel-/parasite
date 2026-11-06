@@ -42,9 +42,11 @@ class Bot
   var game: Game;
   var rng: Void -> Float;
   public var trail: Array<String>; // the last TRAIL steps taken, newest last
-  public var policy: String; // random, or goal: work through the tutorial (random where it has no say)
+  public var policy: String; // random, or goal: work through the tutorial, timeline and habitat goals (random where it has no say)
   var walkFailed = false; // the goal policy's last walk had no path: hand the next step to random
   var fled: game.AreaGame = null; // the area the goal policy last fled, not to be entered again straight away
+  var opened = ''; // the window the goal policy last opened, and the turn it did (one try a turn each)
+  var openedTurn = -1;
 
   public function new(g: Game, seed: Int, policy: String)
     {
@@ -263,6 +265,18 @@ class Bot
       };
     }
 
+// the option opening this window, unless the goal policy opened it already this turn: a window
+// with nothing to do in it is escaped, and opening it again straight away would loop
+  function openOnce(list: Array<_BotOption>, state: _UIState): _BotOption
+    {
+      if (opened == state &&
+          openedTurn == game.turns)
+        return null;
+      opened = state;
+      openedTurn = game.turns;
+      return find(list, 'open.' + state);
+    }
+
 // press Escape through the real keyboard handler
   function escape(): _BotOption
     {
@@ -294,12 +308,14 @@ class Bot
       for (o in list)
         if (o.kind == 'answer')
           return o;
-      var probeLevel = (game.goals.has(GOAL_PROBE_BRAIN_ADVANCED) ? 2 : 1);
+      var evo = p.evolutionManager;
+      var imp = wantedImprov();
       if (ui.state == UISTATE_EVOLUTION)
         {
-          var o = find(list, 'set.' + _Improv.IMP_BRAIN_PROBE);
+          var o = (imp != null ? find(list, 'set.' + imp) : null);
           return (o != null &&
-            !p.evolutionManager.isActive ? o : find(list, 'escape'));
+            !(evo.isActive &&
+              evo.taskID == imp) ? o : find(list, 'escape'));
         }
       // the body window is where an item is learned, and a paper read for its clues (a book wants a
       // habitat)
@@ -309,7 +325,13 @@ class Bot
             if (o.id != null &&
                 (StringTools.startsWith(o.id, 'learn.') ||
                  (o.id == 'read.paper' &&
-                  wantsClues())))
+                  wantsClues()) ||
+                 // an organ (the feature list's ids are set.<improvement>)
+                 (StringTools.startsWith(o.id, 'set.') &&
+                  game.goals.has(GOAL_GROW_ORGAN)) ||
+                 (StringTools.startsWith(o.id, 'search.') &&
+                  game.goals.has(GOAL_USE_COMPUTER) &&
+                  game.area.isHabitat)))
               return o;
           return find(list, 'escape');
         }
@@ -333,7 +355,12 @@ class Bot
           f: game.update,
         };
 
-      var human = nearestAI(true);
+      // the computer goal wants a host carrying a device, and one who knows computers while the
+      // parasite does not
+      var human = (game.goals.has(GOAL_USE_COMPUTER) ?
+        nearestAI(true, computerHost) : nearestAI(true));
+      if (human == null)
+        human = nearestAI(true);
       if (p.state == PLR_STATE_PARASITE)
         {
           // a dog only when there is no human about: every goal past the first needs a human
@@ -364,23 +391,62 @@ class Bot
           if (o != null)
             return o;
         }
-      var evo = p.evolutionManager;
-      if (evo.state > 0 &&
-          evo.getLevel(IMP_BRAIN_PROBE) < probeLevel)
-        return (evo.isActive ? find(list, 'skipTurn') : find(list, 'open.' + _UIState.UISTATE_EVOLUTION));
+      // the next improvement set evolving; the probe is waited for, since the next goals need it, and
+      // the rest evolves while the bot goes on
+      if (imp != null &&
+          !(evo.isActive &&
+            evo.taskID == imp))
+        {
+          var o = openOnce(list, _UIState.UISTATE_EVOLUTION);
+          if (o != null)
+            return o;
+        }
+      if (imp == IMP_BRAIN_PROBE &&
+          evo.isActive)
+        return find(list, 'skipTurn');
       // whatever the host carries, learned (in the body window) before its brain is wrung
       // (a dog's inventory is unavailable there, as ui.Body.updateInventory has it)
       if (p.vars.inventoryEnabled &&
           host.isHuman)
         for (item in host.inventory.withWorn())
           if (!p.knowsItem(item.id))
-            return find(list, 'open.' + _UIState.UISTATE_BODY);
+            {
+              var o = openOnce(list, _UIState.UISTATE_BODY);
+              if (o != null)
+                return o;
+            }
+      // an organ grown in the body window, for GROW_ORGAN
+      if (game.goals.has(GOAL_GROW_ORGAN) &&
+          @:privateAccess host.organs.currentOrgan == null)
+        {
+          var o = openOnce(list, _UIState.UISTATE_BODY);
+          if (o != null)
+            return o;
+        }
+      // in the habitat, a ready host searches its device for the computer goal; any other host
+      // has no business there
+      var ready = computerReady();
+      if (game.area.isHabitat &&
+          game.goals.has(GOAL_USE_COMPUTER))
+        {
+          if (ready)
+            {
+              var o = openOnce(list, _UIState.UISTATE_BODY);
+              return (o != null ? o : find(list, 'skipTurn'));
+            }
+          var o = leave(list);
+          if (o != null)
+            return o;
+        }
       // a hot area is left before the police it calls in arrive; the sewers goal leaves the same way,
       // and so does a timeline goal that wants another area
       var target = eventArea();
       if (host.isHuman &&
+          !game.area.isHabitat &&
           (game.area.alertness >= FLEE ||
            ((game.goals.has(GOAL_ENTER_SEWERS) ||
+             game.goals.has(GOAL_CREATE_HABITAT) ||
+             ready ||
              (target != null &&
               target != game.area)) &&
             host.energy >= TRIP_ENERGY)))
@@ -398,7 +464,11 @@ class Bot
         {
           if (host.inventory.has('paper') &&
               host.energy > 10)
-            return find(list, 'open.' + _UIState.UISTATE_BODY);
+            {
+              var o = openOnce(list, _UIState.UISTATE_BODY);
+              if (o != null)
+                return o;
+            }
           // an unknown paper is learned about before it can be picked up
           var o = first(list, [ 'get', 'pickupMenu', 'learnObject' ]);
           if (o != null)
@@ -418,7 +488,10 @@ class Bot
           (!game.goals.completed(GOAL_LEARN_SOCIETY) ||
            (host.isNPC &&
             !host.npc.memoryKnown &&
-            wantsClues())))
+            wantsClues()) ||
+           (game.goals.has(GOAL_USE_COMPUTER) &&
+            p.skills.getLevel(SKILL_COMPUTER) == 0 &&
+            host.skills.getLevel(SKILL_COMPUTER) > 0)))
         return o;
       // a spent host, or a dog, is a ride to the nearest human: walk it there, step out next to them
       if (!host.isHuman ||
@@ -429,7 +502,11 @@ class Bot
            host.hasTrait(TRAIT_ILLITERATE)) ||
           (target != null &&
            target != game.area &&
-           host.energy < TRIP_ENERGY))
+           host.energy < TRIP_ENERGY) ||
+          (game.goals.has(GOAL_USE_COMPUTER) &&
+           !computerHost(host) &&
+           human != null &&
+           computerHost(human)))
         {
           if (human == null)
             return null;
@@ -451,6 +528,30 @@ class Bot
           label: 'follow region path',
           f: game.update,
         };
+      // a habitat is made in the sewers under the first inhabited area it gets to
+      var o = find(list, 'createHabitat');
+      if (o != null &&
+          game.goals.has(GOAL_CREATE_HABITAT))
+        return o;
+      // a host ready for the computer goal goes to the habitat
+      if (game.goals.has(GOAL_USE_COMPUTER) &&
+          computerReady())
+        {
+          var o = find(list, 'enterHabitat');
+          if (o != null)
+            return o;
+          for (a in game.region)
+            if (a.hasHabitat)
+              {
+                var x = a.x;
+                var y = a.y;
+                return {
+                  kind: 'move',
+                  label: 'travel ' + x + ',' + y + ' (habitat)',
+                  f: function() pr.setTarget(x, y),
+                };
+              }
+        }
       // a parasite, or a host about to expire, needs a new host before anywhere else
       var p = game.player;
       var target = (p.state == PLR_STATE_HOST &&
@@ -465,7 +566,7 @@ class Bot
           var bestD = 0;
           for (a in game.region)
             {
-              if (!a.info.canEnter ||
+              if (!canEnter(a) ||
                   !a.info.isInhabited ||
                   a == fled ||
                   a.alertness >= FLEE)
@@ -479,8 +580,10 @@ class Bot
                 }
             }
         }
-      if (target == null ||
-          target == pr.currentArea)
+      // nowhere calm: in here if this area lets the player in, else wait (alertness falls out here)
+      if (target == null)
+        return find(list, canEnter(pr.currentArea) ? 'enterArea' : 'skipTurn');
+      if (target == pr.currentArea)
         return find(list, 'enterArea');
       var x = target.x;
       var y = target.y;
@@ -500,6 +603,58 @@ class Bot
         return o;
       var exit = nearestObject(game.area.info.exit);
       return (exit != null ? walk(exit.x, exit.y) : null);
+    }
+
+// does this area let the player in now, as PlayerRegion.enterAreaAction has it?
+  function canEnter(a: game.AreaGame): Bool
+    {
+      return a.info.canEnter &&
+        a.alertness < 75 &&
+        !(game.player.state == PLR_STATE_PARASITE &&
+          a.info.type == 'corp');
+    }
+
+// the improvement the goal policy evolves next: Brain Probe to the level the goals want, any organ
+// for EVOLVE_ORGAN, then Microhabitat; null when there is none
+  function wantedImprov(): _Improv
+    {
+      var evo = game.player.evolutionManager;
+      if (evo.state == 0)
+        return null;
+      if (evo.getLevel(IMP_BRAIN_PROBE) < (game.goals.has(GOAL_PROBE_BRAIN_ADVANCED) ? 2 : 1))
+        return IMP_BRAIN_PROBE;
+      if (game.goals.has(GOAL_EVOLVE_ORGAN))
+        for (imp in evo)
+          if (imp.info.organ != null)
+            return imp.id;
+      if (game.goals.has(GOAL_EVOLVE_MICROHABITAT) &&
+          evo.getLevel(IMP_MICROHABITAT) == 0)
+        return IMP_MICROHABITAT;
+      return null;
+    }
+
+// does this AI carry a computer device, and know computers while the parasite does not?
+  function computerHost(ai: ai.AI): Bool
+    {
+      return (ai.inventory.has('smartphone') ||
+        ai.inventory.has('laptop')) &&
+        (game.player.skills.getLevel(SKILL_COMPUTER) > 0 ||
+         ai.skills.getLevel(SKILL_COMPUTER) > 0);
+    }
+
+// is the host ready to search for the computer goal: a known device, and the computer skill?
+  function computerReady(): Bool
+    {
+      var p = game.player;
+      if (!game.goals.has(GOAL_USE_COMPUTER) ||
+          p.state != PLR_STATE_HOST ||
+          p.skills.getLevel(SKILL_COMPUTER) == 0)
+        return false;
+      for (id in [ 'smartphone', 'laptop' ])
+        if (p.host.inventory.has(id) &&
+            p.knowsItem(id))
+          return true;
+      return false;
     }
 
 // do the timeline goals want clues?
@@ -571,8 +726,9 @@ class Bot
       };
     }
 
-// the nearest living, unarmed AI to the player that is not its host; only humans when asked
-  function nearestAI(humanOnly: Bool): ai.AI
+// the nearest living, unarmed AI to the player that is not its host; only humans when asked, and
+// only the ones `want` accepts when given
+  function nearestAI(humanOnly: Bool, ?want: ai.AI -> Bool): ai.AI
     {
       var pa = game.playerArea;
       var best: ai.AI = null;
@@ -584,7 +740,9 @@ class Bot
               ai == game.player.host ||
               ai.isAggressive ||
               (humanOnly &&
-               !ai.isHuman))
+               !ai.isHuman) ||
+              (want != null &&
+               !want(ai)))
             continue;
           // an alerted AI tears the parasite away: a calm one counts as ten cells closer. every
           // witness around it, who would call the police, as three cells further

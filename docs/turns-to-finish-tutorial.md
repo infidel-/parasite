@@ -4,16 +4,21 @@
 
 Played by the goal bot of the headless tests (`make test args="--suite tutorial --count 40"`, see
 `tests/README.md`) on new games, seeds 1-40, normal difficulty rolls. It carries on past the tutorial
-into the timeline:
+into the timeline and the habitat branch:
 
 | goal | reached | turns min / median / max |
 |---|---|---|
 | `GOAL_INVADE_HUMAN` | 37/40 | 7 / 16 / 33 |
-| `GOAL_LEARN_SOCIETY` (the end of the tutorial) | 22/40 (55%) | 67 / 98 / 169 |
-| `GOAL_ENTER_SEWERS` | 20/40 | 69 / 110 / 183 |
-| `GOAL_TRAVEL_EVENT` (the remembered event area) | 20/40 | 73 / 114 / 185 |
-| `GOAL_LEARN_CLUE` | 14/40 | 119 / 185 / 232 |
-| `GOAL_LEARN_NPC` | 9/40 | 125 / 216 / 268 |
+| `GOAL_LEARN_SOCIETY` (the end of the tutorial) | 20/40 (50%) | 68 / 94 / 141 |
+| `GOAL_ENTER_SEWERS` | 17/40 | 82 / 111 / 146 |
+| `GOAL_TRAVEL_EVENT` (the remembered event area) | 17/40 | 91 / 117 / 148 |
+| `GOAL_LEARN_CLUE` | 11/40 | 109 / 177 / 241 |
+| `GOAL_LEARN_NPC` | 9/40 | 126 / 172 / 297 |
+| `GOAL_EVOLVE_ORGAN` | 21/40 | 47 / 92 / 108 |
+| `GOAL_GROW_ORGAN` | 16/40 | 80 / 119 / 186 |
+| `GOAL_EVOLVE_MICROHABITAT` | 15/40 | 84 / 132 / 201 |
+| `GOAL_CREATE_HABITAT` | 15/40 | 84 / 142 / 243 |
+| `GOAL_USE_COMPUTER` | 6/40 | 174 / 237 / 279 |
 
 The bot is no expert. It probes one host until its health is down to 3, then rides it to the next
 calm human. It leaves an area at alertness 50, but a city can only be left through the sewer hatch,

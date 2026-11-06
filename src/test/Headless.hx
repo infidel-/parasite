@@ -37,6 +37,11 @@ class Headless
     GOAL_TRAVEL_EVENT,
     GOAL_LEARN_CLUE,
     GOAL_LEARN_NPC,
+    GOAL_EVOLVE_ORGAN,
+    GOAL_GROW_ORGAN,
+    GOAL_EVOLVE_MICROHABITAT,
+    GOAL_CREATE_HABITAT,
+    GOAL_USE_COMPUTER,
   ];
   // the in-memory save slots the runs use
   static inline var FIXTURE_SLOT = 5;
@@ -156,12 +161,13 @@ class Headless
           suite == 'roundtrip')
         for (st in (start != null ? start.split(',') : (quick ? [ 'new', 's2' ].concat(quickSaves) : [ 'new' ].concat(STAGES).concat(saves))))
           ids.push('roundtrip:' + st + ':' + seed0 + ':' + (quick ? 20 : 50));
-      // the goal policy through the tutorial and on into the timeline, on every seed. the quick cut
-      // stops at the remembered event area, which about half the seeds reach
+      // the goal policy through the tutorial, the timeline and the habitat, on every seed, and on
+      // twice the seeds in the soak: 20 leave the computer goal at two runs, too thin to gate on.
+      // the quick cut stops at the remembered event area, which about half the seeds reach
       if (all ||
           suite == 'tutorial')
-        for (i in 0...count)
-          ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'GOAL_LEARN_NPC') + ':' + (seed0 + i) + ':' +
+        for (i in 0...(quick ? count : 2 * count))
+          ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'GOAL_USE_COMPUTER') + ':' + (seed0 + i) + ':' +
             (quick ? 2000 : 4000));
       return ids;
     }
@@ -428,6 +434,7 @@ class Headless
   static function tutorial(id: String, goal: _Goal, seed: Int, steps: Int)
     {
       var res = play('new', seed, steps, -1, goal);
+      log('@milestones ' + MILESTONES.join(','));
       for (r in res.reached)
         log('@reach ' + r);
       if (res.failure != null)
