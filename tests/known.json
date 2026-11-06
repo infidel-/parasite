@@ -19,7 +19,8 @@
       "_ai[]._psyche (",
       "_ai[].maxHealth (",
       "_ai[].health (",
-      "_ai[].maxEnergy ("
+      "_ai[].maxEnergy (",
+      "_ai[].energy ("
     ],
     "todo": "TODO.md: prostitutes and blackops spawn with stale derived stats"
   },

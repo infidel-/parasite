@@ -13,6 +13,7 @@
 package test;
 
 import game.Game;
+import region.RegionObject;
 
 typedef _BotOption = {
   var kind: String; // move, act, window, escape, answer: what the random policy weighs
@@ -828,9 +829,17 @@ class Bot
           nan('cult ' + c.id + ' resources.money', c.resources.money);
           nan('cult ' + c.id + ' power.money', c.power.money);
         }
+      var pa = game.playerArea;
       if (p.state == PLR_STATE_HOST &&
           p.host == null)
         list.push('host state with no host');
+      else if (p.state == PLR_STATE_HOST &&
+          p.hostID != p.host.id)
+        list.push('hostID ' + p.hostID + ' is not the host ' + p.host.id);
+      if (p.state == PLR_STATE_PARASITE &&
+          (p.host != null ||
+           pa.attachHost != null))
+        list.push('parasite state with a host or an attach host');
       if (game.location == LOCATION_AREA)
         {
           var a = game.area;
@@ -838,19 +847,104 @@ class Bot
             list.push('area location with no area');
           else
             {
-              if (game.playerArea.x < 0 ||
-                  game.playerArea.y < 0 ||
-                  game.playerArea.x >= a.width ||
-                  game.playerArea.y >= a.height)
-                list.push('player at ' + game.playerArea.x + ',' + game.playerArea.y +
+              if (pa.x < 0 ||
+                  pa.y < 0 ||
+                  pa.x >= a.width ||
+                  pa.y >= a.height)
+                list.push('player at ' + pa.x + ',' + pa.y +
                   ' outside the ' + a.width + 'x' + a.height + ' area');
               if (Math.isNaN(a.alertness))
                 list.push('area alertness is NaN');
+              checkArea(a, list);
             }
         }
       for (g in game.goals.iteratorCurrent())
         if (game.goals.completed(g))
           list.push('goal ' + g + ' both current and completed');
+      if (game.messageList.length > 100)
+        list.push('messageList holds ' + game.messageList.length + ' lines, over its cap of 100');
+      checkCounters(list);
       return list;
+    }
+
+// the current area's invariants: its AIs, the host and the cultists in it
+  function checkArea(a: game.AreaGame, list: Array<String>)
+    {
+      var p = game.player;
+      var pa = game.playerArea;
+      if (p.state == PLR_STATE_HOST &&
+          a.getAIByID(p.host.id) != p.host)
+        list.push('host ' + p.host.id + ' is not in the area AI list');
+      if (p.state == PLR_STATE_ATTACHED &&
+          (pa.attachHost == null ||
+           !pa.attachHost.parasiteAttached))
+        list.push('attached state with no attach host, or one not flagged parasiteAttached');
+      for (ai in @:privateAccess a._ai)
+        {
+          if (Math.isNaN(ai.health) ||
+              Math.isNaN(ai.energy))
+            list.push('AI ' + ai.id + ' health or energy is NaN');
+          if (ai.health > ai.maxHealth)
+            list.push('AI health above max (' + ai.health + ' > ' + ai.maxHealth + ')');
+          if (ai.energy > ai.maxEnergy)
+            list.push('AI ' + ai.id + (ai == p.host ? ' (host)' : '') + ' energy above max (' + ai.energy + ' > ' + ai.maxEnergy + ')');
+          if (ai.x < 0 ||
+              ai.y < 0 ||
+              ai.x >= a.width ||
+              ai.y >= a.height)
+            list.push('AI ' + ai.id + ' at ' + ai.x + ',' + ai.y + ' outside the area');
+          // a carried host still holds its enemies from the area it came from
+          if (ai != p.host)
+            for (id in ai.enemies)
+              if (a.getAIByID(id) == null)
+                {
+                  list.push('AI ' + ai.id + ' has enemy ' + id + ', not in the area');
+                  break;
+                }
+          // Cult.onRemoveAI throws on a cultist with no member record (TODO.md)
+          if (ai.isCultist)
+            {
+              var c = game.getCultByID(ai.cultID);
+              if (c == null ||
+                  c.getMemberByID(ai.id) == null)
+                list.push('cultist AI ' + ai.id + ' has no member record in cult ' + ai.cultID);
+            }
+        }
+    }
+
+// the id counters are ahead of every live id, or the next object made takes an id in use (a load
+// restores them from the ids it finds)
+  function checkCounters(list: Array<String>)
+    {
+      // the largest live id of each kind, reported once against its counter
+      var top = new Map<String, Int>();
+      var ahead = function(name: String, id: Int)
+        {
+          if (!top.exists(name) ||
+              id > top[name])
+            top[name] = id;
+        };
+      if (game.region != null)
+        for (o in game.region.getObjects())
+          ahead('RegionObject', o.id);
+      if (game.area != null)
+        {
+          for (x in @:privateAccess game.area._ai)
+            ahead('AIData', x.id);
+          for (o in game.area.getObjects())
+            ahead('AreaObject', o.id);
+        }
+      for (e in game.timeline)
+        for (npc in e.npc)
+          ahead('NPC', npc.id);
+      var counters = [
+        'RegionObject' => RegionObject._maxID,
+        'AIData' => ai.AIData._maxID,
+        'AreaObject' => objects.AreaObject._maxID,
+        'NPC' => @:privateAccess scenario.NPC._maxID,
+      ];
+      for (name in top.keys())
+        if (top[name] >= counters[name])
+          list.push(name + '._maxID ' + counters[name] + ' is not above live id ' + top[name]);
     }
 }

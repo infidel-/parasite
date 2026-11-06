@@ -105,8 +105,16 @@ write the state before step N as a save, and `--trace` to keep the game's own co
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
 
 **Invariants** (`Bot.check`), which check only rules the code already implies:
-- no NaN in player health, energy and ap, `group.priority`, cult money, area alertness;
-- a host whenever the player is in host state;
+- no NaN in player health, energy and ap, `group.priority`, cult money, area alertness, AI health
+  and energy;
+- AI health and energy at most their max, every AI inside the area;
+- host state: a host, `hostID` its id, and the host in the area's AI list; attached state: an
+  attach host flagged `parasiteAttached`; parasite state: neither;
+- every `enemies` id of an AI (the carried host aside) an AI in the area;
+- every cultist in the area has its member record (`Cult.onRemoveAI` throws without one);
+- the id counters (`RegionObject`, `AIData`, `AreaObject`, `NPC` `._maxID`) above every live id;
+  a load restores them, and two of them it did not (fixed);
+- `messageList` within its cap of 100;
 - the player inside the area;
 - no goal both current and completed.
 
