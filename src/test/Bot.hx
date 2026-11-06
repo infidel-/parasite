@@ -55,17 +55,21 @@ class Bot
   var game: Game;
   var rng: Void -> Float;
   public var trail: Array<String>; // the last TRAIL steps taken, newest last
-  public var policy: String; // random, or goal: work through the tutorial, timeline and habitat goals (random where it has no say)
+  public var policy: String; // random, goal (the tutorial, the timeline, the habitat, the endgame), or cult (ordeals and profane missions); random where it has no say
   var walkFailed = false; // the goal policy's last walk had no path: hand the next step to random
   var fled: game.AreaGame = null; // the area the goal policy last fled, not to be entered again straight away
   var opened = ''; // the window the goal policy last opened, and the turn it did (one try a turn each)
   var openedTurn = -1;
   var lastMessage: _LogMessage = null; // the newest log line check() has looked at
   var talkTo: ai.AI = null; // the AI the goal policy is out to chat with (the converse menu picks it)
+  var cultTried: Map<String, Int> = new Map(); // the Cult window actions the cult policy tried, and the turn it did
+  var startsOrdeals: Bool; // the cult policy starts communal ordeals on odd seeds; they lock the free members a profane ordeal needs, so even seeds leave them be
+  var leftTurn = -1; // the turn the policy last tried to leave an area (an area may refuse, and a refusal passes no turn)
 
   public function new(g: Game, seed: Int, policy: String)
     {
       game = g;
+      startsOrdeals = (seed % 2 == 1);
       rng = gen.Rng.mulberry32(seed);
       trail = [];
       this.policy = policy;
@@ -106,7 +110,8 @@ class Bot
       var list = options();
       if (list.length == 0)
         return false;
-      var o = (policy == 'goal' ? goal(list) : null);
+      var o = (policy == 'goal' ? goal(list) :
+        policy == 'cult' ? cultGoal(list) : null);
       if (o == null)
         o = pick(list);
       trail.push('T' + game.turns + ' ' + o.label);
@@ -280,6 +285,7 @@ class Bot
                   label: 'window ' + index + ' ' + actions[i].id,
                   f: function() w.action(index),
                   id: actions[i].id,
+                  action: actions[i],
                 });
               }
             list.push(escape());
@@ -901,24 +907,183 @@ class Bot
           var beside = (Math.max(Math.abs(smiler.x - pa.x), Math.abs(smiler.y - pa.y)) <= 1);
           if (smiler.chat.consent >= 100)
             return (beside ? find(list, 'leaveHost') : walkNear(smiler.x, smiler.y));
-          // a chat takes a host at 75 affinity and full consent (game.Chat.addConverseAction)
-          if (p.host.affinity < 75)
-            return find(list, 'skipTurn');
-          // a chat just over leaves a timeout on the one talked to (game.Chat.start refuses)
-          if (p.host.chat.consent < 100)
-            return find(list, (p.host.chat.timeout > 0 ? 'skipTurn' : 'converseHost'));
-          if (!beside)
-            return walkNear(smiler.x, smiler.y);
-          if (smiler.chat.timeout > 0)
-            return find(list, 'skipTurn');
-          talkTo = smiler;
-          return find(list, 'converseMenu');
+          return talk(list, smiler);
         }
       if (!near)
         return walkNear(target.x, target.y);
       if (g != SCENARIO_ALIEN_MISSION_LIQUIDATION)
         return find(list, 'leaveHost');
       return attack(list, target);
+    }
+
+// talk an AI round to full consent, the way a player does: the host first (a chat takes a host at
+// 75 affinity and full consent, game.Chat.addConverseAction), then the AI, from beside it
+  function talk(list: Array<_BotOption>, ai: ai.AI): _BotOption
+    {
+      var p = game.player;
+      var pa = game.playerArea;
+      if (p.host.affinity < 75)
+        return find(list, 'skipTurn');
+      // a chat just over leaves a timeout on the one talked to (game.Chat.start refuses)
+      if (p.host.chat.consent < 100)
+        return find(list, (p.host.chat.timeout > 0 ? 'skipTurn' : 'converseHost'));
+      if (Math.max(Math.abs(ai.x - pa.x), Math.abs(ai.y - pa.y)) > 1)
+        return walkNear(ai.x, ai.y);
+      if (ai.chat.timeout > 0)
+        return find(list, 'skipTurn');
+      talkTo = ai;
+      return find(list, 'converseMenu');
+    }
+
+// the cult policy: the Cult window worked (a running ordeal funded, else a new one started), cult
+// turns waited out (one in ten turns), and each profane mission taken to its area and done: a
+// Persuade target talked round, a Kill target hit. Hosts are kept the goal policy's way
+  function cultGoal(list: Array<_BotOption>): _BotOption
+    {
+      var ui = game.ui;
+      var p = game.player;
+      for (o in list)
+        if (o.kind == 'answer')
+          return o;
+      // the window: each action once a turn, the funding first, then whatever starts an ordeal
+      if (ui.state == UISTATE_CULT)
+        {
+          var best: _BotOption = null;
+          var rank = 99;
+          // a submenu's choices can share their parent's id (recruit, then the power to recruit for)
+          var key = function(o: _BotOption) return o.id + ':' + (o.action != null ? o.action.name : '');
+          for (o in list)
+            {
+              if (o.id == null ||
+                  cultTried[key(o)] == game.turns)
+                continue;
+              var r = (StringTools.startsWith(o.id, 'spend.') ? 0 :
+                StringTools.startsWith(o.id, 'ordeal_') ? 1 :
+                o.id == 'initiateOrdeal' ? (startsOrdeals ? 2 : 99) :
+                // a submenu with nothing to do goes back up, to the menus not tried yet
+                o.id == 'back' ? 50 :
+                // followers called in are not free for the profane ordeals
+                (o.id == 'escape' ||
+                 o.id == 'callHelp' ||
+                 o.id == 'annul' ||
+                 o.id == 'callMember' ||
+                 o.id == 'trade' ||
+                 o.id == 'tradeResources' ||
+                 o.id == 'bazaar') ? 99 : 3);
+              if (r < rank)
+                {
+                  best = o;
+                  rank = r;
+                }
+            }
+          if (best == null)
+            return find(list, 'escape');
+          cultTried[key(best)] = game.turns;
+          return best;
+        }
+      if (ui.state != UISTATE_DEFAULT)
+        return null;
+      if (ui.hud.state == HUD_CHAT)
+        return chat(list);
+      if (ui.hud.state == HUD_CONVERSE_MENU)
+        {
+          for (o in list)
+            if (o.id == 'converseMenu.chat' &&
+                o.action.obj == talkTo)
+              return o;
+          return find(list, 'escape');
+        }
+      // Forma is left with its own key: Escape opens the main menu over it
+      if (ui.hud.state == HUD_BASE_BUILDING)
+        return first(list, [ 'baseExit', 'escape' ]);
+      if (ui.hud.state != HUD_DEFAULT)
+        return find(list, 'escape');
+      // the profane mission open, if any, with its marker on the region map to travel to: an area of
+      // the map, or the habitat under one (Ordeals.getMarkerMission), or x,y
+      var m: cult.Mission = null;
+      var marker: { x: Int, y: Int } = null;
+      for (ordeal in game.cults[0].ordeals.list)
+        for (x in ordeal.missions)
+          if (!x.isCompleted &&
+              x.areaID >= 0)
+            for (a in game.region)
+              // a habitat area is in the list too, off the map at -1,-1
+              if (a.x >= 0 &&
+                  (a.id == x.markerAreaID ||
+                   (a.hasHabitat &&
+                    a.habitatAreaID == x.markerAreaID) ||
+                   (x.markerAreaID < 0 &&
+                    a.x == x.x &&
+                    a.y == x.y)))
+                {
+                  m = x;
+                  marker = { x: a.x, y: a.y };
+                }
+      if (game.location == LOCATION_REGION)
+        {
+          if (m == null ||
+              p.state != PLR_STATE_HOST)
+            return region(list);
+          var o = find(list, 'enterMissionArea');
+          if (o != null)
+            return o;
+          if (game.playerRegion.target != null)
+            return {
+              kind: 'move',
+              label: 'follow region path',
+              f: game.update,
+            };
+          var x = marker.x;
+          var y = marker.y;
+          return {
+            kind: 'move',
+            label: 'travel ' + x + ',' + y + ' (mission)',
+            f: function() game.playerRegion.setTarget(x, y),
+          };
+        }
+      if (game.location != LOCATION_AREA)
+        return null;
+      // no host, a host about to expire, a walk under way: the goal policy keeps those
+      if (p.state != PLR_STATE_HOST ||
+          p.host.energy < 20 ||
+          !p.host.isHuman ||
+          game.playerArea.path != null ||
+          walkFailed)
+        return goal(list);
+      if (p.hostControl < 50)
+        {
+          var o = find(list, 'reinforceControl');
+          if (o != null)
+            return o;
+        }
+      if (m != null &&
+          game.area.id == m.areaID)
+        {
+          // the mission's target, spawned in its area
+          var targetID = (Std.isOfType(m, cult.missions.Persuade) ? (cast m: cult.missions.Persuade).target.id :
+            Std.isOfType(m, cult.missions.Kill) ? (cast m: cult.missions.Kill).target.id : -1);
+          var target = game.area.getAIByID(targetID);
+          if (target == null ||
+              target.state == AI_STATE_DEAD)
+            return null;
+          if (m.type == MISSION_PERSUADE)
+            {
+              var o = talk(list, target);
+              return (o != null ? o : find(list, 'skipTurn'));
+            }
+          if (Math.max(Math.abs(target.x - game.playerArea.x), Math.abs(target.y - game.playerArea.y)) > 1)
+            return walkNear(target.x, target.y);
+          return attack(list, target);
+        }
+      // out to the mission, else the window once a turn, else the cult turn waited for
+      if (m != null)
+        {
+          var o = leave(list);
+          if (o != null)
+            return o;
+        }
+      var o = openOnce(list, _UIState.UISTATE_CULT);
+      return (o != null ? o : find(list, 'skipTurn'));
     }
 
 // a chat under way: an action that answers the target's need (ChatConst.needActions, what Analyze
@@ -995,8 +1160,14 @@ class Bot
   function leave(list: Array<_BotOption>): _BotOption
     {
       var o = first(list, [ 'leaveArea', 'enterSewers', 'learnObject' ]);
+      if (o != null &&
+          leftTurn == game.turns)
+        return null;
       if (o != null)
-        return o;
+        {
+          leftTurn = game.turns;
+          return o;
+        }
       var exit = nearestObject(game.area.info.exit);
       return (exit != null ? walk(exit.x, exit.y) : null);
     }

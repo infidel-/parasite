@@ -100,7 +100,8 @@ if (!args.includes('--run') && !args.includes('--plan')) {
     const r = results[i];
     const kind = ids[i].split(':')[0];
     if (kind == 'tutorial' ||
-        kind == 'endgame') {
+        kind == 'endgame' ||
+        kind == 'cult') {
       if (!tally.has(kind))
         tally.set(kind, { runs: 0, goals: 0, milestones: [], reachedBy: new Map() });
       const t = tally.get(kind);
@@ -143,7 +144,7 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   // which nothing gets past, fails. Raise them as the bots improve
   const ri = args.indexOf('--reach');
   const spec = (ri >= 0 ? args[ri + 1] :
-    (args.includes('--quick') ? 'TRAVEL_EVENT=1' : 'LEARN_NPC=1,CREATE_HABITAT=1,USE_COMPUTER=1,FINISH=1'));
+    (args.includes('--quick') ? 'TRAVEL_EVENT=1' : 'LEARN_NPC=1,CREATE_HABITAT=1,USE_COMPUTER=1,FINISH=1,PROFANE_DONE=1'));
   const shortName = (g) => g.replace(/^GOAL_|^SCENARIO_ALIEN_/, '');
   for (const [kind, t] of tally) {
     // the milestone table is the soak's; every build's quick cut prints only the verdict

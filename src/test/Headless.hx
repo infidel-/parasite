@@ -26,6 +26,8 @@ class Headless
   // the start points that are a new game: the alien scenario, the sandbox, and the alien scenario
   // with every mod in parasite/dev on (tools/test.mjs lists them)
   static var NEW_GAMES = [ 'new', 'sandbox', 'mods' ];
+  // a cult made by console on the s1 host: no preset starts one
+  static inline var CULT_START = 's1+cu_start+cu_members+cu_gr';
   // steps without a turn passing before a run counts as stuck
   static inline var STUCK = 300;
   // exit codes the runner reads: a known failure (tests/known.json) is reported but not counted
@@ -61,6 +63,10 @@ class Headless
   ];
   // the chain play() tallies for a goal run: the tutorial's, or the endgame's
   static var milestones = MILESTONES;
+  // the bot policy play() uses when it is not the goal or random one (cult), and what it calls after
+  // every step (the cult run's own milestones)
+  static var botPolicy: String = null;
+  static var onStep: Void -> Void = null;
   // the in-memory save slots the runs use
   static inline var FIXTURE_SLOT = 5;
   static inline var ROUNDTRIP_SLOT = 93;
@@ -140,6 +146,11 @@ class Headless
           endgame(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
           return;
         }
+      else if (parts[0] == 'cult')
+        {
+          cultRun(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
+          return;
+        }
       else
         {
           log('[test] unknown run id: ' + id);
@@ -175,6 +186,7 @@ class Headless
           suite != 'continue' &&
           suite != 'loc' &&
           suite != 'endgame' &&
+          suite != 'cult' &&
           suite != 'tutorial')
         return null;
       var ids = [];
@@ -185,7 +197,7 @@ class Headless
       // once, the soak each of them on every seed
       if (all ||
           suite == 'fuzz')
-        for (st in (start != null ? start.split(',') : NEW_GAMES.concat(STAGES)))
+        for (st in (start != null ? start.split(',') : NEW_GAMES.concat(STAGES).concat([ CULT_START ])))
           for (i in 0...(quick ? 1 : count))
             ids.push('fuzz:' + st + ':' + (seed0 + i) + ':' + steps);
       // every fixture loads (old saves too) and plays on
@@ -202,7 +214,7 @@ class Headless
       // presets only, and early: random play ends a new game (and most presets) before 200 steps
       if (all ||
           suite == 'continue')
-        for (st in (start != null ? start.split(',') : (quick ? [ 's1', 's2' ] : STAGES)))
+        for (st in (start != null ? start.split(',') : (quick ? [ 's1', 's2' ] : STAGES.concat([ CULT_START ]))))
           for (i in 0...(quick ? 1 : 3))
             ids.push('continue:' + st + ':' + (seed0 + i) + ':30:' + (quick ? 50 : 100));
       // random play in French and in the pseudo locale; the runner plays each one's English twin
@@ -227,6 +239,17 @@ class Headless
         for (st in (start != null ? start.split(',') : [ 's3', 's31' ]))
           for (i in 0...count)
             ids.push('endgame:' + st + ':' + (seed0 + i) + ':3000');
+      // the cult policy from a cult made by console (a host, the cult, followers, resources) and
+      // from the cult fixtures
+      if (!quick &&
+          (all ||
+           suite == 'cult'))
+        for (st in (start != null ? start.split(',') : [ CULT_START ].concat([ for (f in saves)
+            if (f.indexOf('habitat-cult-base') > 0 ||
+                f.indexOf('region-cult-rival-base') > 0 ||
+                f.indexOf('city-medium-cult8') > 0) f ])))
+          for (i in 0...(st.indexOf('save/') == 0 ? 3 : count))
+            ids.push('cult:' + st + ':' + (seed0 + i) + ':2000');
       return ids;
     }
 
@@ -493,7 +516,7 @@ class Headless
                 reached: reached,
               };
             }
-          bot = new Bot(game, seed, (goal != null ? 'goal' : 'random'));
+          bot = new Bot(game, seed, (botPolicy != null ? botPolicy : goal != null ? 'goal' : 'random'));
           var lastTurn = game.turns;
           var still = 0;
           step = 0;
@@ -518,6 +541,8 @@ class Headless
                   failure = 'alert: ' + alerts[n];
                   break;
                 }
+              if (onStep != null)
+                onStep();
               var broken = bot.check();
               if (broken.length > 0)
                 {
@@ -628,6 +653,69 @@ class Headless
       exit(EXIT_STALLED);
     }
 
+// the cult policy from a start point: ordeals started and funded, profane missions taken to their
+// area. Its milestones are the cult's own, not goals: an ordeal started, a profane ordeal come up, its
+// mission area entered, and a profane ordeal over (done or failed)
+  static function cultRun(id: String, start: String, seed: Int, steps: Int)
+    {
+      botPolicy = 'cult';
+      milestones = [];
+      var reached = new Map<String, Int>();
+      var profane: Array<cult.Ordeal> = [];
+      var mark = function(name: String)
+        {
+          if (!reached.exists(name))
+            reached[name] = game.turns;
+        };
+      onStep = function() {
+        var c = game.cults[0];
+        if (c.state != CULT_STATE_ACTIVE)
+          return;
+        for (o in profane)
+          if (c.ordeals.list.indexOf(o) < 0)
+            mark('PROFANE_DONE');
+        profane = [];
+        for (o in c.ordeals.list)
+          {
+            if (o.type == ORDEAL_PROFANE)
+              {
+                profane.push(o);
+                mark('PROFANE');
+                for (m in o.missions)
+                  if (game.area != null &&
+                      game.area.id == m.areaID)
+                    mark('MISSION_AREA');
+              }
+            else mark('ORDEAL');
+          }
+      };
+      var res = play(start, seed, steps, -1, null);
+      var names = [ 'ORDEAL', 'PROFANE', 'MISSION_AREA', 'PROFANE_DONE' ];
+      log('@milestones ' + names.join(','));
+      for (n in names)
+        if (reached.exists(n))
+          log('@reach ' + n + ' ' + reached[n]);
+      if (res.failure != null)
+        {
+          fail(seed, 'at step ' + res.step + ' (turn ' + game.turns + '): ' + res.failure +
+            '\n    replay: make test args="--run ' + id + '"' +
+            '\n    last steps: ' + res.trail.join(' | '));
+          finish(id);
+          return;
+        }
+      if (reached.exists('PROFANE_DONE'))
+        {
+          exit(0);
+          return;
+        }
+      log('stalled ' + id + ' at turn ' + game.turns + ' (' + game.state + ', player ' + game.player.state +
+        '), ordeals: ' + [ for (o in game.cults[0].ordeals.list) o.name ].join(', ') +
+        '\n    replay: make test args="--run ' + id + '"' +
+        '\n    last steps: ' + res.trail.join(' | ') +
+        '\n    last log: ' + logTail(8).join(' | '));
+      exit(EXIT_STALLED);
+    }
+
 // play a few random steps from a start point, then save, load that save and save again: anything
 // a save does not carry, or a load changes, shows up as a difference between the two
   static function roundtrip(start: String, seed: Int, steps: Int)
@@ -695,7 +783,10 @@ class Headless
                 js.Syntax.code("host.writeOut({0}, {1})", name + '-b.json.gz', b);
                 var changed = new Map<String, String>();
                 diffPaths(haxe.Json.parse(a), haxe.Json.parse(b), 'save', changed);
-                var paths = [ for (p in changed.keys()) p ];
+                // a cult mission's id is never looked up (an elevator only tests missionID >= 0),
+                // and a load restarts its counter from the missions it finds (Cult.loadPost): one
+                // made after a load can take another id, unique all the same
+                var paths = [ for (p in changed.keys()) if (!StringTools.endsWith(p, '.missions[].id')) p ];
                 paths.sort(Reflect.compare);
                 for (p in paths)
                   fail(seed, 'differs after a load and ' + m + ' steps: ' + p + ' (e.g. ' + changed[p] + ')');

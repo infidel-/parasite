@@ -5,12 +5,12 @@ states, broken invariants and saves that do not survive a load.
 
 | run | what it does |
 |---|---|
-| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 32 runs, ~10 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (474 runs, ~130 s on 6 cores) |
+| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 33 runs, ~10 s) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (526 runs, ~135 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
-Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|endgame`, `--start new,s1,save/<file>`
+Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|endgame|cult`, `--start new,s1,save/<file>`
 (a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
 `_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
@@ -136,17 +136,45 @@ to the end of the game:
   measured worse (0 of 20), because the guard has longer to shoot. An abduction never got its target
   back aboard.
 
+**The cult policy** (`cult:<start>:<seed>:<steps>`) plays from a cult made by console on the `s1`
+host (`s1+cu_start+cu_members+cu_gr`, no preset starts one) and from three cult fixtures (the cult
+base, the rival base, cult8):
+- **The window.** Each action is tried once a turn. It funds a running ordeal first (`spend.*`).
+  On odd seeds it then starts a new one through Initiate and its submenus. Even seeds leave the
+  members free, because a communal ordeal locks the members a profane ordeal needs. Followers are
+  not called in, for the same reason.
+- **The turns.** Cult turns, one in ten, are waited out.
+- **Profane missions** are taken to their area: the marker area of the map, or the habitat under
+  one, through `enterMissionArea`. A Persuade target is chatted to full consent; a Kill target is
+  hit.
+- **Forma** is left with its own key, because Escape opens the main menu over it.
+
+  Its milestones are the cult's own: ORDEAL (a communal ordeal running), PROFANE (a profane ordeal
+  come up), MISSION_AREA, PROFANE_DONE (a profane ordeal over, done or failed: the gate). Measured
+  (2026-11-07, 20 console seeds and 3 of each fixture):
+
+  | milestone | reached | turns min / median / max |
+  |---|---|---|
+  | ORDEAL | 17/29 | 1 / 1 / 1116 |
+  | PROFANE | 17/29 | 11 / 112 / 1206 |
+  | MISSION_AREA | 3/29 | 302 |
+  | PROFANE_DONE | 6/29 | 212 / 1206 / 1306 |
+
+  The losses are the console cult's s1 host, which police kill in its first city. Few runs reach a
+  mission area.
+
 ## Suites
 
 | suite | runs | checks |
 |---|---|---|
 | `smoke` | one run over N seeds in one process | a new game lands in an area; Wait passes turns; one seed saves the same twice, and its hash matches across processes |
-| `fuzz` | `new`, `sandbox` (the sandbox scenario), `mods` (every mod in `parasite/dev` on) and the 11 console stage presets (`s1`..`s31`) × seeds | random play; after every step: no throw, no `UI.onError` alert, the invariants, not stuck (300 steps with no turn) |
+| `fuzz` | `new`, `sandbox` (the sandbox scenario), `mods` (every mod in `parasite/dev` on), the 11 console stage presets (`s1`..`s31`) and the console cult × seeds | random play; after every step: no throw, no `UI.onError` alert, the invariants, not stuck (300 steps with no turn) |
 | `compat` | every fixture save | it loads through `Game.load` (old saves too), then 200 fuzz steps |
 | `roundtrip` | `new`, the presets and every fixture | play a little, save, load, save: the two saves must match field for field |
-| `continue` | the 11 presets × 3 seeds (quick: `s1`, `s2`) | random play to step 30, on to the first quiet step (no walk, region trip, repeated action or window under way), save. Then 100 steps on a second seed, and save. A fresh process loads the quiet save and plays the same 100 steps: the two last saves must match |
+| `continue` | the 11 presets and the console cult × 3 seeds (quick: `s1`, `s2`) | random play to step 30, on to the first quiet step (no walk, region trip, repeated action or window under way), save. Then 100 steps on a second seed, and save. A fresh process loads the quiet save and plays the same 100 steps: the two last saves must match |
 | `loc` | `fr` and `pseudo` × the new games and presets (quick: `fr` from `s1`, `pseudo` from `s2`) | random play in that language (`loc:<code>:<start>:<seed>:<steps>`, served to Loc by `host.lang`), then its English twin (`loc:en:…`): the two saves must match, apart from the log, because a save holds English keys only. The soak lists the strings a run met with no translation |
 | `endgame` | `s3` and `s31` × seeds (soak only) | the goal policy to the end of the game; fails when no run reaches FINISH (`--reach FINISH=1`) |
+| `cult` | the console cult × seeds, the cult fixtures × 3 (soak only) | the cult policy; fails when no run sees a profane ordeal over (`--reach PROFANE_DONE=1`) |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
 
 **Seeds vary the setup:**
@@ -182,7 +210,9 @@ testmod's `bad*` ids are rejected on purpose, so the runner does not count those
 static counter a load does not restore. Roundtrip compares the save it just loaded, so it never
 plays on. Both halves reseed `Math.random` and start a new bot on the second seed. The second half
 plays with the first half's profile. New games are left out, because random play ends them before
-step 30. Measured 2026-11-06: 24 of 39 sampled runs compared, all identical.
+step 30. Cult mission ids are not compared. They are never looked up, and a load restarts their
+counter from the missions it finds, so a mission made after a load can take another id (still
+unique). Measured 2026-11-06: 24 of 39 sampled runs compared, all identical.
 
 **Roundtrip ignores** `messageList`/`hudMessageList` (a load logs "Game loaded from slot N.") and
 `visRev` (the renderer's sightline counter, which a load bumps). It reports each changed path once,
