@@ -73,8 +73,9 @@ class Door extends AreaObject
       // door locked, check for key card
       if (isPlayer && isLocked)
         {
-          // check if player has correct key card
-          var cards = game.player.host.inventory.getAll('keycard');
+          // check if player has correct key card (a bare parasite carries none)
+          var cards = (game.player.host != null ?
+            game.player.host.inventory.getAll('keycard') : []);
           for (item in cards)
             {
               if (game.player.knowsItem(item.id) &&

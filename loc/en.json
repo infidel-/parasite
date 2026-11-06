@@ -28880,7 +28880,7 @@
    "s": "You command the host to unlock the door.",
    "kind": "T",
    "loc": [
-    "src/objects/Door.hx:85"
+    "src/objects/Door.hx:86"
    ],
    "vars": [],
    "where": "Door.frob",
@@ -28890,7 +28890,7 @@
    "s": "The door is locked.",
    "kind": "T",
    "loc": [
-    "src/objects/Door.hx:94"
+    "src/objects/Door.hx:95"
    ],
    "vars": [],
    "where": "Door.frob",

@@ -16,6 +16,7 @@
 - game: a host that dies on the region map (ovum, expiry) now leaves the cult and counts as a Group death
 - game: a host whose attributes drop no longer keeps energy above its new maximum
 - game: a load no longer lets a new ovum or mission NPC take an id already in use
+- game: a parasite with no host walking into a locked door no longer crashes
 - game: a save no longer stores habitat formation messages in the player's language
 - game: an organ gives its strength, energy or health bonus only once it is grown
 - game: ship parts left behind or dropped no longer vanish, and lost ones reappear in the lab
