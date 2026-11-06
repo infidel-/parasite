@@ -382,7 +382,7 @@ class Entry
     {
       var c = js.Browser.console;
       var url = 'https://example.com/';
-      var p: Dynamic = untyped js.Browser.window.fetch(url);
+      var p: js.lib.Promise<Dynamic> = untyped js.Browser.window.fetch(url);
       p.then(function(resp: Dynamic): Void
         {
           c.log('[testmod] remote fetch UNEXPECTEDLY resolved: status=' +
