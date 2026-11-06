@@ -1274,9 +1274,12 @@ class PlayerArea extends _SaveObject
         {
           log(T('The host resists your command.'));
           var dir = game.area.getRandomDirection(x, y);
-          // boxed in (walls, followers): the host goes nowhere
+          // boxed in (walls, followers): the host goes nowhere, the turn is spent
           if (dir == -1)
-            return false;
+            {
+              actionPost();
+              return true;
+            }
           nx = x + Const.dirx[dir];
           ny = y + Const.diry[dir];
           // shake the host as it lurches off the commanded path

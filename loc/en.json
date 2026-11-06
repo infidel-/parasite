@@ -589,7 +589,7 @@
    "kind": "T",
    "loc": [
     "src/ai/AI.hx:993",
-    "src/game/PlayerArea.hx:1623"
+    "src/game/PlayerArea.hx:1626"
    ],
    "vars": [],
    "where": "AI.onDamage",
@@ -26356,7 +26356,7 @@
    "s": "You can see the following objects here: {list}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1363"
+    "src/game/PlayerArea.hx:1366"
    ],
    "vars": [
     "list"
@@ -26367,7 +26367,7 @@
    "s": "You can see an object here: {obj}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1364"
+    "src/game/PlayerArea.hx:1367"
    ],
    "vars": [
     "obj"
@@ -26378,8 +26378,8 @@
    "s": "Something blocks the way out.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1406",
-    "src/game/PlayerArea.hx:1427"
+    "src/game/PlayerArea.hx:1409",
+    "src/game/PlayerArea.hx:1430"
    ],
    "vars": [],
    "where": "PlayerArea.climbOut",
@@ -26389,7 +26389,7 @@
    "s": "You climb out of {obj:the}.",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx:1409"
+    "src/game/PlayerArea.hx:1412"
    ],
    "vars": [
     "obj"
