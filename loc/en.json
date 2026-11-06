@@ -21609,7 +21609,7 @@
    "kind": "T",
    "loc": [
     "src/cult/ordeals/RecruitFollower.hx:157",
-    "src/cult/ordeals/UpgradeFollower.hx:171",
+    "src/cult/ordeals/UpgradeFollower.hx:174",
     "src/cult/ordeals/UpgradeFollower2.hx:149",
     "src/ui/Cult.hx:381",
     "src/ui/Cult.hx:525",
@@ -21720,7 +21720,7 @@
    "kind": "N",
    "loc": [
     "src/cult/ordeals/UpgradeFollower.hx:45",
-    "src/cult/ordeals/UpgradeFollower.hx:156"
+    "src/cult/ordeals/UpgradeFollower.hx:159"
    ],
    "vars": [],
    "where": "UpgradeFollower.init",
@@ -21740,7 +21740,7 @@
    "s": "{ordeal} - {ai:The}",
    "kind": "T",
    "loc": [
-    "src/cult/ordeals/UpgradeFollower.hx:111"
+    "src/cult/ordeals/UpgradeFollower.hx:114"
    ],
    "vars": [
     "ordeal",
@@ -21752,7 +21752,7 @@
    "s": "{cult} member {ai:the} has been elevated to level {level}.",
    "kind": "T",
    "loc": [
-    "src/cult/ordeals/UpgradeFollower.hx:134"
+    "src/cult/ordeals/UpgradeFollower.hx:137"
    ],
    "vars": [
     "cult",

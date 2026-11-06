@@ -11,6 +11,7 @@
 ### Fixes
 - cult: a member death fails only the ordeals that member takes part in
 - cult: a Stakeholder Flesh log line named the wrong choice
+- cult: an Elevate the faithful that fails on its target's death no longer names it "null"
 - game: a dog host's bark costs its energy and a turn, and barks when repeated
 - game: a host that dies on the region map (ovum, expiry) now leaves the cult and counts as a Group death
 - game: a host whose attributes drop no longer keeps energy above its new maximum

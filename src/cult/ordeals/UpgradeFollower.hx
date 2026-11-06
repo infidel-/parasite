@@ -108,6 +108,9 @@ class UpgradeFollower extends Ordeal
   public override function customName(): String
     {
       var aidata = cult.getMemberByID(targetID);
+      // the target is gone by the time a death fails the ordeal
+      if (aidata == null)
+        return Loc.tr(name);
       return T('{ordeal} - {ai:The}', {
         ordeal: Loc.tr(name),
         ai: aidata,
