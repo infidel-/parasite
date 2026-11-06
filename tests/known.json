@@ -26,12 +26,6 @@
   },
   {
     "match": [
-      "player.host.maxEnergy ("
-    ],
-    "todo": "TODO.md: the energy organ's host bonus applies only after a load"
-  },
-  {
-    "match": [
       "_list.N._list.N.width (",
       "_list.N._list.N.tiles.length (",
       "_list.N._list.N._cells ("

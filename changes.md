@@ -15,6 +15,7 @@
 - game: a host that dies on the region map (ovum, expiry) now leaves the cult and counts as a Group death
 - game: a host whose attributes drop no longer keeps energy above its new maximum
 - game: a load no longer lets a new ovum or mission NPC take an id already in use
+- game: an organ gives its strength, energy or health bonus only once it is grown
 - game: ship parts left behind or dropped no longer vanish, and lost ones reappear in the lab
 - ui: an action key pressed twice quickly no longer crashes when the first press loses the host
 - ui: log lines read "1 turn" / "5 resources", use "a"/"an" correctly and no longer end in a double full stop

@@ -240,7 +240,7 @@ class AIData extends _SaveObject
       modAttrs.psyche = 0;
 
       // organ: muscle enhancement
-      var o = organs.get(IMP_MUSCLE);
+      var o = organs.getActive(IMP_MUSCLE);
       if (o != null)
         modAttrs.strength += o.params.strength;
 
@@ -250,7 +250,7 @@ class AIData extends _SaveObject
       _psyche = baseAttrs.psyche + modAttrs.psyche;
 
       // organ: host energy bonus
-      var o = organs.get(IMP_ENERGY);
+      var o = organs.getActive(IMP_ENERGY);
       var energyMod = 1.0;
       if (o != null)
         energyMod = o.params.hostEnergyMod;
@@ -259,7 +259,7 @@ class AIData extends _SaveObject
       maxHealth = strength + constitution;
 
       // organ: health increase
-      var o = organs.get(IMP_HEALTH);
+      var o = organs.getActive(IMP_HEALTH);
       if (o != null)
         maxHealth += o.params.health;
 

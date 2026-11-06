@@ -69,9 +69,6 @@ suites stay green, and says so at the workaround.
   archetype's real stats (a prostitute 7/5/6 → 4/4/4, a blackops 4/5/6 → 9/8/8). `BumAI` and
   `ThugAI` call `derivedStats()` after theirs. Replay: `make test args="--run roundtrip:new:1:50"`,
   `--run roundtrip:s12:1:50` (blackops). Fix: `derivedStats()` after the attribute lines in both.
-- **The energy organ's host bonus applies only after a load.** A host with `IMP_ENERGY` grown keeps
-  `maxEnergy` 150 until a load's `recalc()` makes it 187 (the organ's `hostEnergyMod` 1.25). Replay:
-  `make test args="--run roundtrip:s22:1:50"`. Fix: recalc the host when that organ completes.
 - **An old save's unvisited city area is generated at its old shrunk size.**
   `AreaGame.migrateCityGrid` (`src/game/AreaGame.hx:330`) grows only areas that were already
   generated, and `generate()` (`:947`) re-sizes old military bases, labs and caves but not cities.
