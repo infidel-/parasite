@@ -123,6 +123,15 @@ class Bot
           return list;
         }
 
+      // targeting takes only its own keys (UI.handleTargetingKey): rotate, confirm, Escape
+      if (ui.hud.state == HUD_TARGETING)
+        {
+          for (code in [ 'Numpad4', 'Numpad6', 'Enter' ])
+            list.push(press('target ' + code, code, '', false));
+          list.push(escape());
+          return list;
+        }
+
       // the action list and the keyboard-only actions, as the HUD shows them
       var i = 1;
       for (a in @:privateAccess ui.hud.actions.listActions)
@@ -149,6 +158,20 @@ class Bot
             f: function() ui.hud.keyAction(key),
             id: a.id,
           });
+        }
+
+      // the random policy aims too: T enters targeting (on key up, as UI.onKeyUp has it), and a target
+      // set is shot (s) or hit (a). The goal policy has no use for it yet
+      if (policy == 'random' &&
+          ui.hud.state == HUD_DEFAULT &&
+          game.location == LOCATION_AREA &&
+          game.player.state == PLR_STATE_HOST)
+        {
+          list.push(press('key t target', 'KeyT', 't', true));
+          if (ui.hud.targeting.canShootTarget())
+            list.push(press('key s shoot target', 'KeyS', 's', false));
+          if (ui.hud.targeting.canAttackTarget())
+            list.push(press('key a hit target', 'KeyA', 'a', false));
         }
 
       // the eight directions, through the keyboard handler
@@ -205,6 +228,28 @@ class Bot
                 label: 'choice ' + i,
                 f: function() w.action(i),
               });
+          case UISTATE_DIFFICULTY:
+            // config.difficulty 0 asks: noob, easy, normal, hard (ui.Difficulty.action)
+            for (i in 0...4)
+              list.push({
+                kind: 'answer',
+                label: 'difficulty ' + i,
+                f: function() w.action(i),
+              });
+          case UISTATE_OVUM:
+            w.update();
+            var actions = @:privateAccess (cast w: ui.Ovum).listActions;
+            for (i in 0...actions.length)
+              {
+                var index = i + 1;
+                list.push({
+                  kind: 'act',
+                  label: 'window ' + index + ' ' + actions[i].id,
+                  f: function() w.action(index),
+                  id: actions[i].id,
+                });
+              }
+            list.push(escape());
           case UISTATE_EVOLUTION, UISTATE_CULT:
             w.update();
             var actions: Array<_PlayerAction> = (ui.state == UISTATE_EVOLUTION ?
@@ -281,19 +326,33 @@ class Bot
 // press Escape through the real keyboard handler
   function escape(): _BotOption
     {
+      var o = press('escape', 'Escape', 'Escape', false);
+      o.kind = 'escape';
+      o.id = 'escape';
+      return o;
+    }
+
+// press a key through the real keyboard handler: UI.onKey, or UI.onKeyUp for a key that acts on
+// release
+  function press(label: String, code: String, key: String, up: Bool): _BotOption
+    {
+      var e: js.html.KeyboardEvent = cast {
+        key: key,
+        code: code,
+        keyCode: (code == 'Escape' ? 27 : 0),
+        altKey: false,
+        ctrlKey: false,
+        shiftKey: false,
+        preventDefault: function() {},
+      };
       return {
-        kind: 'escape',
-        label: 'escape',
-        id: 'escape',
-        f: function() @:privateAccess game.ui.onKey(cast {
-          key: 'Escape',
-          code: 'Escape',
-          keyCode: 27,
-          altKey: false,
-          ctrlKey: false,
-          shiftKey: false,
-          preventDefault: function() {},
-        }),
+        kind: 'act',
+        label: label,
+        f: function() {
+          if (up)
+            @:privateAccess game.ui.onKeyUp(e);
+          else @:privateAccess game.ui.onKey(e);
+        },
       };
     }
 

@@ -23,6 +23,9 @@ class Headless
   static var failures: Array<String> = [];
   // the console stage presets (console.Stage) a fuzz run can start from instead of a new game
   static var STAGES = [ 's1', 's11', 's12', 's2', 's21', 's22', 's23', 's24', 's25', 's3', 's31' ];
+  // the start points that are a new game: the alien scenario, the sandbox, and the alien scenario
+  // with every mod in parasite/dev on (tools/test.mjs lists them)
+  static var NEW_GAMES = [ 'new', 'sandbox', 'mods' ];
   // steps without a turn passing before a run counts as stuck
   static inline var STUCK = 300;
   // exit codes the runner reads: a known failure (tests/known.json) is reported but not counted
@@ -148,7 +151,7 @@ class Headless
       // once, the soak each of them on every seed
       if (all ||
           suite == 'fuzz')
-        for (st in (start != null ? start.split(',') : [ 'new' ].concat(STAGES)))
+        for (st in (start != null ? start.split(',') : NEW_GAMES.concat(STAGES)))
           for (i in 0...(quick ? 1 : count))
             ids.push('fuzz:' + st + ':' + (seed0 + i) + ':' + steps);
       // every fixture loads (old saves too) and plays on
@@ -236,10 +239,10 @@ class Headless
     }
 
 // start a new game on this seed, as ui.NewGame.newGame does
-  public static function newGame(seed: Int)
+  public static function newGame(seed: Int, ?scenario = 'alien')
     {
       prepare(seed);
-      game.scenarioStringID = 'alien';
+      game.scenarioStringID = scenario;
       game.isStarted = true;
       game.ui.closeWindow();
       game.restart();
@@ -268,6 +271,8 @@ class Headless
       game.config.repeatDelay = 0;
       // > 0 answers every Difficulty window on its own (ui.UI.closeWindow)
       game.config.difficulty = 1 + seed % 3;
+      // the gray INFO lines default to on in a debug build (Config), and to off for a player
+      game.config.extendedInfo = (seed % 2 == 0);
     }
 
 // boot every seed into its starting area, wait out a few turns, and check that a seed is a replay.
@@ -356,16 +361,27 @@ class Headless
       var bot: Bot = null;
       var step = -1;
       var failure: String = null;
+      var slowMS = 0.0;
+      var slow = '';
       try
         {
-          if (start.indexOf('save/') == 0)
-            loadFixture(start.substr(5), seed);
+          // a new game (`new`, `sandbox`, or `mods` with every dev mod on), a stage preset or a
+          // fixture save, then the console commands chained on with `+` (`_` for a space)
+          var parts = [ for (x in start.split('+')) x.split('_').join(' ') ];
+          if (parts[0].indexOf('save/') == 0)
+            loadFixture(parts[0].substr(5), seed);
           else
             {
-              newGame(seed);
-              if (start != 'new')
-                game.console.run(start);
+              newGame(seed, (parts[0] == 'sandbox' ? 'sandbox' : 'alien'));
+              if (NEW_GAMES.indexOf(parts[0]) < 0)
+                game.console.run(parts[0]);
             }
+          for (cmd in parts.slice(1))
+            game.console.run(cmd);
+          // one random run in four answers the Difficulty windows itself, one choice at a time
+          if (goal == null &&
+              seed % 4 == 0)
+            game.config.difficulty = 0;
           if (alerts.length > 0)
             {
               failure = 'alert while starting from ' + start + ': ' + alerts[0];
@@ -386,8 +402,16 @@ class Headless
                !game.goals.completed(goal)))
             {
               var n = alerts.length;
+              var t0 = haxe.Timer.stamp();
               if (!bot.step())
                 break;
+              var ms = (haxe.Timer.stamp() - t0) * 1000;
+              if (ms > slowMS)
+                {
+                  slowMS = ms;
+                  slow = 'step ' + step + ', turn ' + game.turns + ', ' +
+                    (game.area != null ? @:privateAccess game.area._ai.length : 0) + ' AIs: ' + bot.trail[bot.trail.length - 1];
+                }
               if (alerts.length > n)
                 {
                   failure = 'alert: ' + alerts[n];
@@ -421,6 +445,8 @@ class Headless
         {
           failure = 'threw: ' + e.details();
         }
+      // the slowest step, for the runner's report
+      log('@slow ' + Std.int(slowMS) + ' ' + slow);
       return {
         failure: failure,
         step: step,

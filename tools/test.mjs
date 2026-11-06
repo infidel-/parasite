@@ -74,6 +74,8 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   await Promise.all(Array.from({ length: Math.min(availableParallelism(), ids.length) }, worker));
   let failed = 0;
   let known = 0;
+  // each run's slowest bot step (`@slow <ms> <where>`): the soak lists the worst five
+  const slow = [];
   // the tutorial runs: how many reached their goal (exit 0, else stalled: exit 4), and each milestone
   // of the chain on the way, with the turns it took (`@reach <goal> <turn>`)
   const reachedBy = new Map();
@@ -87,6 +89,8 @@ if (!args.includes('--run') && !args.includes('--plan')) {
       if (r.code == 0)
         goals++;
     }
+    for (const [, ms, where] of r.out.matchAll(/^@slow (\d+) (.*)$/gm))
+      slow.push({ ms: +ms, line: ids[i] + ' ' + where });
     const order = /^@milestones (\S+)$/m.exec(r.out);
     if (order)
       milestones = order[1].split(',');
@@ -103,6 +107,9 @@ if (!args.includes('--run') && !args.includes('--plan')) {
     if ((r.code != 3 && r.code != 4) || !args.includes('--quick'))
       process.stdout.write(r.out.split('\n').filter((l) => !l.startsWith('@')).join('\n'));
   }
+  if (!args.includes('--quick'))
+    for (const x of slow.sort((a, b) => b.ms - a.ms).slice(0, 5))
+      console.log('[test] slow step ' + x.ms + ' ms: ' + x.line);
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
   console.log('[test] ' + ids.length + ' runs, ' + failed + ' failed, ' + known + ' known (' + secs + ' s)' +
     (known > 0 ? ' — known failures are filed in tests/known.json' : ''));
@@ -201,12 +208,13 @@ const canvas = over({ id: 'canvas', width: 1920, height: 1080 });
 // runs with none. a mod not installed is left out, and the load says so the way the game does
 const modInfos = () => {
   const run = args[args.indexOf('--run') + 1] ?? '';
-  const start = run.split(':')[1] ?? '';
-  if (!start.startsWith('save/'))
-    return [];
-  const save = JSON.parse(gunzipSync(readFileSync(resolve(root, 'tests', 'saves', start.substr(5)))));
+  const start = (run.split(':')[1] ?? '').split('+')[0];
+  // the `mods` start: a new game with every mod installed
+  const ids = (start == 'mods' ? readdirSync(resolve(root, 'parasite', 'dev')).sort().map((id) => ({ id })) :
+    start.startsWith('save/') ?
+      JSON.parse(gunzipSync(readFileSync(resolve(root, 'tests', 'saves', start.substr(5)))))._activeMods ?? [] : []);
   const out = [];
-  for (const { id } of save._activeMods ?? []) {
+  for (const { id } of ids) {
     const rootDir = resolve(root, 'parasite', 'dev', id);
     if (!existsSync(resolve(rootDir, 'manifest.json')))
       continue;
@@ -254,7 +262,12 @@ const host = {
   },
   lang: () => ({ code: 'en', available: ['en'], json: null }),
   consoleHistory: { read: () => null, write: () => true, exists: () => false },
-  log: { append: (line) => { host.alerts.push(String(line)); return true; } },
+  // testmod registers `bad*` ids on purpose, to see them rejected (examples/testmod)
+  log: { append: (line) => {
+    if (!/^MOD REGISTER REJECT \[testmod\] .*id "bad/.test(String(line)))
+      host.alerts.push(String(line));
+    return true;
+  } },
   assets: { listSounds: () => listSounds(resolve(root, 'app', 'sound'), '') },
   mods: { list: () => mods, rescan: () => mods, openFolder: () => {} },
   shell: { openExternal: () => {} },

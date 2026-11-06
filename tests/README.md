@@ -5,12 +5,14 @@ states, broken invariants and saves that do not survive a load.
 
 | run | what it does |
 |---|---|
-| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 26 runs, ~6 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (311 runs, ~70 s on 6 cores) |
+| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 28 runs, ~10 s) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (371 runs, ~110 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
-Arguments are `--suite all|smoke|fuzz|compat|roundtrip|tutorial`, `--start new,s1,save/<file>`,
+Arguments are `--suite all|smoke|fuzz|compat|roundtrip|tutorial`, `--start new,s1,save/<file>`
+(a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
+`_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
 `GOAL_USE_COMPUTER`, quick `GOAL_TRAVEL_EVENT`) and `--reach GOAL=N,...`. Add `--full` to print a known failure's whole report, `--stop N` to
 write the state before step N as a save, and `--trace` to keep the game's own console output.
@@ -39,7 +41,9 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   `keyAction`, `UI.handleMovement` (numpad codes), Escape through `UI.onKey`, a window's
   `action(i)` and `UI.closeWindow`. The only UI rules it copies are the three navbar gates (Evo,
   Cult, Body). Its choices come from its own `gen.Rng` stream. It has two policies:
-  - **random**: weighted picks among moves, actions, windows and Escape;
+  - **random**: weighted picks among moves, actions, windows and Escape. It also aims: T enters
+    targeting (on key up, as `UI.onKeyUp` has it), the targeting keys rotate and confirm, and `s`/`a`
+    shoot or hit a target. It answers the Difficulty window and toggles the Ovum window's marks;
   - **goal**: walks the tutorial chain the way a player would, and on through the timeline and the
     habitat to USE_COMPUTER.
 
@@ -99,10 +103,22 @@ write the state before step N as a save, and `--trace` to keep the game's own co
 | suite | runs | checks |
 |---|---|---|
 | `smoke` | one run over N seeds in one process | a new game lands in an area; Wait passes turns; one seed saves the same twice, and its hash matches across processes |
-| `fuzz` | `new` and the 11 console stage presets (`s1`..`s31`) × seeds | random play; after every step: no throw, no `UI.onError` alert, the invariants, not stuck (300 steps with no turn) |
+| `fuzz` | `new`, `sandbox` (the sandbox scenario), `mods` (every mod in `parasite/dev` on) and the 11 console stage presets (`s1`..`s31`) × seeds | random play; after every step: no throw, no `UI.onError` alert, the invariants, not stuck (300 steps with no turn) |
 | `compat` | every fixture save | it loads through `Game.load` (old saves too), then 200 fuzz steps |
 | `roundtrip` | `new`, the presets and every fixture | play a little, save, load, save: the two saves must match field for field |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
+
+**Seeds vary the setup:**
+- the difficulty is `1 + seed % 3`;
+- one random run in four sets it to 0 instead, so the bot answers each Difficulty window itself;
+- odd seeds play with the gray INFO lines (`extendedInfo`) off, as a player has them. A debug build
+  defaults them on.
+
+**The slowest step** of each run is printed, and the soak lists its five worst (`[test] slow
+step`). It is a report, not a gate; today's worst is ~0.7 s, the first entry into an area on an
+old save, which generates it.
+
+testmod's `bad*` ids are rejected on purpose, so the runner does not count those rejects as alerts.
 
 **Invariants** (`Bot.check`), which check only rules the code already implies:
 - no NaN in player health, energy and ap, `group.priority`, cult money, area alertness, AI health
