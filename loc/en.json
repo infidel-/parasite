@@ -25506,7 +25506,7 @@
    "s": "Not enough free space.",
    "kind": "T",
    "loc": [
-    "src/game/Habitat.hx:62"
+    "src/game/Habitat.hx:63"
    ],
    "vars": [],
    "where": "Habitat.putObject",
@@ -25516,7 +25516,7 @@
    "s": "Not enough energy in habitat ({used}/{total}).",
    "kind": "T",
    "loc": [
-    "src/game/Habitat.hx:69"
+    "src/game/Habitat.hx:70"
    ],
    "vars": [
     "used",
@@ -28663,7 +28663,7 @@
   },
   {
    "s": "The assimilation cavity opens its maw.",
-   "kind": "T",
+   "kind": "N",
    "loc": [
     "src/objects/AssimilationCavity.hx:21"
    ],
@@ -28703,7 +28703,7 @@
   },
   {
    "s": "The biomineral formation is ready to feed the habitat.",
-   "kind": "T",
+   "kind": "N",
    "loc": [
     "src/objects/Biomineral.hx:21"
    ],
@@ -29238,7 +29238,7 @@
   },
   {
    "s": "You feel cold signaling the activation of the host preservator.",
-   "kind": "T",
+   "kind": "N",
    "loc": [
     "src/objects/Preservator.hx:22"
    ],
@@ -29428,7 +29428,7 @@
   },
   {
    "s": "The watcher blinks its eyes and joins you.",
-   "kind": "T",
+   "kind": "N",
    "loc": [
     "src/objects/Watcher.hx:21"
    ],

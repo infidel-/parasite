@@ -4,6 +4,7 @@ package game;
 
 import objects.*;
 import const.*;
+import l10n.Loc;
 
 class Habitat extends _SaveObject
 {
@@ -108,7 +109,7 @@ class Habitat extends _SaveObject
       if (!game.area.isWalkable(ai.x, ai.y))
         game.playerArea.moveToRandom();
       // object narrative message
-      game.narrative(o.spawnMessage, COLOR_ORGAN);
+      game.narrative(Loc.tr(o.spawnMessage), COLOR_ORGAN);
       // update camera
       game.area.updateVisibility();
       game.scene.updateCamera();

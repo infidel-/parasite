@@ -19,7 +19,7 @@ class Preservator extends HabitatObject
     {
       super.init();
       name = N('preservator');
-      spawnMessage = T('You feel cold signaling the activation of the host preservator.');
+      spawnMessage = N('You feel cold signaling the activation of the host preservator.');
       imageRow = Const.ROW_GROWTH1;
       imageCol = Const.FRAME_PRESERVATOR + level;
     }

@@ -18,7 +18,7 @@ class Watcher extends HabitatObject
     {
       super.init();
       name = N('watcher');
-      spawnMessage = T('The watcher blinks its eyes and joins you.');
+      spawnMessage = N('The watcher blinks its eyes and joins you.');
       imageRow = Const.ROW_WATCHER;
       imageCol = level;
     }

@@ -18,7 +18,7 @@ class AssimilationCavity extends HabitatObject
     {
       super.init();
       name = N('assimilation cavity');
-      spawnMessage = T('The assimilation cavity opens its maw.');
+      spawnMessage = N('The assimilation cavity opens its maw.');
       imageRow = Const.ROW_ASSIMILATION;
       imageCol = level;
     }
