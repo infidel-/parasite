@@ -6,7 +6,7 @@ states, broken invariants and saves that do not survive a load.
 | run | what it does |
 |---|---|
 | `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 32 runs, ~10 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (472 runs, ~130 s on 6 cores) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (474 runs, ~130 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
@@ -14,7 +14,8 @@ Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|end
 (a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
 `_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
-`GOAL_USE_COMPUTER`, quick `GOAL_TRAVEL_EVENT`) and `--reach GOAL=N,...`. Add `--full` to print a known failure's whole report, `--stop N` to
+`SCENARIO_ALIEN_FIND_SHIP`, quick `GOAL_TRAVEL_EVENT`) and `--reach GOAL=N,...`, `--save-at GOAL`
+(write the game the moment a goal run reaches that goal, to `tests/out/`, the makings of a fixture). Add `--full` to print a known failure's whole report, `--stop N` to
 write the state before step N as a save, and `--trace` to keep the game's own console output.
 
 ## How it works
@@ -74,23 +75,29 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   - **Windows** are opened once a turn at most: a window with nothing to do in it is escaped, and
     opening it again straight away would loop with no turn passing.
 
+  - **Past the computer goal** it searches again whenever no event NPC is known to hunt. When a
+    search names one (job and area), it travels to the NPC's area, takes the NPC as host and probes
+    it until the NPC has nothing left. It goes on until FIND_SHIP, the soak's goal. A bare parasite
+    in a habitat with no one to take goes out to find a host.
+
   Wherever the goal policy has no opinion, the random policy picks. Each run prints the turn it
-  reached each milestone on, and the soak tallies them. **Measured** (2026-11-06, seeds 1-40, the
+  reached each milestone on, and the soak tallies them. **Measured** (2026-11-07, seeds 1-40, the
   soak's tutorial seeds):
 
   | milestone | reached | turns min / median / max |
   |---|---|---|
   | INVADE_HUMAN | 37/40 | 7 / 16 / 33 |
-  | LEARN_SOCIETY | 20/40 | 68 / 94 / 141 |
-  | ENTER_SEWERS | 17/40 | 82 / 111 / 146 |
-  | TRAVEL_EVENT | 17/40 | 91 / 117 / 148 |
-  | LEARN_CLUE | 11/40 | 109 / 177 / 241 |
+  | LEARN_SOCIETY | 18/40 | 68 / 93 / 127 |
+  | ENTER_SEWERS | 15/40 | 82 / 111 / 146 |
+  | TRAVEL_EVENT | 15/40 | 91 / 117 / 148 |
+  | LEARN_CLUE | 11/40 | 109 / 169 / 241 |
   | LEARN_NPC | 9/40 | 126 / 172 / 297 |
-  | EVOLVE_ORGAN | 21/40 | 47 / 92 / 108 |
-  | GROW_ORGAN | 16/40 | 80 / 119 / 186 |
-  | EVOLVE_MICROHABITAT | 15/40 | 84 / 132 / 201 |
-  | CREATE_HABITAT | 15/40 | 84 / 142 / 243 |
+  | EVOLVE_ORGAN | 20/40 | 47 / 92 / 136 |
+  | GROW_ORGAN | 14/40 | 80 / 119 / 186 |
+  | EVOLVE_MICROHABITAT | 14/40 | 84 / 136 / 201 |
+  | CREATE_HABITAT | 14/40 | 84 / 143 / 243 |
   | USE_COMPUTER | 6/40 | 174 / 237 / 279 |
+  | PROGRESS_TIMELINE, FIND_SHIP | 0/40 | |
 
   Most of the losses are deaths before LEARN_SOCIETY: until then a city cannot be left (the sewer
   hatch cannot be learned yet), and the police that witnesses call kill the host. Fleeing alerted
@@ -223,6 +230,9 @@ version than the save's raises the game's own "different mod set" prompt, which 
 with *load anyway*. New games and presets run with no mods. **A mod missing from `parasite/dev`
 is left out**, and the four saves holding pickpocket content (*needs pickpocket*) then fail to load.
 
+A goal run can make one too: `--save-at GOAL` writes its game the moment it reaches that goal,
+already gzipped, to copy into `tests/saves` under the same naming.
+
 The version is the one in the save when it carries one (0.19, 0.20 wrote it as `version`).
 Otherwise it is *inferred* from the save's date against the `src/VERSION` history.
 
@@ -247,3 +257,4 @@ Otherwise it is *inferred* from the save's date against the `src/VERSION` histor
 | `military-base-t155-v1.0.2` | 1.0.2 (stated) | 3 | 155 | military base | *needs pickpocket* |
 | `facility-cult4-t162-v1.1` | 1.1 (inferred) | 3 | 162 | facility | *needs pickpocket* |
 | `region-facility-parasite-t158-v1.1` | 1.1 (inferred) | 3 | 158 | region, no host | *needs pickpocket* |
+| `habitat-computer-t265-v1.1` | 1.1 (made by the tests) | 3 | 265 | habitat, host | the timeline past USE_COMPUTER: the goal bot's game at that goal (`--run tutorial:SCENARIO_ALIEN_FIND_SHIP:6:4000 --save-at GOAL_USE_COMPUTER`) |

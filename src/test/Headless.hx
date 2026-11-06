@@ -45,6 +45,8 @@ class Headless
     GOAL_EVOLVE_MICROHABITAT,
     GOAL_CREATE_HABITAT,
     GOAL_USE_COMPUTER,
+    GOAL_PROGRESS_TIMELINE,
+    SCENARIO_ALIEN_FIND_SHIP,
   ];
   // the endgame's chain, from the ship found to the end of the game (FINISH, printed on its own)
   static var ENDGAME_MILESTONES: Array<_Goal> = [
@@ -216,7 +218,7 @@ class Headless
       if (all ||
           suite == 'tutorial')
         for (i in 0...(quick ? count : 2 * count))
-          ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'GOAL_USE_COMPUTER') + ':' + (seed0 + i) + ':' +
+          ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'SCENARIO_ALIEN_FIND_SHIP') + ':' + (seed0 + i) + ':' +
             (quick ? 2000 : 4000));
       // the goal policy from the ship found (s3) and ready to start (s31) to the end of the game
       if (!quick &&
@@ -529,6 +531,14 @@ class Headless
                     {
                       reached.push(g + ' ' + game.turns);
                       left.remove(g);
+                      // --save-at GOAL keeps the game as it stands then, the makings of a fixture
+                      if (g == strArg('--save-at', null))
+                        {
+                          Saver.save(game, 90);
+                          var name = id(start, seed) + '-' + g + '-t' + game.turns + '.json.gz';
+                          js.Syntax.code("host.writeOut({0}, {1})", name, HostBridge.saveRead(90));
+                          log('[test] saved at ' + g + ': tests/out/' + name);
+                        }
                     }
               still = (game.turns == lastTurn ? still + 1 : 0);
               lastTurn = game.turns;
@@ -791,6 +801,12 @@ class Headless
       if (a != b &&
           !out.exists(path))
         out[path] = short(a) + ' -> ' + short(b);
+    }
+
+// a name for a run's files: its start and seed
+  static function id(start: String, seed: Int): String
+    {
+      return start.split('/').join('-').split('+').join('-') + '-' + seed;
     }
 
 // a value cut down for a report line

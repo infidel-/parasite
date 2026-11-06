@@ -407,7 +407,7 @@ class Bot
                  (StringTools.startsWith(o.id, 'set.') &&
                   game.goals.has(GOAL_GROW_ORGAN)) ||
                  (StringTools.startsWith(o.id, 'search.') &&
-                  game.goals.has(GOAL_USE_COMPUTER) &&
+                  wantsSearch() &&
                   game.area.isHabitat)))
               return o;
           return find(list, 'escape');
@@ -466,10 +466,17 @@ class Bot
 
       // the computer goal wants a host carrying a device, and one who knows computers while the
       // parasite does not
-      var human = (game.goals.has(GOAL_USE_COMPUTER) ?
+      var human = (wantsSearch() ?
         nearestAI(true, computerHost) : nearestAI(true));
       if (human == null)
         human = nearestAI(true);
+      // the NPC hunted down, once it has spawned here
+      var wanted = npcTarget();
+      if (wanted != null &&
+          wanted.ai != null &&
+          wanted.ai.state != AI_STATE_DEAD &&
+          game.area.getAIByID(wanted.ai.id) == wanted.ai)
+        human = wanted.ai;
       if (p.state == PLR_STATE_PARASITE)
         {
           // a dog only when there is no human about: every goal past the first needs a human
@@ -481,6 +488,10 @@ class Bot
                 here.isHuman)))
             return o;
           var ai = (human != null ? human : nearestAI(false));
+          // a habitat keeps a bare parasite alive, with no one to take: out to find a host
+          if (ai == null &&
+              game.area.isHabitat)
+            return leave(list);
           return (ai != null ? walk(ai.x, ai.y) : null);
         }
       // a host that fights the grip outlasts a starving parasite: risk the early invasion then, once
@@ -536,7 +547,7 @@ class Bot
       // has no business there
       var ready = computerReady();
       if (game.area.isHabitat &&
-          game.goals.has(GOAL_USE_COMPUTER))
+          wantsSearch())
         {
           if (ready)
             {
@@ -598,7 +609,7 @@ class Bot
            (host.isNPC &&
             !host.npc.memoryKnown &&
             wantsClues()) ||
-           (game.goals.has(GOAL_USE_COMPUTER) &&
+           (wantsSearch() &&
             p.skills.getLevel(SKILL_COMPUTER) == 0 &&
             host.skills.getLevel(SKILL_COMPUTER) > 0)))
         return o;
@@ -612,10 +623,13 @@ class Bot
           (target != null &&
            target != game.area &&
            host.energy < TRIP_ENERGY) ||
-          (game.goals.has(GOAL_USE_COMPUTER) &&
+          (wantsSearch() &&
            !computerHost(host) &&
            human != null &&
-           computerHost(human)))
+           computerHost(human)) ||
+          (wanted != null &&
+           human == wanted.ai &&
+           host != human))
         {
           if (human == null)
             return null;
@@ -659,7 +673,7 @@ class Bot
           game.goals.has(GOAL_CREATE_HABITAT))
         return o;
       // a host ready for the computer goal goes to the habitat
-      if (game.goals.has(GOAL_USE_COMPUTER) &&
+      if (wantsSearch() &&
           computerReady())
         {
           var o = find(list, 'enterHabitat');
@@ -1028,7 +1042,7 @@ class Bot
   function computerReady(): Bool
     {
       var p = game.player;
-      if (!game.goals.has(GOAL_USE_COMPUTER) ||
+      if (!wantsSearch() ||
           p.state != PLR_STATE_HOST ||
           p.skills.getLevel(SKILL_COMPUTER) == 0)
         return false;
@@ -1039,19 +1053,55 @@ class Bot
       return false;
     }
 
-// do the timeline goals want clues?
+// do the timeline goals want clues? Past the computer goal the timeline wants them until the ship
+// is found
   function wantsClues(): Bool
     {
       return game.goals.has(GOAL_LEARN_CLUE) ||
-        game.goals.has(GOAL_LEARN_NPC);
+        game.goals.has(GOAL_LEARN_NPC) ||
+        game.goals.has(GOAL_PROGRESS_TIMELINE) ||
+        game.goals.has(SCENARIO_ALIEN_FIND_SHIP);
     }
 
-// the area of an event whose location the player knows, while a timeline goal wants one; else null
+// does the goal policy want a computer search: for the computer goal, and past it whenever no
+// event NPC is known to hunt down (a search names one: items.Computer)
+  function wantsSearch(): Bool
+    {
+      return game.goals.has(GOAL_USE_COMPUTER) ||
+        (game.goals.completed(GOAL_USE_COMPUTER) &&
+         wantsClues() &&
+         npcTarget() == null);
+    }
+
+// past the computer goal, an event NPC the player knows the job and the area of (so it spawns
+// there), alive and not wrung yet; else null
+  function npcTarget(): scenario.NPC
+    {
+      if (!game.goals.completed(GOAL_USE_COMPUTER) ||
+          !wantsClues())
+        return null;
+      for (e in game.timeline)
+        if (!e.isHidden)
+          for (n in e.npc)
+            if (n.areaKnown &&
+                n.jobKnown &&
+                !n.isDead &&
+                !n.memoryKnown &&
+                !n.noEventClues)
+              return n;
+      return null;
+    }
+
+// the area of an event whose location the player knows, while a timeline goal wants one; else null.
+// Past the computer goal, the area of the NPC to hunt down comes first
   function eventArea(): game.AreaGame
     {
       if (!game.goals.has(GOAL_TRAVEL_EVENT) &&
           !wantsClues())
         return null;
+      var n = npcTarget();
+      if (n != null)
+        return n.area;
       for (e in game.timeline)
         if (!e.isHidden &&
             e.locationKnown &&
