@@ -20,6 +20,7 @@ typedef _BotOption = {
   var label: String; // what it does, for the trail
   var f: Void -> Void; // do it
   @:optional var id: String; // the action id behind it, for the goal policy to look for
+  @:optional var action: _PlayerAction; // the HUD action behind it (its item and object)
 }
 
 class Bot
@@ -33,6 +34,17 @@ class Bot
     'answer' => 100,
   ];
   static inline var TRAIL = 30;
+  // the endgame goals, the order they come in: the ship stolen and boarded, the mission, back aboard
+  static var ENDGAME: Array<_Goal> = [
+    SCENARIO_ALIEN_STEAL_SHIP,
+    SCENARIO_ALIEN_ENTER_SHIP,
+    SCENARIO_ALIEN_MISSION_ABDUCTION,
+    SCENARIO_ALIEN_MISSION_LIQUIDATION,
+    SCENARIO_ALIEN_MISSION_INTEL,
+    SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
+    SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP,
+    SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
+  ];
   // the area alertness the goal policy leaves an area at, before the police it calls in arrive
   static inline var FLEE = 50;
   // the parasite energy it stops hardening a grip at and invades early
@@ -49,6 +61,7 @@ class Bot
   var opened = ''; // the window the goal policy last opened, and the turn it did (one try a turn each)
   var openedTurn = -1;
   var lastMessage: _LogMessage = null; // the newest log line check() has looked at
+  var talkTo: ai.AI = null; // the AI the goal policy is out to chat with (the converse menu picks it)
 
   public function new(g: Game, seed: Int, policy: String)
     {
@@ -145,6 +158,7 @@ class Bot
             label: 'act ' + index + ' ' + a.id,
             f: function() ui.hud.action(index, false),
             id: a.id,
+            action: a,
           });
         }
       for (a in @:privateAccess ui.hud.actions.listKeyActions)
@@ -400,6 +414,29 @@ class Bot
         }
       if (ui.state != UISTATE_DEFAULT)
         return null;
+      // a chat under way, or the converse menu open to start one
+      if (ui.hud.state == HUD_CHAT)
+        return chat(list);
+      if (ui.hud.state == HUD_CONVERSE_MENU)
+        {
+          for (o in list)
+            if (o.id == 'converseMenu.chat' &&
+                o.action.obj == talkTo)
+              return o;
+          return find(list, 'escape');
+        }
+      // a pickup submenu opened on the way: take the ship part or the clue paper it was opened for,
+      // or go back
+      if (ui.hud.state == HUD_PICKUP_MENU)
+        {
+          for (o in list)
+            if (o.id == 'get' &&
+                ((cast o.action.obj: objects.Pickup).item.id == 'shipPart' ||
+                 ((cast o.action.obj: objects.Pickup).item.id == 'paper' &&
+                  wantsClues())))
+              return o;
+          return find(list, 'pickupMenu.abort');
+        }
       if (game.location == LOCATION_REGION)
         return region(list);
       if (game.location != LOCATION_AREA)
@@ -417,6 +454,15 @@ class Bot
           label: 'follow path',
           f: game.update,
         };
+      // the endgame, once the ship is found: its own policy, and the targeting it needs
+      var eg = endgameGoal();
+      if (eg != null &&
+          game.location == LOCATION_AREA)
+        {
+          var o = endgame(list, eg);
+          if (o != null)
+            return o;
+        }
 
       // the computer goal wants a host carrying a device, and one who knows computers while the
       // parasite does not
@@ -591,6 +637,22 @@ class Bot
           label: 'follow region path',
           f: game.update,
         };
+      // the endgame's area, with a host: the corp area of the mission takes no bare parasite
+      var eg = endgameGoal();
+      if (eg != null &&
+          game.player.state == PLR_STATE_HOST)
+        {
+          var a = endgameArea(eg);
+          if (a == pr.currentArea)
+            return find(list, canEnter(a) ? 'enterArea' : 'skipTurn');
+          var x = a.x;
+          var y = a.y;
+          return {
+            kind: 'move',
+            label: 'travel ' + x + ',' + y + ' (endgame)',
+            f: function() pr.setTarget(x, y),
+          };
+        }
       // a habitat is made in the sewers under the first inhabited area it gets to
       var o = find(list, 'createHabitat');
       if (o != null &&
@@ -655,6 +717,263 @@ class Bot
         label: 'travel ' + x + ',' + y,
         f: function() pr.setTarget(x, y),
       };
+    }
+
+// the endgame goal held now, or null
+  function endgameGoal(): _Goal
+    {
+      for (g in ENDGAME)
+        if (game.goals.has(g))
+          return g;
+      return null;
+    }
+
+// the area an endgame goal is worked in: the lab the ship is studied in, the corp area of the
+// mission, or where the ship hides
+  function endgameArea(g: _Goal): game.AreaGame
+    {
+      var ship = @:privateAccess scenario.GoalsAlienCrashLanding.getSpaceshipState(game);
+      if (g == SCENARIO_ALIEN_STEAL_SHIP)
+        return game.region.get(ship.studyAreaID);
+      if (g == SCENARIO_ALIEN_MISSION_ABDUCTION ||
+          g == SCENARIO_ALIEN_MISSION_LIQUIDATION ||
+          g == SCENARIO_ALIEN_MISSION_INTEL)
+        return game.region.get(scenario.GoalsAlienCrashLanding.getMissionState(game).areaID);
+      return game.region.get(ship.hiddenAreaID);
+    }
+
+// the endgame in an area: each ship part into its own slot and the startup, then the ship boarded,
+// the mission target invaded, probed or killed, and back aboard. null leaves the step to the rest
+// of the goal policy (a host found, a window, an upkeep)
+  function endgame(list: Array<_BotOption>, g: _Goal): _BotOption
+    {
+      var p = game.player;
+      var pa = game.playerArea;
+      var area = endgameArea(g);
+      if (game.area != area)
+        return (p.state == PLR_STATE_HOST ? leave(list) : null);
+      var ship = @:privateAccess scenario.GoalsAlienCrashLanding.getSpaceshipState(game);
+
+      // the ship in the lab
+      if (g == SCENARIO_ALIEN_STEAL_SHIP)
+        {
+          if (p.state != PLR_STATE_HOST)
+            return null;
+          var names = [ ship.part1Name, ship.part2Name, ship.part3Name ];
+          var done = [ ship.part1Installed, ship.part2Installed, ship.part3Installed ];
+          var slots = [ ship.slot1ObjectID, ship.slot2ObjectID, ship.slot3ObjectID ];
+          // a part the host carries goes into its own slot
+          for (i in 0...3)
+            if (!done[i])
+              for (item in p.host.inventory)
+                if (item.id == 'shipPart' &&
+                    item.name == names[i])
+                  {
+                    for (o in list)
+                      if (o.id == 'installPart' &&
+                          o.action.item == item &&
+                          o.action.obj.id == slots[i])
+                        return o;
+                    var slot = game.area.getObject(slots[i]);
+                    return walkNear(slot.x, slot.y);
+                  }
+          // the next part not installed yet, picked up where it lies (beside a lab table too)
+          for (i in 0...3)
+            if (!done[i])
+              for (o in game.area.getObjects())
+                if (o.type == 'pickup' &&
+                    o.item.id == 'shipPart' &&
+                    o.item.name == names[i])
+                  {
+                    for (x in list)
+                      if (x.id == 'get' &&
+                          x.action.obj == o)
+                        return x;
+                    var x = first(list, [ 'pickupMenu', 'learnObject' ]);
+                    if (x != null &&
+                        Math.max(Math.abs(o.x - pa.x), Math.abs(o.y - pa.y)) <= 1)
+                      return x;
+                    return walkNear(o.x, o.y);
+                  }
+          if (done[0] &&
+              done[1] &&
+              done[2])
+            {
+              var o = find(list, 'startShip');
+              if (o != null)
+                return o;
+              var console = game.area.getObject(ship.studyObjectID);
+              return walkNear(console.x, console.y);
+            }
+          return null;
+        }
+
+      // the mission target, while a mission wants it
+      if (g == SCENARIO_ALIEN_MISSION_ABDUCTION ||
+          g == SCENARIO_ALIEN_MISSION_LIQUIDATION ||
+          g == SCENARIO_ALIEN_MISSION_INTEL)
+        return mission(list, g);
+
+      // aboard: the ship where it hides, boarded with or without the target (the abduction keeps it)
+      var o = find(list, 'enterShip');
+      if (o != null)
+        return o;
+      var obj = game.area.getObject(ship.hiddenObjectID);
+      return (p.state == PLR_STATE_HOST ? walkNear(obj.x, obj.y) : null);
+    }
+
+// the mission in the corp area: a smiler's keycard through the locked office door, then the target
+// invaded (abduction; intel probes it too), or killed (liquidation)
+  function mission(list: Array<_BotOption>, g: _Goal): _BotOption
+    {
+      var p = game.player;
+      var pa = game.playerArea;
+      var npcID = scenario.GoalsAlienCrashLanding.getMissionState(game).npcID;
+      var target: ai.AI = null;
+      for (x in @:privateAccess game.area._ai)
+        if (x.npc != null &&
+            x.npc.id == npcID &&
+            x.state != AI_STATE_DEAD)
+          target = x;
+      if (target == null)
+        return null;
+      var near = (Math.max(Math.abs(target.x - pa.x), Math.abs(target.y - pa.y)) <= 1);
+      // a known keycard of the office lock, or a smiler carrying one to ride to
+      var card = false;
+      if (p.state == PLR_STATE_HOST)
+        for (item in p.host.inventory.getAll('keycard'))
+          if (item.lockID == 'corp-mission')
+            {
+              // learned first: an unknown card opens nothing (objects.Door)
+              if (!p.knowsItem(item.id))
+                return openOnce(list, _UIState.UISTATE_BODY);
+              card = true;
+            }
+      // a smiler pulls a parasite back until it is talked round to full consent
+      var smiler: ai.AI = null;
+      if (!card)
+        for (x in @:privateAccess game.area._ai)
+          if (x.type == 'smiler' &&
+              x.state != AI_STATE_DEAD &&
+              x != p.host &&
+              x.inventory.getAll('keycard').length > 0)
+            smiler = x;
+      switch (p.state)
+        {
+          case PLR_STATE_PARASITE:
+            // onto the target, or onto a won-over smiler first while the office is locked to us
+            var want = (smiler != null ? smiler : target);
+            if (g == SCENARIO_ALIEN_MISSION_LIQUIDATION &&
+                smiler == null)
+              want = null;
+            if (want == null ||
+                (want == smiler &&
+                 smiler.chat.consent < 100))
+              return null;
+            if (pa.x == want.x &&
+                pa.y == want.y)
+              return find(list, 'attachHost');
+            return walk(want.x, want.y);
+          case PLR_STATE_ATTACHED:
+            return null;
+          default:
+        }
+      // in the target: intel probes it, the abduction is done by holding it
+      if (p.host == target)
+        return (g == SCENARIO_ALIEN_MISSION_INTEL ? find(list, 'probeBrain') : find(list, 'skipTurn'));
+      // no card: the smiler that carries one talked round, then stepped into
+      if (smiler != null)
+        {
+          var beside = (Math.max(Math.abs(smiler.x - pa.x), Math.abs(smiler.y - pa.y)) <= 1);
+          if (smiler.chat.consent >= 100)
+            return (beside ? find(list, 'leaveHost') : walkNear(smiler.x, smiler.y));
+          // a chat takes a host at 75 affinity and full consent (game.Chat.addConverseAction)
+          if (p.host.affinity < 75)
+            return find(list, 'skipTurn');
+          // a chat just over leaves a timeout on the one talked to (game.Chat.start refuses)
+          if (p.host.chat.consent < 100)
+            return find(list, (p.host.chat.timeout > 0 ? 'skipTurn' : 'converseHost'));
+          if (!beside)
+            return walkNear(smiler.x, smiler.y);
+          if (smiler.chat.timeout > 0)
+            return find(list, 'skipTurn');
+          talkTo = smiler;
+          return find(list, 'converseMenu');
+        }
+      if (!near)
+        return walkNear(target.x, target.y);
+      if (g != SCENARIO_ALIEN_MISSION_LIQUIDATION)
+        return find(list, 'leaveHost');
+      return attack(list, target);
+    }
+
+// a chat under way: an action that answers the target's need (ChatConst.needActions, what Analyze
+// tells the player), else any but the questions, which cost the most; out at full consent
+  function chat(list: Array<_BotOption>): _BotOption
+    {
+      var c = game.player.chat;
+      if (c.target == null ||
+          c.target.chat.consent >= 100)
+        return find(list, 'chat.exit');
+      for (a in const.ChatConst.needActions[c.target.chat.needID])
+        {
+          var o = find(list, 'chat.' + a.toLowerCase());
+          if (o != null)
+            return o;
+        }
+      for (o in list)
+        if (o.id != null &&
+            StringTools.startsWith(o.id, 'chat.') &&
+            o.id != 'chat.exit' &&
+            o.id != 'chat.question' &&
+            o.id != 'chat.consult')
+          return o;
+      return find(list, 'chat.exit');
+    }
+
+// hit an AI next to the host the way the keyboard does: T into targeting, rotate to it, confirm,
+// then `a`
+  function attack(list: Array<_BotOption>, ai: ai.AI): _BotOption
+    {
+      var t = game.ui.hud.targeting;
+      if (game.ui.hud.state == HUD_TARGETING)
+        return press('target ' + ai.id, (t.targetingTarget != null &&
+          t.targetingTarget.ai == ai ? 'Enter' : 'Numpad6'), '', false);
+      if (t.target != null &&
+          t.target.ai == ai &&
+          t.canAttackTarget())
+        return press('key a hit ' + ai.id, 'KeyA', 'a', false);
+      return press('key t target ' + ai.id, 'KeyT', 't', true);
+    }
+
+// walk next to a cell the player cannot stand on (a slot, a console, a lab table, an AI): the
+// nearest walkable cell beside it; null when the player is beside it already
+  function walkNear(x: Int, y: Int): _BotOption
+    {
+      var pa = game.playerArea;
+      if (Math.max(Math.abs(x - pa.x), Math.abs(y - pa.y)) <= 1)
+        return null;
+      var best = null;
+      var bestD = 0;
+      for (dy in -1...2)
+        for (dx in -1...2)
+          {
+            var nx = x + dx;
+            var ny = y + dy;
+            if ((dx == 0 &&
+                 dy == 0) ||
+                !game.area.isWalkable(nx, ny) ||
+                game.area.getAI(nx, ny) != null)
+              continue;
+            var d = Std.int(Math.max(Math.abs(nx - pa.x), Math.abs(ny - pa.y)));
+            if (best == null ||
+                d < bestD)
+              {
+                best = { x: nx, y: ny };
+                bestD = d;
+              }
+          }
+      return (best != null ? walk(best.x, best.y) : walk(x, y));
     }
 
 // out of the area: Leave Area where the area allows it, else its exit object (a city's sewer hatch),

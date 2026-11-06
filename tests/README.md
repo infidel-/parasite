@@ -6,11 +6,11 @@ states, broken invariants and saves that do not survive a load.
 | run | what it does |
 |---|---|
 | `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 32 runs, ~10 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (432 runs, ~115 s on 6 cores) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (472 runs, ~130 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
-Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial`, `--start new,s1,save/<file>`
+Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|endgame`, `--start new,s1,save/<file>`
 (a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
 `_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
@@ -98,6 +98,37 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   Past LEARN_NPC the losses are the same deaths, in the long stretches spent in cities looking for
   a host with a device.
 
+**The endgame** (`endgame:<start>:<seed>:<steps>`, from `s3` and `s31`) plays on from the ship found
+to the end of the game:
+- **The ship.** Each part a host carries goes into its own slot (part N in slot N, `installPart`),
+  and the next is picked up where it lies (a lab table is worked from beside it). Then
+  `startShip`, and `enterShip` where the ship hides.
+- **The mission** is in a corp area, behind an office door the mission locks; a smiler carries the
+  keycard. A smiler pulls a parasite back until it is chatted to full consent. So the host is chatted
+  to full consent first (affinity 75 is needed), then the smiler, picking the actions that answer its
+  need (`ChatConst.needActions`, what Analyze tells a player). Then the parasite steps into the
+  smiler and learns the card. Abduction and intel invade the target (intel probes it too).
+  Liquidation hits it the keyboard way: T, rotate to it, Enter, `a`.
+- **Back aboard:** `enterShip`, which ends the game.
+
+  Measured (2026-11-07, seeds 1-20 of each start):
+
+  | milestone | reached | turns min / median / max |
+  |---|---|---|
+  | STEAL_SHIP | 40/40 | 1 / 64 / 220 |
+  | ENTER_SHIP | 40/40 | 2 / 65 / 221 |
+  | MISSION_ABDUCTION | 3/40 | 46 / 73 / 162 |
+  | MISSION_LIQUIDATION | 3/40 | 48 / 120 / 170 |
+  | MISSION_INTEL | 6/40 | 35 / 69 / 256 |
+  | MISSION_SUCCESS_GO_SPACESHIP | 4/40 | 99 / 173 / 226 |
+  | MISSION_FAILURE_GO_SPACESHIP | 1/40 | 107 |
+  | FINISH | 5/40 | 99 / 131 / 226 |
+
+  The losses are in the corp area. A mission that calls the law freezes its alertness at 100 and
+  shuts the exit, and the office's security guard shoots. Waiting at the locked office for a smiler
+  measured worse (0 of 20), because the guard has longer to shoot. An abduction never got its target
+  back aboard.
+
 ## Suites
 
 | suite | runs | checks |
@@ -108,6 +139,7 @@ write the state before step N as a save, and `--trace` to keep the game's own co
 | `roundtrip` | `new`, the presets and every fixture | play a little, save, load, save: the two saves must match field for field |
 | `continue` | the 11 presets × 3 seeds (quick: `s1`, `s2`) | random play to step 30, on to the first quiet step (no walk, region trip, repeated action or window under way), save. Then 100 steps on a second seed, and save. A fresh process loads the quiet save and plays the same 100 steps: the two last saves must match |
 | `loc` | `fr` and `pseudo` × the new games and presets (quick: `fr` from `s1`, `pseudo` from `s2`) | random play in that language (`loc:<code>:<start>:<seed>:<steps>`, served to Loc by `host.lang`), then its English twin (`loc:en:…`): the two saves must match, apart from the log, because a save holds English keys only. The soak lists the strings a run met with no translation |
+| `endgame` | `s3` and `s31` × seeds (soak only) | the goal policy to the end of the game; fails when no run reaches FINISH (`--reach FINISH=1`) |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
 
 **Seeds vary the setup:**

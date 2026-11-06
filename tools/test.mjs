@@ -93,32 +93,34 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   let known = 0;
   // each run's slowest bot step (`@slow <ms> <where>`): the soak lists the worst five
   const slow = [];
-  // the tutorial runs: how many reached their goal (exit 0, else stalled: exit 4), and each milestone
-  // of the chain on the way, with the turns it took (`@reach <goal> <turn>`)
-  const reachedBy = new Map();
-  let milestones = [];
-  let tutorials = 0;
-  let goals = 0;
+  // the goal runs (tutorial, endgame): per kind, how many reached their goal (exit 0, else stalled:
+  // exit 4), and each milestone of the chain on the way, with the turns it took (`@reach <goal> <turn>`)
+  const tally = new Map();
   for (let i = 0; i < ids.length; i++) {
     const r = results[i];
-    if (ids[i].startsWith('tutorial:')) {
-      tutorials++;
+    const kind = ids[i].split(':')[0];
+    if (kind == 'tutorial' ||
+        kind == 'endgame') {
+      if (!tally.has(kind))
+        tally.set(kind, { runs: 0, goals: 0, milestones: [], reachedBy: new Map() });
+      const t = tally.get(kind);
+      t.runs++;
       if (r.code == 0)
-        goals++;
+        t.goals++;
+      const order = /^@milestones (\S+)$/m.exec(r.out);
+      if (order)
+        t.milestones = order[1].split(',');
+      for (const [, g, turn] of r.out.matchAll(/^@reach (\S+) (\d+)$/gm)) {
+        if (!t.reachedBy.has(g))
+          t.reachedBy.set(g, []);
+        t.reachedBy.get(g).push(+turn);
+      }
     }
     for (const [, n, some] of r.out.matchAll(/^@locmiss (\d+) ?(.*)$/gm))
       if (+n > 0 && !args.includes('--quick'))
         console.log('[test] ' + ids[i] + ': ' + n + ' strings with no translation met in play' + (some ? ': ' + some : ''));
     for (const [, ms, where] of r.out.matchAll(/^@slow (\d+) (.*)$/gm))
       slow.push({ ms: +ms, line: ids[i] + ' ' + where });
-    const order = /^@milestones (\S+)$/m.exec(r.out);
-    if (order)
-      milestones = order[1].split(',');
-    for (const [, g, t] of r.out.matchAll(/^@reach (\S+) (\d+)$/gm)) {
-      if (!reachedBy.has(g))
-        reachedBy.set(g, []);
-      reachedBy.get(g).push(+t);
-    }
     if (r.code == 0)
       continue;
     if (r.code == 3) known++;
@@ -133,33 +135,40 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
   console.log('[test] ' + ids.length + ' runs, ' + failed + ' failed, ' + known + ' known (' + secs + ' s)' +
     (known > 0 ? ' — known failures are filed in tests/known.json' : ''));
-  // the tutorial passes when enough runs reach each gated milestone, not all of them: --reach
-  // GOAL=N,... is the minimum number of runs per milestone. The defaults are one run each, under what
-  // the goal bot measured (2026-11-06; the quick cut's 5 seeds: TRAVEL_EVENT 3; the soak's 40:
-  // LEARN_NPC 9, CREATE_HABITAT 15, USE_COMPUTER 6): low enough for the bot's own deaths, high enough
-  // that a broken step in the chain, which nothing gets past, fails. Raise them as the bot improves
-  let low = false;
-  if (tutorials > 0) {
+  // a goal suite passes when enough runs reach each gated milestone, not all of them: --reach
+  // GOAL=N,... is the minimum number of runs per milestone (GOAL_ / SCENARIO_ALIEN_ dropped). The
+  // defaults are one run each, under what the bots measured (2026-11-07; the quick cut's 5 seeds:
+  // TRAVEL_EVENT 2; the soak's 40: LEARN_NPC 9, CREATE_HABITAT 14, USE_COMPUTER 6; the endgame's
+  // 40: FINISH 5): low enough for the bots' own deaths, high enough that a broken step in the chain,
+  // which nothing gets past, fails. Raise them as the bots improve
+  const ri = args.indexOf('--reach');
+  const spec = (ri >= 0 ? args[ri + 1] :
+    (args.includes('--quick') ? 'TRAVEL_EVENT=1' : 'LEARN_NPC=1,CREATE_HABITAT=1,USE_COMPUTER=1,FINISH=1'));
+  const shortName = (g) => g.replace(/^GOAL_|^SCENARIO_ALIEN_/, '');
+  for (const [kind, t] of tally) {
     // the milestone table is the soak's; every build's quick cut prints only the verdict
-    for (const g of (args.includes('--quick') ? [] : milestones.filter((m) => reachedBy.has(m)))) {
-      const turns = reachedBy.get(g);
+    for (const g of (args.includes('--quick') ? [] : t.milestones.filter((m) => t.reachedBy.has(m)))) {
+      const turns = t.reachedBy.get(g);
       turns.sort((a, b) => a - b);
-      console.log('[test]   ' + g.replace('GOAL_', '').padEnd(19) + ' ' + String(turns.length).padStart(3) + '/' + tutorials +
+      console.log('[test]   ' + shortName(g).padEnd(27) + ' ' + String(turns.length).padStart(3) + '/' + t.runs +
         ', turns min ' + turns[0] + ' / median ' + turns[turns.length >> 1] + ' / max ' + turns[turns.length - 1]);
     }
-    const ri = args.indexOf('--reach');
-    const spec = (ri >= 0 ? args[ri + 1] :
-      (args.includes('--quick') ? 'TRAVEL_EVENT=1' : 'LEARN_NPC=1,CREATE_HABITAT=1,USE_COMPUTER=1'));
-    const short = [];
-    for (const [g, n] of spec.split(',').filter((x) => x.length > 0).map((x) => x.split('='))) {
-      const got = (reachedBy.get('GOAL_' + g) ?? []).length;
-      if (got < +n)
-        short.push(g + ' ' + got + ' < ' + n);
-    }
-    low = short.length > 0;
-    console.log('[test] tutorial: ' + goals + '/' + tutorials + ' reached the goal, gates ' + spec +
-      (low ? ' — TOO FEW: ' + short.join(', ') : ' met'));
+    console.log('[test] ' + kind + ': ' + t.goals + '/' + t.runs + ' reached the goal');
   }
+  // each gate counts the runs of the kind whose chain has that milestone; a gate no kind in this
+  // suite has is skipped (a --suite or --start that leaves its kind out)
+  const short = [];
+  for (const [g, n] of spec.split(',').filter((x) => x.length > 0).map((x) => x.split('='))) {
+    const t = [...tally.values()].find((x) => x.milestones.some((m) => shortName(m) == g));
+    if (t == null)
+      continue;
+    const got = [...t.reachedBy.entries()].filter(([m]) => shortName(m) == g).reduce((a, [, v]) => a + v.length, 0);
+    if (got < +n)
+      short.push(g + ' ' + got + ' < ' + n);
+  }
+  const low = short.length > 0;
+  if (tally.size > 0)
+    console.log('[test] gates ' + spec + (low ? ' — TOO FEW: ' + short.join(', ') : ' met'));
   process.exit(failed > 0 || low ? 1 : 0);
 }
 

@@ -46,6 +46,19 @@ class Headless
     GOAL_CREATE_HABITAT,
     GOAL_USE_COMPUTER,
   ];
+  // the endgame's chain, from the ship found to the end of the game (FINISH, printed on its own)
+  static var ENDGAME_MILESTONES: Array<_Goal> = [
+    SCENARIO_ALIEN_STEAL_SHIP,
+    SCENARIO_ALIEN_ENTER_SHIP,
+    SCENARIO_ALIEN_MISSION_ABDUCTION,
+    SCENARIO_ALIEN_MISSION_LIQUIDATION,
+    SCENARIO_ALIEN_MISSION_INTEL,
+    SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP,
+    SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP,
+    SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
+  ];
+  // the chain play() tallies for a goal run: the tutorial's, or the endgame's
+  static var milestones = MILESTONES;
   // the in-memory save slots the runs use
   static inline var FIXTURE_SLOT = 5;
   static inline var ROUNDTRIP_SLOT = 93;
@@ -120,6 +133,11 @@ class Headless
           tutorial(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
           return;
         }
+      else if (parts[0] == 'endgame')
+        {
+          endgame(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
+          return;
+        }
       else
         {
           log('[test] unknown run id: ' + id);
@@ -154,6 +172,7 @@ class Headless
           suite != 'roundtrip' &&
           suite != 'continue' &&
           suite != 'loc' &&
+          suite != 'endgame' &&
           suite != 'tutorial')
         return null;
       var ids = [];
@@ -199,6 +218,13 @@ class Headless
         for (i in 0...(quick ? count : 2 * count))
           ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'GOAL_USE_COMPUTER') + ':' + (seed0 + i) + ':' +
             (quick ? 2000 : 4000));
+      // the goal policy from the ship found (s3) and ready to start (s31) to the end of the game
+      if (!quick &&
+          (all ||
+           suite == 'endgame'))
+        for (st in (start != null ? start.split(',') : [ 's3', 's31' ]))
+          for (i in 0...count)
+            ids.push('endgame:' + st + ':' + (seed0 + i) + ':3000');
       return ids;
     }
 
@@ -426,7 +452,7 @@ class Headless
     }
     {
       var reached: Array<String> = [];
-      var left = MILESTONES.copy();
+      var left = milestones.copy();
       var alerts: Array<String> = js.Syntax.code("host.alerts");
       var bot: Bot = null;
       var step = -1;
@@ -546,6 +572,40 @@ class Headless
         }
       if (game.goals.completed(goal))
         {
+          exit(0);
+          return;
+        }
+      var on = [ for (g in game.goals.iteratorCurrent()) g ];
+      log('stalled ' + id + ' at turn ' + game.turns + ' (' + game.state + ', player ' + game.player.state +
+        '), current goals: ' + on.join(', ') +
+        '\n    replay: make test args="--run ' + id + '"' +
+        '\n    last steps: ' + res.trail.join(' | ') +
+        '\n    last log: ' + logTail(8).join(' | '));
+      exit(EXIT_STALLED);
+    }
+
+// the goal policy from a start point at the ship (s3, s31) to the end of the game: the ship stolen
+// and boarded, the mission, back aboard. It finishes (a win, failed mission or not), stalls, or breaks
+  static function endgame(id: String, start: String, seed: Int, steps: Int)
+    {
+      milestones = ENDGAME_MILESTONES;
+      // the last goal of every ending finishes the game, so the run stops on FINISH, not on a goal
+      var res = play(start, seed, steps, -1, SCENARIO_ALIEN_MISSION_SUCCESS_GO_SPACESHIP);
+      log('@milestones ' + ENDGAME_MILESTONES.join(',') + ',FINISH');
+      for (r in res.reached)
+        log('@reach ' + r);
+      if (res.failure != null)
+        {
+          fail(seed, 'at step ' + res.step + ' (turn ' + game.turns + '): ' + res.failure +
+            '\n    replay: make test args="--run ' + id + '"' +
+            '\n    last steps: ' + res.trail.join(' | '));
+          finish(id);
+          return;
+        }
+      // every ending is one of the three back-aboard goals completed (game.finish, result 'win')
+      if (Lambda.exists(ENDGAME_MILESTONES.slice(5), function(g) return game.goals.completed(g)))
+        {
+          log('@reach FINISH ' + game.turns);
           exit(0);
           return;
         }
