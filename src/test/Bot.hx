@@ -32,12 +32,19 @@ class Bot
     'answer' => 100,
   ];
   static inline var TRAIL = 30;
+  // the area alertness the goal policy leaves an area at, before the police it calls in arrive
+  static inline var FLEE = 50;
+  // the parasite energy it stops hardening a grip at and invades early
+  static inline var LOW_ENERGY = 15;
+  // the host energy a trip on the region map needs; below it the host is changed first
+  static inline var TRIP_ENERGY = 50;
 
   var game: Game;
   var rng: Void -> Float;
   public var trail: Array<String>; // the last TRAIL steps taken, newest last
   public var policy: String; // random, or goal: work through the tutorial (random where it has no say)
   var walkFailed = false; // the goal policy's last walk had no path: hand the next step to random
+  var fled: game.AreaGame = null; // the area the goal policy last fled, not to be entered again straight away
 
   public function new(g: Game, seed: Int, policy: String)
     {
@@ -294,17 +301,23 @@ class Bot
           return (o != null &&
             !p.evolutionManager.isActive ? o : find(list, 'escape'));
         }
-      // the body window is where an item is learned
+      // the body window is where an item is learned, and a paper read for its clues (a book wants a
+      // habitat)
       if (ui.state == UISTATE_BODY)
         {
           for (o in list)
             if (o.id != null &&
-                StringTools.startsWith(o.id, 'learn.'))
+                (StringTools.startsWith(o.id, 'learn.') ||
+                 (o.id == 'read.paper' &&
+                  wantsClues())))
               return o;
           return find(list, 'escape');
         }
-      if (ui.state != UISTATE_DEFAULT ||
-          game.location != LOCATION_AREA)
+      if (ui.state != UISTATE_DEFAULT)
+        return null;
+      if (game.location == LOCATION_REGION)
+        return region(list);
+      if (game.location != LOCATION_AREA)
         return null;
       // the target was out of reach (behind a wall, a locked door): a random step moves things on
       if (walkFailed)
@@ -334,8 +347,14 @@ class Bot
           var ai = (human != null ? human : nearestAI(false));
           return (ai != null ? walk(ai.x, ai.y) : null);
         }
+      // a host that fights the grip outlasts a starving parasite: risk the early invasion then, once
+      // the grip gives it a fair chance (each failure costs the parasite 2 health)
       if (p.state == PLR_STATE_ATTACHED)
-        return first(list, [ 'invadeHost', 'hardenGrip', 'invadeEarly' ]);
+        return first(list, (p.energy <= LOW_ENERGY &&
+          pa.attachHold >= 50 &&
+          p.health > 2 ?
+          [ 'invadeHost', 'invadeEarly', 'hardenGrip' ] :
+          [ 'invadeHost', 'hardenGrip', 'invadeEarly' ]));
 
       // in a host
       var host = p.host;
@@ -356,27 +375,61 @@ class Bot
         for (item in host.inventory.withWorn())
           if (!p.knowsItem(item.id))
             return find(list, 'open.' + _UIState.UISTATE_BODY);
-      if (game.goals.has(GOAL_ENTER_SEWERS))
+      // a hot area is left before the police it calls in arrive; the sewers goal leaves the same way,
+      // and so does a timeline goal that wants another area
+      var target = eventArea();
+      if (host.isHuman &&
+          (game.area.alertness >= FLEE ||
+           ((game.goals.has(GOAL_ENTER_SEWERS) ||
+             (target != null &&
+              target != game.area)) &&
+            host.energy >= TRIP_ENERGY)))
         {
-          var o = first(list, [ 'enterSewers', 'learnObject' ]);
+          if (game.area.alertness >= FLEE)
+            fled = game.area;
+          var o = leave(list);
           if (o != null)
             return o;
-          var hatch = nearestObject('sewer_hatch');
-          if (hatch != null)
-            return walk(hatch.x, hatch.y);
         }
-      // a probe takes health off the host: stop while it can still carry the parasite to the next one
+      // the event area: papers picked up and read, an event participant's brain probed
+      if (target == game.area &&
+          host.isHuman &&
+          !host.hasTrait(TRAIT_ILLITERATE))
+        {
+          if (host.inventory.has('paper') &&
+              host.energy > 10)
+            return find(list, 'open.' + _UIState.UISTATE_BODY);
+          // an unknown paper is learned about before it can be picked up
+          var o = first(list, [ 'get', 'pickupMenu', 'learnObject' ]);
+          if (o != null)
+            return o;
+          if (host.inventory.length() < host.maxItems)
+            for (doc in game.area.getObjects())
+              if (doc.type == 'document' &&
+                  doc.item.id == 'paper')
+                return walk(doc.x, doc.y);
+        }
+      // a probe takes health off the host: stop while it can still carry the parasite to the next one.
+      // past the tutorial only an event participant has anything left to tell
       var o = find(list, 'probeBrain');
       if (o != null &&
           host.isHuman &&
           host.health > 3 &&
-          !game.goals.completed(GOAL_LEARN_SOCIETY))
+          (!game.goals.completed(GOAL_LEARN_SOCIETY) ||
+           (host.isNPC &&
+            !host.npc.memoryKnown &&
+            wantsClues())))
         return o;
       // a spent host, or a dog, is a ride to the nearest human: walk it there, step out next to them
       if (!host.isHuman ||
           host.health <= 3 ||
           host.energy < 20 ||
-          !game.goals.completed(GOAL_LEARN_SOCIETY))
+          !game.goals.completed(GOAL_LEARN_SOCIETY) ||
+          (target == game.area &&
+           host.hasTrait(TRAIT_ILLITERATE)) ||
+          (target != null &&
+           target != game.area &&
+           host.energy < TRIP_ENERGY))
         {
           if (human == null)
             return null;
@@ -385,6 +438,89 @@ class Bot
           return walk(human.x, human.y);
         }
       return find(list, 'skipTurn');
+    }
+
+// on the region map: to the event area while a timeline goal wants it, else into the nearest calm
+// inhabited area that is not the one just fled
+  function region(list: Array<_BotOption>): _BotOption
+    {
+      var pr = game.playerRegion;
+      if (pr.target != null)
+        return {
+          kind: 'move',
+          label: 'follow region path',
+          f: game.update,
+        };
+      // a parasite, or a host about to expire, needs a new host before anywhere else
+      var p = game.player;
+      var target = (p.state == PLR_STATE_HOST &&
+        p.host.energy >= 20 ? eventArea() : null);
+      // a hot event area is waited out next to it: alertness falls by one a turn out here
+      if (target != null &&
+          target == pr.currentArea &&
+          target.alertness >= FLEE)
+        return find(list, 'skipTurn');
+      if (target == null)
+        {
+          var bestD = 0;
+          for (a in game.region)
+            {
+              if (!a.info.canEnter ||
+                  !a.info.isInhabited ||
+                  a == fled ||
+                  a.alertness >= FLEE)
+                continue;
+              var d = Std.int(Math.max(Math.abs(a.x - pr.x), Math.abs(a.y - pr.y)));
+              if (target == null ||
+                  d < bestD)
+                {
+                  target = a;
+                  bestD = d;
+                }
+            }
+        }
+      if (target == null ||
+          target == pr.currentArea)
+        return find(list, 'enterArea');
+      var x = target.x;
+      var y = target.y;
+      return {
+        kind: 'move',
+        label: 'travel ' + x + ',' + y,
+        f: function() pr.setTarget(x, y),
+      };
+    }
+
+// out of the area: Leave Area where the area allows it, else its exit object (a city's sewer hatch),
+// learned first and walked to; null when there is no way out from here
+  function leave(list: Array<_BotOption>): _BotOption
+    {
+      var o = first(list, [ 'leaveArea', 'enterSewers', 'learnObject' ]);
+      if (o != null)
+        return o;
+      var exit = nearestObject(game.area.info.exit);
+      return (exit != null ? walk(exit.x, exit.y) : null);
+    }
+
+// do the timeline goals want clues?
+  function wantsClues(): Bool
+    {
+      return game.goals.has(GOAL_LEARN_CLUE) ||
+        game.goals.has(GOAL_LEARN_NPC);
+    }
+
+// the area of an event whose location the player knows, while a timeline goal wants one; else null
+  function eventArea(): game.AreaGame
+    {
+      if (!game.goals.has(GOAL_TRAVEL_EVENT) &&
+          !wantsClues())
+        return null;
+      for (e in game.timeline)
+        if (!e.isHidden &&
+            e.locationKnown &&
+            e.location != null)
+          return e.location.area;
+      return null;
     }
 
 // the option with this id, or null
@@ -409,7 +545,8 @@ class Bot
     }
 
 // walk to a cell as a mouse click does (PlayerArea.setPath takes the first step); a cell with no
-// path to it is noted, so the goal policy does not ask for it again straight away
+// path to it, the cell the player stands on, or a first step refused, is noted, so the goal policy
+// does not ask for it again straight away
   function walk(x: Int, y: Int): _BotOption
     {
       return {
@@ -417,9 +554,19 @@ class Bot
         label: 'walk ' + x + ',' + y,
         f: function() {
           var pa = game.playerArea;
-          if (game.area.getPath(pa.x, pa.y, x, y) == null)
+          if ((pa.x == x &&
+               pa.y == y) ||
+              game.area.getPath(pa.x, pa.y, x, y) == null)
+            {
+              walkFailed = true;
+              return;
+            }
+          // a first step refused (a door, someone in the way) drops the path with no turn passed
+          var turns = game.turns;
+          pa.setPath(x, y);
+          if (pa.path == null &&
+              game.turns == turns)
             walkFailed = true;
-          else pa.setPath(x, y);
         },
       };
     }
@@ -439,9 +586,11 @@ class Bot
               (humanOnly &&
                !ai.isHuman))
             continue;
-          // an alerted AI tears the parasite away: a calm one counts as ten cells closer
+          // an alerted AI tears the parasite away: a calm one counts as ten cells closer. every
+          // witness around it, who would call the police, as three cells further
           var d = Std.int(Math.max(Math.abs(ai.x - pa.x), Math.abs(ai.y - pa.y))) +
-            (ai.state == AI_STATE_IDLE ? 0 : 10);
+            (ai.state == AI_STATE_IDLE ? 0 : 10) +
+            3 * (game.area.getAIinRadius(ai.x, ai.y, 5, false).length - 1);
           if (best == null ||
               d < bestD)
             {

@@ -74,16 +74,23 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   await Promise.all(Array.from({ length: Math.min(availableParallelism(), ids.length) }, worker));
   let failed = 0;
   let known = 0;
-  // the tutorial runs: how many reached the goal, in how many turns, and how many stalled (exit 4)
-  const turns = [];
+  // the tutorial runs: how many reached their goal (exit 0, else stalled: exit 4), and each milestone
+  // of the chain on the way, with the turns it took (`@reach <goal> <turn>`)
+  const reachedBy = new Map();
   let tutorials = 0;
+  let goals = 0;
   for (let i = 0; i < ids.length; i++) {
     const r = results[i];
-    if (ids[i].startsWith('tutorial:'))
+    if (ids[i].startsWith('tutorial:')) {
       tutorials++;
-    const at = /^@turns (\d+)$/m.exec(r.out);
-    if (at)
-      turns.push(+at[1]);
+      if (r.code == 0)
+        goals++;
+    }
+    for (const [, g, t] of r.out.matchAll(/^@reach (\S+) (\d+)$/gm)) {
+      if (!reachedBy.has(g))
+        reachedBy.set(g, []);
+      reachedBy.get(g).push(+t);
+    }
     if (r.code == 0)
       continue;
     if (r.code == 3) known++;
@@ -95,20 +102,25 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
   console.log('[test] ' + ids.length + ' runs, ' + failed + ' failed, ' + known + ' known (' + secs + ' s)' +
     (known > 0 ? ' — known failures are filed in tests/known.json' : ''));
-  // the tutorial passes on a share of its seeds, not all: --reach is that share in percent. The
-  // defaults sit under what the goal bot measured (2026-11-05, GOAL_ENTER_SEWERS: the soak's 20
-  // seeds 11/20, the quick cut's 5 seeds 2/5): low enough for the bot's own deaths, high enough that
-  // a broken step in the chain, which reaches nothing, fails. Raise them as the bot improves
+  // the tutorial passes on a share of its seeds, not all: --reach is that share in percent, of the
+  // runs that reached their goal. The defaults sit under what the goal bot measured (2026-11-06, 40
+  // seeds: GOAL_TRAVEL_EVENT, the quick cut's goal, 18-20/40; GOAL_LEARN_NPC, the soak's, 8-9/40):
+  // low enough for the bot's own deaths, high enough that a broken step in the chain, which reaches
+  // nothing past it, fails. Raise them as the bot improves
   let low = false;
   if (tutorials > 0) {
-    turns.sort((a, b) => a - b);
-    const pct = Math.round(100 * turns.length / tutorials);
+    // the milestone table is the soak's; every build's quick cut prints only the verdict
+    for (const [g, turns] of (args.includes('--quick') ? [] : reachedBy)) {
+      turns.sort((a, b) => a - b);
+      console.log('[test]   ' + g.replace('GOAL_', '').padEnd(14) + ' ' + String(turns.length).padStart(3) + '/' + tutorials +
+        ', turns min ' + turns[0] + ' / median ' + turns[turns.length >> 1] + ' / max ' + turns[turns.length - 1]);
+    }
+    const pct = Math.round(100 * goals / tutorials);
     const ri = args.indexOf('--reach');
-    const reach = (ri >= 0 ? +args[ri + 1] : (args.includes('--quick') ? 20 : 40));
+    const reach = (ri >= 0 ? +args[ri + 1] : (args.includes('--quick') ? 20 : 5));
     low = pct < reach;
-    console.log('[test] tutorial: ' + turns.length + '/' + tutorials + ' reached (' + pct + '%, needs ' + reach + '%)' +
-      (turns.length > 0 ? ', turns min ' + turns[0] + ' / median ' + turns[turns.length >> 1] +
-        ' / max ' + turns[turns.length - 1] : '') + (low ? ' — TOO FEW' : ''));
+    console.log('[test] tutorial: ' + goals + '/' + tutorials + ' reached the goal (' + pct + '%, needs ' + reach + '%)' +
+      (low ? ' — TOO FEW' : ''));
   }
   process.exit(failed > 0 || low ? 1 : 0);
 }

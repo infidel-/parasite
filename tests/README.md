@@ -12,7 +12,7 @@ states, broken invariants and saves that do not survive a load.
 
 Arguments are `--suite all|smoke|fuzz|compat|roundtrip|tutorial`, `--start new,s1,save/<file>`,
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
-`GOAL_ENTER_SEWERS`) and `--reach P`. Add `--full` to print a known failure's whole report, `--stop N` to
+`GOAL_LEARN_NPC`, quick `GOAL_TRAVEL_EVENT`) and `--reach P`. Add `--full` to print a known failure's whole report, `--stop N` to
 write the state before step N as a save, and `--trace` to keep the game's own console output.
 
 ## How it works
@@ -40,21 +40,43 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   `action(i)` and `UI.closeWindow`. The only UI rules it copies are the three navbar gates (Evo,
   Cult, Body). Its choices come from its own `gen.Rng` stream. It has two policies:
   - **random**: weighted picks among moves, actions, windows and Escape;
-  - **goal**: walks the tutorial chain the way a player would.
+  - **goal**: walks the tutorial chain the way a player would, and on into the timeline.
 
   The goal policy works like this:
   - **Hosts.** It walks to the nearest calm, unarmed human the way a mouse click walks
-    (`setPath`), attaches, hardens its grip and invades. A dog is ridden to a human, and the
-    parasite steps out next to them.
+    (`setPath`). A target with witnesses around (who would call the police) counts as further away.
+    It attaches, hardens its grip and invades; a parasite running out of energy invades early once
+    the grip gives that a fair chance. A dog is ridden to a human, and the parasite steps out next to
+    them.
   - **Evolution.** It evolves Brain Probe in the Evolution window.
   - **Learning.** It learns the host's items in the Body window, and probes the brain until the
     host's health is down to 3.
-  - **Sewers.** For ENTER_SEWERS it learns the sewer hatch and uses it.
+  - **Leaving.** It leaves an area once its alertness reaches 50, for ENTER_SEWERS, and for an event
+    area it wants. A city is left by its sewer hatch (learned first), other areas by Leave Area. It
+    changes host first when the host has less than 50 energy for the trip.
+  - **Region map.** It travels (`PlayerRegion.setTarget`) to the event area whose location it
+    knows while TRAVEL_EVENT, LEARN_CLUE or LEARN_NPC want it, and waits outside while that area's
+    alertness is 50 or more (it falls by one a turn on the region map). Otherwise, and whenever it
+    needs a new host, it enters the nearest calm inhabited area that is not the one it just fled.
+  - **Clues.** In the event area a literate host picks up the clue papers and reads them (Body
+    window), and an event participant's brain is probed until it has nothing left.
 
-  Wherever the goal policy has no opinion, the random policy picks. **Measured** (2026-11-05,
-  seeds 1-40): 53% reach ENTER_SEWERS, median 94 turns. Most failures die to police once the area's
-  alertness climbs, because the bot never changes area. Raising that rate means teaching it to
-  travel; raise `--reach` with it.
+  Wherever the goal policy has no opinion, the random policy picks. Each run prints the turn it
+  reached each milestone on, and the soak tallies them. **Measured** (2026-11-06, seeds 1-40):
+
+  | milestone | reached | turns min / median / max |
+  |---|---|---|
+  | INVADE_HUMAN | 37/40 | 7 / 16 / 33 |
+  | LEARN_SOCIETY | 22/40 | 67 / 98 / 169 |
+  | ENTER_SEWERS | 20/40 | 69 / 110 / 183 |
+  | TRAVEL_EVENT | 20/40 | 73 / 114 / 185 |
+  | LEARN_CLUE | 14/40 | 119 / 185 / 232 |
+  | LEARN_NPC | 9/40 | 125 / 216 / 268 |
+
+  Most of the losses are deaths before LEARN_SOCIETY: until then a city cannot be left (the sewer
+  hatch cannot be learned yet), and the police that witnesses call kill the host. Fleeing alerted
+  police outright measured worse (9 → 4 of 40): they stay alerted, and the bot stops progressing.
+  USE_COMPUTER, the next goal, needs a habitat, which is a chain of evolutions further.
 
 ## Suites
 
@@ -64,7 +86,7 @@ write the state before step N as a save, and `--trace` to keep the game's own co
 | `fuzz` | `new` and the 11 console stage presets (`s1`..`s31`) × seeds | random play; after every step: no throw, no `UI.onError` alert, the invariants, not stuck (300 steps with no turn) |
 | `compat` | every fixture save | it loads through `Game.load` (old saves too), then 200 fuzz steps |
 | `roundtrip` | `new`, the presets and every fixture | play a little, save, load, save: the two saves must match field for field |
-| `tutorial` | new games × seeds, the GOAL policy | works through the tutorial chain to `--goal`; the suite fails when fewer than `--reach`% of the seeds get there (default 40, quick 20) and prints min/median/max turns |
+| `tutorial` | new games × seeds, the GOAL policy | works through the tutorial and the timeline to `--goal`; the suite fails when fewer than `--reach`% of the seeds get there (default 5, quick 20). The soak prints each milestone's reach and min/median/max turns |
 
 **Invariants** (`Bot.check`), which check only rules the code already implies:
 - no NaN in player health, energy and ap, `group.priority`, cult money, area alertness;

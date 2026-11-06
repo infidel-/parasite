@@ -29,6 +29,15 @@ class Headless
   static inline var EXIT_FAILED = 1;
   static inline var EXIT_KNOWN = 3;
   static inline var EXIT_STALLED = 4; // the tutorial bot did not reach its goal: tallied, not failed
+  // the goal policy's chain, each reported with the turn a tutorial run reached it on
+  static var MILESTONES: Array<_Goal> = [
+    GOAL_INVADE_HUMAN,
+    GOAL_LEARN_SOCIETY,
+    GOAL_ENTER_SEWERS,
+    GOAL_TRAVEL_EVENT,
+    GOAL_LEARN_CLUE,
+    GOAL_LEARN_NPC,
+  ];
   // the in-memory save slots the runs use
   static inline var FIXTURE_SLOT = 5;
   static inline var ROUNDTRIP_SLOT = 93;
@@ -147,11 +156,13 @@ class Headless
           suite == 'roundtrip')
         for (st in (start != null ? start.split(',') : (quick ? [ 'new', 's2' ].concat(quickSaves) : [ 'new' ].concat(STAGES).concat(saves))))
           ids.push('roundtrip:' + st + ':' + seed0 + ':' + (quick ? 20 : 50));
-      // the goal policy through the tutorial, on every seed
+      // the goal policy through the tutorial and on into the timeline, on every seed. the quick cut
+      // stops at the remembered event area, which about half the seeds reach
       if (all ||
           suite == 'tutorial')
         for (i in 0...count)
-          ids.push('tutorial:' + strArg('--goal', 'GOAL_ENTER_SEWERS') + ':' + (seed0 + i) + ':' + (quick ? 1500 : 3000));
+          ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'GOAL_LEARN_NPC') + ':' + (seed0 + i) + ':' +
+            (quick ? 2000 : 4000));
       return ids;
     }
 
@@ -330,8 +341,11 @@ class Headless
       failure: String,
       step: Int,
       trail: Array<String>,
+      reached: Array<String>,
     }
     {
+      var reached: Array<String> = [];
+      var left = MILESTONES.copy();
       var alerts: Array<String> = js.Syntax.code("host.alerts");
       var bot: Bot = null;
       var step = -1;
@@ -353,6 +367,7 @@ class Headless
                 failure: failure,
                 step: -1,
                 trail: [],
+                reached: reached,
               };
             }
           bot = new Bot(game, seed, (goal != null ? 'goal' : 'random'));
@@ -378,6 +393,14 @@ class Headless
                   failure = broken.join('; ');
                   break;
                 }
+              // the turn each milestone of the goal policy's chain was first completed on
+              if (goal != null)
+                for (g in left.copy())
+                  if (game.goals.completed(g))
+                    {
+                      reached.push(g + ' ' + game.turns);
+                      left.remove(g);
+                    }
               still = (game.turns == lastTurn ? still + 1 : 0);
               lastTurn = game.turns;
               if (still >= STUCK)
@@ -396,6 +419,7 @@ class Headless
         failure: failure,
         step: step,
         trail: (bot != null ? bot.trail : []),
+        reached: reached,
       };
     }
 
@@ -404,6 +428,8 @@ class Headless
   static function tutorial(id: String, goal: _Goal, seed: Int, steps: Int)
     {
       var res = play('new', seed, steps, -1, goal);
+      for (r in res.reached)
+        log('@reach ' + r);
       if (res.failure != null)
         {
           fail(seed, 'at step ' + res.step + ' (turn ' + game.turns + '): ' + res.failure +
@@ -414,7 +440,6 @@ class Headless
         }
       if (game.goals.completed(goal))
         {
-          log('@turns ' + game.turns);
           exit(0);
           return;
         }
