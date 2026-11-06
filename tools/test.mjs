@@ -64,6 +64,18 @@ if (!args.includes('--run') && !args.includes('--plan')) {
     while (next < ids.length) {
       const i = next++;
       let r = await child(['--run', ids[i]]);
+      // a language run's English twin: the same play must save the same, apart from the log
+      const lh = /^@lochash (\S+)$/m.exec(r.out);
+      if (lh) {
+        const twin = ids[i].replace(/^loc:[^:]+:/, 'loc:en:');
+        const t = await child(['--run', twin]);
+        const th = /^@lochash (\S+)$/m.exec(t.out);
+        if (t.code != 0 || !th || th[1] != lh[1])
+          r = { code: 1, out: r.out + ids[i] + ': its save differs from the English twin ' + twin + "'s, apart from the log" +
+            (t.code != 0 ? ' (the twin exited ' + t.code + ')' : '') + '\n    both saves: tests/out/' +
+            ids[i].replaceAll(':', '-').replaceAll('/', '-') + '.json.gz, tests/out/' + twin.replaceAll(':', '-').replaceAll('/', '-') + '.json.gz\n' +
+            t.out };
+      }
       // a continue run's second half, in a fresh process of its own
       if (/^@resume$/m.test(r.out)) {
         const b = await child(['--run', ids[i], '--resume']);
@@ -94,6 +106,9 @@ if (!args.includes('--run') && !args.includes('--plan')) {
       if (r.code == 0)
         goals++;
     }
+    for (const [, n, some] of r.out.matchAll(/^@locmiss (\d+) ?(.*)$/gm))
+      if (+n > 0 && !args.includes('--quick'))
+        console.log('[test] ' + ids[i] + ': ' + n + ' strings with no translation met in play' + (some ? ': ' + some : ''));
     for (const [, ms, where] of r.out.matchAll(/^@slow (\d+) (.*)$/gm))
       slow.push({ ms: +ms, line: ids[i] + ' ' + where });
     const order = /^@milestones (\S+)$/m.exec(r.out);
@@ -213,7 +228,8 @@ const canvas = over({ id: 'canvas', width: 1920, height: 1080 });
 // runs with none. a mod not installed is left out, and the load says so the way the game does
 const modInfos = () => {
   const run = args[args.indexOf('--run') + 1] ?? '';
-  const start = (run.split(':')[1] ?? '').split('+')[0];
+  const f = run.split(':');
+  const start = ((f[0] == 'loc' ? f[2] : f[1]) ?? '').split('+')[0];
   // the `mods` start: a new game with every mod installed
   const ids = (start == 'mods' ? readdirSync(resolve(root, 'parasite', 'dev')).sort().map((id) => ({ id })) :
     start.startsWith('save/') ?
@@ -266,7 +282,13 @@ const host = {
     writeMeta: (s, d) => { metas.set(s, d); return true; },
     delete: (s) => { saves.delete(s); metas.delete(s); return true; },
   },
-  lang: () => ({ code: 'en', available: ['en'], json: null }),
+  // a loc run's language (loc:<code>:...): fr from the shipped electron/lang, pseudo from Loc itself
+  lang: () => {
+    const run = args[args.indexOf('--run') + 1] ?? '';
+    const code = run.startsWith('loc:') ? run.split(':')[1] : 'en';
+    return { code, available: ['en', code],
+      json: code == 'fr' ? readFileSync(resolve(root, 'electron', 'lang', 'fr.json'), 'utf8') : null };
+  },
   consoleHistory: { read: () => null, write: () => true, exists: () => false },
   // testmod registers `bad*` ids on purpose, to see them rejected (examples/testmod)
   log: { append: (line) => {
@@ -312,7 +334,16 @@ globalThis.ResizeObserver = stub;
 globalThis.SoundManager = stub;
 globalThis.localStorage = stub;
 globalThis.host = host;
-globalThis.fetch = () => new Promise(() => {});
+// fetch serves a mod's own files (ModLoader.loadLang reads mod://<id>/lang/<code>.json); anything
+// else stays pending, as a blocked remote fetch does
+globalThis.fetch = (url) => {
+  if (!String(url).startsWith('mod://'))
+    return new Promise(() => {});
+  const [id, ...rest] = String(url).substr(6).split('/');
+  const m = mods.find((x) => x.id == id);
+  const file = m ? resolve(m.rootDir, ...rest) : null;
+  return Promise.resolve(file && existsSync(file) ? new Response(readFileSync(file)) : new Response(null, { status: 404 }));
+};
 globalThis.requestAnimationFrame = () => 0;
 // the game clock (GameScene's setInterval(game.update)) is driven by the tests, not by time
 globalThis.setInterval = () => 0;

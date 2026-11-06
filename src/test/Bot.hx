@@ -48,6 +48,7 @@ class Bot
   var fled: game.AreaGame = null; // the area the goal policy last fled, not to be entered again straight away
   var opened = ''; // the window the goal policy last opened, and the turn it did (one try a turn each)
   var openedTurn = -1;
+  var lastMessage: _LogMessage = null; // the newest log line check() has looked at
 
   public function new(g: Game, seed: Int, policy: String)
     {
@@ -55,6 +56,8 @@ class Bot
       rng = gen.Rng.mulberry32(seed);
       trail = [];
       this.policy = policy;
+      // the log a save brought in was written before this bot: its lines are not checked
+      lastMessage = game.messageList.last();
     }
 
 // seed Math.random for a game about to start, and clear what the last game left behind, so a seed
@@ -923,7 +926,37 @@ class Bot
       if (game.messageList.length > 100)
         list.push('messageList holds ' + game.messageList.length + ' lines, over its cap of 100');
       checkCounters(list);
+      checkLog(list);
       return list;
+    }
+
+// the log lines since the last check show no unfilled template: a value missing from a template's
+// arguments prints `null` (l10n.Loc), an unparsed one keeps its braces. INFO and DEBUG lines are
+// built by hand and may hold braces
+  function checkLog(list: Array<String>)
+    {
+      var fresh = (lastMessage == null);
+      for (m in game.messageList)
+        {
+          if (!fresh)
+            {
+              fresh = (m == lastMessage);
+              continue;
+            }
+          var text = ~/<[^>]*>/g.replace(m.msg, '');
+          if (!StringTools.startsWith(text, 'INFO ') &&
+              !StringTools.startsWith(text, 'DEBUG ') &&
+              ~/\bnull\b|\bundefined\b|\bNaN\b|\[object |[{}]/.match(text))
+            list.push('log line looks unfilled: ' + text);
+        }
+      // the line looked at last fell off the capped list: everything in it was new
+      if (!fresh)
+        {
+          lastMessage = null;
+          checkLog(list);
+          return;
+        }
+      lastMessage = game.messageList.last();
     }
 
 // the current area's invariants: its AIs, the host and the cultists in it

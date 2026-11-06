@@ -102,6 +102,12 @@ class Headless
           fuzz(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
           return;
         }
+      // loc:<language>:<start>:<seed>:<steps>, the language served to Loc by tools/test.mjs
+      else if (parts[0] == 'loc')
+        {
+          fuzz(id, parts[2], Std.parseInt(parts[3]), Std.parseInt(parts[4]));
+          return;
+        }
       else if (parts[0] == 'roundtrip')
         roundtrip(parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
       else if (parts[0] == 'continue')
@@ -147,6 +153,7 @@ class Headless
           suite != 'compat' &&
           suite != 'roundtrip' &&
           suite != 'continue' &&
+          suite != 'loc' &&
           suite != 'tutorial')
         return null;
       var ids = [];
@@ -177,6 +184,13 @@ class Headless
         for (st in (start != null ? start.split(',') : (quick ? [ 's1', 's2' ] : STAGES)))
           for (i in 0...(quick ? 1 : 3))
             ids.push('continue:' + st + ':' + (seed0 + i) + ':30:' + (quick ? 50 : 100));
+      // random play in French and in the pseudo locale; the runner plays each one's English twin
+      // and compares their saves
+      if (all ||
+          suite == 'loc')
+        for (lang in [ 'fr', 'pseudo' ])
+          for (st in (start != null ? start.split(',') : (quick ? [ (lang == 'fr' ? 's1' : 's2') ] : NEW_GAMES.concat(STAGES))))
+            ids.push('loc:' + lang + ':' + st + ':' + seed0 + ':' + (quick ? 200 : 500));
       // the goal policy through the tutorial, the timeline and the habitat, on every seed, and on
       // twice the seeds in the soak: 20 leave the computer goal at two runs, too thin to gate on.
       // the quick cut stops at the remembered event area, which about half the seeds reach
@@ -334,6 +348,8 @@ class Headless
         }
       if (res.failure == null)
         {
+          if (id.indexOf('loc:') == 0)
+            locReport(id);
           exit(0);
           return;
         }
@@ -356,6 +372,47 @@ class Headless
       // the runner reads this and replays to the step before it, for the save
       log('@fail ' + res.step);
       exit(EXIT_FAILED);
+    }
+
+// a language run's save, with the log taken out (the only part of a save that is in the player's
+// language), as a hash the runner compares with the English twin's, and the strings it missed
+  static function locReport(id: String)
+    {
+      // the language really is the one asked for, or every check here passes in English
+      if (l10n.Loc.lang() != id.split(':')[1])
+        {
+          log(id + ': played in ' + l10n.Loc.lang() + ', not ' + id.split(':')[1]);
+          exit(EXIT_FAILED);
+          return;
+        }
+      Saver.save(game, 90);
+      // the save's own JSON parsed back: untyped by nature
+      var save: Dynamic = haxe.Json.parse(HostBridge.saveRead(90));
+      stripLog(save);
+      var text = haxe.Json.stringify(save);
+      js.Syntax.code("host.writeOut({0}, {1})", id.split(':').join('-').split('/').join('-') + '.json.gz', text);
+      log('@lochash ' + haxe.crypto.Md5.encode(text));
+      var missing = l10n.Loc.missingList();
+      log('@locmiss ' + missing.length + ' ' + missing.slice(0, 5).join(' | '));
+    }
+
+// drop the log fields (ROUNDTRIP_IGNORE) from a parsed save, at any depth
+  static function stripLog(v: Dynamic)
+    {
+      if (Std.isOfType(v, Array))
+        {
+          var a: Array<Dynamic> = v;
+          for (x in a)
+            stripLog(x);
+        }
+      else if (Reflect.isObject(v) &&
+          !Std.isOfType(v, String))
+        for (k in Reflect.fields(v))
+          {
+            if (ROUNDTRIP_IGNORE.indexOf(k) >= 0)
+              Reflect.deleteField(v, k);
+            else stripLog(Reflect.field(v, k));
+          }
     }
 
 // one bot game from a start point: the step it broke at and why, or no failure. stopAt >= 0

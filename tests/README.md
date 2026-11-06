@@ -5,12 +5,12 @@ states, broken invariants and saves that do not survive a load.
 
 | run | what it does |
 |---|---|
-| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 30 runs, ~10 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (404 runs, ~125 s on 6 cores) |
+| `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 32 runs, ~10 s) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (432 runs, ~115 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
-Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|tutorial`, `--start new,s1,save/<file>`
+Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial`, `--start new,s1,save/<file>`
 (a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
 `_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
@@ -107,6 +107,7 @@ write the state before step N as a save, and `--trace` to keep the game's own co
 | `compat` | every fixture save | it loads through `Game.load` (old saves too), then 200 fuzz steps |
 | `roundtrip` | `new`, the presets and every fixture | play a little, save, load, save: the two saves must match field for field |
 | `continue` | the 11 presets × 3 seeds (quick: `s1`, `s2`) | random play to step 30, on to the first quiet step (no walk, region trip, repeated action or window under way), save. Then 100 steps on a second seed, and save. A fresh process loads the quiet save and plays the same 100 steps: the two last saves must match |
+| `loc` | `fr` and `pseudo` × the new games and presets (quick: `fr` from `s1`, `pseudo` from `s2`) | random play in that language (`loc:<code>:<start>:<seed>:<steps>`, served to Loc by `host.lang`), then its English twin (`loc:en:…`): the two saves must match, apart from the log, because a save holds English keys only. The soak lists the strings a run met with no translation |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
 
 **Seeds vary the setup:**
@@ -132,6 +133,9 @@ testmod's `bad*` ids are rejected on purpose, so the runner does not count those
 - the id counters (`RegionObject`, `AIData`, `AreaObject`, `NPC` `._maxID`) above every live id;
   a load restores them, and two of them it did not (fixed);
 - `messageList` within its cap of 100;
+- no log line written since the bot started looks unfilled: `null`, `undefined`, `NaN`, `[object`, or
+  a brace (a value missing from a `T()` template prints `null`; a template that does not parse keeps
+  its braces). INFO and DEBUG lines are skipped, because they are built by hand;
 - the player inside the area;
 - no goal both current and completed.
 
