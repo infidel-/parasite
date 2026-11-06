@@ -20,5 +20,5 @@ All of the tutorial happens in the same area, no exit to region mode. Assume we 
 
 Tutorial starts with the GOAL_INVADE_HOST and ends when completing GOAL_LEARN_SOCIETY. Pick all the goals that are from this tutorial line and check out the code for game.goals.receive/complete(<goal id>) to have an understanding.
 
-Carefully evaluate how many turns does it take for the player to finish the tutorial. Give a mininum and approximate numbers first, then full explanation on how you came to these results. Write the generated response to reports/turns-to-finish-tutorial.md
+Carefully evaluate how many turns does it take for the player to finish the tutorial. Give a mininum and approximate numbers first, then full explanation on how you came to these results. Write the generated response to docs/turns-to-finish-tutorial.md, keeping its "Measured" section (the headless goal bot numbers, `tests/README.md`)
 ```
