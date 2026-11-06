@@ -263,8 +263,9 @@ class AIData extends _SaveObject
       if (o != null)
         maxHealth += o.params.health;
 
-      // clamp new health if decreased
+      // clamp new health and energy if decreased
       health = health;
+      energy = energy;
     }
 
 // get current weapon item info (supports player-host known-item logic)
