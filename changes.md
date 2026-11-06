@@ -1,9 +1,22 @@
 # Changes
 
-## 1.1
+## 1.1.1
 
 ### Changes
 - console: `bot` lets a test bot play the game (debug build)
+
+### Fixes
+- cult: an Elevate the faithful that fails on its target's death no longer names it "null"
+- game: a host whose attributes drop no longer keeps energy above its new maximum
+- game: a load no longer lets a new ovum or mission NPC take an id already in use
+- game: a parasite with no host walking into a locked door no longer crashes
+- game: a resisting host boxed in by walls or followers no longer crashes the game
+- game: a save no longer stores habitat formation messages in the player's language
+- game: an organ gives its strength, energy or health bonus only once it is grown
+
+## 1.1
+
+### Changes
 - mods: mods can ship translations (lang/<code>.json) and translate their text through l10n.Loc
 - ui: French translation, and a language option in Options (Interface)
 - ui: Cyrillic, Chinese, Japanese and Korean text shows in a sans face sized to match the chosen font
@@ -11,15 +24,8 @@
 ### Fixes
 - cult: a member death fails only the ordeals that member takes part in
 - cult: a Stakeholder Flesh log line named the wrong choice
-- cult: an Elevate the faithful that fails on its target's death no longer names it "null"
 - game: a dog host's bark costs its energy and a turn, and barks when repeated
 - game: a host that dies on the region map (ovum, expiry) now leaves the cult and counts as a Group death
-- game: a host whose attributes drop no longer keeps energy above its new maximum
-- game: a load no longer lets a new ovum or mission NPC take an id already in use
-- game: a parasite with no host walking into a locked door no longer crashes
-- game: a resisting host boxed in by walls or followers no longer crashes the game
-- game: a save no longer stores habitat formation messages in the player's language
-- game: an organ gives its strength, energy or health bonus only once it is grown
 - game: ship parts left behind or dropped no longer vanish, and lost ones reappear in the lab
 - ui: an action key pressed twice quickly no longer crashes when the first press loses the host
 - ui: log lines read "1 turn" / "5 resources", use "a"/"an" correctly and no longer end in a double full stop
