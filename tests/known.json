@@ -13,12 +13,6 @@
   },
   {
     "match": [
-      "Could not resolve class BurglarKingAI"
-    ],
-    "todo": "needs the pickpocket mod; headless runs without mods (tests/README.md)"
-  },
-  {
-    "match": [
       "_ai[]._strength (",
       "_ai[]._constitution (",
       "_ai[]._intellect (",

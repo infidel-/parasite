@@ -29,7 +29,7 @@
 //     relative url rejects, and an unhandled rejection kills node
 import { spawn } from 'node:child_process';
 import { availableParallelism } from 'node:os';
-import { createRequire } from 'node:module';
+import { createRequire, register } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -173,6 +173,46 @@ Math.random = () => {
 
 const canvas = over({ id: 'canvas', width: 1920, height: 1080 });
 
+// the mods a fixture was saved with (its _activeMods), as MainElectron's scan describes them, from
+// the dev install's parasite/dev (the examples' `make` installs them there). a new game or a preset
+// runs with none. a mod not installed is left out, and the load says so the way the game does
+const modInfos = () => {
+  const run = args[args.indexOf('--run') + 1] ?? '';
+  const start = run.split(':')[1] ?? '';
+  if (!start.startsWith('save/'))
+    return [];
+  const save = JSON.parse(gunzipSync(readFileSync(resolve(root, 'tests', 'saves', start.substr(5)))));
+  const out = [];
+  for (const { id } of save._activeMods ?? []) {
+    const rootDir = resolve(root, 'parasite', 'dev', id);
+    if (!existsSync(resolve(rootDir, 'manifest.json')))
+      continue;
+    const m = JSON.parse(readFileSync(resolve(rootDir, 'manifest.json'), 'utf8'));
+    out.push({ ...m, name: m.name ?? m.id, author: m.author ?? '', rootDir, source: 'sideload-dev', assets: [],
+      hasModCss: existsSync(resolve(rootDir, 'mod.css')) });
+  }
+  return out;
+};
+const mods = modInfos();
+
+// ModLoader imports each mod's entry from mod://<id>/<file>, which electron's protocol handler serves;
+// a loader hook serves it here. the entry is a plain Haxe script, so as a module it sees no `exports`
+// and @:expose puts its class on window, the contract ModLoader reads
+register('data:text/javascript,' + encodeURIComponent(`
+import { readFileSync } from 'node:fs';
+let roots = {};
+export function initialize(data) { roots = data; }
+export function resolve(spec, ctx, next) {
+  return spec.startsWith('mod://') ? { url: spec, shortCircuit: true } : next(spec, ctx);
+}
+export function load(url, ctx, next) {
+  if (!url.startsWith('mod://'))
+    return next(url, ctx);
+  const [id, ...rest] = url.substr(6).split('/');
+  return { format: 'module', source: readFileSync(roots[id] + '/' + rest.join('/'), 'utf8'), shortCircuit: true };
+}
+`), { data: Object.fromEntries(mods.map((m) => [m.id, m.rootDir])) });
+
 // in-memory host: save slots, a log sink that counts the alerts UI.onError writes through it
 const saves = new Map();
 const metas = new Map();
@@ -193,7 +233,7 @@ const host = {
   consoleHistory: { read: () => null, write: () => true, exists: () => false },
   log: { append: (line) => { host.alerts.push(String(line)); return true; } },
   assets: { listSounds: () => listSounds(resolve(root, 'app', 'sound'), '') },
-  mods: { list: () => [], rescan: () => [], openFolder: () => {} },
+  mods: { list: () => mods, rescan: () => mods, openFolder: () => {} },
   shell: { openExternal: () => {} },
   debug: { writeRegionRoads: () => {}, writeRegionBuildings: () => {}, writeImage: () => {} },
   quit: () => {},

@@ -26,7 +26,7 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   and logic takes its own non-3D path.
 - **What is real, not stubbed:**
   - the canvas size, which drives the view rect, spawns and sounds;
-  - `window.host`, an in-memory save map plus the sound list from `app/sound`;
+  - `window.host`, an in-memory save map plus the sound list from `app/sound`, and a fixture's mods;
   - `Math.random`, seeded per run. `Std.random` compiles to it, so a run id is a replay.
 - **The seams in shipped code.** `#if headless` in `GameScene.draw` releases the window queue the 3D
   reveal would release. The boot calls `Sounds.init`, which soundmanager's onready would. The proxy
@@ -110,10 +110,13 @@ most**: compat and roundtrip load every one of them on every soak. When a case i
 set up, make it a save the same way. `make fixture name=<what> slot=<NN>` packs
 `parasite/saveNN.json` with the current version stamped. Then add its row below.
 
-Most of them were made with the `chainsaw` and `pickpocket` mods on, and the tests run without mods.
-A load then raises the game's own "different mod set" prompt, which the harness answers with *load
-anyway*, as a player without the mods would. Saves that hold mod content cannot load that way (the
-four marked *needs pickpocket*); `tests/known.json` files them.
+Most of them were made with the `chainsaw` and `pickpocket` mods on. **A fixture run loads the mods
+its save names** (`_activeMods`), from the dev install's `parasite/dev/<id>`, where each example's
+`make` puts it (`examples/*/`, `make testmod`). `tools/test.mjs` lists them for `host.mods.list`, a
+node loader hook serves `mod://`, and the boot awaits `ModLoader.load` as the menu does. A newer mod
+version than the save's raises the game's own "different mod set" prompt, which the harness answers
+with *load anyway*. New games and presets run with no mods. **A mod missing from `parasite/dev`
+is left out**, and the four saves holding pickpocket content (*needs pickpocket*) then fail to load.
 
 The version is the one in the save when it carries one (0.19, 0.20 wrote it as `version`).
 Otherwise it is *inferred* from the save's date against the `src/VERSION` history.

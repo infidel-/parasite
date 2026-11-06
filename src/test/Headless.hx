@@ -60,7 +60,23 @@ class Headless
           return;
         }
 
-      boot();
+      // the mods a fixture was saved with load asynchronously, as they do at the menu
+      boot().then(function(_) {
+        try
+          {
+            dispatch(id);
+          }
+        catch (e: haxe.Exception)
+          {
+            log('[test] ' + id + ' threw outside a step: ' + e.details());
+            exit(1);
+          }
+      });
+    }
+
+// run one id
+  static function dispatch(id: String)
+    {
       var parts = id.split(':');
       if (parts[0] == 'smoke')
         smoke(Std.parseInt(parts[1]), Std.parseInt(parts[2]));
@@ -187,7 +203,7 @@ class Headless
     }
 
 // build the game object graph the way Main.init does, minus the canvas, the shader warm and the menu
-  static function boot()
+  static function boot(): js.lib.Promise<Dynamic>
     {
       Const.isDebug = HostBridge.isDebug;
       game = new Game();
@@ -199,6 +215,7 @@ class Headless
       // Sounds builds its library on soundmanager's onready, which the stub never fires. it matters
       // to logic only through Std.random: a play rolls its variant, as it does live
       @:privateAccess game.scene.sounds.init();
+      return mods.ModLoader.load(game);
     }
 
 // start a new game on this seed, as ui.NewGame.newGame does
