@@ -14,6 +14,7 @@ Usage: imported by tools/loc/extract.py and tools/loc/translate.py.
 from __future__ import annotations
 
 import hashlib
+import html
 import re
 from collections import Counter
 
@@ -155,13 +156,17 @@ def visible(s: str) -> str:
 
 def markup(s: str) -> Counter:
     """Multiset of what a translation must keep: placeholder names (+forms are free), html tag
-    names, entities and %tokens%."""
+    names, entities (except a letter's or an apostrophe's) and %tokens%."""
     c = Counter()
     for n in names(s):
         c["{" + n + "}"] += 1
     for close, tag in RE_TAG.findall(s):
         c["<" + close + tag.lower() + ">"] += 1
     for e in RE_ENTITY.findall(s):
+        # an entity for a letter or an apostrophe (&#233;, &#39;) is text, not markup: free to change
+        ch = html.unescape(e)
+        if len(ch) == 1 and (ch.isalpha() or ch in "'’"):
+            continue
         c[e] += 1
     for t in RE_TOKEN.findall(s):
         c[t] += 1
@@ -202,6 +207,8 @@ def selftest() -> None:
     assert "extra" in check("Hi.", "Salut {x}.")
     assert check("a %name% b", "a b") is not None
     assert check("x &rarr; y", "x &rarr; y") is None
+    assert check("The Lobbyist&#39;s Expos&#233;", "Die Kommunion des Lobbyisten") is None
+    assert check("R&#38;D", "F und E") is not None
     assert check("<span class=a>x</span>", "<span class=b>y</span>") is None
     assert sha("abc") == sha("abc") and len(sha("abc")) == 16
     assert visible("+{v} {p, select, media{médias} other{x}} power") == "+v médias power"

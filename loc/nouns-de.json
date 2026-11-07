@@ -563,7 +563,7 @@
  "captain": {
   "g": "m",
   "s": "Hauptmann",
-  "fs": "Hauptfrau"
+  "fs": "Hauptmann"
  },
  "car wash attendant": {
   "g": "m",
@@ -1490,8 +1490,21 @@
   "s": "Metallstab"
  },
  "elongated object": {
-  "g": "n",
-  "s": "Langobjekt"
+  "g": "m",
+  "s": "länglicher Gegenstand",
+  "forms": {
+   "der": "der längliche Gegenstand",
+   "den": "den länglichen Gegenstand",
+   "dem": "dem länglichen Gegenstand",
+   "des": "des länglichen Gegenstands",
+   "ein": "ein länglicher Gegenstand",
+   "einen": "einen länglichen Gegenstand",
+   "einem": "einem länglichen Gegenstand",
+   "eines": "eines länglichen Gegenstands",
+   "zum": "zum länglichen Gegenstand",
+   "vom": "vom länglichen Gegenstand",
+   "beim": "beim länglichen Gegenstand"
+  }
  },
  "embassy greeter": {
   "g": "m",
@@ -1752,8 +1765,8 @@
  },
  "fire captain": {
   "g": "m",
-  "s": "Feuerwehrhauptmann",
-  "fs": "Feuerwehrhauptfrau"
+  "s": "Hauptbrandmeister",
+  "fs": "Hauptbrandmeisterin"
  },
  "firmus": {
   "g": "m",
@@ -1889,7 +1902,10 @@
  "gang sergeant": {
   "g": "m",
   "s": "Gang-Sergeant",
-  "fs": "Gang-Sergeantin"
+  "fs": "Gang-Sergeantin",
+  "acc": "Gang-Sergeanten",
+  "dat": "Gang-Sergeanten",
+  "gen": "Gang-Sergeanten"
  },
  "gang unit officer": {
   "g": "m",

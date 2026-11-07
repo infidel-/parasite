@@ -2780,8 +2780,8 @@
    "where": "CultBase.createCustos",
    "field": "actionFailed",
    "kind": "T",
-   "t": "Custos braucht ein freies Feld.",
-   "status": "done",
+   "t": "Ein Custos braucht ein freies Feld.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -2791,8 +2791,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "„Custos braucht ein freies Feld.“ has no article. That works only if Custos is treated as a proper name. Otherwise use „Der Custos braucht ein freies Feld.“ Left unchanged."
+   ]
   },
   "9469b660a5e18755": {
    "s": "A new Custos takes shape.",
@@ -17309,8 +17308,8 @@
    ],
    "where": "Jobs.initJobTable",
    "kind": "N",
-   "t": "Feuerwehrhauptmann",
-   "status": "done",
+   "t": "Hauptbrandmeister",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -28521,8 +28520,8 @@
    ],
    "where": "PediaConst.hostAttrNotePsyche",
    "kind": "T",
-   "t": "<li>Verringert die Wirksamkeit beim Festigen der Kontrolle</li>",
-   "status": "done",
+   "t": "<li>Verringert die Wirksamkeit beim Verstärken der Kontrolle</li>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -28532,8 +28531,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"reinforcing control\" is read as the action that strengthens the grip/control on a host. Translated as „Festigen der Kontrolle“. Check this against the action's name in the UI batch."
+   ]
   },
   "737df5d50a966153": {
    "s": "<li>Makes conversations and gaining consent harder</li>",
@@ -28811,8 +28809,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "<p>Eine hohe Affinität zum Wirt schaltet die Aktion „Gespräch“ frei. Hauptzweck des Gesprächs ist es, die Zustimmung des Wirts zu erlangen. Maximale Zustimmung wird im HUD neben dem Namen des Wirts mit einem grünen &#127282;-Symbol markiert und verändert das Spiel erheblich. Erstens verbraucht ein zustimmender Wirt für manche Aktionen (und für die Bewegung im Regionsmodus) weit weniger Energie. Zweitens sinkt der passive Energieverlust im Gebietsmodus auf null, die Bewegung wird also im Grunde kostenlos. Drittens wächst die Kontrolle bei zustimmenden Wirten jede Runde von selbst. Viertens stellt ein zustimmender Wirt in einem Habitat mit freier Biomineralenergie Energie wieder her, genau wie ein assimilierter. Zuletzt und vor allem gibt die Zustimmung des Wirts dem Parasiten die Fähigkeit, durch den Mund des Wirts mit Menschen zu sprechen. Der zweite Zweck der Zustimmung ist, sekundäre Aktionen freizuschalten. Dazu gehören Befragen, um Hinweise zu sammeln, Gegenstände erbitten, Beraten, um Fertigkeiten zu erlernen, die Deeskalation des Gebietsalarms bei Polizisten und die Unterwanderung bei Mitgliedern der Gruppe, um die Distanz des Teams zu erhöhen (falls du dich traust, mit ihnen zu reden). Beachte, dass Mitglieder der Gruppe immer etwas über ein Ereignis der Ereigniszeitleiste wissen. Außerdem haben Polizisten immer Hinweise auf das Ereignis, wenn dieses Gebiet ein Schauplatz des Ereignisses ist.</p>\n\n<p>Im Gespräch kommen vier Fertigkeiten zum Einsatz: Psychologie sowie drei Fertigkeiten aus dem Bereich Manipulation: Überreden, Nötigung und Täuschung. Jede manipulative Aktion erfordert einen erfolgreichen Wurf, um richtig zu wirken. Für die Aktion „Analysieren“ wird auf Psychologie gewürfelt. Diese Aktion liefert eine Beschreibung des Zustands deines Gesprächspartners mit Hinweisen, wie du weiterkommst. Jeder NPC hat ein Grundbedürfnis und einen Charakterzug. Das Bedürfnis bestimmt, welche Aktionen sich positiv oder negativ auf die Zustimmung auswirken. Der Charakterzug verändert den grundlegenden Gesprächsablauf zusätzlich.</p>\n\n<p>In jeder Gesprächsrunde wird die Liste der Aktionen neu ausgewürfelt. Die Aktionen der Fertigkeiten Überreden und Täuschung erhöhen oder senken die Zustimmung meist je nach Bedürfnis des Gesprächspartners. Bei Überreden sind das die Aktionen Versichern, Diskutieren und Ermutigen. Bei Täuschung sind es Verdrehen, Schmeicheln und Lügen. Die Fertigkeit Nötigung umfasst vier weitere Aktionen: Drohen, Einschüchtern und Schockieren. Bei Erfolg bewirken sie im Wesentlichen dasselbe: Sie bringen den Gesprächspartner aus dem Gleichgewicht und wirken als Multiplikator für die nächste manipulative Aktion, egal ob deren Ergebnis positiv oder negativ ist. Die verbleibende Nötigungsaktion, Provozieren, verringert die Gesprächserschöpfung.</p>\n\n<p>Manche Aktionen (besonders die nötigenden) bergen das Risiko, dass der Gesprächspartner emotional wird. In diesem Fall können bestimmte manipulative Aktionen ihn wieder beruhigen. Gelingt das nicht, wird die Emotion stärker und führt schließlich zu einem negativen Gesprächsausgang. Wie sich Emotionen verhalten, hängt fast immer von den Charakterzügen ab.</p>\n\n<p>Während des Gesprächs kannst du dich nicht bewegen und nicht speichern. Passiert in der Nähe etwas, wird das Gespräch unterbrochen, und es gilt eine Wartezeit. Dasselbe geschieht, wenn die Erschöpfung ihr Maximum erreicht. Beachte, dass die KI während des Gesprächs nach denselben Regeln alarmiert wird wie sonst. Positive und negative manipulative Aktionen senken bzw. erhöhen jedoch die Wachsamkeit des Gesprächspartners, sodass er bei einem erfolgreichen Gespräch nicht alarmiert wird. Das wichtigste Wissen kommt zum Schluss: Während des Gesprächs wird immer die Energie des Parasiten statt der des Wirts verbraucht. Im schlimmsten Fall kannst du also während des Gesprächs sterben. Viel Spaß!</p>",
-   "status": "done",
+   "t": "<p>Eine hohe Affinität zum Wirt schaltet die Aktion „Sprechen mit“ frei. Hauptzweck des Gesprächs ist es, die Zustimmung des Wirts zu erlangen. Maximale Zustimmung wird im HUD neben dem Namen des Wirts mit einem grünen &#127282;-Symbol markiert und verändert das Spiel erheblich. Erstens verbraucht ein zustimmender Wirt für manche Aktionen (und für die Bewegung im Regionsmodus) weit weniger Energie. Zweitens sinkt der passive Energieverlust im Gebietsmodus auf null, die Bewegung wird also im Grunde kostenlos. Drittens wächst die Kontrolle bei zustimmenden Wirten jede Runde von selbst. Viertens stellt ein zustimmender Wirt in einem Habitat mit freier Biomineralenergie Energie wieder her, genau wie ein assimilierter. Zuletzt und vor allem gibt die Zustimmung des Wirts dem Parasiten die Fähigkeit, durch den Mund des Wirts mit Menschen zu sprechen. Der zweite Zweck der Zustimmung ist, sekundäre Aktionen freizuschalten. Dazu gehören Befragen, um Hinweise zu sammeln, Bitten um Gegenstände, Konsultieren, um Fertigkeiten zu erlernen, die Deeskalation des Gebietsalarms bei Polizisten und die Unterwanderung bei Mitgliedern der Gruppe, um die Distanz des Teams zu erhöhen (falls du dich traust, mit ihnen zu reden). Beachte, dass Mitglieder der Gruppe immer etwas über ein Ereignis der Ereigniszeitleiste wissen. Außerdem haben Polizisten immer Hinweise auf das Ereignis, wenn dieses Gebiet ein Schauplatz des Ereignisses ist.</p>\n\n<p>Im Gespräch kommen vier Fertigkeiten zum Einsatz: Psychologie sowie drei Fertigkeiten aus dem Bereich Manipulation: Überreden, Nötigung und Täuschung. Jede manipulative Aktion erfordert einen erfolgreichen Wurf, um richtig zu wirken. Für die Aktion „Analysieren“ wird auf Psychologie gewürfelt. Diese Aktion liefert eine Beschreibung des Zustands deines Gesprächspartners mit Hinweisen, wie du weiterkommst. Jeder NPC hat ein Grundbedürfnis und einen Charakterzug. Das Bedürfnis bestimmt, welche Aktionen sich positiv oder negativ auf die Zustimmung auswirken. Der Charakterzug verändert den grundlegenden Gesprächsablauf zusätzlich.</p>\n\n<p>In jeder Gesprächsrunde wird die Liste der Aktionen neu ausgewürfelt. Die Aktionen der Fertigkeiten Überreden und Täuschung erhöhen oder senken die Zustimmung meist je nach Bedürfnis des Gesprächspartners. Bei Überreden sind das die Aktionen Beruhigen, Diskutieren und Ermutigen. Bei Täuschung sind es Verzerren, Schmeicheln und Lügen. Die Fertigkeit Nötigung umfasst vier weitere Aktionen: Drohen, Ängstigen und Schockieren. Bei Erfolg bewirken sie im Wesentlichen dasselbe: Sie bringen den Gesprächspartner aus dem Gleichgewicht und wirken als Multiplikator für die nächste manipulative Aktion, egal ob deren Ergebnis positiv oder negativ ist. Die verbleibende Nötigungsaktion, Provozieren, verringert die Gesprächserschöpfung.</p>\n\n<p>Manche Aktionen (besonders die nötigenden) bergen das Risiko, dass der Gesprächspartner emotional wird. In diesem Fall können bestimmte manipulative Aktionen ihn wieder beruhigen. Gelingt das nicht, wird die Emotion stärker und führt schließlich zu einem negativen Gesprächsausgang. Wie sich Emotionen verhalten, hängt fast immer von den Charakterzügen ab.</p>\n\n<p>Während des Gesprächs kannst du dich nicht bewegen und nicht speichern. Passiert in der Nähe etwas, wird das Gespräch unterbrochen, und es gilt eine Wartezeit. Dasselbe geschieht, wenn die Erschöpfung ihr Maximum erreicht. Beachte, dass die KI während des Gesprächs nach denselben Regeln alarmiert wird wie sonst. Positive und negative manipulative Aktionen senken bzw. erhöhen jedoch die Wachsamkeit des Gesprächspartners, sodass er bei einem erfolgreichen Gespräch nicht alarmiert wird. Das wichtigste Wissen kommt zum Schluss: Während des Gesprächs wird immer die Energie des Parasiten statt der des Wirts verbraucht. Im schlimmsten Fall kannst du also während des Gesprächs sterben. Viel Spaß!</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -28822,8 +28820,7 @@
      "pass": 2,
      "t": "<p>Eine hohe Affinität zum Wirt schaltet die Aktion „Gespräch“ frei. Hauptzweck des Gesprächs ist es, die Zustimmung des Wirts zu erlangen. Maximale Zustimmung wird im HUD neben dem Namen des Wirts mit einem grünen &#127282;-Symbol markiert und verändert das Spiel erheblich. Erstens verbraucht ein zustimmender Wirt für manche Aktionen (und für die Bewegung im Regionsmodus) weit weniger Energie. Zweitens sinkt der passive Energieverlust im Gebietsmodus auf null, die Bewegung wird also im Grunde kostenlos. Drittens wächst die Kontrolle bei zustimmenden Wirten jede Runde von selbst. Viertens stellt ein zustimmender Wirt in einem Habitat mit freier Biomineralenergie Energie wieder her, genau wie ein assimilierter. Zuletzt und vor allem gibt die Zustimmung des Wirts dem Parasiten die Fähigkeit, durch den Mund des Wirts mit Menschen zu sprechen. Der zweite Zweck der Zustimmung ist, sekundäre Aktionen freizuschalten. Dazu gehören Befragen, um Hinweise zu sammeln, Gegenstände erbitten, Beraten, um Fertigkeiten zu erlernen, die Deeskalation des Gebietsalarms bei Polizisten und die Unterwanderung bei Mitgliedern der Gruppe, um die Distanz des Teams zu erhöhen (falls du dich traust, mit ihnen zu reden). Beachte, dass Mitglieder der Gruppe immer etwas über ein Ereignis der Ereigniszeitleiste wissen. Außerdem haben Polizisten immer Hinweise auf das Ereignis, wenn dieses Gebiet ein Schauplatz des Ereignisses ist.</p>\n\n<p>Im Gespräch kommen vier Fertigkeiten zum Einsatz: Psychologie sowie drei Fertigkeiten aus dem Bereich Manipulation: Überreden, Nötigung und Täuschung. Jede manipulative Aktion erfordert einen erfolgreichen Wurf, um richtig zu wirken. Für die Aktion „Analysieren“ wird auf Psychologie gewürfelt. Diese Aktion liefert eine Beschreibung des Zustands deines Gesprächspartners mit Hinweisen, wie du weiterkommst. Jeder NPC hat ein Grundbedürfnis und einen Charakterzug. Das Bedürfnis bestimmt, welche Aktionen sich positiv oder negativ auf die Zustimmung auswirken. Der Charakterzug verändert den grundlegenden Gesprächsablauf zusätzlich.</p>\n\n<p>In jeder Gesprächsrunde wird die Liste der Aktionen neu ausgewürfelt. Die Aktionen der Fertigkeiten Überreden und Täuschung erhöhen oder senken die Zustimmung meist je nach Bedürfnis des Gesprächspartners. Bei Überreden sind das die Aktionen Versichern, Diskutieren und Ermutigen. Bei Täuschung sind es Verdrehen, Schmeicheln und Lügen. Die Fertigkeit Nötigung umfasst vier weitere Aktionen: Drohen, Einschüchtern und Schockieren. Bei Erfolg bewirken sie im Wesentlichen dasselbe: Sie bringen den Gesprächspartner aus dem Gleichgewicht und wirken als Multiplikator für die nächste manipulative Aktion, egal ob deren Ergebnis positiv oder negativ ist. Die verbleibende Nötigungsaktion, Provozieren, verringert die Gesprächserschöpfung.</p>\n\n<p>Manche Aktionen (besonders die nötigenden) bergen das Risiko, dass der Gesprächspartner emotional wird. In diesem Fall können bestimmte manipulative Aktionen ihn wieder beruhigen. Gelingt das nicht, wird die Emotion stärker und führt schließlich zu einem negativen Gesprächsausgang. Wie sich Emotionen verhalten, hängt fast immer von den Charakterzügen ab.</p>\n\n<p>Während des Gesprächs kannst du dich nicht bewegen und nicht speichern. Passiert in der Nähe etwas, wird das Gespräch unterbrochen, und es gilt eine Wartezeit. Dasselbe geschieht, wenn die Erschöpfung ihr Maximum erreicht. Beachte, dass die KI während des Gesprächs nach denselben Regeln alarmiert wird wie sonst. Positive und negative manipulative Aktionen senken bzw. erhöhen jedoch die Wachsamkeit des Gesprächspartners, sodass er bei einem erfolgreichen Gespräch nicht alarmiert wird. Das wichtigste Wissen kommt zum Schluss: Während des Gesprächs wird immer die Energie des Parasiten statt der des Wirts verbraucht. Im schlimmsten Fall kannst du also während des Gesprächs sterben. Viel Spaß!</p>"
     }
-   ],
-   "doubt": "The English says \"four more actions in the coercion skill\" but lists only three (Threaten, Scare, Shock). Provoke is named separately later. The translation keeps „vier“ to stay faithful to the source. Ask the developer whether the source should say \"three\" or whether a fourth action is missing."
+   ]
   },
   "87eb34c8b7091917": {
    "s": "Host: Expiry",
@@ -29085,8 +29082,8 @@
    "where": "PediaConst.builtinContents",
    "field": "name",
    "kind": "T",
-   "t": "<i>Das erfordert immense Konzentration und Zeit</i>",
-   "status": "done",
+   "t": "<i>Diese Aktion erfordert intensive Konzentration und Zeit</i>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29096,8 +29093,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "This pedia title quotes a log message. I chose „Das erfordert immense Konzentration und Zeit“. It must match the log string's translation exactly."
+   ]
   },
   "dcf08eee87cbf976": {
    "s": "This message will appear in the log if you try to do something that must be done in a habitat, like access a computer device or read a long readable (a journal or a book of some kind).",
@@ -29128,8 +29124,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "<p>Sobald du die Verbesserung Parthenogenese entwickelt hast, erhält der Parasit Zugang zum Prozess der Wiedergeburt. Normalerweise ist das Spiel vorbei, wenn er stirbt. Hast du die Wiedergeburt aber vorbereitet, geht der Parasit mit einigen Verlusten einfach ins „nächste Leben“ über. Zuerst musst du im Regionsmodus das Ovum erschaffen. Der Vorgang ähnelt dem Erschaffen eines Mikrohabitats. Begib dich in die nächste Kanalisation, wähle auf der Regionskarte einen guten Ort und benutze die Aktion „Ovum erschaffen“. Wähle den Ort sorgfältig, denn du musst dorthin reisen, um Einstellungen zu ändern, und der Parasit wird jedes Mal dort wiedergeboren. Das Ovum selbst ist derzeit nicht durch die Gegner gefährdet, und du kannst nur eines erschaffen.</p>\n\n<p>Ist das Ovum erschaffen, siehst du, wenn du sein Feld betrittst, seine Stufe und welche Verbesserungen für die Wiedergeburt markiert sind. Zwei Aktionen stehen zur Verfügung. „Verbesserungen festlegen“ öffnet die Oberfläche, in der du festlegst, mit welchen Grundverbesserungen du wiedergeboren werden willst, indem du sie sperrst oder entsperrst. Die zweite Aktion, „Ovum nähren“, lässt dich deinen aktuellen Wirt an das Ovum verfüttern und bringt Punkte für die nächste Stufe. Jede neue Stufe erfordert mehr Punkte, und es gibt eine Höchststufe für das Ovum. Verschiedene Arten von Wirten bringen unterschiedlich viele Punkte. Allgemein gilt: Je gefährlicher die Art des Wirts, desto mehr Punkte erhält das Ovum.</p>\n\n<p>Die Wiedergeburt erfolgt automatisch beim Tod des Parasiten. Dabei erscheint ein neuer Parasit am Ort des Ovums. Die Stufe des Ovums sinkt um eins. Ist die aktuelle Stufe des Ovums null, ist es der endgültige Tod und das Spiel ist vorbei. Die gesperrten Grundverbesserungen bleiben dir erhalten, die übrigen werden verworfen, und du erhältst einen neuen Satz Startverbesserungen. Grundverbesserungen sind diejenigen, die du erhalten kannst, wenn du im Tutorial die Evolution zum ersten Mal startest. Alle, die du danach im Lauf des Spiels erworben hast, werden nicht verworfen. Es besteht jedoch eine hohe Wahrscheinlichkeit, dass einige von ihnen um eine Stufe absinken, mindestens aber auf Stufe eins bleiben. Evolutionspunkte, die du über die aktuelle Stufe einer Verbesserung hinaus gesammelt hast, werden ebenfalls zurückgesetzt.</p>",
-   "status": "done",
+   "t": "<p>Sobald du die Verbesserung Parthenogenese entwickelt hast, erhält der Parasit Zugang zum Prozess der Wiedergeburt. Normalerweise ist das Spiel vorbei, wenn er stirbt. Hast du die Wiedergeburt aber vorbereitet, geht der Parasit mit einigen Verlusten einfach ins „nächste Leben“ über. Zuerst musst du im Regionsmodus das Ovum erschaffen. Der Vorgang ähnelt dem Erschaffen eines Mikrohabitats. Begib dich in die nächste Kanalisation, wähle auf der Regionskarte einen guten Ort und benutze die Aktion „Ovum erzeugen“. Wähle den Ort sorgfältig, denn du musst dorthin reisen, um Einstellungen zu ändern, und der Parasit wird jedes Mal dort wiedergeboren. Das Ovum selbst ist derzeit nicht durch die Gegner gefährdet, und du kannst nur eines erschaffen.</p>\n\n<p>Ist das Ovum erschaffen, siehst du, wenn du sein Feld betrittst, seine Stufe und welche Verbesserungen für die Wiedergeburt markiert sind. Zwei Aktionen stehen zur Verfügung. „Verbesserungen festlegen“ öffnet die Oberfläche, in der du festlegst, mit welchen Grundverbesserungen du wiedergeboren werden willst, indem du sie sperrst oder entsperrst. Die zweite Aktion, „Ovum nähren“, lässt dich deinen aktuellen Wirt an das Ovum verfüttern und bringt Punkte für die nächste Stufe. Jede neue Stufe erfordert mehr Punkte, und es gibt eine Höchststufe für das Ovum. Verschiedene Arten von Wirten bringen unterschiedlich viele Punkte. Allgemein gilt: Je gefährlicher die Art des Wirts, desto mehr Punkte erhält das Ovum.</p>\n\n<p>Die Wiedergeburt erfolgt automatisch beim Tod des Parasiten. Dabei erscheint ein neuer Parasit am Ort des Ovums. Die Stufe des Ovums sinkt um eins. Ist die aktuelle Stufe des Ovums null, ist es der endgültige Tod und das Spiel ist vorbei. Die gesperrten Grundverbesserungen bleiben dir erhalten, die übrigen werden verworfen, und du erhältst einen neuen Satz Startverbesserungen. Grundverbesserungen sind diejenigen, die du erhalten kannst, wenn du im Tutorial die Evolution zum ersten Mal startest. Alle, die du danach im Lauf des Spiels erworben hast, werden nicht verworfen. Es besteht jedoch eine hohe Wahrscheinlichkeit, dass einige von ihnen um eine Stufe absinken, mindestens aber auf Stufe eins bleiben. Evolutionspunkte, die du über die aktuelle Stufe einer Verbesserung hinaus gesammelt hast, werden ebenfalls zurückgesetzt.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29212,8 +29208,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Sobald sich der Parasit an einen möglichen Wirt geheftet hat, musst du dessen Widerstand brechen, bevor du ihn befallen kannst. Dazu wiederholst du die Aktion „Griff festigen“, die Zeit und Energie des Parasiten kostet. Normalerweise muss der Griff vollständig auf 100 stehen, bevor du den Wirt befallen kannst. Ist deine Energie aber niedrig genug, wird eine weitere Aktion namens „Vorzeitiger Befall“ verfügbar. Damit unternimmt der Parasit einen riskanten Versuch, obwohl der Wirt noch nicht vollständig unterworfen ist. Scheitert der Versuch, erleidet der Parasit Schaden. Genau genommen erleidet er auch bei Erfolg Schaden, nur weniger.",
-   "status": "done",
+   "t": "Sobald sich der Parasit an einen möglichen Wirt geheftet hat, musst du dessen Widerstand brechen, bevor du ihn befallen kannst. Dazu wiederholst du die Aktion „Griff festigen“, die Zeit und Energie des Parasiten kostet. Normalerweise muss der Griff vollständig auf 100 stehen, bevor du den Wirt befallen kannst. Ist deine Energie aber niedrig genug, wird eine weitere Aktion namens „Vorzeitig befallen“ verfügbar. Damit unternimmt der Parasit einen riskanten Versuch, obwohl der Wirt noch nicht vollständig unterworfen ist. Scheitert der Versuch, erleidet der Parasit Schaden. Genau genommen erleidet er auch bei Erfolg Schaden, nur weniger.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29223,8 +29219,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The action names „Griff festigen“ (Harden Grip) and „Vorzeitiger Befall“ (Early Invasion) must match the translated action labels in the action menu."
+   ]
   },
   "266695479a949eec": {
    "s": "Keyboard shortcuts",
@@ -29532,8 +29527,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Um in der feindseligen Welt der Menschheit zu überleben, musst du durch kontrollierte Evolution neues Wissen und neue Verbesserungen entwickeln. Die grundlegenden Startverbesserungen erhältst du im Tutorial, alle weiteren musst du erst aufspüren. Die verfügbaren Verbesserungen und ihre Forschungskosten werden im Evolutionsfenster angezeigt. Du kannst die Evolution jederzeit starten und anhalten (dafür gibt es sogar ein festes Tastenkürzel). Die Evolution verbraucht nicht nur die Energie des Wirts, sie baut ihn auch langsam ab. Steht der Wirt kurz vor dem Tod, erhältst du die Meldung: „Dein Wirt baut bis an die Belastungsgrenze ab und könnte bald verfallen.“ Hältst du den Prozess dann nicht an, kann der Wirt schon in der nächsten Runde sterben. Ob du die Evolution an diesem Punkt abbrichst, liegt ganz bei dir.",
-   "status": "done",
+   "t": "Um in der feindseligen Welt der Menschheit zu überleben, musst du durch kontrollierte Evolution neues Wissen und neue Verbesserungen entwickeln. Die grundlegenden Startverbesserungen erhältst du im Tutorial, alle weiteren musst du erst aufspüren. Die verfügbaren Verbesserungen und ihre Forschungskosten werden im Evolutionsfenster angezeigt. Du kannst die Evolution jederzeit starten und anhalten (dafür gibt es sogar ein festes Tastenkürzel). Die Evolution verbraucht nicht nur die Energie des Wirts, sie baut ihn auch langsam ab. Steht der Wirt kurz vor dem Tod, erhältst du die Meldung: „Dein Wirt degeneriert bis an die Belastungsgrenze und könnte bald verfallen.“ Hältst du den Prozess dann nicht an, kann der Wirt schon in der nächsten Runde sterben. Ob du die Evolution an diesem Punkt abbrichst, liegt ganz bei dir.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29543,8 +29538,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The quoted message „Dein Wirt baut bis an die Belastungsgrenze ab und könnte bald verfallen.“ must match the translation of the actual log string word for word. Check it against that string."
+   ]
   },
   "eebe662bd8405e55": {
    "s": "Habitat",
@@ -29575,8 +29569,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Sobald du dein erstes Körpermerkmal wachsen lässt, erkennt der Parasit, dass dieser gefährliche Vorgang besser in einem Habitat stattfindet. Dadurch wird die Wissensverbesserung „Mikrohabitat“ freigeschaltet. Die Zahl der Habitate, die der Parasit gleichzeitig aktiv haben kann, ist begrenzt. Außerdem ist begrenzt, wie viele Habitate insgesamt in einem Spiel angelegt werden können. Habitate legst du im Regionsmodus mit einer besonderen Aktion in jedem bewohnten Gebiet an; der Parasit nistet sich dann in der Kanalisation darunter ein. In der Wildnis eignen sich nur die Berge: Dort ist das Habitat eine natürliche Höhle, während Ebenen und Wälder überhaupt keins aufnehmen können. Eine Höhle, die mindestens drei Schritte vom nächsten Stadt- oder Firmengebiet entfernt liegt, ist ein sicheres Habitat: Die Teams der Gruppe finden es nie, und der Regionsmodus bietet auf einem solchen Feld „Sicheres Habitat anlegen“ an. Der Preis ist der Weg dorthin, denn die Reise durch die Wildnis zehrt einen gewöhnlichen Wirt doppelt so schnell aus wie die Kanalisation unter der Stadt. Das Anlegen eines Habitats kostet keine Ressourcen, und schon das leere Habitat ermöglicht es dir, Tagebücher zu lesen und Ereignis-NPCs am Computer zu recherchieren. Für weitere Nutzungsmöglichkeiten musst du verschiedene Habitatwucherungen entwickeln und erzeugen. Jede Wucherungsform ist ein Körpermerkmal, das bei Aktivierung den Wirt in die Habitatwucherung verwandelt und den Parasiten ohne Wirt zurücklässt.",
-   "status": "done",
+   "t": "Sobald du dein erstes Körpermerkmal wachsen lässt, erkennt der Parasit, dass dieser gefährliche Vorgang besser in einem Habitat stattfindet. Dadurch wird die Wissensverbesserung „Mikrohabitat“ freigeschaltet. Die Zahl der Habitate, die der Parasit gleichzeitig aktiv haben kann, ist begrenzt. Außerdem ist begrenzt, wie viele Habitate insgesamt in einem Spiel angelegt werden können. Habitate legst du im Regionsmodus mit einer besonderen Aktion in jedem bewohnten Gebiet an; der Parasit nistet sich dann in der Kanalisation darunter ein. In der Wildnis eignen sich nur die Berge: Dort ist das Habitat eine natürliche Höhle, während Ebenen und Wälder überhaupt keins aufnehmen können. Eine Höhle, die mindestens drei Schritte vom nächsten Stadt- oder Firmengebiet entfernt liegt, ist ein sicheres Habitat: Die Teams der Gruppe finden es nie, und der Regionsmodus bietet auf einem solchen Feld „Sicheres Habitat anlegen“ an. Der Preis ist der Weg dorthin, denn die Reise durch die Wildnis zehrt einen gewöhnlichen Wirt doppelt so schnell aus wie die Kanalisation unter der Stadt. Das Anlegen eines Habitats kostet keine Ressourcen, und schon das leere Habitat ermöglicht es dir, Tagebücher zu lesen und Ereignis-NPCs am Computer zu recherchieren. Für weitere Nutzungsmöglichkeiten musst du verschiedene Habitatwucherungen entwickeln und erzeugen. Jede Gussform einer Wucherung ist ein Körpermerkmal, das bei Aktivierung den Wirt in die Habitatwucherung verwandelt und den Parasiten ohne Wirt zurücklässt.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29586,8 +29580,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The quoted action „Sicheres Habitat anlegen“ must match the region-mode action label „Create safe habitat“. Check it against the UI string."
+   ]
   },
   "acd92b0891324f5e": {
    "s": "Habitat: Assim. Cavity",
@@ -29829,8 +29822,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Der Spoon-Modus ist im Optionsmenü versteckt. Er enthält verschiedene Schalter und Anpassungen, die das Spielgeschehen drastisch vom vorgesehenen abweichen lassen können. Sobald er aktiviert ist, kannst du ihn für das laufende Spiel nicht mehr abschalten, es gilt als unwiderruflich gespoont. Um den Spoon-Modus zu aktivieren, musst du die Buchstaben im Titel des Optionsfensters so anklicken, dass sie das Wort SPOON bilden. Viel Spaß!",
-   "status": "done",
+   "t": "Der Spoon-Modus ist im Optionsmenü versteckt. Er enthält verschiedene Schalter und Anpassungen, die das Spielgeschehen drastisch vom vorgesehenen abweichen lassen können. Sobald er aktiviert ist, kannst du ihn für das laufende Spiel nicht mehr abschalten, es gilt als unwiderruflich gespoont. Um den Spoon-Modus zu aktivieren, musst du die Buchstaben des Titels OPTIONS im Optionsfenster so anklicken, dass sie das Wort SPOON bilden. Viel Spaß!",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -29840,8 +29833,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The English names the title literally (\"the letters in the OPTIONS title\"). The translation says „im Titel des Optionsfensters“. If the German window title is „OPTIONEN“, it has no S, so SPOON cannot be spelled from it. Please check whether the spoon trigger reads the localized title or a fixed English one. The text may need to name the actual letters."
+   ]
   },
   "91c161035e8659d2": {
    "s": "<i>You feel someone is watching</i>",
@@ -30212,8 +30204,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Dieses HUD-Fenster zeigt eine Liste der zum Kontext passenden Aktionen mit den Tastenkürzeln links. Manche Aktionen haben feste Tastenkürzel, die sich nicht ändern. Die übrigen werden dynamisch den Tasten 1-9 zugewiesen. Jede Aktion kann Energie kosten, was in der Liste angezeigt wird. Wenn du die Shift-Taste gedrückt hältst, siehst du, dass manche Aktionen ihr Tastenkürzel zu S-[Zahl] ändern. Das bedeutet, dass diese Aktion wiederholbar ist: Drückst du ihre Zahl bei gedrückter Shift-Taste, wird sie so lange wiederholt, bis eine bestimmte, von der Aktion abhängige Bedingung erfüllt ist. Zum Beispiel endet das Wiederholen der Aktion „Griff verstärken“, sobald der maximale Griff erreicht ist, und so weiter. Beachte, dass die Hirnsondierung den Wirt töten kann, wenn sie wiederholt wird.",
-   "status": "done",
+   "t": "Dieses HUD-Fenster zeigt eine Liste der zum Kontext passenden Aktionen mit den Tastenkürzeln links. Manche Aktionen haben feste Tastenkürzel, die sich nicht ändern. Die übrigen werden dynamisch den Tasten 1-9 zugewiesen. Jede Aktion kann Energie kosten, was in der Liste angezeigt wird. Wenn du die Shift-Taste gedrückt hältst, siehst du, dass manche Aktionen ihr Tastenkürzel zu S-[Zahl] ändern. Das bedeutet, dass diese Aktion wiederholbar ist: Drückst du ihre Zahl bei gedrückter Shift-Taste, wird sie so lange wiederholt, bis eine bestimmte, von der Aktion abhängige Bedingung erfüllt ist. Zum Beispiel endet das Wiederholen der Aktion „Griff festigen“, sobald der maximale Griff erreicht ist, und so weiter. Beachte, dass die Hirnsondierung den Wirt töten kann, wenn sie wiederholt wird.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -30223,8 +30215,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"Harden Grip\" is an action name defined elsewhere; I used „Griff verstärken“. Align it with the action string if that one differs."
+   ]
   },
   "22c71ba29e0c7132": {
    "s": "Goals List",
@@ -30340,8 +30331,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Wenn der Parasit einen Wirt kontrolliert, wird das Infofenster größer und zeigt nach einem weiteren Trennstrich folgende Informationen: den Typ des Wirts oder seinen Namen, falls bekannt, die Attribute des Wirts (wenn sie mit einer Hirnsondierung höchster Stufe ermittelt wurden), aktuelle und maximale Gesundheit des Wirts, aktuelle und maximale Kontrolle sowie die Energiewerte. Die Energiezeile zeigt den Energiezuwachs oder -verbrauch des Wirts und in eckigen Klammern die bei aktuellem Verbrauch verbleibenden Runden bis zu seinem Tod. Wenn du gerade evolvierst, werden als Nächstes die Evolutionsrichtung und die verbleibenden Runden angezeigt. Wenn du ein Körpermerkmal wachsen lässt, wird es danach mit den verbleibenden Runden bis zur Fertigstellung angezeigt. Die Symbole nach dem Namen des Wirts kennzeichnen volle Affinität, volle Zustimmung, einen Kultisten als Wirt oder einen zerbrechenden Wirt. Fahre mit der Maus über ein Symbol, um zu sehen, was es bedeutet.",
-   "status": "done",
+   "t": "Wenn der Parasit einen Wirt kontrolliert, wird das Infofenster größer und zeigt nach einem weiteren Trennstrich folgende Informationen: den Typ des Wirts oder seinen Namen, falls bekannt, die Attribute des Wirts (wenn sie mit einer Hirnsondierung höchster Stufe ermittelt wurden), aktuelle und maximale Gesundheit des Wirts, aktuelle und maximale Kontrolle sowie die Energiewerte. Die Energiezeile zeigt den Energiezuwachs oder -verbrauch des Wirts und in eckigen Klammern die bei aktuellem Verbrauch verbleibenden Runden bis zu seinem Tod. Wenn du gerade evolvierst, werden als Nächstes die Evolutionsrichtung und die verbleibenden Runden angezeigt. Wenn du ein Körpermerkmal wachsen lässt, wird es danach mit den verbleibenden Runden bis zur Fertigstellung angezeigt. Die Symbole nach dem Namen des Wirts kennzeichnen volle Affinität, volle Zustimmung, einen Kultisten als Wirt oder einen brüchigen Wirt. Fahre mit der Maus über ein Symbol, um zu sehen, was es bedeutet.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -30351,8 +30342,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"breaking host\" is unclear (mentally breaking down? breaking free of control?). I chose „zerbrechender Wirt“. Align it with the icon tooltip."
+   ]
   },
   "8bf95ea372568c7a": {
    "s": "Log",
@@ -30700,8 +30690,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><b>Der Regionalleiter.</b> Die erste Hirnsondierung jedes Gruppenagenten liefert dir Informationen über die Gruppe: Ein Teammitglied bringt einen Punkt, ein Blackops-Agent zwei. Die Blackops-Agenten erfahrenerer Teams tragen außerdem ein Dossier bei sich, das drei Punkte bringt, wenn du es in einem Habitat liest. Sobald du genug gesammelt hast (die Menge hängt vom Schwierigkeitsgrad der Gruppe ab), erfährst du, von welchem Militärstützpunkt aus der Regionalleiter arbeitet. Das Leck bleibt nicht unbemerkt: Die Gruppenpriorität springt auf das Maximum und das aktive Team kommt dir deutlich näher. Der Regionalleiter wartet in einem verschlossenen Raum, bewacht von Blackops-Agenten. Die Wache vor der Tür trägt die Schlüsselkarte, ebenso jeder Offizier auf diesem Stützpunkt. Sobald Alarm ausgelöst ist, kannst du den Stützpunkt erst verlassen, wenn der Regionalleiter erledigt ist. Pflanzt du ihm falsche Erinnerungen ein, wird die Akte still und leise geschlossen. Tötest du ihn, wird sie ebenfalls geschlossen, aber erst, nachdem seine Leute mit ihrem stärksten Team einen letzten Versuch unternommen haben, dich zu erwischen.</p>",
-   "status": "done",
+   "t": "<p><b>Der Regionalleiter.</b> Die erste Hirnsondierung jedes Gruppenagenten liefert dir Erkenntnisse über die Gruppe: Ein Teammitglied bringt einen Punkt, ein Blackops-Agent zwei. Die Blackops-Agenten erfahrenerer Teams tragen außerdem ein Dossier bei sich, das drei Punkte bringt, wenn du es in einem Habitat liest. Sobald du genug gesammelt hast (die Menge hängt vom Schwierigkeitsgrad der Gruppe ab), erfährst du, von welcher Militärbasis aus der Regionalleiter arbeitet. Das Leck bleibt nicht unbemerkt: Die Gruppenpriorität springt auf das Maximum und das aktive Team kommt dir deutlich näher. Der Regionalleiter wartet in einem verschlossenen Raum, bewacht von Blackops-Agenten. Die Wache vor der Tür trägt die Schlüsselkarte, ebenso jeder Offizier auf dieser Basis. Sobald Alarm ausgelöst ist, kannst du die Basis erst verlassen, wenn der Regionalleiter erledigt ist. Pflanzt du ihm falsche Erinnerungen ein, wird die Akte still und leise geschlossen. Tötest du ihn, wird sie ebenfalls geschlossen, aber erst, nachdem seine Leute mit ihrem stärksten Team einen letzten Versuch unternommen haben, dich zu erwischen.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -30720,8 +30710,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><b>Akte begraben.</b> Ein Kult mit einem Mitglied der Stufe 3 kann die Parasitenakte stattdessen tief in der Bürokratie begraben (siehe gemeinschaftliche Prüfungen).</p>",
-   "status": "done",
+   "t": "<p><b>Die Akte begraben.</b> Ein Kult mit einem Mitglied der Stufe 3 kann die Parasitenakte stattdessen tief in der Bürokratie begraben (siehe gemeinschaftliche Prüfungen).</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -30731,8 +30721,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "„Akte begraben“ must match the name of the communal ordeal \"Bury the File\" in the cult strings."
+   ]
   },
   "98caeb0f7df93a9e": {
    "s": "<p>While the file is closed, the Group mark dims and no teams come for you. Every incident you cause still raises the Group priority, though, and once it reaches the maximum, the Group reopens the file and the hunt starts again.</p>",
@@ -31008,8 +30997,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><span class=window-cult-ordeals-title>Mitglied trainieren</span> konzentriert sich auf den Umgang mit Waffen. Trainingsoptionen erscheinen für die aktuell ausgerüstete Nahkampf- und Fernkampfwaffe des Mitglieds und wirken direkt auf diese Fertigkeitsbereiche. So sind Ausrüstungs- und Trainingsentscheidungen eng miteinander verknüpft.</p>",
-   "status": "done",
+   "t": "<p><span class=window-cult-ordeals-title>Mitglied ausbilden</span> konzentriert sich auf den Umgang mit Waffen. Trainingsoptionen erscheinen für die aktuell ausgerüstete Nahkampf- und Fernkampfwaffe des Mitglieds und wirken direkt auf diese Fertigkeitsbereiche. So sind Ausrüstungs- und Trainingsentscheidungen eng miteinander verknüpft.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -31355,8 +31344,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><span class=window-cult-ordeals-title>Suche die Reinen</span> wirbt neue Mitglieder für den Kult an. Du wählst, welche Machtart gesucht wird, und die Prüfung findet einen passenden Kandidaten. Erfordert 1 freies Mitglied, 2 Macht der gewählten Art und 10.000 Geld.</p>",
-   "status": "done",
+   "t": "<p><span class=window-cult-ordeals-title>Die Reinen suchen</span> wirbt neue Mitglieder für den Kult an. Du wählst, welche Machtart gesucht wird, und die Prüfung findet einen passenden Kandidaten. Erfordert 1 freies Mitglied, 2 Macht der gewählten Art und 10.000 Geld.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -31375,8 +31364,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><span class=window-cult-ordeals-title>Erhebe die Gläubigen</span> befördert ein Mitglied der Stufe 1 auf Stufe 2. Zwei weitere Mitglieder müssen beim Ritual helfen, du brauchst also insgesamt 3 freie Mitglieder (2 Helfer plus das Ziel). Kostet 3 Macht der Berufsgruppe des Ziels und 20.000 Geld.</p>",
-   "status": "done",
+   "t": "<p><span class=window-cult-ordeals-title>Die Gläubigen erheben</span> befördert ein Mitglied der Stufe 1 auf Stufe 2. Zwei weitere Mitglieder müssen beim Ritual helfen, du brauchst also insgesamt 3 freie Mitglieder (2 Helfer plus das Ziel). Kostet 3 Macht der Berufsgruppe des Ziels und 20.000 Geld.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -31395,8 +31384,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><span class=window-cult-ordeals-title>Erhebe die Gläubigen II</span> befördert ein Mitglied der Stufe 2 auf die höchste Stufe. Erfordert 3 freie Mitglieder der Stufe 2 (2 Helfer plus das Ziel). Kostet 5 Macht und 100.000 Geld. Nach Abschluss wird ein Occasio-Ereignis ausgelöst – ein erzählerischer Moment mit Entscheidungen, die dem Kult Vorteile bringen oder Bürden auferlegen können.</p>",
-   "status": "done",
+   "t": "<p><span class=window-cult-ordeals-title>Die Gläubigen erheben II</span> befördert ein Mitglied der Stufe 2 auf die höchste Stufe. Erfordert 3 freie Mitglieder der Stufe 2 (2 Helfer plus das Ziel). Kostet 5 Macht und 100.000 Geld. Nach Abschluss wird ein Occasio-Ereignis ausgelöst – ein erzählerischer Moment mit Entscheidungen, die dem Kult Vorteile bringen oder Bürden auferlegen können.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -31406,8 +31395,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"Occasio\" is capitalized as in the source („Occasio-Ereignis“). The glossary lists it lowercase \"occasio\"."
+   ]
   },
   "741129bfe8c63951": {
    "s": "<p><span class=window-cult-ordeals-title>Anthropomancy</span> (only in scenario A) uses a level 3 member to divine hidden knowledge from the timeline. The master haruspex reads the entrails of fate to uncover clues about past events. Requires 1 free level-3 member, 10 power of their type, and 200,000 money. Reveals random timeline event clues.</p>",
@@ -31436,8 +31424,8 @@
    ],
    "where": "PediaConst.builtinContents",
    "kind": "T",
-   "t": "<p><span class=window-cult-ordeals-title>Begrabe die Akte</span> nutzt ein Mitglied der Stufe 3 und zwei Helfer der Stufe 2, um die Parasitenakte tief in der Bürokratie zu begraben, damit die Gruppe die Jagd auf dich einstellt. Kostet 20 Politik-, 20 Justiz- und 10 Medienmacht sowie 500.000 Geld. Die Prüfung kann nur begonnen werden, wenn kein Team der Gruppe aktiv ist, und scheitert, wenn ein neues Team die Jagd aufnimmt, bevor sie abgeschlossen ist. Jeder Vorfall, den du danach verursachst, erhöht die Priorität der Gruppe wieder, und beim Höchstwert wird die Akte erneut geöffnet.</p>",
-   "status": "done",
+   "t": "<p><span class=window-cult-ordeals-title>Die Akte begraben</span> nutzt ein Mitglied der Stufe 3 und zwei Helfer der Stufe 2, um die Parasitenakte tief in der Bürokratie zu begraben, damit die Gruppe die Jagd auf dich einstellt. Kostet 20 Politik-, 20 Justiz- und 10 Medienmacht sowie 500.000 Geld. Die Prüfung kann nur begonnen werden, wenn kein Team der Gruppe aktiv ist, und scheitert, wenn ein neues Team die Jagd aufnimmt, bevor sie abgeschlossen ist. Jeder Vorfall, den du danach verursachst, erhöht die Priorität der Gruppe wieder, und beim Höchstwert wird die Akte erneut geöffnet.</p>",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -31447,8 +31435,7 @@
      "pass": 2,
      "t": "<p><span class=window-cult-ordeals-title>Begrabe die Akte</span> nutzt ein Mitglied der Stufe 3 und zwei Helfer der Stufe 2, um die Parasitenakte tief in der Bürokratie zu begraben, damit die Gruppe die Jagd auf dich einstellt. Kostet 20 Politik-, 20 Justiz- und 10 Medienmacht sowie 500.000 Geld. Die Prüfung kann nur begonnen werden, wenn kein Team der Gruppe aktiv ist, und scheitert, wenn ein neues Team die Jagd aufnimmt, bevor sie abgeschlossen ist. Jeder Vorfall, den du danach verursachst, erhöht die Priorität der Gruppe wieder, und beim Höchstwert wird die Akte erneut geöffnet.</p>"
     }
-   ],
-   "doubt": "Changed „Sie“ to „Die Prüfung“. Next to „Akte“, the pronoun read as if the file were begun or closed („abgeschlossen“)."
+   ]
   },
   "828c61961b8f2350": {
    "s": "<p>To complete any ordeal, you must spend the required resources by using the \"Wield\" actions in the ordeal menu. Each assigned member allows one action per cult turn. You can also annul an ordeal to cancel it, though this counts as failure.</p>",
@@ -36040,8 +36027,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{effect} - {ai:der}",
-   "status": "done",
+   "t": "{effect} - {ai:Der}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -36906,8 +36893,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} schwört auf {trait} und ist nun an die Arterie gebunden.",
-   "status": "done",
+   "t": "{ai:Der} legt das Gelübde „{trait}“ ab und ist nun an die Arterie gebunden.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -37253,8 +37240,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} bewahrt {trait}, der verborgenen Litanei verschworen.",
-   "status": "done",
+   "t": "{ai:Der} hütet die Eigenschaft „{trait}“, der verborgenen Litanei verschworen.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39137,8 +39124,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} verinnerlicht {trait}, während sich die Gewebeschriftsätze setzen.",
-   "status": "done",
+   "t": "{ai:Der} verinnerlicht die Eigenschaft „{trait}“, während sich die Gewebeschriftsätze setzen.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39429,8 +39416,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "Das Venenbuch verzehrt den Geist {ai:des} und erzeugt den Makel „gefräßig“.",
-   "status": "done",
+   "t": "Das Venenbuch verzehrt den Geist {ai:des} und erzeugt den Makel „unersättliche Buchführung“.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39440,8 +39427,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The English \"{ai:The} vein ledger consumes mind\" is unclear. I read it as the vein ledger consuming the AI's mind and kept the translation „den Geist {ai:des}“. For names this gives „den Geist Annas“, which is correct but slightly formal."
+   ]
   },
   "2fc79d55b7610540": {
    "s": "{cult} vein ledger closes without new devotion.",
@@ -39796,8 +39782,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} trägt {trait} in die verborgenen Schwüre des Buchs ein.",
-   "status": "done",
+   "t": "{ai:Der} trägt die Eigenschaft „{trait}“ in die verborgenen Schwüre des Buchs ein.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -40138,8 +40124,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} lässt {trait} durch künftige geheime Predigten hallen.",
-   "status": "done",
+   "t": "{ai:Der} lässt die Eigenschaft „{trait}“ durch künftige geheime Predigten hallen.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -40797,8 +40783,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} lässt {trait} in der aufgewerteten Stimme widerhallen.",
-   "status": "done",
+   "t": "{ai:Der} lässt die Eigenschaft „{trait}“ in der aufgewerteten Stimme widerhallen.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -41139,8 +41125,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} verinnerlicht {trait}, während der Ritus {ai, select, m{seine} f{ihre} n{seine} other{seine}} neue Stufe verankert.",
-   "status": "done",
+   "t": "{ai:Der} verinnerlicht die Eigenschaft „{trait}“, während der Ritus {ai, select, m{seine} f{ihre} n{seine} other{seine}} neue Stufe verankert.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42410,8 +42396,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Der} zerbricht unter dem Druck der Wirbel und erbt den Makel „Dumm“.",
-   "status": "done",
+   "t": "{ai:Der} zerbricht unter dem Druck der Wirbel und erbt den Makel „dumm“.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42459,8 +42445,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} verinnerlicht {trait}, während sich die Kammer des Os Nativitas schließt.",
-   "status": "done",
+   "t": "{ai:Der} verinnerlicht die Eigenschaft „{trait}“, während sich die Kammer des Os Nativitas schließt.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -42470,8 +42456,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The source has lowercase \"os nativitas\". I kept the Latin name in its usual capitalization, „Os Nativitas“."
+   ]
   },
   "286617b3833e62f9": {
    "s": "Policy Graft",
@@ -42702,8 +42687,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "Die Überlastung durch das Transplantat verleiht {ai:dem} den Makel „Dumm“.",
-   "status": "done",
+   "t": "Die Überlastung durch das Transplantat verleiht {ai:dem} den Makel „dumm“.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43339,8 +43324,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Der} gerät an die rituellen Spirituosen und erhält den Makel „Alkoholiker“.",
-   "status": "done",
+   "t": "{ai:Der} gerät an die rituellen Spirituosen und erhält den Makel „alkoholkrank“.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43707,8 +43692,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Der} atmet Lösungsmittelhymnen ein und erhält den Makel „Süchtig“.",
-   "status": "done",
+   "t": "{ai:Der} atmet Lösungsmittelhymnen ein und erhält den Makel „drogensüchtig“.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43779,8 +43764,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Der} empfängt die Litanei „Messerexperte“, in die lebende Hand geschnitzt.",
-   "status": "done",
+   "t": "{ai:Der} empfängt die Litanei „Messerprofi“, in die lebende Hand geschnitzt.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -43790,8 +43775,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The skill name \"Knife Expert\" is rendered as „Messerexperte“. Please align it with the skill name used elsewhere."
+   ]
   },
   "dae1e2f1ba35ef16": {
    "s": "{cult} blade seal fails to graft the promised edge.",
@@ -44147,8 +44131,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} spürt {trait} durch {ai, select, m{seine} f{ihre} n{seine} other{seine}} aufgerüsteten Nerven ziehen und heißt die Eigenschaft willkommen.",
-   "status": "done",
+   "t": "{ai:Der} heißt die Eigenschaft „{trait}“ willkommen, die sich durch {ai, select, m{seine} f{ihre} n{seine} other{seine}} aufgerüsteten Nerven zieht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -44440,8 +44424,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Der} knickt unter der Last der Arterien ein und erbt den Makel „Willensschwach“.",
-   "status": "done",
+   "t": "{ai:Der} knickt unter der Last der Arterien ein und erbt den Makel „willensschwach“.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -44489,8 +44473,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} verzeichnet {trait}, während sich der Venenpräzedenzfall im Gedächtnis verhärtet.",
-   "status": "done",
+   "t": "{ai:Der} verzeichnet die Eigenschaft „{trait}“, während sich der Venenpräzedenzfall im Gedächtnis verhärtet.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -45077,8 +45061,8 @@
     "trait"
    ],
    "kind": "T",
-   "t": "{ai:Der} spürt, wie {trait} sich durch die aufgewerteten Sehnen zieht.",
-   "status": "done",
+   "t": "{ai:Der} spürt, wie sich die Eigenschaft „{trait}“ durch die aufgewerteten Sehnen zieht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -47278,8 +47262,8 @@
    "where": "UpgradeFollower2.init",
    "field": "name",
    "kind": "N",
-   "t": "Erhebung der Gläubigen II",
-   "status": "done",
+   "t": "Die Gläubigen erheben II",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -47453,8 +47437,8 @@
    "where": "BumCult.getInfo",
    "field": "note",
    "kind": "N",
-   "t": "Der unaussprechliche kult hat im Gemäuer der Unterstadt eine Gossenkapelle gesät. Seine Gemeinde singt die Liturgie des nassen Fleisches zwischen verrosteten Einkaufswagen und Schlafsackaltären. Die Membran blutet in den Beton. Brich sein Sakrament, bevor der Straßenkreuzzug sich verhärtet.",
-   "status": "done",
+   "t": "Der unaussprechliche Kult hat im Gemäuer der Unterstadt eine Gossenkapelle gesät. Seine Gemeinde singt die Liturgie des nassen Fleisches zwischen verrosteten Einkaufswagen und Schlafsackaltären. Die Membran blutet in den Beton. Brich sein Sakrament, bevor der Straßenkreuzzug sich verhärtet.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -47464,8 +47448,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "„low-city shell“: I read it as a hollowed-out building shell and translated it as „im Gemäuer der Unterstadt“."
+   ]
   },
   "8f59a49966ec174f": {
    "s": "The alley choir gutters out. Bedroll altars burn, and the low-city flock scatters into static hunger. The concrete stops bleeding.",
@@ -47496,8 +47479,8 @@
    "where": "BumCult.getInfo",
    "field": "fail",
    "kind": "T",
-   "t": "Du wirst durch Glasscherben und verrostete Einkaufswagen zurückgetrieben. Der kult nimmt den Bezirk ein und rekrutiert bei Tageslicht, seine Liturgie hallt lauter.",
-   "status": "done",
+   "t": "Du wirst durch Glasscherben und verrostete Einkaufswagen zurückgetrieben. Der Kult nimmt den Bezirk ein und rekrutiert bei Tageslicht, seine Liturgie hallt lauter.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -48317,8 +48300,8 @@
    "where": "CorpoCult.getInfo",
    "field": "note",
    "kind": "N",
-   "t": "Der unaussprechliche kult hält sein Oberhaupt in einem Eckbüro, wo es quartalsweise Fleischdividenden vollstreckt. Zwei bewaffnete Hüter sichern den Perimeter. Lege die Exekutivfunktion lahm, bevor die Fusion abgeschlossen ist.",
-   "status": "done",
+   "t": "Der unaussprechliche Kult hält sein Oberhaupt in einem Eckbüro, wo es quartalsweise Fleischdividenden vollstreckt. Zwei bewaffnete Hüter sichern den Perimeter. Lege die Exekutivfunktion lahm, bevor die Fusion abgeschlossen ist.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -48328,8 +48311,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "„Wächter“ is the glossary term for watcher, so the \"guardians\"/\"keepers\" in 2 and 9 became „Hüter“ to avoid confusion."
+   ]
   },
   "1013d816dc3d7e3d": {
    "s": "The head falls. His vertical integration collapses into static. The boardroom exhales, and the suite goes dark.",
@@ -48360,8 +48342,8 @@
    "where": "CorpoCult.getInfo",
    "field": "fail",
    "kind": "T",
-   "t": "Du wirst durch Glastüren zurückgeschleudert. Das Oberhaupt entkommt und ruft „feindliche Übernahme“. Der kult schluckt eine weitere Tochtergesellschaft.",
-   "status": "done",
+   "t": "Du wirst durch Glastüren zurückgeschleudert. Das Oberhaupt entkommt und ruft „feindliche Übernahme“. Der Kult schluckt eine weitere Tochtergesellschaft.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -48465,8 +48447,8 @@
    "where": "LabCloning.getInfo",
    "field": "note",
    "kind": "N",
-   "t": "Der unaussprechliche kult unterhält unter der Stadt eine geheime Zisterne grüner Fleischgefäße. Seine leitende Forschertriade pflegt die Klonlinie, während der Sicherheitsdienst den sterilen Perimeter hält. Leere jeden Tank und beseitige die Hüter.",
-   "status": "done",
+   "t": "Der unaussprechliche Kult unterhält unter der Stadt eine geheime Zisterne grüner Fleischgefäße. Seine leitende Forschertriade pflegt die Klonlinie, während der Sicherheitsdienst den sterilen Perimeter hält. Leere jeden Tank und beseitige die Hüter.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -48507,8 +48489,8 @@
    "where": "LabCloning.getInfo",
    "field": "fail",
    "kind": "T",
-   "t": "Du wirst hinausgedrängt, bevor die Säuberung abgeschlossen ist. Der unaussprechliche kult versiegelt seine Notizen, und das Gefäßprogramm atmet weiter.",
-   "status": "done",
+   "t": "Du wirst hinausgedrängt, bevor die Säuberung abgeschlossen ist. Der unaussprechliche Kult versiegelt seine Notizen, und das Gefäßprogramm atmet weiter.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -49032,8 +49014,8 @@
    "where": "LawfareConst.new",
    "field": "fail",
    "kind": "T",
-   "t": "Sie übergibt ihre Erkenntnisse der Dienstaufsicht. Die Internen Ermittler stürmen den Unterschlupf. Unsere Anwälte können die Bodycam-Aufnahmen nicht unterdrücken.",
-   "status": "done",
+   "t": "Sie übergibt ihre Erkenntnisse der Dienstaufsicht. Die internen Ermittler stürmen den Unterschlupf. Unsere Anwälte können die Bodycam-Aufnahmen nicht unterdrücken.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -51057,28 +51039,6 @@
     }
    ]
   },
-  "3567202d3ddc65fa": {
-   "s": "Expos&#233; airs. Company named, flesh-sigils in HD. Credibility shatters. Initiates scatter like flayed tissue.",
-   "loc": [
-    "src/cult/ordeals/profane/MediaConst.hx"
-   ],
-   "where": "MediaConst.new",
-   "field": "fail",
-   "kind": "T",
-   "t": "Expos&#233; geht auf Sendung. Firma genannt, Fleischsigillen in HD. Glaubwürdigkeit zerbricht. Initiierte zerstreuen sich wie gehäutetes Gewebe.",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Expos&#233; geht auf Sendung. Firma genannt, Fleischsigillen in HD. Glaubwürdigkeit zerbricht. Initiierte zerstreuen sich wie gehäutetes Gewebe."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ],
-   "doubt": "I kept „Expos&#233;“ to preserve the entity. The German „Exposé“ leans toward \"outline or report\". The more natural word would be „Enthüllungsbericht“, if the entity may be dropped."
-  },
   "553e1aa99b4f9325": {
    "s": "Teaching the Algorithm Prayer",
    "loc": [
@@ -52007,27 +51967,6 @@
     }
    ]
   },
-  "bd71aa17f7fe562c": {
-   "s": "The Lobbyist&#39;s Communion",
-   "loc": [
-    "src/cult/ordeals/profane/PoliticalConst.hx"
-   ],
-   "where": "PoliticalConst.new",
-   "field": "name",
-   "kind": "N",
-   "t": "Die heil&#39;ge Kommunion des Lobbyisten",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Die heil&#39;ge Kommunion des Lobbyisten"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
   "b844e795f1123d3f": {
    "s": "He trades in favors and handshakes. We offer him a grip that leaves residue, a partnership sealed in sinew.",
    "loc": [
@@ -52084,27 +52023,6 @@
     {
      "pass": 1,
      "t": "Er wählt saubereres Geld. Unsere Interessen bleiben unvertreten."
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "965f3f931ed21c36": {
-   "s": "The Whistleblower&#39;s Silence",
-   "loc": [
-    "src/cult/ordeals/profane/PoliticalConst.hx"
-   ],
-   "where": "PoliticalConst.new",
-   "field": "name",
-   "kind": "N",
-   "t": "Das ew&#39;ge Schweigen der Hinweisgeberin",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Das ew&#39;ge Schweigen der Hinweisgeberin"
     },
     {
      "pass": 2,
@@ -52295,27 +52213,6 @@
     {
      "pass": 1,
      "t": "Senatsreferent"
-    },
-    {
-     "pass": 2,
-     "t": null
-    }
-   ]
-  },
-  "b54a999912cc3e9f": {
-   "s": "The Inspector&#39;s Final Report",
-   "loc": [
-    "src/cult/ordeals/profane/PoliticalConst.hx"
-   ],
-   "where": "PoliticalConst.new",
-   "field": "name",
-   "kind": "N",
-   "t": "Des Inspektors finst&#39;rer Schlussbericht",
-   "status": "done",
-   "passes": [
-    {
-     "pass": 1,
-     "t": "Des Inspektors finst&#39;rer Schlussbericht"
     },
     {
      "pass": 2,
@@ -53308,8 +53205,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "„Vernichte {ai, select, m{ihn} f{sie} n{es} other{es}}!“",
-   "status": "done",
+   "t": "„Vernichtet {ai, select, m{ihn} f{sie} n{es} other{es}}!“",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -53319,8 +53216,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "I added an `n{es}` case for German neuter nouns. `other{es}` mirrors the English \"it\"."
+   ]
   },
   "6f3abbe484abd8e9": {
    "s": "Abort",
@@ -54610,8 +54506,8 @@
    "where": "PlayerArea.leaveAreaAction",
    "field": "actionFailed",
    "kind": "T",
-   "t": "Du kannst das Habitat nicht mit einem Schimmelpilz verlassen.",
-   "status": "done",
+   "t": "Du kannst das Habitat nicht mit einer Gussform verlassen.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -54621,8 +54517,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "\"a mold\" is translated as „Schimmelpilz“. If the game's mold is a casting mold or a specific habitat object rather than a fungus, this needs another word."
+   ]
   },
   "820ab9c30d8f6c97": {
    "s": "You cannot slip away while the soldiers are alerted.",
@@ -56439,8 +56334,8 @@
    "where": "Group.onDirectorMemories",
    "field": "text",
    "kind": "T",
-   "t": "Der Einsatzleiter wird sich erinnern, meine Akte selbst geschlossen zu haben. Die Gruppe jagt mich nicht mehr.",
-   "status": "done",
+   "t": "Der Regionalleiter wird sich erinnern, meine Akte selbst geschlossen zu haben. Die Gruppe jagt mich nicht mehr.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -56460,8 +56355,8 @@
    "where": "Group.onDirectorDeath",
    "field": "text",
    "kind": "T",
-   "t": "Der Einsatzleiter ist tot. Seine Leute werden alles gegen mich werfen, was ihnen bleibt, bevor die Akte geschlossen wird.",
-   "status": "done",
+   "t": "Der Regionalleiter ist tot. Seine Leute werden alles gegen mich werfen, was ihnen bleibt, bevor die Akte geschlossen wird.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -56569,8 +56464,8 @@
    "where": "GroupDirector.start",
    "field": "text",
    "kind": "T",
-   "t": "Ich weiß, wer die Jagd lenkt: ein regionaler Einsatzleiter, der von einer Militärbasis aus arbeitet. Er wird wissen, dass ich komme.",
-   "status": "done",
+   "t": "Ich weiß, wer die Jagd lenkt: ein Regionalleiter, der von einer Militärbasis aus arbeitet. Er wird wissen, dass ich komme.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -56590,8 +56485,8 @@
    "where": "GroupDirector.onTurn",
    "field": "text",
    "kind": "T",
-   "t": "Der Alarm ist ausgelöst. Ich kann diese Basis nicht verlassen, bevor ich mich um den Einsatzleiter gekümmert habe.",
-   "status": "done",
+   "t": "Der Alarm ist ausgelöst. Ich kann diese Basis nicht verlassen, bevor ich mich um den Regionalleiter gekümmert habe.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -56611,8 +56506,8 @@
    "where": "GroupDirector.leaveAreaPre",
    "field": "actionFailed",
    "kind": "T",
-   "t": "Du kannst diese Basis nicht verlassen, bevor du dich um den Einsatzleiter gekümmert hast.",
-   "status": "done",
+   "t": "Du kannst diese Basis nicht verlassen, bevor du dich um den Regionalleiter gekümmert hast.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58277,8 +58172,8 @@
    "where": "Baton.new",
    "field": "unknown",
    "kind": "N",
-   "t": "Langobjekt",
-   "status": "done",
+   "t": "länglicher Gegenstand",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58841,8 +58736,8 @@
     "item"
    ],
    "kind": "T",
-   "t": "Lies {item:den}",
-   "status": "done",
+   "t": "Lesen: {item}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -59507,8 +59402,8 @@
     "item"
    ],
    "kind": "T",
-   "t": "Öffne {item:den}",
-   "status": "done",
+   "t": "Öffnen: {item}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -59578,8 +59473,8 @@
     "item"
    ],
    "kind": "T",
-   "t": "Markiere {item:den} als aktiv",
-   "status": "done",
+   "t": "Als aktiv markieren: {item}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -59972,8 +59867,8 @@
     "item"
    ],
    "kind": "T",
-   "t": "Nimm {item:den}",
-   "status": "done",
+   "t": "Nehmen: {item}",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -60359,8 +60254,8 @@
    "where": "FloorDrain.updateActionList",
    "field": "name",
    "kind": "T",
-   "t": "Abfluss betreten",
-   "status": "done",
+   "t": "In den Abfluss schlüpfen",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -60670,8 +60565,8 @@
     "obj"
    ],
    "kind": "T",
-   "t": "In {obj:dem} findest du: {item}.",
-   "status": "done",
+   "t": "Du findest {item:einen} in {obj:dem}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -60681,8 +60576,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The bare {item} may be a plain name or already carry an article. I wrote „In {obj:dem} findest du: {item}.“ so the sentence works in either case."
+   ]
   },
   "96ce2d7feb860d65": {
    "s": "You take {item:the} out of {obj:the}.",
@@ -61161,8 +61055,8 @@
    "where": "Vent.updateActionList",
    "field": "name",
    "kind": "T",
-   "t": "Lüftung betreten",
-   "status": "done",
+   "t": "In die Lüftung schlüpfen",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -62218,8 +62112,8 @@
     "item"
    ],
    "kind": "T",
-   "t": "{item:Einen} rauchen",
-   "status": "done",
+   "t": "Eine {item} rauchen",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -62229,8 +62123,7 @@
      "pass": 2,
      "t": "{item:Einen} rauchen"
     }
-   ],
-   "doubt": "{item} is the bare string 7 („Zigarette“). I wrote „{item} rauchen“ without an article so I don't add a determiner before the placeholder."
+   ]
   },
   "218a26ec6421cdd8": {
    "s": "cigarette",
@@ -62434,8 +62327,8 @@
    "where": "Computer.searchAction",
    "field": "itemFailed",
    "kind": "T",
-   "t": "Dafür brauchst du die Fertigkeit Computerbedienung.",
-   "status": "done",
+   "t": "Dafür brauchst du die Fertigkeit Computernutzung.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -62445,8 +62338,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "The skill name „Computerbedienung“ could not be checked against the skill list in other batches. It must match the skill string exactly."
+   ]
   },
   "e2af780090a612cd": {
    "s": "This action requires intense concentration and time. You can only do it in a habitat.",
@@ -65606,8 +65498,8 @@
    ],
    "where": "ScenarioAlienCrashLanding.new",
    "kind": "N",
-   "t": "Der Pilot war ein grauer Humanoide unbekannter Herkunft.",
-   "status": "done",
+   "t": "Der Pilot war ein grauer Humanoider unbekannter Herkunft.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -69698,8 +69590,8 @@
    ],
    "kind": "T",
    "note": "COM = combat resource (the cult resource abbreviation)",
-   "t": "{weapon} +{amount}% ({money}, {combat} KMP)",
-   "status": "done",
+   "t": "{weapon} +{amount}% ({money}, {combat} KAM)",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -69982,8 +69874,8 @@
    ],
    "kind": "T",
    "note": "COM = combat resource (the cult resource abbreviation)",
-   "t": "{name} ({money}, {combat} KMP)",
-   "status": "done",
+   "t": "{name} ({money}, {combat} KAM)",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -70328,8 +70220,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Zeigt genaue Zahlen zu Gruppe und Team an der Gruppenmarkierung im HUD. Begrenzter Schock und Energieverlust durch Habitatzerstörung. Wenig Informationen nötig, um den regionalen Kontrolleur zu finden.",
-   "status": "done",
+   "t": "Zeigt genaue Zahlen zu Gruppe und Team an der Gruppenmarkierung im HUD. Begrenzter Schock und Energieverlust durch Habitatzerstörung. Wenige Erkenntnisse nötig, um den Regionalleiter zu finden.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -70348,8 +70240,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Beschreibt Informationen zu Gruppe und Team nur vage. Schock und Energieverlust durch Habitatzerstörung sind schwerer. Mehr Informationen nötig, um den regionalen Kontrolleur zu finden.",
-   "status": "done",
+   "t": "Beschreibt Informationen zu Gruppe und Team nur vage. Schock und Energieverlust durch Habitatzerstörung sind schwerer. Mehr Erkenntnisse nötig, um den Regionalleiter zu finden.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -70368,8 +70260,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Keine Informationen zu Gruppe und Team verfügbar. Der Schock durch Habitatzerstörung ist heftig. Deutlich mehr Informationen nötig, um den regionalen Kontrolleur zu finden.",
-   "status": "done",
+   "t": "Keine Informationen zu Gruppe und Team verfügbar. Der Schock durch Habitatzerstörung ist heftig. Deutlich mehr Erkenntnisse nötig, um den Regionalleiter zu finden.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -72274,8 +72166,8 @@
    ],
    "where": "Command.updateActions",
    "kind": "T",
-   "t": "„Vernichte das!“",
-   "status": "done",
+   "t": "„Vernichtet das!“",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -72295,8 +72187,8 @@
    "where": "Command.updateActions",
    "field": "name",
    "kind": "T",
-   "t": "„Lass uns allein!“",
-   "status": "done",
+   "t": "„Lasst uns allein!“",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -72307,11 +72199,97 @@
      "t": null
     }
    ]
+  },
+  "3567202d3ddc65fa": {
+   "s": "Expos&#233; airs. Company named, flesh-sigils in HD. Credibility shatters. Initiates scatter like flayed tissue.",
+   "loc": [
+    "src/cult/ordeals/profane/MediaConst.hx"
+   ],
+   "where": "MediaConst.new",
+   "field": "fail",
+   "kind": "T",
+   "t": "Der Enthüllungsbericht läuft. Firma genannt, Fleischsiegel in HD. Die Glaubwürdigkeit zerbricht. Initiierte stieben auseinander wie Fetzen gehäuteten Gewebes.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Der Enthüllungsbericht läuft. Firma genannt, Fleischsiegel in HD. Die Glaubwürdigkeit zerbricht. Initiierte stieben auseinander wie Fetzen gehäuteten Gewebes."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "The English entity `&#233;` belongs to the word \"Exposé\". The translation uses „Enthüllungsbericht“, so the entity is correctly absent."
+  },
+  "bd71aa17f7fe562c": {
+   "s": "The Lobbyist&#39;s Communion",
+   "loc": [
+    "src/cult/ordeals/profane/PoliticalConst.hx"
+   ],
+   "where": "PoliticalConst.new",
+   "field": "name",
+   "kind": "N",
+   "t": "Kommunion des Lobbyisten",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Kommunion des Lobbyisten"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "965f3f931ed21c36": {
+   "s": "The Whistleblower&#39;s Silence",
+   "loc": [
+    "src/cult/ordeals/profane/PoliticalConst.hx"
+   ],
+   "where": "PoliticalConst.new",
+   "field": "name",
+   "kind": "N",
+   "t": "Schweigen der Whistleblowerin",
+   "status": "reviewed",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Schweigen des Whistleblowers"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "b54a999912cc3e9f": {
+   "s": "The Inspector&#39;s Final Report",
+   "loc": [
+    "src/cult/ordeals/profane/PoliticalConst.hx"
+   ],
+   "where": "PoliticalConst.new",
+   "field": "name",
+   "kind": "N",
+   "t": "Letzter Bericht des Inspektors",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Letzter Bericht des Inspektors"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "\"Final Report\" seems to mean both the official closing report and the inspector's last act before dying. I chose „Letzter Bericht“ over „Abschlussbericht“ to keep the hint of death."
   }
  },
  "totals": {
-  "calls": 135,
-  "input": 1688556,
-  "output": 565684
+  "calls": 138,
+  "input": 1711410,
+  "output": 567963
  }
 }

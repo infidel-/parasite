@@ -50,6 +50,8 @@ missions and rituals in its name.
 - Keep HTML tags exactly as they are: `<b>`, `<br/>`, `<span class=…>`, `<p>`, `<ul><li>`. Translate
   the text between them, not inside them. Keep entities (`&rarr;`, `&#127282;`) and `%tokens%`
   exactly.
+- An entity for a letter or an apostrophe (`&#39;`, `&#233;`) is plain text: write the character
+  {LANG} needs instead, or none.
 - Never add a placeholder, tag or token that the English does not have.
 
 ## Names and terms

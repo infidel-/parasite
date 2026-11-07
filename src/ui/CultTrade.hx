@@ -3,6 +3,7 @@
 package ui;
 
 import game.Game;
+import l10n.Loc;
 
 class CultTrade
 {
@@ -46,7 +47,7 @@ class CultTrade
             id: 'trade.' + power,
             type: ACTION_CULT,
             name: T('To {power} resource ({cost})', {
-              power: Const.col('cult-power', _CultPower.namesCap[i].toLowerCase()),
+              power: Const.col('cult-power', powerName(i)),
               cost: Const.col('cult-power', cost) + Icon.money,
             }),
             energy: 0,
@@ -131,9 +132,9 @@ class CultTrade
             id: 'trade.' + from + '.' + to,
             type: ACTION_CULT,
             name: T('To {power} resource ({cost} {from})', {
-              power: Const.col('cult-power', _CultPower.namesCap[i].toLowerCase()),
+              power: Const.col('cult-power', powerName(i)),
               cost: cost,
-              from: Const.col('cult-power', _CultPower.namesCap[_CultPower.names.indexOf(from)].toLowerCase()),
+              from: Const.col('cult-power', powerName(_CultPower.names.indexOf(from))),
             }),
             energy: 0,
             f: function() {
@@ -142,5 +143,12 @@ class CultTrade
             }
           });
         }
+    }
+
+// a cult power name for running text: lowercased, except in German, where a noun keeps its capital
+  static function powerName(i: Int): String
+    {
+      var name = _CultPower.namesCap[i];
+      return (Loc.lang() == 'de' ? name : name.toLowerCase());
     }
 }

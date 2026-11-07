@@ -217,7 +217,7 @@ are only transport: a new or edited string never re-translates the rest.
   glossary. **Fix translations there, not in the state**: delete the affected records from
   `loc/<lang>.json` and re-run.
 - Every translation must pass `locfmt.check` (same placeholder names, html tags, entities,
-  `%tokens%`), use only its language's noun forms (`FORMS` in `translate.py`) and a length guard; rejects are retried with a nudge, then marked `failed`.
+  `%tokens%`; an entity for a letter or an apostrophe, `&#39;` `&#233;`, is text and free to change), use only its language's noun forms (`FORMS` in `translate.py`) and a length guard; rejects are retried with a nudge, then marked `failed`.
 - `[TERM]` suggestions from the model go to `loc/.logs/<lang>-terms.txt` for review, and are never fed
   back automatically. In the book pipeline, an auto-glossary in the state overrode the hand-written one.
 - Raw replies are in `loc/.logs/<lang>.jsonl` (gitignored).
