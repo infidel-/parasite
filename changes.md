@@ -16,6 +16,7 @@
 - game: an organ gives its strength, energy or health bonus only once it is grown
 - mods: a mod weapon missing some of its attack texts no longer crashes the attack
 - ui: alien ship part names take the right article in log lines
+- ui: one missing system font no longer stops the other fallback fonts from scaling
 - ui: the language switch no longer promises an autosave in chat or a mission area
 
 ## 1.1

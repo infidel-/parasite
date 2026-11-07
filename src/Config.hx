@@ -453,7 +453,8 @@ class Config
       var loads = [ doc.fonts.load("100px '" + text + "'", 'H'), doc.fonts.load("100px '" + title + "'", 'H') ];
       for (f in FALLBACKS)
         loads.push(doc.fonts.load("100px 'FbBase-" + f.id + "'", f.probe));
-      js.lib.Promise.all(loads).then(function(_) {
+      // a face this machine lacks (no CJK font on Linux) rejects its load: the others still scale
+      js.lib.Promise.all([ for (l in loads) l.catchError(function(_) return null) ]).then(function(_) {
         // a newer font choice already rewrote the faces
         if (gen != fallbackGen)
           return;
