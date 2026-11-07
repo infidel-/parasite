@@ -225,14 +225,19 @@ class Options extends UIWindow
       });
     }
 
-// confirm a language change, then save it and reload into it (an ongoing game is autosaved)
+// confirm a language change, then save it and reload into it (an ongoing game is autosaved where it can be)
   function setLang(val: String)
     {
       var params: _YesNoParams = {
         text: T('Switch the language to {lang}?', {
           lang: (Loc.NAMES.exists(val) ? Loc.NAMES[val] : val),
         }),
-        sub: T('The game reloads; a game in progress is autosaved first.'),
+        // no autosave in chat or a mission area: say so instead of promising one
+        sub: (game.isStarted &&
+          game.state == GAMESTATE_RUNNING &&
+          !game.canAutosave() ?
+          T('The game reloads; progress since the last save is lost.') :
+          T('The game reloads; a game in progress is autosaved first.')),
         back: UISTATE_OPTIONS,
         func: function(yes: Bool) {
           if (!yes)

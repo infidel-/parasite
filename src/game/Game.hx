@@ -843,11 +843,7 @@ class Game extends _SaveObject
       // world over the reserved slot and destroyed the save the failed load had been reading. A
       // successful load restores isInited from the save itself, so nothing legitimate is blocked --
       // and so does a load that throws partway, which is why Loader.load clears it again on failure
-      if (!isInited ||
-          !isStarted ||
-          state != GAMESTATE_RUNNING ||
-          ui.hud.state == HUD_CHAT ||
-          player.inMissionArea())
+      if (!canAutosave())
         return;
       if (!force &&
           turns - lastAutosaveTurn < AUTOSAVE_THROTTLE)
@@ -855,6 +851,16 @@ class Game extends _SaveObject
       Saver.save(this, AUTOSAVE_SLOT);
       lastAutosaveTurn = turns;
       log(T('Autosaved.'), COLOR_HINT);
+    }
+
+// check if an autosave can be written now: an initialised running game, outside chat and mission areas
+  public function canAutosave(): Bool
+    {
+      return (isInited &&
+        isStarted &&
+        state == GAMESTATE_RUNNING &&
+        ui.hud.state != HUD_CHAT &&
+        !player.inMissionArea());
     }
 
 // check if save exists
