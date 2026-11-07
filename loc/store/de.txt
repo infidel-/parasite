@@ -1,0 +1,25 @@
+=== short ===
+Du bist ein Parasit unbekannter Herkunft, ohne Wirt bist du bald tot. Übernimm Menschen, verbrauche ihre Körper, lies ihre Gedanken und entwickle dich, während dich eine geheime Organisation jagt. Ein Survival-Horror-Roguelike über Besessenheit, Verschwörung und einen finsteren Kult.
+
+=== long ===
+Parasite ist ein Survival-Horror-Roguelike in einer modernen Stadt. Du bist ein kleines Ding unbekannter Herkunft, das allein nicht lange überleben kann. Jede Bewegung kostet Energie, und geht dir die Energie aus, ist es auch mit dir vorbei. Also suchst du dir einen Menschen, krallst dich fest und nimmst ihn dir.
+
+Der Wirt ist deine Batterie, deine Tarnung und dein Werkzeug. Verbrauche seine Energie statt deiner eigenen, geh an Leuten vorbei, die bei deinem Anblick schreien würden, nutze seine Fertigkeiten, seine Schlüsselkarten, seine Waffe. Sondiere sein Gehirn nach seinem Namen, nach dem, was er weiß, und dem, was er gesehen hat. Ist er verbraucht, such dir einen neuen.
+
+Irgendwo in den Köpfen dieser Menschen steckt die Geschichte deiner Herkunft. Setz sie zusammen, bevor dich die finden, die sie längst kennen.
+
+[h2]Features[/h2]
+
+[list]
+[*][b]Besessenheit.[/b] Hefte dich an, bezwinge den zappelnden Wirt und befalle ihn. Wirte werden müde, bauen ab und sterben: Verschleiße sie einen nach dem anderen oder behalte einen für die lange Strecke.
+[*][b]Hirnsondierung.[/b] Zieh Namen, Fertigkeiten, Wissen und Hinweise direkt aus dem Kopf eines Wirts, auf Kosten seiner Energie und Gesundheit. Sondierst du zu hart, bricht er zusammen und wacht nie wieder auf.
+[*][b]Zustimmung.[/b] Bleib lange genug in einem Wirt, und er gewöhnt sich an dich. Überrede ihn zur Zusammenarbeit und sprich durch seinen Mund mit anderen Menschen.
+[*][b]Evolution.[/b] Erforsche neue Verbesserungen und lass sie in deinen Wirten wachsen: Neurotoxinnadeln, Halluzinogengas, Tarnung, falsche Erinnerungen, eingepflanzt in den Kopf eines Opfers, und vieles mehr. Jede davon ist ein Werkzeug, das dir beim Überleben hilft.
+[*][b]Habitate.[/b] Lass ein Nest in der Kanalisation unter der Stadt wachsen oder in einer Höhle weit draußen in den Bergen. Assimiliere Wirte, tanke mit Biomineral Energie, stell einen Wächter gegen Hinterhalte auf oder lege ein Ovum, um nach deinem Tod wiedergeboren zu werden.
+[*][b]Ermittlung.[/b] Sammle in der ganzen Stadt Hinweise und erschließe eine Ereigniszeitleiste, die von der Gegenwart zurückreicht bis zu dem Moment, in dem alles begann.
+[*][b]Die Gruppe.[/b] Eine Regierungsverschwörung, die sich um all das kümmert, wovon niemand wissen darf, führt jetzt eine Akte über dich. Ihre Teams folgen deiner Spur, finden deine Habitate und erwarten dich darin. Hol genug Informationen aus den Köpfen ihrer Agenten, und du kannst dir ihren Anführer vornehmen.
+[*][b]Cultus Carnis.[/b] Gründe einen Kult aus menschlichen Anhängern. Rekrutiere Menschen, deren Berufe dir Einfluss in Kampf, Medien, Justiz, Wirtschaft und Politik verschaffen, halte Prüfungen ab, rüste sie aus und ruf sie herbei, wenn du sie brauchst.
+[*][b]Eine Stadt zum Untertauchen.[/b] Innenstadt, Wohnviertel, Slums, Konzernzentralen, Forschungslabore, Militärbasen und die Wildnis dahinter, in jedem Spiel neu generiert und komplett in 3D. Zwischen ihnen bewegst du dich auf der Regionskarte durch die Kanalisation.
+[*][b]Heimlichkeit vor Stärke.[/b] Menschen bemerken, was um sie herum nicht stimmt, die Polizei rückt an, und ganze Viertel geraten in Aufruhr. Tauch in einem Müllcontainer unter, schlüpf durch einen Kanaldeckel nach unten oder sei einfach jemand anderes.
+[*][b]Spiel auf deine Art.[/b] Ein Story-Szenario oder eine offene Sandbox, ein eigener Schwierigkeitsgrad für jedes System, sobald du ihm begegnest, eine Enzyklopädie im Spiel und Mod-Unterstützung.
+[/list]

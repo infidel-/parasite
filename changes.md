@@ -4,6 +4,7 @@
 
 ### Changes
 - console: `bot` lets a test bot play the game (debug build)
+- ui: [beta] German translation
 
 ### Fixes
 - boot: a damaged language file starts the game in English instead of not at all
@@ -32,7 +33,7 @@
 
 ### Changes
 - mods: mods can ship translations (lang/<code>.json) and translate their text through l10n.Loc
-- ui: French translation, and a language option in Options (Interface)
+- ui: [beta] French translation, and a language option in Options (Interface)
 - ui: Cyrillic, Chinese, Japanese and Korean text shows in a sans face sized to match the chosen font
 
 ### Fixes

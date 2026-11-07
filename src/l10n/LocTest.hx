@@ -1,4 +1,4 @@
-// self-check for loc.Loc (formatter, plural/select, English and French noun forms, pseudo):
+// self-check for loc.Loc (formatter, plural/select, English, French and German noun forms, pseudo):
 // compiled and run under node by the src Makefile on every build; exits 1 on any failure
 package l10n;
 
@@ -12,6 +12,7 @@ class LocTest
     {
       english();
       french();
+      german();
       pseudo();
       out(fails == 0 ? 'loc-test: ok' : 'loc-test: ' + fails + ' FAILED');
       if (fails > 0)
@@ -114,6 +115,42 @@ class LocTest
       Loc.tr('Not translated.');
       Loc.fmt('{s:def}', { s: noun('missing noun', 'm') });
       eq(Loc.missingList().join('|'), '1× ' + mod + '|1× Not translated.|1× noun: missing noun|1× missing noun');
+    }
+
+// German: articles by case and gender, weak nouns, genitive s, feminine forms, names, phrases
+  static function german()
+    {
+      Loc.init('de', haxe.Json.stringify({
+        strings: {
+          'your host': 'dein Wirt',
+          '{attacker:The} tries to stab {target:the}, but misses.': '{attacker:Der} versucht, {target:den} zu erstechen, verfehlt aber.',
+        },
+        nouns: {
+          'police officer': { g: 'm', s: 'Polizist', fs: 'Polizistin', acc: 'Polizisten', dat: 'Polizisten', gen: 'Polizisten' },
+          'dog': { g: 'm', s: 'Hund', gen: 'Hundes' },
+          'knife': { g: 'n', s: 'Messer' },
+          'glass': { g: 'n', s: 'Glas' },
+          'keycard': { g: 'f', s: 'Schlüsselkarte' },
+          'your host': { g: 'm', s: 'dein Wirt', acc: 'deinen Wirt', dat: 'deinem Wirt', gen: 'deines Wirts' },
+          'dead agent': { g: 'm', s: 'toter Agent', forms: { der: 'der tote Agent', ein: 'ein toter Agent' } },
+        },
+      }));
+      eq(Loc.fmt('{s:der}|{s:den}|{s:dem}|{s:des}', { s: noun('police officer', 'm') }),
+        'der Polizist|den Polizisten|dem Polizisten|des Polizisten');
+      eq(Loc.fmt('{s:Der}|{s:den}|{s:einem}|{s:zum}|{s:vom}', { s: noun('police officer', 'f') }),
+        'Die Polizistin|die Polizistin|einer Polizistin|zur Polizistin|von der Polizistin');
+      eq(Loc.fmt('{s:ein}|{s:einen}|{s:eines}|{s:beim}', { s: noun('dog', 'n') }), 'ein Hund|einen Hund|eines Hundes|beim Hund');
+      eq(Loc.fmt('{s:den}|{s:des}|{s}', { s: noun('knife', 'n') }), 'das Messer|des Messers|Messer');
+      eq(Loc.fmt('{s:des}', { s: noun('glass', 'n') }), 'des Glases');
+      eq(Loc.fmt('{s:dem}|{s:des}', { s: noun('keycard', 'n') }), 'der Schlüsselkarte|der Schlüsselkarte');
+      eq(Loc.fmt('{s:Der}|{s:ein}', { s: noun('dead agent', 'm') }), 'Der tote Agent|ein toter Agent');
+      eq(Loc.fmt('{a:des}|{b:des}|{b:zum}', { a: name('Hans', 'm'), b: name('Anna', 'f') }), 'Hans’|Annas|zu Anna');
+      eq(Loc.fmt('{p:Der}|{p:dem}|{p:beim}', { p: phrase('your host', 'f') }), 'Dein Wirt|deinem Wirt|bei deinem Wirt');
+      eq(Loc.fmt('{s, select, m{er} f{sie} n{es} other{er}}', { s: noun('knife', 'm') }), 'es');
+      eq(Loc.fmt(Loc.tr(STAB), {
+        attacker: phrase('your host', 'm'),
+        target: noun('police officer', 'm'),
+      }), 'Dein Wirt versucht, den Polizisten zu erstechen, verfehlt aber.');
     }
 
 // pseudo: letters accented, syntax and markup intact, marked and padded

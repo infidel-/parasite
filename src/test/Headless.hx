@@ -229,12 +229,12 @@ class Headless
         for (st in (start != null ? start.split(',') : (quick ? [ 's1', 's2' ] : STAGES.concat([ CULT_START ]))))
           for (i in 0...(quick ? 1 : 3))
             ids.push('continue:' + st + ':' + (seed0 + i) + ':30:' + (quick ? 50 : 100));
-      // random play in French and in the pseudo locale; the runner plays each one's English twin
+      // random play in French, German and the pseudo locale; the runner plays each one's English twin
       // and compares their saves
       if (all ||
           suite == 'loc')
-        for (lang in [ 'fr', 'pseudo' ])
-          for (st in (start != null ? start.split(',') : (quick ? [ (lang == 'fr' ? 's1' : 's2') ] : NEW_GAMES.concat(STAGES))))
+        for (lang in [ 'fr', 'de', 'pseudo' ])
+          for (st in (start != null ? start.split(',') : (quick ? [ (lang == 'pseudo' ? 's2' : 's1') ] : NEW_GAMES.concat(STAGES))))
             ids.push('loc:' + lang + ':' + st + ':' + seed0 + ':' + (quick ? 200 : 500));
       // the goal policy through the tutorial, the timeline and the habitat, on every seed, and on
       // twice the seeds in the soak: 20 leave the computer goal at two runs, too thin to gate on.

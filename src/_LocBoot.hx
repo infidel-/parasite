@@ -19,9 +19,12 @@ typedef _LocFile = {
 
 // grammar entry of one common noun in a language noun table
 typedef _LocNounEntry = {
-  var g: String;                                    // grammatical gender: 'm' or 'f'
+  var g: String;                                    // grammatical gender: 'm', 'f' (or German 'n')
   var s: String;                                    // the translated noun, bare
   @:optional var fs: String;                        // feminine variant for female entities (policière)
   @:optional var elide: Bool;                       // article elision override (French aspirated h)
+  @:optional var acc: String;                       // German accusative when it differs (Polizisten)
+  @:optional var dat: String;                       // German dative when it differs (Polizisten)
+  @:optional var gen: String;                       // German genitive when not s + -s/-es (Polizisten)
   @:optional var forms: haxe.DynamicAccess<String>; // explicit forms that beat the language rule
 }

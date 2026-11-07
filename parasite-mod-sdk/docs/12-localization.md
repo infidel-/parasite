@@ -66,6 +66,10 @@ mymod/
   `s` (the noun without article), optional `fs` (a feminine form for a person), `elide: false` (an
   aspirated h). French forms are `def`/`indef`/`de`/`a` (le/un/du/au), capitalized at a sentence
   start: `{x:Def}`.
+- German (`de.json`): `g` is `m`/`f`/`n`, `s` is capitalized, and `acc`/`dat`/`gen` give the noun's
+  own case form where it differs (`"Polizist"` → `"Polizisten"`). Forms are
+  `der`/`den`/`dem`/`des`, `ein`/`einen`/`einem`/`eines` (nominative, accusative, dative, genitive)
+  and `zum`/`vom`/`beim`: `{x:Der} greift {y:den} an.`
 - The file is merged into the game's table before your entry runs, so `Loc.tr` in `init()` already
   sees it. Nothing is loaded in English. A missing file or string falls back to English.
-- Language codes: `en`, `fr`, … (`Loc.lang()` tells the active one).
+- Language codes: `en`, `fr`, `de`, … (`Loc.lang()` tells the active one).

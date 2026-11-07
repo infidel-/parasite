@@ -60,6 +60,10 @@ RATIO_MIN, RATIO_MAX = 0.3, 3.0
 RATIO_MIN_CHARS = 16          # shorter strings skip the length guard
 STATE_LOCK = threading.Lock()
 
+# the noun forms a {x:form} placeholder may name in each language with a rule in Loc.nounForm
+FORMS = {"fr": {"def", "indef", "de", "a"},
+         "de": {"der", "den", "dem", "des", "ein", "einen", "einem", "eines", "zum", "vom", "beim"}}
+
 NAMES = {"fr": "French", "de": "German", "es": "Spanish", "it": "Italian", "pl": "Polish",
          "pt-BR": "Brazilian Portuguese", "ru": "Russian", "uk": "Ukrainian", "tr": "Turkish",
          "zh-CN": "Simplified Chinese", "zh-TW": "Traditional Chinese", "ja": "Japanese", "ko": "Korean"}
@@ -358,7 +362,7 @@ def parse_reply(text: str) -> tuple:
 RE_NOTE_SELECT = re.compile(r"ALWAYS write \{(\w+), select")
 
 
-def problem(src: str, tr: str, note: str = "") -> str | None:
+def problem(src: str, tr: str, note: str = "", code: str = "") -> str | None:
     """Why a translation is rejected, or None. A translator note that says `ALWAYS write {x, select,`
     makes that select required (a raw English key would otherwise show through)."""
     if not tr.strip():
@@ -371,6 +375,9 @@ def problem(src: str, tr: str, note: str = "") -> str | None:
         return bad
     if re.search(r"\{\w+:[Tt]he\}", tr):
         return "English noun form {x:the}/{x:The} in the translation: use the forms of the style sheet"
+    bad = [f for f in re.findall(r"\{\w+:(\w+)\}", tr) if code in FORMS and f.lower() not in FORMS[code]]
+    if bad:
+        return f"noun form {{x:{bad[0]}}} is not one of the style sheet's: " + ", ".join(sorted(FORMS[code]))
     if starts_upper(src) and not starts_upper(tr):
         return "starts lowercase: the English starts with a capital (or a capitalized {x:Form}); a log line that starts lowercase is taken for a 1.0 mod predicate"
     vs, vt = locfmt.visible(src), locfmt.visible(tr)
@@ -381,7 +388,7 @@ def problem(src: str, tr: str, note: str = "") -> str | None:
     return None
 
 
-RE_LEAD = re.compile(r"(?:<[^>]*>|\s|[«\"(\[])*")
+RE_LEAD = re.compile(r"(?:<[^>]*>|\s|[«„‚\"(\[])*")
 
 
 def starts_upper(s: str) -> bool:
@@ -417,7 +424,7 @@ def translate_batch(code: str, system: str, batch: list, bno: int, total: int,
             if i not in got:
                 reasons[i] = "missing"
                 continue
-            why = problem(batch[i - 1]["s"], got[i], batch[i - 1].get("note", ""))
+            why = problem(batch[i - 1]["s"], got[i], batch[i - 1].get("note", ""), code)
             if why:
                 reasons[i] = why
             else:
@@ -456,7 +463,7 @@ def revise_batch(code: str, system: str, batch: list, recs: list, bno: int, tota
         r = dict(r)
         new = got.get(i)
         if new is not None and new != r["t"]:
-            why = problem(e["s"], new, e.get("note", ""))
+            why = problem(e["s"], new, e.get("note", ""), code)
             if why:
                 warn(f"batch {bno}: revision of [{i}] dropped ({why})")
                 new = None
@@ -643,7 +650,7 @@ def apply_review(code: str, path: str | None) -> int:
             warn(f"line {ln}: unknown id (the English changed since the sheet was written?)")
             bad += 1
             continue
-        why = problem(r["s"], fix, r.get("note", ""))
+        why = problem(r["s"], fix, r.get("note", ""), code)
         if why:
             warn(f"line {ln}: rejected ({why}): {fix[:80]}")
             bad += 1
@@ -732,20 +739,25 @@ def noun_keys(entries: list) -> list:
 
 
 def parse_nouns(text: str, batch: list) -> dict:
-    """<n id=.. g=.. fs=.. elide=..>noun</n> lines -> {english: {g, s, fs?, elide?}}."""
+    """<n id=.. g=.. fs=.. elide=.. acc=.. dat=.. gen=.. der=..>noun</n> lines -> {english: {g, s, fs?,
+    elide?, acc?, dat?, gen?, forms?}} (the case attributes and German explicit forms only come from German)."""
     out = {}
     for m in RE_NOUN.finditer(text):
         i = int(m.group(1))
         if not 1 <= i <= len(batch):
             continue
         a = dict(RE_ATTR.findall(m.group(2)))
-        if a.get("g") not in ("m", "f"):
+        if a.get("g") not in ("m", "f", "n"):
             continue
         r = {"g": a["g"], "s": m.group(3).strip()}
-        if a.get("fs"):
-            r["fs"] = a["fs"]
+        for k in ("fs", "acc", "dat", "gen"):
+            if a.get(k):
+                r[k] = a[k]
         if a.get("elide") == "0":
             r["elide"] = False
+        forms = {k: v for k, v in a.items() if k in FORMS["de"]}
+        if forms:
+            r["forms"] = forms
         out[batch[i - 1]["s"]] = r
     return out
 
@@ -771,7 +783,8 @@ def nouns(code: str) -> int:
     todo = [e for e in noun_keys(catalog()) if not noun_agrees(table.get(e["s"]), st["strings"].get(locfmt.sha(e["s"])))]
     info(f"{code}: {len(todo)} nouns to add or redo ({len(table)} in the table)")
     style = (LOC / f"style-{code}.md").read_text(encoding="utf-8")
-    system = (LOC / "nouns.md").read_text(encoding="utf-8").replace("{LANG}", NAMES.get(code, code))
+    prompt = LOC / f"nouns-{code}.md"
+    system = (prompt if prompt.exists() else LOC / "nouns.md").read_text(encoding="utf-8").replace("{LANG}", NAMES.get(code, code))
     system = system.rstrip() + "\n\n" + style.strip() + "\n"
     for b0 in range(0, len(todo), 120):
         batch = todo[b0:b0 + 120]
@@ -851,7 +864,11 @@ def selftest() -> int:
     assert problem("{s:The} hits.", "{s:def} frappe.").startswith("starts lowercase")
     assert problem("<b>Yes</b>", "<b>oui</b>").startswith("starts lowercase")
     assert problem("{n} turns", "{n} tours") is None and starts_upper("« Oui")
+    assert problem('"Leave us!"', "„Verlasst uns!“", "", "de") is None
     assert problem("{s:The} hits.", "{s:The} frappe.").startswith("English noun form")
+    assert problem("{s:The} hits.", "{s:Der} schlägt zu.", "", "de") is None
+    assert problem("{s:The} hits.", "{s:Def} schlägt zu.", "", "de").startswith("noun form")
+    assert problem("You see {s:a}.", "Du siehst {s:a}.", "", "de").startswith("noun form")
     es = [{"s": "x" * 100, "loc": [f"src/a.hx:{i}"]} for i in range(10)] + \
          [{"s": "y" * 100, "loc": [f"src/b.hx:{i}"]} for i in range(10)]
     bs = batches(es)
@@ -866,6 +883,11 @@ def selftest() -> int:
                       '<n id="3" g="q">bad</n>', [{"s": "officer"}, {"s": "owl"}, {"s": "z"}])
     assert got == {"officer": {"g": "f", "s": "policière", "fs": "x"},
                    "owl": {"g": "m", "s": "hibou", "elide": False}}, got
+    got = parse_nouns('<n id="1" g="m" fs="Polizistin" acc="Polizisten" dat="Polizisten" gen="Polizisten">Polizist</n>'
+                      '<n id="2" g="n" der="das tote Tier" den="das tote Tier">totes Tier</n>', [{"s": "officer"}, {"s": "animal"}])
+    assert got == {"officer": {"g": "m", "s": "Polizist", "fs": "Polizistin", "acc": "Polizisten", "dat": "Polizisten",
+                               "gen": "Polizisten"},
+                   "animal": {"g": "n", "s": "totes Tier", "forms": {"der": "das tote Tier", "den": "das tote Tier"}}}, got
     ks = [e["s"] for e in noun_keys([{"s": "dog", "kind": "N", "loc": ["src/ai/DogAI.hx:1"]},
 
                                      {"s": "Dog", "kind": "N", "loc": ["src/ai/DogAI.hx:2"]},

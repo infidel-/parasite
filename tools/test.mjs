@@ -305,12 +305,12 @@ const host = {
     writeMeta: (s, d) => { metas.set(s, d); return true; },
     delete: (s) => { saves.delete(s); metas.delete(s); return true; },
   },
-  // a loc run's language (loc:<code>:...): fr from the shipped electron/lang, pseudo from Loc itself
+  // a loc run's language (loc:<code>:...): fr, de from the shipped electron/lang, pseudo from Loc itself
   lang: () => {
     const run = args[args.indexOf('--run') + 1] ?? '';
     const code = run.startsWith('loc:') ? run.split(':')[1] : 'en';
     return { code, available: ['en', code],
-      json: code == 'fr' ? readFileSync(resolve(root, 'electron', 'lang', 'fr.json'), 'utf8') : null };
+      json: code == 'en' || code == 'pseudo' ? null : readFileSync(resolve(root, 'electron', 'lang', code + '.json'), 'utf8') };
   },
   consoleHistory: { read: () => null, write: () => true, exists: () => false },
   // testmod registers `bad*` ids on purpose, to see them rejected (examples/testmod)

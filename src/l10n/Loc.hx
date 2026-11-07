@@ -361,6 +361,7 @@ class Loc
           case 'en', 'pseudo': english(n, f, false);
           case _ if (f == 'the' || untranslated): english(n, f, true);
           case 'fr': french(n, f);
+          case 'de': german(n, f);
           default: generic(n, f);
         };
       // capitalise the first letter (in pseudo, the one after the ⟦ mark)
@@ -415,6 +416,68 @@ class Loc
           case 'de': (el ? 'de l’' : (g == 'f' ? 'de la ' : 'du ')) + w;
           case 'a': (el ? 'à l’' : (g == 'f' ? 'à la ' : 'au ')) + w;
           default: w;
+        };
+    }
+
+// German forms by case: der/den/dem/des (the), ein/einen/einem/eines (a), zum/vom/beim (zu/von/bei
+// + the dative), bare (nominative); a woman's fs form never declines
+  static function german(n: _LocNoun, f: String): String
+    {
+      // names take no article and only the genitive s; a phrase (your host, you) takes its table forms
+      if (n.kind == LOC_NAME)
+        {
+          var w = (f == 'des' || f == 'eines' ?
+            n.key + (~/[sßxz]$/.match(n.key) ? '’' : 's') : n.key);
+          return germanPrep(f) + w;
+        }
+      var e = (n.kind == LOC_PHRASE ? nouns.get(n.key) : entry(n));
+      if (e == null)
+        return germanPrep(f) + tr(n.key);
+      if (e.forms != null &&
+          e.forms.exists(f))
+        return e.forms.get(f);
+      var fem = (n.gender == 'f' &&
+        e.fs != null);
+      var g = (fem ? 'f' : e.g);
+      var w = switch (f)
+        {
+          case _ if (fem): e.fs;
+          case 'den', 'einen' if (e.acc != null): e.acc;
+          case 'dem', 'einem', 'zum', 'vom', 'beim' if (e.dat != null): e.dat;
+          case 'des', 'eines' if (e.gen != null): e.gen;
+          case 'des', 'eines' if (g != 'f'): e.s + (~/[sßxz]$/.match(e.s) ? 'es' : 's');
+          default: e.s;
+        };
+      if (n.kind == LOC_PHRASE)
+        return germanPrep(f) + w;
+      // the article of the form: masculine, feminine, neuter (a switch: Loc statics have no initialisers)
+      var arts = switch (f)
+        {
+          case 'der': [ 'der ', 'die ', 'das ' ];
+          case 'den': [ 'den ', 'die ', 'das ' ];
+          case 'dem': [ 'dem ', 'der ', 'dem ' ];
+          case 'des': [ 'des ', 'der ', 'des ' ];
+          case 'ein': [ 'ein ', 'eine ', 'ein ' ];
+          case 'einen': [ 'einen ', 'eine ', 'ein ' ];
+          case 'einem': [ 'einem ', 'einer ', 'einem ' ];
+          case 'eines': [ 'eines ', 'einer ', 'eines ' ];
+          case 'zum': [ 'zum ', 'zur ', 'zum ' ];
+          case 'vom': [ 'vom ', 'von der ', 'vom ' ];
+          case 'beim': [ 'beim ', 'bei der ', 'beim ' ];
+          default: [ '', '', '' ];
+        };
+      return arts[g == 'f' ? 1 : (g == 'n' ? 2 : 0)] + w;
+    }
+
+// the preposition a zum/vom/beim form puts before a German name or phrase, which takes no article
+  static function germanPrep(f: String): String
+    {
+      return switch (f)
+        {
+          case 'zum': 'zu ';
+          case 'vom': 'von ';
+          case 'beim': 'bei ';
+          default: '';
         };
     }
 

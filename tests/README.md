@@ -6,7 +6,7 @@ states, broken invariants and saves that do not survive a load.
 | run | what it does |
 |---|---|
 | `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 33 runs, ~10 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (566 runs, ~140 s on 6 cores) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (580 runs, ~135 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
@@ -203,7 +203,7 @@ base, the rival base, cult8):
 | `compat` | every fixture save | it loads through `Game.load` (old saves too), then 200 fuzz steps |
 | `roundtrip` | `new`, the presets and every fixture | play a little, save, load, save: the two saves must match field for field |
 | `continue` | the 11 presets and the console cult × 3 seeds (quick: `s1`, `s2`) | random play to step 30, on to the first quiet step (no walk, region trip, repeated action or window under way), save. Then 100 steps on a second seed, and save. A fresh process loads the quiet save and plays the same 100 steps: the two last saves must match |
-| `loc` | `fr` and `pseudo` × the new games and presets (quick: `fr` from `s1`, `pseudo` from `s2`) | random play in that language (`loc:<code>:<start>:<seed>:<steps>`, served to Loc by `host.lang`), then its English twin (`loc:en:…`): the two saves must match, apart from the log, because a save holds English keys only. The soak lists the strings a run met with no translation |
+| `loc` | `fr`, `de` and `pseudo` × the new games and presets (quick: `fr` and `de` from `s1`, `pseudo` from `s2`) | random play in that language (`loc:<code>:<start>:<seed>:<steps>`, served to Loc by `host.lang`), then its English twin (`loc:en:…`): the two saves must match, apart from the log, because a save holds English keys only. The soak lists the strings a run met with no translation |
 | `endgame` | `s3` and `s31` × seeds (soak only) | the goal policy to the end of the game; fails when no run reaches FINISH (`--reach FINISH=1`) |
 | `cult` | the console cult × seeds, the cult fixtures × 3 (soak only) | the cult policy; fails when no run sees a profane ordeal over (`--reach PROFANE_DONE=1`) |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
