@@ -121,7 +121,9 @@ class Saves extends UIWindow
       sub.className = 'mods-reason saves-meta';
       if (meta != null)
         sub.innerHTML = T('{area} · turn {turns} · {time}', {
-          area: meta.area,
+          area: (meta.sector != null ?
+            meta.area + ' - ' + T('Sector {n}', { n: meta.sector }) :
+            Loc.tr(meta.area)),
           turns: meta.turns,
           time: relTime(meta.time),
         });

@@ -57,11 +57,15 @@ class Saver
           ];
 #if electron
           HostBridge.saveWrite(slotID, Json.stringify(o, null, '  '));
-          // tiny preview sidecar for the slot list (additive; never blocks save)
+          // tiny preview sidecar for the slot list (additive; never blocks save). the area is
+          // stored in English and translated by the slot list, like the scenario
+          var a = game.area;
           var meta: _SaveMeta = {
             scenario: game.timeline.scenario.name,
             scenarioID: game.scenarioStringID,
-            area: game.area.getDisplayName(),
+            area: (!a.isNameKnown() ? N('unknown location') :
+              (a.districtName != null ? a.districtName : a.name)),
+            sector: (a.isNameKnown() && a.districtName != null ? a.districtSector : null),
             turns: game.turns,
             time: Date.now().getTime(),
           };

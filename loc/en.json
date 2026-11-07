@@ -266,6 +266,16 @@
    "field": "log"
   },
   {
+   "s": "unknown location",
+   "kind": "N",
+   "loc": [
+    "src/Saver.hx:66",
+    "src/game/AreaGame.hx:1532"
+   ],
+   "vars": [],
+   "where": "Saver.save"
+  },
+  {
    "s": "Combat",
    "kind": "T",
    "loc": [
@@ -824,7 +834,7 @@
    "s": "{attacker:The} hesitates to attack you.",
    "kind": "T",
    "loc": [
-    "src/ai/CommonLogic.hx:158"
+    "src/ai/CommonLogic.hx:164"
    ],
    "vars": [
     "attacker"
@@ -836,7 +846,7 @@
    "s": "Shit!",
    "kind": "T",
    "loc": [
-    "src/ai/CommonLogic.hx:162",
+    "src/ai/CommonLogic.hx:168",
     "src/const/SoundConst.hx:621"
    ],
    "vars": [],
@@ -847,7 +857,7 @@
    "s": "You're losing control.",
    "kind": "T",
    "loc": [
-    "src/ai/CommonLogic.hx:330"
+    "src/ai/CommonLogic.hx:336"
    ],
    "vars": [],
    "where": "CommonLogic.melee"
@@ -23869,15 +23879,6 @@
    "field": "log"
   },
   {
-   "s": "unknown location",
-   "kind": "T",
-   "loc": [
-    "src/game/AreaGame.hx:1532"
-   ],
-   "vars": [],
-   "where": "AreaGame.getAreaLabel"
-  },
-  {
    "s": "Sec. {n}",
    "kind": "T",
    "loc": [
@@ -23892,7 +23893,8 @@
    "s": "Sector {n}",
    "kind": "T",
    "loc": [
-    "src/game/AreaGame.hx:1536"
+    "src/game/AreaGame.hx:1536",
+    "src/ui/Saves.hx:125"
    ],
    "vars": [
     "n"
@@ -25098,7 +25100,7 @@
    "s": "Autosaved.",
    "kind": "T",
    "loc": [
-    "src/game/Game.hx:857"
+    "src/game/Game.hx:853"
    ],
    "vars": [],
    "where": "Game.autosave",
@@ -25108,7 +25110,7 @@
    "s": "This save was made with a different mod set:",
    "kind": "T",
    "loc": [
-    "src/game/Game.hx:882"
+    "src/game/Game.hx:888"
    ],
    "vars": [],
    "where": "Game.load",
@@ -25118,7 +25120,7 @@
    "s": "- <b>{mod} v{version}</b> was active when saved but is no longer enabled",
    "kind": "T",
    "loc": [
-    "src/game/Game.hx:886"
+    "src/game/Game.hx:892"
    ],
    "vars": [
     "mod",
@@ -25131,7 +25133,7 @@
    "s": "- <b>{mod} v{version}</b> is now enabled but was not when saved",
    "kind": "T",
    "loc": [
-    "src/game/Game.hx:891"
+    "src/game/Game.hx:897"
    ],
    "vars": [
     "mod",
@@ -25144,7 +25146,7 @@
    "s": "- <b>{mod}</b> version differs: save v{saveVersion}, active v{activeVersion}",
    "kind": "T",
    "loc": [
-    "src/game/Game.hx:896"
+    "src/game/Game.hx:902"
    ],
    "vars": [
     "mod",
@@ -25158,7 +25160,7 @@
    "s": "State may be inconsistent or load may fail. Load anyway?",
    "kind": "T",
    "loc": [
-    "src/game/Game.hx:902"
+    "src/game/Game.hx:908"
    ],
    "vars": [],
    "where": "Game.load"
@@ -25167,7 +25169,7 @@
    "s": "Thank you for playing the demo! You can restart the game now and play it to this point again but to progress further you will need to buy the full game.",
    "kind": "T",
    "loc": [
-    "src/game/Game.hx:951"
+    "src/game/Game.hx:957"
    ],
    "vars": [],
    "where": "Game.finishDemo",
@@ -33154,7 +33156,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:186",
-    "src/ui/Options.hx:474"
+    "src/ui/Options.hx:479"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33165,7 +33167,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:187",
-    "src/ui/Options.hx:475"
+    "src/ui/Options.hx:480"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33176,7 +33178,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:188",
-    "src/ui/Options.hx:476"
+    "src/ui/Options.hx:481"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33187,7 +33189,7 @@
    "kind": "T",
    "loc": [
     "src/ui/Options.hx:189",
-    "src/ui/Options.hx:477"
+    "src/ui/Options.hx:482"
    ],
    "vars": [],
    "where": "Options.new",
@@ -33324,20 +33326,28 @@
    "field": "text"
   },
   {
+   "s": "The game reloads; progress since the last save is lost.",
+   "kind": "T",
+   "loc": [
+    "src/ui/Options.hx:239"
+   ],
+   "vars": [],
+   "where": "Options.setLang"
+  },
+  {
    "s": "The game reloads; a game in progress is autosaved first.",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:235"
+    "src/ui/Options.hx:240"
    ],
    "vars": [],
-   "where": "Options.setLang",
-   "field": "sub"
+   "where": "Options.setLang"
   },
   {
    "s": "Presets",
    "kind": "T",
    "loc": [
-    "src/ui/Options.hx:433"
+    "src/ui/Options.hx:438"
    ],
    "vars": [],
    "where": "Options.addOptSelect",
@@ -33750,7 +33760,7 @@
    "s": "no preview info",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:129"
+    "src/ui/Saves.hx:131"
    ],
    "vars": [],
    "where": "Saves.addRow",
@@ -33760,7 +33770,7 @@
    "s": "click to save here",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:131"
+    "src/ui/Saves.hx:133"
    ],
    "vars": [],
    "where": "Saves.addRow",
@@ -33770,7 +33780,7 @@
    "s": "AUTOSAVE",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:139"
+    "src/ui/Saves.hx:141"
    ],
    "vars": [],
    "where": "Saves.addRow"
@@ -33779,7 +33789,7 @@
    "s": "SAVED",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:139"
+    "src/ui/Saves.hx:141"
    ],
    "vars": [],
    "where": "Saves.addRow"
@@ -33788,7 +33798,7 @@
    "s": "EMPTY",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:139"
+    "src/ui/Saves.hx:141"
    ],
    "vars": [],
    "where": "Saves.addRow"
@@ -33797,7 +33807,7 @@
    "s": "Overwrite slot {slot}?",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:184"
+    "src/ui/Saves.hx:186"
    ],
    "vars": [
     "slot"
@@ -33809,7 +33819,7 @@
    "s": "The save currently in this slot will be replaced.",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:185"
+    "src/ui/Saves.hx:187"
    ],
    "vars": [],
    "where": "Saves.confirmOverwrite",
@@ -33819,7 +33829,7 @@
    "s": "Confirm overwrite",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:190"
+    "src/ui/Saves.hx:192"
    ],
    "vars": [],
    "where": "Saves.confirmOverwrite",
@@ -33829,7 +33839,7 @@
    "s": "just now",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:207"
+    "src/ui/Saves.hx:209"
    ],
    "vars": [],
    "where": "Saves.relTime"
@@ -33838,7 +33848,7 @@
    "s": "{n}m ago",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:210"
+    "src/ui/Saves.hx:212"
    ],
    "vars": [
     "n"
@@ -33850,7 +33860,7 @@
    "s": "{n}h ago",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:212"
+    "src/ui/Saves.hx:214"
    ],
    "vars": [
     "n"
@@ -33861,7 +33871,7 @@
    "s": "{n}d ago",
    "kind": "T",
    "loc": [
-    "src/ui/Saves.hx:213"
+    "src/ui/Saves.hx:215"
    ],
    "vars": [
     "n"
