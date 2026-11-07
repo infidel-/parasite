@@ -1,12 +1,6 @@
 [
   {
     "match": [
-      "game_PlayerArea.hardenGripAction"
-    ],
-    "todo": "TODO.md: Harden grip offered after a move detached the parasite"
-  },
-  {
-    "match": [
       "spaceshipStudySlot"
     ],
     "todo": "TODO.md: spaceship slot actions read a host the parasite does not have"

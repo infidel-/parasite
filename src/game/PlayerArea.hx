@@ -1261,8 +1261,12 @@ class PlayerArea extends _SaveObject
         return climbOut(x + dx, y + dy, true);
 
       // if player tries to move when attached, that detaches the parasite
+      // (and the HUD drops the attached-state actions now: a blocked step returns before actionPost)
       if (state == PLR_STATE_ATTACHED)
-        detachAction();
+        {
+          detachAction();
+          game.ui.hud.update();
+        }
 
       var nx = x + dx;
       var ny = y + dy;
