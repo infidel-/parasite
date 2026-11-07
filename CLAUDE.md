@@ -27,6 +27,7 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 | generating or baking a SOUND (fal-sfx MCP, `make sounds`) | [`docs/sound-gen.md`](docs/sound-gen.md) — every new sound gets a bake-off; never touch shipped sounds |
 | adding or changing ANY player-facing text, or translating it | [`docs/localization.md`](docs/localization.md) — `T()`/`N()` markers, placeholder syntax, nouns |
 | a headless test failed, or adding a test, a suite or a fixture save | [`tests/README.md`](tests/README.md) — replay by run id, `tests/known.json`, the fixture version table |
+| adding or changing a GAME MECHANIC (AI, cult, ordeals, missions, base, evolution, ovum, region, habitats, group, items…) | [`docs/relations.md`](docs/relations.md) — lifecycle events × listeners, copies, invariants, neighbour ideas |
 
 **A NEW FINDING GOES IN THE DOC, NOT HERE.** This file went 1.7 KB → 61 KB in six months and 75% of
 that was two sections that are now docs. One line here when it must fire unprompted, the numbers and
@@ -41,6 +42,7 @@ the war story there. A rule nobody can act on without opening the doc anyway bel
 - ALWAYS run tests at the end of each task: cd src/ && make
 - When changing persisted game data structures, ALWAYS verify Saver/Loader savegame compatibility (both serialization and load behavior, including old saves when relevant). Note that you should ask whether it is needed when planning (there might not have been a release yet)
 - **After changing anything player-facing (gameplay, UI, controls, areas, AI behaviour), ASK the user whether the pedia articles in [`src/const/PediaConst.hx`](src/const/PediaConst.hx) need updating** — name the articles the change touches. Do not edit them unasked.
+- **Planning or reviewing a game change: run it past [`docs/relations.md`](docs/relations.md)** — name the rows it touches and give a block with its Neighbours (*must update*: correctness; *could update*: ideas), the **invariants offered** that would let it touch fewer neighbours, and its **web delta** (edges added/removed). Prefer the variant with the fewest new edges; a storm of related edits only when unavoidable, and say why. Ask before editing a neighbour. A new entry point, listener, copy or invariant updates its row in the same commit.
 - **When adding a NEW pedia article, tell the user it most likely needs an image** (`img:`, a 2560×1440 jpg in `app/img/pedia/`) — say whether an existing one fits or a new one has to be made.
 - **When adding, removing or changing a cult ordeal (`src/cult/ordeals/`, the lists in `src/cult/Ordeals.hx`), update [`reports/cult-ordeals.md`](reports/cult-ordeals.md)** — its row: name, required members, power/money cost.
 - **After updating anything in `reports/`, run `make report`** — copies them to `ObsidianReports/`, overwriting the older versions.

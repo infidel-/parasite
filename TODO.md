@@ -21,12 +21,11 @@ Known open work, deferred on purpose. Remove an entry when it is done.
 
 ## Cult
 
-- **A host with a stale cult flag crashes on leaving an area.** `Cult.destroy()` clears `isCultist`
-  only on AIs in `game.area` and in habitats, so a host carried on the region map when its cult is
-  destroyed (a rival destroyed by an ordeal) keeps it. `AreaGame.removeAI` then calls
-  `Cult.onRemoveAI`, whose member lookup is null: `aidata.updateData` throws
-  (`src/cult/Cult.hx:216`). Seen live by flagging a non-member host by hand; `AI.dieRegion()` already
-  guards the same gap. Fix: clear the flag on `game.player.host` in `destroy()`, or guard there.
+- **A host with a stale cult flag would crash on leaving an area.** Guard only, no known trigger.
+  `Cult.destroy()` clears `isCultist` only in `game.area` and the habitats, and `Cult.onRemoveAI`
+  throws on a missing record (`src/cult/Cult.hx:216`). Seen only by flagging a host by hand: cult
+  members die only on screen, and a rival taken by `RivalBase.onSuccess` is never `destroy()`ed
+  (relations.md, cult destruction row). Fix if a trigger appears: guard in `onRemoveAI`.
 
 ## Mods
 
@@ -34,6 +33,23 @@ Known open work, deferred on purpose. Remove an entry when it is done.
   (ovum, expiry, degradation) runs the cult record and the `onDeath()` hook like `AI.die()`, but not
   the mod events: their payload carries `area` and `entity`, and neither exists there. Needs either a
   region-death event or a payload with both optional.
+
+## Found by relations mapping
+
+Confirmed by reading the code end to end; each has its cell in `docs/relations.md`.
+
+- **G1** Mission ids collide after loading a save with rivals: `Cult.loadPost` sets `Mission._maxID` per cult, the last wins.
+- **RegionObject counter**: `World.loadPost` takes the region id, not the object id, and never increments it (latent).
+- **G9** `Ordeals.turn` removes a failed profane ordeal from the array it iterates, so the next ordeal skips its turn.
+- **G6** `Habitat.putObject` kills the host without `AI.die`: no `npc.isDead` (the NPC respawns), no `onDeath` hook, no mod event.
+- **G2** A save made on the region map with a host never runs `host.loadPost`: organ growth stops until an organ is picked again.
+- **G3** `Cult.destroy()` during a base defense: the defense id survives, no defense is ever scheduled again, the team stays in TEAM_BASE_DEFENSE.
+- **G4** Custodes count as outsiders in the habitat exit check, so the base habitat can't be left.
+- **G5** `AreaGame.enter` re-adds the host without re-linking `npc.ai`: a second AI spawns for the same NPC.
+- **G7** `RegionManager.onHostDiscovered` says an NPC host had a fatal accident but leaves it alive; its lines are bare English.
+- **G8** BaseDefense attackers that vanish without dying (rebirth, despawn) leave a defense that can never finish.
+- **G10** An AI spawned from a shallow AIData copy shares an `Organs` whose `_ai` points at the old AI.
+- **G11** `MetamorphosisPhaseII` performed outside a habitat is used up without creating the base.
 
 ## Found by the headless tests
 

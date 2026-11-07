@@ -222,7 +222,9 @@ old save, which generates it.
 
 testmod's `bad*` ids are rejected on purpose, so the runner does not count those rejects as alerts.
 
-**Invariants** (`Bot.check`), which check only rules the code already implies:
+**Invariants** (`Bot.check`), which check only rules the code already implies. Their source is the
+Invariants table in [`docs/relations.md`](../docs/relations.md): a rule added there goes in here
+when it is cheap to assert, and the table's "asserted" column says which ones are.
 - no NaN in player health, energy and ap, `group.priority`, cult money, area alertness, AI health
   and energy;
 - AI health and energy at most their max, every AI inside the area;
