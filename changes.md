@@ -13,6 +13,7 @@
 - game: a resisting host boxed in by walls or followers no longer crashes the game
 - game: a save no longer stores habitat formation messages in the player's language
 - game: an organ gives its strength, energy or health bonus only once it is grown
+- mods: a mod weapon missing some of its attack texts no longer crashes the attack
 
 ## 1.1
 

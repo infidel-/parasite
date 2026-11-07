@@ -82,18 +82,24 @@ class CommonLogic
         }
     }
 
-// 1.0 mod API: a mod weapon declares verb1/verb2 ('rip'/'rips') instead of the text* templates and
-// gets English sentences built from them, once (the weapon info object is shared)
+// mod weapons (trust boundary: every text* field is optional): a 1.0 mod declares verb1/verb2
+// ('rip'/'rips') instead of the templates, a newer one may set only some of them; each missing
+// template gets an English sentence built from the verbs ('hit'/'hits' without them), once (the
+// weapon info object is shared)
   static function legacyWeaponText(weapon: WeaponInfo)
     {
-      if (weapon.textHit != null ||
-          weapon.verb2 == null)
-        return;
-      weapon.textMiss = '{attacker:The} tries to ' + weapon.verb1 + ' {target:the}, but misses.';
-      weapon.textMissYou = '{attacker:The} tries to ' + weapon.verb1 + ' you, but misses.';
-      weapon.textHit = '{attacker:The} ' + weapon.verb2 + ' {target:the} for {damage} damage.';
-      weapon.textHitYou = '{attacker:The} ' + weapon.verb2 + ' you for {damage} damage.';
-      weapon.textStun = '{attacker:The} ' + weapon.verb2 + ' {target:the} for {rounds, plural, one{# round} other{# rounds}}.';
+      var v1 = (weapon.verb1 != null ? weapon.verb1 : 'hit');
+      var v2 = (weapon.verb2 != null ? weapon.verb2 : 'hits');
+      if (weapon.textMiss == null)
+        weapon.textMiss = '{attacker:The} tries to ' + v1 + ' {target:the}, but misses.';
+      if (weapon.textMissYou == null)
+        weapon.textMissYou = '{attacker:The} tries to ' + v1 + ' you, but misses.';
+      if (weapon.textHit == null)
+        weapon.textHit = '{attacker:The} ' + v2 + ' {target:the} for {damage} damage.';
+      if (weapon.textHitYou == null)
+        weapon.textHitYou = '{attacker:The} ' + v2 + ' you for {damage} damage.';
+      if (weapon.textStun == null)
+        weapon.textStun = '{attacker:The} ' + v2 + ' {target:the} for {rounds, plural, one{# round} other{# rounds}}.';
     }
 
 // logic: attack target (player, ai, or object)
