@@ -6,7 +6,7 @@ English in memory and saves and is translated where it is displayed) — see doc
 Both take a constant literal (the T/N macros refuse anything else), so a small Haxe lexer is
 enough: comments and other strings are skipped, 'a' + 'b' chains fold, escapes decode.
 
-Each entry carries what a translator needs: file:line of every use, the enclosing Class.member,
+Each entry carries what a translator needs: the file of every use, the enclosing Class.member,
 the field or call the literal is written into (name:, note =, addOptToggle(...)), its placeholder
 names, and a `// tr: ...` note from the line above.
 
@@ -171,7 +171,8 @@ def call(text: str, i: int, kind: str, path: str, line: int) -> tuple:
         vars_ = locfmt.names(s)
     except locfmt.FmtError as e:
         return None, f"{path}:{line}: bad placeholder syntax ({e}): {s[:60]}", i
-    return {"s": s, "kind": kind, "loc": [f"{path}:{line}"], "vars": vars_}, None, i
+    # the file only: a line number moved with every edit above it and churned the tracked catalog
+    return {"s": s, "kind": kind, "loc": [path], "vars": vars_}, None, i
 
 
 def context(text: str, pos: int, marks: list, src_lines: list, line: int) -> dict:
@@ -221,7 +222,7 @@ def build(root: str, rel_base: str) -> tuple:
             for e in ents:
                 old = merged.get(e["s"])
                 if old:
-                    old["loc"] += e["loc"]
+                    old["loc"] += [f for f in e["loc"] if f not in old["loc"]]
                 else:
                     merged[e["s"]] = e
     return list(merged.values()), warnings
@@ -245,7 +246,7 @@ def write_catalog(entries: list) -> None:
 
 
 def spot(rec: dict) -> tuple:
-    """Where a string sits, line numbers aside: file, member, field."""
+    """Where a string sits: file, member, field (older records carry file:line)."""
     loc = (rec.get("loc") or [""])[0]
     return (loc.rsplit(":", 1)[0], rec.get("where", ""), rec.get("field", ""))
 
@@ -349,7 +350,7 @@ class Foo
                         "{s:The} pays $5 for {n, plural, one{# item} other{# items}}."}, set(got)
     assert got["Hello world."]["field"] == "innerHTML"
     assert got["Hello world."]["where"] == "Foo.new"
-    assert got["Hello world."]["loc"] == ["src/Foo.hx:16"]
+    assert got["Hello world."]["loc"] == ["src/Foo.hx"]
     assert got["police officer"]["kind"] == "N" and got["police officer"]["field"] == "name"
     assert got["Skip tutorial"]["field"] == "addOptToggle"
     pays = got["{s:The} pays $5 for {n, plural, one{# item} other{# items}}."]

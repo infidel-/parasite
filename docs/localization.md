@@ -114,7 +114,7 @@ translation of the key.
 
 | path | what |
 |---|---|
-| `loc/en.json` | the catalog, rewritten by every build (tracked: its diff is the string change log) |
+| `loc/en.json` | the catalog, rewritten by every build (tracked: its diff is the string change log). Each string lists the files it is used in, not lines, so an edit that only shifts code leaves it alone |
 | `loc/<code>.json` | per-language state, one record per string keyed by sha1 of the English |
 | `electron/lang/<code>.json` | runtime table `{strings, nouns, fonts…}`, copied into `app/lang/` by the build |
 | `tools/loc/extract.py` | the extractor (`--check`, `--strict`, `--list <code>`, `--root <dir>`, `--selftest`) |
