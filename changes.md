@@ -15,6 +15,7 @@
 - game: a parasite with no host walking into a locked door no longer crashes
 - game: a resisting host boxed in by walls or followers no longer crashes the game
 - game: a save no longer stores habitat formation messages in the player's language
+- game: a save that fails to load returns to the main menu instead of a broken game
 - game: a second new game in one session starts its log at turn 0
 - game: an old save's never-visited city area is built at full size
 - game: an organ gives its strength, energy or health bonus only once it is grown

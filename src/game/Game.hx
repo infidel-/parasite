@@ -891,6 +891,7 @@ class Game extends _SaveObject
           // only on a load that actually restored a game graph — see Loader.load's return
           if (Loader.load(this, slotID))
             applyLoaded();
+          else backToMenu();
           return;
         }
 
@@ -927,19 +928,30 @@ class Game extends _SaveObject
             if (!yes)
               {
                 // a cancelled boot load has no world to return to: the caller already closed
-                // the menu, so reopen it after YesNo's dismiss() has closed this dialog
+                // the menu
                 if (!self.isStarted)
-                  js.Browser.window.setTimeout(function() {
-                    self.ui.canvas.style.visibility = 'hidden';
-                    self.ui.state = UISTATE_MAINMENU;
-                  }, 0);
+                  self.backToMenu();
                 return;
               }
             if (Loader.load(self, slotID))
               self.applyLoaded();
+            else self.backToMenu();
           }
         }
       });
+    }
+
+// back to the main menu as a game not started: after a cancelled boot load, and after a failed load,
+// which has already wiped the game (Loader.load calls restartPre first) so the next HUD update would
+// read the missing area. the menu opens a tick later, after a YesNo's dismiss() has closed its dialog
+  function backToMenu()
+    {
+      isStarted = false;
+      var self = this;
+      js.Browser.window.setTimeout(function() {
+        self.ui.canvas.style.visibility = 'hidden';
+        self.ui.state = UISTATE_MAINMENU;
+      }, 0);
     }
 
 // post-load HUD refresh shared by both sync and deferred load paths

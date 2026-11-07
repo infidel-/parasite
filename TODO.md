@@ -39,10 +39,3 @@ Known open work, deferred on purpose. Remove an entry when it is done.
 
 Each entry has the replay command; see `tests/README.md`. The harness works around these so the
 suites stay green, and says so at the workaround.
-
-- **A failed load leaves a half-wiped game running.** Loading a save whose mod classes are missing
-  (four fixtures need the pickpocket mod's `BurglarKingAI`) answers "Load anyway?" with an
-  exception, then the game carries on with `game.area == null` and the HUD throws on the next
-  update. `Game.save` already guards against saving over a slot from that state. Replay: move
-  `parasite/dev/pickpocket` aside, then
-  `make test args="--run fuzz:save/military-base-t155-v1.0.2.json.gz:1:200"`.
