@@ -14,7 +14,8 @@ Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|tim
 (a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
 `_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
-`SCENARIO_ALIEN_FIND_SHIP`, quick `GOAL_TRAVEL_EVENT`) and `--reach GOAL=N,...`, `--save-at GOAL`
+`SCENARIO_ALIEN_FIND_SHIP`, quick `GOAL_TRAVEL_EVENT`) and `--reach GOAL=N,...` (`kind:GOAL=N`
+counts that kind's runs alone, as `timeline:PROGRESS_TIMELINE=1`), `--save-at GOAL`
 (write the game the moment a goal run reaches that goal, to `tests/out/`, the makings of a fixture). Add `--full` to print a known failure's whole report, `--stop N` to
 write the state before step N as a save, and `--trace` to keep the game's own console output.
 
@@ -206,7 +207,7 @@ base, the rival base, cult8):
 | `endgame` | `s3` and `s31` × seeds (soak only) | the goal policy to the end of the game; fails when no run reaches FINISH (`--reach FINISH=1`) |
 | `cult` | the console cult × seeds, the cult fixtures × 3 (soak only) | the cult policy; fails when no run sees a profane ordeal over (`--reach PROFANE_DONE=1`) |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
-| `timeline` | the `habitat-computer` fixture × seeds, as is and with event 11 learned by console (soak only) | the GOAL policy on from USE_COMPUTER, to PROGRESS_TIMELINE and FIND_SHIP: tallied apart (`timeline`, `timeline+11`), no gate |
+| `timeline` | the `habitat-computer` fixture × seeds, as is and with event 11 learned by console (soak only) | the GOAL policy on from USE_COMPUTER, to PROGRESS_TIMELINE and FIND_SHIP, tallied apart (`timeline`, `timeline+11`); fails when no plain run completes event 11's note (`--reach timeline:PROGRESS_TIMELINE=1`; measured 3 of 20). The event-11 runs have no gate: one of 20 finds the ship |
 
 **Seeds vary the setup:**
 - the difficulty is `1 + seed % 3`;
@@ -215,7 +216,8 @@ base, the rival base, cult8):
   defaults them on.
 
 **The slowest step** of each run is printed, and the soak lists its five worst (`[test] slow
-step`). It is a report, not a gate; today's worst is ~0.7 s, the first entry into an area on an
+step`). A step over 1.5 s fails the run set (`[test] TOO SLOW`, `SLOW_MS` in `tools/test.mjs`),
+about three times the worst measured: 450-570 ms (2026-11-07), the first entry into an area on an
 old save, which generates it.
 
 testmod's `bad*` ids are rejected on purpose, so the runner does not count those rejects as alerts.

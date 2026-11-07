@@ -136,18 +136,27 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   if (!args.includes('--quick'))
     for (const x of slow.sort((a, b) => b.ms - a.ms).slice(0, 5))
       console.log('[test] slow step ' + x.ms + ' ms: ' + x.line);
+  // no bot step may take longer than SLOW_MS: about three times the worst measured (2026-11-07, 450 ms,
+  // the first entry into an old save's city area, which migrates its grid)
+  const SLOW_MS = 1500;
+  const tooSlow = slow.filter((x) => x.ms > SLOW_MS);
+  for (const x of tooSlow)
+    console.log('[test] TOO SLOW: step ' + x.ms + ' ms > ' + SLOW_MS + ': ' + x.line);
   const secs = ((Date.now() - t0) / 1000).toFixed(1);
   console.log('[test] ' + ids.length + ' runs, ' + failed + ' failed, ' + known + ' known (' + secs + ' s)' +
     (known > 0 ? ' — known failures are filed in tests/known.json' : ''));
   // a goal suite passes when enough runs reach each gated milestone, not all of them: --reach
   // GOAL=N,... is the minimum number of runs per milestone (GOAL_ / SCENARIO_ALIEN_ dropped). The
   // defaults are one run each, under what the bots measured (2026-11-07; the quick cut's 5 seeds:
-  // TRAVEL_EVENT 2; the soak's 40: LEARN_NPC 11, CREATE_HABITAT 12, USE_COMPUTER 8; the endgame's
-  // 40: FINISH 5): low enough for the bots' own deaths, high enough that a broken step in the chain,
-  // which nothing gets past, fails. Raise them as the bots improve
+  // TRAVEL_EVENT 2; the soak's 40: LEARN_NPC 9, CREATE_HABITAT 16, USE_COMPUTER 6; the timeline's
+  // 20: PROGRESS_TIMELINE 3; the endgame's 40: FINISH 5): low enough for the bots' own deaths, high
+  // enough that a broken step in the chain, which nothing gets past, fails. Raise them as the bots
+  // improve. `kind:GOAL=N` counts that kind's runs alone (the tutorial's chain has PROGRESS_TIMELINE
+  // too, and the timeline+11 runs are given it)
   const ri = args.indexOf('--reach');
   const spec = (ri >= 0 ? args[ri + 1] :
-    (args.includes('--quick') ? 'TRAVEL_EVENT=1' : 'LEARN_NPC=1,CREATE_HABITAT=1,USE_COMPUTER=1,FINISH=1,PROFANE_DONE=1'));
+    (args.includes('--quick') ? 'TRAVEL_EVENT=1' :
+      'LEARN_NPC=1,CREATE_HABITAT=1,USE_COMPUTER=1,timeline:PROGRESS_TIMELINE=1,FINISH=1,PROFANE_DONE=1'));
   const shortName = (g) => g.replace(/^GOAL_|^SCENARIO_ALIEN_/, '');
   for (const [kind, t] of tally) {
     // the milestone table is the soak's; every build's quick cut prints only the verdict
@@ -162,18 +171,19 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   // each gate counts the runs of the kind whose chain has that milestone; a gate no kind in this
   // suite has is skipped (a --suite or --start that leaves its kind out)
   const short = [];
-  for (const [g, n] of spec.split(',').filter((x) => x.length > 0).map((x) => x.split('='))) {
-    const t = [...tally.values()].find((x) => x.milestones.some((m) => shortName(m) == g));
+  for (const [name, n] of spec.split(',').filter((x) => x.length > 0).map((x) => x.split('='))) {
+    const [k, g] = (name.includes(':') ? name.split(':') : [null, name]);
+    const t = (k != null ? tally.get(k) : [...tally.values()].find((x) => x.milestones.some((m) => shortName(m) == g)));
     if (t == null)
       continue;
     const got = [...t.reachedBy.entries()].filter(([m]) => shortName(m) == g).reduce((a, [, v]) => a + v.length, 0);
     if (got < +n)
-      short.push(g + ' ' + got + ' < ' + n);
+      short.push(name + ' ' + got + ' < ' + n);
   }
   const low = short.length > 0;
   if (tally.size > 0)
     console.log('[test] gates ' + spec + (low ? ' — TOO FEW: ' + short.join(', ') : ' met'));
-  process.exit(failed > 0 || low ? 1 : 0);
+  process.exit(failed > 0 || low || tooSlow.length > 0 ? 1 : 0);
 }
 
 // the report goes out through __out; the game's own console chatter (debug dumps, [mods] lines) is
