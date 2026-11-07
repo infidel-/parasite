@@ -98,9 +98,11 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   const tally = new Map();
   for (let i = 0; i < ids.length; i++) {
     const r = results[i];
-    const kind = ids[i].split(':')[0];
+    // a timeline run that learned event 11 by console is tallied apart: its PROGRESS_TIMELINE is given
+    const kind = ids[i].split(':')[0] + (ids[i].includes('+learn_event_11') ? '+11' : '');
     if (kind == 'tutorial' ||
         kind == 'timeline' ||
+        kind == 'timeline+11' ||
         kind == 'endgame' ||
         kind == 'cult') {
       if (!tally.has(kind))

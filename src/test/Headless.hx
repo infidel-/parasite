@@ -245,13 +245,15 @@ class Headless
           ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'SCENARIO_ALIEN_FIND_SHIP') + ':' + (seed0 + i) + ':' +
             (quick ? 2000 : 4000));
       // the goal policy on from the computer goal (the habitat-computer fixture), to the event before
-      // the start one learned and the ship found: the tutorial's seeds mostly die before it
+      // the start one learned and the ship found: the tutorial's seeds mostly die before it. each
+      // fixture also runs with that event learned by console, so the chain past it runs at all
       if (!quick &&
           (all ||
            suite == 'timeline'))
         for (st in (start != null ? start.split(',') : [ for (f in saves) if (f.indexOf('habitat-computer') > 0) f ]))
-          for (i in 0...count)
-            ids.push('timeline:' + st + ':' + (seed0 + i) + ':3000');
+          for (v in (start != null ? [ st ] : [ st, st + '+learn_event_11' ]))
+            for (i in 0...count)
+              ids.push('timeline:' + v + ':' + (seed0 + i) + ':3000');
       // the goal policy from the ship found (s3) and ready to start (s31) to the end of the game
       if (!quick &&
           (all ||

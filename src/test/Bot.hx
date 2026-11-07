@@ -1266,6 +1266,17 @@ class Bot
       if (!game.goals.completed(GOAL_USE_COMPUTER) ||
           !wantsClues())
         return null;
+      // the earliest event placed: an armed NPC is hunted only when it leads past it, where it is the
+      // only way on (events 10-8 are agents alone, 10 with no place to read papers in)
+      var first = 99;
+      for (e in game.timeline)
+        if (!e.isHidden &&
+            e.locationKnown &&
+            e.location != null)
+          {
+            first = e.index;
+            break;
+          }
       for (e in game.timeline)
         if (!e.isHidden)
           for (n in e.npc)
@@ -1274,7 +1285,8 @@ class Bot
                 !n.isDead &&
                 !n.memoryKnown &&
                 !n.noEventClues &&
-                ARMED_NPC.indexOf(n.type) < 0)
+                (e.index < first ||
+                 ARMED_NPC.indexOf(n.type) < 0))
               return n;
       return null;
     }
