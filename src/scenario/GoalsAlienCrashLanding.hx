@@ -74,8 +74,11 @@ class GoalsAlienCrashLanding
   public static var eventObjectActionsFuncs: _EventObjectActionsFuncs = [
     'spaceshipStudySlot' => function (game, player)
       {
-        var inventory = player.host.inventory;
         var list: Array<_PlayerAction> = [];
+        // a bare parasite carries no parts
+        if (player.host == null)
+          return list;
+        var inventory = player.host.inventory;
         for (item in inventory.iterator())
           if (item.id == 'shipPart')
             list.push({

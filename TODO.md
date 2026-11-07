@@ -47,13 +47,6 @@ suites stay green, and says so at the workaround.
   `._maxID` likewise carry on across a restart (`restartPre` resets only Region and Cult), which is
   harmless in play. Workaround: `test.Headless.newGame` zeroes them. Fix: move `turns = 0` above the
   first `log`, and reset the counters in `restartPre` if seed-for-seed replay inside the GUI matters.
-- **Spaceship slot actions read a host the parasite does not have.** A bare parasite on a spaceship
-  slot tile makes `EventObject.updateActionList` call `spaceshipStudySlot`
-  (`src/scenario/GoalsAlienCrashLanding.hx:77`), which reads `player.host.inventory`; every HUD
-  update then throws. 8 of 480 fuzz runs, all from the s3/s31 presets. Replay:
-  `make test args="--run fuzz:s3:11:1000 --full"` (step 24). Confirmed in the GUI: the run's
-  failure save (`--stop 24`, gunzipped over a slot) throws the same way on its first HUD update. Fix:
-  return no actions when `player.host == null`. Filed in `tests/known.json`.
 - **Prostitutes and blackops spawn with stale derived stats, and a load changes them.**
   `ProstituteAI` and `BlackopsAI` set their base attributes in the constructor AFTER `init()` has
   run `derivedStats()`, and never recompute: the AI plays on HumanAI's generic roll
