@@ -732,6 +732,10 @@ class Bot
         return find(list, canEnter(pr.currentArea) ? 'enterArea' : 'skipTurn');
       if (target == pr.currentArea)
         return find(list, 'enterArea');
+      // a bare parasite too weak for a region step (PlayerRegion.moveAction) tries the area it is over
+      if (p.state == PLR_STATE_PARASITE &&
+          p.energy < p.vars.regionEnergyPerTurn)
+        return find(list, canEnter(pr.currentArea) ? 'enterArea' : 'skipTurn');
       var x = target.x;
       var y = target.y;
       return {
