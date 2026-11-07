@@ -79,7 +79,10 @@ write the state before step N as a save, and `--trace` to keep the game's own co
     event back at a time, and the events before it often share the place (event 12, the parasite's
     removal, and 11, the alien's study, both happen in the same lab). There it reads the papers, and
     when none is about it walks to the area's clue spots, since a lab lays new papers only on spots
-    on screen and out of sight. It searches with the computer again while someone known is left to
+    on screen and out of sight. Papers and clue spots are desk and bench cells nobody stands on, so
+    it walks beside them (a walk onto one fails, and until 2026-11-07 every one did: the bot only
+    ever read papers lying on the floor), and it picks spots no AI within five cells can see, as
+    each turn in view there grows that AI's alertness. It searches with the computer again while someone known is left to
     research, and hunts an event NPC the search placed, unless the NPC belongs to a later event. A
     gun (agents, soldiers, police) rules an NPC out too while the earliest placed event can still be
     worked: every NPC of the start event is an agent, and a bare parasite attaching to one was shot
@@ -100,12 +103,12 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   | ENTER_SEWERS | 20/40 | 83 / 115 / 171 |
   | TRAVEL_EVENT | 20/40 | 91 / 128 / 173 |
   | LEARN_CLUE | 13/40 | 109 / 185 / 281 |
-  | LEARN_NPC | 9/40 | 109 / 287 / 430 |
+  | LEARN_NPC | 9/40 | 109 / 251 / 430 |
   | EVOLVE_ORGAN | 22/40 | 47 / 92 / 136 |
   | GROW_ORGAN | 19/40 | 80 / 119 / 250 |
   | EVOLVE_MICROHABITAT | 16/40 | 85 / 147 / 270 |
   | CREATE_HABITAT | 16/40 | 85 / 150 / 274 |
-  | USE_COMPUTER | 6/40 | 128 / 328 / 354 |
+  | USE_COMPUTER | 6/40 | 128 / 293 / 354 |
   | PROGRESS_TIMELINE, FIND_SHIP | 0/40 | |
 
   Most of the losses are deaths before LEARN_SOCIETY: until then a city cannot be left (the sewer
@@ -118,12 +121,17 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   the same policy on from USE_COMPUTER, so their seeds skip the early deaths. Each seed runs twice:
   as is, and with `+learn_event_11` (the console learns event 11 whole), so the chain past the lab
   runs even when the lab ends the run; the soak tallies the two apart (`timeline+11`). Measured on 30
-  seeds each (2026-11-07): one plain run found the ship (turn 607) without ever completing event
-  11's note, through the agents of events 10-8; one run with event 11 learned found it too (turn
-  1106). None of the plain runs completed event 11's note (PROGRESS_TIMELINE): a paper about it
-  gives a clue towards its note about one time in five and the whole note one in thirty, so a run
-  needs 10-20 of them, and the lab's guards end nearly every run first, often called by a body the
-  bot left. Surviving the lab is the open step.
+  seeds each (2026-11-07): 7 plain runs completed event 11's note (PROGRESS_TIMELINE, turns
+  337-751), and one run of each kind found the ship, through the agents of events 10-8. Before the
+  bot walked beside desk papers, none completed the note: a paper about event 11 gives a clue
+  towards its note about one time in five and the whole note one in thirty, so a run needs 10-20 of
+  them. The lab's guards still end nearly every run, often after killing the host first.
+
+  **Tried in the lab and measured no better** (30 seeds each, against 7 PROGRESS_TIMELINE and runs
+  ending at a median turn 487 / 454):
+  - stepping to the neighbour cell seen by the fewest alert AIs: 6, 453 / 400, and two runs stuck;
+  - a bare parasite taking only a human no other AI watches: 5, 480 / 405 (longer walks starve it);
+  - changing hosts at energy 30 instead of 20: 7, no change.
 
 **The endgame** (`endgame:<start>:<seed>:<steps>`, from `s3` and `s31`) plays on from the ship found
 to the end of the game:

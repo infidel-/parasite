@@ -593,18 +593,29 @@ class Bot
           var o = first(list, [ 'get', 'pickupMenu', 'learnObject' ]);
           if (o != null)
             return o;
+          // a paper on a desk is picked up from beside it (Document.canActivateNear): nobody stands
+          // on a desk, so a walk onto it fails
           if (host.inventory.length() < host.maxItems)
             for (doc in game.area.getObjects())
               if (doc.type == 'document' &&
                   doc.item.id == 'paper')
-                return walk(doc.x, doc.y);
+                {
+                  var o = (game.area.isWalkable(doc.x, doc.y) ? walk(doc.x, doc.y) : walkNear(doc.x, doc.y));
+                  if (o != null)
+                    return o;
+                }
           // no paper about: off to a clue spot, as a lab or base lays new ones only on spots on
           // screen and out of sight (AreaGame.turnSpawnClues), and a bot standing still got none
-          var pts = game.area.clueSpawnPoints;
+          var pts = [ for (pt in game.area.clueSpawnPoints) if (guardFree(pt.x, pt.y)) pt ];
+          if (pts.length == 0)
+            pts = game.area.clueSpawnPoints;
           if (pts.length > 0)
             {
+              // clue spots are desk and bench cells too
               var pt = pts[gen.Rng.int(rng, pts.length)];
-              return walk(pt.x, pt.y);
+              var o = walkNear(pt.x, pt.y);
+              if (o != null)
+                return o;
             }
         }
       // a probe takes health off the host: stop while it can still carry the parasite to the next one.
@@ -1364,6 +1375,19 @@ class Bot
             walkFailed = true;
         },
       };
+    }
+
+// a cell no AI within five cells can see: past five an idle AI does not grow alert at the sight of an
+// unarmed host (DefaultLogic.playerVisibility), within it each turn adds up to 15, and an alerted
+// scientist calls the guards in
+  function guardFree(x: Int, y: Int): Bool
+    {
+      for (ai in @:privateAccess game.area._ai)
+        if (ai != game.player.host &&
+            Math.max(Math.abs(ai.x - x), Math.abs(ai.y - y)) <= 5 &&
+            ai.seesPosition(x, y))
+          return false;
+      return true;
     }
 
 // the nearest living, unarmed AI to the player that is not its host; only humans when asked, and

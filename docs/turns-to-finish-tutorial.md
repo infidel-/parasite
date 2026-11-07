@@ -13,12 +13,12 @@ into the timeline and the habitat branch:
 | `GOAL_ENTER_SEWERS` | 20/40 | 83 / 115 / 171 |
 | `GOAL_TRAVEL_EVENT` (the remembered event area) | 20/40 | 91 / 128 / 173 |
 | `GOAL_LEARN_CLUE` | 13/40 | 109 / 185 / 281 |
-| `GOAL_LEARN_NPC` | 9/40 | 109 / 287 / 430 |
+| `GOAL_LEARN_NPC` | 9/40 | 109 / 251 / 430 |
 | `GOAL_EVOLVE_ORGAN` | 22/40 | 47 / 92 / 136 |
 | `GOAL_GROW_ORGAN` | 19/40 | 80 / 119 / 250 |
 | `GOAL_EVOLVE_MICROHABITAT` | 16/40 | 85 / 147 / 270 |
 | `GOAL_CREATE_HABITAT` | 16/40 | 85 / 150 / 274 |
-| `GOAL_USE_COMPUTER` | 6/40 | 128 / 328 / 354 |
+| `GOAL_USE_COMPUTER` | 6/40 | 128 / 293 / 354 |
 | `GOAL_PROGRESS_TIMELINE` | 0/40 | |
 | `SCENARIO_ALIEN_FIND_SHIP` | 0/40 | |
 
@@ -30,8 +30,8 @@ numbers as an upper bound for a cautious player, not the minimum. The estimate b
 assumes fewer host changes than LEARN_SOCIETY took the bot. Past USE_COMPUTER none got a note of
 event 11 (PROGRESS_TIMELINE). Clues only lead one event back at a time: the bot goes to the lab that
 holds events 12 and 11 and reads its papers, but its guards end the run first. Started at that
-point from a fixture, 1 of 30 seeds found the ship all the same, through the agents of events 10-8
-(`tests/README.md`, the timeline runs).
+point from a fixture, 7 of 30 seeds completed event 11's note, and 1 found the ship, through the
+agents of events 10-8 (`tests/README.md`, the timeline runs).
 
 ## Summary (estimated)
 
