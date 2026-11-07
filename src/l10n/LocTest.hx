@@ -50,7 +50,14 @@ class LocTest
       }), 'The agent stuns Ann for 1 round.');
       eq(Loc.fmt('You pick {i:the} up.', { i: Loc.thing('keycard') }), 'You pick the keycard up.');
       eq(Loc.fmt('{oops', { oops: 1 }), '{oops');
+      // an alien ship part name: the article follows the bare noun, the span stays as written
+      eq(Loc.fmt('You see {i:a}.', { i: noun('<span class=alien1>engine core</span>', 'n') }),
+        'You see an <span class=alien1>engine core</span>.');
       eq(Loc.names('{a:The} {n, plural, one{# {b}} other{#}} {a}').join(','), 'a,n,b');
+      // a damaged lang file boots in English
+      Loc.init('fr', '{"strings": {');
+      eq(Loc.lang(), 'en');
+      eq(Loc.tr('Hello.'), 'Hello.');
     }
 
 // French: table lookup, elision, articles, feminine variants, de/à contractions, names, plural
@@ -69,8 +76,11 @@ class LocTest
           'police officer': { g: 'm', s: 'policier', fs: 'policière' },
           'secretary': { g: 'f', s: 'secrétaire' },
           'hero': { g: 'm', s: 'héros', elide: false },
+          'power battery': { g: 'f', s: 'batterie' },
         },
       }));
+      eq(Loc.fmt(Loc.tr('{s:The} hesitates.'), { s: noun('<span class=alien1>power battery</span>', 'n') }),
+        'La <span class=alien1>power battery</span> hésite.');
       eq(Loc.tr('Hello.'), 'Bonjour.');
       eq(Loc.fmt(Loc.tr('{s:The} hesitates.'), { s: noun('soldier', 'm') }), 'Le soldat hésite.');
       eq(Loc.fmt('{s:def}|{s:indef}|{s:de}|{s:a}', { s: noun('soldier', 'm') }),

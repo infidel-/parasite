@@ -6,6 +6,7 @@
 - console: `bot` lets a test bot play the game (debug build)
 
 ### Fixes
+- boot: a damaged language file starts the game in English instead of not at all
 - cult: an Elevate the faithful that fails on its target's death no longer names it "null"
 - game: a host whose attributes drop no longer keeps energy above its new maximum
 - game: a load no longer lets a new ovum or mission NPC take an id already in use
@@ -14,6 +15,7 @@
 - game: a save no longer stores habitat formation messages in the player's language
 - game: an organ gives its strength, energy or health bonus only once it is grown
 - mods: a mod weapon missing some of its attack texts no longer crashes the attack
+- ui: alien ship part names take the right article in log lines
 
 ## 1.1
 

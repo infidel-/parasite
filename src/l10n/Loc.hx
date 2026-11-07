@@ -176,8 +176,20 @@ class Loc
       file = null;
       if (json != null)
         {
-          file = parseFile(json);
-          addFile(file);
+          // a damaged lang file (interrupted update, hand edit) boots in English instead of not at all
+          try
+            {
+              file = parseFile(json);
+              addFile(file);
+            }
+          catch (e: haxe.Exception)
+            {
+              trace('lang ' + langCode + ' unreadable, English used: ' + e.message);
+              code = 'en';
+              file = null;
+              table = new Map();
+              nouns = new Map();
+            }
         }
     }
 
@@ -315,9 +327,32 @@ class Loc
       return null;
     }
 
+// the bare noun of a key wrapped in one tag (an alien ship part name), else n itself
+  static function untagged(n: _LocNoun): _LocNoun
+    {
+      var tagged = ~/^<[^>]+>([^<]*)<\/[^>]+>$/;
+      if (n.kind != LOC_NOUN ||
+          !tagged.match(n.key))
+        return n;
+      return {
+        key: tagged.matched(1),
+        kind: n.kind,
+        gender: n.gender,
+      };
+    }
+
 // a noun in the requested form; a capitalised form name capitalises the result
   static function nounForm(n: _LocNoun, form: String): String
     {
+      // a tagged key takes the article of its bare noun and stays as written itself
+      var bare = untagged(n);
+      if (bare != n)
+        {
+          var s = nounForm(bare, form);
+          var w = nounForm(bare, '');
+          return (StringTools.endsWith(s.toLowerCase(), w.toLowerCase()) ?
+            s.substr(0, s.length - w.length) : '') + n.key;
+        }
       var f = form.toLowerCase();
       // {x:the} is a form of no other language: the template is untranslated English (a string
       // newer than the table, a mod without a lang file), so it reads as English, nouns included
@@ -400,6 +435,7 @@ class Loc
 // grammatical gender for select: the noun table's in a gendered language, else the natural one
   static function genderOf(n: _LocNoun): String
     {
+      n = untagged(n);
       if (n.kind != LOC_NOUN ||
           code == 'en' ||
           code == 'pseudo' ||
