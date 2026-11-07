@@ -77,6 +77,7 @@ class BlackopsAI extends HumanAI
       constitution = 4 + bonusStat + Std.random(6 - bonusStat);
       intellect = 4 + bonusStat + Std.random(6 - bonusStat);
       psyche = 4 + bonusStat + Std.random(6 - bonusStat);
+      derivedStats();
 
       // senior teams carry the parasite case file
       if (game.group.team != null &&

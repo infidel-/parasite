@@ -15,6 +15,7 @@
 - game: a resisting host boxed in by walls or followers no longer crashes the game
 - game: a save no longer stores habitat formation messages in the player's language
 - game: an organ gives its strength, energy or health bonus only once it is grown
+- game: sex workers and blackops agents spawn with their own stats, not ones a load later changes
 - game: stepping off a host into a wall no longer crashes the next action
 - game: the corp mission target can be placed in any office, not only the left part of the area
 - mods: a mod weapon missing some of its attack texts no longer crashes the attack

@@ -1,19 +1,6 @@
 [
   {
     "match": [
-      "_ai[]._strength (",
-      "_ai[]._constitution (",
-      "_ai[]._intellect (",
-      "_ai[]._psyche (",
-      "_ai[].maxHealth (",
-      "_ai[].health (",
-      "_ai[].maxEnergy (",
-      "_ai[].energy ("
-    ],
-    "todo": "TODO.md: prostitutes and blackops spawn with stale derived stats"
-  },
-  {
-    "match": [
       "_list.N._list.N.width (",
       "_list.N._list.N.tiles.length (",
       "_list.N._list.N._cells ("

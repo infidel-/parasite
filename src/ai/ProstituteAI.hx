@@ -16,6 +16,7 @@ class ProstituteAI extends HumanAI
       constitution = 3 + Std.random(3);
       intellect = 4 + Std.random(3);
       psyche = 4 + Std.random(3);
+      derivedStats();
       // enforce drug addict trait chance for prostitutes
       if (Std.random(100) < 20)
         addTrait(TRAIT_DRUG_ADDICT);

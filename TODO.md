@@ -47,13 +47,6 @@ suites stay green, and says so at the workaround.
   `._maxID` likewise carry on across a restart (`restartPre` resets only Region and Cult), which is
   harmless in play. Workaround: `test.Headless.newGame` zeroes them. Fix: move `turns = 0` above the
   first `log`, and reset the counters in `restartPre` if seed-for-seed replay inside the GUI matters.
-- **Prostitutes and blackops spawn with stale derived stats, and a load changes them.**
-  `ProstituteAI` and `BlackopsAI` set their base attributes in the constructor AFTER `init()` has
-  run `derivedStats()`, and never recompute: the AI plays on HumanAI's generic roll
-  (`_strength`/`maxHealth`/`maxEnergy`), and the next load's `recalc()` silently swaps in the
-  archetype's real stats (a prostitute 7/5/6 → 4/4/4, a blackops 4/5/6 → 9/8/8). `BumAI` and
-  `ThugAI` call `derivedStats()` after theirs. Replay: `make test args="--run roundtrip:new:1:50"`,
-  `--run roundtrip:s12:1:50` (blackops). Fix: `derivedStats()` after the attribute lines in both.
 - **An old save's unvisited city area is generated at its old shrunk size.**
   `AreaGame.migrateCityGrid` (`src/game/AreaGame.hx:330`) grows only areas that were already
   generated, and `generate()` (`:947`) re-sizes old military bases, labs and caves but not cities.
