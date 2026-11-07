@@ -202,20 +202,25 @@ the invariants below after every bot step. See [`tests/README.md`](../tests/READ
 
 ### AI death
 
-| listener | H1 `AI.die` (area, via `PlayerArea.onHostDeath` for the host) | H2 `AI.dieRegion` (region host: expiry, degradation) | H3 `Ovum.nurtureOvumAction` (→ H2) | H6 `Habitat.putObject` (host grown into an organ) |
+One listener list: **`AI.notifyDeath`** (the AI's `onDeath()` hook, `npc.isDead`, the area mission's
+`ON_AI_DEATH`, mod `ai:die` in an area / `ai:die-region` on the region map). Every death path calls
+it, so a new death listener goes there and reaches them all. The cult and custodes records are
+synced on removal (`AreaGame.removeAI`); the region path has no removal and syncs the cult itself.
+
+| step | H1 `AI.die` (area, via `PlayerArea.onHostDeath` for the host) | H2 `AI.dieRegion` (region host: expiry, degradation) | H3 `Ovum.nurtureOvumAction` (→ H2) | H6 `Habitat.putObject` (host grown into an organ) |
 |---|---|---|---|---|
 | `Player.onHostDeath` (affinity, tutorial goals, pedia) | ✓ host | ✓ | ✗ SAFE: voluntary sacrifice, matches H6 | ✗ same |
 | `Cult.onDeath` → `Ordeals.onDeath` | via `AreaGame.removeAI` → `Cult.onRemoveAI` | ✓ direct | ✓ | via `removeAI` |
 | custos `CultBase.onRemoveAI` | via `removeAI` | ✗ SAFE: `BaseCustosAI.canAttach` is false | ✗ same | n/a |
-| `onDeath()` hook (team member → `Group.onTeamMemberDeath`, agent → director, blackops → `Team.checkFightFinish`) | ✓ | ✓ | ✓ | ✗ **GAP G6** |
-| `npc.isDead` | ✓ | ✓ | ✓ | ✗ **GAP G6**: the NPC respawns |
-| mission `onEventAI(ON_AI_DEATH)` | ✓ current area | ✗ SAFE: a mission area can't be left | ✗ same | ✗ **GAP G6** |
-| mod AI_DIE_PRE / AI_DIE | ✓ | ✗ **GAP** (TODO.md, Mods) | ✗ same | ✗ **GAP G6** |
+| `AI.notifyDeath` | ✓ | ✓ | ✓ | ✓ (G6, fixed) |
+| ↳ mission `ON_AI_DEATH` | ✓ current area | ✗ SAFE: a mission area can't be left | ✗ same | ✓ |
+| mod `ai:die-pre` (live entity, attacker) | ✓ | ✗ no entity | ✗ same | ✗ no corpse |
 | body, targeting clear, enemies purge | ✓ | n/a | n/a | via `removeAI` (no body: the organ replaces it) |
 
 H4 (`AI.onDamage` host branch) and H5 (`PlayerArea.onDamageHost`) run `AI.die` and match H1.
 `Player.death` in host state (only `habitatShock`) keeps the host through the rebirth (PLAUSIBLE
-P6: in a Kill mission area that carries the target out without ON_AI_DEATH).
+P6: in a Kill mission area that carries the target out without ON_AI_DEATH). Scenarios:
+`ovum-leader`, `ovum-member`, `expiry-member`, `organ-npc`.
 
 ### AI despawn (removed alive)
 

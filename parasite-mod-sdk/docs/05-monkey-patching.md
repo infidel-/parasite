@@ -171,6 +171,7 @@ These events ship currently:
 | `onAISpawn`    | `ai:spawn`   | when an AI actor is added to an area                          | `ModAIEvent { ai: AI, area: AreaGame }` |
 | `onAIDiePre`   | `ai:die-pre` | inside `AI.die()` after dead state is set but **before** `AreaGame.removeAI` nulls `ai.entity`. carries the live entity ref + attacker (null for non-combat deaths) | `ModAIDiePreEvent { ai: AI, area: AreaGame, entity: AIEntity, attacker: Null<Attacker> }` |
 | `onAIDie`      | `ai:die`     | when an AI dies in the current area (post `onDeath()` hook); area-mode only. `ai.entity` is already `null` here | `ModAIEvent { ai: AI, area: AreaGame }` |
+| `onAIDieRegion` | `ai:die-region` | when the player's host dies on the region map (fed to the ovum, expired, degraded), post `onDeath()` hook. No area, no entity; with `ai:die` it covers every death | `ModAIRegionEvent { ai: AI }` |
 | `onItemLearn`  | `item:learn` | after the player learns about an item (post `info.onLearn()`, id added to known items) | `ModItemLearnEvent { item: _Item }` |
 | `onGameFinishPre` | `game:finish-pre` | inside `Game.finish()` after the engine builds the default finish text, before the UI window is shown. **mutable payload** — handlers may overwrite `e.text` / `e.img` / `e.filter` to override the game-over screen. `filter` grades the image (`'lose'` \| `'alien'` \| `'cult'`); `null` is **not** ungraded, it falls back to the `'lose'` grade, so a mod swapping in its own win image must set it or the image renders like a death screen | `ModGameFinishPreEvent { result: String, text: String, img: String, filter: String }` |
 
@@ -194,6 +195,10 @@ Notes:
   the engine cleans it up. Use it when you need to read or snapshot visual
   state at the moment of death; use `ai:die` for plain bookkeeping (kill
   counters, journal updates) where you don't need the entity.
+- **Every death fires `ai:die` or `ai:die-region`, once.** `ai:die` also
+  fires for a host grown into a habitat organ, which has no `ai:die-pre`
+  (there is no corpse). A host dying on the region map fires `ai:die-region`
+  only.
 
 Full field docs live in the extern: `externs/mods/ModEvents.hx`.
 

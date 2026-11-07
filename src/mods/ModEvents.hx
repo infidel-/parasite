@@ -50,6 +50,12 @@ class ModEvents
   public function onAIDie(handler: ModAIEvent -> Void): Void
     { sub(ModEventRegistry.AI_DIE, cast handler); }
 
+// subscribe to ai:die-region — fires when the player's host dies on the region map (fed to the
+// ovum, expired, degraded), after its own onDeath() hook; there is no area and no entity. ai:die
+// covers every other death, so a mod that counts deaths subscribes to both
+  public function onAIDieRegion(handler: ModAIRegionEvent -> Void): Void
+    { sub(ModEventRegistry.AI_DIE_REGION, cast handler); }
+
 // subscribe to item:learn — fires when the player learns about an item
 // (after info.onLearn() runs and the id is added to known items)
   public function onItemLearn(handler: ModItemLearnEvent -> Void): Void
@@ -108,6 +114,14 @@ typedef ModAIEvent =
   var ai: AI;
   // the area it was added to
   var area: AreaGame;
+}
+
+// payload for ai:die-region
+typedef ModAIRegionEvent =
+{
+  > ModEventBase,
+  // the player's host that died on the region map
+  var ai: AI;
 }
 
 // payload for item:learn

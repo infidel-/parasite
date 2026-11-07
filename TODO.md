@@ -27,18 +27,10 @@ Known open work, deferred on purpose. Remove an entry when it is done.
   members die only on screen, and a rival taken by `RivalBase.onSuccess` is never `destroy()`ed
   (relations.md, cult destruction row). Fix if a trigger appears: guard in `onRemoveAI`.
 
-## Mods
-
-- **`AI_DIE_PRE` / `AI_DIE` do not fire for a host that dies on the region map.** `AI.dieRegion()`
-  (ovum, expiry, degradation) runs the cult record and the `onDeath()` hook like `AI.die()`, but not
-  the mod events: their payload carries `area` and `entity`, and neither exists there. Needs either a
-  region-death event or a payload with both optional.
-
 ## Found by relations mapping
 
 Confirmed by reading the code end to end; each has its cell in `docs/relations.md`.
 
-- **G6** `Habitat.putObject` kills the host without `AI.die`: no `npc.isDead` (the NPC respawns), no `onDeath` hook, no mod event.
 - **G2** A save made on the region map with a host never runs `host.loadPost`: organ growth stops until an organ is picked again.
 - **G3** `Cult.destroy()` during a base defense: the defense id survives, no defense is ever scheduled again, the team stays in TEAM_BASE_DEFENSE.
 - **G4** Custodes count as outsiders in the habitat exit check, so the base habitat can't be left.

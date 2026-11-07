@@ -96,9 +96,11 @@ class Habitat extends _SaveObject
       else if (id == IMP_PRESERVATOR)
         o = new Preservator(game, area.id, ai.x, ai.y, level);
 
-      // remove and kill host
+      // remove and kill host: the organ takes the body's place, so no AI.die and no corpse, but the
+      // same death listeners (its NPC dies, its hook and the mods hear of it)
       game.playerArea.onDetach();
       game.area.removeAI(ai);
+      ai.notifyDeath();
       // the organ grew where the host stood, and some of them are SOLID (AreaObject.isWalkable), so
       // the parasite is left standing inside one and its sprite is hidden by the 3D prop.
       // best-effort ONLY: moveToRandom returns false when every neighbour is solid or occupied, and

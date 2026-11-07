@@ -32,6 +32,10 @@ class Scenarios
       start: 's11',
       run: npcReenter,
     },
+    'organ-npc' => {
+      start: 's22',
+      run: organNPC,
+    },
   ];
 
 // the scenario names in a stable order, for the run ids
@@ -95,6 +99,48 @@ class Scenarios
       if (npc.ai != host)
         return [ 'NPC ' + npc.id + ' lost its link to the host on re-entry' ];
       return [];
+    }
+
+// an NPC host grown into a habitat organ (Habitat.putObject) dies as that NPC: the third death path,
+// which has no AI.die and no corpse
+  static function organNPC(game: Game, bot: Bot): Array<String>
+    {
+      var host = game.player.host;
+      var npc = linkNPC(game, host);
+      if (npc == null)
+        return [ 'no live NPC to tie the host to' ];
+      game.player.evolutionManager.addImprov(IMP_ASSIMILATION, 1);
+      host.organs.action('set.IMP_ASSIMILATION');
+      host.organs.debugCompleteCurrent();
+      // off the biomineral s22 grew where the host stands
+      game.playerArea.moveBy(1, 0);
+      game.updateHUD();
+      if (!bot.pressAction('formAssimilation'))
+        return [ 'no Form assimilation cavity in the habitat' ];
+      if (game.player.state != PLR_STATE_PARASITE)
+        return [ 'the host outlived the organ: player is ' + game.player.state ];
+      if (!npc.isDead)
+        return [ 'NPC ' + npc.id + ' is alive after its body became an organ' ];
+      return [];
+    }
+
+// tie the AI to a live NPC of the start events, as the s11 preset does for its host
+  static function linkNPC(game: Game, ai: ai.AI): scenario.NPC
+    {
+      for (id in [ 'parasiteRemoval', 'parasiteTransportation' ])
+        {
+          var ev = game.timeline.getEvent(id);
+          for (n in ev.npc)
+            if (!n.isDead)
+              {
+                n.ai = ai;
+                ai.eventID = ev.id;
+                ai.npcID = n.id;
+                ai.isNPC = true;
+                return n;
+              }
+        }
+      return null;
     }
 
 // make the host a follower: a generated follower takes the lead (no entry point hands it over)

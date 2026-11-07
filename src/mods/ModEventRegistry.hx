@@ -15,6 +15,7 @@ class ModEventRegistry
   public static inline var AI_SPAWN = 'ai:spawn';
   public static inline var AI_DIE_PRE = 'ai:die-pre';
   public static inline var AI_DIE = 'ai:die';
+  public static inline var AI_DIE_REGION = 'ai:die-region';
   public static inline var ITEM_LEARN = 'item:learn';
   public static inline var GAME_FINISH_PRE = 'game:finish-pre';
 

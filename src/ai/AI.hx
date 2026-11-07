@@ -1031,14 +1031,40 @@ public function show()
           if (aidata != null)
             cult.onDeath(aidata);
         }
-      onDeath(); // event hook
+      notifyDeath();
+    }
 
-      // event stuff
+
+// the death listeners every death path runs (die, dieRegion, Habitat.putObject) once the AI is out
+// of the area or off the region host: its own hook, its NPC, the area mission and the mods. ONE list,
+// so a new listener reaches every path (docs/relations.md, AI death). The cult and custodes records
+// are not here: AreaGame.removeAI syncs them on any removal, and dieRegion does it itself
+  public function notifyDeath()
+    {
+      onDeath(); // event hook
       if (npc != null)
         {
           npc.isDead = true;
           npc.statusKnown = true;
         }
+      if (game.location == LOCATION_AREA)
+        {
+          // mission death handling
+          var mission = game.area.getAreaMission();
+          if (mission != null)
+            mission.onEventAI(ON_AI_DEATH, this);
+          // mod event: AI actor died in this area
+          ModEventRegistry.fire(ModEventRegistry.AI_DIE, {
+            game: game,
+            ai: this,
+            area: game.area,
+          });
+        }
+      // mod event: the player's host died on the region map (ovum, expiry, degradation)
+      else ModEventRegistry.fire(ModEventRegistry.AI_DIE_REGION, {
+        game: game,
+        ai: this,
+      });
     }
 
 
@@ -1082,13 +1108,7 @@ public function show()
       game.scene.view3d.playDeathFade(entity);
       game.area.removeAI(this);
       game.ui.hud.targeting.clearTargetIf(this);
-      onDeath(); // event hook
-      // mod event: AI actor died in this area
-      mods.ModEventRegistry.fire(mods.ModEventRegistry.AI_DIE, {
-        game: game,
-        ai: this,
-        area: game.area,
-      });
+      notifyDeath();
       var o = new BodyObject(game, game.area.id, x, y, type);
       // only flat corpses wear the dead actor's own sprite; upright bodies (choir) keep their
       // dedicated standing dead-body tile from iconByType
@@ -1113,18 +1133,6 @@ public function show()
         witnessReason(attacker.ai) == REASON_NPC_FIGHT);
       o.inventory = inventory; // copy inventory
       game.scene.updateCamera();
-
-      // event stuff
-      if (npc != null)
-        {
-          npc.isDead = true;
-          npc.statusKnown = true;
-        }
-
-      // mission death handling
-      var mission = game.area.getAreaMission();
-      if (mission != null)
-        mission.onEventAI(ON_AI_DEATH, this);
     }
 
 

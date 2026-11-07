@@ -25,6 +25,10 @@ typedef ModEvents = {
   // ai:die — fires when an AI actor dies in the current area (after the AI's
   // own onDeath() hook runs); area-mode only. ai.entity is already null here
   function onAIDie(handler: ModAIEvent -> Void): Void;
+  // ai:die-region — fires when the player's host dies on the region map (fed to
+  // the ovum, expired, degraded), after its own onDeath() hook. There is no area
+  // and no entity; ai:die covers every other death, so count deaths with both
+  function onAIDieRegion(handler: ModAIRegionEvent -> Void): Void;
   // item:learn — fires when the player learns about an item (after the
   // item's info.onLearn() runs and the id is added to known items)
   function onItemLearn(handler: ModItemLearnEvent -> Void): Void;
@@ -65,6 +69,13 @@ typedef ModAIEvent = {
   var ai: ai.AI;
   // the area it was added to
   var area: game.AreaGame;
+}
+
+// payload for ai:die-region
+typedef ModAIRegionEvent = {
+  > ModEventBase,
+  // the player's host that died on the region map
+  var ai: ai.AI;
 }
 
 // payload for item:learn
