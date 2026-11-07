@@ -62,6 +62,11 @@ class Headless
     SCENARIO_ALIEN_MISSION_FAILURE_GO_SPACESHIP,
   ];
   // the chain play() tallies for a goal run: the tutorial's, or the endgame's
+  // the timeline runs' chain: from a game at the computer goal, the rest of MILESTONES
+  static var TIMELINE_MILESTONES: Array<_Goal> = [
+    GOAL_PROGRESS_TIMELINE,
+    SCENARIO_ALIEN_FIND_SHIP,
+  ];
   static var milestones = MILESTONES;
   // the bot policy play() uses when it is not the goal or random one (cult), and what it calls after
   // every step (the cult run's own milestones)
@@ -141,6 +146,12 @@ class Headless
           tutorial(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
           return;
         }
+      else if (parts[0] == 'timeline')
+        {
+          milestones = TIMELINE_MILESTONES;
+          tutorial(id, SCENARIO_ALIEN_FIND_SHIP, Std.parseInt(parts[2]), Std.parseInt(parts[3]), parts[1]);
+          return;
+        }
       else if (parts[0] == 'endgame')
         {
           endgame(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
@@ -187,7 +198,8 @@ class Headless
           suite != 'loc' &&
           suite != 'endgame' &&
           suite != 'cult' &&
-          suite != 'tutorial')
+          suite != 'tutorial' &&
+          suite != 'timeline')
         return null;
       var ids = [];
       if (all ||
@@ -232,6 +244,14 @@ class Headless
         for (i in 0...(quick ? count : 2 * count))
           ids.push('tutorial:' + strArg('--goal', quick ? 'GOAL_TRAVEL_EVENT' : 'SCENARIO_ALIEN_FIND_SHIP') + ':' + (seed0 + i) + ':' +
             (quick ? 2000 : 4000));
+      // the goal policy on from the computer goal (the habitat-computer fixture), to the event before
+      // the start one learned and the ship found: the tutorial's seeds mostly die before it
+      if (!quick &&
+          (all ||
+           suite == 'timeline'))
+        for (st in (start != null ? start.split(',') : [ for (f in saves) if (f.indexOf('habitat-computer') > 0) f ]))
+          for (i in 0...count)
+            ids.push('timeline:' + st + ':' + (seed0 + i) + ':3000');
       // the goal policy from the ship found (s3) and ready to start (s31) to the end of the game
       if (!quick &&
           (all ||
@@ -591,10 +611,10 @@ class Headless
 
 // the goal policy through the tutorial from a new game: it reaches the goal (printing the turns it
 // took, for the runner's tally), stalls (exit EXIT_STALLED with what it was on), or breaks
-  static function tutorial(id: String, goal: _Goal, seed: Int, steps: Int)
+  static function tutorial(id: String, goal: _Goal, seed: Int, steps: Int, ?start: String = 'new')
     {
-      var res = play('new', seed, steps, -1, goal);
-      log('@milestones ' + MILESTONES.join(','));
+      var res = play(start, seed, steps, -1, goal);
+      log('@milestones ' + milestones.join(','));
       for (r in res.reached)
         log('@reach ' + r);
       if (res.failure != null)
@@ -615,7 +635,8 @@ class Headless
         '), current goals: ' + on.join(', ') +
         '\n    replay: make test args="--run ' + id + '"' +
         '\n    last steps: ' + res.trail.join(' | ') +
-        '\n    last log: ' + logTail(8).join(' | '));
+        '\n    last log: ' + logTail(8).join(' | ') +
+        '\n    timeline: ' + timelineState());
       exit(EXIT_STALLED);
     }
 
@@ -921,6 +942,34 @@ class Headless
         {
           return 'none (saving threw: ' + e.message + ')';
         }
+    }
+
+// what the player knows of each event the timeline shows: index:id, L when its location is known,
+// the clue count of every note (* once known), and its NPCs as name/job/area/memory known (nja m)
+  static function timelineState(): String
+    {
+      var out = [];
+      for (e in game.timeline)
+        {
+          if (e.isHidden)
+            continue;
+          var notes = [ for (n in e.notes) (n.isKnown ? '*' : '' + n.clues) ].join('');
+          var npcs = [
+            for (n in e.npc)
+              if (n.nameKnown ||
+                  n.jobKnown)
+                (n.nameKnown ? 'n' : '') + (n.jobKnown ? 'j' : '') + (n.areaKnown ? 'a' : '') +
+                  (n.memoryKnown ? 'm' : '') + (n.isDead ? 'x' : '')
+          ];
+          if (!e.locationKnown &&
+              notes.indexOf('*') < 0 &&
+              ~/^0*$/.match(notes) &&
+              npcs.length == 0)
+            continue;
+          out.push(e.index + ':' + e.id + (e.locationKnown ? ' L' : '') + ' ' + notes +
+            (npcs.length > 0 ? ' [' + npcs.join(' ') + ']' : ''));
+        }
+      return out.join(' | ');
     }
 
 // the last n lines of the game log, tags stripped

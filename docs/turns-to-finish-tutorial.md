@@ -9,16 +9,16 @@ into the timeline and the habitat branch:
 | goal | reached | turns min / median / max |
 |---|---|---|
 | `GOAL_INVADE_HUMAN` | 37/40 | 7 / 16 / 33 |
-| `GOAL_LEARN_SOCIETY` (the end of the tutorial) | 18/40 (45%) | 68 / 93 / 127 |
-| `GOAL_ENTER_SEWERS` | 15/40 | 82 / 111 / 146 |
-| `GOAL_TRAVEL_EVENT` (the remembered event area) | 15/40 | 91 / 117 / 148 |
-| `GOAL_LEARN_CLUE` | 11/40 | 109 / 169 / 241 |
-| `GOAL_LEARN_NPC` | 9/40 | 126 / 172 / 297 |
-| `GOAL_EVOLVE_ORGAN` | 20/40 | 47 / 92 / 136 |
-| `GOAL_GROW_ORGAN` | 14/40 | 80 / 119 / 186 |
-| `GOAL_EVOLVE_MICROHABITAT` | 14/40 | 84 / 136 / 201 |
-| `GOAL_CREATE_HABITAT` | 14/40 | 84 / 143 / 243 |
-| `GOAL_USE_COMPUTER` | 6/40 | 174 / 237 / 279 |
+| `GOAL_LEARN_SOCIETY` (the end of the tutorial) | 18/40 (45%) | 68 / 93 / 169 |
+| `GOAL_ENTER_SEWERS` | 15/40 | 83 / 111 / 171 |
+| `GOAL_TRAVEL_EVENT` (the remembered event area) | 15/40 | 91 / 122 / 173 |
+| `GOAL_LEARN_CLUE` | 11/40 | 109 / 201 / 318 |
+| `GOAL_LEARN_NPC` | 11/40 | 109 / 245 / 412 |
+| `GOAL_EVOLVE_ORGAN` | 19/40 | 47 / 91 / 136 |
+| `GOAL_GROW_ORGAN` | 14/40 | 80 / 137 / 250 |
+| `GOAL_EVOLVE_MICROHABITAT` | 12/40 | 85 / 170 / 270 |
+| `GOAL_CREATE_HABITAT` | 12/40 | 85 / 175 / 274 |
+| `GOAL_USE_COMPUTER` | 8/40 | 128 / 279 / 449 |
 | `GOAL_PROGRESS_TIMELINE` | 0/40 | |
 | `SCENARIO_ALIEN_FIND_SHIP` | 0/40 | |
 
@@ -27,10 +27,11 @@ calm human. It leaves an area at alertness 50, but a city can only be left throu
 which cannot be learned before LEARN_SOCIETY. So most of the seeds it fails on die before that, to
 police called by witnesses. Once in the sewers it nearly always finds the event area. Read these
 numbers as an upper bound for a cautious player, not the minimum. The estimate below (~40 turns)
-assumes fewer host changes than LEARN_SOCIETY took the bot. Past USE_COMPUTER the six that get
-there live on for 300-1000 turns, searching with the computer and hunting the NPC each search
-names, but none got a full note of event 11 (PROGRESS_TIMELINE). Clues only lead one event back
-at a time, and the NPCs a search finds belong to the start event, 13.
+assumes fewer host changes than LEARN_SOCIETY took the bot. Past USE_COMPUTER none got a note of
+event 11 (PROGRESS_TIMELINE). Clues only lead one event back at a time: the bot goes to the lab that
+holds events 12 and 11 and reads its papers, but its guards end the run first. Started at that
+point from a fixture, 18 of 60 seeds got a clue or the place of event 11 and the best three of the
+four clues its first note takes (`tests/README.md`, the timeline runs).
 
 ## Summary (estimated)
 

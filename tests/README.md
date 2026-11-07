@@ -6,11 +6,11 @@ states, broken invariants and saves that do not survive a load.
 | run | what it does |
 |---|---|
 | `cd src && make` | builds the game, then runs the **quick cut** (`--quick`, 33 runs, ~10 s) |
-| `make test` | the full soak: every suite, 20 seeds, 1000 steps (526 runs, ~135 s on 6 cores) |
+| `make test` | the full soak: every suite, 20 seeds, 1000 steps (546 runs, ~130 s on 6 cores) |
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
-Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|endgame|cult`, `--start new,s1,save/<file>`
+Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|timeline|endgame|cult`, `--start new,s1,save/<file>`
 (a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
 `_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
@@ -75,10 +75,17 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   - **Windows** are opened once a turn at most: a window with nothing to do in it is escaped, and
     opening it again straight away would loop with no turn passing.
 
-  - **Past the computer goal** it searches again whenever no event NPC is known to hunt. When a
-    search names one (job and area), it travels to the NPC's area, takes the NPC as host and probes
-    it until the NPC has nothing left. It goes on until FIND_SHIP, the soak's goal. A bare parasite
-    in a habitat with no one to take goes out to find a host.
+  - **Past the computer goal** it goes to the earliest event whose place it knows: clues lead one
+    event back at a time, and the events before it often share the place (event 12, the parasite's
+    removal, and 11, the alien's study, both happen in the same lab). There it reads the papers, and
+    when none is about it walks to the area's clue spots, since a lab lays new papers only on spots
+    on screen and out of sight. It searches with the computer again while someone known is left to
+    research, and hunts an event NPC the search placed, unless the NPC belongs to a later event or
+    carries a gun (agents, soldiers, police: every NPC of the start event is an agent, and a bare
+    parasite attaching to one was shot run after run). It goes on until FIND_SHIP, the soak's goal.
+    A bare parasite in a habitat with no one to take leaves by the hatch to find a host.
+  - **Left to chance**, a goal run never leaves its host: a random "leave host" walked a bare
+    parasite into a lab's guards.
 
   Wherever the goal policy has no opinion, the random policy picks. Each run prints the turn it
   reached each milestone on, and the soak tallies them. **Measured** (2026-11-07, seeds 1-40, the
@@ -87,16 +94,16 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   | milestone | reached | turns min / median / max |
   |---|---|---|
   | INVADE_HUMAN | 37/40 | 7 / 16 / 33 |
-  | LEARN_SOCIETY | 18/40 | 68 / 93 / 127 |
-  | ENTER_SEWERS | 15/40 | 82 / 111 / 146 |
-  | TRAVEL_EVENT | 15/40 | 91 / 117 / 148 |
-  | LEARN_CLUE | 11/40 | 109 / 169 / 241 |
-  | LEARN_NPC | 9/40 | 126 / 172 / 297 |
-  | EVOLVE_ORGAN | 20/40 | 47 / 92 / 136 |
-  | GROW_ORGAN | 14/40 | 80 / 119 / 186 |
-  | EVOLVE_MICROHABITAT | 14/40 | 84 / 136 / 201 |
-  | CREATE_HABITAT | 14/40 | 84 / 143 / 243 |
-  | USE_COMPUTER | 6/40 | 174 / 237 / 279 |
+  | LEARN_SOCIETY | 18/40 | 68 / 93 / 169 |
+  | ENTER_SEWERS | 15/40 | 83 / 111 / 171 |
+  | TRAVEL_EVENT | 15/40 | 91 / 122 / 173 |
+  | LEARN_CLUE | 11/40 | 109 / 201 / 318 |
+  | LEARN_NPC | 11/40 | 109 / 245 / 412 |
+  | EVOLVE_ORGAN | 19/40 | 47 / 91 / 136 |
+  | GROW_ORGAN | 14/40 | 80 / 137 / 250 |
+  | EVOLVE_MICROHABITAT | 12/40 | 85 / 170 / 270 |
+  | CREATE_HABITAT | 12/40 | 85 / 175 / 274 |
+  | USE_COMPUTER | 8/40 | 128 / 279 / 449 |
   | PROGRESS_TIMELINE, FIND_SHIP | 0/40 | |
 
   Most of the losses are deaths before LEARN_SOCIETY: until then a city cannot be left (the sewer
@@ -104,6 +111,14 @@ write the state before step N as a save, and `--trace` to keep the game's own co
   police outright measured worse (9 → 4 of 40): they stay alerted, and the bot stops progressing.
   Past LEARN_NPC the losses are the same deaths, in the long stretches spent in cities looking for
   a host with a device.
+
+  **The timeline runs** (`timeline:<start>:<seed>:<steps>`, from the `habitat-computer` fixture) play
+  the same policy on from USE_COMPUTER, so their seeds skip the early deaths. Measured on 60 seeds
+  (2026-11-07): none reached PROGRESS_TIMELINE. 18 got a clue or the place of event 11, the best
+  three of the four clues its first note takes. The lab's guards end nearly every run, often called
+  by a body the bot left: a paper about event 11 gives a clue towards its note about one time in
+  five and the whole note one in thirty, so a run needs 10-20 of them, and it lives for 50-450
+  turns there. Surviving the lab is the open step.
 
 **The endgame** (`endgame:<start>:<seed>:<steps>`, from `s3` and `s31`) plays on from the ship found
 to the end of the game:
@@ -157,8 +172,8 @@ base, the rival base, cult8):
   |---|---|---|
   | ORDEAL | 17/29 | 1 / 1 / 1116 |
   | PROFANE | 17/29 | 11 / 112 / 1206 |
-  | MISSION_AREA | 3/29 | 302 |
-  | PROFANE_DONE | 6/29 | 212 / 1206 / 1306 |
+  | MISSION_AREA | 3/29 | 123 / 201 / 302 |
+  | PROFANE_DONE | 4/29 | 212 / 1296 / 1306 |
 
   The losses are the console cult's s1 host, which police kill in its first city. Few runs reach a
   mission area.
@@ -176,6 +191,7 @@ base, the rival base, cult8):
 | `endgame` | `s3` and `s31` × seeds (soak only) | the goal policy to the end of the game; fails when no run reaches FINISH (`--reach FINISH=1`) |
 | `cult` | the console cult × seeds, the cult fixtures × 3 (soak only) | the cult policy; fails when no run sees a profane ordeal over (`--reach PROFANE_DONE=1`) |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
+| `timeline` | the `habitat-computer` fixture × seeds (soak only) | the GOAL policy on from USE_COMPUTER, to PROGRESS_TIMELINE and FIND_SHIP: tallied, no gate (none reaches them yet) |
 
 **Seeds vary the setup:**
 - the difficulty is `1 + seed % 3`;

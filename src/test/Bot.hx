@@ -25,6 +25,9 @@ typedef _BotOption = {
 
 class Bot
 {
+  // event NPC types that carry a gun: a bare parasite attaching to one was shot, run after run
+  // (every NPC of the start event is an agent), so the hunt leaves them be
+  static var ARMED_NPC = [ 'agent', 'soldier', 'police' ];
   // how often the random policy picks each kind, when the kind is on offer at all
   static var WEIGHTS = [
     'move' => 45,
@@ -112,8 +115,13 @@ class Bot
         return false;
       var o = (policy == 'goal' ? goal(list) :
         policy == 'cult' ? cultGoal(list) : null);
+      // a step a goal policy leaves to chance never leaves the host: that walked a bare parasite
+      // into a lab's guards, the way the timeline past the computer went on
       if (o == null)
-        o = pick(list);
+        {
+          var rest = (policy == 'random' ? list : [ for (x in list) if (x.id != 'leaveHost') x ]);
+          o = pick(rest.length > 0 ? rest : list);
+        }
       trail.push('T' + game.turns + ' ' + o.label);
       if (trail.length > TRAIL)
         trail.shift();
@@ -604,6 +612,14 @@ class Bot
               if (doc.type == 'document' &&
                   doc.item.id == 'paper')
                 return walk(doc.x, doc.y);
+          // no paper about: off to a clue spot, as a lab or base lays new ones only on spots on
+          // screen and out of sight (AreaGame.turnSpawnClues), and a bot standing still got none
+          var pts = game.area.clueSpawnPoints;
+          if (pts.length > 0)
+            {
+              var pt = pts[gen.Rng.int(rng, pts.length)];
+              return walk(pt.x, pt.y);
+            }
         }
       // a probe takes health off the host: stop while it can still carry the parasite to the next one.
       // past the tutorial only an event participant has anything left to tell
@@ -1168,7 +1184,8 @@ class Bot
           leftTurn = game.turns;
           return o;
         }
-      var exit = nearestObject(game.area.info.exit);
+      // a habitat lists no exit ('-'): its way out is the hatch object
+      var exit = nearestObject(game.area.isHabitat ? 'habitat_exit' : game.area.info.exit);
       return (exit != null ? walk(exit.x, exit.y) : null);
     }
 
@@ -1235,13 +1252,21 @@ class Bot
     }
 
 // does the goal policy want a computer search: for the computer goal, and past it whenever no
-// event NPC is known to hunt down (a search names one: items.Computer)
+// event NPC is known to hunt down and a search has someone to research (items.Computer refuses
+// once every known person is researched, and the bot sat in the habitat for good)
   function wantsSearch(): Bool
     {
-      return game.goals.has(GOAL_USE_COMPUTER) ||
-        (game.goals.completed(GOAL_USE_COMPUTER) &&
-         wantsClues() &&
-         npcTarget() == null);
+      if (game.goals.has(GOAL_USE_COMPUTER))
+        return true;
+      if (!game.goals.completed(GOAL_USE_COMPUTER) ||
+          !wantsClues() ||
+          npcTarget() != null)
+        return false;
+      for (e in game.timeline)
+        if (!e.isHidden &&
+            e.npcCanResearch())
+          return true;
+      return false;
     }
 
 // past the computer goal, an event NPC the player knows the job and the area of (so it spawns
@@ -1258,7 +1283,8 @@ class Bot
                 n.jobKnown &&
                 !n.isDead &&
                 !n.memoryKnown &&
-                !n.noEventClues)
+                !n.noEventClues &&
+                ARMED_NPC.indexOf(n.type) < 0)
               return n;
       return null;
     }
@@ -1270,15 +1296,24 @@ class Bot
       if (!game.goals.has(GOAL_TRAVEL_EVENT) &&
           !wantsClues())
         return null;
-      var n = npcTarget();
-      if (n != null)
-        return n.area;
+      // clues lead one event back at a time, so the earliest event placed is where the next one is
+      // learned (its papers, and the events before it that share the place); an NPC of a later
+      // event only feeds an event already passed
+      var first: scenario.Event = null;
       for (e in game.timeline)
         if (!e.isHidden &&
             e.locationKnown &&
             e.location != null)
-          return e.location.area;
-      return null;
+          {
+            first = e;
+            break;
+          }
+      var n = npcTarget();
+      if (n != null &&
+          (first == null ||
+           n.event.index <= first.index))
+        return n.area;
+      return (first != null ? first.location.area : null);
     }
 
 // the option with this id, or null

@@ -93,13 +93,14 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   let known = 0;
   // each run's slowest bot step (`@slow <ms> <where>`): the soak lists the worst five
   const slow = [];
-  // the goal runs (tutorial, endgame): per kind, how many reached their goal (exit 0, else stalled:
+  // the goal runs (tutorial, timeline, endgame, cult): per kind, how many reached their goal (exit 0, else stalled:
   // exit 4), and each milestone of the chain on the way, with the turns it took (`@reach <goal> <turn>`)
   const tally = new Map();
   for (let i = 0; i < ids.length; i++) {
     const r = results[i];
     const kind = ids[i].split(':')[0];
     if (kind == 'tutorial' ||
+        kind == 'timeline' ||
         kind == 'endgame' ||
         kind == 'cult') {
       if (!tally.has(kind))
@@ -139,7 +140,7 @@ if (!args.includes('--run') && !args.includes('--plan')) {
   // a goal suite passes when enough runs reach each gated milestone, not all of them: --reach
   // GOAL=N,... is the minimum number of runs per milestone (GOAL_ / SCENARIO_ALIEN_ dropped). The
   // defaults are one run each, under what the bots measured (2026-11-07; the quick cut's 5 seeds:
-  // TRAVEL_EVENT 2; the soak's 40: LEARN_NPC 9, CREATE_HABITAT 14, USE_COMPUTER 6; the endgame's
+  // TRAVEL_EVENT 2; the soak's 40: LEARN_NPC 11, CREATE_HABITAT 12, USE_COMPUTER 8; the endgame's
   // 40: FINISH 5): low enough for the bots' own deaths, high enough that a broken step in the chain,
   // which nothing gets past, fails. Raise them as the bots improve
   const ri = args.indexOf('--reach');
