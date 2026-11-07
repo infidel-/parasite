@@ -10,7 +10,7 @@ states, broken invariants and saves that do not survive a load.
 | `make test args="--suite fuzz --start s21 --count 50"` | one suite, chosen start points and seeds |
 | `make test args="--run <id>"` | replay ONE run: the id a failure prints |
 
-Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|timeline|endgame|cult`, `--start new,s1,save/<file>`
+Arguments are `--suite all|smoke|fuzz|compat|roundtrip|continue|loc|tutorial|timeline|endgame|cult|scenario`, `--start new,s1,save/<file>`
 (a start is `new`, `sandbox`, `mods`, a preset or a fixture, then console commands chained with `+`,
 `_` for a space: `s1+cu_start+cu_members`),
 `--seed N`, `--count N`, `--steps N`, and for the tutorial `--goal GOAL_X` (default
@@ -208,6 +208,7 @@ base, the rival base, cult8):
 | `cult` | the console cult × seeds, the cult fixtures × 3 (soak only) | the cult policy; fails when no run sees a profane ordeal over (`--reach PROFANE_DONE=1`) |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
 | `timeline` | the `habitat-computer` fixture × seeds, as is and with event 11 learned by console (soak only) | the GOAL policy on from USE_COMPUTER, to PROGRESS_TIMELINE and FIND_SHIP, tallied apart (`timeline`, `timeline+11`); fails when no plain run completes event 11's note (`--reach timeline:PROGRESS_TIMELINE=1`; measured 3 of 20). The event-11 runs have no gate: one of 20 finds the ship |
+| `scenario` | each scripted scenario in `src/test/Scenarios.hx`, once (quick cut too) | its own start (a preset or fixture plus `+` console commands), steps through the player's entry points (`Bot.pressAction`), its own asserts, then the invariants. One scenario per entry point of a lifecycle event in [`docs/relations.md`](../docs/relations.md): **a new entry point gets one**. Today the AI death row (the ovum fed a leader's and a follower's host, a follower's host expiring on the region map) and NPC host re-entry |
 
 **Seeds vary the setup:**
 - the difficulty is `1 + seed % 3`;

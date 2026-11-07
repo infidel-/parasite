@@ -162,6 +162,8 @@ class Headless
           cultRun(id, parts[1], Std.parseInt(parts[2]), Std.parseInt(parts[3]));
           return;
         }
+      else if (parts[0] == 'scenario')
+        scenario(parts[1], Std.parseInt(parts[2]));
       else
         {
           log('[test] unknown run id: ' + id);
@@ -198,6 +200,7 @@ class Headless
           suite != 'loc' &&
           suite != 'endgame' &&
           suite != 'cult' &&
+          suite != 'scenario' &&
           suite != 'tutorial' &&
           suite != 'timeline')
         return null;
@@ -205,6 +208,12 @@ class Headless
       if (all ||
           suite == 'smoke')
         ids.push('smoke:' + seed0 + ':' + count);
+      // the scripted lifecycle scenarios (test.Scenarios), one run each, in the quick cut too: they
+      // are the regression net of docs/relations.md's event rows
+      if (all ||
+          suite == 'scenario')
+        for (name in Scenarios.names())
+          ids.push('scenario:' + name + ':' + seed0);
       // random play from new games and the stage presets: the quick cut plays every start point
       // once, the soak each of them on every seed
       if (all ||
@@ -508,22 +517,7 @@ class Headless
       var slow = '';
       try
         {
-          // a new game (`new`, `sandbox`, or `mods` with every dev mod on), a stage preset or a
-          // fixture save, then the console commands chained on with `+` (`_` for a space)
-          var parts = [ for (x in start.split('+')) x.split('_').join(' ') ];
-          // `-` plays on from the game as it stands
-          if (parts[0] == '-')
-            {}
-          else if (parts[0].indexOf('save/') == 0)
-            loadFixture('tests/saves/' + parts[0].substr(5), seed);
-          else
-            {
-              newGame(seed, (parts[0] == 'sandbox' ? 'sandbox' : 'alien'));
-              if (NEW_GAMES.indexOf(parts[0]) < 0)
-                game.console.run(parts[0]);
-            }
-          for (cmd in parts.slice(1))
-            game.console.run(cmd);
+          begin(start, seed);
           // one random run in four answers the Difficulty windows itself, one choice at a time
           if (goal == null &&
               seed % 4 == 0)
@@ -618,6 +612,46 @@ class Headless
         trail: (bot != null ? bot.trail : []),
         reached: reached,
       };
+    }
+
+// a run's start: a new game (`new`, `sandbox`, or `mods` with every dev mod on), a stage preset or a
+// fixture save, then the console commands chained on with `+` (`_` for a space). `-` plays on from
+// the game as it stands
+  static function begin(start: String, seed: Int)
+    {
+      var parts = [ for (x in start.split('+')) x.split('_').join(' ') ];
+      if (parts[0] == '-')
+        {}
+      else if (parts[0].indexOf('save/') == 0)
+        loadFixture('tests/saves/' + parts[0].substr(5), seed);
+      else
+        {
+          newGame(seed, (parts[0] == 'sandbox' ? 'sandbox' : 'alien'));
+          if (NEW_GAMES.indexOf(parts[0]) < 0)
+            game.console.run(parts[0]);
+        }
+      for (cmd in parts.slice(1))
+        game.console.run(cmd);
+    }
+
+// one scripted lifecycle scenario (test.Scenarios): its start, its steps through the player's entry
+// points and its own asserts, then the invariants
+  static function scenario(name: String, seed: Int)
+    {
+      var sc = Scenarios.list[name];
+      if (sc == null)
+        {
+          fail(seed, 'no scenario ' + name);
+          return;
+        }
+      run(seed, function() {
+        begin(sc.start, seed);
+        var bot = new Bot(game, seed, 'random');
+        for (e in sc.run(game, bot))
+          fail(seed, name + ': ' + e);
+        for (e in bot.check())
+          fail(seed, name + ': ' + e);
+      });
     }
 
 // the goal policy through the tutorial from a new game: it reaches the goal (printing the turns it

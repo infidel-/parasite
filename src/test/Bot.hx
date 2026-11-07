@@ -1339,6 +1339,19 @@ class Bot
     }
 
 // the option with this id, or null
+// press the option with this action id the way its click does, message windows clicked away first;
+// false when it is not on offer. For the scripted scenarios (test.Scenarios)
+  public function pressAction(id: String): Bool
+    {
+      while (game.ui.state == UISTATE_MESSAGE)
+        game.ui.closeWindow();
+      var o = find(options(), id);
+      if (o == null)
+        return false;
+      o.f();
+      return true;
+    }
+
   function find(list: Array<_BotOption>, id: String): _BotOption
     {
       for (o in list)
