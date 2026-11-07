@@ -30,9 +30,15 @@ class TeamBaseDefense extends Mission
       spawned = false;
     }
 
-// spawns team attackers before area AI turns
+// spawns team attackers before area AI turns, again when the wave vanished without dying
   public override function turnPreAI()
     {
+      if (spawned &&
+          BaseDefenseLogic.waveGone(game, targetIDs))
+        {
+          targetIDs = [];
+          spawned = false;
+        }
       if (!spawned)
         spawnAttackers();
     }

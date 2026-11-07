@@ -959,11 +959,12 @@ class PlayerArea extends _SaveObject
           if (!skipOutsiderCheck &&
               game.area.hasAnyAI())
             {
-              // preserved AI are allowed
+              // preserved AI are allowed, and so are the custodes: they guard the base and stay
               var ok = true;
               for (ai in game.area.getAllAI())
                 if (ai.state != AI_STATE_PRESERVED &&
-                    ai.state != AI_STATE_HOST)
+                    ai.state != AI_STATE_HOST &&
+                    !ai.isCustos)
                   {
                     ok = false;
                     break;

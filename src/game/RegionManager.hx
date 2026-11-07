@@ -18,21 +18,28 @@ class RegionManager
   public function onHostDiscovered(area: AreaGame, ai: AI)
     {
       game.group.raisePriority(__Math.hostDiscovered(ai));
-      if (ai.npc != null)
-        log(ai.name.realCapped + ' had suffered a fatal accident.');
+      var name = ai.name.realCapped;
+      // a timeline NPC is silenced for good: it dies, as the log says, and is never spawned again
+      var npc = ai.npc;
+      if (npc != null)
+        {
+          npc.isDead = true;
+          npc.statusKnown = true;
+          log(T('{name} had suffered a fatal accident.', { name: name }));
+        }
       else if (ai.wasInvaded)
         {
           var tmp = [
-            ' is claiming to have been possessed by an angel.',
-            ' is claiming to be the subject of experiments conducted by aliens.',
-            ' has died under mysterious circumstances.',
-            ' had to be committed to a mental institution after having a nervous breakdown.',
-            ' has apparently taken their own life after having a mental breakdown.',
+            T('{name} is claiming to have been possessed by an angel.', { name: name }),
+            T('{name} is claiming to be the subject of experiments conducted by aliens.', { name: name }),
+            T('{name} has died under mysterious circumstances.', { name: name }),
+            T('{name} had to be committed to a mental institution after having a nervous breakdown.', { name: name }),
+            T('{name} has apparently taken their own life after having a mental breakdown.', { name: name }),
             ];
-          log(ai.name.realCapped + tmp[Std.random(tmp.length)]);
+          log(tmp[Std.random(tmp.length)]);
         }
       else if (ai.wasAttached)
-        log(ai.name.realCapped + ' is claiming to be the subject of a weird animal attack.');
+        log(T('{name} is claiming to be the subject of a weird animal attack.', { name: name }));
     }
 
 

@@ -2238,7 +2238,10 @@ class AreaGame extends _SaveObject
           game.area == this)
         ai.onRemove();
 
-      if (ai.npc != null)
+      // the player's host takes its NPC along: the link holds wherever the host goes, or the NPC
+      // spawns again as a second body when the host walks back into its area
+      if (ai.npc != null &&
+          ai != game.player.host)
         ai.npc.ai = null;
       ai.entity = null;
       _ai.remove(ai);

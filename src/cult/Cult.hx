@@ -249,6 +249,10 @@ class Cult extends _SaveObject
       members = [];
       effects.list = [];
       ordeals.list = [];
+      // the base defense was one of those ordeals: no defense runs now, and a team attacking the
+      // base calls it off (Team.turn)
+      if (base != null)
+        base.activeDefenseMissionID = -1;
       state = CULT_STATE_DEAD;
       if (!isPlayer)
         {

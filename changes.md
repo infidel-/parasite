@@ -9,8 +9,14 @@
 
 ### Fixes
 - boot: a damaged language file starts the game in English instead of not at all
+- cult: a base defense whose attackers vanished without dying sends a fresh wave instead of never ending
+- cult: a cult destroyed during a base defense no longer freezes the base and the team attacking it
 - cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
+- cult: a summoned cultist taken over by the parasite grows organs on its own body
 - cult: an Elevate the faithful that fails on its target's death no longer names it "null"
+- cult: custodes no longer keep the player inside the base habitat
+- cult: the second metamorphosis performed outside a habitat is refused instead of used up
+- game: a former NPC host reported dead after getting away stays dead
 - game: a host grown into a habitat organ no longer comes back as its NPC
 - game: a host whose attributes drop no longer keeps energy above its new maximum
 - game: a load no longer lets a new ovum, mission NPC or cult mission take an id already in use
@@ -18,9 +24,11 @@
 - game: a parasite with no host on a spaceship slot no longer crashes
 - game: a parasite with no host walking into a locked door no longer crashes
 - game: a resisting host boxed in by walls or followers no longer crashes the game
+- game: a save made on the region map keeps the host's organ growing
 - game: a save no longer stores habitat formation messages in the player's language
 - game: a save that fails to load returns to the main menu instead of a broken game
 - game: a second new game in one session starts its log at turn 0
+- game: an NPC host walking back into its own area no longer spawns a second copy of that NPC
 - game: an old save's never-visited city area is built at full size
 - game: an organ gives its strength, energy or health bonus only once it is grown
 - game: sex workers and blackops agents spawn with their own stats, not ones a load later changes
@@ -28,6 +36,7 @@
 - game: the corp mission target can be placed in any office, not only the left part of the area
 - mods: a mod weapon missing some of its attack texts no longer crashes the attack
 - ui: alien ship part names take the right article in log lines
+- ui: news of what became of a former host is translated
 - ui: one missing system font no longer stops the other fallback fonts from scaling
 - ui: save slot labels show the area in the current language
 - ui: the language switch no longer promises an autosave in chat or a mission area

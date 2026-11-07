@@ -44,6 +44,14 @@ class MetamorphosisPhaseII extends Ordeal
         name: T('Perform metamorphosis ritual'),
         energy: 0,
         f: function() {
+          // the base grows in a habitat: refuse anywhere else and keep the ordeal, since
+          // success() removes it whatever onSuccess does
+          if (game.location != LOCATION_AREA ||
+              !game.area.isHabitat)
+            {
+              game.actionFailed(T('The ritual must finish in a habitat.'));
+              return;
+            }
           success();
           game.ui.closeWindow();
         }
@@ -65,13 +73,6 @@ class MetamorphosisPhaseII extends Ordeal
 // creates the living base
   public override function onSuccess()
     {
-      if (game.location != LOCATION_AREA ||
-          game.area == null ||
-          !game.area.isHabitat)
-        {
-          game.actionFailed(T('The ritual must finish in a habitat.'));
-          return;
-        }
       cult.level = 2;
       cult.base = new CultBase(game, game.area.id,
         game.playerArea.x, game.playerArea.y);

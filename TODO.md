@@ -27,19 +27,6 @@ Known open work, deferred on purpose. Remove an entry when it is done.
   members die only on screen, and a rival taken by `RivalBase.onSuccess` is never `destroy()`ed
   (relations.md, cult destruction row). Fix if a trigger appears: guard in `onRemoveAI`.
 
-## Found by relations mapping
-
-Confirmed by reading the code end to end; each has its cell in `docs/relations.md`.
-
-- **G2** A save made on the region map with a host never runs `host.loadPost`: organ growth stops until an organ is picked again.
-- **G3** `Cult.destroy()` during a base defense: the defense id survives, no defense is ever scheduled again, the team stays in TEAM_BASE_DEFENSE.
-- **G4** Custodes count as outsiders in the habitat exit check, so the base habitat can't be left.
-- **G5** `AreaGame.enter` re-adds the host without re-linking `npc.ai`: a second AI spawns for the same NPC.
-- **G7** `RegionManager.onHostDiscovered` says an NPC host had a fatal accident but leaves it alive; its lines are bare English.
-- **G8** BaseDefense attackers that vanish without dying (rebirth, despawn) leave a defense that can never finish.
-- **G10** An AI spawned from a shallow AIData copy shares an `Organs` whose `_ai` points at the old AI.
-- **G11** `MetamorphosisPhaseII` performed outside a habitat is used up without creating the base.
-
 ## Found by the headless tests
 
 Each entry has the replay command; see `tests/README.md`. The harness works around these so the

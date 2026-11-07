@@ -67,8 +67,14 @@ class Team extends FSM<_TeamState, _TeamFlag>
         turnAmbush();
       else if (state == TEAM_FIGHT)
         turnFight();
+      // the cult it attacks is gone (Cult.destroy clears the base defense): the attack is called off
       else if (state == TEAM_BASE_DEFENSE)
-        return;
+        {
+          var base = game.cults[0].base;
+          if (base == null ||
+              base.activeDefenseMissionID < 0)
+            game.group.deactivateTeam(0);
+        }
     }
 
 // spawns team attack as a cult base defense ordeal

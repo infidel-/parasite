@@ -87,6 +87,15 @@ class BaseDefenseLogic
         }));
     }
 
+// true when a wave was tracked and none of it is left in the area: attackers that vanished without
+// dying (rebirth walked the player out, an invaded one despawned). targetIDs shrinks only on a death,
+// so the defense could never finish; the missions spawn a fresh wave instead
+  public static function waveGone(game: Game, targetIDs: Array<Int>): Bool
+    {
+      return (targetIDs.length > 0 &&
+        !Lambda.exists(targetIDs, function(id) return game.area.getAIByID(id) != null));
+    }
+
 // calms living area AI after base defense ends
   public static function calmAreaAI(game: Game)
     {

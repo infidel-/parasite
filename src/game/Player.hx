@@ -116,6 +116,11 @@ class Player extends _SaveObject
           // set entity image
           game.playerRegion.resetEntity();
         }
+      // the region host is in no area's AI list, so AreaGame.loadPost never reached it: its organ
+      // growth, traits and NPC link are restored here
+      else if (game.location == LOCATION_REGION &&
+          state == PLR_STATE_HOST)
+        host.loadPost();
       skills.loadPost();
       game.playerRegion.loadPost();
     }

@@ -21440,7 +21440,7 @@
     "src/cult/ordeals/MetamorphosisPhaseII.hx"
    ],
    "vars": [],
-   "where": "MetamorphosisPhaseII.onSuccess",
+   "where": "MetamorphosisPhaseII.getActions",
    "field": "actionFailed"
   },
   {
@@ -26491,6 +26491,85 @@
    "vars": [],
    "where": "PlayerRegion.moveAction",
    "field": "actionFailed"
+  },
+  {
+   "s": "{name} had suffered a fatal accident.",
+   "kind": "T",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "field": "log"
+  },
+  {
+   "s": "{name} is claiming to have been possessed by an angel.",
+   "kind": "T",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "RegionManager.onHostDiscovered"
+  },
+  {
+   "s": "{name} is claiming to be the subject of experiments conducted by aliens.",
+   "kind": "T",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "RegionManager.onHostDiscovered"
+  },
+  {
+   "s": "{name} has died under mysterious circumstances.",
+   "kind": "T",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "RegionManager.onHostDiscovered"
+  },
+  {
+   "s": "{name} had to be committed to a mental institution after having a nervous breakdown.",
+   "kind": "T",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "RegionManager.onHostDiscovered"
+  },
+  {
+   "s": "{name} has apparently taken their own life after having a mental breakdown.",
+   "kind": "T",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "RegionManager.onHostDiscovered"
+  },
+  {
+   "s": "{name} is claiming to be the subject of a weird animal attack.",
+   "kind": "T",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "field": "log"
   },
   {
    "s": "The team closes on Cor Nefandum. Defend the base before the timer expires.",

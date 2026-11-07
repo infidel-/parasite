@@ -33,9 +33,15 @@ class BaseDefense extends Mission
       cultID = -1;
     }
 
-// spawns attackers before area AI turns
+// spawns attackers before area AI turns, again when the wave vanished without dying
   public override function turnPreAI()
     {
+      if (spawned &&
+          BaseDefenseLogic.waveGone(game, targetIDs))
+        {
+          targetIDs = [];
+          spawned = false;
+        }
       if (!spawned)
         spawnAttackers();
     }

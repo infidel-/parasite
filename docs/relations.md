@@ -236,12 +236,12 @@ area, no `removeAI`). All but D6 go through `AreaGame.removeAI`.
 | `Cult.onRemoveAI` → `AIData.updateData` | ✓ (D2) | ✓ | ✗ SAFE: flag cleared first | ✗ record kept, live copy lost |
 | custos `CultBase.onRemoveAI` | n/a (guards) | ✓ | n/a | ✗ |
 | mission target copies | ✗ PLAUSIBLE P2: a Kill/Persuade target's progress resets on respawn | ✗ | ✗ | ✗ |
-| BaseDefense `targetIDs` | ✗ **GAP G8** | ✗ **GAP G8** (rebirth walks you out) | n/a | n/a |
+| BaseDefense `targetIDs` | ✗ SAFE: a wave with none left alive is spawned anew (`BaseDefenseLogic.waveGone`; G8, fixed) | ✗ same (rebirth walks you out) | n/a | n/a |
 | `Targeting.target` | ✗ PLAUSIBLE P9 | via `Game.setLocation` | n/a | n/a |
 | mod event | ✗ none exists | ✗ | ✗ | ✗ |
 
-`RegionManager.onHostDiscovered` logs "had suffered a fatal accident" for an NPC host but leaves
-`npc.isDead` false: **GAP G7**. `BlackopsAI.onRemove` does not call super, so a despawned invaded
+`RegionManager.onHostDiscovered` reports an NPC host dead ("had suffered a fatal accident") and
+sets `npc.isDead` (G7, fixed: it used to leave the NPC alive to respawn). `BlackopsAI.onRemove` does not call super, so a despawned invaded
 blackops is never reported (PLAUSIBLE P12).
 
 ### Area enter and leave
@@ -254,7 +254,7 @@ Leave: X1 `Game.setLocation(LOCATION_REGION)` → `AreaGame.leave`; X2 `Game.res
 | listener | N1 | N2 | N3 |
 |---|---|---|---|
 | `Team.onEnterHabitat`, `Goals.onEnter`, `cults[0].onEnterArea` → `CultBase.onEnterArea` (custodes respawn) | ✓ | ✓ | ✗ SAFE: director and custodes are saved in the area AI list |
-| host re-added to `_ai` | ✓ with `_ai.add`, no NPC re-link: **GAP G5** (a second AI spawns for the same NPC) | n/a | via `Player.loadPost` |
+| host re-added to `_ai` | ✓ with `_ai.add`; SAFE: `removeAI` never unlinks the player's host from its NPC (G5, fixed: a second AI spawned for the same NPC) | n/a | via `Player.loadPost` |
 | mod AREA_ENTER, autosave | ✓ | ✗ PLAUSIBLE P7 | ✗ P7 |
 
 | listener | X1 | X2 |
@@ -269,8 +269,8 @@ Only `cults[0]` gets enter/leave: SAFE, because rivals have no base, ordeals or 
 
 Leave checks, run by every exit object and `PlayerArea.leaveAreaAction`: `AreaGame.canLeave`
 (mission lock, `Goals.leaveAreaPre`), `Cult.leavePre` (each follower 10% death). The habitat exit
-also refuses with outsiders present: custodes count as outsiders, **GAP G4** (you can't leave the
-base habitat). `Game.beginRebirth` skips every check.
+also refuses with outsiders present; preserved AIs, the host and custodes are not outsiders (G4,
+fixed: custodes kept the player in the base habitat). `Game.beginRebirth` skips every check.
 
 ### Habitat
 
@@ -310,10 +310,10 @@ stale until they expire.
 | removed from `game.cults` | rivals only | ✗ SAFE: `getCultByID` still finds it for its AIs |
 | flags cleared in `game.area` and habitats | ✓ | ✗ SAFE: members kept, lookups succeed |
 | `player.host` flag on the region map | ✗ SAFE: members only die on screen, so the host is in the cleared area or is the one dying | ✗ same |
-| base defense | ✗ **GAP G3**: the defense id survives, `addPressure` never schedules again, the team stays in TEAM_BASE_DEFENSE | n/a |
+| base defense | ✓ the defense id is cleared with the ordeals; a team in TEAM_BASE_DEFENSE calls the attack off on its turn (`Team.turn`; G3, fixed) | n/a |
 
-`MetamorphosisPhaseII.onSuccess` returns early outside a habitat, but `Ordeal.success` removes the
-ordeal anyway: **GAP G11**.
+The `MetamorphosisPhaseII` perform action refuses outside a habitat and keeps the ordeal (G11,
+fixed: `Ordeal.success` removed it whatever `onSuccess` did).
 
 ### Missions and ordeals
 
@@ -352,7 +352,7 @@ Group and cult pause in mission areas.
 | `World.loadPost` → `AreaGame.loadPost` → `AI.loadPost` | region by id, `_maxID`s, `npc.ai`, `Organs.currentOrgan` |
 | `AreaManager.loadPost`, `Team.loadPost` | `AreaEvent.ai` by id, `ambushedHabitat` by area id |
 | `PlayerArea.loadPost` | `attachHost` by id |
-| `Player.loadPost` | area: host by `hostID`; region: keeps the saved copy and never calls `host.loadPost`: **GAP G2** (organ growth stops) |
+| `Player.loadPost` | area: host by `hostID`; region: keeps the saved copy and runs `host.loadPost`, since no area holds it (G2, fixed: organ growth stopped) |
 | `Cult.loadPost` (per cult) | raises `Mission._maxID` past its own missions, never below an earlier cult's (G1, fixed: a per-cult assignment let the last cult win) |
 | `Loader.rebuildAIDataMaxID` | the AIData counter over areas, habitats, host and cults, run last |
 
@@ -363,8 +363,9 @@ the ids it finds. `Bot.check` asserts that every counter is above every live id.
 
 `AIData.cloneData`/`AIData.updateData` are **shallow**: inside a session a copy shares inventory,
 skills, organs, effects, traits and chat with the live AI. An AI spawned from a copy therefore
-shares an `Organs` whose `_ai` still points at the old AI, so a possessed summoned cultist grows
-organs on the wrong body: **GAP G10** (one session; a load builds fresh ones).
+would share an `Organs` whose `_ai` points at the old AI: `AIData.updateData` re-parents the
+organs and effects it copies (G10, fixed: a possessed summoned cultist grew organs on the wrong
+body).
 
 | holder | stores | synced by | stale when |
 |---|---|---|---|
@@ -372,12 +373,12 @@ organs on the wrong body: **GAP G10** (one session; a load builds fresh ones).
 | `CultBase.custodes` | CustosAIData | `CultBase.onRemoveAI`, respawned by `CultBase.onEnterArea` | habitat destroyed |
 | `Kill.target`, `Persuade.target` | AIData | ON_AI_DEATH | despawn (P2) |
 | Combat `targets`/`targetIDs` | AIData + ids | ON_AI_DEATH, `Combat.getMissingTargets` | — (guards don't despawn) |
-| BaseDefense `targetIDs`, `CultBase.activeDefenseMissionID` | ids | ON_AI_DEATH, the missions' `onSuccess` | despawn, rebirth, cult destroyed (G3, G8) |
+| BaseDefense `targetIDs`, `CultBase.activeDefenseMissionID` | ids | ON_AI_DEATH, the missions' `onSuccess` | — (fresh wave, cleared by `Cult.destroy`) |
 | `RecruitFollower.target` | AIData, never live | — | — |
 | `Ordeal.members` | member ids | `Ordeal.onDeath` in 7 ordeals | the other 4 (P3) |
 | `Group.directorID` | id | `AgentAI.onDeath`; SAFE: `GroupDirector.onEnter` reassigns on every visit | — |
-| `NPC.ai` | pointer (¬S) | `AI.setNPC`, `AI.loadPost`, cleared by `removeAI` | host re-added (G5), `Team.destroyHabitat` |
-| `Player.host`/`hostID` | pointer + id | invade, `onDetach`, host death | region load (G2) |
+| `NPC.ai` | pointer (¬S) | `AI.setNPC`, `AI.loadPost`, cleared by `removeAI` | `Team.destroyHabitat` |
+| `Player.host`/`hostID` | pointer + id | invade, `onDetach`, host death | — |
 | `AreaEvent.ai` | pointer + id | pruned when the event fires | despawn (still fires) |
 | `AI.enemies` | ids | purged by `removeAI` | — |
 | id counters `AIData`/`Mission`/`RegionObject`/`NPC`/`Cult._maxID` | statics (¬S) | reset by `Game.restartPre`, raised on load | — |
@@ -393,10 +394,10 @@ organs on the wrong body: **GAP G10** (one session; a load builds fresh ones).
 | mission ids start at 1, so 0 is never a mission | `CultBase.initPost` reads a defense id of 0 as none | `Mission._maxID`, `Game.restartPre` | no |
 | every cultist in the area has a record in a live cult | `AreaGame.removeAI` and `Cult.onRemoveAI` don't null-check | `Cult.destroy` clears flags in the area | yes |
 | an ACTIVE cult has ≥ 1 member, the leader first | `Cult.onDeath` reads `members[0]` | `Cult.addLeader`, `Cult.destroy` | yes |
-| a base defense id points at a live mission | `CultBase.addPressure`, `Team.spawnBaseDefenseOrdeal` skip while one runs | the defense missions' `onSuccess` | yes (G3 known) |
+| a base defense id points at a live mission | `CultBase.addPressure`, `Team.spawnBaseDefenseOrdeal` skip while one runs | the defense missions' `onSuccess` | yes |
 | custodes records and the base area's custos AIs match | `CultBase.onEnterArea` respawns from the records | `CultBase.onRemoveAI`, `CultBase.onEnterArea` | yes |
 | a dead AI leaves the area at once; area AI ids are unique | area AI loops | `AI.die` sets DEAD and calls `removeAI` | yes |
-| an NPC is at most one AI in the area | timeline NPC state | `AreaGame.turnSpawnNPC` spawns only an unlinked NPC | yes (G5) |
+| an NPC is at most one AI in the area | timeline NPC state | `AreaGame.turnSpawnNPC` spawns only an unlinked NPC | yes |
 | in area mode the host is in the area's AI list | `Player.loadPost` re-link | `AreaGame.enter` | yes |
 | cult members only die on screen: in the current area, or as the dying host | the region host's cult flag can't go stale (`Cult.destroy` clears only the area and habitats) | no off-screen member deaths exist | no |
 | group priority stays in 0..100, team distance in 0..150, a team has 1..maxSize members | group and team logic | `Group.changeOnlyPriority`, the `Team.distance` setter, `Group.onTeamMemberDeath` | yes |
@@ -439,3 +440,6 @@ One line per cross-system bug: the commit and the empty cell.
 | 3e225586 | the ordeal death loop skipped ordeals | missions × member death × list removal |
 | 82e2103e | a deferred key click hit a HUD button rebuilt after host loss | host death × HUD |
 | c22f6c78 | ship parts vanished on area leave | area leave × scenario objects |
+| ac4cbac8 | mission ids collided after loading a save with rivals (G1); a failed profane ordeal skipped the next one's turn (G9) | save/load × `Cult.loadPost`; missions × list removal |
+| e902a0f0 | a host grown into a habitat organ came back as its NPC (G6) | AI death × H6 × `AI.notifyDeath` |
+| "Fix eight cross-system gaps found by relations mapping" | G2 G3 G4 G5 G7 G8 G10 G11, each with a scenario | the cells above marked "fixed" |

@@ -182,6 +182,10 @@ class AIData extends _SaveObject
           if (Reflect.isFunction(val)) continue;
           Reflect.setField(this, f, val);
         }
+      // the copy is shallow: organs and effects are the same objects, so their parent link follows
+      // them here, or an AI spawned from a record grows organs and heals on the record's old AI
+      @:privateAccess organs._ai = this;
+      @:privateAccess effects.ai = this;
     }
 
 // does this AI have this trait?
