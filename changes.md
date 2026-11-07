@@ -14,6 +14,7 @@
 - game: a resisting host boxed in by walls or followers no longer crashes the game
 - game: a save no longer stores habitat formation messages in the player's language
 - game: an organ gives its strength, energy or health bonus only once it is grown
+- game: the corp mission target can be placed in any office, not only the left part of the area
 - mods: a mod weapon missing some of its attack texts no longer crashes the attack
 - ui: alien ship part names take the right article in log lines
 - ui: one missing system font no longer stops the other fallback fonts from scaling

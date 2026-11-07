@@ -253,10 +253,10 @@ class AlienMissionCommon
       var cubiclepts = [];
       var meetingpts = [];
       var cells = game.area.getCells();
-      for (y in 0...cells.length)
+      for (y in 0...game.area.height)
         if (solopts.length < 100)
           {
-            for (x in 0...cells[y].length)
+            for (x in 0...game.area.width)
               if (cells[x][y] == Const.TILE_FLOOR_MARBLE1)
                 solopts.push({ x: x, y: y });
               else if (cells[x][y] == Const.TILE_FLOOR_CARPET_MEETING)
