@@ -289,7 +289,7 @@ class Game extends _SaveObject
       AreaGame._maxID = 0;
       ai.AIData._maxID = 0;
       objects.AreaObject._maxID = 0;
-      cult.Mission._maxID = 0;
+      cult.Mission._maxID = 1;
       cult.base.CultBaseOrgan._maxID = 0;
       cult.base.RivalBaseOrgan._maxID = 0;
       RegionObject._maxID = 1;

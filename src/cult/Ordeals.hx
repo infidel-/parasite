@@ -99,8 +99,9 @@ class Ordeals extends _SaveObject
 // turn processing for ordeals
   public function turn()
     {
-      // reset actions counter for all active ordeals
-      for (ordeal in list)
+      // reset actions counter for all active ordeals. a copy: a profane ordeal whose timer runs out
+      // fails here and removes itself from the list
+      for (ordeal in list.copy())
         {
           // ordeal-specific turn processing
           ordeal.actions = 0;

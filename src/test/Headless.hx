@@ -539,6 +539,15 @@ class Headless
               };
             }
           bot = new Bot(game, seed, (botPolicy != null ? botPolicy : goal != null ? 'goal' : 'random'));
+          // the start itself holds the invariants: a load restores counters and links before any step
+          var broken = bot.check();
+          if (broken.length > 0)
+            return {
+              failure: 'at the start: ' + broken.join('; '),
+              step: -1,
+              trail: [],
+              reached: reached,
+            };
           var lastTurn = game.turns;
           var still = 0;
           step = 0;
@@ -623,7 +632,8 @@ class Headless
         {
           fail(seed, 'at step ' + res.step + ' (turn ' + game.turns + '): ' + res.failure +
             '\n    replay: make test args="--run ' + id + '"' +
-            '\n    last steps: ' + res.trail.join(' | '));
+            '\n    last steps: ' + res.trail.join(' | ') +
+            '\n    last log: ' + logTail(8).join(' | '));
           finish(id);
           return;
         }
@@ -656,7 +666,8 @@ class Headless
         {
           fail(seed, 'at step ' + res.step + ' (turn ' + game.turns + '): ' + res.failure +
             '\n    replay: make test args="--run ' + id + '"' +
-            '\n    last steps: ' + res.trail.join(' | '));
+            '\n    last steps: ' + res.trail.join(' | ') +
+            '\n    last log: ' + logTail(8).join(' | '));
           finish(id);
           return;
         }
@@ -722,7 +733,8 @@ class Headless
         {
           fail(seed, 'at step ' + res.step + ' (turn ' + game.turns + '): ' + res.failure +
             '\n    replay: make test args="--run ' + id + '"' +
-            '\n    last steps: ' + res.trail.join(' | '));
+            '\n    last steps: ' + res.trail.join(' | ') +
+            '\n    last log: ' + logTail(8).join(' | '));
           finish(id);
           return;
         }
@@ -755,6 +767,9 @@ class Headless
         game.load(ROUNDTRIP_SLOT);
         if (game.ui.state == UISTATE_YESNO)
           @:privateAccess game.ui.components[_UIState.UISTATE_YESNO].action(1);
+        // what the load rebuilt (id counters, links) holds the invariants too
+        for (b in new Bot(game, seed, 'random').check())
+          fail(seed, 'after the load: ' + b);
         Saver.save(game, ROUNDTRIP_SLOT + 1);
         var b = HostBridge.saveRead(ROUNDTRIP_SLOT + 1);
         if (a == b)

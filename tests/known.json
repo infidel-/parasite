@@ -1,1 +1,6 @@
-[]
+[
+  {
+    "match": [ "base defense mission" ],
+    "todo": "TODO.md, Found by relations mapping: G3 (Cult.destroy during a base defense)"
+  }
+]

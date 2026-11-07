@@ -38,9 +38,6 @@ Known open work, deferred on purpose. Remove an entry when it is done.
 
 Confirmed by reading the code end to end; each has its cell in `docs/relations.md`.
 
-- **G1** Mission ids collide after loading a save with rivals: `Cult.loadPost` sets `Mission._maxID` per cult, the last wins.
-- **RegionObject counter**: `World.loadPost` takes the region id, not the object id, and never increments it (latent).
-- **G9** `Ordeals.turn` removes a failed profane ordeal from the array it iterates, so the next ordeal skips its turn.
 - **G6** `Habitat.putObject` kills the host without `AI.die`: no `npc.isDead` (the NPC respawns), no `onDeath` hook, no mod event.
 - **G2** A save made on the region map with a host never runs `host.loadPost`: organ growth stops until an organ is picked again.
 - **G3** `Cult.destroy()` during a base defense: the defense id survives, no defense is ever scheduled again, the team stays in TEAM_BASE_DEFENSE.

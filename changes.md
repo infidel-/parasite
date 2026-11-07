@@ -8,9 +8,10 @@
 
 ### Fixes
 - boot: a damaged language file starts the game in English instead of not at all
+- cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
 - cult: an Elevate the faithful that fails on its target's death no longer names it "null"
 - game: a host whose attributes drop no longer keeps energy above its new maximum
-- game: a load no longer lets a new ovum or mission NPC take an id already in use
+- game: a load no longer lets a new ovum, mission NPC or cult mission take an id already in use
 - game: a parasite attached to a host that gets killed falls off instead of crashing the invade
 - game: a parasite with no host on a spaceship slot no longer crashes
 - game: a parasite with no host walking into a locked door no longer crashes

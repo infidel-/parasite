@@ -8,7 +8,7 @@ import ai.AI;
 class Mission extends _SaveObject
 {
   static var _ignoredFields = [ 'game' ];
-  public static var _maxID: Int = 0; // current max ID
+  public static var _maxID: Int = 1; // next mission id; ids start at 1, so 0 is never a mission (CultBase.initPost)
   public var game: Game;
   public var id: Int;
   public var name: String;

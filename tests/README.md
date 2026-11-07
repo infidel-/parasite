@@ -232,14 +232,22 @@ when it is cheap to assert, and the table's "asserted" column says which ones ar
   attach host flagged `parasiteAttached`; parasite state: neither;
 - every `enemies` id of an AI (the carried host aside) an AI in the area;
 - every cultist in the area has its member record (`Cult.onRemoveAI` throws without one);
-- the id counters (`RegionObject`, `AIData`, `AreaObject`, `NPC` `._maxID`) above every live id;
-  a load restores them, and two of them it did not (fixed);
+- the id counters (`RegionObject`, `AIData`, `AreaObject`, `NPC`, `Mission` `._maxID`) above every
+  live id, cult rosters, custodes and every cult's missions included, and mission ids unique; a load
+  restores them, and three of them it did not (fixed);
+- an active cult has members; a base defense id points at a live mission; in the base area, the
+  custodes records and the custos AIs match;
+- no dead AI in the area, no AI id twice, no NPC as two AIs;
+- group priority in 0..100, a team of 1..maxSize members at a distance in 0..150;
 - `messageList` within its cap of 100;
 - no log line written since the bot started looks unfilled: `null`, `undefined`, `NaN`, `[object`, or
   a brace (a value missing from a `T()` template prints `null`; a template that does not parse keeps
   its braces). INFO and DEBUG lines are skipped, because they are built by hand;
 - the player inside the area;
 - no goal both current and completed.
+
+They run after every bot step, once before the first (a load's counters and links are checked
+before any play), and after the roundtrip's load.
 
 **Continue** catches what roundtrip cannot: state that play reads and a save drops, such as a
 static counter a load does not restore. Roundtrip compares the save it just loaded, so it never

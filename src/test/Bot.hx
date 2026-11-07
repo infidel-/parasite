@@ -1536,8 +1536,54 @@ class Bot
       if (game.messageList.length > 100)
         list.push('messageList holds ' + game.messageList.length + ' lines, over its cap of 100');
       checkCounters(list);
+      checkCults(list);
+      checkGroup(list);
       checkLog(list);
       return list;
+    }
+
+// the cults' invariants (docs/relations.md, Invariants): a live roster, a defense that points at a
+// mission, custodes in step with the base area's custos AIs
+  function checkCults(list: Array<String>)
+    {
+      for (c in game.cults)
+        if (c.state == CULT_STATE_ACTIVE &&
+            c.members.length == 0)
+          list.push('cult ' + c.id + ' is active with no members');
+      var base = game.cults[0].base;
+      if (base == null)
+        return;
+      if (base.activeDefenseMissionID >= 0 &&
+          game.cults[0].ordeals.getMissionByID(base.activeDefenseMissionID) == null)
+        list.push('base defense mission ' + base.activeDefenseMissionID + ' does not exist');
+      if (game.location != LOCATION_AREA ||
+          game.area.id != base.areaID)
+        return;
+      for (ai in @:privateAccess game.area._ai)
+        if (ai.isCustos &&
+            !Lambda.exists(base.custodes, function(d) return d.id == ai.id))
+          list.push('custos AI ' + ai.id + ' has no record in the base');
+      for (d in base.custodes)
+        if (game.area.getAIByID(d.id) == null)
+          list.push('custos record ' + d.id + ' has no AI in the base area');
+    }
+
+// the group's ranges: priority is clamped to 0..100, a team has members and a distance in 0..150
+  function checkGroup(list: Array<String>)
+    {
+      var g = game.group;
+      if (g.priority < 0 ||
+          g.priority > 100)
+        list.push('group priority ' + g.priority + ' outside 0..100');
+      var t = g.team;
+      if (t == null)
+        return;
+      if (t.size <= 0 ||
+          t.size > t.maxSize)
+        list.push('team size ' + t.size + ' outside 1..' + t.maxSize);
+      if (t.distance < 0 ||
+          t.distance > 150)
+        list.push('team distance ' + t.distance + ' outside 0..150');
     }
 
 // the log lines since the last check show no unfilled template: a value missing from a template's
@@ -1581,8 +1627,24 @@ class Bot
           (pa.attachHost == null ||
            !pa.attachHost.parasiteAttached))
         list.push('attached state with no attach host, or one not flagged parasiteAttached');
+      // AI ids, and the NPC each AI stands for, appear once: a second AI for one NPC is the NPC
+      // spawned again while its first body still walks
+      var ids = new Map<Int, Bool>();
+      var npcs = new Map<Int, Int>();
       for (ai in @:privateAccess a._ai)
         {
+          if (ids.exists(ai.id))
+            list.push('AI id ' + ai.id + ' is in the area twice');
+          ids[ai.id] = true;
+          if (ai.state == AI_STATE_DEAD)
+            list.push('dead AI ' + ai.id + ' is still in the area');
+          var npc = ai.npc;
+          if (npc != null)
+            {
+              if (npcs.exists(npc.id))
+                list.push('NPC ' + npc.id + ' is both AI ' + npcs[npc.id] + ' and AI ' + ai.id);
+              npcs[npc.id] = ai.id;
+            }
           if (Math.isNaN(ai.health) ||
               Math.isNaN(ai.energy))
             list.push('AI ' + ai.id + ' health or energy is NaN');
@@ -1639,11 +1701,31 @@ class Bot
       for (e in game.timeline)
         for (npc in e.npc)
           ahead('NPC', npc.id);
+      // cult rosters and custodes hold AI ids too, and every cult's missions share one counter
+      // (ids looked up by Ordeals.getMissionByID and the base defense)
+      var missions = new Map<Int, Bool>();
+      for (c in game.cults)
+        {
+          for (m in c.members)
+            ahead('AIData', m.id);
+          if (c.base != null)
+            for (d in c.base.custodes)
+              ahead('AIData', d.id);
+          for (o in c.ordeals.list)
+            for (m in o.missions)
+              {
+                if (missions.exists(m.id))
+                  list.push('mission id ' + m.id + ' is used twice');
+                missions[m.id] = true;
+                ahead('Mission', m.id);
+              }
+        }
       var counters = [
         'RegionObject' => RegionObject._maxID,
         'AIData' => ai.AIData._maxID,
         'AreaObject' => objects.AreaObject._maxID,
         'NPC' => @:privateAccess scenario.NPC._maxID,
+        'Mission' => cult.Mission._maxID,
       ];
       for (name in top.keys())
         if (top[name] >= counters[name])

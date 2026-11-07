@@ -107,13 +107,12 @@ class Cult extends _SaveObject
         if (ai.id > AIData._maxID)
           AIData._maxID = ai.id;
 
-      // set Mission._maxID to maximum mission id + 1
-      var maxMissionID = 0;
+      // every cult's missions share one counter (Game.restartPre zeroes it before a load): raise it
+      // past this cult's, never lower it below an earlier cult's
       for (ordeal in ordeals.list)
         for (mission in ordeal.missions)
-          if (mission.id > maxMissionID)
-            maxMissionID = mission.id;
-      Mission._maxID = maxMissionID + 1;
+          if (mission.id >= Mission._maxID)
+            Mission._maxID = mission.id + 1;
       if (base != null)
         {
           base.initPost(true);

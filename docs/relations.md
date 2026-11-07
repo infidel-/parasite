@@ -315,7 +315,7 @@ ordeal anyway: **GAP G11**.
 | listener | `Mission.success` | `Mission.fail` | profane timer out | member death | `Cult.destroy` |
 |---|---|---|---|---|---|
 | subclass `onSuccess`/`onFail` | ✓ | ✓ | ✓ | via `Ordeal.onDeath` → `fail` | ✗ |
-| removed from `Ordeals.list` | via `Ordeal.check` | ✓ | ✓ but `Ordeals.turn` skips the next ordeal: **GAP G9** | ✓ (iterates a copy) | wiped |
+| removed from `Ordeals.list` | via `Ordeal.check` | ✓ | ✓ (`Ordeals.turn` iterates a copy; G9, fixed) | ✓ (iterates a copy) | wiped |
 | mission site area removed | only through exit objects | same | ✗ | ✗ | ✗ |
 
 `ON_AI_DEATH` has one sender, `AI.die`, to the current area's mission. `ON_AI_MAX_CONSENT` comes
@@ -348,11 +348,11 @@ Group and cult pause in mission areas.
 | `AreaManager.loadPost`, `Team.loadPost` | `AreaEvent.ai` by id, `ambushedHabitat` by area id |
 | `PlayerArea.loadPost` | `attachHost` by id |
 | `Player.loadPost` | area: host by `hostID`; region: keeps the saved copy and never calls `host.loadPost`: **GAP G2** (organ growth stops) |
-| `Cult.loadPost` (per cult) | `Mission._maxID` set per cult, the last wins: **GAP G1** (mission ids collide after loading any save with rivals) |
+| `Cult.loadPost` (per cult) | raises `Mission._maxID` past its own missions, never below an earlier cult's (G1, fixed: a per-cult assignment let the last cult win) |
 | `Loader.rebuildAIDataMaxID` | the AIData counter over areas, habitats, host and cults, run last |
 
-`World.loadPost` sets `RegionObject._maxID` from the region id instead of the object id and never
-increments it (latent: only one ovum is created after worldgen).
+Every id counter is static (¬S): `Game.restartPre` resets them all, and the load raises each past
+the ids it finds. `Bot.check` asserts that every counter is above every live id.
 
 ## Copies and ids
 
@@ -375,7 +375,7 @@ organs on the wrong body: **GAP G10** (one session; a load builds fresh ones).
 | `Player.host`/`hostID` | pointer + id | invade, `onDetach`, host death | region load (G2) |
 | `AreaEvent.ai` | pointer + id | pruned when the event fires | despawn (still fires) |
 | `AI.enemies` | ids | purged by `removeAI` | — |
-| id counters `AIData`/`Mission`/`RegionObject`/`Cult._maxID` | statics (¬S) | rebuilt on load | G1, the RegionObject counter |
+| id counters `AIData`/`Mission`/`RegionObject`/`NPC`/`Cult._maxID` | statics (¬S) | reset by `Game.restartPre`, raised on load | — |
 
 ## Invariants
 
@@ -384,17 +384,23 @@ organs on the wrong body: **GAP G10** (one session; a load builds fresh ones).
 | a custos is never a host | host-death paths skip the custodes | `BaseCustosAI.canAttach` | no (structural) |
 | a mission area can't be left until its mission completes | mission targets never die on the region map | `AreaGame.canLeave` (not `Game.beginRebirth`) | no (structural) |
 | the player cult is `cults[0]`; only it has a base, ordeals and missions | enter/leave notify only `cults[0]` | `Game.init`, `MetamorphosisPhaseII` | no |
-| the AIData counter is rebuilt after everything else loads | new AIs never reuse a member's id | `Loader.rebuildAIDataMaxID` | no |
-| every cultist in the area has a record in a live cult | `AreaGame.removeAI` and `Cult.onRemoveAI` don't null-check | `Cult.destroy` clears flags in the area | no |
-| an ACTIVE cult has ≥ 1 member, the leader first | `Cult.onDeath` reads `members[0]` | `Cult.addLeader`, `Cult.destroy` | no |
-| a dead AI leaves the area at once | area AI loops | `AI.die` sets DEAD and calls `removeAI` | no |
-| in area mode the host is in the area's AI list | `Player.loadPost` re-link | `AreaGame.enter` | no |
+| every id counter is above every live id; mission ids are unique across all cults | lookups by id (`Ordeals.getMissionByID`, `AreaGame.getAIByID`, the base defense) | `Game.restartPre` resets, each `loadPost` raises, `Loader.rebuildAIDataMaxID` runs last | yes |
+| mission ids start at 1, so 0 is never a mission | `CultBase.initPost` reads a defense id of 0 as none | `Mission._maxID`, `Game.restartPre` | no |
+| every cultist in the area has a record in a live cult | `AreaGame.removeAI` and `Cult.onRemoveAI` don't null-check | `Cult.destroy` clears flags in the area | yes |
+| an ACTIVE cult has ≥ 1 member, the leader first | `Cult.onDeath` reads `members[0]` | `Cult.addLeader`, `Cult.destroy` | yes |
+| a base defense id points at a live mission | `CultBase.addPressure`, `Team.spawnBaseDefenseOrdeal` skip while one runs | the defense missions' `onSuccess` | yes (G3 known) |
+| custodes records and the base area's custos AIs match | `CultBase.onEnterArea` respawns from the records | `CultBase.onRemoveAI`, `CultBase.onEnterArea` | yes |
+| a dead AI leaves the area at once; area AI ids are unique | area AI loops | `AI.die` sets DEAD and calls `removeAI` | yes |
+| an NPC is at most one AI in the area | timeline NPC state | `AreaGame.turnSpawnNPC` spawns only an unlinked NPC | yes (G5) |
+| in area mode the host is in the area's AI list | `Player.loadPost` re-link | `AreaGame.enter` | yes |
 | cult members only die on screen: in the current area, or as the dying host | the region host's cult flag can't go stale (`Cult.destroy` clears only the area and habitats) | no off-screen member deaths exist | no |
-| group priority stays in 0..100, team distance in 0..150, a team has ≥ 1 member | group and team logic | `Group.changeOnlyPriority`, the `Team.distance` setter, `Group.onTeamMemberDeath` | no |
+| group priority stays in 0..100, team distance in 0..150, a team has 1..maxSize members | group and team logic | `Group.changeOnlyPriority`, the `Team.distance` setter, `Group.onTeamMemberDeath` | yes |
 | the team leaves TEAM_FIGHT whenever the player leaves the area | a blackops host dying on the region map is harmless | `Team.onLeaveArea` | no |
 
-Asserted today (`Bot.check`): no NaN in player, group, cult money and alertness; a host in host
-state; the player inside the area; no goal both current and completed.
+`Bot.check` also asserts: no NaN in player, group, cult money, AI health/energy and alertness; host
+and attach state consistent with the player state; the player and every AI inside the area; no goal
+both current and completed; the message list under its cap; no unfilled template in the log. It
+runs after every bot step, once before the first, and after a roundtrip load.
 
 ## Neighbour ideas
 
