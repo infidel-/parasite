@@ -7,6 +7,7 @@ import ui.UI;
 import scenario.Timeline;
 import cult.Cult;
 import cult.RivalCult;
+import region.RegionObject;
 import const.ItemsConst;
 import const.Jobs;
 import const.Lang;
@@ -111,6 +112,8 @@ class Game extends _SaveObject
   public function init(firstTime: Bool, ?worldGen: Bool = true)
     {
       trace('init');
+      // before the first log line, which is stamped with the turn
+      turns = 0;
       var scen = '';
       if (scenarioStringID == 'alien')
         scen = T('[scenario a]');
@@ -124,7 +127,6 @@ class Game extends _SaveObject
       log(s);
 #end
       log('<font style="font-size: 6px">' + T('Revulsion is a striking color in my palette.') + '</font>', COLOR_DEBUG);
-      turns = 0;
       state = GAMESTATE_RUNNING;
       isInited = false;
 
@@ -281,8 +283,17 @@ class Game extends _SaveObject
     {
       isInited = false;
       state = GAMESTATE_RUNNING;
+      // every id counter back to its boot value: a load restores them (World.loadPost and the rest)
       RegionGame._maxID = 0;
       Cult._maxID = 0;
+      AreaGame._maxID = 0;
+      ai.AIData._maxID = 0;
+      objects.AreaObject._maxID = 0;
+      cult.Mission._maxID = 0;
+      cult.base.CultBaseOrgan._maxID = 0;
+      cult.base.RivalBaseOrgan._maxID = 0;
+      RegionObject._maxID = 1;
+      scenario.NPC._maxID = 0;
       messageList.clear();
       hudMessageList.clear();
       if (location == LOCATION_AREA)

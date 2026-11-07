@@ -86,20 +86,6 @@ class Bot
   public static function seed(g: Game, seed: Int)
     {
       js.Syntax.code("Math.random = {0}", gen.Rng.mulberry32(seed));
-      // Game.restartPre resets only the region and cult id counters; the rest carry on from the
-      // previous game, which a second New Game in one session shrugs off but which would make a
-      // seed's game depend on the games played before it
-      game.AreaGame._maxID = 0;
-      ai.AIData._maxID = 0;
-      objects.AreaObject._maxID = 0;
-      cult.Mission._maxID = 0;
-      cult.base.CultBaseOrgan._maxID = 0;
-      cult.base.RivalBaseOrgan._maxID = 0;
-      region.RegionObject._maxID = 1;
-      @:privateAccess scenario.NPC._maxID = 0;
-      // Game.init logs its first lines BEFORE it zeroes turns, so they carry the last game's turn
-      // (TODO.md)
-      g.turns = 0;
       // the stage presets switch these off and only the Game constructor switches them back on
       g.importantMessagesEnabled = true;
       // the profile outlives a game by design (unlocked pedia articles and the like); headless, a new
