@@ -816,7 +816,10 @@ class AreaGame extends _SaveObject
   public function leave()
     {
 //      game.debug('Area.leave()');
-      if (!isHabitat)
+      // a teardown (Game.restartPre: restart, load) runs no gameplay on the game it discards: no
+      // body discovery, no despawn hooks (removeAI), no team, manager or cult listeners
+      if (!isHabitat &&
+          game.isInited)
         {
           // count all bodies and discover them in bulk
           var totalPoints = 0;
@@ -857,6 +860,8 @@ class AreaGame extends _SaveObject
           o.hide();
         else removeObject(o);
       clearTemporaryDecorations();
+      if (!game.isInited)
+        return;
 
       // leave area with active team
       if (game.group.team != null)
@@ -2235,8 +2240,13 @@ class AreaGame extends _SaveObject
       if (ai.state != AI_STATE_DEAD &&
           ai != game.player.host &&
           // only called if player in the same area
-          game.area == this)
+          game.area == this &&
+          // not on a teardown (AreaGame.leave)
+          game.isInited)
         ai.onRemove();
+
+      // a despawned or dead AI is no attack target
+      game.ui.hud.targeting.clearTargetIf(ai);
 
       // the player's host takes its NPC along: the link holds wherever the host goes, or the NPC
       // spawns again as a second body when the host walks back into its area
@@ -2743,8 +2753,7 @@ class Test {
       for (ai in _ai)
         if (ai.isCommon == isCommon &&
             !ai.isGuard &&
-            !(ai.entity != null &&
-              ai.entity.isMissionTarget) &&
+            !isMissionTarget(ai) &&
             !ai.isCultist &&
             !ai.parasiteAttached)
           cnt++;
@@ -3248,6 +3257,14 @@ class Test {
    {
      return game.cults[0].ordeals.getAreaMission(this);
    }
+
+// is this AI a target of this area's mission? derived, so it holds across a load and ends with the
+// mission
+  public function isMissionTarget(ai: AI): Bool
+    {
+      var m = getAreaMission();
+      return (m != null && m.isTarget(ai));
+    }
 
 // check if the player can leave this area
   public function canLeave(): Bool

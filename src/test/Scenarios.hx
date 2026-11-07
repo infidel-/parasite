@@ -7,6 +7,9 @@
 package test;
 
 import game.Game;
+import game.Team;
+import cult.ordeals.profane.GenericProfaneOrdeal;
+import cult.ordeals.profane.ProfaneConst;
 
 typedef _Scenario = {
   var start: String; // the start a fuzz run would take (Headless.begin)
@@ -63,6 +66,38 @@ class Scenarios
     'phase2-outside' => {
       start: 's2+cu_start',
       run: phase2Outside,
+    },
+    'ambush-base' => {
+      start: BASE,
+      run: ambushBase,
+    },
+    'load-habitat-fight' => {
+      start: 's22',
+      run: loadHabitatFight,
+    },
+    'despawn-target' => {
+      start: 's1',
+      run: despawnTarget,
+    },
+    'kill-target' => {
+      start: 's1+cu_start+cu_members',
+      run: killTarget,
+    },
+    'ordeal-member-dies' => {
+      start: 's2+cu_start+cu_members',
+      run: ordealMemberDies,
+    },
+    'region-effects' => {
+      start: 's2',
+      run: regionEffects,
+    },
+    'rebirth-region' => {
+      start: 's11',
+      run: rebirthRegion,
+    },
+    'rebirth-area' => {
+      start: 's11',
+      run: rebirthArea,
     },
   ];
   // the fixture with a cult base, standing in its habitat
@@ -311,6 +346,237 @@ class Scenarios
       if (c.base != null)
         return [ 'a base grew on the region map' ];
       return [];
+    }
+
+// an ambush laid in the habitat before the base grew in it times out (Team.destroyHabitat): the base
+// habitat is not burned, the team turns on Cor Nefandum, and the game still saves and loads
+  static function ambushBase(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      if (base == null ||
+          game.location != LOCATION_AREA ||
+          game.area.id != base.areaID)
+        return [ 'the fixture does not stand in the base habitat' ];
+      var team = new Team(game);
+      team.state = TEAM_AMBUSH;
+      team.ambushedHabitat = game.area.habitat;
+      team.ambushedHabitatAreaID = base.areaID;
+      team.timer = 1;
+      game.group.team = team;
+      // the ambush fires while the player is away from the habitat
+      game.setLocation(LOCATION_REGION);
+      if (!bot.pressAction('skipTurn'))
+        return [ 'no Wait on the region map' ];
+      if (game.region.get(base.areaID) == null)
+        return [ 'the team burned the base habitat' ];
+      if (team.state != TEAM_BASE_DEFENSE)
+        return [ 'the team is ' + team.state + ' after its ambush met the base, not attacking it' ];
+      Saver.save(game, SLOT);
+      game.load(SLOT);
+      return [];
+    }
+
+// a load during a habitat ambush (Game.restartPre → AreaGame.leave) runs no gameplay on the game it
+// tears down: the habitat is not burned and no habitat shock is dealt
+  static function loadHabitatFight(game: Game, bot: Bot): Array<String>
+    {
+      if (game.location != LOCATION_AREA ||
+          !game.area.isHabitat)
+        return [ 's22 does not stand in a habitat' ];
+      Saver.save(game, SLOT);
+      var team = new Team(game);
+      team.state = TEAM_FIGHT;
+      game.group.team = team;
+      // the torn-down game's own objects: the load builds new ones
+      var region = game.region;
+      var vars = game.player.vars;
+      var habitatID = game.area.id;
+      var left = vars.habitatsLeft;
+      game.load(SLOT);
+      var errs = [];
+      if (region.get(habitatID) == null)
+        errs.push('the load burned the habitat of the game it replaced');
+      if (vars.habitatsLeft != left)
+        errs.push('the load dealt a habitat shock: ' + left + ' habitats left became ' + vars.habitatsLeft);
+      return errs;
+    }
+
+// a targeted AI that despawns (AreaGame.removeAI) leaves no target behind, or the next attack hits a
+// body that is no longer in the area
+  static function despawnTarget(game: Game, bot: Bot): Array<String>
+    {
+      var target = null;
+      for (ai in game.area.getAllAI())
+        if (ai != game.player.host)
+          {
+            target = ai;
+            break;
+          }
+      if (target == null)
+        return [ 's1 has no AI besides the host' ];
+      var t = game.ui.hud.targeting;
+      t.target = new AttackTarget(game, TARGET_AI, target);
+      // AI.checkDespawn, a backup going idle and the leave-area command all remove it this way
+      game.area.removeAI(target);
+      if (t.target != null)
+        return [ 'the despawned AI ' + target.id + ' is still the attack target' ];
+      return [];
+    }
+
+// a Kill target is marked as the area mission's target, never despawns (AI.checkDespawn), and keeps
+// its mark across a save and load
+  static function killTarget(game: Game, bot: Bot): Array<String>
+    {
+      var o = profaneOrdeal(game, MISSION_KILL);
+      if (o == null)
+        return [ 'no profane ordeal has a Kill mission' ];
+      game.cults[0].ordeals.list.push(o);
+      var m: cult.missions.Kill = cast o.missions[0];
+      // the mission is in the area the player stands in
+      m.x = game.area.x;
+      m.y = game.area.y;
+      if (!bot.pressAction('skipTurn'))
+        return [ 'no Wait in the mission area' ];
+      var ai = game.area.getAIByID(m.target.id);
+      if (ai == null)
+        return [ 'the Kill target did not spawn in its area' ];
+      if (!marked(ai))
+        return [ 'the Kill target has no mission mark' ];
+      // idle, calm and out of sight for longer than AI.checkDespawn waits
+      var loc = game.area.findUnseenEmptyLocation();
+      if (loc.x >= 0)
+        ai.setPosition(loc.x, loc.y);
+      ai.setState(AI_STATE_IDLE);
+      ai.alertness = 0;
+      @:privateAccess ai._turnsInvisible = 1000;
+      ai.checkDespawn();
+      if (game.area.getAIByID(m.target.id) == null)
+        return [ 'the Kill target despawned' ];
+      Saver.save(game, SLOT);
+      game.load(SLOT);
+      ai = game.area.getAIByID(m.target.id);
+      if (ai == null ||
+          !marked(ai))
+        return [ 'the Kill target lost its mission mark across a load' ];
+      return [];
+    }
+
+// a member of an ordeal that had no death hook of its own (the profane ordeals, Metamorphosis
+// Phase II, Reap the Unwary, Rival Research) dies: the ordeal fails, as every other one does
+  static function ordealMemberDies(game: Game, bot: Bot): Array<String>
+    {
+      var hostID = makeHostFollower(game);
+      var c = game.cults[0];
+      var o = profaneOrdeal(game, MISSION_KILL);
+      if (o == null)
+        return [ 'no profane ordeal has a Kill mission' ];
+      c.ordeals.list.push(o);
+      o.addMembers([ hostID ]);
+      game.player.host.energy = 0;
+      game.updateHUD();
+      if (!bot.pressAction('skipTurn'))
+        return [ 'no Wait on the region map' ];
+      if (game.player.state != PLR_STATE_PARASITE)
+        return [ 'the host did not expire' ];
+      if (c.ordeals.list.indexOf(o) >= 0)
+        return [ 'the profane ordeal lives on with its dead member ' + hostID ];
+      return [];
+    }
+
+// the host's effects tick on the region map (PlayerRegion.turn): a timer runs out, and bleeding that
+// kills the host takes the region death path (Player.onHostDeath → AI.dieRegion)
+  static function regionEffects(game: Game, bot: Bot): Array<String>
+    {
+      var host = game.player.host;
+      host.onEffect(new effects.Paralysis(game, 3));
+      game.updateHUD();
+      if (!bot.pressAction('skipTurn'))
+        return [ 'no Wait on the region map' ];
+      if (host.effects.has(EFFECT_PARALYSIS))
+        return [ 'a 3-turn paralysis outlasted a 5-turn region turn' ];
+      host.onEffect(new effects.Bleeding(game, 10));
+      host.health = 2;
+      game.updateHUD();
+      bot.pressAction('skipTurn');
+      if (game.player.state != PLR_STATE_PARASITE)
+        return [ 'the host outlived bleeding past its health: player is ' + game.player.state ];
+      return [];
+    }
+
+// the final habitat shock kills the parasite inside its host on the region map (Player.death): it
+// is reborn at the ovum without the host, which is no longer its NPC's body
+  static function rebirthRegion(game: Game, bot: Bot): Array<String>
+    {
+      var npc = game.player.host.npc;
+      if (npc == null)
+        return [ 's11 did not tie the host to an NPC' ];
+      game.setLocation(LOCATION_REGION);
+      var errs = makeOvum(game, bot);
+      if (errs.length > 0)
+        return errs;
+      game.player.death('habitatShock');
+      game.endRebirth();
+      return rebornFree(game, npc);
+    }
+
+// the same death in an area: the host is left behind there, alive, and despawns as a former host
+  static function rebirthArea(game: Game, bot: Bot): Array<String>
+    {
+      var npc = game.player.host.npc;
+      if (npc == null)
+        return [ 's11 did not tie the host to an NPC' ];
+      var area = game.area;
+      game.setLocation(LOCATION_REGION);
+      var errs = makeOvum(game, bot);
+      if (errs.length > 0)
+        return errs;
+      game.setLocation(LOCATION_AREA, area);
+      game.player.death('habitatShock');
+      game.endRebirth();
+      return rebornFree(game, npc);
+    }
+
+// a rebirth left the parasite free and its old host's NPC unlinked
+  static function rebornFree(game: Game, npc: scenario.NPC): Array<String>
+    {
+      var errs = [];
+      if (game.player.state != PLR_STATE_PARASITE)
+        errs.push('reborn as ' + game.player.state + ', not a free parasite');
+      if (game.player.host != null)
+        errs.push('reborn still in host ' + game.player.host.id);
+      if (npc.ai != null)
+        errs.push('NPC ' + npc.id + ' is still linked to the host left behind');
+      return errs;
+    }
+
+// learn the ovum and create it where the parasite stands on the region map, with a life in it
+  static function makeOvum(game: Game, bot: Bot): Array<String>
+    {
+      game.player.evolutionManager.addImprov(IMP_OVUM, 1);
+      game.updateHUD();
+      if (!bot.pressAction('createOvum'))
+        return [ 'no Create ovum on the region map' ];
+      game.player.evolutionManager.ovum.level = 1;
+      return [];
+    }
+
+// a new profane ordeal whose mission is of this type, or null
+  static function profaneOrdeal(game: Game, type: _MissionType): GenericProfaneOrdeal
+    {
+      for (power in ProfaneConst.availableTypes)
+        {
+          var infos = ProfaneConst.constMap.get(power).getInfos();
+          for (i in 0...infos.length)
+            if (infos[i].mission == type)
+              return new GenericProfaneOrdeal(game, power, i);
+        }
+      return null;
+    }
+
+// the AI wears the mission-target badge
+  static function marked(ai: ai.AI): Bool
+    {
+      return Lambda.exists(ai.getBadges(), function(b) return b.svg == 'missiontarget');
     }
 
 // tie the AI to a live NPC of the start events, as the s11 preset does for its host

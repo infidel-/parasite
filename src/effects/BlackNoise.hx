@@ -29,8 +29,9 @@ class BlackNoise extends Effect
   public override function turn(ai: AI, time: Int)
     {
       super.turn(ai, time);
+      // area behaviour: on the region map the effect only runs down
       if (ai == null ||
-          game.area == null)
+          game.location != LOCATION_AREA)
         return;
 
       // apply one random black-noise behavior to this AI

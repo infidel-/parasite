@@ -1563,9 +1563,17 @@ class Bot
         if (c.state == CULT_STATE_ACTIVE &&
             c.members.length == 0)
           list.push('cult ' + c.id + ' is active with no members');
-      var base = game.cults[0].base;
+      // an ordeal locks only live members: a member's death fails its ordeal (Ordeal.onDeath)
+      var player = game.cults[0];
+      for (o in player.ordeals.list)
+        for (id in o.getLockedCultists())
+          if (player.getMemberByID(id) == null)
+            list.push('ordeal ' + o.name + ' locks ' + id + ', no live member');
+      var base = player.base;
       if (base == null)
         return;
+      if (game.region.get(base.areaID) == null)
+        list.push('the base area ' + base.areaID + ' is gone from the region');
       if (base.activeDefenseMissionID >= 0 &&
           game.cults[0].ordeals.getMissionByID(base.activeDefenseMissionID) == null)
         list.push('base defense mission ' + base.activeDefenseMissionID + ' does not exist');
@@ -1640,6 +1648,11 @@ class Bot
           (pa.attachHost == null ||
            !pa.attachHost.parasiteAttached))
         list.push('attached state with no attach host, or one not flagged parasiteAttached');
+      // the attack target is a live AI of this area: AreaGame.removeAI drops it
+      var target = game.ui.hud.targeting.getAITarget();
+      if (target != null &&
+          a.getAIByID(target.id) != target)
+        list.push('attack target ' + target.id + ' is not in the area');
       // AI ids, and the NPC each AI stands for, appear once: a second AI for one NPC is the NPC
       // spawned again while its first body still walks
       var ids = new Map<Int, Bool>();

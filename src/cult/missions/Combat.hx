@@ -145,8 +145,13 @@ class Combat extends Mission
       ai.guardTargetX = x;
       ai.guardTargetY = y;
       game.area.addAI(ai);
-      ai.entity.setMissionTarget();
       game.debug('Combat target ' + data.TheName() + ' has appeared in the mission area at (' + x + ',' + y + ').');
+    }
+
+// is this AI one of the targets?
+  public override function isTarget(ai: AI): Bool
+    {
+      return targetIDs.indexOf(ai.id) >= 0;
     }
 
 // pick a free city tile that can host a mission marker

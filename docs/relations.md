@@ -84,12 +84,13 @@ ones that call it.
 - `Ovum.nurtureOvumAction` enters host death at the middle layer (`PlayerRegion.onHostDeath`), so no
   affinity loss, which matches the other voluntary sacrifice (`Habitat.putObject`).
 - Hidden: nurture points per host type; rebirth gives each improvement a 50% chance to lose a
-  level, +9 turns, and the ovum loses a level. Rebirth notifies nobody else. Pedia: impOvum.
+  level, +9 turns, and the ovum loses a level; a host the parasite died in is left behind
+  (`Player.releaseHost`). Rebirth notifies nobody else. Pedia: impOvum.
 
 **Habitat**: `game/Habitat.hx`, `objects/HabitatObject.hx` and the habitat organs
 - Owns energy balance, regen, watcher (S, as `AreaGame.habitat`).
 - Destruction lives in `Team.destroyHabitat`: habitatsLeft--, a max-energy shock, maybe
-  `Player.death('habitatShock')`.
+  `Player.death('habitatShock')`. Never the base habitat: the team attacks the base instead.
 - Pedia: habitat, habitatCavity, habitatBiomineral, habitatDestruction, habitatWatcher,
   habitatPreservator.
 
@@ -139,13 +140,15 @@ ones that call it.
 **Ordeals**: `cult/Ordeal.hx`, `Ordeals.hx`, `ProfaneOrdeal.hx`, `cult/ordeals/*`
 - Owns the ordeal list, profaneTimeout, per-ordeal members/power/missions (S). Rows in
   `reports/cult-ordeals.md`.
-- Hooks: `onDeath`, `check`, `turn`, `onSuccess`, `fail`, `getActions`, `onTimerTick`.
+- Hooks: `onDeath` (fails the ordeal unless overridden), `check`, `turn`, `onSuccess`, `fail`,
+  `getActions`, `onTimerTick`.
 - Out: timeline (GatherClues), goals, group, getRivalCult*. MetamorphosisPhaseII creates the base
   and the rivals. Pedia: cultCommunalOrdeals, cultProfaneOrdeals.
 
 **Missions**: `cult/Mission.hx`, `cult/missions/*`
 - Saved inside their ordeal. Hooks `turn`, `turnPreAI`, `turnAI` (can take over an AI before its
-  own logic), `onSuccess`, `onFail`, `onEventAI` (ON_AI_DEATH, ON_AI_MAX_CONSENT only).
+  own logic), `onSuccess`, `onFail`, `onEventAI` (ON_AI_DEATH, ON_AI_MAX_CONSENT only), `isTarget`
+  (the mission mark).
 - `AreaGame.getAreaMission` finds the current area's mission; `AreaGame.canLeave` locks the area
   until it completes. Pedia: cultCombatMissions.
 
@@ -207,7 +210,7 @@ One listener list: **`AI.notifyDeath`** (the AI's `onDeath()` hook, `npc.isDead`
 it, so a new death listener goes there and reaches them all. The cult and custodes records are
 synced on removal (`AreaGame.removeAI`); the region path has no removal and syncs the cult itself.
 
-| step | H1 `AI.die` (area, via `PlayerArea.onHostDeath` for the host) | H2 `AI.dieRegion` (region host: expiry, degradation) | H3 `Ovum.nurtureOvumAction` (→ H2) | H6 `Habitat.putObject` (host grown into an organ) |
+| step | H1 `AI.die` (area, via `PlayerArea.onHostDeath` for the host) | H2 `AI.dieRegion` (region host: expiry, degradation, bleeding) | H3 `Ovum.nurtureOvumAction` (→ H2) | H6 `Habitat.putObject` (host grown into an organ) |
 |---|---|---|---|---|
 | `Player.onHostDeath` (affinity, tutorial goals, pedia) | ✓ host | ✓ | ✗ SAFE: voluntary sacrifice, matches H6 | ✗ same |
 | `Cult.onDeath` → `Ordeals.onDeath` | via `AreaGame.removeAI` → `Cult.onRemoveAI` | ✓ direct | ✓ | via `removeAI` |
@@ -218,9 +221,13 @@ synced on removal (`AreaGame.removeAI`); the region path has no removal and sync
 | body, targeting clear, enemies purge | ✓ | n/a | n/a | via `removeAI` (no body: the organ replaces it) |
 
 H4 (`AI.onDamage` host branch) and H5 (`PlayerArea.onDamageHost`) run `AI.die` and match H1.
-`Player.death` in host state (only `habitatShock`) keeps the host through the rebirth (PLAUSIBLE
-P6: in a Kill mission area that carries the target out without ON_AI_DEATH). Scenarios:
-`ovum-leader`, `ovum-member`, `expiry-member`, `organ-npc`.
+Bleeding on the region map enters H2 at the top layer (`Player.onHostDeath`), never through
+`AI.onDamage`, whose alert, sound and `AI.die` are area code. `Player.death` in host state (only
+`habitatShock`) releases the host first (`Player.releaseHost`): in an area it stays behind alive and
+despawns with the rebirth's leave (D4); on the region map it walks off and its NPC is unlinked (P6,
+fixed: the parasite was reborn still inside it). No mission area is in play: the Group pauses there,
+so no habitat shock fires in one. Scenarios: `ovum-leader`, `ovum-member`, `expiry-member`,
+`organ-npc`, `region-effects`, `rebirth-region`, `rebirth-area`.
 
 ### AI despawn (removed alive)
 
@@ -231,18 +238,19 @@ area, no `removeAI`). All but D6 go through `AreaGame.removeAI`.
 
 | listener | D1–D3 | D4 leave | D5 | D6 |
 |---|---|---|---|---|
-| `AI.onRemove` (alive, not host, player in the same area): `HumanAI` → `RegionManager.onHostDiscovered`; `TeamMemberAI` → group; `BlackopsAI` → `Team.checkFightFinish` | ✓ | ✓ (not the host) | ✗ other area | ✗ |
+| `AI.onRemove` (alive, not host, player in the same area, not a teardown): `HumanAI` → `RegionManager.onHostDiscovered`; `TeamMemberAI` → group; `BlackopsAI` → `Team.checkFightFinish` | ✓ | ✓ (not the host) | ✗ other area | ✗ |
 | `npc.ai = null` | ✓ | ✓ | ✓ | ✗ stale pointer |
 | `Cult.onRemoveAI` → `AIData.updateData` | ✓ (D2) | ✓ | ✗ SAFE: flag cleared first | ✗ record kept, live copy lost |
 | custos `CultBase.onRemoveAI` | n/a (guards) | ✓ | n/a | ✗ |
-| mission target copies | ✗ PLAUSIBLE P2: a Kill/Persuade target's progress resets on respawn | ✗ | ✗ | ✗ |
+| mission target copies | ✗ SAFE: a mission target never despawns (`AI.checkDespawn` asks `AreaGame.isMissionTarget`; P2, fixed: it came back from its stale record) | ✗ SAFE: a mission area can't be left | n/a | n/a |
 | BaseDefense `targetIDs` | ✗ SAFE: a wave with none left alive is spawned anew (`BaseDefenseLogic.waveGone`; G8, fixed) | ✗ same (rebirth walks you out) | n/a | n/a |
-| `Targeting.target` | ✗ PLAUSIBLE P9 | via `Game.setLocation` | n/a | n/a |
-| mod event | ✗ none exists | ✗ | ✗ | ✗ |
+| `Targeting.target` | ✓ `AreaGame.removeAI` (P9, fixed: a despawned target could still be attacked from its last tile) | ✓ | ✓ | n/a |
+| mod event | ✗ none exists (Neighbour ideas) | ✗ | ✗ | ✗ |
 
 `RegionManager.onHostDiscovered` reports an NPC host dead ("had suffered a fatal accident") and
-sets `npc.isDead` (G7, fixed: it used to leave the NPC alive to respawn). `BlackopsAI.onRemove` does not call super, so a despawned invaded
-blackops is never reported (PLAUSIBLE P12).
+sets `npc.isDead` (G7, fixed: it used to leave the NPC alive to respawn). `BlackopsAI.onRemove`
+does not call super: SAFE by design, a former blackops host needs no report, since the team it
+belongs to already hunts the player (P12). Scenarios: `despawn-target`, `kill-target`.
 
 ### Area enter and leave
 
@@ -255,15 +263,24 @@ Leave: X1 `Game.setLocation(LOCATION_REGION)` → `AreaGame.leave`; X2 `Game.res
 |---|---|---|---|
 | `Team.onEnterHabitat`, `Goals.onEnter`, `cults[0].onEnterArea` → `CultBase.onEnterArea` (custodes respawn) | ✓ | ✓ | ✗ SAFE: director and custodes are saved in the area AI list |
 | host re-added to `_ai` | ✓ with `_ai.add`; SAFE: `removeAI` never unlinks the player's host from its NPC (G5, fixed: a second AI spawned for the same NPC) | n/a | via `Player.loadPost` |
-| mod AREA_ENTER, autosave | ✓ | ✗ PLAUSIBLE P7 | ✗ P7 |
+| mod AREA_ENTER, autosave | ✓ | ✗ by design: nothing is entered; a mod needs new-game and load events of its own (Neighbour ideas, P7) | ✗ same |
 
 | listener | X1 | X2 |
 |---|---|---|
-| body discovery → `RegionManager.onBodyDiscovered` (not in habitats) | ✓ | ✓ |
-| `removeAI` on everything not PRESERVED (= D4) | ✓ | ✓ |
-| `Team.onLeaveArea` (escape, `destroyHabitat`, ambush → search) | ✓ | ✓ PLAUSIBLE P8: runs gameplay on the game being torn down |
-| `AreaManager.onLeaveArea`, `cults[0].onLeaveArea` | ✓ | ✓ |
+| body discovery → `RegionManager.onBodyDiscovered` (not in habitats) | ✓ | ✗ SAFE: a teardown runs no gameplay (below) |
+| `removeAI` on everything not PRESERVED (= D4) | ✓ | ✓ without the `AI.onRemove` hooks |
+| `Team.onLeaveArea` (escape, `destroyHabitat`, ambush → search) | ✓ | ✗ SAFE: teardown (P8, fixed: a load during a habitat ambush burned the habitat of the game it discarded, and at the last habitat could finish the run and delete the autosave) |
+| `AreaManager.onLeaveArea`, `cults[0].onLeaveArea` | ✓ | ✗ SAFE: teardown |
 | mod AREA_LEAVE, autosave, `RegionGame.updateAlertness` | ✓ | ✗ |
+
+X2 is a teardown: `Game.restartPre` clears `game.isInited` before it leaves, and `AreaGame.leave`
+and `AreaGame.removeAI` run their gameplay listeners only while it is set. Scenario:
+`load-habitat-fight`.
+
+A final habitat shock inside `Team.onLeaveArea` (X1) runs the rebirth's `Game.setLocation` inside
+the outer one, while `game.location` is still the area: the inner leave meets the parent cell, which
+`RegionGame.removeArea` made `game.area`, and finds nothing left to do. SAFE, but only by that
+accident.
 
 Only `cults[0]` gets enter/leave: SAFE, because rivals have no base, ordeals or missions.
 
@@ -279,7 +296,7 @@ fixed: custodes kept the player in the base habitat). `Game.beginRebirth` skips 
 | create | `PlayerRegion.createHabitatAction` | — |
 | enter | `PlayerRegion.enterHabitatAction` → N1, plus `Team.onEnterHabitat` | — |
 | leave | `PlayerArea.leaveAreaAction` / `HabitatExit` | — |
-| destroy | `Team.destroyHabitat` (from `Team.turnAmbush`, `Team.onLeaveArea`) | the AIs inside (no `removeAI`); `CultBase` if this is the base habitat (PLAUSIBLE P1: the base's area id dangles); missions marked there |
+| destroy | `Team.destroyHabitat` (from `Team.turnAmbush`, `Team.onLeaveArea`) | the AIs inside (no `removeAI`); missions marked there. Never the base habitat: the team turns on Cor Nefandum instead (`Team.spawnBaseDefenseOrdeal`; P1, fixed: an ambush laid before the base grew burned it, and the save then failed to load). Scenario: `ambush-base` |
 
 ### Host attach, invade, detach
 
@@ -326,8 +343,12 @@ fixed: `Ordeal.success` removed it whatever `onSuccess` did).
 `ON_AI_DEATH` has one sender, `AI.die`, to the current area's mission. `ON_AI_MAX_CONSENT` comes
 only from Chat. Mission targets: Kill/Persuade hold an AIData and respawn from it; Combat respawns
 missing targets (`Combat.getMissingTargets`); BaseDefense/TeamBaseDefense hold ids only and cannot
-respawn (G8). MetamorphosisPhaseII, RivalResearch, ReapTheUnwary and GenericProfaneOrdeal lock
-members but don't override `onDeath` (PLAUSIBLE P3: a dead member still counts).
+respawn (G8). Every ordeal fails when a locked member dies: `Ordeal.onDeath` defaults to `fail()`
+(P3, fixed: four ordeals kept the dead member and its action slot). Scenario: `ordeal-member-dies`.
+
+The mission mark is derived, not stored: `AreaGame.isMissionTarget` asks the area's open mission
+(`Mission.isTarget`: Kill, Persuade, Combat), so it holds across a load and ends with the mission
+(fixed: a flag on the render entity was lost on every load).
 
 ### Turn ticks: area vs region
 
@@ -335,9 +356,10 @@ members but don't override `onDeath` (PLAUSIBLE P3: a dead member still counts).
 |---|---|---|
 | `Player.turn` (energy, affinity, organs, evolution) | ×1 | ×5 |
 | `PlayerArea.turn` (control, AP) / `PlayerRegion.turn` (control +25, `chatTurn(5)`) | area | region |
-| `Group.turn` | ×1 | ×1, not scaled (PLAUSIBLE P5) |
+| `Group.turn` | ×1 | ×1, not scaled: design, the region map slows the Group (P5) |
 | `Cult.turnInternal` | cult time 1 | cult time 5 |
-| `AI.turnInternal` (effects, traits, logic, despawn) | area AIs and host | ✗: host effects freeze (PLAUSIBLE P4) |
+| `AI.turnInternal` (effects, traits, logic, despawn) | area AIs and host | ✗ |
+| host effects | via `AI.turnInternal` | ×5 via `PlayerRegion.turn`: timers and stats only; attacks, sounds, alerts and splats are area code and skip (P4, fixed: effects froze) |
 | mission `turnPreAI`/`turn`/`turnAI` | mission area | ✗ |
 | `Goals.turn` | ✓ | ✓, not scaled |
 | alertness decay | current area −0.1, only with nobody alerted | every area −1 |
@@ -371,11 +393,12 @@ body).
 |---|---|---|---|
 | `Cult.members` | AIData | `Cult.onRemoveAI` (despawn, death), `AI.dieRegion` | habitat destroyed (record kept) |
 | `CultBase.custodes` | CustosAIData | `CultBase.onRemoveAI`, respawned by `CultBase.onEnterArea` | habitat destroyed |
-| `Kill.target`, `Persuade.target` | AIData | ON_AI_DEATH | despawn (P2) |
+| `Kill.target`, `Persuade.target` | AIData | ON_AI_DEATH | — (a mission target never despawns) |
 | Combat `targets`/`targetIDs` | AIData + ids | ON_AI_DEATH, `Combat.getMissingTargets` | — (guards don't despawn) |
 | BaseDefense `targetIDs`, `CultBase.activeDefenseMissionID` | ids | ON_AI_DEATH, the missions' `onSuccess` | — (fresh wave, cleared by `Cult.destroy`) |
 | `RecruitFollower.target` | AIData, never live | — | — |
-| `Ordeal.members` | member ids | `Ordeal.onDeath` in 7 ordeals | the other 4 (P3) |
+| `Ordeal.members` | member ids | `Ordeal.onDeath` fails the ordeal | — |
+| `Targeting.target` | AI pointer | cleared by `AreaGame.removeAI`, `Game.setLocation`, `PlayerArea.onDetach` | — |
 | `Group.directorID` | id | `AgentAI.onDeath`; SAFE: `GroupDirector.onEnter` reassigns on every visit | — |
 | `NPC.ai` | pointer (¬S) | `AI.setNPC`, `AI.loadPost`, cleared by `removeAI` | `Team.destroyHabitat` |
 | `Player.host`/`hostID` | pointer + id | invade, `onDetach`, host death | — |
@@ -402,6 +425,13 @@ body).
 | cult members only die on screen: in the current area, or as the dying host | the region host's cult flag can't go stale (`Cult.destroy` clears only the area and habitats) | no off-screen member deaths exist | no |
 | group priority stays in 0..100, team distance in 0..150, a team has 1..maxSize members | group and team logic | `Group.changeOnlyPriority`, the `Team.distance` setter, `Group.onTeamMemberDeath` | yes |
 | the team leaves TEAM_FIGHT whenever the player leaves the area | a blackops host dying on the region map is harmless | `Team.onLeaveArea` | no |
+| the base habitat is never removed | `CultBase` reads its area (`CultBase.syncOrganObjects` on load) | `Team.destroyHabitat` turns on the base instead | yes |
+| an ordeal locks only live members | its action slots, the cult window | `Ordeal.onDeath` fails it | yes |
+| the attack target is a live AI of the current area | attacks and organ actions on it | `AreaGame.removeAI`, `Game.setLocation` | yes |
+| a mission target never despawns | Kill/Persuade would respawn it from a stale record | `AI.checkDespawn` | no (scenario `kill-target`) |
+| a teardown runs no gameplay | load and restart discard the game | `AreaGame.leave`, `AreaGame.removeAI` check `game.isInited` | no (scenario `load-habitat-fight`) |
+| on the region map only the host's effects tick, and only their location-free part | no effect reaches area code or `AI.die` there | `PlayerRegion.turn`, each area effect's location check | no (scenario `region-effects`) |
+| the parasite is never reborn in a host | rebirth starts free at the ovum | `Player.releaseHost` | no (scenarios `rebirth-*`) |
 
 `Bot.check` also asserts: no NaN in player, group, cult money, AI health/energy and alertness; host
 and attach state consistent with the player state; the player and every AI inside the area; no goal
@@ -427,7 +457,8 @@ Remove a line when it ships.
 - Mission events stop at death and consent; `onInvade`/`onBrainProbe`/`onNotice` could forward to
   `Mission.onEventAI`.
 - `Group.neutralize`/`reopen` are invisible to cults and the timeline.
-- No mod events for cult, ordeal, mission, goal, group priority or rebirth.
+- No mod events for cult, ordeal, mission, goal, group priority, rebirth, despawn, new game or
+  load (`area:enter` fires on neither, P7).
 
 ## History
 
@@ -443,3 +474,4 @@ One line per cross-system bug: the commit and the empty cell.
 | ac4cbac8 | mission ids collided after loading a save with rivals (G1); a failed profane ordeal skipped the next one's turn (G9) | save/load × `Cult.loadPost`; missions × list removal |
 | e902a0f0 | a host grown into a habitat organ came back as its NPC (G6) | AI death × H6 × `AI.notifyDeath` |
 | "Fix eight cross-system gaps found by relations mapping" | G2 G3 G4 G5 G7 G8 G10 G11, each with a scenario | the cells above marked "fixed" |
+| "Fix the plausible relations gaps" | P1 P2 P3 P4 P6 P8 P9 and the mission mark lost on load, each with a scenario; P5 P7 P12 recorded as design, P11 covered by "mission ids start at 1" | the P cells above |

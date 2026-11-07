@@ -27,7 +27,9 @@ class Panic extends Effect
   public override function turn(ai: AI, time: Int)
     {
       super.turn(ai, time);
-      if (ai == null)
+      // area behaviour: on the region map the effect only runs down
+      if (ai == null ||
+          game.location != LOCATION_AREA)
         return;
 
       if (ai.parasiteAttached)

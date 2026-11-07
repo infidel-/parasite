@@ -139,6 +139,12 @@ class Mission extends _SaveObject
   public function onEventAI(type: _MissionEvent, ai: AI)
     {}
 
+// is this AI one of the mission's targets (the mission mark, AreaGame.isMissionTarget)?
+  public function isTarget(ai: AI): Bool
+    {
+      return false;
+    }
+
   // get ordeal property
   function get_ordeal(): Ordeal
     {

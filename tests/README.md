@@ -208,7 +208,7 @@ base, the rival base, cult8):
 | `cult` | the console cult × seeds, the cult fixtures × 3 (soak only) | the cult policy; fails when no run sees a profane ordeal over (`--reach PROFANE_DONE=1`) |
 | `tutorial` | new games × seeds (twice the seeds in the soak), the GOAL policy | works through the tutorial, the timeline and the habitat to `--goal`; the suite fails when fewer runs than `--reach` reach a gated milestone (default one run each for LEARN_NPC, CREATE_HABITAT and USE_COMPUTER; quick, TRAVEL_EVENT). The soak prints each milestone's reach and min/median/max turns |
 | `timeline` | the `habitat-computer` fixture × seeds, as is and with event 11 learned by console (soak only) | the GOAL policy on from USE_COMPUTER, to PROGRESS_TIMELINE and FIND_SHIP, tallied apart (`timeline`, `timeline+11`); fails when no plain run completes event 11's note (`--reach timeline:PROGRESS_TIMELINE=1`; measured 3 of 20). The event-11 runs have no gate: one of 20 finds the ship |
-| `scenario` | each scripted scenario in `src/test/Scenarios.hx`, once (quick cut too) | its own start (a preset or fixture plus `+` console commands), steps through the player's entry points (`Bot.pressAction`), its own asserts, then the invariants. One scenario per entry point of a lifecycle event in [`docs/relations.md`](../docs/relations.md): **a new entry point gets one**. Today: the AI death row (`ovum-leader`, `ovum-member`, `expiry-member`, `organ-npc`), NPC hosts (`npc-reenter`, `npc-discovered`), a region-map save (`region-load-organ`), the base defense (`defense-leader-dies`, `defense-wave-gone`), the base exit (`base-leave-custos`), a summoned cultist's organs (`summon-organs`) and the second metamorphosis (`phase2-outside`) |
+| `scenario` | each scripted scenario in `src/test/Scenarios.hx`, once (quick cut too) | its own start (a preset or fixture plus `+` console commands), steps through the player's entry points (`Bot.pressAction`), its own asserts, then the invariants. One scenario per entry point of a lifecycle event in [`docs/relations.md`](../docs/relations.md): **a new entry point gets one**. Today: the AI death row (`ovum-leader`, `ovum-member`, `expiry-member`, `organ-npc`), NPC hosts (`npc-reenter`, `npc-discovered`), a region-map save (`region-load-organ`), the base defense (`defense-leader-dies`, `defense-wave-gone`), the base exit (`base-leave-custos`), a summoned cultist's organs (`summon-organs`), the second metamorphosis (`phase2-outside`), a team ambush meeting the base (`ambush-base`), a load during a habitat fight (`load-habitat-fight`), a despawned attack target (`despawn-target`), a Kill target that stays and keeps its mark (`kill-target`), a member's death in a profane ordeal (`ordeal-member-dies`), host effects on the region map (`region-effects`) and a rebirth from inside a host (`rebirth-region`, `rebirth-area`) |
 
 **Seeds vary the setup:**
 - the difficulty is `1 + seed % 3`;
@@ -236,9 +236,10 @@ when it is cheap to assert, and the table's "asserted" column says which ones ar
 - the id counters (`RegionObject`, `AIData`, `AreaObject`, `NPC`, `Mission` `._maxID`) above every
   live id, cult rosters, custodes and every cult's missions included, and mission ids unique; a load
   restores them, and three of them it did not (fixed);
-- an active cult has members; a base defense id points at a live mission; in the base area, the
-  custodes records and the custos AIs match;
-- no dead AI in the area, no AI id twice, no NPC as two AIs;
+- an active cult has members; an ordeal locks only live members; the base area exists; a base
+  defense id points at a live mission; in the base area, the custodes records and the custos AIs
+  match;
+- no dead AI in the area, no AI id twice, no NPC as two AIs; the attack target an AI of the area;
 - group priority in 0..100, a team of 1..maxSize members at a distance in 0..150;
 - `messageList` within its cap of 100;
 - no log line written since the bot started looks unfilled: `null`, `undefined`, `NaN`, `[object`, or

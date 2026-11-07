@@ -62,12 +62,6 @@ class BuryTheFile extends Ordeal
       super.initPost(onLoad);
     }
 
-// handle member death
-  public override function onDeath(aidata: AIData)
-    {
-      fail();
-    }
-
 // cult turn: the group sending a new team first loses the race
   public override function turn()
     {

@@ -69,8 +69,13 @@ class Kill extends Mission
       var ai = game.area.spawnAI(target.type, loc.x, loc.y, false);
       ai.updateData(target, 'on spawn');
       game.area.addAI(ai);
-      ai.entity.setMissionTarget();
       game.debug('Target ' + target.TheName() + ' has appeared in the mission area.');
+    }
+
+// is this AI the target?
+  public override function isTarget(ai: AI): Bool
+    {
+      return ai.id == target.id;
     }
 
 

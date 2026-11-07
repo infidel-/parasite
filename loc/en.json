@@ -23602,6 +23602,16 @@
    "field": "name"
   },
   {
+   "s": "Your host has bled out.",
+   "kind": "T",
+   "loc": [
+    "src/effects/Bleeding.hx"
+   ],
+   "vars": [],
+   "where": "Bleeding.turn",
+   "field": "onHostDeath"
+  },
+  {
    "s": "cannot tear away",
    "kind": "N",
    "loc": [

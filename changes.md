@@ -4,6 +4,9 @@
 
 ### Changes
 - console: `bot` lets a test bot play the game (debug build)
+- cult: a member's death fails any ordeal it is locked in, profane ones too
+- game: a parasite reborn after its final habitat shock leaves its host behind
+- game: the host's status effects keep running on the region map
 - mods: `ai:die-region` event when the host dies on the region map
 - ui: [beta] German translation
 
@@ -11,11 +14,15 @@
 - boot: a damaged language file starts the game in English instead of not at all
 - cult: a base defense whose attackers vanished without dying sends a fresh wave instead of never ending
 - cult: a cult destroyed during a base defense no longer freezes the base and the team attacking it
+- cult: a Kill or Persuade target no longer wanders off and returns elsewhere
+- cult: a mission target keeps its marker after a load
 - cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
 - cult: a summoned cultist taken over by the parasite grows organs on its own body
+- cult: a team ambush set before the base grew no longer burns the base habitat
 - cult: an Elevate the faithful that fails on its target's death no longer names it "null"
 - cult: custodes no longer keep the player inside the base habitat
 - cult: the second metamorphosis performed outside a habitat is refused instead of used up
+- game: a despawned AI no longer stays the attack target
 - game: a former NPC host reported dead after getting away stays dead
 - game: a host grown into a habitat organ no longer comes back as its NPC
 - game: a host whose attributes drop no longer keeps energy above its new maximum
@@ -31,6 +38,7 @@
 - game: an NPC host walking back into its own area no longer spawns a second copy of that NPC
 - game: an old save's never-visited city area is built at full size
 - game: an organ gives its strength, energy or health bonus only once it is grown
+- game: loading or restarting during a habitat ambush no longer burns the habitat
 - game: sex workers and blackops agents spawn with their own stats, not ones a load later changes
 - game: stepping off a host into a wall no longer crashes the next action
 - game: the corp mission target can be placed in any office, not only the left part of the area

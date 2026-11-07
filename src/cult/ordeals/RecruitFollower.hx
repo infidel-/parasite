@@ -111,12 +111,6 @@ class RecruitFollower extends Ordeal
       return T('Seek out those who hold sway over {power} matters.', { power: followerType });
     }
 
-// handle member death
-  public override function onDeath(aidata: AIData)
-    {
-      fail();
-    }
-
   // handle successful completion
   public override function onSuccess()
     {

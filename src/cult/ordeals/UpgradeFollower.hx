@@ -86,12 +86,6 @@ class UpgradeFollower extends Ordeal
       return locked;
     }
 
-// handle member death
-  public override function onDeath(aidata: AIData)
-    {
-      fail();
-    }
-
 // handle successful completion
   public override function onSuccess()
     {

@@ -1,5 +1,7 @@
 # Cult Ordeals Table
 
+Every ordeal fails when a member locked in it dies.
+
 ## Communal Ordeals
 
 Started by the player from the cult window. Random member picks prefer the given level and fill any gap with higher-level members, unless the row says "exactly".

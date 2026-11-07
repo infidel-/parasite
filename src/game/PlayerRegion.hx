@@ -51,6 +51,8 @@ class PlayerRegion extends _SaveObject
             player.hostControl += 25;
           // time passing for chat
           player.host.chatTurn(time);
+          // time passing for effects: the host is in no area, so AI.turnInternal does not tick them
+          player.host.effects.turn(player.host, time);
         }
     }
 

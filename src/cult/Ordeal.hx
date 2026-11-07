@@ -137,9 +137,10 @@ class Ordeal extends _SaveObject
       return customName();
     }
 
-// handle member death
+// a member locked in this ordeal died (Ordeals.onDeath): the ordeal fails
   public function onDeath(aidata: AIData)
     {
+      fail();
     }
 
 // fail this ordeal

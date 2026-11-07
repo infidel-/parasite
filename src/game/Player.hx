@@ -228,6 +228,9 @@ class Player extends _SaveObject
       // detach
       if (state == PLR_STATE_ATTACHED)
         game.playerArea.detachAction();
+      // the parasite is reborn free: the host it died in stays behind, alive
+      else if (state == PLR_STATE_HOST)
+        releaseHost();
       game.log(T('You fade into the darkness...'));
       // restore health
       health = maxHealth;
@@ -276,6 +279,23 @@ class Player extends _SaveObject
 
       // start rebirth transition
       game.beginRebirth();
+    }
+
+// leaves the host behind alive on a rebirth. in an area it stays there, groggy, and the rebirth's
+// area leave despawns it like any former host; on the region map (or with the area already being
+// left) it just walks off, and its NPC can be spawned again
+  function releaseHost()
+    {
+      if (game.location == LOCATION_AREA &&
+          game.area.getAIByID(host.id) == host)
+        host.onDetach('default');
+      else if (host.npc != null)
+        host.npc.ai = null;
+      state = PLR_STATE_PARASITE;
+      host = null;
+      game.playerArea.attachHost = null;
+      game.ui.hud.targeting.clearTarget();
+      game.playerRegion.resetEntity();
     }
 
 // called after turn is over

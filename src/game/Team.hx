@@ -502,11 +502,21 @@ class Team extends FSM<_TeamState, _TeamFlag>
 
       // team goes back to search
       state = TEAM_SEARCH;
+      ambushedHabitat = null;
+      ambushedHabitatAreaID = -1;
+
+      // the base habitat is never burned (an ambush laid there before the base grew): the team
+      // turns on Cor Nefandum instead, or keeps searching while another attack on it runs
+      var base = game.cults[0].base;
+      if (base != null &&
+          base.areaID == area.habitatAreaID)
+        {
+          spawnBaseDefenseOrdeal();
+          return;
+        }
 
       // cleanup habitat links
       area.hasHabitat = false;
-      ambushedHabitat = null;
-      ambushedHabitatAreaID = -1;
       game.region.removeArea(area.habitatAreaID);
 
       // SPOON: disable habitat death shock

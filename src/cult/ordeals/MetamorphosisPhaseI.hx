@@ -32,12 +32,6 @@ class MetamorphosisPhaseI extends Ordeal
       note = N('A perfected follower seeks the most forbidden of knowledges.');
     }
 
-// fail if bound member dies
-  public override function onDeath(aidata: ai.AIData)
-    {
-      fail();
-    }
-
 // unlocks Phase II
   public override function onSuccess()
     {

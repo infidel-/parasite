@@ -80,12 +80,6 @@ class LowerAlertness extends Ordeal
       super.initPost(onLoad);
     }
 
-// handle member death
-  public override function onDeath(aidata: AIData)
-    {
-      fail();
-    }
-
 // handle successful completion
   public override function onSuccess()
     {

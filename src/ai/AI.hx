@@ -527,7 +527,7 @@ public function show()
             });
         }
       // npc / mission-target marker: mission target wins (cult-pink disc), else timeline npc (yellow)
-      if (entity.isMissionTarget)
+      if (game.area.isMissionTarget(this))
         out.push({
           col: Const.FRAME_EVENT_NPC_AREA,
           row: Const.ROW_REGION_ICON,
@@ -771,8 +771,10 @@ public function show()
       _turnsInvisible++;
 
       // remove from area
-      // guards do not despawn
-      if (!isGuard && _turnsInvisible > DESPAWN_TIMER)
+      // guards and mission targets do not despawn (a target would come back from its stale record)
+      if (!isGuard &&
+          _turnsInvisible > DESPAWN_TIMER &&
+          !game.area.isMissionTarget(this))
         game.area.removeAI(this);
     }
 
@@ -1107,7 +1109,6 @@ public function show()
       // body that spawns just below, instead of the sprite hard-cutting to the corpse
       game.scene.view3d.playDeathFade(entity);
       game.area.removeAI(this);
-      game.ui.hud.targeting.clearTargetIf(this);
       notifyDeath();
       var o = new BodyObject(game, game.area.id, x, y, type);
       // only flat corpses wear the dead actor's own sprite; upright bodies (choir) keep their

@@ -28,9 +28,17 @@ class Bleeding extends Effect
   public override function turn(ai: AI, time: Int)
     {
       super.turn(ai, time);
-      if (ai == null ||
-          game.area == null)
+      if (ai == null)
         return;
+      // on the region map the host only bleeds: no splat or alert, and a death takes the region
+      // host-death path (Player.onHostDeath → AI.dieRegion), not AI.die
+      if (game.location != LOCATION_AREA)
+        {
+          ai.health -= time;
+          if (ai.health == 0)
+            game.player.onHostDeath(T('Your host has bled out.'));
+          return;
+        }
 
       ai.onDamage(1 * time);
       Particle.createSplat(ai.bloodType(), game.scene, {
