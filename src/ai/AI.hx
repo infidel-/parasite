@@ -1057,6 +1057,10 @@ public function show()
           game.player.host != this)
         log(T('{ai:The} dies.', { ai: this }));
       setState(AI_STATE_DEAD);
+      // a parasite attached to it (not yet inside) is left on the floor, not holding a corpse
+      if (game.player.state == PLR_STATE_ATTACHED &&
+          game.playerArea.attachHost == this)
+        game.playerArea.onDetach();
       // mod event: pre-removeAI. entity ref is still live here; mods may
       // snapshot icon/state before AreaGame.removeAI nulls ai.entity below
       ModEventRegistry.fire(ModEventRegistry.AI_DIE_PRE, {

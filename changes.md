@@ -10,6 +10,7 @@
 - cult: an Elevate the faithful that fails on its target's death no longer names it "null"
 - game: a host whose attributes drop no longer keeps energy above its new maximum
 - game: a load no longer lets a new ovum or mission NPC take an id already in use
+- game: a parasite attached to a host that gets killed falls off instead of crashing the invade
 - game: a parasite with no host on a spaceship slot no longer crashes
 - game: a parasite with no host walking into a locked door no longer crashes
 - game: a resisting host boxed in by walls or followers no longer crashes the game
