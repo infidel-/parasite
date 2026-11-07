@@ -161,7 +161,10 @@ to the end of the game:
   The losses are in the corp area. A mission that calls the law freezes its alertness at 100 and
   shuts the exit, and the office's security guard shoots. Waiting at the locked office for a smiler
   measured worse (0 of 20), because the guard has longer to shoot. An abduction never got its target
-  back aboard.
+  back aboard: all three that invaded it (s3 seeds 8 and 18, s31 seed 8) lost it on the walk out, a
+  corp executive of 6-10 health under the fire of guards the mission's law call alerted. The random
+  steps a failed walk hands over no longer probe it on the way (a probe costs the host health), which
+  changed none of the three; getting it out alive is the guarded-area problem of the lab runs.
 
 **The cult policy** (`cult:<start>:<seed>:<steps>`) plays from a cult made by console on the `s1`
 host (`s1+cu_start+cu_members+cu_gr`, no preset starts one) and from three cult fixtures (the cult

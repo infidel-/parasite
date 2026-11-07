@@ -102,10 +102,19 @@ class Bot
       var o = (policy == 'goal' ? goal(list) :
         policy == 'cult' ? cultGoal(list) : null);
       // a step a goal policy leaves to chance never leaves the host: that walked a bare parasite
-      // into a lab's guards, the way the timeline past the computer went on
+      // into a lab's guards, the way the timeline past the computer went on. nor does it probe the
+      // abducted target on the way to the ship: a probe costs the host health, and the target dying
+      // fails the mission
       if (o == null)
         {
-          var rest = (policy == 'random' ? list : [ for (x in list) if (x.id != 'leaveHost') x ]);
+          var carry = game.goals.has(SCENARIO_ALIEN_MISSION_ABDUCTION_GO_SPACESHIP);
+          var rest = (policy == 'random' ? list : [
+            for (x in list)
+              if (x.id != 'leaveHost' &&
+                  !(carry &&
+                    x.id == 'probeBrain'))
+                x
+          ]);
           o = pick(rest.length > 0 ? rest : list);
         }
       trail.push('T' + game.turns + ' ' + o.label);
