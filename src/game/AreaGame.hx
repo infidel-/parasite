@@ -951,8 +951,11 @@ class AreaGame extends _SaveObject
           height = info.height - 10 + 10 * Std.random(2);
         }
       // and an underground lab created before gen.lab took it carries the 2D generator's 45x35, which
-      // the grown plate does not fit: it is generated at its exact size, as setType now creates one
-      if (typeID == AREA_UNDERGROUND_LAB)
+      // the grown plate does not fit: it is generated at its exact size, as setType now creates one.
+      // so is a city created before cities took their full grid: migrateCityGrid only grows the
+      // generated ones, and the 3D street renderer draws the full grid whatever the cut
+      if (typeID == AREA_UNDERGROUND_LAB ||
+          isCity())
         {
           width = info.width;
           height = info.height;

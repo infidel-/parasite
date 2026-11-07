@@ -1,16 +1,1 @@
-[
-  {
-    "match": [
-      "_list.N._list.N.width (",
-      "_list.N._list.N.tiles.length (",
-      "_list.N._list.N._cells ("
-    ],
-    "todo": "TODO.md: an old save's unvisited city area is generated at its old shrunk size"
-  },
-  {
-    "match": [
-      "CityAreaGenerator.addCrosswalks"
-    ],
-    "todo": "TODO.md: re-migrating that city area on the next load crashes"
-  }
-]
+[]

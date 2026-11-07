@@ -40,18 +40,6 @@ Known open work, deferred on purpose. Remove an entry when it is done.
 Each entry has the replay command; see `tests/README.md`. The harness works around these so the
 suites stay green, and says so at the workaround.
 
-- **An old save's unvisited city area is generated at its old shrunk size.**
-  `AreaGame.migrateCityGrid` (`src/game/AreaGame.hx:330`) grows only areas that were already
-  generated, and `generate()` (`:947`) re-sizes old military bases, labs and caves but not cities.
-  So a pre-1.0 save's city area entered for the first time after the upgrade is built 90 wide with
-  the unreachable streets the migration exists to fix, and the next load migrates it after all.
-  Replay: `make test args="--run roundtrip:save/region-cult4-t58-v0.20.json.gz:1:50"`. Fix: give
-  cities `info.width`/`info.height` in `generate()`, as the lab gets.
-- **Re-migrating such an area on the next load can crash the load.** For the v0.21 rival-base save,
-  that second load throws in `CityAreaGenerator.addCrosswalks` (via `rebuildCells` ←
-  `migrateCityGrid` ← `World.loadPost`), so the game does not load. Replay:
-  `make test args="--run roundtrip:save/region-cult-rival-base-t234-v0.21.json.gz:1:50"`.
-  Probably gone with the fix above; check `rebuildCells` on a grid that was generated shrunk.
 - **A failed load leaves a half-wiped game running.** Loading a save whose mod classes are missing
   (four fixtures need the pickpocket mod's `BurglarKingAI`) answers "Load anyway?" with an
   exception, then the game carries on with `game.area == null` and the HUD throws on the next
