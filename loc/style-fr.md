@@ -42,6 +42,10 @@ NEVER write « le », « la », « l’ », « un », « du », « au » before 
 | `{x:a}` | au soldat / à la secrétaire / à l’agent / à Marc | to the |
 | `{x}` | soldat (bare) | bare noun |
 
+- An English placeholder with no form can still be a noun: when its value is an item, an object, a
+  person or a cult (the context says), give it the form French needs:
+  `Drop {item}` → `Lâcher {item:def}`. On a plain value (an effect name, a sum, a number) a form
+  does nothing: write the sentence so it needs no article there.
 - Capitalize the form name at the start of a sentence: `{x:Def} hésite à vous attaquer.` →
   « Le soldat hésite… ». `{x:Indef}` gives « Un soldat… ».
 - People's names and phrases such as « votre hôte » never get an article: `{x:def}` gives just

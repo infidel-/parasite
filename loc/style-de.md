@@ -53,6 +53,10 @@ ending of the noun for you (den Polizisten, des Hundes), so NEVER write „der�
 - The form names are the masculine article of the case; the game swaps in die/das/der/eine… for a
   feminine or neuter noun. Other prepositions take the case form: „mit {x:dem}“, „auf {x:den}“,
   „für {x:einen}“.
+- An English placeholder with no form can still be a noun: when its value is an item, an object, a
+  person or a cult (the context says), give it the case form German needs:
+  `You find {item} in {obj:the}.` → `Du findest {item:einen} in {obj:dem}.` On a plain value (an
+  effect name, a sum, a number) a form does nothing: write the sentence so it needs no article there.
 - Capitalize the form name at the start of a sentence: `{x:Der} zögert, dich anzugreifen.` →
   „Der Soldat zögert…“, „Die Polizistin zögert…“. `{x:Ein}` gives „Ein Soldat…“.
 - People's names and phrases such as „dein Wirt“ never get an article, but the form still picks the

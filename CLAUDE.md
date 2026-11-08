@@ -25,7 +25,7 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 | BUILDING that thing out of quads instead of a glb — a fitting, a box, a run | [`docs/3d-geometry.md`](docs/3d-geometry.md) — the per-FACE texture split, the 0..1 aspect lock, wiring and warm |
 | dressing or enhancing a 3D area | skill `3d-enhance` |
 | generating or baking a SOUND (fal-sfx MCP, `make sounds`) | [`docs/sound-gen.md`](docs/sound-gen.md) — every new sound gets a bake-off; never touch shipped sounds |
-| adding or changing ANY player-facing text, or translating it | [`docs/localization.md`](docs/localization.md) — `T()`/`N()` markers, placeholder syntax, nouns |
+| adding or changing ANY player-facing text, translating it, or importing a translation review | [`docs/localization.md`](docs/localization.md) — `T()`/`N()` markers, placeholder syntax, nouns |
 | a headless test failed, or adding a test, a suite or a fixture save | [`tests/README.md`](tests/README.md) — replay by run id, `tests/known.json`, the fixture version table |
 | adding or changing a GAME MECHANIC (AI, cult, ordeals, missions, base, evolution, ovum, region, habitats, group, items…) | [`docs/relations.md`](docs/relations.md) — lifecycle events × listeners, copies, invariants, neighbour ideas |
 

@@ -223,3 +223,44 @@ are only transport: a new or edited string never re-translates the rest.
 - Raw replies are in `loc/.logs/<lang>.jsonl` (gitignored).
 - Use `lang=`, never `LANG=`: that is the locale of every process make starts.
 
+
+## External review (a person, or a person with another model)
+
+The round of 2026-11-07/08 (a friend, ChatGPT Pro, de + fr): of 84 fix rows, 45 went in. Every one
+of the 84 passed `locfmt.check`. The check compares placeholder names and counts, not meaning, so a
+passing row is not a correct row.
+
+**The pack** (built by hand; no script yet), one folder per language: `PROMPT.md` (the reviewer's
+instructions), `style-<lang>.md` (a copy of `loc/style-<lang>.md`), `strings/NN-*.tsv` in 11 parts
+(`id`, `context`, `en`, `<lang>`, `model_note`), `nouns.tsv`, the store pages. The reviewer returns
+`fixes-NN.tsv` with `id`, `fix` (the whole line), `why`.
+
+**The placeholder rule PROMPT.md must state.** The 2026 prompt said "a placeholder with no form
+(`{item}`) is plain text, no article". That is false. It produced 32 wrong rows: `Lâcher {item:def}`
+→ `Lâcher : {item}`, and `{cult:de}` → `{cult} : …`. The rule is:
+- A bare `{x}` in the English can still be a noun. The VALUE decides: an entity with
+  `getLocNoun()`, a `_LocNoun`, or `Loc.colored(col, entity)` is a noun, and the translation may
+  give it any form its grammar needs. On a string or number value, `Loc.value` silently ignores the
+  form, so the sentence must read right with no article.
+- The same name can be either. `{cult}` is the `Cult` entity in the `SudorSigillumMass` logs, but
+  `rival.customName()`, a string, in `BaseDefense`.
+- A reviewer can't see the value. Tell them: keep a form the translation already has on a bare
+  English placeholder (the translator chose it from context), and add one only where context says
+  the value is a person, item, object or cult.
+
+**Importing:**
+1. Check each row's claim against the code: the call site (`T('…', { x: … })`), not the reviewer's
+   reasoning. The reviewer was right on meaning that needed context (the `{cult}` in `BaseDefense`
+   is the attacking rival) and wrong wherever the prompt misled it.
+2. Copy the accepted rows into one sheet per language in the scratchpad. An id is the sha1 of the
+   English, so **the same id appears in every language**. Reword a row per language, never by id
+   alone (that bug put French text in a German row).
+3. `python3 tools/loc/translate.py apply-review --lang <code> --sheet <file>` for each language.
+   Rejected rows are listed; accepted ones become `reviewed`.
+4. A row on a string that is already `reviewed` overwrites an earlier human review. Look at it first.
+5. Noun fixes go into `loc/nouns-<lang>.json` by hand.
+6. Never run a script shipped back with the fixes. The 2026 zip was an executable Python archive
+   that patched the pack we sent, not our state.
+7. Reviewers find English bugs too (2026: a pedia text contradicting the code, a copy-pasted
+   Ballistospores label). An English fix changes the string's id: `make loc` retranslates that
+   string in every language, and any other pending string with it.
