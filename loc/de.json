@@ -814,8 +814,8 @@
     "target"
    ],
    "kind": "T",
-   "t": "{ai:Der} versucht, {target:den} anzugreifen, verfehlt aber.",
-   "status": "done",
+   "t": "{ai:Der} versucht, {target:den} anzugreifen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -3966,8 +3966,8 @@
    ],
    "where": "Spoon.new",
    "kind": "T",
-   "t": "Kein Spielstandlimit",
-   "status": "done",
+   "t": "Unbegrenzt speichern",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -3977,8 +3977,7 @@
      "pass": 2,
      "t": "Kein Spielstandlimit"
     }
-   ],
-   "doubt": "Spoon-Modus feature list, so treated as a label. Replaced the genitive chain with a compound to get near 130 % of the English length. \"Kein Speicherlimit\" would be shorter but could read as a storage limit."
+   ]
   },
   "321c090bd169ccbf": {
    "s": "Not a lot here yet. Want anything added? Write on the forums and I'll see if I can make it happen.",
@@ -5054,8 +5053,8 @@
    ],
    "where": "InfoHud.update",
    "kind": "T",
-   "t": "Volle Affinität: Der Verlust dieses Wirts kostet keine maximale Energie.",
-   "status": "done",
+   "t": "Volle Affinität: Der Verlust dieses Wirts senkt die maximale Energie nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -5078,8 +5077,8 @@
     "death"
    ],
    "kind": "T",
-   "t": "Volle Affinität: Diesen Wirt zu verlassen kostet {leave} maximale Energie, sein Tod kostet {death}.",
-   "status": "done",
+   "t": "Volle Affinität: Diesen Wirt zu verlassen senkt die maximale Energie um {leave}, sein Tod um {death}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -12769,8 +12768,8 @@
    "where": "EvolutionConst.epCostImprovement",
    "field": "note",
    "kind": "T",
-   "t": "Wächterwucherung. Warnt vor einem Hinterhalt im Habitat und verringert den maximalen Energieverlust bei der Zerstörung des Habitats.",
-   "status": "done",
+   "t": "Wächterwucherung. Warnt vor einem Hinterhalt im Habitat und verringert den Verlust an maximaler Energie bei der Zerstörung des Habitats.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -12830,8 +12829,8 @@
    ],
    "where": "EvolutionConst.epCostImprovement",
    "kind": "T",
-   "t": "Der Wächter lockt den Hinterhalt an, verringert den maximalen Energieverlust und verschafft noch mehr Abstand",
-   "status": "done",
+   "t": "Der Wächter lockt den Hinterhalt an, verringert den Verlust an maximaler Energie und verschafft noch mehr Abstand",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -30099,8 +30098,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Die Labore und Forschungseinrichtungen sind vor allem mit hochentwickelter Laborausrüstung und hochqualifizierten Wissenschaftlern bevölkert, die alle eifrig an fortschrittlichen Projekten arbeiten. Sicherheitspersonal ist wachsam präsent und patrouilliert auf dem Gelände, um die Sicherheit und Integrität der heiklen Forschung zu gewährleisten. Diese Einrichtungen sollen Innovation fördern und dabei strenge Sicherheitsvorschriften einhalten.",
-   "status": "done",
+   "t": "Die Labore und Forschungseinrichtungen sind vor allem mit hochentwickelter Laborausrüstung ausgestattet und mit hochqualifizierten Wissenschaftlern besetzt, die eifrig an fortschrittlichen Projekten arbeiten. Sicherheitspersonal ist wachsam präsent und patrouilliert auf dem Gelände, um die Sicherheit und Integrität der heiklen Forschung zu gewährleisten. Diese Einrichtungen sollen Innovation fördern und dabei strenge Sicherheitsvorschriften einhalten.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -39075,8 +39074,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "{ai:Der} erstickt an Schriftsätzen und erbt den Makel „dumm“.",
-   "status": "done",
+   "t": "{ai:Der} würgt an Schriftsätzen und erbt den Makel „dumm“.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -40208,8 +40207,8 @@
    "where": "InductionHangar.create",
    "field": "text",
    "kind": "T",
-   "t": "Versteigere Ritualtrophäen über Darknet-Makler und wasche die Gebote direkt in Budgets für gehärtete Ausrüstung.",
-   "status": "done",
+   "t": "Versteigere Ritualtrophäen über Darknet-Makler, wasche die Erlöse und leite sie direkt in Budgets für gehärtete Ausrüstung.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -40393,8 +40392,8 @@
     "turns"
    ],
    "kind": "T",
-   "t": "{cult} teilt Schaltpläne und ermöglicht {effect} für {turns, plural, one{# Runde} other{# Runden}}.",
-   "status": "done",
+   "t": "{cult} teilt Einsatzpläne und ermöglicht {effect} für {turns, plural, one{# Runde} other{# Runden}}.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -44173,8 +44172,8 @@
    "where": "VeinPrecedentRitual.create",
    "field": "text",
    "kind": "T",
-   "t": "Eine verborgene Tribunalkammer pocht, während der frisch erhobene Magistrat vor einer Richterbank steht, die aus einer einzigen pulsierenden Arterie geschnitzt ist. Gerichtsschreiber murmeln Zeugenaussagen durch Schleier, während sich Präzedenzrollen in blutwarmer Kaskade entrollen. Kronleuchter aus Ligaturfäden schwingen über ihnen und werfen wandernde Schatten über das lebende Register, das keine öffentliche Galerie je zu sehen bekäme.",
-   "status": "done",
+   "t": "Eine verborgene Tribunalkammer pocht, während der frisch erhobene Magistrat vor einer Richterbank steht, die aus einer einzigen pulsierenden Arterie geschnitzt ist. Gerichtsschreiber murmeln Zeugenaussagen durch Schleier, während sich Präzedenzrollen in blutwarmer Kaskade entrollen. Kronleuchter aus Ligaturfäden schwingen über ihnen und werfen wandernde Schatten über das lebende Register, das kein Publikum auf einer Zuschauertribüne je zu sehen bekäme.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -45444,8 +45443,8 @@
     "cult"
    ],
    "kind": "T",
-   "t": "Eindringlinge betreten die Basis von {cult}.",
-   "status": "done",
+   "t": "Angreifer von {cult} betreten die Basis.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -45455,8 +45454,7 @@
      "pass": 2,
      "t": null
     }
-   ],
-   "doubt": "„{cult} attackers“ is ambiguous. I chose „Eindringlinge betreten die Basis von {cult}“ because it is a base-defense mission."
+   ]
   },
   "e55fb3420d7fea26": {
    "s": "Attackers enter the base.",
@@ -47921,8 +47919,8 @@
    "where": "CorpoConst.new",
    "field": "note",
    "kind": "N",
-   "t": "Innenrevisor hat Unstimmigkeiten gefunden. Rechnungen der Briefkastenfirma führen zu unserer Verarbeitungsanlage. Sein Bericht geht bei Börsenschluss hoch. Eckbüro, vierzehnter Stock.",
-   "status": "done",
+   "t": "Innenrevisor hat Unstimmigkeiten gefunden. Rechnungen der Briefkastenfirma führen zu unserer Verarbeitungsanlage. Sein Bericht wird bei Börsenschluss hochgeladen. Eckbüro, vierzehnter Stock.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -48152,8 +48150,8 @@
    "where": "CorpoConst.new",
    "field": "fail",
    "kind": "T",
-   "t": "Er legt Beweise vor. Der Vorstand stimmt einstimmig ab. Unsere Tochterfirma abgestoßen. Die Herde verliert ihren Unternehmensschleier.",
-   "status": "done",
+   "t": "Er legt Beweise vor. Der Vorstand stimmt einstimmig ab. Unsere Tochterfirma abgestoßen. Die Herde verliert ihren geschäftlichen Deckmantel.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -51026,8 +51024,8 @@
    "where": "MediaConst.new",
    "field": "success",
    "kind": "T",
-   "t": "Sie weint auf Sendung, nennt ihre Haut <q>ein Haus aus Nebel.</q> Du stellst Chirurgen und Narrativ. Morgen moderiert sie deinen Psalm.",
-   "status": "done",
+   "t": "Sie weint auf Sendung, nennt ihre Haut <q>ein Haus aus Nebel.</q> Du stellst einen Chirurgen und lieferst das Narrativ. Morgen moderiert sie deinen Psalm.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -52468,8 +52466,8 @@
     "ai"
    ],
    "kind": "T",
-   "t": "Du provozierst {ai:den} und steigerst {ai, select, m{seine} f{ihre} n{seine} other{seine}} Lust auf mehr Gespräch.",
-   "status": "done",
+   "t": "Du provozierst {ai:den} und steigerst {ai, select, m{seine} f{ihre} n{seine} other{seine}} Lust, das Gespräch fortzusetzen.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -57738,8 +57736,8 @@
     "target"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, {target:den} anzugreifen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, {target:den} anzugreifen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -57762,8 +57760,8 @@
     "attacker"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, dich anzugreifen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, dich anzugreifen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -57927,8 +57925,8 @@
     "target"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, auf {target:den} zu schießen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, auf {target:den} zu schießen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -57953,8 +57951,8 @@
     "attacker"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, auf dich zu schießen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, auf dich zu schießen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58075,8 +58073,8 @@
     "target"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, {target:den} zu knüppeln, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, {target:den} zu knüppeln, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58099,8 +58097,8 @@
     "attacker"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, dich zu knüppeln, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, dich zu knüppeln, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58197,8 +58195,8 @@
     "target"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, {target:den} zu schlagen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, {target:den} zu schlagen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58221,8 +58219,8 @@
     "attacker"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, dich zu schlagen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, dich zu schlagen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -58482,8 +58480,8 @@
     "target"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, {target:dem} einen Hieb zu verpassen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, {target:dem} einen Hieb zu verpassen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -61251,8 +61249,8 @@
     "target"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, einen Stachel auf {target:den} abzuschießen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, einen Stachel auf {target:den} abzuschießen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -61275,8 +61273,8 @@
     "attacker"
    ],
    "kind": "T",
-   "t": "{attacker:Der} versucht, einen Stachel auf dich abzuschießen, verfehlt aber.",
-   "status": "done",
+   "t": "{attacker:Der} versucht, einen Stachel auf dich abzuschießen, trifft aber nicht.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -63867,8 +63865,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Mittlere Anfangszustimmung. Mittlerer Bonus auf Fertigkeitswürfe. Kleiner Bonus auf Zustimmungswachstum. Einen Wirt mit voller Affinität zu verlassen kostet 1 maximale Energie, sein Tod 5.",
-   "status": "done",
+   "t": "Mittlere Anfangszustimmung. Mittlerer Bonus auf Fertigkeitswürfe. Kleiner Bonus auf Zustimmungswachstum. Einen Wirt mit voller Affinität zu verlassen senkt die maximale Energie um 1, sein Tod um 5.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -63887,8 +63885,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Niedrige Zustimmung zu Beginn. Minimaler Bonus auf Fertigkeitswürfe. Kein Bonus auf Zustimmungswachstum. Einen Wirt mit voller Affinität zu verlassen kostet 2 maximale Energie, sein Tod 5.",
-   "status": "done",
+   "t": "Niedrige Zustimmung zu Beginn. Minimaler Bonus auf Fertigkeitswürfe. Kein Bonus auf Zustimmungswachstum. Einen Wirt mit voller Affinität zu verlassen senkt die maximale Energie um 2, sein Tod um 5.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67147,8 +67145,8 @@
    "where": "GoalsAlienCrashLanding.map",
    "field": "name",
    "kind": "T",
-   "t": "Finde dein Schiff",
-   "status": "done",
+   "t": "Dein Schiff finden",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67231,8 +67229,8 @@
    "where": "GoalsAlienCrashLanding.map",
    "field": "name",
    "kind": "T",
-   "t": "Rette deinen ursprünglichen Wirt",
-   "status": "done",
+   "t": "Deinen ursprünglichen Wirt retten",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67315,8 +67313,8 @@
    "where": "GoalsAlienCrashLanding.map",
    "field": "name",
    "kind": "T",
-   "t": "Verlege das Schiff",
-   "status": "done",
+   "t": "Das Schiff verlegen",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67428,8 +67426,8 @@
    "where": "GoalsAlienCrashLanding.map",
    "field": "name",
    "kind": "T",
-   "t": "Betritt das Schiff",
-   "status": "done",
+   "t": "Das Schiff betreten",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67764,8 +67762,8 @@
    "where": "GoalsAlienCrashLanding.map",
    "field": "name",
    "kind": "T",
-   "t": "Kehre zum Raumschiff zurück",
-   "status": "done",
+   "t": "Zum Raumschiff zurückkehren",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -68005,8 +68003,8 @@
     "name"
    ],
    "kind": "T",
-   "t": "Du hast Beruf und Foto von {name} herausgefunden.",
-   "status": "done",
+   "t": "Du hast den Beruf von {name} ermittelt und ein Foto gefunden.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -68830,8 +68828,8 @@
    ],
    "where": "Cult.updateStats",
    "kind": "T",
-   "t": "Mitglieder / maximale Gemeinde",
-   "status": "done",
+   "t": "Mitglieder / maximale Gemeindegröße",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,

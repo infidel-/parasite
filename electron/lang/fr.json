@@ -301,7 +301,7 @@
   "Attack {cult}": "Attaquer le culte {cult}",
   "Attack {obj}": "Attaquer {obj}",
   "Attackers enter the base.": "Des attaquants pénètrent dans la base.",
-  "Auction ritual trophies through darknet brokers and launder the bids straight into hardened gear budgets.": "Mettre aux enchères les trophées rituels via des courtiers du darknet et blanchir les offres directement dans les budgets d’équipement renforcé.",
+  "Auction ritual trophies through darknet brokers and launder the bids straight into hardened gear budgets.": "Mettre aux enchères les trophées rituels via des courtiers du darknet, blanchir les recettes et les affecter directement aux budgets d’équipement renforcé.",
   "Audio": "Audio",
   "Audit Trail in Marrow": "Piste d’audit dans la moelle",
   "Autosave exists. Load?": "Une sauvegarde automatique existe. La charger ?",
@@ -640,7 +640,7 @@
   "FEATURES": "CARACTÉRISTIQUES",
   "FPS cap": "Limite d’images/s",
   "Facility": "Complexe",
-  "Fast calling speed. Calls are not interrupted with attaching. Early invasion chance penalty.": "Appels rapides. Vous accrocher à un humain n’interrompt pas son appel. Malus aux chances d’invasion en début de partie.",
+  "Fast calling speed. Calls are not interrupted with attaching. Early invasion chance penalty.": "Appels rapides. Vous accrocher à un humain n’interrompt pas son appel. Malus aux chances d’invasion précoce.",
   "Feeling tired, {ai:the} ends the conversation.": "Sous l’effet de la fatigue, {ai:def} met fin à la conversation.",
   "Final Diagnosis": "Diagnostic final",
   "Finally. I can begin the host assimilation process.": "Enfin. Je peux commencer le processus d’assimilation des hôtes.",
@@ -765,7 +765,7 @@
   "He found the basement. Photographed the tables. His report uploads to federal servers at midnight.": "Il a trouvé le sous-sol. Photographié les tables. Son rapport sera téléversé sur les serveurs fédéraux à minuit.",
   "He holds kill switch for bot farms. Noon board meeting. Server logs hold your fingerprints, encoded in scar tissue.": "Il détient le coupe-circuit des fermes de bots. Réunion du conseil à midi. Les journaux du serveur portent vos empreintes, encodées dans du tissu cicatriciel.",
   "He logs <q>contamination</q>. Vial evaporates. Inquiry terminates. Flock remains ghosts in data.": "Il consigne <q>contamination</q>. La fiole s’évapore. L’enquête s’éteint. Les ouailles restent des fantômes dans les données.",
-  "He presents evidence. Board votes unanimously. Our subsidiary divested. The flock loses its corporate veil.": "Il présente les preuves. Le conseil vote à l’unanimité. Notre filiale cédée. Le troupeau perd son voile d’entreprise.",
+  "He presents evidence. Board votes unanimously. Our subsidiary divested. The flock loses its corporate veil.": "Il présente les preuves. Le conseil vote à l’unanimité. Notre filiale cédée. Le troupeau perd sa façade d’entreprise.",
   "He restructures department around flesh principles. Calls it <q>organic growth.</q> His direct reports genuflect at standup.": "Il restructure le service selon les principes de la chair. Appelle cela <q>croissance organique</q>. Ses subordonnés directs font la génuflexion au point du matin.",
   "He rezones the warehouse district. His hands tremble with renewed purpose.": "Il modifie le zonage du quartier des entrepôts. Ses mains tremblent d’une ardeur retrouvée.",
   "He trades in favors and handshakes. We offer him a grip that leaves residue, a partnership sealed in sinew.": "Il fait commerce de faveurs et de poignées de main. Nous lui offrons une poigne qui laisse un résidu, un partenariat scellé dans les tendons.",
@@ -778,7 +778,7 @@
   "Her office door remains closed. The vote proceeds without our voice.": "La porte de son bureau reste close. Le vote se tient sans notre voix.",
   "Here: {organ} L{level} HP {health}/{maxHealth}": "Ici : {organ} N{level} PV {health}/{maxHealth}",
   "Heretics close on Cor Nefandum. Defend the base before the timer expires.": "Des hérétiques se rapprochent de Cor Nefandum. Défendez la base avant la fin du compte à rebours.",
-  "Hidden tribunal chamber throbs as the newly elevated magistrate stands before a bench carved from a single pulsing artery. Court reporters murmur testimony through veils while precedent scrolls unfurl in blood-warmed cascade. Ligature chandeliers sway overhead, casting moving shadows across the living docket that no public gallery could ever witness.": "La chambre secrète du tribunal palpite tandis que le magistrat fraîchement élevé se tient devant un banc taillé dans une seule artère pulsatile. Des greffiers murmurent des témoignages à travers des voiles, tandis que des rouleaux de jurisprudence se déroulent en une cascade tiédie par le sang. Des lustres de ligatures se balancent au-dessus, projetant des ombres mouvantes sur le rôle vivant qu’aucune galerie publique ne pourra jamais contempler.",
+  "Hidden tribunal chamber throbs as the newly elevated magistrate stands before a bench carved from a single pulsing artery. Court reporters murmur testimony through veils while precedent scrolls unfurl in blood-warmed cascade. Ligature chandeliers sway overhead, casting moving shadows across the living docket that no public gallery could ever witness.": "La chambre secrète du tribunal palpite tandis que le magistrat fraîchement élevé se tient devant un banc taillé dans une seule artère pulsatile. Des greffiers murmurent des témoignages à travers des voiles, tandis que des rouleaux de jurisprudence se déroulent en une cascade tiédie par le sang. Des lustres de ligatures se balancent au-dessus, projetant des ombres mouvantes sur le rôle vivant qu’aucun spectateur dans la salle d’audience ne pourra jamais contempler.",
   "Hide in dumpster": "Se cacher dans la benne",
   "High Crime Area": "Zone à forte criminalité",
   "High amount of efficient emitters that have a wider range. Spores have faster effect": "Nombreux émetteurs efficaces à plus large portée. Les spores agissent plus vite",
@@ -809,7 +809,7 @@
   "Hover a level to read what it changes.": "Survolez un niveau pour voir ce qu’il modifie.",
   "Huh?": "Hein ?",
   "Human society knowledge multiplier: {society}<br/>Base host energy cost: {energy}<br/>Base host health cost: {health}<br/>Host skills learning multiplier: {skills}": "Multiplicateur de connaissance de la société humaine : {society}<br/>Coût de base en énergie pour l’hôte : {energy}<br/>Coût de base en santé pour l’hôte : {health}<br/>Multiplicateur d’apprentissage des compétences de l’hôte : {skills}",
-  "Humans call the law slower. You will stop them from doing that when you jump on them. Minor early invasion chance bonus.": "Les humains appellent la police moins vite. Vous les en empêchez en leur sautant dessus. Léger bonus aux chances d’invasion en début de partie.",
+  "Humans call the law slower. You will stop them from doing that when you jump on them. Minor early invasion chance bonus.": "Les humains appellent la police moins vite. Vous les en empêchez en leur sautant dessus. Léger bonus aux chances d’invasion précoce.",
   "Humans use these to control their breeding habits. However, there is a way that I can reproduce as well.": "Les humains s’en servent pour contrôler leur reproduction. Mais il existe un moyen pour que je me reproduise aussi.",
   "Hush Ledger Convocation": "Convocation du registre du silence",
   "I am alive. Alive.": "Je suis vivant. Vivant.",
@@ -978,7 +978,7 @@
   "Medium starting consent. Medium bonus to skill rolls. Small bonus to consent growth. Leaving a full affinity host costs 1 max energy, its death 5.": "Consentement initial moyen. Bonus moyen aux jets de compétence. Léger bonus à la progression du consentement. Quitter un hôte à affinité totale coûte 1 point d’énergie maximale, sa mort 5.",
   "Medium-density city area": "Zone urbaine de densité moyenne",
   "Members": "Membres",
-  "Members / maximum congregation": "Membres / congrégation maximale",
+  "Members / maximum congregation": "Membres / effectif maximal",
   "Members: {n}/{max}": "Membres : {n}/{max}",
   "Memo Choir": "Chœur des notes",
   "Memorandum of Flesh": "Mémorandum de chair",
@@ -1308,7 +1308,7 @@
   "Saint Clip": "Clip du saint",
   "Salivary gland extension": "Extension des glandes salivaires",
   "Salivate": "Saliver",
-  "Same calling rules as normal. No free dog on exiting the sewers. Larger penalty for early invasion chance.": "Mêmes règles d’appel qu’en normal. Pas de chien offert à la sortie des égouts. Malus plus important aux chances d’invasion en début de partie.",
+  "Same calling rules as normal. No free dog on exiting the sewers. Larger penalty for early invasion chance.": "Mêmes règles d’appel qu’en normal. Pas de chien offert à la sortie des égouts. Malus plus important aux chances d’invasion précoce.",
   "Sandbox": "Bac à sable",
   "Sandbox Mode": "Mode bac à sable",
   "Save anywhere, as many times as you like. Unlimited saves.": "Sauvegardez n’importe où, autant de fois que vous le voulez. Sauvegardes illimitées.",
@@ -1366,7 +1366,7 @@
   "She testifies before grand jury. Her description of our rites is too vivid. The political capital hemorrhages.": "Elle témoigne devant un grand jury. Sa description de nos rites est trop vivante. Le capital politique saigne à blanc.",
   "She testifies. Names read into record. Patrons exposed. The flock loses its shepherds in high places.": "Elle témoigne. Les noms sont versés au compte rendu. Les mécènes sont démasqués. Le troupeau perd ses bergers haut placés.",
   "She trades favors between suites and chambers, loyalty purchased hourly. Offer her a taste that cannot be bought. The flesh remembers what money forgets.": "Elle monnaie des faveurs entre suites d’hôtel et hémicycles, une loyauté achetée à l’heure. Offrez-lui un goût qui ne s’achète pas. La chair se souvient de ce que l’argent oublie.",
-  "She weeps on air, calls her skin <q>a house of fog.</q> You provide surgeon, narrative. Tomorrow she anchors your psalm.": "Elle pleure à l’antenne, dit de sa peau qu’elle est <q>une maison de brouillard.</q> Vous fournissez chirurgien, récit. Demain, elle présente votre psaume.",
+  "She weeps on air, calls her skin <q>a house of fog.</q> You provide surgeon, narrative. Tomorrow she anchors your psalm.": "Elle pleure à l’antenne, dit de sa peau qu’elle est <q>une maison de brouillard.</q> Vous fournissez un chirurgien et un récit. Demain, elle présente votre psaume.",
   "Shift-click/number repeat action": "Maj+clic/chiffre : répéter l’action",
   "Shit!": "Merde !",
   "Shock": "Choquer",
@@ -1559,7 +1559,7 @@
   "The humans have evolved a large and intricate society. I must study it some more.": "Les humains ont développé une société vaste et complexe. Je dois l’étudier davantage.",
   "The initial attach action is fast and precise": "L’accrochage initial est rapide et précis",
   "The interceptor pilot described the dogfight in detail.": "Le pilote de l’intercepteur a décrit le combat aérien en détail.",
-  "The laboratories and research facilities are primarily populated with sophisticated lab equipment and highly skilled scientists, all working diligently on advanced projects. Security personnel maintain a vigilant presence, patrolling the premises to ensure the safety and integrity of the sensitive research being conducted. These facilities are designed to foster innovation while adhering to stringent safety and security protocols.": "Les laboratoires et centres de recherche sont avant tout remplis d’équipements de pointe et de scientifiques hautement qualifiés, tous plongés dans des projets avancés. Le personnel de sécurité reste vigilant et patrouille les lieux pour garantir la sûreté et l’intégrité des recherches sensibles qui y sont menées. Ces installations sont conçues pour favoriser l’innovation tout en respectant des protocoles de sûreté et de sécurité rigoureux.",
+  "The laboratories and research facilities are primarily populated with sophisticated lab equipment and highly skilled scientists, all working diligently on advanced projects. Security personnel maintain a vigilant presence, patrolling the premises to ensure the safety and integrity of the sensitive research being conducted. These facilities are designed to foster innovation while adhering to stringent safety and security protocols.": "Les laboratoires et centres de recherche disposent d’équipements de pointe et accueillent des scientifiques hautement qualifiés, tous plongés dans des projets avancés. Le personnel de sécurité reste vigilant et patrouille les lieux pour garantir la sûreté et l’intégrité des recherches sensibles qui y sont menées. Ces installations sont conçues pour favoriser l’innovation tout en respectant des protocoles de sûreté et de sécurité rigoureux.",
   "The largest object has received a speficic codename for future reference: %shipCode%.": "Le plus grand objet a reçu un nom de code spécifique pour référence ultérieure : %shipCode%.",
   "The membrane tears. A choir of discord spills through.": "La membrane se déchire. Un chœur de discorde s’y déverse.",
   "The membrane yet holds.": "La membrane tient encore.",
@@ -4340,7 +4340,8 @@
   },
   "corporate executive": {
    "g": "m",
-   "s": "cadre d’entreprise"
+   "s": "cadre d’entreprise",
+   "fs": "cadre d’entreprise"
   },
   "corporate liaison": {
    "g": "m",
@@ -5710,7 +5711,8 @@
   },
   "medical examiner": {
    "g": "m",
-   "s": "médecin légiste"
+   "s": "médecin légiste",
+   "fs": "médecin légiste"
   },
   "medical internist": {
    "g": "m",
@@ -7240,7 +7242,8 @@
   },
   "video analyst": {
    "g": "m",
-   "s": "analyste vidéo"
+   "s": "analyste vidéo",
+   "fs": "analyste vidéo"
   },
   "video editor": {
    "g": "m",

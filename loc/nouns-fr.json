@@ -963,7 +963,8 @@
  },
  "corporate executive": {
   "g": "m",
-  "s": "cadre d’entreprise"
+  "s": "cadre d’entreprise",
+  "fs": "cadre d’entreprise"
  },
  "corporate liaison": {
   "g": "m",
@@ -2333,7 +2334,8 @@
  },
  "medical examiner": {
   "g": "m",
-  "s": "médecin légiste"
+  "s": "médecin légiste",
+  "fs": "médecin légiste"
  },
  "medical internist": {
   "g": "m",
@@ -3863,7 +3865,8 @@
  },
  "video analyst": {
   "g": "m",
-  "s": "analyste vidéo"
+  "s": "analyste vidéo",
+  "fs": "analyste vidéo"
  },
  "video editor": {
   "g": "m",

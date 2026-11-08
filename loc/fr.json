@@ -28665,8 +28665,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Les laboratoires et centres de recherche sont avant tout remplis d’équipements de pointe et de scientifiques hautement qualifiés, tous plongés dans des projets avancés. Le personnel de sécurité reste vigilant et patrouille les lieux pour garantir la sûreté et l’intégrité des recherches sensibles qui y sont menées. Ces installations sont conçues pour favoriser l’innovation tout en respectant des protocoles de sûreté et de sécurité rigoureux.",
-   "status": "done",
+   "t": "Les laboratoires et centres de recherche disposent d’équipements de pointe et accueillent des scientifiques hautement qualifiés, tous plongés dans des projets avancés. Le personnel de sécurité reste vigilant et patrouille les lieux pour garantir la sûreté et l’intégrité des recherches sensibles qui y sont menées. Ces installations sont conçues pour favoriser l’innovation tout en respectant des protocoles de sûreté et de sécurité rigoureux.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -38407,7 +38407,7 @@
    "where": "InductionHangar.create",
    "field": "text",
    "kind": "T",
-   "t": "Mettre aux enchères les trophées rituels via des courtiers du darknet et blanchir les offres directement dans les budgets d’équipement renforcé.",
+   "t": "Mettre aux enchères les trophées rituels via des courtiers du darknet, blanchir les recettes et les affecter directement aux budgets d’équipement renforcé.",
    "status": "reviewed",
    "passes": [
     {
@@ -47028,8 +47028,8 @@
    "where": "VeinPrecedentRitual.create",
    "field": "text",
    "kind": "T",
-   "t": "La chambre secrète du tribunal palpite tandis que le magistrat fraîchement élevé se tient devant un banc taillé dans une seule artère pulsatile. Des greffiers murmurent des témoignages à travers des voiles, tandis que des rouleaux de jurisprudence se déroulent en une cascade tiédie par le sang. Des lustres de ligatures se balancent au-dessus, projetant des ombres mouvantes sur le rôle vivant qu’aucune galerie publique ne pourra jamais contempler.",
-   "status": "done",
+   "t": "La chambre secrète du tribunal palpite tandis que le magistrat fraîchement élevé se tient devant un banc taillé dans une seule artère pulsatile. Des greffiers murmurent des témoignages à travers des voiles, tandis que des rouleaux de jurisprudence se déroulent en une cascade tiédie par le sang. Des lustres de ligatures se balancent au-dessus, projetant des ombres mouvantes sur le rôle vivant qu’aucun spectateur dans la salle d’audience ne pourra jamais contempler.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -47961,8 +47961,8 @@
    "where": "CorpoConst.new",
    "field": "fail",
    "kind": "T",
-   "t": "Il présente les preuves. Le conseil vote à l’unanimité. Notre filiale cédée. Le troupeau perd son voile d’entreprise.",
-   "status": "done",
+   "t": "Il présente les preuves. Le conseil vote à l’unanimité. Notre filiale cédée. Le troupeau perd sa façade d’entreprise.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -51840,8 +51840,8 @@
    "where": "MediaConst.new",
    "field": "success",
    "kind": "T",
-   "t": "Elle pleure à l’antenne, dit de sa peau qu’elle est <q>une maison de brouillard.</q> Vous fournissez chirurgien, récit. Demain, elle présente votre psaume.",
-   "status": "done",
+   "t": "Elle pleure à l’antenne, dit de sa peau qu’elle est <q>une maison de brouillard.</q> Vous fournissez un chirurgien et un récit. Demain, elle présente votre psaume.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -66445,8 +66445,8 @@
    ],
    "where": "Cult.updateStats",
    "kind": "T",
-   "t": "Membres / congrégation maximale",
-   "status": "done",
+   "t": "Membres / effectif maximal",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67760,8 +67760,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Les humains appellent la police moins vite. Vous les en empêchez en leur sautant dessus. Léger bonus aux chances d’invasion en début de partie.",
-   "status": "done",
+   "t": "Les humains appellent la police moins vite. Vous les en empêchez en leur sautant dessus. Léger bonus aux chances d’invasion précoce.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67780,8 +67780,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Appels rapides. Vous accrocher à un humain n’interrompt pas son appel. Malus aux chances d’invasion en début de partie.",
-   "status": "done",
+   "t": "Appels rapides. Vous accrocher à un humain n’interrompt pas son appel. Malus aux chances d’invasion précoce.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -67800,8 +67800,8 @@
    ],
    "where": "Difficulty.choices",
    "kind": "T",
-   "t": "Mêmes règles d’appel qu’en normal. Pas de chien offert à la sortie des égouts. Malus plus important aux chances d’invasion en début de partie.",
-   "status": "done",
+   "t": "Mêmes règles d’appel qu’en normal. Pas de chien offert à la sortie des égouts. Malus plus important aux chances d’invasion précoce.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
