@@ -72460,11 +72460,261 @@
      "t": "Passer suffisamment de temps dans le même hôte augmente votre affinité avec lui. Lorsque l’affinité est assez élevée, la conversation devient possible, de même que l’obtention du consentement de l’hôte. À terme, l’affinité atteint son maximum et vous recevez un message qui vous l’indique. Une fois l’affinité maximale atteinte, le nom de l’hôte est suivi dans l’interface d’une icône verte représentant deux anneaux entrelacés. En difficulté de conversation normale ou difficile, quitter un hôte dont l’affinité est maximale fait perdre au parasite un peu d’énergie maximale (1 ou 2). Cette réduction reste faible. En revanche, si un tel hôte meurt alors que le parasite est sur lui, quelle qu’en soit la raison, la perte est bien plus élevée (5). Seule exception : nourrir l’ovum avec l’hôte ne coûte aucune énergie maximale. Si vous comptez perdre l’hôte, quittez-le donc avant sa mort. En difficulté de conversation facile, il n’y a aucune perte. Notez également que les hôtes dont l’affinité est maximale et qui ont donné leur consentement ne sont pas alertés lorsqu’ils voient le parasite. Vous pouvez d’ailleurs remonter rapidement sur un tel hôte après l’avoir quitté."
     }
    ]
+  },
+  "705fe29db70a0ea9": {
+   "s": "Cloud range: {range}<br/>Gas release timeout: {timeout}<br/>Paralysis effect time: {time}",
+   "loc": [
+    "src/const/EvolutionConst.hx"
+   ],
+   "where": "EvolutionConst.improvements",
+   "vars": [
+    "range",
+    "timeout",
+    "time"
+   ],
+   "kind": "T",
+   "t": "Portée du nuage : {range}<br/>Délai de libération du gaz : {timeout}<br/>Durée de la paralysie : {time}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Portée du nuage : {range}<br/>Délai de libération du gaz : {timeout}<br/>Durée de la paralysie : {time}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "47c29e99df717ec9": {
+   "s": "Habitats are not permanent. Once the active team for the Group gets onto your trail, they can find one of your habitats and put an ambush there. If it happens that you are inside, they might literally fall on top of your head. While it is possible to dispose of the attacking team members, this is not a certainty in any case. If you succeed, the habitat is spared; otherwise it is destroyed. The destruction of the habitat is a highly painful process for the parasite. The most damaging result is that the maximum amount of energy for the parasite will be reduced permanently. The lowest possible amount varies according to the difficulty setting. ",
+   "loc": [
+    "src/const/PediaConst.hx"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "text",
+   "kind": "T",
+   "t": "Les habitats ne sont pas permanents. Une fois que l’équipe active du Groupe est sur votre piste, elle peut trouver l’un de vos habitats et y tendre une embuscade. Si vous êtes à l’intérieur à ce moment-là, les agents risquent littéralement de vous tomber dessus. Il est possible d’éliminer les membres de l’équipe d’assaut, mais rien n’est jamais garanti. Si vous y parvenez, l’habitat est épargné ; sinon, il est détruit. La destruction d’un habitat est un processus extrêmement douloureux pour le parasite. La conséquence la plus grave est une réduction permanente de l’énergie maximale du parasite. La valeur minimale possible dépend du niveau de difficulté.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les habitats ne sont pas permanents. Une fois que l’équipe active du Groupe est sur votre piste, elle peut trouver l’un de vos habitats et y tendre une embuscade. Si vous êtes à l’intérieur à ce moment-là, les agents risquent littéralement de vous tomber dessus. Il est possible d’éliminer les membres de l’équipe d’assaut, mais rien n’est jamais garanti. Si vous y parvenez, l’habitat est épargné ; sinon, il est détruit. La destruction d’un habitat est un processus extrêmement douloureux pour le parasite. La conséquence la plus grave est une réduction permanente de l’énergie maximale du parasite. La valeur minimale possible dépend du niveau de difficulté."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "256db17392e6a48e": {
+   "s": "Your host has bled out.",
+   "loc": [
+    "src/effects/Bleeding.hx"
+   ],
+   "where": "Bleeding.turn",
+   "field": "onHostDeath",
+   "kind": "T",
+   "t": "Votre hôte s’est vidé de son sang.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Votre hôte s’est vidé de son sang."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "eedcd808e49353f9": {
+   "s": "{name} had suffered a fatal accident.",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "field": "log",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "{name} a été victime d’un accident mortel.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{name} a été victime d’un accident mortel."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "c06979746cf49451": {
+   "s": "{name} is claiming to have been possessed by an angel.",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "{name} affirme qu’un ange a pris possession de son corps.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{name} affirme qu’un ange a pris possession de son corps."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "780add8b3280ba62": {
+   "s": "{name} is claiming to be the subject of experiments conducted by aliens.",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "{name} affirme avoir servi de cobaye à des extraterrestres.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{name} affirme avoir servi de cobaye à des extraterrestres."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "be7932416569e53f": {
+   "s": "{name} has died under mysterious circumstances.",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "{name} a trouvé la mort dans des circonstances mystérieuses.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{name} a trouvé la mort dans des circonstances mystérieuses."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "87a36e96fed18d30": {
+   "s": "{name} had to be committed to a mental institution after having a nervous breakdown.",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "{name} a fait l’objet d’un internement psychiatrique après une dépression nerveuse.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{name} a fait l’objet d’un internement psychiatrique après une dépression nerveuse."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7a1ce88be6cb6ded": {
+   "s": "{name} has apparently taken their own life after having a mental breakdown.",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "{name} s’est apparemment donné la mort après un effondrement psychologique.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{name} s’est apparemment donné la mort après un effondrement psychologique."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "6e88a61be443c30a": {
+   "s": "{name} is claiming to be the subject of a weird animal attack.",
+   "loc": [
+    "src/game/RegionManager.hx"
+   ],
+   "where": "RegionManager.onHostDiscovered",
+   "field": "log",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "{name} affirme avoir été victime d’une étrange attaque d’animal.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{name} affirme avoir été victime d’une étrange attaque d’animal."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5cfb5f2e1dd61bcc": {
+   "s": "The game reloads; progress since the last save is lost.",
+   "loc": [
+    "src/ui/Options.hx"
+   ],
+   "where": "Options.setLang",
+   "kind": "T",
+   "t": "Le jeu redémarre ; la progression depuis la dernière sauvegarde est perdue.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le jeu redémarre ; la progression depuis la dernière sauvegarde est perdue."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
   }
  },
  "totals": {
-  "calls": 158,
-  "input": 1724692,
-  "output": 548351
+  "calls": 161,
+  "input": 1745914,
+  "output": 550598
  }
 }

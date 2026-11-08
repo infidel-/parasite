@@ -44,11 +44,13 @@
 - game: the corp mission target can be placed in any office, not only the left part of the area
 - mods: a mod weapon missing some of its attack texts no longer crashes the attack
 - ui: alien ship part names take the right article in log lines
+- ui: Ballistospores shows its paralysis time instead of a panic time
 - ui: German and French translation fixes
 - ui: news of what became of a former host is translated
 - ui: one missing system font no longer stops the other fallback fonts from scaling
 - ui: save slot labels show the area in the current language
 - ui: the language switch no longer promises an autosave in chat or a mission area
+- ui: the pedia no longer says a beaten habitat ambush still burns the habitat
 
 ## 1.1
 

@@ -193,7 +193,7 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           id: 'habitatDestruction',
           name: T('Habitat: Destruction'),
           img: 'pedia/habitat_destruction',
-          text: T("Habitats are not permanent. Once the active team for the Group gets onto your trail, they can find one of your habitats and put an ambush there. If it happens that you are inside, they might literally fall on top of your head. While it is possible to dispose of the attacking team members, this is not a certainty in any case. Moreover, the habitat will be destroyed even if you are successful. The destruction of the habitat is a highly painful process for the parasite. The most damaging result is that the maximum amount of energy for the parasite will be reduced permanently. The lowest possible amount varies according to the difficulty setting. "),
+          text: T("Habitats are not permanent. Once the active team for the Group gets onto your trail, they can find one of your habitats and put an ambush there. If it happens that you are inside, they might literally fall on top of your head. While it is possible to dispose of the attacking team members, this is not a certainty in any case. If you succeed, the habitat is spared; otherwise it is destroyed. The destruction of the habitat is a highly painful process for the parasite. The most damaging result is that the maximum amount of energy for the parasite will be reduced permanently. The lowest possible amount varies according to the difficulty setting. "),
         },
         {
           id: 'habitatWatcher',

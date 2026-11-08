@@ -411,8 +411,8 @@ class EvolutionConst
         note: T('Body feature. Clusters of sporangiums designed to produce multitudes of fungal-like ballistospores in the surrounding air. When inhaled by the hosts, the ballistospores act as a mild neurotoxin paralyzing them temporarily.'),
         maxLevel: 3,
         noteFunc: function (l: Dynamic, l2: Dynamic) {
-          return T('Cloud range: {range}<br/>Gas release time: {timeout}<br/>' +
-            'Panic effect time: {time}', {
+          return T('Cloud range: {range}<br/>Gas release timeout: {timeout}<br/>' +
+            'Paralysis effect time: {time}', {
             range: l.range + (l2 != null ? ' &rarr; ' + l2.range : ''),
             timeout: l.timeout + (l2 != null ? ' &rarr; ' + l2.timeout : ''),
             time: l.time + (l2 != null ? ' &rarr; ' + l2.time : ''),
