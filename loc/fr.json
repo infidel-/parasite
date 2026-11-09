@@ -26118,8 +26118,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Vous êtes un parasite d’origine inconnue. Vous ne pouvez survivre que peu de temps sans hôte. Chaque action, chaque mouvement vous coûte de l’énergie, et elle est rare. Quand elle tombe à zéro, la partie est terminée. Vous devez trouver un hôte et en prendre le contrôle pour vous en servir comme d’une sorte de batterie. Vos actions consommeront alors l’énergie de l’hôte, et celle du parasite remontera passivement jusqu’à son maximum.",
-   "status": "done",
+   "t": "Vous êtes un parasite d’origine inconnue. Vous ne pouvez survivre que peu de temps sans hôte. Chaque action, chaque mouvement vous coûte de l’énergie, et elle est rare. Quand elle tombe à zéro, la partie est terminée. Vous devez trouver un hôte et en prendre le contrôle pour vous en servir comme d’une batterie. Vos actions consommeront alors l’énergie de l’hôte, et celle du parasite remontera passivement jusqu’à son maximum.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
@@ -26160,8 +26160,8 @@
    "where": "PediaConst.builtinContents",
    "field": "text",
    "kind": "T",
-   "t": "Vous pouvez vous déplacer avec le pavé numérique ou la souris. En déplaçant le curseur sur l’écran, vous voyez le chemin que vous allez emprunter. Le nombre au bout du chemin indique combien d’énergie le déplacement coûtera à votre parasite ou à votre hôte, et devient rouge s’il devait les vider entièrement. Un clic gauche sur l’écran lance le déplacement s’il est possible. Notez que vous ne pouvez pas cliquer pour vous déplacer vers les cases noires de l’écran, car vous ignorez ce qui s’y trouve réellement. Comme le déplacement consomme de l’énergie, soyez prudent, sinon vous risquez d’y laisser la vie.",
-   "status": "done",
+   "t": "Vous pouvez vous déplacer avec le pavé numérique ou la souris. En déplaçant le curseur sur l’écran, vous voyez le chemin que vous allez emprunter. Le nombre au bout du chemin indique combien d’énergie le déplacement coûtera à votre parasite ou à votre hôte, et devient rouge s’il devait les vider entièrement. Un clic gauche sur l’écran lance le déplacement s’il est possible. Notez que vous ne pouvez pas cliquer pour vous déplacer vers les cases noires de l’écran, car vous ignorez ce qui s’y trouve. Comme le déplacement consomme de l’énergie, soyez prudent, sinon vous risquez d’y laisser la vie.",
+   "status": "reviewed",
    "passes": [
     {
      "pass": 1,
