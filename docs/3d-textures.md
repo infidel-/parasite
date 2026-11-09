@@ -25,7 +25,7 @@ by re-rolling and never by `lift`.
   - **SVG** — `generate_image` with `output_format:"svg"`, `n:1`: a reference image plus a text-model authoring pass, $0.04 at `low` / $0.07 at `high`, ~30 s. Static vector icons and logos only.
   - **`markup`** on the edit tools — a transparent PNG of circles or arrows marking WHERE the prompt's change goes; never together with `mask`. The marked spot changed ~2x more than the rest, but a transparent drop came back with a soft dark halo (alpha 61% → 3% cut).
   - **`complexity`** (`low`/`medium`/`high`) — changes no token count; leave it unset.
-  - **Neither `mask` nor `markup` is pixel-identical.** Both re-draw the whole image: 0.1-0.2% of the "kept" pixels came back unchanged (median drift 8/255). Composite the original back over anything that must stay exact.
+  - **Neither `mask` nor `markup` is pixel-identical.** Both re-draw the whole image: 0.1-0.2% of the "kept" pixels came back unchanged (median drift 8/255). Composite the original back over anything that must stay exact: `tools/patch.py`, *Non-destructive detail edits* below.
 - **FOUR 512 textures fit in ONE 1k generation, at a quarter of the cost — and WHICH ROUTE IS THE USER'S CALL, SO ASK.** Whenever a job wants two or more square tiles at once, say what each route buys and costs and ask which one, BEFORE generating anything. It is not a pure saving: the neighbours change the art, and that cuts both ways. Do not default to either.
 
   `"crop": [x, y, w, h]` in `textures.json` takes a sub-rect of the source, so several labels share one generated sheet; the crop runs BEFORE the lift, so each tile still takes its own gamma. A 2x2 of 1024 gives four native 512s, which is what the runtime ships anyway. Measured on the four square `facility/deco-*` tiles: **$0.2137 for the sheet against 4x that** — both figures at `quality: "high"`, which is itself 4x medium and was not needed (see the tier bullet above) — and on screen the bookcase differed from its four solo sources by mean |d| **0.5 / 255**. Two things it costs, and one it buys:
@@ -93,3 +93,32 @@ by re-rolling and never by `lift`.
 - **Batch gen in parallel:** issue independent `generate_image`/`edit_image` calls in ONE message (they're independent + slow). For lit/unlit pairs, make the unlit base first, then fan out lit edits.
 - **Before reaching for `lift`, read the drop's CHANNEL SPREAD, not just its luminance.** A lift is a gamma and it publishes whatever cast the art already has — not by widening the spread but by raising the value the spread is read at. Measured on `facility/floor-lino`: lift 0.749 hit the target luminance exactly and the byte spread did not move (77/78/67 → 104/104/93, 10.8 either side), yet the corridor came out visibly green, because a cast invisible at 0.075 linear is visible at 0.137. **Over about 6 points of spread, re-roll instead of lifting** — with a named brightness plus "HUE: PERFECTLY NEUTRAL — the red, green and blue values are equal" and an explicit list of the casts to avoid. That drop returned spread **3.8**. Neutral surfaces here all render at G − B ≈ −2.6 (the rig is blue); anything sitting off that number is carrying a cast of its own.
 - **NEVER stretch a texture** (any surface — walls, ground, roads, decals). World-aligned tiling on BOTH axes (`uv = worldPos/TILE` or `texture.repeat = faceLen/TILE`); accept a partial tile at a far edge. If stretching is ever unavoidable, STOP and notify the user. And NEVER put a flat solid-color material on visible geometry — always a texture.
+
+## Non-destructive detail edits
+
+**Use it to add or change ONE detail on accepted art and keep everything else byte-identical:** a label on a decal, a stain on a texture, a strap on a TRELLIS reference. Ported from nullstone, where it put tails on two finished character figures (2026-11-09; the user: "all new good").
+
+**Why a plain edit won't do: every edit re-draws the whole image,** with or without `mask` or `markup`. Measured in nullstone:
+
+| Edit | Pixels unchanged outside the detail | Median drift |
+|---|---|---|
+| 2.5 sunburst, plain | ~1% | 5–6/255 |
+| 2.6 sunburst, `mask` | 2–3% | 4–5/255 |
+| 2.6 sunburst, `markup` | 2–3% | 4–5/255 |
+
+The user sees that as "the image changes significantly". The mask steers WHERE the new thing goes; it does not protect the rest. **Compositing the original back is what protects it**, and `tools/patch.py` is how.
+
+**The recipe** (`tools/patch.py`):
+1. **Box the area** the detail will occupy, generously, including where it meets the existing art (where a tail comes out from under a robe). Note it as `x0,y0,x1,y1` in the art's own pixels.
+2. **Make the API mask:** `python3 tools/patch.py mask W H x0,y0,x1,y1 mask.png`, with `W H` the art's size (transparent over the box).
+3. **Edit.**
+   - Any model works, because the merge does the protecting. In nullstone, 2.6 sunburst with the mask and a plain 2.5 edit both made picks.
+   - First image: the accepted art. Second image: a reference for the new part's look, if one exists.
+   - The prompt: *"Edit the FIRST image, only inside the masked area at the [where]. Paint there [the detail, its colours matching the subject's own] … Keep everything else exactly as it is: [list the subject's parts]. Do not copy anything else from the second image."* Then the canonical style string from `art/textures.json` (`style` for a surface, `style_prop` for an object) VERBATIM.
+   - Make two rolls, or edit with both models: one roll can add a stray inside the box (both 2.6 edits of one nullstone figure patched the robe where the tail came out).
+4. **Merge:** `python3 tools/patch.py merge ORIG EDIT x0,y0,x1,y1 OUT.png`.
+   - It takes the edit only where it changed strongly inside the box (max-channel diff over 40, specks removed, gaps closed, grown a few px), feathered 1.5 px, and keeps the original everywhere else. A transparent original merges as RGBA, so its alpha survives.
+   - It prints the share left byte-identical; nullstone's tails came out at 96–97% of the figure.
+5. **Check, then show:**
+   - At 1:1, look at the seam and at everything the edit put inside the box, since the merge keeps whatever changed there. On transparent art check the alpha in the box too: `markup` leaves a soft dark halo, and inside the box the merge keeps it.
+   - Then put it on a flip page: the original first, then each merged result, so the user sees that only the detail moves.
