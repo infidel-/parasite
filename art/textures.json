@@ -8866,6 +8866,16 @@
       "built_srgb": 75.9,
       "last_lift": 1.44,
       "last_sat": 0.85
+    },
+    "fx/halo": {
+      "src": "fx/halo.png",
+      "class": "sprite",
+      "res": 128,
+      "needs_alpha": true,
+      "note": "procedural, not generated: a white disc halo whose alpha is a gaussian dipped over the middle, so it rings the glowing thing it sits on (the cult heart's eye, render.world.ObjModels `core`) instead of washing it white. the firefly mote has painted star spikes, which read as a lens flare there",
+      "last_converted": "2026-11-14T01:13:21",
+      "built_linear": 1.0,
+      "built_srgb": 255.0
     }
   }
 }

@@ -129,8 +129,11 @@ class PropFX {
               // per-cell phase: two organs of a kind in one level never move together, and nothing
               // has to be stored per object. the hash LampShadows.gatherBarrels already uses
               var ph = o.x * 12.9898 + o.y * 78.233;
+              // the core sits on the prop where it STANDS, not on its cell: a row's `off` moves the
+              // model (the cult heart stands on its 2x2's centre). the other three keep the cell
+              var c = (m.core != null ? ObjModels.standsAt(o.x, o.y, m) : null);
               if (m.core != null)
-                drawCore(m.core, m.h, w.x, floor, w.z, ph);
+                drawCore(m.core, m.h, (c != null ? c.x : w.x), floor, (c != null ? c.z : w.z), ph);
               if (m.fly != null)
                 drawFlies(m.fly, m.h, w.x, floor, w.z, ph, level(o) * m.fly.perLevel);
               if (m.arc != null)

@@ -1158,10 +1158,9 @@ class ObjModels
       h: 6.2, // twice the 3.0 walls (widest/height 1.35, so the root mat spans ~8.4)
       sink: 0.0, // its root mat is the model's floor
       yaw: FRONTAL, // generated off one front-on drawing like the habitat organs, so the same rule
-      // a red wash off the core over the floor and the walls of its room. pale and LOW for the reason
-      // the biomineral's is pale: at 0xff6050 / 0.8 it drowned the heart's own pale trunk and pink
-      // lobes in one flat red, since the light hangs just over its crown
-      light: { color: 0xff8a78, mul: 0.5 },
+      // a pink-red wash off the core over the floor and the walls of its room, the eye's own hue.
+      // the old pale 0xff8a78 read as white
+      light: { color: 0xff3d6e, mul: 0.6 },
       // a building of flesh does not sway (amp 0): this is only the crawling wet highlight
       anim: {
         amp: 0.0,
@@ -1191,11 +1190,48 @@ class ObjModels
         wave: 0.6,
       },
       curl: null,
-      core: null, // the core glows off the emissive map, cut from its own painted disc
+      // the eye's BLOOM: a soft frontal halo over it, HDR so the bloom pass spreads it. the lamp below
+      // alone could not: ACES turns any red bright enough to clear BLOOM_THRESHOLD near white, so the
+      // eye stays a saturated pink-red under the threshold and the halo carries the bloom. y and z off
+      // the eye's measured centre: 0.53 h up, 0.31 h proud of the axis. UPRIGHT and well clear of the
+      // body, whose front within the quad's reach measures 0.364 h: a leaned quad dug its top into
+      // the brow, and one at 0.37 lost its right half to the flank beside the eye. nearer the camera
+      // reads LOWER on screen, so y rides up by dz * tan(53) to stay on the eye (fitted on screenshots)
+      core: {
+        tex: RenderConfig.TEXTURES.fxHalo,
+        y: 0.63,
+        z: 0.42,
+        size: 0.42,
+        lean: 0.0,
+        color: 0xff2d5a,
+        glow: 2.0,
+        alpha: 0.3,
+        pulse: 0.06,
+        pulseRate: 0.23, // the lamp's own beat, so the halo swells as the eye brightens
+        warp: 0.0,
+        warpRate: 0.0,
+      },
       fly: null,
       shine: null,
       eyes: null,
-      lamps: null,
+      // THE EYE: its emissive map is a pure red marker (tools/emissive.py --tint ff0000 --modulate,
+      // so the painted cells survive as value). `full` 1 keeps that pattern; it beats 0.7..1 (~4.1s,
+      // unrelated to the swell and the roll)
+      lamps: {
+        list: [
+          {
+            hue: 0xff0000,
+            color: 0xff2d5a,
+            glow: 2.5,
+            base: 0.9,
+            pulse: 0.3,
+            pulseRate: 0.23,
+            phase: 0.0,
+            full: 1.0,
+          },
+        ],
+        tol: 0.5, // one family, nothing to tell apart
+      },
       arc: null,
       tether: null,
       off: [ 2.0, 2.0 ],

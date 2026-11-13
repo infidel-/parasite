@@ -1421,6 +1421,7 @@ class RenderConfig {
     // assimilation arch and writhes, and the mote its fireflies are drawn with. both chroma-keyed
     fxInnards: 'textures/fx/innards.png',
     fxFirefly: 'textures/fx/firefly.png',
+    fxHalo: 'textures/fx/halo.png', // procedural soft ring round a glowing disc (the cult heart's eye bloom)
   };
   // the gnats over the compound's PARK lamps, drawn by the very same pass: a `fly` row is a fraction
   // of its prop's height, so handing it a lamp's FacilityStyle.LAMP_H makes the mast the prop. Only
