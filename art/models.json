@@ -4687,23 +4687,23 @@
       "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cult/base-cor-nefandum": {
-      "src": "cult/cult-base-cor-nefandum.glb",
-      "tris": -1,
-      "tex": 512,
-      "error": 0.005,
+      "src": "cult/cult-base-cor-nefandum-meshy.glb",
+      "tris": 20000,
+      "tex": 1024,
+      "error": 0.05,
       "dropMR": true,
-      "roughness": 0.4,
+      "roughness": 0.3,
       "baseColor": [
         0.7,
         0.7,
         0.7,
         1
       ],
-      "emissiveSrc": "cult/cult-base-cor-nefandum-emissive.png",
+      "emissiveSrc": "cult/cult-base-cor-nefandum-meshy-emissive.png",
       "emissiveStrength": 1.5,
-      "note": "hand-modelled in Blender, models-src/cult/base/cor-nefandum.py through base_build.py (re-run it, never hand-edit the glb): the cult base's heart (objects.base.CorNefandum, a 2x2 organ, placed by render.world.ObjModels off its part-0 cell). Wears textures-src/cult/Unused/base-cor-nefandum.png, a PACK4 edit_image off Assets/Cult/Base/cor-nefandum.png. Wet like the habitat organs (roughness 0.4). baseColor 0.7 against the 0.37 propstat asked (sampled sRGB 121/57/54): at 0.45 the pale trunk sank into one dark red mass in the habitat's dim rooms, so the heart is left well over the prop family on purpose. Glows off models-src/cult/cult-base-cor-nefandum-emissive.png, the core disc cut from its own sheet by base_emi.py.",
-      "last_converted": "2026-11-13T18:28:54Z",
-      "last_sig": "n1/-1/512/0.005/-/cult/cult-base-cor-nefandum-emissive.png@1.5/noMR/bc0.7,0.7,0.7,1/rf0.4"
+      "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/cor-nefandum.png re-laid on black and lifted to subject p50 72; asked polyCount 100000, came back 756,426 tris in 1 component at split 1.07x, cut here to 20,000 (1.65x, 52 texels/tri at tex 1024). Replaced the hand-modelled cut (models-src/cult/base/cor-nefandum.py via base_build.py, 14,680 tris, still in models-src as cult-base-cor-nefandum.glb): the S-trunk, arches, maw and horns read off the source, the hand one read as a cluster of eggs. TRELLIS 2 off the same reference came back 36 components and crushed dark. roughness 0.3: a little wet highlight, crawled by the row's sheen. baseColor 0.7 holds the hand cut's level (atlas 137/62/72 ~ its sheet). Glows off models-src/cult/cult-base-cor-nefandum-meshy-emissive.png: tools/emissive.py on the BUILT glb, --box=-0.17,0.17,-0.18,0.25,0.34,0.6 --key warm --keylo 0.3 --modulate --res 1024 (328 tris, bleed 0).",
+      "last_converted": "2026-11-13T19:03:23Z",
+      "last_sig": "n1/20000/1024/0.05/-/cult/cult-base-cor-nefandum-meshy-emissive.png@1.5/noMR/bc0.7,0.7,0.7,1/rf0.3"
     }
   }
 }

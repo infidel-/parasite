@@ -1155,24 +1155,40 @@ class ObjModels
     {
       keys: [ 'cult_cor_nefandum' ],
       path: RenderConfig.MODELS.cultCorNefandum,
-      h: 6.2, // its own modelled height (aorta 6.0, the tallest horn tip 6.2): twice the 3.0 walls
-      sink: 0.0, // the blood pool is the model's floor, 0.02 thick
-      yaw: FRONTAL, // modelled off one front-on drawing like the habitat organs, so the same rule
+      h: 6.2, // twice the 3.0 walls (widest/height 1.35, so the root mat spans ~8.4)
+      sink: 0.0, // its root mat is the model's floor
+      yaw: FRONTAL, // generated off one front-on drawing like the habitat organs, so the same rule
       // a red wash off the core over the floor and the walls of its room. pale and LOW for the reason
       // the biomineral's is pale: at 0xff6050 / 0.8 it drowned the heart's own pale trunk and pink
       // lobes in one flat red, since the light hangs just over its crown
       light: { color: 0xff8a78, mul: 0.5 },
-      anim: null, // a building of flesh does not sway
-      // a HEARTBEAT, not a breath: ~1.6s a beat (0.59 x 6.67 t/s = 3.9 rad/s), a small swell. the
-      // floor stands over the blood pool, mound and roots (0.55 of 6.2 = 0.09), so the roots stay put
+      // a building of flesh does not sway (amp 0): this is only the crawling wet highlight
+      anim: {
+        amp: 0.0,
+        bend: 1.0,
+        rate: 0.0,
+        strand: 0.0,
+        sheen: 0.05,
+        sheenRate: 0.35,
+      },
+      // a slow BREATH, layered: the swell (~5.2s, 0.18 x 6.67 t/s), the belly roll below (~3.5s) and
+      // a slight turn (~8.6s) never line up, so the body never repeats a pose. the floor stands over
+      // the root mat, so the roots stay put
       pulse: {
-        amp: 0.025,
-        rate: 0.59,
-        lift: 0.3,
+        amp: 0.03,
+        rate: 0.18,
+        lift: 0.4,
         floor: 0.12,
         soft: 0.15,
-        twist: 0.0,
-        twistRate: 0.0,
+        twist: 0.012,
+        twistRate: 0.11,
+      },
+      // the trunk heaves toward the camera and back, rolling top to hem; the box edges (root tips,
+      // crown) stay pinned
+      billow: {
+        amp: 0.01,
+        rate: 0.27,
+        wave: 0.6,
       },
       curl: null,
       core: null, // the core glows off the emissive map, cut from its own painted disc
