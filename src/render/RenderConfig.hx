@@ -1133,6 +1133,9 @@ class RenderConfig {
     habitatAssimilation: 'models/habitat/assimilation.glb', // braided tentacle arch with a maw
     habitatPreservator: 'models/habitat/preservator.glb',   // amber pod caged in veins
     habitatWatcher: 'models/habitat/watcher.glb',           // eye-studded mass ringed by tendrils
+    // the cult base's organs (objects.base.BaseOrganObject), hand-modelled off their 2D art
+    // (models-src/cult/base_build.py), through render.world.ObjModels for the same reason
+    cultCorNefandum: 'models/cult/base-cor-nefandum.glb',  // the heart: pale trunk, glowing core, lobes, roots
     // the alien ship of the crash-landing scenario, which goes through render.world.ObjModels for
     // the same reason the four organs above do: it has an objects.EventObject behind it, so it
     // carries the full solid / ghost / outline-hull set. supplied as a 584k-tri master and decimated

@@ -40,6 +40,24 @@ class BaseOrganObject extends AreaObject
   public override function isGroundDecal(): Bool
     { return false; }
 
+// the 3D view's key: the organ type on its anchor (part 0) cell, `_part` on the others, which
+// render.world.ObjModels keys to a row that hides their sprites. a type with no row keeps its sprite
+  public override function getModelKey(): String
+    {
+      var organ = getOrgan();
+      if (organ == null)
+        return type;
+      return 'cult_' + Std.string(organ.type).toLowerCase() + (basePartIndex == 0 ? '' : '_part');
+    }
+
+// the cursor on any cell outlines the whole organ
+  public override function getHoverGroup(): Array<AreaObject>
+    {
+      return [ for (o in game.region.get(areaID).getObjects())
+        if (o.type == 'base_organ' &&
+            cast(o, BaseOrganObject).organID == organID) o ];
+    }
+
 // refresh base organ atlas coordinates
   public function syncOrganImage()
     {

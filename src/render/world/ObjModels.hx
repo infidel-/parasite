@@ -584,6 +584,9 @@ typedef ObjModel = {
                       // always stands under a casting light of its own, or off its cell, so a flat
                       // copy of the 2D icon at the cell centre only doubles its real shadow. Absent
                       // for a prop that can stand where nothing casts (a habitat organ)
+  ?skip:Bool,         // PLACES NOTHING: the row only takes its keys' sprites away, for the other cells
+                      // of a multi-cell object whose one model the anchor cell's row places (a 2x2
+                      // cult base organ). `path` is still a real glb, so every warm stays one loop
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -1145,6 +1148,62 @@ class ObjModels
         -render.corp.CorpStyle.GUN_CAB_BACK - render.corp.CorpStyle.GUN_CAB_OPEN_Y,
       ],
       ghostPart: true,
+    },
+    // the cult base's heart (objects.base.BaseOrganObject, a 2x2 organ): ONE model, placed off its
+    // part-0 (top-left) cell and moved by `off` onto the footprint's centre. the other three cells
+    // are keyed onto the skip row below, which takes their sprite quarters away and places nothing
+    {
+      keys: [ 'cult_cor_nefandum' ],
+      path: RenderConfig.MODELS.cultCorNefandum,
+      h: 6.2, // its own modelled height (aorta 6.0, the tallest horn tip 6.2): twice the 3.0 walls
+      sink: 0.0, // the blood pool is the model's floor, 0.02 thick
+      yaw: FRONTAL, // modelled off one front-on drawing like the habitat organs, so the same rule
+      // a red wash off the core over the floor and the walls of its room. pale and LOW for the reason
+      // the biomineral's is pale: at 0xff6050 / 0.8 it drowned the heart's own pale trunk and pink
+      // lobes in one flat red, since the light hangs just over its crown
+      light: { color: 0xff8a78, mul: 0.5 },
+      anim: null, // a building of flesh does not sway
+      // a HEARTBEAT, not a breath: ~1.6s a beat (0.59 x 6.67 t/s = 3.9 rad/s), a small swell. the
+      // floor stands over the blood pool, mound and roots (0.55 of 6.2 = 0.09), so the roots stay put
+      pulse: {
+        amp: 0.025,
+        rate: 0.59,
+        lift: 0.3,
+        floor: 0.12,
+        soft: 0.15,
+        twist: 0.0,
+        twistRate: 0.0,
+      },
+      curl: null,
+      core: null, // the core glows off the emissive map, cut from its own painted disc
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      off: [ 2.0, 2.0 ],
+      noCast: true, // the fake shadow would be the old quarter sprite
+    },
+    {
+      keys: [ 'cult_cor_nefandum_part' ],
+      path: RenderConfig.MODELS.cultCorNefandum,
+      h: 6.2,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: null,
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+      noCast: true,
+      skip: true,
     },
     {
       keys: [ 'habitat_biomineral' ],
@@ -1734,6 +1793,7 @@ class ObjModels
           var i = rowFor(o.getModelKey());
           // a base emits its gun cabinet as geometry, in its own art
           if (i < 0 ||
+              MODELS[i].skip == true ||
               propFor(o.getModelKey()) == null ||
               render.military.MilitaryGeom.draws(game.area, o))
             continue;

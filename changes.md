@@ -3,6 +3,7 @@
 ## 1.1.1
 
 ### Changes
+- art: cult base Cor Nefandum is now 3D
 - console: `bot` lets a test bot play the game (debug build)
 - cult: a member's death fails any ordeal it is locked in, profane ones too
 - game: a parasite reborn after its final habitat shock leaves its host behind
