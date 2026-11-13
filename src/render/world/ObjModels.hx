@@ -587,6 +587,8 @@ typedef ObjModel = {
   ?skip:Bool,         // PLACES NOTHING: the row only takes its keys' sprites away, for the other cells
                       // of a multi-cell object whose one model the anchor cell's row places (a 2x2
                       // cult base organ). `path` is still a real glb, so every warm stays one loop
+  ?turns:Array<Float>, // extra yaw per key, indexed like `keys`: one row (one batch) for an object that
+                       // faces one of four ways (the cult spine turret). Absent for every other row
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -1237,8 +1239,30 @@ class ObjModels
       off: [ 2.0, 2.0 ],
       noCast: true, // the fake shadow would be the old quarter sprite
     },
+    // the other ten organs, each a Meshy glb sized off the Cor by its 2D atlas width (capped at the
+    // Cor's height: the heart stays the tallest)
+    cultOrgan([ 'cult_flesh_block' ], RenderConfig.MODELS.cultFleshBlock, 4.3, true),
+    cultOrgan([ 'cult_rat_nest' ], RenderConfig.MODELS.cultRatNest, 5.8, true),
+    cultOrgan([ 'cult_crusher' ], RenderConfig.MODELS.cultCrusher, 5.9, true),
+    cultOrgan([ 'cult_garbage_heap' ], RenderConfig.MODELS.cultGarbageHeap, 4.8, true),
+    cultOrgan([ 'cult_body_storage' ], RenderConfig.MODELS.cultBodyStorage, 6.2, true),
+    cultOrgan([ 'cult_cauldron' ], RenderConfig.MODELS.cultCauldron, 5.1, true),
+    cultOrgan([ 'cult_ribwall' ], RenderConfig.MODELS.cultRibWall, 2.6, false),
+    cultOrgan([ 'cult_ribgate' ], RenderConfig.MODELS.cultRibGate, 3.2, false),
+    cultOrgan([ 'cult_blood_trap' ], RenderConfig.MODELS.cultBloodTrap, 1.6, false),
+    // ONE row for all four facings (one batch), the key carrying the direction (north, east,
+    // south, west: objects.base.SpineTurret). the glb's barrel faces the camera, which is south
+    turret(),
     {
-      keys: [ 'cult_cor_nefandum_part' ],
+      keys: [
+        'cult_cor_nefandum_part',
+        'cult_flesh_block_part',
+        'cult_rat_nest_part',
+        'cult_crusher_part',
+        'cult_garbage_heap_part',
+        'cult_body_storage_part',
+        'cult_cauldron_part',
+      ],
       path: RenderConfig.MODELS.cultCorNefandum,
       h: 6.2,
       sink: 0.0,
@@ -1789,6 +1813,63 @@ class ObjModels
     },
   ];
 
+// a cult base organ off its Meshy glb (objects.base.BaseOrganObject): FRONTAL like the Cor, standing
+// on its own mat, wearing the Cor's crawling wet highlight. a 2x2 organ (`big`) also takes the Cor's
+// slow layered breath and is moved off its part-0 cell onto the footprint's centre; a 1x1 one is bone
+// or a puddle and holds still
+  static function cultOrgan(keys:Array<String>, path:String, h:Float, big:Bool):ObjModel
+    {
+      return {
+        keys: keys,
+        path: path,
+        h: h,
+        sink: 0.0,
+        yaw: FRONTAL,
+        light: null,
+        anim: {
+          amp: 0.0,
+          bend: 1.0,
+          rate: 0.0,
+          strand: 0.0,
+          sheen: 0.05,
+          sheenRate: 0.35,
+        },
+        pulse: (big ? {
+          amp: 0.03,
+          rate: 0.18,
+          lift: 0.4,
+          floor: 0.12,
+          soft: 0.15,
+          twist: 0.012,
+          twistRate: 0.11,
+        } : null),
+        billow: (big ? {
+          amp: 0.01,
+          rate: 0.27,
+          wave: 0.6,
+        } : null),
+        curl: null,
+        core: null,
+        fly: null,
+        shine: null,
+        eyes: null,
+        lamps: null,
+        arc: null,
+        tether: null,
+        off: (big ? [ 2.0, 2.0 ] : null),
+        noCast: true, // the fake shadow would be the old sprite
+      };
+    }
+
+// the spine turret: one cultOrgan row keyed per direction, each key turned to face its way
+  static function turret():ObjModel
+    {
+      var m = cultOrgan([ for (d in 0...4) 'cult_spine_turret_' + d ],
+        RenderConfig.MODELS.cultSpineTurret, 2.4, false);
+      m.turns = [ Math.PI, Math.PI / 2, 0.0, -Math.PI / 2 ];
+      return m;
+    }
+
 // the prop an object draws as, or null for the ordinary sprite path. a linear scan of five rows,
 // which is cheaper than the map it would take to avoid it — render.Actors asks once per object per
 // frame and the answer is null for everything in a city
@@ -1851,7 +1932,8 @@ class ObjModels
             continue;
           var m = MODELS[i];
           var w = CityConfig.cellToWorld(o.x, o.y);
-          var yw = yaw(o.x, o.y, m.yaw);
+          var yw = yaw(o.x, o.y, m.yaw) +
+            (m.turns != null ? m.turns[m.keys.indexOf(o.getModelKey())] : 0.0);
           var ox = (m.off != null ? m.off[0] : 0.0);
           // `wall` is how much nearer the cell a WALL-yawed prop's masonry stands than the masonry
           // its row's `off` was written against: only the area kind knows a perimeter wall is

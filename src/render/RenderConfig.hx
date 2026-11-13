@@ -1133,9 +1133,19 @@ class RenderConfig {
     habitatAssimilation: 'models/habitat/assimilation.glb', // braided tentacle arch with a maw
     habitatPreservator: 'models/habitat/preservator.glb',   // amber pod caged in veins
     habitatWatcher: 'models/habitat/watcher.glb',           // eye-studded mass ringed by tendrils
-    // the cult base's organs (objects.base.BaseOrganObject), hand-modelled off their 2D art
-    // (models-src/cult/base_build.py), through render.world.ObjModels for the same reason
+    // the cult base's organs (objects.base.BaseOrganObject), Meshy 6 off their 2D art's HD sources,
+    // through render.world.ObjModels for the same reason
     cultCorNefandum: 'models/cult/base-cor-nefandum.glb',  // the heart: pale trunk, glowing core, lobes, roots
+    cultFleshBlock: 'models/cult/base-flesh-block.glb',    // quilted flesh cube over a blood mat
+    cultRatNest: 'models/cult/base-rat-nest.glb',          // bone-antlered burrow ring around a pit
+    cultCrusher: 'models/cult/base-crusher.glb',           // skull-crowned maw with bone rollers
+    cultGarbageHeap: 'models/cult/base-garbage-heap.glb',  // olive refuse mound with an orifice
+    cultBodyStorage: 'models/cult/base-body-storage.glb',  // flesh frame of hanging bodies
+    cultCauldron: 'models/cult/base-cauldron.glb',         // ribbed tub of stew with a foetus
+    cultRibWall: 'models/cult/base-rib-wall.glb',          // bone-and-sinew wall segment
+    cultRibGate: 'models/cult/base-rib-gate.glb',          // the wall with a toothed door
+    cultSpineTurret: 'models/cult/base-spine-turret.glb',  // bone dome with a ribbed barrel
+    cultBloodTrap: 'models/cult/base-blood-trap.glb',      // blood puddle with grasping hands
     // the alien ship of the crash-landing scenario, which goes through render.world.ObjModels for
     // the same reason the four organs above do: it has an objects.EventObject behind it, so it
     // carries the full solid / ghost / outline-hull set. supplied as a 584k-tri master and decimated
