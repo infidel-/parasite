@@ -2483,6 +2483,8 @@ Trap: the swap test is per BATCH, because a batch has one ghost opacity. A row w
 
 ## Cult base Cor Nefandum hand-modelled off its 2D art (`models-src/cult/base_build.py`, `ObjModel.skip`)
 
+> SUPERSEDED by Cult base Cor Nefandum: Meshy 6 cut to 20k replaces the hand model (hand vs TRELLIS vs Meshy) (the model only; the kit, `skip` row and keys stand)
+
 The cult base's heart was a 2x2 block of upright atlas quarters, one sprite per footprint cell. Now it is
 one hand-modelled glb: the lab-machine route (`lab/top_build.py`) cloned for flesh.
 
@@ -2508,3 +2510,42 @@ Traps:
 - Calls were not A/B'd: the model adds one row's batch set.
 
 **Verdict:** landed. The other ten organs follow on the same kit.
+
+## Cult base Cor Nefandum: Meshy 6 cut to 20k replaces the hand model (hand vs TRELLIS vs Meshy)
+
+The hand-modelled heart above read as a cluster of eggs against its source. All three routes were run off
+the same reference: `Assets/Cult/Base/cor-nefandum.png`, keyed off its grey backdrop, re-laid on black and
+lifted to subject p50 72 (propstat said 62, TOO DARK). They were rendered side by side at the source's own
+28° view, the 53° game camera and from the back.
+
+- **Hand** (Blender kit): 14,680 tris, 1 component, $0.07 sheet. The cleanest topology, and the least
+  like the source: a straight trunk under lobes that read as separate eggs.
+- **TRELLIS 2** (`decimation_target` 100000): 98,871 tris in **36 components, the largest 83.3%**, so
+  propstat rejects it as a blob cloud. The albedo was crushed to 56/25/23 and the pale horns baked dark.
+  It did get the S-curved trunk and the arches. $0.04.
+- **Meshy 6** (`poly_count` 100000): **756,426 tris**, so the cap was not honoured. It came back as
+  1 component, split 1.07x, albedo 137/62/72 (on a par with the hand sheet), pale horns, a red core, and
+  a believable back. $0.80. It is the only one that reads as the source from every side.
+- **The cut.** `models.json` `tris` 20000, `error` 0.05, `tex` 1024 landed exactly on **20,000 tris**:
+  1 component, split 1.65x, **52 texels/tri**, **3.2 MB** (3.4x the hand glb, almost all of it the 1024
+  map). The existing label `cult/base-cor-nefandum` was repointed, so the game path and every warm entry
+  stayed put. The hand glb stays in `models-src`.
+- **The glow.** `tools/emissive.py` on the BUILT glb: `--box=-0.17,0.17,-0.18,0.25,0.34,0.6 --key warm
+  --keylo 0.3 --modulate`. That is 328 tris, 1.0% lit, bleed 0. The core's triangles were found first by
+  sampling each triangle's centroid albedo for saturated red (203 hits). `--box` needs the `=` form,
+  because a leading minus reads as a flag.
+- **The motion.** The heartbeat (rate 0.59, ~1.6 s) became a slow layered breath, three beats that never
+  line up:
+  - a swell at rate 0.18 (~5.2 s), amp 0.03, lift 0.4;
+  - a turn of 0.012 rad at rate 0.11 (~8.6 s);
+  - a `billow` belly roll (amp 0.01, rate 0.27, wave 0.6, ~3.5 s).
+- **The highlight.** `roughness` 0.3 (it was 0.4), plus a sheen-only `anim` (amp 0, sheen 0.05, rate
+  0.35) that crawls the highlight without moving a vertex. Live, the three frames 1.2 s apart differed by
+  a mean of 4.2/4.4 per channel against 2.4 between the outer two, so the motion is periodic, not drift.
+
+Traps:
+- Meshy ignores `poly_count`. Budget the master as ~750k tris, 25 MB.
+- On a 2D painted source with a grey backdrop, propstat's subject p50 is the number to fix before a
+  paid run, not after.
+
+**Verdict:** landed. Meshy plus a 20k cut beats hand-modelling for a painted organic source.
