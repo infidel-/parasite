@@ -2480,3 +2480,31 @@ Measured live:
 Trap: the swap test is per BATCH, because a batch has one ghost opacity. A row whose placements only partly swapped falls back to the old snap. Only `SewerArea` hands over; the other kinds still dispose, since none of them swaps a model.
 
 **Verdict:** landed.
+
+## Cult base Cor Nefandum hand-modelled off its 2D art (`models-src/cult/base_build.py`, `ObjModel.skip`)
+
+The cult base's heart was a 2x2 block of upright atlas quarters, one sprite per footprint cell. Now it is
+one hand-modelled glb: the lab-machine route (`lab/top_build.py`) cloned for flesh.
+
+- **The kit.** `models-src/cult/base_build.py` is the shared API, and each organ is a module in `cult/base/<name>.py`.
+  - The lab's `limb`/`spline` were lifted out of `lab/mach/tentacle.py`, with `vlen` added so every root wears its ribs at one density.
+  - New: `circle` (lobed or oval sections), `dome`, `vessel` (an opening as a lathe proud of the body, the tentacle port's trick), `hug` (BVH-casts tube points onto what is built so far, for veins) and `cast` (a spot on a body to stand a vessel on).
+  - `base_cmp.py` lays the reference PNG beside renders from the reference's own view (28°) and the habitat's near camera (53°). `base_emi.py` cuts the emissive map off the sheet.
+- **The piece.** One PACK4 sheet off `Assets/Cult/Base/cor-nefandum.png` ($0.068, sunburst): pale trunk skin, lobe skin, ribbed vessel skin, and horn/core/throat/blood.
+  - The trunk is a profile lathe with a waist under the core. Around it: 13 lumpy lobes, the aorta, a maw and a core as vessels, 5 trunk ovals, 7 pores and stubs, 7 horns, 4 cast veins and 28 roots with forks, on a pool and a mound.
+  - **14,680 tris, 945 KB at tex 512**; holes 0, coplanar 0, islands 1, inside-out 0. The core glows off its own painted disc (5.1% lit).
+- **Wiring.** One `ObjModels` row keyed `cult_cor_nefandum`, placed off part 0 with `off [2, 2]`: FRONTAL, `noCast`, a light 0xff8a78 at 0.5, and a heartbeat `pulse` (rate 0.59, amp 0.025, floor 0.12 over the roots).
+  - The other three cells key `cult_cor_nefandum_part` onto a new **`skip` row**, which `build()` passes over. It hides their sprites and places nothing.
+  - `path` stays a real glb, so none of the five warm loops needed a filter. `BaseOrganObject.getModelKey` returns `cult_<type>` on part 0 and `_part` elsewhere, and a type with no row keeps its sprite. `getHoverGroup` returns every cell of the organ.
+- **Rounds: 7 compare renders and 3 live.** In order:
+  - the first model was squat egg-cartons: lobes at r 1.0 against the reference's 0.65-0.75, measured at ~151 px a unit;
+  - the roots read as thorns until they were slimmer at the root, tapered slower and forked;
+  - live, `baseColor` 0.45 (propstat asked 0.37) and a 0xff6050 light at 0.8 drowned it in one dark red, so it went to 0.7 and the paler light at 0.5.
+
+Traps:
+- A vessel's floor parallel to the body 0.01 out is a near-coplanar pair with the body itself (gap 0.0087). Keep the floor at least 0.025 out.
+- A thin root lying at z = r puts its top on the pool's plane, so roots get a per-root height step.
+- `hug` must DROP a ray that misses: kept in place, it flew a vein 6 units in front of the model.
+- Calls were not A/B'd: the model adds one row's batch set.
+
+**Verdict:** landed. The other ten organs follow on the same kit.
