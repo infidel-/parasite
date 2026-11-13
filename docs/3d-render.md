@@ -103,7 +103,7 @@ Measured this way, **tactical = 513 calls: 175 shadow / 324 main / 14 post**.
 
 ## Verdict table
 
-Bodies in [`3d-changes.md`](3d-changes.md) and its dated predecessors (`3d-changes-2026-10.md`
+Bodies in [`3d-changes.md`](3d-changes.md) and its dated predecessors (`3d-changes-2026-11.md`
 back) — grep the change text.
 
 ### Perf and render engineering
@@ -1968,3 +1968,4 @@ overlay overdraw** — that instrumentation is the first step.
 | **Cult base Cor Nefandum hand-modelled off its 2D art** (`models-src/cult/base_build.py` kit cloned from `lab/top_build.py` with `limb`/`vessel`/`hug`/`cast`; one PACK4 sheet; `ObjModel.skip` row hides a multi-cell organ's other cells) | 14,680 tris, 945 KB at tex 512, gates 0/0/1/0; 7 compare + 3 live rounds; baseColor 0.7, light 0xff8a78 x 0.5, heartbeat pulse | **landed. `BaseOrganObject.getModelKey` `cult_<type>` / `_part`; a type with no row keeps its sprite** |
 | **Cult base Cor Nefandum: Meshy 6 cut to 20k replaces the hand model** (same reference re-laid on black, p50 72, run through hand / TRELLIS 2 / Meshy 6; `tris` 20000 `error` 0.05 `tex` 1024 on the existing label; slow layered breath: swell 0.18 + twist 0.11 + `billow` 0.27; roughness 0.3 + sheen-only `anim`) | hand 14,680 / 1 comp; TRELLIS 98,871 / 36 comp, albedo 56/25/23; Meshy 756,426 / 1 comp (asked 100k) → 20,000, 52 texels/tri, 3.2 MB, emissive 328 tris, bleed 0 | **landed. Meshy ignores `poly_count`; TRELLIS fragments this subject** |
 | **Cult base Cor Nefandum eye blooms pink-red** (emissive re-cut as a pure red marker for a `PropLamps` family, 0xff2d5a glow 2.5 `full` 1; a `PropCore` quad on a procedural `fx/halo.png`, upright, z 0.42 y 0.63, glow 2.0 alpha 0.3; light 0xff3d6e x 0.6; `PropFX.drawCore` at `standsAt`) | eye (253,179,192) at strength 5 → (253,117,136); halo 28 → 78 above / 201 left; halo centroid y 338 vs eye 337 | **landed. ACES whitens a red bright enough to bloom; the halo carries it** |
+| **Cult base: the other ten organs as Meshy 6 cuts** (same black re-lay as the Cor, 10 parallel runs; 2x2 at 20k and 1x1 at 8k, tex 1024; `ObjModels.cultOrgan` rows sized by the Cor's world-per-atlas-px, capped at its 6.2; `ObjModel.turns` per key for the turret's four facings; crusher `texSrc` de-greened) | Meshy 790k–1.98M tris / 1 mesh each, $8; albedo lum 76–86 (gate 103 → baseColor 0.55); 2.8–3.7 MB each; body storage keyed at 12/18 to keep its pale bodies | **landed. Scale by atlas width held live; Meshy bakes stray hues → `texSrc`** |
