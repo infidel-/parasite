@@ -2549,3 +2549,38 @@ Traps:
   paid run, not after.
 
 **Verdict:** landed. Meshy plus a 20k cut beats hand-modelling for a painted organic source.
+
+## Cult base Cor Nefandum eye blooms pink-red (`PropLamps` marker + `fxHalo` core quad)
+
+The Meshy heart's eye glowed off a modulated emissive map at strength 1.5. That is under
+`BLOOM_THRESHOLD` 0.9, so it had no bloom, and the room light (0xff8a78) read as white. There were three
+rounds. Brightness numbers below are the eye's median sRGB at the near camera; the halo number is the
+median just left of the eye.
+
+- **Round 1: emissiveStrength 5.** The eye came out peach-white: (253,179,192) with a halo of 28.
+  **ACES whitens any red bright enough to clear the threshold.** Red's luminance is 0.2126 R, so a
+  bloom-capable red needs R ≈ 4 linear, and ACES maps that toward white.
+- **Round 2: a lamp family.** The emissive map was re-cut as a pure red MARKER (`emissive.py --tint
+  ff0000 --modulate`, so the painted cells survive as value). `PropLamps` adds 0xff2d5a × `glow` with
+  `full` 1, which keeps the pattern. At glow 7 it was still pale (253,156,172), and there was still no
+  halo.
+- **Round 3: the halo carries the bloom.** It is a `PropCore` quad wearing `textures/fx/halo.png`:
+  procedural, 128 px, white, with an alpha gaussian (σ 0.5) dipped to 0.35 over the middle so it rings
+  the eye instead of washing it white. The quad is upright, glow 2.0, alpha 0.3, size 0.42 h, beating
+  with the lamp (rate 0.23). The lamp dropped to glow 2.5 (beat 0.7..1). Result: eye (253,117,136),
+  saturated pink-red; halo 78 above, 201 left.
+- **Room light** is now 0xff3d6e at 0.6, the eye's own hue. Underlay emissiveStrength is 0.5.
+- **`PropFX.drawCore` now places at `ObjModels.standsAt`**, so a row's `off` carries the core quad with
+  the model; the Cor stands two units off its part-0 cell. Fly, arc and tether keep the cell.
+
+Traps:
+- The firefly mote has painted star spikes, and over the eye they read as a lens flare.
+- A quad leaned by `Sprites.TILT` dug its top into the brow. Upright at z 0.37 it lost its right half
+  to the flank beside the eye, whose front measures 0.364 h.
+- Nearer the camera reads LOWER on screen, so y rides up by dz × tan 53°. Placement then has to be
+  fitted on screenshots: y 0.53 at z 0.46 sat under the eye, and y 0.63 at z 0.42 centres it (halo
+  centroid y 338 against the eye's 337).
+- The halo still reads stronger on the left. There the lit flesh plus the halo crosses the threshold,
+  and it blooms; the dark recess on the right does not.
+
+**Verdict:** landed. A red that blooms needs a halo quad; the emissive alone goes white first.
