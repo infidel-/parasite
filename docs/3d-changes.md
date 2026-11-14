@@ -103,3 +103,27 @@ Traps:
   `{ value }` object the hook registered, so writing `.value` retunes the drawn frame.
 
 **Verdict:** landed. The harness's emissive levels do not transfer: cut them ~15x for these bodies.
+
+## Cult rat nest: a real hole through the floor (`ObjModel.hole`, a discard on the sewer floor)
+
+**Changed:** the sunk rat nest stood over solid floor, which painted over its funnel below the floor
+line. A new optional row column `hole` [x, z, rx, rz] (fractions of `h` off the placement) is filled
+by `ObjModels.build` into `ObjModels.floorHoles`, 4 world-xz ellipse slots shared by identity. The
+sewer/habitat floor material (`SewerGeom.holed`, hooked before `VisionMask.patch`, key `floorHole`)
+discards fragments inside any of them. The rat nest also lost its pulse and billow: a hole does not
+breathe, and a swelling wall would cross the hole's edge. Only the sheen is left.
+
+Numbers:
+- The funnel's cross-section at the floor line (0.38 h), sliced off the built mesh, spans x -0.26..0.26
+  and z -0.17..0.57 h, with a narrow front lobe. The ellipse is centred at z +0.092 with rx 0.176 and
+  rz 0.2 (world 1.02 x 1.16): just inside the walls, leaving the lobe floored.
+- 131 programs after entry, and the warm went 122 → 123 (the patched floor through
+  `SewerModel.demo()`). No compile at entry.
+
+Traps:
+- Inserting a function above `add` split `add` from its own header comment; it was moved back.
+- The ellipse's axes stay world-aligned (ponytail): right for FRONTAL rows. A turned row would also
+  need the axes rotated.
+
+**Verdict:** landed. Through the bone ring you see the ribbed funnel down to a black bottom, with no
+floor ring and no gap at the edge.
