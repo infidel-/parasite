@@ -132,9 +132,11 @@ floor ring and no gap at the edge.
 ## Cult blood trap: twitching fingers; Cadaverum holds still
 
 **Changed:** the blood trap (a 1x1 organ, held still until now) takes the existing `anim` sway
-(`ObjModels.bloodTrap`): amp 0.05, bend 3.0, rate 0.45, strand 4.0, plus the sheen it already had. The
+(`ObjModels.bloodTrap`): amp 0.05, bend 3.0, rate 0.45, strand 4.0, plus the sheen it already had,
+FRONT-BACK only: a new optional `PropAnim.swayX` (uniform `propSwayX`, default 1) scales the sway's
+local-X half, and the trap takes 0, so on a FRONTAL row it rocks toward and away from the camera. The
 body storage (Cadaverum, `ObjModels.bodyStorage`) lost its pulse, its billow and its heartbeat glow
-(was 0.02); only the sheen is left. No new code: two row helpers beside `ratNest()`.
+(was 0.02); only the sheen is left. Two row helpers beside `ratNest()`.
 
 Numbers:
 - The trap's height profile off the built glb: the puddle fills 0..0.2 h (75% of the verts), the hands
@@ -143,8 +145,9 @@ Numbers:
 - Strand 4 cycles per height across x+z: neighbouring hands sit ~1 h apart (a full cycle each way)
   and adjacent fingers ~0.1 h apart (~0.4 cycle), so no two curl together.
 - Rate 0.45 ≈ 2.1 s a sway, faster than the organs' breath (5.2 s).
-- Live, two frames of the habitat camera: 289 px changed in the trap's crop, all on the pale
-  fingertips; the puddle diffed clean. The warm stayed at 123 programs, with 0 compiles at entry.
+- Live, two frames of the habitat camera: 289 px changed in the trap's crop with the full sway, 105
+  with front-back only (depth foreshortens under the ~52° camera), all on the pale fingertips; the
+  puddle diffed clean. The warm stayed at 123 programs, with 0 compiles at entry.
 
 **Verdict:** landed. The sway's power-of-height weight is a finger gate for free on a prop whose only
 tall parts are fingers.
