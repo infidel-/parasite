@@ -71,3 +71,35 @@ Traps:
 
 **Verdict:** landed. The Cor now matches the other ten organs' detail level, and the halo sits on the
 eye at both the game camera and a close 53° view.
+
+## Cult base organs: a faint heartbeat (`PropFlesh`), the rat nest sunk into the floor
+
+**Changed:** variant A of the flesh-shader bake-off now ships as a new `flesh` column on `ObjModel`,
+consumed by `PropGlow` (same hook chain, key suffix `F`, warmed through `patchRow`). Two keys of the
+prop's own linear albedo, max'd: a crevice key (luminance 0.012..0.035 falling × redness R/(G+B)
+1.3..2.2) and a vein key (darkness against the base map sampled at mip bias 3, 0.35..0.65, × redness
+1.2..2.0). They glow 0xff1030 on a lub-dub beat whose phase is the distance from a core (0.8 cycles per
+height), so it travels outward. The Cor's core is its eye (0.505 h, 0.236 h proud); the others sit
+0.55 h up the axis. It runs on the Cor, flesh block, garbage heap and cauldron at glow 0.04, and on the
+crusher and body storage at 0.02 (their whole red interior keys). There is none on the rib wall, rib
+gate, spine turret or blood trap, and none on the rat nest. The existing sheen and breath are unchanged.
+B, C and D are kept with their GLSL and knobs in `docs/flesh-shaders.md`.
+The rat nest: Meshy stood its pit up as a funnel on a narrow stalk, 5.8 tall. At `sink` 0.38 the stalk
+is under the floor (the skirt's widest ring is at 0.35–0.40 h). The bone ring, the skull and the mouth
+stand around a dark hole at floor level.
+
+Numbers:
+- Glow 0.25 in the game flashed saturated red over every root (the R channel of a close shot swung
+  up to 250 between frames). At 0.04 it is a faint red tide through the crevices on the beat.
+- Rate 0.35 is ~2.7 s per beat (the harness's 0.63 was 1.5 s); base 0.004.
+- Cost: frag ~40 ALU plus 1 extra tap of the base map. 132 programs after entry (133 before), and no
+  compile at area entry.
+
+Traps:
+- PropGlow's fragment blocks are concatenated, and the lamp block opens with `#ifdef`. A block ending
+  `}` with no newline puts the directive mid-line, the fragment shader fails to compile, and the Cor
+  drew only its halo. The new block ends `}\n`.
+- Tuned live without rebuilds: `renderer.properties.get(mat).uniforms.propFleshBeat` is the same
+  `{ value }` object the hook registered, so writing `.value` retunes the drawn frame.
+
+**Verdict:** landed. The harness's emissive levels do not transfer: cut them ~15x for these bodies.
