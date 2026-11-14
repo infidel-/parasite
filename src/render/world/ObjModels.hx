@@ -1282,18 +1282,18 @@ class ObjModels
     },
     // the other ten organs, each a Meshy glb sized off the Cor by its 2D atlas width (capped at the
     // Cor's height: the heart stays the tallest)
-    // the last argument is the heartbeat's glow: the crusher and the body storage are a red mass round
-    // their bones, so the whole interior keys and they take half. the bone pieces and the puddle
-    // take none (the puddle keys as one blob)
+    // the last argument is the heartbeat's glow: the crusher is a red mass round its bones, so the
+    // whole interior keys and it takes half. the bone pieces and the puddle take none (the puddle
+    // keys as one blob)
     cultOrgan([ 'cult_flesh_block' ], RenderConfig.MODELS.cultFleshBlock, 4.3, true, FLESH_GLOW),
     ratNest(),
     cultOrgan([ 'cult_crusher' ], RenderConfig.MODELS.cultCrusher, 5.9, true, FLESH_GLOW * 0.5),
     cultOrgan([ 'cult_garbage_heap' ], RenderConfig.MODELS.cultGarbageHeap, 4.8, true, FLESH_GLOW),
-    cultOrgan([ 'cult_body_storage' ], RenderConfig.MODELS.cultBodyStorage, 6.2, true, FLESH_GLOW * 0.5),
+    bodyStorage(),
     cultOrgan([ 'cult_cauldron' ], RenderConfig.MODELS.cultCauldron, 5.1, true, FLESH_GLOW),
     cultOrgan([ 'cult_ribwall' ], RenderConfig.MODELS.cultRibWall, 2.6, false, 0.0),
     cultOrgan([ 'cult_ribgate' ], RenderConfig.MODELS.cultRibGate, 3.2, false, 0.0),
-    cultOrgan([ 'cult_blood_trap' ], RenderConfig.MODELS.cultBloodTrap, 1.6, false, 0.0),
+    bloodTrap(),
     // ONE row for all four facings (one batch), the key carrying the direction (north, east,
     // south, west: objects.base.SpineTurret). the glb's barrel faces the camera, which is south
     turret(),
@@ -1941,6 +1941,28 @@ class ObjModels
       m.pulse = null;
       m.billow = null;
       m.hole = [ 0.0, 0.092, 0.305, 0.347 ];
+      return m;
+    }
+
+// the body storage (Cadaverum): neither breathes nor beats, only the sheen
+  static function bodyStorage():ObjModel
+    {
+      var m = cultOrgan([ 'cult_body_storage' ], RenderConfig.MODELS.cultBodyStorage, 6.2, true, 0.0);
+      m.pulse = null;
+      m.billow = null;
+      return m;
+    }
+
+// the blood trap: its hands twitch. a sway weighted by height cubed holds the puddle (under 0.2 h) and
+// the wrists still and moves the fingers (0.7..1 h); the strand phase across the puddle (hands spread
+// +/-1 h) gives every hand and finger a beat of its own
+  static function bloodTrap():ObjModel
+    {
+      var m = cultOrgan([ 'cult_blood_trap' ], RenderConfig.MODELS.cultBloodTrap, 1.6, false, 0.0);
+      m.anim.amp = 0.05;
+      m.anim.bend = 3.0;
+      m.anim.rate = 0.45;
+      m.anim.strand = 4.0;
       return m;
     }
 
