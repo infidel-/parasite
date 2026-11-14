@@ -128,3 +128,23 @@ Traps:
 
 **Verdict:** landed. Through the bone ring you see the ribbed funnel down to a black bottom, with no
 floor ring and no gap at the edge.
+
+## Cult blood trap: twitching fingers; Cadaverum holds still
+
+**Changed:** the blood trap (a 1x1 organ, held still until now) takes the existing `anim` sway
+(`ObjModels.bloodTrap`): amp 0.05, bend 3.0, rate 0.45, strand 4.0, plus the sheen it already had. The
+body storage (Cadaverum, `ObjModels.bodyStorage`) lost its pulse, its billow and its heartbeat glow
+(was 0.02); only the sheen is left. No new code: two row helpers beside `ratNest()`.
+
+Numbers:
+- The trap's height profile off the built glb: the puddle fills 0..0.2 h (75% of the verts), the hands
+  rise 0.2..1.0 h and spread x ±1.0 h. Weight y^3 gives the puddle 0.008 and the wrists (~0.35) 0.04,
+  so only the fingers (0.7..1 h) carry the motion. At h 1.6, a fingertip moves ~0.08 world units.
+- Strand 4 cycles per height across x+z: neighbouring hands sit ~1 h apart (a full cycle each way)
+  and adjacent fingers ~0.1 h apart (~0.4 cycle), so no two curl together.
+- Rate 0.45 ≈ 2.1 s a sway, faster than the organs' breath (5.2 s).
+- Live, two frames of the habitat camera: 289 px changed in the trap's crop, all on the pale
+  fingertips; the puddle diffed clean. The warm stayed at 123 programs, with 0 compiles at entry.
+
+**Verdict:** landed. The sway's power-of-height weight is a finger gate for free on a prop whose only
+tall parts are fingers.
