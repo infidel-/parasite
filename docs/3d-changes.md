@@ -116,8 +116,8 @@ breathe, and a swelling wall would cross the hole's edge. Only the sheen is left
 Numbers:
 - The funnel's cross-section at the floor line (0.38 h), sliced off the built mesh, spans x -0.26..0.26
   and z -0.17..0.57 h, with a narrow front lobe. The ellipse is centred at z +0.092. Fitted just inside
-  the walls (rx 0.176, rz 0.2), a grey crescent of floor still showed round the funnel; +30% and then
-  +10% more (by eye, live) gives rx 0.252, rz 0.286 (world 1.46 x 1.66), reaching into the walls.
+  the walls (rx 0.176, rz 0.2), a grey crescent of floor still showed round the funnel; +30%, then
+  +10% twice more (by eye, live) gives rx 0.277, rz 0.315 (world 1.61 x 1.83), reaching into the walls.
 - 131 programs after entry, and the warm went 122 → 123 (the patched floor through
   `SewerModel.demo()`). No compile at entry.
 

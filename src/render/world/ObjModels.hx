@@ -1932,7 +1932,7 @@ class ObjModels
 // only the bone ring and the mouth stand out of it, over a real hole: the floor inside the funnel's
 // mouth is cut away (`hole`, off the funnel's cross-section at the floor line, measured off the mesh:
 // x -0.26..0.26 h, z -0.17..0.57 h; fitted just inside it, the floor's edge still showed, so it is
-// 43% larger and reaches into the walls). a hole does not breathe or beat,
+// 57% larger and reaches into the walls). a hole does not breathe or beat,
 // and a swelling wall would cross the hole's edge, so no pulse, billow or heartbeat: only the sheen
   static function ratNest():ObjModel
     {
@@ -1940,7 +1940,7 @@ class ObjModels
       m.sink = 0.38;
       m.pulse = null;
       m.billow = null;
-      m.hole = [ 0.0, 0.092, 0.252, 0.286 ];
+      m.hole = [ 0.0, 0.092, 0.277, 0.315 ];
       return m;
     }
 
