@@ -615,6 +615,9 @@ typedef ObjModel = {
   ?turns:Array<Float>, // extra yaw per key, indexed like `keys`: one row (one batch) for an object that
                        // faces one of four ways (the cult spine turret). Absent for every other row
   ?flesh:PropFlesh,   // a faint heartbeat in its dark red tissue, or absent. shares PropGlow's patch
+  ?hole:Array<Float>, // [x, z, rx, rz]: an ellipse of FLOOR this prop removes (floorHoles), as fractions
+                      // of `h` off its placement in its own frame, for a pit sunk through the floor
+                      // (the cult rat nest). Absent for every other row
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -701,6 +704,12 @@ class ObjModels
       off: off,
       noCast: true,
     };
+
+  // the floor's HOLES (render.sewer.SewerGeom.holed): one world-xz ellipse (x, z, rx, rz) per placed
+  // `hole` row, refilled by build(). shared BY IDENTITY with the floor material, so a rebuild reaches
+  // the drawn frame. the slot count is a literal loop bound in that shader; an unused slot has rx 0
+  public static inline var FLOOR_HOLES = 4;
+  public static var floorHoles = { value: [ for (_ in 0...FLOOR_HOLES) new Vector4() ] };
 
   // the cult organs' heartbeat glow (PropFlesh.glow). FAINT: the bodies' linear albedo is ~0.03, so the
   // harness preview's 0.7 and even 0.25 flashed saturated red over every root in the game; at 0.04 it
@@ -1920,11 +1929,17 @@ class ObjModels
     }
 
 // the rat nest: Meshy stood its pit up as a funnel on a stalk, so the stalk goes under the floor and
-// only the bone ring and the mouth stand out of it. no heartbeat: it is a hole, not an organ
+// only the bone ring and the mouth stand out of it, over a real hole: the floor inside the funnel's
+// mouth is cut away (`hole`, the funnel's cross-section at the floor line, measured off the mesh:
+// x -0.26..0.26 h, z -0.17..0.57 h, its front lobe left floored). a hole does not breathe or beat,
+// and a swelling wall would cross the hole's edge, so no pulse, billow or heartbeat: only the sheen
   static function ratNest():ObjModel
     {
       var m = cultOrgan([ 'cult_rat_nest' ], RenderConfig.MODELS.cultRatNest, 5.8, true, 0.0);
       m.sink = 0.38;
+      m.pulse = null;
+      m.billow = null;
+      m.hole = [ 0.0, 0.092, 0.176, 0.2 ];
       return m;
     }
 
@@ -1988,6 +2003,9 @@ class ObjModels
       // honest key; the path is just where its geometry comes from
       var byRow = [for (_ in MODELS) new Array<Models.PropPlace>()];
       var cellsByRow = [for (_ in MODELS) new Array<{ col:Int, row:Int }>()];
+      var holes = 0;
+      for (v in floorHoles.value)
+        v.set(0, 0, 0, 0);
       for (o in game.area.getObjects())
         {
           var i = rowFor(o.getModelKey());
@@ -2026,6 +2044,18 @@ class ObjModels
           // pushed in the SAME iteration as its placement, so the two share an index — and that shared
           // index is the whole mechanism turning "the player stands on cell X" into an instance to fade
           cellsByRow[i].push({ col: o.x, row: o.y });
+          // its floor hole, turned with it. ponytail: the ellipse's own axes stay world-aligned, right
+          // for the one FRONTAL row that has one
+          if (m.hole != null &&
+              holes < FLOOR_HOLES)
+            {
+              var p = byRow[i][byRow[i].length - 1];
+              var hx = m.hole[0] * m.h;
+              var hz = m.hole[1] * m.h;
+              floorHoles.value[holes].set(p.x + hx * Math.cos(yw) + hz * Math.sin(yw),
+                p.z - hx * Math.sin(yw) + hz * Math.cos(yw), m.hole[2] * m.h, m.hole[3] * m.h);
+              holes++;
+            }
         }
       var C = RenderConfig.OBJMARK;
       var out:Array<PropBatch> = [];

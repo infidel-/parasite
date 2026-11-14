@@ -333,6 +333,39 @@ class SewerGeom
         }
     }
 
+// cut the floor's HOLES (render.world.ObjModels.floorHoles) out of a floor material: a fragment inside
+// one of those world-xz ellipses is discarded, so a prop sunk through the floor (the cult rat nest)
+// shows its own pit below it. hooked BEFORE VisionMask.patch, which chains onto this hook and its key.
+// `mat` is Dynamic for render.world.PropShader's reason: the material externs declare none of
+// onBeforeCompile / customProgramCacheKey
+  static function holed(mat:Dynamic):Void
+    {
+      mat.onBeforeCompile = function(shader:render.world.PropShader.ShaderPatch, renderer:Dynamic)
+        {
+          shader.uniforms.floorHole = render.world.ObjModels.floorHoles;
+          shader.vertexShader = 'varying vec2 vHoleXZ;\n' +
+            StringTools.replace(shader.vertexShader, '#include <project_vertex>',
+              '#include <project_vertex>\n' +
+              '  vHoleXZ = ( modelMatrix * vec4( transformed, 1.0 ) ).xz;');
+          shader.fragmentShader = 'uniform vec4 floorHole[ ' + render.world.ObjModels.FLOOR_HOLES + ' ];\n' +
+            'varying vec2 vHoleXZ;\n' +
+            StringTools.replace(shader.fragmentShader, '#include <clipping_planes_fragment>',
+              '#include <clipping_planes_fragment>\n' +
+              '  for ( int i = 0; i < ' + render.world.ObjModels.FLOOR_HOLES + '; i ++ )\n' +
+              '  {\n' +
+              '    vec4 fh = floorHole[ i ];\n' +
+              '    if ( fh.z > 0.0 )\n' +
+              '    {\n' +
+              '      vec2 fd = ( vHoleXZ - fh.xy ) / fh.zw;\n' +
+              '      if ( dot( fd, fd ) < 1.0 )\n' +
+              '        discard;\n' +
+              '    }\n' +
+              '  }');
+        };
+      mat.customProgramCacheKey = function()
+        return 'floorHole';
+    }
+
 // turn one buffer into a single lit mesh. Lambert, not Standard: measured -42% GPU on the city
 // surfaces for no visual loss (docs/3d-render.md).
 // everything here is FrontSide: walls are wound inward and the horizontals' normals come out at +Y
@@ -353,11 +386,14 @@ class SewerGeom
       // map, costs no draw call and no attribute the merge did not already need — and the program
       // permutation it adds is warmed for free, because View.warmup runs this same builder over
       // SewerModel.demo()
-      var mesh = new Mesh(geo, VisionMask.patch(new MeshLambertMaterial({
+      var mat = new MeshLambertMaterial({
         map: Textures.loadTexture(tex, 'wall', 1),
         side: THREE.FrontSide,
         vertexColors: true,
-      })));
+      });
+      if (tex == SewerStyle.FLOOR)
+        holed(mat);
+      var mesh = new Mesh(geo, VisionMask.patch(mat));
       mesh.receiveShadow = recv;
       mesh.castShadow = casts;
       scene.add(mesh);
