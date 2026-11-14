@@ -394,6 +394,31 @@ typedef PropLamps = {
                         // 0..~1.7. Fit it against the SMALLEST gap between two markers in the table
 };
 
+// a slow heartbeat in the dark red tissue of a fleshy organ (the cult base's): the crevices and the
+// painted veins of its OWN baked albedo glow faintly on a lub-dub beat that travels out from a core.
+// two keys, max'd: dark AND red-dominant texels (the crevices), and a texel darker than a blurred mip
+// of the same map AND red (a thin painted vein in lighter skin). picked out of four variants tried in
+// a standalone harness; the other three are kept in docs/flesh-shaders.md.
+//
+// consumed by render.world.PropGlow. costs NO draw call, NO pass and NO new texture, but ONE extra tap
+// of the base map (the mip) per fragment of the prop
+typedef PropFlesh = {
+  color:Int,    // tint
+  glow:Float,   // HDR multiplier at the top of the beat
+  base:Float,   // steady floor under the beat, same units
+  rate:Float,   // beat speed as a BASE_MS multiplier (one lub-dub per 2 PI / rate)
+  wave:Float,   // phase CYCLES per prop-height of distance from `coreY`/`coreZ`, so the beat travels
+  lumLo:Float,  // crevice key: LINEAR albedo luminance (after `baseColor`) fully lit under this,
+  lumHi:Float,  // fading out by this
+  redLo:Float,  // and redness, R / (G + B), fading in from this
+  redHi:Float,  // to fully lit at this
+  veinLo:Float, // vein key: darkness against the blurred mip, 1 - L / Lmip, fading in from this
+  veinHi:Float, // to fully lit at this (its redness ramp is fixed at 1.2..2.0)
+  veinMip:Float,// the mip bias that blurred sample is taken at
+  coreY:Float,  // where the beat starts, as a fraction of the prop's height off its floor
+  coreZ:Float,  // and toward the camera off its axis, same fraction
+};
+
 // one repainted eye. the frame is render.world.PropGlow's: x and z off the bounding box's XZ centre,
 // y off its FLOOR, all as fractions of the box's Y span — so the same numbers survive any edit to the
 // row's `h`, and they are read straight off the baked atlas (see PropEyes)
@@ -589,6 +614,7 @@ typedef ObjModel = {
                       // cult base organ). `path` is still a real glb, so every warm stays one loop
   ?turns:Array<Float>, // extra yaw per key, indexed like `keys`: one row (one batch) for an object that
                        // faces one of four ways (the cult spine turret). Absent for every other row
+  ?flesh:PropFlesh,   // a faint heartbeat in its dark red tissue, or absent. shares PropGlow's patch
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -675,6 +701,11 @@ class ObjModels
       off: off,
       noCast: true,
     };
+
+  // the cult organs' heartbeat glow (PropFlesh.glow). FAINT: the bodies' linear albedo is ~0.03, so the
+  // harness preview's 0.7 and even 0.25 flashed saturated red over every root in the game; at 0.04 it
+  // is a red tide through the crevices on the beat and next to nothing between
+  static inline var FLESH_GLOW = 0.04;
 
   // every object-backed prop there is. ONE table: build() places from it, render.View warms every
   // entry at boot, modelFor() is the lookup and render.particles.PropLights reads the `light` rows —
@@ -1238,18 +1269,22 @@ class ObjModels
       tether: null,
       off: [ 2.0, 2.0 ],
       noCast: true, // the fake shadow would be the old quarter sprite
+      flesh: flesh(FLESH_GLOW, 0.505, 0.236), // the beat starts at the eye
     },
     // the other ten organs, each a Meshy glb sized off the Cor by its 2D atlas width (capped at the
     // Cor's height: the heart stays the tallest)
-    cultOrgan([ 'cult_flesh_block' ], RenderConfig.MODELS.cultFleshBlock, 4.3, true),
-    cultOrgan([ 'cult_rat_nest' ], RenderConfig.MODELS.cultRatNest, 5.8, true),
-    cultOrgan([ 'cult_crusher' ], RenderConfig.MODELS.cultCrusher, 5.9, true),
-    cultOrgan([ 'cult_garbage_heap' ], RenderConfig.MODELS.cultGarbageHeap, 4.8, true),
-    cultOrgan([ 'cult_body_storage' ], RenderConfig.MODELS.cultBodyStorage, 6.2, true),
-    cultOrgan([ 'cult_cauldron' ], RenderConfig.MODELS.cultCauldron, 5.1, true),
-    cultOrgan([ 'cult_ribwall' ], RenderConfig.MODELS.cultRibWall, 2.6, false),
-    cultOrgan([ 'cult_ribgate' ], RenderConfig.MODELS.cultRibGate, 3.2, false),
-    cultOrgan([ 'cult_blood_trap' ], RenderConfig.MODELS.cultBloodTrap, 1.6, false),
+    // the last argument is the heartbeat's glow: the crusher and the body storage are a red mass round
+    // their bones, so the whole interior keys and they take half. the bone pieces and the puddle
+    // take none (the puddle keys as one blob)
+    cultOrgan([ 'cult_flesh_block' ], RenderConfig.MODELS.cultFleshBlock, 4.3, true, FLESH_GLOW),
+    ratNest(),
+    cultOrgan([ 'cult_crusher' ], RenderConfig.MODELS.cultCrusher, 5.9, true, FLESH_GLOW * 0.5),
+    cultOrgan([ 'cult_garbage_heap' ], RenderConfig.MODELS.cultGarbageHeap, 4.8, true, FLESH_GLOW),
+    cultOrgan([ 'cult_body_storage' ], RenderConfig.MODELS.cultBodyStorage, 6.2, true, FLESH_GLOW * 0.5),
+    cultOrgan([ 'cult_cauldron' ], RenderConfig.MODELS.cultCauldron, 5.1, true, FLESH_GLOW),
+    cultOrgan([ 'cult_ribwall' ], RenderConfig.MODELS.cultRibWall, 2.6, false, 0.0),
+    cultOrgan([ 'cult_ribgate' ], RenderConfig.MODELS.cultRibGate, 3.2, false, 0.0),
+    cultOrgan([ 'cult_blood_trap' ], RenderConfig.MODELS.cultBloodTrap, 1.6, false, 0.0),
     // ONE row for all four facings (one batch), the key carrying the direction (north, east,
     // south, west: objects.base.SpineTurret). the glb's barrel faces the camera, which is south
     turret(),
@@ -1817,7 +1852,7 @@ class ObjModels
 // on its own mat, wearing the Cor's crawling wet highlight. a 2x2 organ (`big`) also takes the Cor's
 // slow layered breath and is moved off its part-0 cell onto the footprint's centre; a 1x1 one is bone
 // or a puddle and holds still
-  static function cultOrgan(keys:Array<String>, path:String, h:Float, big:Bool):ObjModel
+  static function cultOrgan(keys:Array<String>, path:String, h:Float, big:Bool, glow:Float):ObjModel
     {
       return {
         keys: keys,
@@ -1858,14 +1893,46 @@ class ObjModels
         tether: null,
         off: (big ? [ 2.0, 2.0 ] : null),
         noCast: true, // the fake shadow would be the old sprite
+        flesh: (glow > 0 ? flesh(glow, 0.55, 0.0) : null),
       };
+    }
+
+// the cult organs' heartbeat (PropFlesh), one knob set for all of them: only the glow and the core move.
+// slow and faint on purpose, a resting beat under the skin rather than a light show
+  static function flesh(glow:Float, coreY:Float, coreZ:Float):PropFlesh
+    {
+      return {
+        color: 0xff1030,
+        glow: glow,
+        base: 0.004,
+        rate: 0.35, // ~2.7 s a beat, half the harness preview's pace
+        wave: 0.8,
+        lumLo: 0.012,
+        lumHi: 0.035,
+        redLo: 1.3,
+        redHi: 2.2,
+        veinLo: 0.35,
+        veinHi: 0.65,
+        veinMip: 3.0,
+        coreY: coreY,
+        coreZ: coreZ,
+      };
+    }
+
+// the rat nest: Meshy stood its pit up as a funnel on a stalk, so the stalk goes under the floor and
+// only the bone ring and the mouth stand out of it. no heartbeat: it is a hole, not an organ
+  static function ratNest():ObjModel
+    {
+      var m = cultOrgan([ 'cult_rat_nest' ], RenderConfig.MODELS.cultRatNest, 5.8, true, 0.0);
+      m.sink = 0.38;
+      return m;
     }
 
 // the spine turret: one cultOrgan row keyed per direction, each key turned to face its way
   static function turret():ObjModel
     {
       var m = cultOrgan([ for (d in 0...4) 'cult_spine_turret_' + d ],
-        RenderConfig.MODELS.cultSpineTurret, 2.4, false);
+        RenderConfig.MODELS.cultSpineTurret, 2.4, false, 0.0);
       m.turns = [ Math.PI, Math.PI / 2, 0.0, -Math.PI / 2 ];
       return m;
     }

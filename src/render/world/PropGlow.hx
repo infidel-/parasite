@@ -42,6 +42,10 @@ import render.world.PropShader.ShaderPatch;
 // boilerplate below (there are already three: VisionMask, PropShader and this) would add another link
 // to a cache key that is walked on every material.
 //
+// a THIRD independent effect rides here too, the `flesh` column (PropFlesh): a faint lub-dub heartbeat in
+// a fleshy organ's dark red crevices and painted veins, keyed off its own albedo and travelling out from
+// a core. the only term in this file that taps a texture of its own (the base map again, at a mip bias).
+//
 // like render.world.PropShader it costs NO draw call, NO pass and NO geometry: the props stay the same
 // instanced batches drawing the same materials, and everything here is arithmetic in a fragment shader
 // that was already running. the halo is the composer's existing bloom pass catching an HDR tint — the
@@ -73,6 +77,7 @@ class PropGlow
            m.eyes == null &&
            m.lamps == null &&
            m.tar == null &&
+           m.flesh == null &&
            (m.light == null || m.light.skipSelf != true)) ||
           !RenderConfig.PROP_GLOW.enabled)
         return;
@@ -98,6 +103,7 @@ class PropGlow
       var e = m.eyes;
       var l = m.lamps;
       var t = m.tar;
+      var f = m.flesh;
       // the mark lives on the HOOK and not in userData: Material.clone() copies userData but NOT
       // onBeforeCompile, so a userData flag would ride onto the GHOST clones render.Models makes from
       // a patched template and lock them out of the patch they never received
@@ -124,6 +130,7 @@ class PropGlow
       var hasL = (l != null && l.list.length > 0);
       var hasT = (t != null);
       var hasO = (m.light != null && m.light.skipSelf == true);
+      var hasF = (f != null);
       // the lamp tables, resolved once here. a MARKER hue is normalised by its own max channel and
       // converted to LINEAR first, because that is the space three hands the sampled map back in
       // (an emissive map is declared sRGB and the sampler decodes it) — compare an sRGB constant
@@ -276,6 +283,15 @@ class PropGlow
         tarGlintPct: { value: RenderConfig.BLOOD.blackGlintPct / 100 },
         // and its star's size: Blood.drawStar's quad, whose four rays reach 0.45 of it
         tarStarR: { value: RenderConfig.BLOOD.blackStarScale * render.particles.Sprites.SIZE * 0.45 },
+        fleshColor: { value: hasF ? new Color(f.color) : new Color(0) },
+        // rate, wave (authored in cycles, converted to radians here, as PropShader's cWave is), base,
+        // glow
+        fleshBeat: { value: hasF ? new Vector4(f.rate, f.wave * 6.2832, f.base, f.glow) : new Vector4() },
+        fleshKey: { value: hasF ? new Vector4(f.lumLo, f.lumHi, f.redLo, f.redHi) : new Vector4() },
+        fleshVein: { value: hasF ? new Vector3(f.veinLo, f.veinHi, f.veinMip) : new Vector3() },
+        // the core in LOCAL units, off the box for the reason everything here is
+        fleshCore: { value: hasF ?
+          new Vector3(centre.x, centre.y + f.coreY * span, centre.z + f.coreZ * span) : new Vector3() },
       };
       var decl =
         'uniform float propGlowTime;\n' +
@@ -345,6 +361,20 @@ class PropGlow
         (hasO ?
           'varying vec3 vOwnC;\n' +
           'varying float vOwnR;\n' : '') +
+        (hasF ?
+          'uniform vec3 propFleshColor;\n' +
+          'uniform vec4 propFleshBeat;\n' +
+          'uniform vec4 propFleshKey;\n' +
+          'uniform vec3 propFleshVein;\n' +
+          'uniform vec3 propFleshCore;\n' +
+          // lub-dub: two gaussian kicks per 2 PI of phase, 1.0 and 0.55 tall, ~0 in between
+          'float propFleshBeatAt( float ph )\n' +
+          '{\n' +
+          '  float f = fract( ph * 0.15915 );\n' +
+          '  float a = f - 0.08;\n' +
+          '  float b = f - 0.30;\n' +
+          '  return exp( - a * a * 60.0 ) + 0.55 * exp( - b * b * 60.0 );\n' +
+          '}\n' : '') +
         'varying vec3 vGlowPos;\n' +
         'varying float vGlowPh;\n' + // ALREADY hashed to 0..1 by the vertex half — see the note there
         'varying float vGlowCam;\n' + // camera azimuth in the INSTANCE's own local frame
@@ -764,7 +794,27 @@ class PropGlow
           '  totalEmissiveRadiance += hole * ( sky * propTarStars + vec3( 0.05, 0.01, 0.1 ) * neb ) +\n' +
           '    vec3( 0.04, 0.01, 0.09 ) * rim * ( 1.0 - hole );\n') +
         '  }';
-      var frag = '#include <emissivemap_fragment>\n' + shine + eyes + lamps + tar;
+      // THE HEARTBEAT (PropFlesh). keyed on diffuseColor, LINEAR albedo after `baseColor`, before the
+      // eyes or the tar repaint it. the vein half samples the base map again at a mip bias, a blurred
+      // neighbourhood, so a thin dark line in lighter skin reads as darker than its surroundings;
+      // GUARDED ON USE_MAP, since `map` and `vMapUv` exist only with a map. the beat's phase is the
+      // distance from the core, so it travels outward, plus the per-instance phase
+      var flesh = !hasF ? '' :
+        '  {\n' +
+        '  float fl = dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) );\n' +
+        '  float fr = diffuseColor.r / max( diffuseColor.g + diffuseColor.b, 1e-3 );\n' +
+        '  float fm = ( 1.0 - smoothstep( propFleshKey.x, propFleshKey.y, fl ) ) *\n' +
+        '    smoothstep( propFleshKey.z, propFleshKey.w, fr );\n' +
+        '  #ifdef USE_MAP\n' +
+        '  vec3 fn = texture2D( map, vMapUv, propFleshVein.z ).rgb * diffuse;\n' +
+        '  float fd = 1.0 - fl / max( dot( fn, vec3( 0.2126, 0.7152, 0.0722 ) ), 1e-3 );\n' +
+        '  fm = max( fm, smoothstep( propFleshVein.x, propFleshVein.y, fd ) * smoothstep( 1.2, 2.0, fr ) );\n' +
+        '  #endif\n' +
+        '  float fb = propFleshBeatAt( propGlowTime * propFleshBeat.x -\n' +
+        '    length( vGlowPos - propFleshCore ) / propGlowSpan * propFleshBeat.y + vGlowPh * 6.2832 );\n' +
+        '  totalEmissiveRadiance += propFleshColor * fm * ( propFleshBeat.z + propFleshBeat.w * fb );\n' +
+        '  }\n'; // the newline: the lamp block opens on a preprocessor line
+      var frag = '#include <emissivemap_fragment>\n' + flesh + shine + eyes + lamps + tar;
       // the tar's two WORLD vectors: off the instance's origin (small, so a cell hash keyed on it keeps
       // its precision — see vGlowPh above) and from the camera, along which a hole's starfield is
       // looked at. AFTER every displacement, at <project_vertex>, and that is the point: the stars are
@@ -855,6 +905,14 @@ class PropGlow
           shader.uniforms.propTarOoze = u.tarOoze;
           shader.uniforms.propTarFlow = u.tarFlow;
             }
+          if (hasF)
+            {
+              shader.uniforms.propFleshColor = u.fleshColor;
+              shader.uniforms.propFleshBeat = u.fleshBeat;
+              shader.uniforms.propFleshKey = u.fleshKey;
+              shader.uniforms.propFleshVein = u.fleshVein;
+              shader.uniforms.propFleshCore = u.fleshCore;
+            }
           if (hasE)
             {
               shader.uniforms.propEyeC = u.eyeC;
@@ -926,7 +984,8 @@ class PropGlow
           (hasL ? 'L' + l.list.length : '') +
           // the tar's two table counts, for the same reason: both are literal loop bounds
           (hasT ? 'T' + t.pools.length + 'h' + t.holes.length : '') +
-          (hasO ? 'O' : '');
+          (hasO ? 'O' : '') +
+          (hasF ? 'F' : '');
       mat.needsUpdate = true;
     }
 }
