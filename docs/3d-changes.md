@@ -40,3 +40,34 @@ Traps:
 
 **Verdict:** landed. Every organ reads off its drawing. The scale-by-atlas-width rule held live with
 no per-organ refit.
+
+## Cult base Cor Nefandum: re-cut by Meshy off `cor-nefandum-3`
+
+**Changed:** after the other ten organs landed, the Cor read different from them. Its drawing
+(`cor-nefandum.png`) is plain smooth skin lobes, while the ten are drawn busy. The ref prep was not
+the cause: the first Cor ref and the garbage heap ref both measured subject p50 72/71, on black at
+1254². The sibling drawing `cor-nefandum-3.png` has the same silhouette, plus veins, cartilage webs
+round the eye and maw, and paler skin. One Meshy run ($0.80) off it, keyed and lifted the same way
+(p50 75 → 72), now feeds `cult/base-cor-nefandum`. The label keeps its 20k tris, tex 1024, roughness
+0.3 and baseColor 0.7. The first cut stays in models-src as `cult-base-cor-nefandum-meshy.glb`.
+
+Numbers:
+- Meshy returned 1,103,334 tris in 1 mesh (asked 100k), cut to 20,000 at 52 texels/tri. The glb is
+  3.5 MB, dims 8.62 x 7.71 x 6.2 (was 8.35 x 8.05).
+- Eye emissive: `--box=-0.13,0.17,-0.14,0.21,0.2,0.9 --key warm --keylo 0.3 --modulate --tint ff0000`
+  keeps 188 tris with bleed 0.
+- Rebuilding with the map changed no positions or UVs (diffed against the build without it), so a
+  mask cut on the first build holds.
+
+Traps:
+- This drawing's eye is painted dark red, not lit. The modulated marker came out at R p50 112, against
+  192 on the first cut, which would dim the `PropLamps` glow. The lit texels are scaled by 1.71 after
+  the bake (no gain flag in `emissive.py`).
+- The halo quad's old y 0.63 / z 0.42 sat on the eye's lower rim. The new eye sits at 0.505 h up and
+  0.236 h proud (area-weighted centroid of the keyed tris; the box mean said 0.515 / 0.24). The game
+  camera pitches 65°, but its ray to an organ 3 rows north slopes ~52° (perspective), so a quad dz
+  nearer must rise dz × 1.27. z 0.37 (the body front in reach is 0.316 h) → y 0.675. Fitted live by
+  patching `ObjModels.MODELS` rows in memory: `drawCore` reads `core.y`/`z` every frame.
+
+**Verdict:** landed. The Cor now matches the other ten organs' detail level, and the halo sits on the
+eye at both the game camera and a close 53° view.
