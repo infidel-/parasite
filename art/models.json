@@ -4687,7 +4687,7 @@
       "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cult/base-cor-nefandum": {
-      "src": "cult/cult-base-cor-nefandum-meshy.glb",
+      "src": "cult/cult-base-cor-nefandum-3-meshy.glb",
       "tris": 20000,
       "tex": 1024,
       "error": 0.05,
@@ -4699,11 +4699,11 @@
         0.7,
         1
       ],
-      "emissiveSrc": "cult/cult-base-cor-nefandum-meshy-emissive.png",
+      "emissiveSrc": "cult/cult-base-cor-nefandum-3-meshy-emissive.png",
       "emissiveStrength": 0.5,
-      "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/cor-nefandum.png re-laid on black and lifted to subject p50 72; asked polyCount 100000, came back 756,426 tris in 1 component at split 1.07x, cut here to 20,000 (1.65x, 52 texels/tri at tex 1024). Replaced the hand-modelled cut (models-src/cult/base/cor-nefandum.py via base_build.py, 14,680 tris, still in models-src as cult-base-cor-nefandum.glb): the S-trunk, arches, maw and horns read off the source, the hand one read as a cluster of eggs. TRELLIS 2 off the same reference came back 36 components and crushed dark. roughness 0.3: a little wet highlight, crawled by the row's sheen. baseColor 0.7 holds the hand cut's level (atlas 137/62/72 ~ its sheet). Glows off models-src/cult/cult-base-cor-nefandum-meshy-emissive.png: tools/emissive.py on the BUILT glb, --box=-0.17,0.17,-0.18,0.25,0.34,0.6 --key warm --keylo 0.3 --modulate --tint ff0000 --res 1024 (328 tris, bleed 0): a pure red MARKER for the row's PropLamps, which adds the pink-red HDR glow that blooms; emissiveStrength 0.5 is only the dim underlay.",
-      "last_converted": "2026-11-13T20:04:56Z",
-      "last_sig": "n1/20000/1024/0.05/-/cult/cult-base-cor-nefandum-meshy-emissive.png@0.5/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/cor-nefandum-3.png keyed onto black and gamma'd to subject p50 72 (scratchpad ref_black.py, the same prep as the other ten organs); asked polyCount 100000, came back 1,103,334 tris in 1 mesh, cut here to 20,000 (52 texels/tri at tex 1024). Replaced the first Meshy cut off cor-nefandum.png (still in models-src as cult-base-cor-nefandum-meshy.glb), whose drawing is plain smooth skin lobes: next to the other ten busy organs it read different. cor-nefandum-3 carries the veins, the cartilage webs round the eye and maw and the pale skin, and Meshy kept all of it. Before that: the hand-modelled cut (models-src/cult/base/cor-nefandum.py via base_build.py, 14,680 tris, models-src cult-base-cor-nefandum.glb) read as a cluster of eggs; TRELLIS 2 came back 36 components and crushed dark. roughness 0.3: a little wet highlight, crawled by the row's sheen. baseColor 0.7 like the other ten. Glows off models-src/cult/cult-base-cor-nefandum-3-meshy-emissive.png: tools/emissive.py on the BUILT glb, --box=-0.13,0.17,-0.14,0.21,0.2,0.9 --key warm --keylo 0.3 --modulate --tint ff0000 --res 1024 (188 tris, bleed 0), then the lit texels x1.71 (R p50 112 -> 192, the first cut's marker level: this drawing's eye is a dark red, not a lit one). A pure red MARKER for the row's PropLamps, which adds the pink-red HDR glow that blooms; emissiveStrength 0.5 is only the dim underlay. The rebuild with the map is byte-identical in positions and UVs, so the mask holds.",
+      "last_converted": "2026-11-14T13:31:25Z",
+      "last_sig": "n1/20000/1024/0.05/-/cult/cult-base-cor-nefandum-3-meshy-emissive.png@0.5/noMR/bc0.7,0.7,0.7,1/rf0.3"
     },
     "cult/base-flesh-block": {
       "src": "cult/cult-base-flesh-block-meshy.glb",

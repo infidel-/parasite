@@ -1195,14 +1195,14 @@ class ObjModels
       // the eye's BLOOM: a soft frontal halo over it, HDR so the bloom pass spreads it. the lamp below
       // alone could not: ACES turns any red bright enough to clear BLOOM_THRESHOLD near white, so the
       // eye stays a saturated pink-red under the threshold and the halo carries the bloom. y and z off
-      // the eye's measured centre: 0.53 h up, 0.31 h proud of the axis. UPRIGHT and well clear of the
-      // body, whose front within the quad's reach measures 0.364 h: a leaned quad dug its top into
-      // the brow, and one at 0.37 lost its right half to the flank beside the eye. nearer the camera
-      // reads LOWER on screen, so y rides up by dz * tan(53) to stay on the eye (fitted on screenshots)
+      // the glowing cells' area-weighted centre: 0.505 h up, 0.236 h proud of the axis. UPRIGHT and
+      // clear of the body, whose front within the quad's reach measures 0.316 h (a leaned quad dug
+      // its top into the brow on the first cut). nearer the camera reads LOWER on screen, so y rides
+      // up by dz * 1.27, the slope of the game camera's ray to the eye (~52 deg; fitted live)
       core: {
         tex: RenderConfig.TEXTURES.fxHalo,
-        y: 0.63,
-        z: 0.42,
+        y: 0.675,
+        z: 0.37,
         size: 0.42,
         lean: 0.0,
         color: 0xff2d5a,
