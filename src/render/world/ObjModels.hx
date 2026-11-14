@@ -87,6 +87,7 @@ typedef PropAnim = {
   strand:Float,    // phase cycles per prop-height across local XZ; 0 = the whole body flexes as one
   sheen:Float,     // shading-normal ripple amplitude — the crawling specular, no displacement
   sheenRate:Float, // ripple speed as a BASE_MS multiplier
+  ?swayX:Float,    // share of the sway ACROSS the face (local X); absent = 1. 0 sways front-back only
 };
 
 // the slow breath of a prop that is a living BODY rather than a limb: everything above a floor line
@@ -1953,9 +1954,9 @@ class ObjModels
       return m;
     }
 
-// the blood trap: its hands twitch. a sway weighted by height cubed holds the puddle (under 0.2 h) and
-// the wrists still and moves the fingers (0.7..1 h); the strand phase across the puddle (hands spread
-// +/-1 h) gives every hand and finger a beat of its own
+// the blood trap: its hands twitch, front-back only (swayX 0). a sway weighted by height cubed holds
+// the puddle (under 0.2 h) and the wrists still and moves the fingers (0.7..1 h); the strand phase
+// across the puddle (hands spread +/-1 h) gives every hand and finger a beat of its own
   static function bloodTrap():ObjModel
     {
       var m = cultOrgan([ 'cult_blood_trap' ], RenderConfig.MODELS.cultBloodTrap, 1.6, false, 0.0);
@@ -1963,6 +1964,7 @@ class ObjModels
       m.anim.bend = 3.0;
       m.anim.rate = 0.45;
       m.anim.strand = 4.0;
+      m.anim.swayX = 0.0;
       return m;
     }
 

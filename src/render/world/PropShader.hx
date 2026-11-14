@@ -138,6 +138,7 @@ class PropShader
         strand: { value: hasA ? a.strand / span : 0.0 },
         sheen: { value: hasA ? a.sheen : 0.0 },
         sheenRate: { value: hasA ? a.sheenRate : 0.0 },
+        swayX: { value: (hasA && a.swayX != null ? a.swayX : 1.0) },
         // the axis the swell and the twist turn about. read off the box and not assumed to be the
         // origin for the reason `base` is: Models.normalize recenters a template by moving
         // root.position, so raw local coordinates are centred on nothing
@@ -191,9 +192,11 @@ class PropShader
         '  float propPh = propIPh + ( position.x + position.z ) * propStrand;\n';
       // the two axes run at 0.83 of each other so they beat instead of tracing a straight line back
       // and forth, and the second carries a phase offset of its own so they never start together
+      // (PropAnim.swayX scales the X half: 0 keeps a FRONTAL prop's sway toward and away from the camera)
       var wave =
         '  vec2 propWave = vec2( sin( propTime * propRate + propPh ),\n' +
-        '                        sin( propTime * propRate * 0.83 + propPh * 1.7 + 1.3 ) );\n';
+        '                        sin( propTime * propRate * 0.83 + propPh * 1.7 + 1.3 ) ) *\n' +
+        '    vec2( propSwayX, 1.0 );\n';
       // only what the row actually asked for is declared. a null half is not merely idle — its
       // uniforms would still be set every frame and its program key would still collide with a prop
       // that really does use them
@@ -206,6 +209,7 @@ class PropShader
           'uniform float propBend;\n' +
           'uniform float propRate;\n' +
           'uniform float propStrand;\n' +
+          'uniform float propSwayX;\n' +
           'uniform float propSheen;\n' +
           'uniform float propSheenRate;\n' +
           // 0 at the base, 1 at the crown: what keeps a prop's feet on the floor while its top drifts
@@ -339,6 +343,7 @@ class PropShader
               shader.uniforms.propBend = u.bend;
               shader.uniforms.propRate = u.rate;
               shader.uniforms.propStrand = u.strand;
+              shader.uniforms.propSwayX = u.swayX;
               shader.uniforms.propSheen = u.sheen;
               shader.uniforms.propSheenRate = u.sheenRate;
             }
