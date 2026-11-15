@@ -6,6 +6,11 @@ reaper-control's `docs/worker-loop.md` (its first run: 2026-11-15), with one dif
 the repo itself**, so the repo CLAUDE.md, the global rules and the memory all load and the code style holds without
 being retyped into every brief.
 
+**Jobs run:** Forma's build UI (2026-11-15, `docs/jobs/forma/`): 4 worker phases, 3 fresh restarts
+(at ~109k, ~185k and ~199k), every phase live-checked by the controller. Fix rounds per phase: 1, 3, 2,
+2. They went on things the worker can't see without the game: font `size-adjust`, `box-sizing`, the
+Enter key reaching a button that `act()` had just focused, and self-lit quads reading above their alpha.
+
 ## Setup
 - **The job lives in the repo:** a brief per job (`docs/jobs/<job>/WORKER.md`) and a log (`docs/jobs/<job>/LOG.md`).
   The brief holds the goal in the user's words, the spec (a preview path, the game's own strings), the phases with

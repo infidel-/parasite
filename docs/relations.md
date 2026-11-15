@@ -157,6 +157,10 @@ ones that call it.
   `game.cults[0].base`. Losing Cor Nefandum ends the game.
 - Created only by `MetamorphosisPhaseII`, inside the current habitat. Pedia: none (the `cultBase`
   article it adds does not exist).
+- Each base action has ONE refusal function returning its reason ('' = OK): `validateBuild`,
+  `validateUpgrade`, `validateRepair`, `validateCustos`; the actions log that reason and the Forma HUD
+  (`ui/hud/FormaHud.hx`, chip, tend menu, 3D ghost) shows it, never re-deriving a rule. Income lives in
+  the pure `incomePerTurn()`, which `turn()` applies and the ledger previews.
 
 **Rival cults**: `cult/RivalCult.hx`, `RivalAttack`/`RivalResearch` ordeals, `RivalBase` mission
 - Owns template, tactic, revealed level, base area id (S, inside `game.cults`).

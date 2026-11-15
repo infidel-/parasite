@@ -9,6 +9,7 @@
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map
 - mods: `ai:die-region` event when the host dies on the region map
+- ui: Forma has its own build screen
 - ui: [beta] German translation
 
 ### Fixes
