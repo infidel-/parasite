@@ -13,6 +13,10 @@ typedef CultBaseOrganInfo = {
   var maxLevel: Int;
   var isDefense: Bool;
   var isGrowth: Bool;
+  // short tray name
+  var shortName: String;
+  // one-line description of what the organ does
+  var desc: String;
 }
 
 class CultBaseConst
@@ -50,6 +54,9 @@ class CultBaseConst
   public static var sanctumDestroyedIcon: _Icon =
     { row: 6, col: 2 };
 
+  // cost of one custos, shared by validation and creation
+  public static var custosCost = new CultBaseResources(10, 8, 0);
+
   public static var buildableTypes: Array<_CultBaseOrganType> = [
     RIBWALL,
     RIBGATE,
@@ -69,27 +76,41 @@ class CultBaseConst
       switch (type)
         {
           case COR_NEFANDUM:
-            return meta(type, N('Cor Nefandum'), 0, 0, 0, 2, 2, 4, false, false);
+            return text(meta(type, N('Cor Nefandum'), 0, 0, 0, 2, 2, 4, false, false),
+              N('The heart of the base.'));
           case RIBWALL:
-            return meta(type, N('Murus Costarum'), 0, 0, 3, 1, 1, 1, true, false);
+            return text(meta(type, N('Murus Costarum'), 0, 0, 3, 1, 1, 1, true, false),
+              N('A wall of ribs. Blocks the way and counts as a defense.'),
+              N('Murus'));
           case RIBGATE:
-            return meta(type, N('Porta Costarum'), 4, 4, 6, 1, 1, 1, true, false);
+            return text(meta(type, N('Porta Costarum'), 4, 4, 6, 1, 1, 1, true, false),
+              N('Grows over a ribwall. Your side walks through. Counts as a defense.'),
+              N('Porta'));
           case SPINE_TURRET:
-            return meta(type, N('Turris Spinarum'), 6, 2, 10, 1, 1, 1, true, false);
+            return text(meta(type, N('Turris Spinarum'), 6, 2, 10, 1, 1, 1, true, false),
+              N('Faces one way. Counts as a defense.'),
+              N('Turris'));
           case BLOOD_TRAP:
-            return meta(type, N('Tardans'), 2, 6, 0, 1, 1, 1, true, false);
+            return text(meta(type, N('Tardans'), 2, 6, 0, 1, 1, 1, true, false),
+              N('A pool of grasping hands. Counts as a defense.'));
           case FLESH_BLOCK:
-            return meta(type, N('Quadrum'), 20, 5, 10, 2, 2, 3, false, true);
+            return text(meta(type, N('Quadrum'), 20, 5, 10, 2, 2, 3, false, true),
+              N('Grows flesh: +5 a turn per level.'));
           case RAT_NEST:
-            return meta(type, N('Nidus Murium'), 8, 2, 4, 2, 2, 3, false, true);
+            return text(meta(type, N('Nidus Murium'), 8, 2, 4, 2, 2, 3, false, true),
+              N('Rats bring +3 flesh, +1 blood and +1 bone a turn per level.'));
           case CRUSHER:
-            return meta(type, N('Fractor'), 10, 4, 12, 2, 2, 3, false, true);
+            return text(meta(type, N('Fractor'), 10, 4, 12, 2, 2, 3, false, true),
+              N('Grinds one stored body a turn into +5 bone per level.'));
           case GARBAGE_HEAP:
-            return meta(type, N('Cumulus'), 12, 3, 4, 2, 2, 3, false, true);
+            return text(meta(type, N('Cumulus'), 12, 3, 4, 2, 2, 3, false, true),
+              N('Rots one stored body a turn into +5 flesh per level, or +2 with none.'));
           case BODY_STORAGE:
-            return meta(type, N('Cadaverum'), 8, 0, 6, 2, 2, 3, false, false);
+            return text(meta(type, N('Cadaverum'), 8, 0, 6, 2, 2, 3, false, false),
+              N('Stores 8 bodies per level.'));
           case CAULDRON:
-            return meta(type, N('Caldarium'), 18, 10, 10, 2, 2, 3, false, false);
+            return text(meta(type, N('Caldarium'), 18, 10, 10, 2, 2, 3, false, false),
+              N('Lets you craft custodes: 2 per level.'));
         }
     }
 
@@ -259,8 +280,20 @@ class CultBaseConst
         h: h,
         maxLevel: maxLevel,
         isDefense: isDefense,
-        isGrowth: isGrowth
+        isGrowth: isGrowth,
+        shortName: name,
+        desc: '',
       };
+    }
+
+// fills the description of a metadata object, and the tray short name when given
+  static function text(data: CultBaseOrganInfo, desc: String,
+      ?shortName: String): CultBaseOrganInfo
+    {
+      data.desc = desc;
+      if (shortName != null)
+        data.shortName = shortName;
+      return data;
     }
 
 // returns ceil(value / 4)

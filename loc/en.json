@@ -2954,11 +2954,38 @@
    "where": "CultBaseConst.info"
   },
   {
+   "s": "The heart of the base.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
    "s": "Murus Costarum",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx",
     "src/objects/base/Ribwall.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "A wall of ribs. Blocks the way and counts as a defense.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "Murus",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
    ],
    "vars": [],
    "where": "CultBaseConst.info"
@@ -2974,11 +3001,47 @@
    "where": "CultBaseConst.info"
   },
   {
+   "s": "Grows over a ribwall. Your side walks through. Counts as a defense.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "Porta",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
    "s": "Turris Spinarum",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx",
     "src/objects/base/SpineTurret.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "Faces one way. Counts as a defense.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "Turris",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
    ],
    "vars": [],
    "where": "CultBaseConst.info"
@@ -2994,11 +3057,29 @@
    "where": "CultBaseConst.info"
   },
   {
+   "s": "A pool of grasping hands. Counts as a defense.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
    "s": "Quadrum",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx",
     "src/objects/base/FleshBlock.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "Grows flesh: +5 a turn per level.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
    ],
    "vars": [],
    "where": "CultBaseConst.info"
@@ -3014,11 +3095,29 @@
    "where": "CultBaseConst.info"
   },
   {
+   "s": "Rats bring +3 flesh, +1 blood and +1 bone a turn per level.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
    "s": "Fractor",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx",
     "src/objects/base/Crusher.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "Grinds one stored body a turn into +5 bone per level.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
    ],
    "vars": [],
    "where": "CultBaseConst.info"
@@ -3034,6 +3133,15 @@
    "where": "CultBaseConst.info"
   },
   {
+   "s": "Rots one stored body a turn into +5 flesh per level, or +2 with none.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
    "s": "Cadaverum",
    "kind": "N",
    "loc": [
@@ -3044,11 +3152,29 @@
    "where": "CultBaseConst.info"
   },
   {
+   "s": "Stores 8 bodies per level.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
    "s": "Caldarium",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx",
     "src/objects/base/Cauldron.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.info"
+  },
+  {
+   "s": "Lets you craft custodes: 2 per level.",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
    ],
    "vars": [],
    "where": "CultBaseConst.info"
@@ -15106,16 +15232,6 @@
    "field": "actionFailed"
   },
   {
-   "s": "This organ cannot grow further.",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.upgradeAtCursor",
-   "field": "actionFailed"
-  },
-  {
    "s": "You strengthen {organ}.",
    "kind": "T",
    "loc": [
@@ -15128,14 +15244,49 @@
    "field": "log"
   },
   {
+   "s": "This organ cannot grow further.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateUpgrade"
+  },
+  {
    "s": "This organ is whole.",
    "kind": "T",
    "loc": [
     "src/cult/base/CultBase.hx"
    ],
    "vars": [],
-   "where": "CultBase.repairAtCursor",
-   "field": "actionFailed"
+   "where": "CultBase.validateRepair"
+  },
+  {
+   "s": "A working Caldarium is required.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateCustos"
+  },
+  {
+   "s": "Custodes capacity reached.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateCustos"
+  },
+  {
+   "s": "Custos needs a free tile.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateCustos"
   },
   {
    "s": "You mend {organ}.",
@@ -15157,36 +15308,6 @@
    ],
    "vars": [],
    "where": "CultBase.damageOrgan"
-  },
-  {
-   "s": "A working Caldarium is required.",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.createCustos",
-   "field": "actionFailed"
-  },
-  {
-   "s": "Custodes capacity reached.",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.createCustos",
-   "field": "actionFailed"
-  },
-  {
-   "s": "Custos needs a free tile.",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.createCustos",
-   "field": "actionFailed"
   },
   {
    "s": "A new Custos takes shape.",

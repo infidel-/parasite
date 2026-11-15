@@ -10,6 +10,14 @@ import game.AreaGame;
 import game.Game;
 import objects.base.*;
 
+// one turn of organ income and the stored bodies it draws
+typedef CultBaseIncome = {
+  // resources produced
+  var income: CultBaseResources;
+  // stored bodies consumed
+  var bodies: Int;
+}
+
 class CultBase extends _SaveObject
 {
   static var _ignoredFields = [ 'game' ];
@@ -95,35 +103,9 @@ class CultBase extends _SaveObject
         return;
 
       // calculate income from organs and add to resources, respecting stockpile cap
-      income = new CultBaseResources();
-      for (organ in organs)
-        {
-          if (!organ.isWorking())
-            continue;
-          switch (organ.type)
-            {
-              case FLESH_BLOCK:
-                income.flesh += 5 * organ.level;
-              case RAT_NEST:
-                income.flesh += 3 * organ.level;
-                income.blood += organ.level;
-                income.bone += organ.level;
-              case CRUSHER:
-                if (storedBodies > 0)
-                  {
-                    storedBodies--;
-                    income.bone += 5 * organ.level;
-                  }
-              case GARBAGE_HEAP:
-                if (storedBodies > 0)
-                  {
-                    storedBodies--;
-                    income.flesh += 5 * organ.level;
-                  }
-                else income.flesh += 2 * organ.level;
-              default:
-            }
-        }
+      var res = incomePerTurn();
+      income = res.income;
+      storedBodies -= res.bodies;
       resources.add(income, stockpileCap());
 
       // heal custodes between attacks
@@ -136,6 +118,46 @@ class CultBase extends _SaveObject
       runRivalTurn();
       if (!income.isEmpty())
         game.logsg(T('Base income: {income}.', { income: income.text() }));
+    }
+
+// returns one turn of organ income and the stored bodies it draws, mutating nothing
+  public function incomePerTurn(): CultBaseIncome
+    {
+      var ret = {
+        income: new CultBaseResources(),
+        bodies: 0,
+      };
+      var bodies = storedBodies;
+      for (organ in organs)
+        {
+          if (!organ.isWorking())
+            continue;
+          switch (organ.type)
+            {
+              case FLESH_BLOCK:
+                ret.income.flesh += 5 * organ.level;
+              case RAT_NEST:
+                ret.income.flesh += 3 * organ.level;
+                ret.income.blood += organ.level;
+                ret.income.bone += organ.level;
+              case CRUSHER:
+                if (bodies > 0)
+                  {
+                    bodies--;
+                    ret.income.bone += 5 * organ.level;
+                  }
+              case GARBAGE_HEAP:
+                if (bodies > 0)
+                  {
+                    bodies--;
+                    ret.income.flesh += 5 * organ.level;
+                  }
+                else ret.income.flesh += 2 * organ.level;
+              default:
+            }
+        }
+      ret.bodies = storedBodies - bodies;
+      return ret;
     }
 
 // returns current stockpile cap
@@ -221,18 +243,13 @@ class CultBase extends _SaveObject
           game.actionFailed(T('No base organ at cursor.'));
           return false;
         }
-      var maxLevel = CultBaseConst.info(organ.type).maxLevel;
-      if (organ.level >= maxLevel)
+      var reason = validateUpgrade(organ);
+      if (reason != '')
         {
-          game.actionFailed(T('This organ cannot grow further.'));
+          game.actionFailed(reason);
           return false;
         }
       var cost = organ.upgradeCost();
-      if (!resources.canAfford(cost))
-        {
-          game.actionFailed(T('Not enough base resources.'));
-          return false;
-        }
       resources.spend(cost);
       organ.level++;
       organ.broken = false;
@@ -241,6 +258,42 @@ class CultBase extends _SaveObject
       game.log(T('You strengthen {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
+    }
+
+// returns why the organ cannot be upgraded, or '' when it can
+  public function validateUpgrade(organ: CultBaseOrgan): String
+    {
+      if (organ.level >= CultBaseConst.info(organ.type).maxLevel)
+        return T('This organ cannot grow further.');
+      if (!resources.canAfford(organ.upgradeCost()))
+        return T('Not enough base resources.');
+      return '';
+    }
+
+// returns why the organ cannot be repaired, or '' when it can
+  public function validateRepair(organ: CultBaseOrgan): String
+    {
+      if (organ.health >= organ.maxHealth() &&
+          !organ.broken)
+        return T('This organ is whole.');
+      if (!resources.canAfford(organ.repairCost()))
+        return T('Not enough base resources.');
+      return '';
+    }
+
+// returns why a custos cannot be created at the tile, or '' when it can
+  public function validateCustos(x: Int, y: Int): String
+    {
+      if (!hasWorkingOrgan(CAULDRON))
+        return T('A working Caldarium is required.');
+      if (custodes.length >= custosCap())
+        return T('Custodes capacity reached.');
+      if (!resources.canAfford(CultBaseConst.custosCost))
+        return T('Not enough base resources.');
+      if (!area().isWalkable(x, y) ||
+          area().hasAI(x, y))
+        return T('Custos needs a free tile.');
+      return '';
     }
 
 // repairs organ at cursor when possible
@@ -252,17 +305,13 @@ class CultBase extends _SaveObject
           game.actionFailed(T('No base organ at cursor.'));
           return false;
         }
-      if (organ.health >= organ.maxHealth() && !organ.broken)
+      var reason = validateRepair(organ);
+      if (reason != '')
         {
-          game.actionFailed(T('This organ is whole.'));
+          game.actionFailed(reason);
           return false;
         }
       var cost = organ.repairCost();
-      if (!resources.canAfford(cost))
-        {
-          game.actionFailed(T('Not enough base resources.'));
-          return false;
-        }
       resources.spend(cost);
       organ.health = organ.maxHealth();
       organ.broken = false;
@@ -315,29 +364,13 @@ class CultBase extends _SaveObject
 // creates custos at the cursor
   public function createCustos(type: String): Bool
     {
-      if (!hasWorkingOrgan(CAULDRON))
+      var reason = validateCustos(cursorX, cursorY);
+      if (reason != '')
         {
-          game.actionFailed(T('A working Caldarium is required.'));
+          game.actionFailed(reason);
           return false;
         }
-      if (custodes.length >= custosCap())
-        {
-          game.actionFailed(T('Custodes capacity reached.'));
-          return false;
-        }
-      var cost = new CultBaseResources(10, 8, 0);
-      if (!resources.canAfford(cost))
-        {
-          game.actionFailed(T('Not enough base resources.'));
-          return false;
-        }
-      if (!area().isWalkable(cursorX, cursorY) ||
-          area().hasAI(cursorX, cursorY))
-        {
-          game.actionFailed(T('Custos needs a free tile.'));
-          return false;
-        }
-      resources.spend(cost);
+      resources.spend(CultBaseConst.custosCost);
       var ai = game.createAI(type, cursorX, cursorY);
       ai.guardTargetX = cursorX;
       ai.guardTargetY = cursorY;
@@ -773,7 +806,7 @@ class CultBase extends _SaveObject
     }
 
 // returns total custodes capacity
-  function custosCap(): Int
+  public function custosCap(): Int
     {
       var cap = 0;
       for (organ in organs)
