@@ -472,10 +472,14 @@ class FormaHud
             (res == 'flesh' ? T('Flesh') : (res == 'blood' ? T('Blood') : T('Bone'))) + '</span><span class="fm-tube">');
           for (p in [ 25, 50, 75 ])
             buf.add('<span class="fm-tick" style="left:' + (2 + p * 1.94) + 'px"></span>');
-          buf.add('<i class="fm-keep" style="width:' + ((v - bite) * px) + 'px"></i>' +
-            '<i class="fm-bite" style="left:' + (2 + (v - bite) * px) + 'px;width:' + (bite * px) + 'px"></i>');
+          // stock above the cap fills the tube and no more
+          var keepPx = Math.min(TUBE_PX, (v - bite) * px);
+          var bitePx = Math.min(TUBE_PX - keepPx, bite * px);
+          var overLeft = Math.min(TUBE_PX, v * px);
+          buf.add('<i class="fm-keep" style="width:' + keepPx + 'px"></i>' +
+            '<i class="fm-bite" style="left:' + (2 + keepPx) + 'px;width:' + bitePx + 'px"></i>');
           if (over > 0)
-            buf.add('<i class="fm-over" style="left:' + (2 + v * px) + 'px;width:' + (over * px) + 'px"></i>');
+            buf.add('<i class="fm-over" style="left:' + (2 + overLeft) + 'px;width:' + Math.min(TUBE_PX - overLeft, over * px) + 'px"></i>');
           buf.add('</span><span class="fm-val"><span>' + v + '<small>/' + cap + '</small></span>' +
             '<span class="fm-after' + (over > 0 ? ' short' : '') + '">' + after + '</span></span></div>');
         }

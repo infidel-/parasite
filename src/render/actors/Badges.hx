@@ -201,8 +201,29 @@ class Badges {
         '<rect x="4" y="59" width="' + Std.int(120 * ratio) + '" height="10" fill="#28d246"/></svg>';
     }
 
-// the forma cursor: the targeting reticle laid flat on the base-building cursor's cell, self-lit
-// and always on top so a grown organ or a wall never hides it
+// one forma footprint cell, as a square svg: thin outline only, plus the refusal hatch
+// when `refused` (a self-lit fill reads far heavier than its alpha); `col` is the outline colour
+// (bone, alert red or cult pink)
+  static function formaCellSvg(col:String, refused:Bool):String
+    {
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">' +
+        '<defs><pattern id="h" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">' +
+        '<rect width="4" height="10" fill="' + col + '" fill-opacity="0.55"/></pattern></defs>' +
+        '<rect x="2" y="2" width="124" height="124" fill="' + (refused ? 'url(#h)' : 'none') + '" stroke="' + col + '" stroke-opacity="1" stroke-width="3"/></svg>';
+    }
+
+// the spine turret's facing arrow, pointing up (north) in the square's centre
+  static function formaArrowSvg(col:String):String
+    {
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">' +
+        '<path d="M0 -22 L12 -4 H5 V12 H-5 V-4 H-12 Z" fill="' + col + '" fill-opacity="0.85" ' +
+        'transform="translate(64 64) scale(2.4)"/></svg>';
+    }
+
+// forma's map overlay: the footprint the pending action would cover, one ground quad per cell (bone
+// when it can go ahead, alert red hatched when refused, cult pink for an organ being tended), the
+// turret's facing arrow, then the cursor reticle on its own cell (the arrow over it, poking out past its ring). all self-lit and always on top so
+// a grown organ or a wall never hides it; the verdict comes from FormaHud, the rules are not here
   public function drawFormaCursor():Void
     {
       if (game.ui.hud.state != HUD_BASE_BUILDING ||
@@ -210,10 +231,62 @@ class Badges {
           game.cults[0].base == null ||
           game.cults[0].base.areaID != game.area.id)
         return;
+      var base = game.cults[0].base;
+      var forma = game.ui.hud.forma;
+      var cells = forma.anchorCells();
+      if (cells != null)
+        {
+          var v = forma.verdict();
+          var tend = (v.act == TEND ||
+            forma.tendRows > 0);
+          var refused = (!tend &&
+            v.reason != '');
+          var tile = sprites.svgTex('svg:forma:' + (tend ? 'org' : (refused ? 'no' : 'ok')),
+            formaCellSvg(tend ? '#fd97ff' : (refused ? '#f26a6a' : '#e9dfc8'), refused), 128);
+          for (c in cells)
+            {
+              var w = CityConfig.cellToWorld(c.x, c.y);
+              sprites.paint({
+                x: w.x,
+                y: WorldCtx.floorY(c.x, c.y) + 0.05,
+                z: w.z,
+                tex: tile,
+                op: 1.0,
+                scale: CityConfig.CELL / Sprites.SIZE,
+                flat: true,
+                order: Sprites.ORD_MARK - 0.2,
+                emissive: 0xffffff,
+                emissiveInt: 1.0,
+                depthTest: false,
+                shadow: false,
+              });
+            }
+          if (!tend &&
+              v.act == BUILD &&
+              base.selectedType == SPINE_TURRET)
+            {
+              var w = CityConfig.cellToWorld(base.cursorX, base.cursorY);
+              sprites.paint({
+                x: w.x,
+                y: WorldCtx.floorY(base.cursorX, base.cursorY) + 0.055,
+                z: w.z,
+                tex: sprites.svgTex('svg:forma:arrow:' + (refused ? 'no' : 'ok'), formaArrowSvg(refused ? '#f26a6a' : '#e9dfc8'), 128),
+                op: 1.0,
+                scale: CityConfig.CELL * 1.6 / Sprites.SIZE,
+                flat: true,
+                // clockwise from north, as the HUD's arrow turns
+                yaw: -base.selectedDirection * Math.PI / 2,
+                order: Sprites.ORD_MARK + 0.1,
+                emissive: 0xffffff,
+                emissiveInt: 1.0,
+                depthTest: false,
+                shadow: false,
+              });
+            }
+        }
       var tex = sprites.tex('entities', Const.FRAME_TARGET_RETICLE, Const.ROW_REGION_ICON, false);
       if (tex == null)
         return;
-      var base = game.cults[0].base;
       var w = CityConfig.cellToWorld(base.cursorX, base.cursorY);
       sprites.paint({
         x: w.x,

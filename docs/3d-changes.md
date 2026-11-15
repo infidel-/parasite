@@ -151,3 +151,26 @@ Numbers:
 
 **Verdict:** landed. The sway's power-of-height weight is a finger gate for free on a prop whose only
 tall parts are fingers.
+
+## Forma footprint ghost
+
+**Changed:** `Badges.drawFormaCursor` drew one reticle on the cursor cell. It now paints one flat
+self-lit quad per footprint cell first (`FormaHud.anchorCells()` + `FormaHud.verdict()`, so the
+colour comes from the same refusal functions as the chip). The quads are painted through the existing
+`sprites.paint` flat path, with cached svg textures, at orders `ORD_MARK - 0.2/-0.1`:
+- a valid footprint is a 3px bone outline (`#e9dfc8`);
+- a refused one is an alert red outline with a hatch (`#f26a6a`);
+- the organ you would tend is a pink outline (`#fd97ff`);
+- a picked spine turret adds an arrow above the reticle (`ORD_MARK + 0.1`, quad 1.6 cells) in its
+  direction.
+
+Numbers (topbar `dc`, habitat cult base, slot 9, tactical camera): 1x1 tool 64, 2x2 tool 67, tend 64.
+That is one call per quad (1-4 cells, plus the arrow and the reticle) and only while Forma is open.
+
+Trap:
+- A translucent fill on the self-lit quad reads far above its texture alpha: fill .16, then .08,
+  both showed as ~40 % beige slabs over the dark floor. The ghost went outline-only (fill 0), and only
+  the refused cells keep a pattern.
+
+**Verdict:** landed. Footprint and refusal now read on the floor itself; translucent fills on the
+self-lit mark quads don't work, so use outlines.
