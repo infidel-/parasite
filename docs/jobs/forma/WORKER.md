@@ -1,6 +1,6 @@
 # Forma: its own build UI (worker brief)
 
-**Status: Phase 1 is next.** Phases done: none. (The controller updates this line at each phase boundary.)
+**Status: Phase 2 is next.** Phases done: 1. (The controller updates this line at each phase boundary.)
 
 **Controller:** session `build-forma-ui-plan` (`ListAgents`, `SendMessage`). You are the worker: read
 `docs/worker-loop.md` § Worker first. The controller drives the live game; **you never use CDP** (no
