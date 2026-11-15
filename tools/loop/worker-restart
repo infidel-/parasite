@@ -1,0 +1,21 @@
+#!/bin/bash
+# worker-restart <name>: a fresh session for that worker in the same pane, at a phase boundary (a long context costs
+# every call). Writes the flag tools/loop/start-worker.sh loops on, then stops claude. Refuses a worker not started by
+# start-worker.sh (stopping it would close its pane). DRY=1 prints what it would do.
+set -e
+NAME="${1:-parasite-worker}"
+FLAG="/tmp/parasite-worker-restart-$NAME"
+PID=$(pgrep -f -- "^claude .*-n $NAME " | head -1)
+[ -n "$PID" ] || { echo "$NAME isn't running: the user starts it in its pane (tools/loop/start-worker.sh <brief> $NAME)" >&2; exit 1; }
+PARENT=$(ps -o args= -p "$(ps -o ppid= -p "$PID" | tr -d ' ')")
+case "$PARENT" in *start-worker.sh*) ;; *) echo "$NAME runs without start-worker.sh's loop (parent: $PARENT): stopping it would close its pane" >&2; exit 1;; esac
+if [ -n "$DRY" ]; then echo "+ touch $FLAG; kill -TERM $PID"; exit 0; fi
+touch "$FLAG"
+kill -TERM "$PID"
+for _ in $(seq 30); do
+  NEW=$(pgrep -f -- "^claude .*-n $NAME " | grep -vx "$PID" | head -1)
+  [ -n "$NEW" ] && { echo "$NAME: stopped $PID, fresh session $NEW in the same pane. Kick it with SendMessage (its startup prompt may not arrive)"; exit 0; }
+  sleep 0.5
+done
+echo "$NAME: no fresh session 15 s after stopping $PID (flag $FLAG)" >&2
+exit 1

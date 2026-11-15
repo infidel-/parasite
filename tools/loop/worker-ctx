@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""worker-ctx [name...]: each worker's current context in tokens (the last usage in its newest transcript), for a
+controller deciding on worker-restart at a phase boundary. Workers share the repo's transcript folder with the
+controller, so a transcript is matched by its session name (the custom-title entry -n writes)"""
+import json, pathlib, sys
+
+proj = pathlib.Path.home() / ".claude/projects" / str(pathlib.Path(__file__).resolve().parents[2]).replace("/", "-")
+files = sorted(proj.glob("*.jsonl"), key=lambda p: p.stat().st_mtime, reverse=True)
+for name in sys.argv[1:] or ["parasite-worker"]:
+    tag = f'"customTitle":"{name}"'
+    f = next((f for f in files if tag in f.read_text(errors="ignore")), None)
+    if not f:
+        print(f"{name}: no transcript")
+        continue
+    last, turns = {}, 0
+    for line in f.open(errors="ignore"):
+        try:
+            m = json.loads(line).get("message")
+        except ValueError:
+            continue
+        if isinstance(m, dict) and m.get("usage"):
+            last, turns = m["usage"], turns + 1
+    ctx = sum(last.get(k, 0) for k in ("input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"))
+    print(f"{name}: ~{ctx // 1000}k tokens, {turns} model calls ({f.name[:8]})")

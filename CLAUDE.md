@@ -27,6 +27,7 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 | generating or baking a SOUND (fal-sfx MCP, `make sounds`) | [`docs/sound-gen.md`](docs/sound-gen.md) — every new sound gets a bake-off; never touch shipped sounds |
 | adding or changing ANY player-facing text, translating it, or importing a translation review | [`docs/localization.md`](docs/localization.md) — `T()`/`N()` markers, placeholder syntax, nouns |
 | a headless test failed, or adding a test, a suite or a fixture save | [`tests/README.md`](tests/README.md) — replay by run id, `tests/known.json`, the fixture version table |
+| running a controller + Sonnet worker loop (`tools/loop/start-worker.sh`) | [`docs/worker-loop.md`](docs/worker-loop.md) |
 | adding or changing a GAME MECHANIC (AI, cult, ordeals, missions, base, evolution, ovum, region, habitats, group, items…) | [`docs/relations.md`](docs/relations.md) — lifecycle events × listeners, copies, invariants, neighbour ideas |
 
 **A NEW FINDING GOES IN THE DOC, NOT HERE.** This file went 1.7 KB → 61 KB in six months and 75% of
