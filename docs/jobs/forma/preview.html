@@ -1,0 +1,742 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Forma preview</title>
+<style>
+@font-face { font-family: 'Virtucorp'; src: url(data:font/ttf;base64,{{VIRTUCORP}}) format('truetype'); }
+@font-face { font-family: 'Cruiser2015'; src: url(data:font/otf;base64,{{CRUISER}}) format('opentype'); }
+
+:root {
+  --plum: linear-gradient(180deg, rgba(22, 10, 25, .9), rgba(13, 7, 16, .9));
+  --plum-solid: #140a17;
+  --edge: rgba(253, 151, 255, .2);
+  --rule: rgba(253, 151, 255, .12);
+  --wash: rgba(253, 151, 255, .06);
+  --bone: #e9dfc8;
+  --flesh: #e2857a;
+  --blood: #b3172f;
+  --blood-text: #e0566a;
+  --cult: #fd97ff;
+  --dried: #a88bb0;
+  --alert: #f26a6a;
+  --game-panel: rgba(12, 14, 19, .7);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: #050608; overflow: hidden; }
+body { font: 17px/1.25 'Virtucorp', sans-serif; color: var(--bone); letter-spacing: .02em; }
+button { font: inherit; color: inherit; letter-spacing: inherit; }
+
+/* the game screen at 1:1: centred, cropped by a smaller window, never scaled */
+#stage { position: absolute; left: 50%; top: 50%; width: 1906px; height: 799px; margin: -399.5px 0 0 -953px;
+  background: url(bg.png) 0 0 / 1906px 799px no-repeat; overflow: hidden; }
+#stage.closed .forma { display: none; }
+#current { position: absolute; inset: 0; background: url(current.png) 0 0 / 1906px 799px no-repeat; display: none; z-index: 50; }
+#stage.compare #current { display: block; }
+#map { position: absolute; inset: 0; }
+#placed { position: absolute; inset: 0; pointer-events: none; }
+.sprite { position: absolute; background-image: url(cult-base.png); background-repeat: no-repeat; }
+.sprite.firmus { background: url(firmus.png) 0 0 / 64px 64px; width: 64px; height: 64px; }
+.sprite.mordax { background: url(mordax.png) 0 0 / 64px 64px; width: 64px; height: 64px; }
+/* menu sprites: a colour layer blended over the art, clipped to the art's own alpha */
+.tint { position: relative; background: linear-gradient(var(--tc), var(--tc)) 0 0 / 100% 100%, var(--src) var(--pos) / var(--size) no-repeat;
+  background-blend-mode: var(--bm), normal; -webkit-mask: var(--src) var(--pos) / var(--size) no-repeat; mask: var(--src) var(--pos) / var(--size) no-repeat; }
+#stage { --tc: rgba(253, 151, 255, .38); --bm: soft-light; }
+
+/* game log, in the game's own panel style */
+#log { position: absolute; left: 26px; top: 78px; min-width: 347px; padding: 8px 14px; background: var(--game-panel);
+  backdrop-filter: blur(1.5px); border: 1px solid rgba(120, 130, 150, .08); border-radius: 4px; color: #fff; font-size: 16px; line-height: 1.05; }
+#log div { white-space: nowrap; }
+#log b { font-weight: normal; color: #8ca5b9; margin-right: 8px; }
+
+/* Forma material */
+.panel { position: absolute; background: var(--plum); border: 1px solid var(--edge); border-radius: 3px; backdrop-filter: blur(2px); }
+.panel::before { content: ''; position: absolute; left: 0; right: 0; top: -1px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(253, 151, 255, .45), transparent); }
+
+/* ledger */
+#ledger { left: 26px; bottom: 26px; width: 372px; padding: 14px 18px 16px; }
+#ledger h1 { font: 22px/1 'Cruiser2015', sans-serif; letter-spacing: .14em; margin: 0 0 14px; color: var(--bone); }
+.res { display: grid; grid-template-columns: 46px 194px 1fr; align-items: center; column-gap: 12px; height: 40px; }
+.res .name { font-size: 15px; color: var(--dried); }
+.res .val { text-align: right; font-size: 22px; line-height: 1; display: flex; flex-direction: column; align-items: flex-end; }
+.res .val small { font-size: 13px; color: var(--dried); margin-left: 2px; }
+.res .after { font-size: 13px; height: 13px; margin-top: 2px; color: var(--dried); }
+.res .after.short { color: var(--alert); }
+.tube { position: relative; height: 14px; border-radius: 7px; background: rgba(0, 0, 0, .45);
+  box-shadow: inset 0 0 0 1px rgba(253, 151, 255, .14); }
+.tube i { position: absolute; top: 2px; bottom: 2px; left: 2px; border-radius: 5px; transition: width .35s ease, left .35s ease; }
+.tube .keep { background: var(--c); }
+.tube .bite { background: repeating-linear-gradient(-45deg, var(--c) 0 3px, transparent 3px 6px); background-size: 8.5px 100%;
+  animation: drift 3.2s linear infinite; border-radius: 0 5px 5px 0; }
+.tube .over { background: repeating-linear-gradient(-45deg, var(--alert) 0 3px, transparent 3px 6px); background-size: 8.5px 100%;
+  box-shadow: 0 0 0 1px var(--alert); border-radius: 0 5px 5px 0; }
+.tube .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(253, 151, 255, .16); }
+@keyframes drift { to { background-position: 8.5px 0; } }
+.r-flesh { --c: var(--flesh); }
+.r-blood { --c: var(--blood); }
+.r-bone { --c: var(--bone); }
+.income { margin: 4px 0 0 58px; font-size: 14px; color: var(--dried); }
+.income span { margin-right: 10px; }
+.stats { display: flex; gap: 18px; margin: 14px 0 0; font-size: 15px; color: var(--dried); }
+.stats b { font-weight: normal; color: var(--bone); font-size: 18px; margin-left: 4px; }
+.stats .warn b { color: var(--alert); }
+.basilica { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.basilica h2 { font-size: 15px; font-weight: normal; margin: 0 0 6px; color: var(--bone); }
+.basilica ul { list-style: none; margin: 0; padding: 0; font-size: 14px; columns: 2; column-gap: 16px; }
+.basilica li { color: var(--dried); padding-left: 16px; position: relative; line-height: 1.5; }
+.basilica li::before { content: ''; position: absolute; left: 0; top: 7px; width: 7px; height: 7px; border: 1px solid var(--dried); border-radius: 50%; }
+.basilica li.met { color: var(--bone); }
+.basilica li.met::before { background: var(--bone); border-color: var(--bone); }
+
+/* organ tray: where the actions menu was */
+#tray { left: 416px; bottom: 26px; display: flex; padding: 10px 12px 8px; transition: opacity .15s; }
+#tray.inert { pointer-events: none; }
+#tray.inert > * { opacity: .3; }
+.group { display: flex; flex-direction: column; padding: 0 10px; }
+.group + .group { border-left: 1px solid var(--rule); }
+.group h3 { font-size: 13px; font-weight: normal; color: var(--dried); margin: 0 0 2px 4px; }
+.group .tiles { display: flex; gap: 2px; }
+.tile { position: relative; width: 82px; padding: 4px 2px 5px; background: none; border: 0; border-radius: 3px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; }
+.tile .tint { flex: none; }
+.tile .nm { font-size: 13px; line-height: 1.05; text-align: center; height: 20px; display: flex; align-items: center; color: rgba(233, 223, 200, .82); }
+.key { position: absolute; left: 4px; top: 3px; font-size: 12px; min-width: 16px; height: 16px; line-height: 15px; border-radius: 3px;
+  border: 1px solid rgba(253, 151, 255, .3); color: var(--dried); text-align: center; padding: 0 2px; }
+.tile:hover { background: var(--wash); }
+.tile[aria-pressed="true"] { background: rgba(253, 151, 255, .08); box-shadow: inset 0 0 0 1px var(--cult); }
+.tile[aria-pressed="true"] .nm { color: var(--cult); }
+.tile[aria-pressed="true"] .key { border-color: var(--cult); color: var(--cult); }
+.tile.poor .tint { opacity: .42; filter: saturate(.4); }
+.tile.poor .nm { color: var(--dried); }
+.tile:focus-visible, button:focus-visible { outline: 2px dashed var(--cult); outline-offset: 2px; }
+.tile .dir { position: absolute; right: 8px; top: 40px; width: 18px; height: 18px; color: var(--cult); }
+.cost { display: inline-flex; gap: 7px; font-size: 13px; line-height: 1; }
+.cost span { display: inline-flex; align-items: center; gap: 2px; }
+.cost svg { width: 8px; height: 9px; }
+.cost .z { opacity: .32; }
+.cost .short { color: var(--alert); text-decoration: underline wavy var(--alert) 1px; text-underline-offset: 3px; }
+.c-flesh { color: var(--flesh); }
+.c-blood { color: var(--blood-text); }
+.c-bone { color: var(--bone); }
+
+/* key legend under the tray */
+#keys { position: absolute; left: 430px; bottom: 4px; display: flex; gap: 16px; font-size: 13px;
+  color: var(--dried); white-space: nowrap; }
+kbd { font: 12px/14px 'Virtucorp', sans-serif; border: 1px solid rgba(253, 151, 255, .3); border-radius: 3px; padding: 0 4px;
+  color: var(--bone); margin-right: 4px; }
+
+/* what the hovered or picked tool is: docked, a tooltip, or in the ledger */
+.card .latin { font: 15px/1.1 'Cruiser2015', sans-serif; letter-spacing: .1em; color: var(--bone); }
+.card .facing { font: 13px 'Virtucorp', sans-serif; letter-spacing: 0; color: var(--dried); }
+.card .does { font-size: 14px; color: rgba(234, 235, 237, .8); margin: 5px 0 8px; }
+.card .meta { display: flex; gap: 14px; align-items: center; font-size: 13px; color: var(--dried); }
+#detail { width: 330px; padding: 11px 15px 12px; pointer-events: none; }
+#detail::after { content: ''; position: absolute; left: var(--ax, 50%); bottom: -7px; width: 12px; height: 12px; margin-left: -6px;
+  background: var(--plum-solid); border: 1px solid var(--edge); border-width: 0 1px 1px 0; transform: rotate(45deg); }
+
+/* the verdict chip: one line, always just under the footprint */
+#chip { padding: 5px 11px 6px; font-size: 15px; white-space: nowrap; pointer-events: none; z-index: 5; }
+#chip.no { color: var(--alert); }
+#chip .sub { color: var(--dried); font-size: 13px; margin-left: 8px; }
+#chip .hp { display: inline-block; width: 46px; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, .5); margin: 0 6px 2px 8px; overflow: hidden; vertical-align: middle; }
+#chip .hp i, .tend .hp i { display: block; height: 100%; background: var(--flesh); }
+#chip .hp.low i, .tend .hp.low i { background: var(--alert); }
+
+/* tend: the organ under the cursor, opened by click or Enter */
+.tend { display: flex; gap: 18px; align-items: center; padding: 2px 4px; }
+.tend .who { display: flex; gap: 12px; align-items: center; width: 250px; }
+.tend .who .tint { flex: none; }
+.tend .who .latin { font: 15px/1.1 'Cruiser2015', sans-serif; letter-spacing: .1em; }
+.tend .who .lv { font-size: 13px; color: var(--dried); margin: 3px 0 5px; }
+.tend .hp { width: 120px; height: 5px; border-radius: 3px; background: rgba(0, 0, 0, .5); overflow: hidden; }
+.tend .hpn { font-size: 12px; color: var(--dried); margin-top: 3px; }
+.tend .opts { display: flex; gap: 4px; }
+.opt { position: relative; width: 168px; min-height: 86px; padding: 24px 10px 8px; background: var(--wash); border: 1px solid transparent;
+  border-radius: 3px; cursor: pointer; text-align: left; display: flex; flex-direction: column; gap: 6px; }
+.opt:hover, .opt:focus-visible { border-color: var(--cult); background: rgba(253, 151, 255, .06); }
+.opt .lb { font-size: 15px; line-height: 1.1; }
+.opt .why { font-size: 12px; color: var(--dried); }
+.opt.off .lb { color: var(--dried); }
+.opt.back { width: 74px; align-items: center; justify-content: center; padding-top: 8px; color: var(--dried); }
+.opt .key { left: 8px; top: 6px; }
+#tend-float { padding: 12px 12px 12px; z-index: 6; }
+#tend-float .tend { flex-direction: column; align-items: stretch; gap: 12px; }
+#tend-float .opts { flex-direction: column; }
+#tend-float .opt { width: 300px; min-height: 0; padding: 7px 10px 7px 36px; flex-direction: row; justify-content: space-between; align-items: center; }
+#tend-float .opt .key { top: 50%; margin-top: -8px; }
+#tend-float .opt.back { width: 300px; justify-content: flex-start; padding-left: 36px; }
+
+/* variant switch, outside the game frame's story */
+#switch { position: absolute; right: 70px; top: 14px; z-index: 60; display: flex; gap: 14px; align-items: center; font-size: 13px; color: #c9cfe0; }
+#switch button { padding: 4px 10px; background: var(--game-panel); border: 1px solid rgba(120, 130, 150, .28); cursor: pointer; font-size: 13px; color: #c9cfe0; }
+#compare { border-radius: 4px; }
+
+#closed { position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); padding: 10px 18px; background: var(--game-panel);
+  border-radius: 4px; font-size: 16px; display: none; }
+#stage.closed #closed { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tube .bite { animation: none; }
+  .tube i, #tray { transition: none; }
+}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="current" aria-hidden="true"></div>
+  <svg id="map" width="1906" height="799" aria-hidden="true">
+    <defs>
+      <pattern id="hatch-no" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+        <rect width="3" height="8" fill="#f26a6a" fill-opacity=".55"/>
+      </pattern>
+    </defs>
+    <g id="g-here"></g>
+    <g id="g-ghost"></g>
+    <g id="g-cursor"></g>
+  </svg>
+  <div id="placed"></div>
+  <div id="log" aria-live="polite"></div>
+
+  <section id="ledger" class="panel forma" aria-label="Base resources">
+    <h1>Forma</h1>
+    <div id="reservoirs"></div>
+    <div class="income" id="income"></div>
+    <div class="stats" id="stats"></div>
+    <div class="basilica"><h2>Corpus Basilica</h2><ul id="basilica"></ul></div>
+  </section>
+
+  <nav id="tray" class="panel forma" aria-label="Organs"></nav>
+  <div id="keys" class="forma"></div>
+  <div id="detail" class="panel card forma"></div>
+  <div id="chip" class="panel forma"></div>
+  <div id="tend-float" class="panel forma" role="menu"></div>
+  <div id="closed">Press <kbd>F</kbd> to open Forma</div>
+  <div id="switch">
+    <button id="compare" type="button">Show current Forma</button>
+  </div>
+</div>
+
+<script>
+const SNAP = {{SNAP}};
+const VW = SNAP.view[0], VH = SNAP.view[1], CW = SNAP.w, CH = SNAP.h;
+const RES = ['flesh', 'blood', 'bone'];
+const ICON = { flesh: '<svg viewBox="0 0 8 9"><ellipse cx="4" cy="5" rx="3.6" ry="3.4" fill="currentColor"/></svg>',
+  blood: '<svg viewBox="0 0 8 9"><path d="M4 .3C5.8 3 7.4 4.6 7.4 6.1A3.4 3.4 0 0 1 .6 6.1C.6 4.6 2.2 3 4 .3Z" fill="currentColor"/></svg>',
+  bone: '<svg viewBox="0 0 8 9"><path d="M1.6 1.2a1.2 1.2 0 0 1 2 .9L5.9 6.9a1.2 1.2 0 1 1 .5 1.9 1.2 1.2 0 0 1-1.9-.5L2.1 3.6A1.2 1.2 0 0 1 1.6 1.2Z" fill="currentColor"/></svg>' };
+
+// organ data: CultBaseConst.info / block, the income rules from CultBase.turn
+const ORG = {
+  RIBWALL: { name: 'Murus Costarum', short: 'Murus', cost: [0, 0, 3], w: 1, h: 1, max: 1, key: '1', icon: [0, 2], does: 'A wall of ribs. Blocks the way and counts as a defense.' },
+  RIBGATE: { name: 'Porta Costarum', short: 'Porta', cost: [4, 4, 6], w: 1, h: 1, max: 1, key: '2', icon: [0, 3], does: 'Grows over a ribwall. Your side walks through. Counts as a defense.' },
+  SPINE_TURRET: { name: 'Turris Spinarum', short: 'Turris', cost: [6, 2, 10], w: 1, h: 1, max: 1, key: '3', icon: [1, 3], does: 'Faces one way. Counts as a defense.' },
+  BLOOD_TRAP: { name: 'Tardans', cost: [2, 6, 0], w: 1, h: 1, max: 1, key: '4', icon: [0, 5], does: 'A pool of grasping hands. Counts as a defense.' },
+  FLESH_BLOCK: { name: 'Quadrum', cost: [20, 5, 10], w: 2, h: 2, max: 3, key: '5', icon: [0, 6], does: 'Grows flesh: +5 a turn per level.' },
+  RAT_NEST: { name: 'Nidus Murium', cost: [8, 2, 4], w: 2, h: 2, max: 3, key: '6', icon: [2, 0], does: 'Rats bring +3 flesh, +1 blood and +1 bone a turn per level.' },
+  CRUSHER: { name: 'Fractor', cost: [10, 4, 12], w: 2, h: 2, max: 3, key: '7', icon: [2, 2], does: 'Grinds one stored body a turn into +5 bone per level.' },
+  GARBAGE_HEAP: { name: 'Cumulus', cost: [12, 3, 4], w: 2, h: 2, max: 3, key: '8', icon: [2, 4], does: 'Rots one stored body a turn into +5 flesh per level, or +2 with none.' },
+  BODY_STORAGE: { name: 'Cadaverum', cost: [8, 0, 6], w: 2, h: 2, max: 3, key: '9', icon: [2, 6], does: 'Stores 8 bodies per level.' },
+  CAULDRON: { name: 'Caldarium', cost: [18, 10, 10], w: 2, h: 2, max: 3, key: '0', icon: [4, 0], does: 'Lets you craft custodes: 2 per level.' },
+  COR_NEFANDUM: { name: 'Cor Nefandum', cost: [0, 0, 0], w: 2, h: 2, max: 4, key: '', icon: [0, 0], does: 'The heart of the base.' },
+};
+// custodes: CultBase.createCustos, stats from FirmusCustosAI / MordaxCustosAI
+const CUSTOS = {
+  FIRMUS: { name: 'Firmus', cost: [10, 8, 0], w: 1, h: 1, key: '-', code: 'Minus', does: 'A sturdy guard that holds its tile. Strength 8, constitution 12.' },
+  MORDAX: { name: 'Mordax', cost: [10, 8, 0], w: 1, h: 1, key: '=', code: 'Equal', does: 'A savage guard that holds its tile. Strength 10, constitution 7.' },
+};
+const TOOLS = Object.assign({}, ORG, CUSTOS);
+const DEFENSE = ['RIBWALL', 'RIBGATE', 'SPINE_TURRET', 'BLOOD_TRAP'];
+const GROWTH = ['FLESH_BLOCK', 'RAT_NEST', 'CRUSHER', 'GARBAGE_HEAP'];
+const TURRET_ICON = [[1, 3], [1, 5], [1, 2], [1, 4]];
+const DIRS = ['north', 'east', 'south', 'west'];
+
+// sample state: the save's stock is debug-inflated (9893/100), so the reservoirs start at plausible values
+const S = {
+  res: [46, 19, 11], bodies: 3, pressure: 6, custodes: 0, survived: SNAP.survived, timer: SNAP.timer,
+  organs: SNAP.organs.map(o => Object.assign({}, o, o.id === 8 ? { hp: 7 } : {})),
+  sel: 'RIBWALL', dir: 0, hoverTool: null, peek: null, menu: null, cx: SNAP.cursor[0], cy: SNAP.cursor[1], open: true, turn: 110,
+  ai: new Set(SNAP.cells.filter(c => c.ai).map(c => c.x + ',' + c.y)), nextID: 100, built: [],
+  keyTip: null,
+};
+const cell = (x, y) => (x < 0 || y < 0 || x >= CW || y >= CH) ? null : SNAP.cells[y * CW + x];
+const centre = c => [c.q.reduce((a, p) => a + p[0], 0) / 4, c.q.reduce((a, p) => a + p[1], 0) / 4];
+const cursorOK = (x, y) => { const c = cell(x, y); return c && !c.wall && centre(c)[1] < VH - 30; };
+
+// --- rules, mirrored from CultBase / CultBaseConst ---
+const heartLevel = () => S.organs.find(o => o.type === 'COR_NEFANDUM').level;
+const cap = () => 100 + 50 * (heartLevel() - 1);
+const organAt = (x, y) => S.organs.find(o => x >= o.x && y >= o.y && x < o.x + ORG[o.type].w && y < o.y + ORG[o.type].h);
+const footprint = (t, x, y) => { const r = []; for (let dy = 0; dy < TOOLS[t].h; dy++) for (let dx = 0; dx < TOOLS[t].w; dx++) r.push([x + dx, y + dy]); return r; };
+const canAfford = c => S.res.every((v, i) => v >= c[i]);
+function validate(t, x, y) {
+  if (t === 'RIBGATE') {
+    const e = organAt(x, y);
+    if (!e || e.type !== 'RIBWALL') return 'Porta Costarum must replace a ribwall.';
+  }
+  else if (organAt(x, y)) return 'Tile already holds a base organ.';
+  for (const [px, py] of footprint(t, x, y)) {
+    const c = cell(px, py);
+    if (!c || !c.walk) return 'Footprint must be on walkable floor.';
+    if (S.ai.has(px + ',' + py)) return 'Footprint is occupied.';
+    const objs = c.objs.length + (organAt(px, py) && t !== 'RIBGATE' ? 1 : 0);
+    if (objs > 0) return 'Footprint is blocked.';
+  }
+  return '';
+}
+const hasCauldron = () => S.organs.some(o => o.type === 'CAULDRON' && working(o));
+// createCustos' checks, in its order
+function validateCustos(x, y) {
+  if (!hasCauldron()) return 'A working Caldarium is required.';
+  if (S.custodes >= custosCap()) return 'Custodes capacity reached.';
+  if (!canAfford([10, 8, 0])) return 'Not enough base resources.';
+  // area.isWalkable: floor, no blocking object (a ribgate is walkable), no AI
+  const c = cell(x, y), o = organAt(x, y);
+  if (!c.walk || c.objs.length || (o && o.type !== 'RIBGATE') || S.ai.has(x + ',' + y)) return 'Custos needs a free tile.';
+  return '';
+}
+function upgradeCost(t, level) {
+  if (t === 'COR_NEFANDUM') return [[40, 30, 30], [60, 45, 45], [80, 60, 60]][level - 1] || [0, 0, 0];
+  return ORG[t].cost.map(v => level >= 2 ? v * 2 : v);
+}
+const repairCost = t => ORG[t].cost.map(v => v <= 0 ? 0 : Math.ceil(v / 4));
+const working = o => !o.broken;
+function income() {
+  const r = [0, 0, 0];
+  let bodies = S.bodies;
+  for (const o of S.organs) {
+    if (!working(o)) continue;
+    if (o.type === 'FLESH_BLOCK') r[0] += 5 * o.level;
+    else if (o.type === 'RAT_NEST') { r[0] += 3 * o.level; r[1] += o.level; r[2] += o.level; }
+    else if (o.type === 'CRUSHER' && bodies > 0) { bodies--; r[2] += 5 * o.level; }
+    else if (o.type === 'GARBAGE_HEAP') { if (bodies > 0) { bodies--; r[0] += 5 * o.level; } else r[0] += 2 * o.level; }
+  }
+  return r;
+}
+const bodyCap = () => S.organs.filter(o => o.type === 'BODY_STORAGE' && working(o)).reduce((a, o) => a + 8 * o.level, 0);
+const custosCap = () => S.organs.filter(o => o.type === 'CAULDRON' && working(o)).reduce((a, o) => a + 2 * o.level, 0);
+
+// what a click or Enter on the cursor does with the picked tool: tend an organ, or build/craft (why = the refusal)
+function verdict() {
+  const t = S.sel, here = organAt(S.cx, S.cy);
+  if (here && !(t === 'RIBGATE' && here.type === 'RIBWALL')) return { act: 'tend', here };
+  if (CUSTOS[t]) return { act: 'craft', why: validateCustos(S.cx, S.cy) };
+  return { act: 'build', why: validate(t, S.cx, S.cy) || (canAfford(ORG[t].cost) ? '' : 'Not enough base resources.') };
+}
+// the tend menu's rows for one organ
+function tendOpts(o) {
+  const ho = ORG[o.type], max = o.level >= ho.max, whole = o.hp >= o.max && !o.broken;
+  const uc = upgradeCost(o.type, o.level), rc = repairCost(o.type);
+  const r = [
+    { lb: max ? 'Upgrade' : 'Upgrade to level ' + (o.level + 1), cost: max ? null : uc,
+      why: max ? 'This organ cannot grow further.' : canAfford(uc) ? '' : 'Not enough base resources.', run: () => upgrade(o) },
+    { lb: 'Repair', cost: whole ? null : rc, why: whole ? 'This organ is whole.' : canAfford(rc) ? '' : 'Not enough base resources.', run: () => repair(o) },
+  ];
+  if (o.type === 'RIBWALL') {
+    const g = ORG.RIBGATE.cost, why = validate('RIBGATE', o.x, o.y);
+    r.push({ lb: 'Grow Porta Costarum', cost: g, why: why || (canAfford(g) ? '' : 'Not enough base resources.'),
+      run: () => { S.menu = null; S.cx = o.x; S.cy = o.y; buildTool('RIBGATE'); } });
+  }
+  return r;
+}
+
+// --- actions ---
+function log(text) {
+  S.lines.push([S.turn, text]);
+  S.lines = S.lines.slice(-4);
+}
+function fail(text) { log(text); render(); }
+function act() {
+  const v = verdict();
+  if (v.act === 'tend') {
+    S.menu = v.here;
+    render();
+    const first = document.querySelector('.opt:not(.off)');
+    if (first) first.focus({ preventScroll: true });
+    return;
+  }
+  if (v.why) return fail(v.why);
+  if (v.act === 'craft') craft();
+  else buildTool(S.sel);
+}
+function buildTool(t) {
+  const cost = ORG[t].cost;
+  S.res = S.res.map((v, i) => v - cost[i]);
+  if (t === 'RIBGATE') S.organs = S.organs.filter(o => o !== organAt(S.cx, S.cy));
+  const o = { id: S.nextID++, type: t, x: S.cx, y: S.cy, level: 1, hp: 0, max: 0, broken: false, dir: S.dir, fresh: true };
+  o.hp = o.max = maxHealth(t, 1);
+  S.organs.push(o);
+  log('You shape ' + ORG[t].name + '.');
+  render();
+}
+function maxHealth(t, l) {
+  return { COR_NEFANDUM: 60 + 20 * (l - 1), RIBWALL: 18, RIBGATE: 24, SPINE_TURRET: 18, BLOOD_TRAP: 10, FLESH_BLOCK: 28 + 8 * (l - 1),
+    RAT_NEST: 10 + 4 * (l - 1), CRUSHER: 24 + 8 * (l - 1), GARBAGE_HEAP: 18 + 6 * (l - 1), BODY_STORAGE: 20 + 6 * (l - 1), CAULDRON: 24 + 8 * (l - 1) }[t];
+}
+function upgrade(o) {
+  const c = upgradeCost(o.type, o.level);
+  S.res = S.res.map((v, i) => v - c[i]);
+  o.level++;
+  o.max = maxHealth(o.type, o.level);
+  o.hp = o.max;
+  log('You strengthen ' + ORG[o.type].name + '.');
+}
+function repair(o) {
+  const c = repairCost(o.type);
+  S.res = S.res.map((v, i) => v - c[i]);
+  o.hp = o.max;
+  o.broken = false;
+  log('You mend ' + ORG[o.type].name + '.');
+}
+function runOpt(i) {
+  const opt = tendOpts(S.menu)[i];
+  if (!opt) return;
+  if (opt.why) return fail(opt.why);
+  opt.run();
+  S.peek = null;
+  render();
+}
+function craft() {
+  S.res = S.res.map((v, i) => v - [10, 8, 0][i]);
+  S.custodes++;
+  S.ai.add(S.cx + ',' + S.cy);
+  S.built.push({ x: S.cx, y: S.cy, kind: S.sel.toLowerCase() });
+  log('A new Custos takes shape.');
+  render();
+}
+function closeMenu() {
+  S.menu = null;
+  S.peek = null;
+}
+
+// --- rendering ---
+const $ = id => document.getElementById(id);
+const costHTML = (c, poor) => '<span class="cost">' + c.map((v, i) =>
+  '<span class="c-' + RES[i] + (v === 0 ? ' z' : '') + (poor && S.res[i] < v ? ' short' : '') + '">' + ICON[RES[i]] + v + '</span>').join('') + '</span>';
+const atlasStyle = (icon, w, h, size) => {
+  // size = on-screen px of one 64 px atlas cell (64 = native, 32 = half); never above 64
+  const s = size / 64;
+  return 'width:' + w * size + 'px;height:' + h * size + 'px;background-size:' + 512 * s + 'px ' + 512 * s + 'px;background-position:-' +
+    icon[1] * size + 'px -' + icon[0] * size + 'px';
+};
+const iconOf = (t, dir) => t === 'SPINE_TURRET' ? TURRET_ICON[dir] : ORG[t].icon;
+// a tool's picture: an atlas organ (2x2 at half size so every tile is 64 px) or a custos sprite
+// tinted: the atlas cell (or custos png) passed to .tint as variables, 2x2 at half size, never above native
+const tintHTML = (t, dir) => {
+  if (CUSTOS[t]) return '<span class="tint" style="--src:url(' + t.toLowerCase() + '.png);--pos:0 0;--size:64px 64px;width:64px;height:64px"></span>';
+  const o = ORG[t], c = o.w > 1 ? 32 : 64, ic = iconOf(t, dir);
+  return '<span class="tint" style="--src:url(cult-base.png);--pos:-' + ic[1] * c + 'px -' + ic[0] * c + 'px;--size:' + 8 * c + 'px ' + 8 * c + 'px;width:' +
+    o.w * c + 'px;height:' + o.h * c + 'px"></span>';
+};
+const spriteHTML = tintHTML;
+const poly = (c, cls) => '<polygon points="' + c.q.map(p => p.join(',')).join(' ') + '" ' + cls + '/>';
+const fpBox = (t, x, y) => {
+  const pts = footprint(t, x, y).map(([a, b]) => cell(a, b)).filter(Boolean).flatMap(c => c.q);
+  return { minX: Math.min(...pts.map(p => p[0])), maxX: Math.max(...pts.map(p => p[0])), minY: Math.min(...pts.map(p => p[1])), maxY: Math.max(...pts.map(p => p[1])) };
+};
+const toolPoor = t => CUSTOS[t] ? !hasCauldron() || S.custodes >= custosCap() || !canAfford(TOOLS[t].cost) : !canAfford(TOOLS[t].cost);
+
+function renderTray() {
+  const tray = $('tray');
+  tray.classList.toggle('inert', !!S.menu);
+  const groups = [['Defense', DEFENSE], ['Growth', GROWTH], ['Upkeep', ['BODY_STORAGE', 'CAULDRON']], ['Custodes ' + S.custodes + '/' + custosCap(), ['FIRMUS', 'MORDAX']]];
+  tray.innerHTML = groups.map(([g, list]) => '<div class="group"><h3>' + g + '</h3><div class="tiles">' + list.map(t => {
+    const o = TOOLS[t], poor = toolPoor(t);
+    return '<button type="button" class="tile' + (poor ? ' poor' : '') + '" data-t="' + t + '" aria-pressed="' + (S.sel === t) + '" ' +
+      'aria-label="' + o.name + (poor ? ', not available' : '') + '">' + spriteHTML(t, S.dir) +
+      '<span class="key">' + o.key + '</span>' +
+      (t === 'SPINE_TURRET' ? '<svg class="dir" viewBox="0 0 18 18" style="transform:rotate(' + S.dir * 90 + 'deg)"><path d="M9 2l6 9h-4v5H7v-5H3z" fill="currentColor"/></svg>' : '') +
+      '<span class="nm">' + (o.short || o.name) + '</span>' + costHTML(o.cost, true) + '</button>';
+  }).join('') + '</div></div>').join('');
+}
+
+function tendHTML(o) {
+  const ho = ORG[o.type], low = o.hp / o.max < .5;
+  const sprite = tintHTML(o.type, o.dir);
+  return '<div class="tend"><div class="who">' + sprite + '<div><div class="latin">' + ho.name + '</div>' +
+    '<div class="lv">Level ' + o.level + ' of ' + ho.max + (o.broken ? ', broken' : '') + '</div>' +
+    '<div class="hp' + (low ? ' low' : '') + '"><i style="width:' + 100 * o.hp / o.max + '%"></i></div><div class="hpn">' + o.hp + '/' + o.max + ' health</div></div></div>' +
+    '<div class="opts">' + tendOpts(o).map((p, i) => '<button type="button" role="menuitem" class="opt' + (p.why && !p.cost ? ' off' : '') + '" data-opt="' + i + '">' +
+      '<span class="key">' + (i + 1) + '</span><span class="lb">' + p.lb + '</span>' +
+      (p.cost ? costHTML(p.cost, true) : '<span class="why">' + p.why + '</span>') + '</button>').join('') +
+    '<button type="button" role="menuitem" class="opt back" data-opt="back"><span class="key">Esc</span>Back</button></div></div>';
+}
+
+function renderLedger() {
+  const cost = S.peek || (S.menu ? [0, 0, 0] : TOOLS[S.hoverTool || S.sel].cost), cp = cap(), px = 194 / cp;
+  $('reservoirs').innerHTML = RES.map((r, i) => {
+    const v = S.res[i], c = cost[i], bite = Math.min(c, v), over = Math.max(0, c - v);
+    const after = c === 0 ? '' : over ? 'short ' + over : '&rarr; ' + (v - c);
+    return '<div class="res r-' + r + '"><span class="name">' + r[0].toUpperCase() + r.slice(1) + '</span>' +
+      '<span class="tube">' + [25, 50, 75].map(p => '<span class="tick" style="left:' + (2 + p * 1.94) + 'px"></span>').join('') +
+      '<i class="keep" style="width:' + (v - bite) * px + 'px"></i>' +
+      '<i class="bite" style="left:' + (2 + (v - bite) * px) + 'px;width:' + bite * px + 'px"></i>' +
+      (over ? '<i class="over" style="left:' + (2 + v * px) + 'px;width:' + over * px + 'px"></i>' : '') +
+      '</span><span class="val"><span>' + v + '<small>/' + cp + '</small></span><span class="after' + (over ? ' short' : '') + '">' + after + '</span></span></div>';
+  }).join('');
+  const inc = income();
+  $('income').innerHTML = inc.map((v, i) => '<span class="c-' + RES[i] + '">+' + v + '</span>').join('') + 'each turn';
+  $('stats').innerHTML = '<span>Bodies<b>' + S.bodies + '/' + bodyCap() + '</b></span><span>Custodes<b>' + S.custodes + '/' + custosCap() + '</b></span>' +
+    '<span' + (S.pressure >= 10 ? ' class="warn"' : '') + '>Pressure<b>' + S.pressure + '</b></span>' +
+    (S.timer > 0 ? '<span class="warn">Defense in<b>' + S.timer + '</b></span>' : '');
+  const rest = S.organs.filter(o => o.type !== 'COR_NEFANDUM');
+  const levels = rest.reduce((a, o) => a + o.level, 0), defenses = rest.filter(o => DEFENSE.includes(o.type)).length;
+  const heart = heartLevel() - 1;
+  const items = [
+    ['Heart ' + heart + '/3', heart >= 3], ['Organ levels ' + levels + '/10', levels >= 10],
+    ['A growth organ', rest.some(o => GROWTH.includes(o.type))], ['Defenses ' + defenses + '/5', defenses >= 5],
+    ['Body storage', rest.some(o => o.type === 'BODY_STORAGE')], ['Survived ' + S.survived + '/2', S.survived >= 2],
+    ['A Caldarium', rest.some(o => o.type === 'CAULDRON')],
+  ];
+  $('basilica').innerHTML = items.map(([t, m]) => '<li' + (m ? ' class="met"' : '') + '>' + t + '</li>').join('');
+}
+
+// the hovered (else picked) tool: name, what it does, cost
+function cardHTML(t) {
+  const o = TOOLS[t];
+  return '<div class="latin">' + o.name + (t === 'SPINE_TURRET' ? ' <span class="facing">facing ' + DIRS[S.dir] + ', Q/E to turn</span>' : '') + '</div>' +
+    '<div class="does">' + o.does + '</div><div class="meta">' + costHTML(o.cost, true) +
+    '<span>' + (CUSTOS[t] ? (hasCauldron() ? 'Custodes ' + S.custodes + '/' + custosCap() : 'Needs a working Caldarium') :
+      (o.w > 1 ? '2 by 2 tiles' : '1 tile') + (o.max > 1 ? ', grows to level ' + o.max : '')) + '</span></div>';
+}
+// the tooltip: while a tile is hovered or focused, or after a key pick until the cursor moves; the chip hides under it
+const tipTool = () => S.menu ? null : S.hoverTool || S.keyTip;
+function renderDetail() {
+  const d = $('detail'), t = tipTool();
+  d.style.display = t ? '' : 'none';
+  $('chip').style.visibility = t ? 'hidden' : '';
+  if (!t) return;
+  d.innerHTML = cardHTML(t);
+  const tray = $('tray'), sr = $('stage').getBoundingClientRect(), tr = tray.getBoundingClientRect();
+  d.style.bottom = (sr.bottom - tr.top + 12) + 'px';
+  // above its tile, arrow on the tile's centre
+  const tile = tray.querySelector('.tile[data-t="' + t + '"]').getBoundingClientRect();
+  const cx = tile.left - sr.left + tile.width / 2, w = d.offsetWidth;
+  const x = Math.max(tr.left - sr.left, Math.min(cx - w / 2, tr.right - sr.left - w));
+  d.style.left = x + 'px';
+  d.style.setProperty('--ax', (cx - x) + 'px');
+}
+
+function renderMap() {
+  const v = verdict(), t = S.sel, menu = S.menu;
+  const here = menu || (v.act === 'tend' ? v.here : null);
+  $('g-here').innerHTML = here ? footprint(here.type, here.x, here.y).map(([x, y]) => cell(x, y)).filter(Boolean)
+    .map(c => poly(c, 'fill="#fd97ff" fill-opacity=".12" stroke="#fd97ff" stroke-width="2"')).join('') : '';
+  const ghost = !menu && v.act !== 'tend';
+  $('g-ghost').innerHTML = !ghost ? '' : footprint(t, S.cx, S.cy).map(([x, y]) => cell(x, y)).filter(Boolean).map(c => !v.why
+    ? poly(c, 'fill="#e9dfc8" fill-opacity=".16" stroke="#e9dfc8" stroke-width="2"')
+    : poly(c, 'fill="url(#hatch-no)" stroke="#f26a6a" stroke-width="2"')).join('') +
+    (t === 'SPINE_TURRET' ? (() => { const [x, y] = centre(cell(S.cx, S.cy)); return '<path d="M0 -22 L12 -4 H5 V12 H-5 V-4 H-12 Z" fill="' +
+      (!v.why ? '#e9dfc8' : '#f26a6a') + '" fill-opacity=".85" transform="translate(' + x + ' ' + y + ') rotate(' + S.dir * 90 + ')"/>'; })() : '');
+  // placed this session: organs at native size on their footprint's front edge, custodes standing on their tile
+  const stand = (x, y) => { const [cx, cy] = centre(cell(x, y)); return 'left:' + (cx - 32) + 'px;top:' + (cy - 50) + 'px'; };
+  $('placed').innerHTML = S.organs.filter(o => o.fresh).map(o => {
+    const fp = footprint(o.type, o.x, o.y).map(([x, y]) => cell(x, y));
+    const front = fp.filter(c => c.y === o.y + ORG[o.type].h - 1);
+    const fx = front.reduce((a, c) => a + c.q[2][0] + c.q[3][0], 0) / (front.length * 2), fy = front[0].q[2][1];
+    const w = ORG[o.type].w * 64, h = ORG[o.type].h * 64;
+    return '<span class="sprite" style="' + atlasStyle(iconOf(o.type, o.dir), ORG[o.type].w, ORG[o.type].h, 64) + ';left:' + (fx - w / 2) + 'px;top:' + (fy - h - 6) + 'px"></span>';
+  }).join('') + S.built.map(b => '<span class="sprite ' + b.kind + '" style="' + stand(b.x, b.y) + '"></span>').join('') +
+    (ghost && CUSTOS[t] && !v.why ? '<span class="sprite ' + t.toLowerCase() + '" style="' + stand(S.cx, S.cy) + ';opacity:.5"></span>' : '');
+  $('g-cursor').innerHTML = poly(cell(S.cx, S.cy), 'fill="none" stroke="#fd97ff" stroke-width="2.5" stroke-dasharray="10 6"');
+  renderChip(v);
+  renderFloat();
+}
+
+// one line under the footprint: what a click here does, or why it can't
+function renderChip(v) {
+  const chip = $('chip');
+  chip.style.display = S.menu ? 'none' : '';
+  if (S.menu) return;
+  const t = S.sel;
+  if (v.act === 'tend') {
+    const o = v.here, ho = ORG[o.type];
+    chip.className = 'panel forma';
+    chip.innerHTML = ho.name + '<span class="hp' + (o.hp / o.max < .5 ? ' low' : '') + '"><i style="width:' + 100 * o.hp / o.max + '%"></i></span>' +
+      o.hp + '/' + o.max + '<span class="sub">Click to tend</span>';
+  }
+  else {
+    chip.className = 'panel forma' + (v.why ? ' no' : '');
+    chip.innerHTML = v.why || 'Click to ' + (v.act === 'craft' ? 'craft ' : 'build ') + TOOLS[t].name;
+  }
+  const b = v.act === 'tend' ? fpBox(v.here.type, v.here.x, v.here.y) : fpBox(CUSTOS[t] ? 'RIBWALL' : t, S.cx, S.cy);
+  const w = chip.offsetWidth, h = chip.offsetHeight, trayTop = VH - 26 - $('tray').offsetHeight - 8;
+  let y = b.maxY + 8;
+  if (y + h > trayTop) y = b.minY - h - 8;
+  chip.style.left = Math.max(12, Math.min((b.minX + b.maxX) / 2 - w / 2, VW - w - 12)) + 'px';
+  chip.style.top = Math.max(64, y) + 'px';
+}
+
+// the tend menu beside its organ
+function renderFloat() {
+  const f = $('tend-float'), show = !!S.menu;
+  f.style.display = show ? '' : 'none';
+  if (!show) return;
+  f.innerHTML = tendHTML(S.menu);
+  const b = fpBox(S.menu.type, S.menu.x, S.menu.y), w = f.offsetWidth, h = f.offsetHeight;
+  let x = b.maxX + 14;
+  if (x + w > VW - 20) x = b.minX - 14 - w;
+  f.style.left = x + 'px';
+  f.style.top = Math.max(64, Math.min(b.minY, VH - h - 20)) + 'px';
+}
+
+function renderKeys() {
+  $('keys').innerHTML = S.menu
+    ? '<span><kbd>1</kbd>&ndash;<kbd>' + tendOpts(S.menu).length + '</kbd>choose</span><span><kbd>Esc</kbd>back</span><span><kbd>&larr;&uarr;&rarr;&darr;</kbd>move away</span>'
+    : '<span><kbd>&larr;&uarr;&rarr;&darr;</kbd>move</span><span><kbd>1</kbd>&ndash;<kbd>0</kbd>organ</span><span><kbd>-</kbd><kbd>=</kbd>custos</span>' +
+      '<span><kbd>Enter</kbd>or click: build, craft or tend</span><span><kbd>Q</kbd><kbd>E</kbd>turn turret</span><span><kbd>F</kbd>exit</span>';
+}
+
+function renderLog() {
+  $('log').innerHTML = S.lines.map(([n, t]) => '<div><b>' + n + '</b>' + t + '</div>').join('');
+}
+
+function render() {
+  $('stage').classList.toggle('closed', !S.open);
+  renderTray();
+  renderLedger();
+  renderKeys();
+  renderLog();
+  if (S.open) {
+    renderMap();
+    renderDetail();
+  }
+  else ['g-here', 'g-ghost', 'g-cursor'].forEach(id => $(id).innerHTML = '');
+}
+
+// --- input ---
+function moveTo(x, y) {
+  if (!cursorOK(x, y) || (x === S.cx && y === S.cy)) return false;
+  S.keyTip = null;
+  S.cx = x;
+  S.cy = y;
+  render();
+  return true;
+}
+function cellAt(px, py) {
+  for (const c of SNAP.cells) {
+    const q = c.q;
+    let inside = false;
+    for (let i = 0, j = 3; i < 4; j = i++)
+      if ((q[i][1] > py) !== (q[j][1] > py) && px < (q[j][0] - q[i][0]) * (py - q[i][1]) / (q[j][1] - q[i][1]) + q[i][0]) inside = !inside;
+    if (inside) return c;
+  }
+  return null;
+}
+function pick(t) {
+  closeMenu();
+  S.sel = t;
+  render();
+}
+const stagePt = e => { const r = $('stage').getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+const onUI = e => e.target.closest('.panel, #switch, #log');
+$('stage').addEventListener('mousemove', e => {
+  if (!S.open || onUI(e)) return;
+  const c = cellAt(...stagePt(e));
+  $('stage').style.cursor = c && cursorOK(c.x, c.y) ? 'crosshair' : 'not-allowed';
+  // an open tend menu holds the cursor, so the mouse can travel to it
+  if (c && !S.menu) moveTo(c.x, c.y);
+});
+$('stage').addEventListener('click', e => {
+  const opt = e.target.closest('[data-opt]');
+  if (opt) {
+    if (opt.dataset.opt === 'back') {
+      closeMenu();
+      return render();
+    }
+    return runOpt(+opt.dataset.opt);
+  }
+  const tile = e.target.closest('.tile');
+  if (tile) {
+    pick(tile.dataset.t);
+    document.querySelector('.tile[data-t="' + S.sel + '"]').focus({ preventScroll: true });
+    return;
+  }
+  if (!S.open || onUI(e)) return;
+  const c = cellAt(...stagePt(e));
+  if (!c || !cursorOK(c.x, c.y)) return;
+  // with a menu open, a click elsewhere only closes it and moves the cursor there
+  if (S.menu) {
+    const same = organAt(c.x, c.y) === S.menu;
+    closeMenu();
+    if (!same) moveTo(c.x, c.y);
+    return render();
+  }
+  moveTo(c.x, c.y);
+  act();
+});
+// hovering a tool or a menu row previews its cost in the reservoirs; hovering a tool also shows its card
+$('stage').addEventListener('mouseover', e => {
+  const t = e.target.closest('.tile'), o = e.target.closest('.opt[data-opt]');
+  const tool = t ? t.dataset.t : null;
+  const peek = o && S.menu && o.dataset.opt !== 'back' ? (tendOpts(S.menu)[+o.dataset.opt].cost || null) : null;
+  if (tool === S.hoverTool && peek === S.peek) return;
+  S.hoverTool = tool;
+  S.peek = peek;
+  renderLedger();
+  if (S.open) renderDetail();
+});
+$('stage').addEventListener('focusin', e => {
+  const o = e.target.closest('.opt[data-opt]');
+  if (!o || !S.menu || o.dataset.opt === 'back') return;
+  S.peek = tendOpts(S.menu)[+o.dataset.opt].cost || null;
+  renderLedger();
+});
+$('compare').addEventListener('click', () => {
+  const on = $('stage').classList.toggle('compare');
+  $('compare').textContent = on ? 'Back to the new Forma' : 'Show current Forma';
+});
+const STEP = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], Numpad8: [0, -1], Numpad2: [0, 1], Numpad4: [-1, 0],
+  Numpad6: [1, 0], Numpad7: [-1, -1], Numpad9: [1, -1], Numpad1: [-1, 1], Numpad3: [1, 1] };
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  if (e.key === 'f' || e.key === 'F') {
+    closeMenu();
+    S.open = !S.open;
+    return render();
+  }
+  if (!S.open) return;
+  if (STEP[e.code]) {
+    e.preventDefault();
+    const [dx, dy] = STEP[e.code];
+    if (S.menu) closeMenu();
+    if (!moveTo(S.cx + dx, S.cy + dy)) render();
+    return;
+  }
+  // tend menu: digits run its rows, Escape backs out
+  if (S.menu) {
+    if (e.key === 'Escape') {
+      closeMenu();
+      render();
+    }
+    else if (/^Digit[1-9]$/.test(e.code)) runOpt(+e.code.slice(5) - 1);
+    return;
+  }
+  const tool = Object.keys(TOOLS).find(t => TOOLS[t].key && (CUSTOS[t] ? e.code === TOOLS[t].code || e.key === TOOLS[t].key : e.key === TOOLS[t].key && /^Digit/.test(e.code)));
+  if (tool) {
+    pick(tool);
+    S.keyTip = tool;
+    return render();
+  }
+  if (e.key === 'Enter' && !(e.target.closest && e.target.closest('button'))) {
+    e.preventDefault();
+    return act();
+  }
+  const k = e.key.toLowerCase();
+  if (k === 'q' || k === 'e') {
+    S.dir = (S.dir + (k === 'e' ? 1 : 3)) % 4;
+    render();
+  }
+});
+
+S.lines = [[108, 'You shape Turris Spinarum. <span style="color:#9fb8c4">[x4]</span>'], [108, 'You shape Tardans.'], [110, 'Game loaded from slot 9.']];
+document.fonts.ready.then(() => {
+  render();
+  // replay keys from the hash for review shots: #ArrowRight,7,Enter
+  const CODE = { '-': 'Minus', '=': 'Equal' };
+  for (const k of decodeURIComponent(location.hash.slice(1)).split(',').filter(Boolean))
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: CODE[k] || (/^\d$/.test(k) ? 'Digit' + k : k.length === 1 ? 'Key' + k.toUpperCase() : k) }));
+});
+</script>
+</body>
+</html>
