@@ -92,6 +92,13 @@ class Actors {
   var convo:ChatConvo;                                   // chat-mode "talking" bubbles over the two conversers
   var damageNumbers:Array<DamageNumber> = [];            // floating damage numbers, waiting or rising
   var damageCount = 0;                                   // running id for damage number bubble keys
+  // scratch: the forma footprint's screen box
+  var _fbox:ui.hud.FormaHud.FormaBox = {
+    minX: 0,
+    maxX: 0,
+    minY: 0,
+    maxY: 0,
+  };
   var _ov = new Vector3();                               // scratch projection vector (off-screen test)
   var _up = new Vector3();                               // scratch: world dir that reads as "up" on screen
   var _side = new Vector3();                             // scratch: world dir that reads as "right" on screen
@@ -373,7 +380,10 @@ class Actors {
           st != _PlayerState.PLR_STATE_ATTACHED)
         badges.drawPlayerXray();
       if (uiOn)
-        badges.drawFormaCursor();
+        {
+          badges.drawFormaCursor();
+          placeForma();
+        }
       // seed-derived street debris + persisted decals (ground blood + wall bullet holes), then the
       // barrel flame body/embers + fake cast shadows (barrels + lamps drawn after the decals so they
       // darken them), then the fire loop + transient FX (blood, death ghosts, gun shots)
@@ -468,6 +478,38 @@ class Actors {
   inline function headPoint(a:Actor, out:Vector3):Void
     {
       out.set(a.x, WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5, a.z);
+    }
+
+// hang forma's chip and tend menu from the screen box of the footprint they describe: project the corners of
+// its tiles on their floor, like the bubbles do, every frame so a camera move keeps them glued
+  function placeForma():Void
+    {
+      var forma = game.ui.hud.forma;
+      var cells = forma.anchorCells();
+      if (cells == null)
+        return;
+      var b = _fbox;
+      b.minX = b.minY = 1e9;
+      b.maxX = b.maxY = -1e9;
+      var seen = false;
+      for (c in cells)
+        for (corner in 0...4)
+          {
+            var w = CityConfig.cellToWorld(c.x + (corner & 1) - 0.5, c.y + (corner >> 1) - 0.5);
+            _ov.set(w.x, WorldCtx.floorY(c.x, c.y), w.z);
+            _ov.project(camera);
+            // behind the camera: no usable box
+            if (_ov.z > 1)
+              continue;
+            seen = true;
+            var sx = (_ov.x * 0.5 + 0.5) * Viewport.w;
+            var sy = (-_ov.y * 0.5 + 0.5) * Viewport.h;
+            b.minX = Math.min(b.minX, sx);
+            b.maxX = Math.max(b.maxX, sx);
+            b.minY = Math.min(b.minY, sy);
+            b.maxY = Math.max(b.maxY, sy);
+          }
+      forma.place(seen ? b : null);
     }
 
 // queue this AI's live bark as a chat bubble above its head. the text/font/variant are set by

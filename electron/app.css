@@ -10514,6 +10514,132 @@ input[type="radio"]:focus {
   font-size: calc(13px / 1.45);
   color: var(--dried);
 }
+/* verdict chip: one line under the footprint */
+#hud-fm-chip {
+  left: 0;
+  top: 0;
+  padding: 5px 11px 6px;
+  font-size: calc(15px / 1.45);
+  line-height: 18.75px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+#hud-fm-chip.no {
+  color: var(--alert);
+}
+#hud-fm-chip .sub {
+  color: var(--dried);
+  font-size: calc(13px / 1.45);
+  line-height: 16.25px;
+  margin-left: 8px;
+}
+#hud-forma .fm-hp {
+  display: inline-block;
+  width: 46px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  margin: 0 6px 2px 8px;
+  overflow: hidden;
+  vertical-align: middle;
+}
+#hud-forma .fm-hp i {
+  display: block;
+  height: 100%;
+  background: var(--flesh);
+}
+#hud-forma .fm-hp.low i {
+  background: var(--alert);
+}
+
+/* tend menu beside the organ under the cursor */
+#hud-fm-tend {
+  left: 0;
+  top: 0;
+  padding: 12px;
+  z-index: 6;
+}
+#hud-forma .fm-tendbox {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 2px 4px;
+}
+#hud-forma .fm-who {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  width: 250px;
+}
+#hud-forma .fm-latin {
+  font: calc(15px / 0.9)/16.5px 'Cruiser2015', sans-serif;
+  letter-spacing: 0.1em;
+}
+#hud-forma .fm-lv {
+  font-size: calc(13px / 1.45);
+  line-height: 16.25px;
+  color: var(--dried);
+  margin: 3px 0 5px;
+}
+#hud-forma .fm-who .fm-hp {
+  display: block;
+  width: 120px;
+  margin: 0;
+}
+#hud-forma .fm-hpn {
+  font-size: calc(12px / 1.45);
+  line-height: 15px;
+  color: var(--dried);
+  margin-top: 3px;
+}
+#hud-forma .fm-opts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#hud-forma .fm-opt {
+  position: relative;
+  width: 300px;
+  padding: 7px 10px 7px 36px;
+  background: var(--wash);
+  border: 1px solid transparent;
+  border-radius: 3px;
+  text-align: left;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+#hud-forma .fm-opt:hover,
+#hud-forma .fm-opt:focus-visible {
+  border-color: var(--cult);
+  background: rgba(253, 151, 255, 0.06);
+  outline: none;
+}
+#hud-forma .fm-lb {
+  font-size: calc(15px / 1.45);
+  line-height: 16.5px;
+}
+#hud-forma .fm-why {
+  font-size: calc(12px / 1.45);
+  line-height: 15px;
+  color: var(--dried);
+}
+#hud-forma .fm-opt.off .fm-lb {
+  color: var(--dried);
+}
+#hud-forma .fm-opt.back {
+  justify-content: flex-start;
+  color: var(--dried);
+}
+#hud-forma .fm-opt .fm-key {
+  top: 50%;
+  margin-top: -8px;
+  left: 8px;
+}
 @media (prefers-reduced-motion: reduce) {
   #hud-forma .fm-bite {
     animation: none;

@@ -1,6 +1,6 @@
 # Forma: its own build UI (worker brief)
 
-**Status: Phase 3 is next.** Phases done: 1, 2. (The controller updates this line at each phase boundary.)
+**Status: Phase 4 is next.** Phases done: 1, 2, 3. (The controller updates this line at each phase boundary.)
 
 **Controller:** session `build-forma-ui-plan` (`ListAgents`, `SendMessage`). You are the worker: read
 `docs/worker-loop.md` § Worker first. The controller drives the live game; **you never use CDP** (no
@@ -124,7 +124,7 @@ Files:
 - `src/cult/base/CultBase.hx`
 - `electron/app.css`
 - `src/test/Bot.hx`: around line 1024 the bot picks `baseExit`, else `escape`; it must exit Forma with the new F key
-- the speech bubble projection, read-only reference: `src/render/Actors.hx` ~499-512
+- `src/render/Actors.hx`: one call next to `badges.drawFormaCursor()` places the chip and menu per frame, using its existing projection (~499-512); no View.hx change, no rAF loop of your own
 
 **Keys.** In `UI.hx`, while `HUD_BASE_BUILDING`, a `hud.forma.onKey(...)`-style hook sees the key first and returns
 true when it used it.

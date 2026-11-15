@@ -6,14 +6,17 @@ import js.Browser.window;
 import js.html.DivElement;
 import js.html.Element;
 import js.html.EventTarget;
+import js.html.KeyboardEvent;
 import js.html.MouseEvent;
 
 import const.CultBaseConst;
 import cult.base.CultBase;
+import cult.base.CultBaseOrgan;
 import cult.base.CultBaseResources;
 import game.*;
 import l10n.Loc;
 import mods.AssetPath;
+import render.Viewport;
 
 // one tray tool: an organ to grow or a custos to craft
 typedef FormaTool = {
@@ -46,6 +49,46 @@ typedef FormaGroup = {
   var tools: Array<FormaTool>;
 }
 
+// what a click or Enter on the cursor tile does with the picked tool
+enum FormaAct
+{
+  // an organ stands here: open its tend menu
+  TEND;
+  // grow the picked organ
+  BUILD;
+  // craft the picked custos
+  CRAFT;
+}
+
+// the verdict for the cursor tile
+typedef FormaVerdict = {
+  var act: FormaAct;
+  // why BUILD or CRAFT is refused, '' when it can go ahead
+  var reason: String;
+  // the organ to tend, null unless act is TEND
+  var organ: CultBaseOrgan;
+}
+
+// one row of the tend menu
+typedef FormaTendRow = {
+  // translated label
+  var label: String;
+  // cost shown on the row, null when the row shows its reason instead
+  var cost: CultBaseResources;
+  // why the row cannot run, '' when it can
+  var reason: String;
+  // runs the row's action, which logs its own refusal
+  var run: Void -> Void;
+}
+
+// screen box in css px of the footprint the chip and the tend menu hang from
+typedef FormaBox = {
+  var minX: Float;
+  var maxX: Float;
+  var minY: Float;
+  var maxY: Float;
+}
+
 class FormaHud
 {
   static inline var TINT = 'rgba(253, 151, 255, .38)'; // colour layer over the tray sprites
@@ -58,6 +101,8 @@ class FormaHud
   var tray: DivElement;
   var keys: DivElement;
   var detail: DivElement;
+  var chip: DivElement;
+  var tend: DivElement;
   var tools: Map<String, FormaTool>;
   var groups: Array<FormaGroup>;
   var cache: Map<String, String>; // last html set into each block
@@ -70,6 +115,17 @@ class FormaHud
   public var peek: CultBaseResources;
   // rows of the open tend menu, 0 when closed
   public var tendRows: Int;
+  // organ whose tend menu is open, null when closed
+  var tendOrgan: CultBaseOrgan;
+  // rows of the last tend render
+  var tendList: Array<FormaTendRow>;
+  // tiles the chip or the tend menu hangs from, null when none
+  var anchor: Array<{ x: Int, y: Int }>;
+  var chipW: Float; // measured chip size, -1 after its html changed
+  var chipH: Float;
+  var tendW: Float; // measured tend menu size, -1 after its html changed
+  var tendH: Float;
+  var trayTop: Float; // top of the tray in css px, -1 after its html changed
 
   public function new(g: Game, h: HUD)
     {
@@ -82,6 +138,12 @@ class FormaHud
       selectedCustos = null;
       peek = null;
       tendRows = 0;
+      tendOrgan = null;
+      tendList = [];
+      anchor = null;
+      chipW = -1;
+      tendW = -1;
+      trayTop = -1;
       initTools();
 
       root = document.createDivElement();
@@ -92,6 +154,10 @@ class FormaHud
       keys = block('fm-keys', '');
       detail = block('fm-detail', 'fm-panel fm-card');
       detail.style.display = 'none';
+      chip = block('fm-chip', 'fm-panel');
+      chip.style.left = '-9999px';
+      tend = block('fm-tend', 'fm-panel');
+      tend.style.display = 'none';
       h.container.appendChild(root);
 
       // tray: hover or focus shows a tool's tooltip and previews its cost, click picks it
@@ -108,6 +174,22 @@ class FormaHud
             return;
           game.scene.sounds.play('click-action');
           pick(id, false);
+        };
+
+      // tend menu: hover or focus a row previews its cost, click runs it, the mouse never reaches the map
+      tend.onmouseover = function (e: MouseEvent) peekRow(rowOf(e.target));
+      tend.onmouseleave = function (e: MouseEvent) peekRow(-1);
+      tend.addEventListener('focusin', function (e) peekRow(rowOf(e.target)));
+      tend.onmousedown = function (e: MouseEvent) e.preventDefault();
+      tend.onclick = function (e: MouseEvent)
+        {
+          var i = rowOf(e.target);
+          if (i == -2)
+            return;
+          game.scene.sounds.play('click-action');
+          if (i == -1)
+            closeTend();
+          else runRow(i);
         };
     }
 
@@ -250,9 +332,21 @@ class FormaHud
         {
           hoverTool = null;
           keyTip = null;
+          tendOrgan = null;
+          tendRows = 0;
+          peek = null;
+          anchor = null;
           return;
         }
       var base = game.cults[0].base;
+      // the organ under the menu is gone (broken down, replaced by a gate): close it
+      if (tendOrgan != null &&
+          base.organs.indexOf(tendOrgan) < 0)
+        {
+          tendOrgan = null;
+          tendRows = 0;
+          peek = null;
+        }
       // a key pick's tooltip goes when the cursor moves
       var cursor = base.cursorX + base.cursorY * 10000;
       if (cursor != lastCursor)
@@ -261,16 +355,19 @@ class FormaHud
       renderLedger(base);
       renderTray(base);
       renderKeys();
+      renderChip(base);
+      renderTend(base);
       renderDetail(base);
     }
 
-// sets the html of one block when it changed
-  function put(el: DivElement, html: String)
+// sets the html of one block when it changed, returns true when it did
+  function put(el: DivElement, html: String): Bool
     {
       if (cache.get(el.id) == html)
-        return;
+        return false;
       cache.set(el.id, html);
       el.innerHTML = html;
+      return true;
     }
 
 // returns a resource cost as a list of flesh, blood and bone
@@ -315,34 +412,32 @@ class FormaHud
 // returns the tray sprite of a tool: a colour layer blended over the art, clipped to the art's own alpha
   function tint(tool: FormaTool): String
     {
-      var src: String;
-      var pos: String;
-      var size: String;
-      var w: Int;
-      var h: Int;
       if (tool.organ == null)
         {
           // custodes sheet, 64 px cells
-          src = AssetPath.resolve('img/creatures64.png');
-          pos = '0 -' + (tool.row * 64) + 'px';
-          size = '512px 192px';
-          w = 64;
-          h = 64;
+          return tintHTML(AssetPath.resolve('img/creatures64.png'), '0 -' + (tool.row * 64) + 'px', '512px 192px', 64, 64);
         }
-      else
-        {
-          // a 2x2 organ shows at half size so every tile is 64 px, never scaled above native
-          var cell = (tool.w > 1 ? 32 : 64);
-          var atlas = (tool.organ == SPINE_TURRET ?
-            CultBaseConst.spineTurretBlock(game.cults[0].base.selectedDirection) :
-            CultBaseConst.block(tool.organ));
-          src = AssetPath.resolve(CultBaseConst.IMAGE_PATH);
-          pos = '-' + (atlas.col * cell) + 'px -' + (atlas.row * cell) + 'px';
-          // the atlas is square
-          size = (CultBaseConst.IMAGE_COLS * cell) + 'px ' + (CultBaseConst.IMAGE_COLS * cell) + 'px';
-          w = tool.w * cell;
-          h = tool.h * cell;
-        }
+      return tintOrgan(tool.organ, game.cults[0].base.selectedDirection);
+    }
+
+// returns the tinted sprite of an organ, a 2x2 one at half size so every tile is 64 px, never scaled above native
+  function tintOrgan(type: _CultBaseOrganType, direction: Int): String
+    {
+      var info = CultBaseConst.info(type);
+      var cell = (info.w > 1 ? 32 : 64);
+      var atlas = (type == SPINE_TURRET ?
+        CultBaseConst.spineTurretBlock(direction) :
+        CultBaseConst.block(type));
+      // the atlas is square
+      return tintHTML(AssetPath.resolve(CultBaseConst.IMAGE_PATH),
+        '-' + (atlas.col * cell) + 'px -' + (atlas.row * cell) + 'px',
+        (CultBaseConst.IMAGE_COLS * cell) + 'px ' + (CultBaseConst.IMAGE_COLS * cell) + 'px',
+        info.w * cell, info.h * cell);
+    }
+
+// returns one tinted sprite span: the sheet url, the cell offset, the sheet size and the box
+  function tintHTML(src: String, pos: String, size: String, w: Int, h: Int): String
+    {
       return '<span class="fm-tint" style="--src:url(\'' + src + '\');--pos:' + pos + ';--size:' + size +
         ';width:' + w + 'px;height:' + h + 'px"></span>';
     }
@@ -439,7 +534,8 @@ class FormaHud
             }
           buf.add('</div></div>');
         }
-      put(tray, buf.toString());
+      if (put(tray, buf.toString()))
+        trayTop = -1;
       tray.classList.toggle('inert', tendRows > 0);
     }
 
@@ -470,6 +566,8 @@ class FormaHud
   function renderDetail(base: CultBase)
     {
       var id = (tendRows > 0 ? null : (hoverTool != null ? hoverTool : keyTip));
+      // the chip hides under the tooltip
+      chip.style.visibility = (id == null ? '' : 'hidden');
       if (id == null)
         {
           detail.style.display = 'none';
@@ -500,5 +598,371 @@ class FormaHud
       detail.style.bottom = (window.innerHeight - trayRect.top + 12) + 'px';
       detail.style.left = x + 'px';
       detail.style.setProperty('--ax', (centre - x) + 'px');
+    }
+
+// returns the key code of a tray key
+  function codeOf(key: String): String
+    {
+      return (key == '-' ? 'Minus' : (key == '=' ? 'Equal' : 'Digit' + key));
+    }
+
+// handles a key press in forma before the rest of the game sees it, returns true when it was used
+  public function onKey(e: KeyboardEvent): Bool
+    {
+      if (e.ctrlKey ||
+          e.altKey ||
+          e.metaKey)
+        return false;
+      var base = game.cults[0].base;
+      var code = e.code;
+      if (code == 'KeyF')
+        {
+          exit();
+          return true;
+        }
+      if (code == 'Escape')
+        {
+          // not used without a tend menu, so the main menu opens as before
+          if (tendOrgan == null)
+            return false;
+          closeTend();
+          return true;
+        }
+      // a turret turn, the quick menu is not available here
+      if (code == 'KeyQ' ||
+          code == 'KeyE')
+        {
+          if (tendOrgan == null)
+            {
+              base.selectedDirection = (base.selectedDirection + (code == 'KeyE' ? 1 : 3)) % 4;
+              game.updateHUD();
+            }
+          return true;
+        }
+      // the tend menu takes the digits for its rows
+      if (tendOrgan != null)
+        {
+          if (code.indexOf('Digit') == 0)
+            {
+              var i = Std.parseInt(code.substr(5)) - 1;
+              if (i >= 0 &&
+                  i < tendRows)
+                runRow(i);
+              return true;
+            }
+          // Enter runs the focused row, or closes the menu on Back
+          if (code == 'Enter' ||
+              code == 'NumpadEnter')
+            {
+              var focus = document.activeElement;
+              var row = (focus == null ? -2 : rowOf(focus));
+              if (row == -1)
+                closeTend();
+              else if (row >= 0)
+                runRow(row);
+              return true;
+            }
+          return false;
+        }
+      for (g in groups)
+        for (t in g.tools)
+          if (code == codeOf(t.key))
+            {
+              pick(t.id, true);
+              return true;
+            }
+      if (code == 'Enter' ||
+          code == 'NumpadEnter')
+        {
+          // a focused tray tile picks itself, else Enter acts on the cursor tile
+          var focus = document.activeElement;
+          var id = (focus == null ? null : toolOf(focus));
+          if (id != null)
+            pick(id, false);
+          else act();
+          return true;
+        }
+      return false;
+    }
+
+// leaves forma
+  function exit()
+    {
+      closeTend();
+      hud.state = HUD_DEFAULT;
+      game.scene.view3d.setTactical(false);
+      game.updateHUD();
+      game.scene.mouse.update(true);
+    }
+
+// returns what a click or Enter on the cursor tile does with the picked tool
+  public function verdict(): FormaVerdict
+    {
+      var base = game.cults[0].base;
+      var organ = base.getOrganAt(base.cursorX, base.cursorY);
+      // a Porta grows over a Murus, any other organ here is tended
+      if (organ != null &&
+          !(selectedCustos == null &&
+          base.selectedType == RIBGATE &&
+          organ.type == RIBWALL))
+        return { act: TEND, reason: '', organ: organ };
+      if (selectedCustos != null)
+        return { act: CRAFT, reason: base.validateCustos(base.cursorX, base.cursorY), organ: null };
+      var reason = base.validateBuild(base.selectedType, base.cursorX, base.cursorY);
+      if (reason == '' &&
+          !base.resources.canAfford(CultBaseConst.buildCost(base.selectedType)))
+        reason = T('Not enough base resources.');
+      return { act: BUILD, reason: reason, organ: null };
+    }
+
+// does what a click or Enter on the cursor tile does: tend an organ, craft the picked custos or grow the picked organ
+  public function act()
+    {
+      var base = game.cults[0].base;
+      var v = verdict();
+      switch (v.act)
+        {
+          case TEND:
+            openTend(v.organ);
+          case CRAFT:
+            base.createCustos(selectedCustos);
+          case BUILD:
+            base.buildSelected();
+        }
+    }
+
+// a click on a map tile: with the tend menu open it only closes it and moves the cursor, else it moves the cursor and acts
+  public function onMapClick(x: Int, y: Int)
+    {
+      var base = game.cults[0].base;
+      if (!base.canUseCursorTile(x, y))
+        return;
+      if (tendOrgan != null)
+        {
+          var same = (base.getOrganAt(x, y) == tendOrgan);
+          closeTend();
+          if (!same)
+            base.setCursor(x, y);
+          return;
+        }
+      base.setCursor(x, y);
+      act();
+    }
+
+// returns the rows of an organ's tend menu
+  function tendOptions(organ: CultBaseOrgan): Array<FormaTendRow>
+    {
+      var base = game.cults[0].base;
+      var info = CultBaseConst.info(organ.type);
+      var maxed = (organ.level >= info.maxLevel);
+      var whole = (organ.health >= organ.maxHealth() &&
+        !organ.broken);
+      var ret: Array<FormaTendRow> = [
+        {
+          label: (maxed ? T('Upgrade') : T('Upgrade to level {n}', { n: organ.level + 1 })),
+          cost: (maxed ? null : organ.upgradeCost()),
+          reason: base.validateUpgrade(organ),
+          run: function () base.upgradeAtCursor(),
+        },
+        {
+          label: T('Repair'),
+          cost: (whole ? null : organ.repairCost()),
+          reason: base.validateRepair(organ),
+          run: function () base.repairAtCursor(),
+        },
+      ];
+      if (organ.type == RIBWALL)
+        {
+          var reason = base.validateBuild(RIBGATE, organ.x, organ.y);
+          var cost = CultBaseConst.buildCost(RIBGATE);
+          if (reason == '' &&
+              !base.resources.canAfford(cost))
+            reason = T('Not enough base resources.');
+          ret.push({
+            label: T('Grow {organ}', { organ: Loc.tr(CultBaseConst.name(RIBGATE)) }),
+            cost: cost,
+            reason: reason,
+            // builds the gate without changing the picked tool
+            run: function ()
+              {
+                var keep = base.selectedType;
+                base.selectedType = RIBGATE;
+                var ok = base.buildSelected();
+                base.selectedType = keep;
+                if (ok)
+                  closeTend();
+              },
+          });
+        }
+      return ret;
+    }
+
+// opens the tend menu of an organ and focuses its first usable row
+  function openTend(organ: CultBaseOrgan)
+    {
+      tendOrgan = organ;
+      tendRows = tendOptions(organ).length;
+      keyTip = null;
+      peek = null;
+      game.updateHUD();
+      var first = tend.querySelector('.fm-opt:not(.off)');
+      if (first != null)
+        (cast first : js.html.HtmlElement).focus();
+    }
+
+// closes the tend menu and hands the keyboard back to the game
+  public function closeTend()
+    {
+      if (tendOrgan == null)
+        return;
+      tendOrgan = null;
+      tendRows = 0;
+      peek = null;
+      game.ui.focus();
+      game.updateHUD();
+    }
+
+// runs one tend row, which logs its own refusal
+  function runRow(i: Int)
+    {
+      tendList[i].run();
+      peek = null;
+      game.updateHUD();
+    }
+
+// returns the tend row under an event target: its index, -1 for Back, -2 for none
+  function rowOf(target: EventTarget): Int
+    {
+      var el = (cast target : Element).closest('[data-opt]');
+      if (el == null)
+        return -2;
+      var v = el.getAttribute('data-opt');
+      return (v == 'back' ? -1 : Std.parseInt(v));
+    }
+
+// previews the cost of a tend row in the reservoirs, none for Back or no row
+  function peekRow(i: Int)
+    {
+      var c = (i >= 0 && i < tendList.length ? tendList[i].cost : null);
+      if (c == peek)
+        return;
+      peek = c;
+      renderLedger(game.cults[0].base);
+    }
+
+// returns the tiles a verdict is about: the tended organ's, the picked organ's or the cursor tile
+  function footprintOf(v: FormaVerdict, base: CultBase): Array<{ x: Int, y: Int }>
+    {
+      if (v.act == TEND)
+        return CultBaseConst.footprint(v.organ.type, v.organ.x, v.organ.y);
+      if (v.act == CRAFT)
+        return [ { x: base.cursorX, y: base.cursorY } ];
+      return CultBaseConst.footprint(base.selectedType, base.cursorX, base.cursorY);
+    }
+
+// returns an organ's health bar and numbers for the chip
+  function hpHTML(organ: CultBaseOrgan): String
+    {
+      return '<span class="fm-hp' + (organ.health * 2 < organ.maxHealth() ? ' low' : '') + '"><i style="width:' +
+        (100 * organ.health / organ.maxHealth()) + '%"></i></span>' + organ.health + '/' + organ.maxHealth();
+    }
+
+// renders the one-line chip under the footprint: what a click here does, or why it cannot
+  function renderChip(base: CultBase)
+    {
+      var v = verdict();
+      anchor = footprintOf(v, base);
+      chip.style.display = (tendOrgan != null ? 'none' : '');
+      var html: String;
+      if (v.act == TEND)
+        html = Loc.tr(CultBaseConst.name(v.organ.type)) + hpHTML(v.organ) +
+          '<span class="sub">' + T('Click to tend') + '</span>';
+      else if (v.reason != '')
+        html = v.reason;
+      else if (v.act == CRAFT)
+        html = T('Click to craft {name}', { name: Loc.tr(tools.get(selectedCustos).name) });
+      else html = T('Click to build {name}', { name: Loc.tr(CultBaseConst.name(base.selectedType)) });
+      chip.classList.toggle('no', v.act != TEND && v.reason != '');
+      if (put(chip, html))
+        chipW = -1;
+    }
+
+// renders the tend menu: the organ, its rows and Back
+  function renderTend(base: CultBase)
+    {
+      if (tendOrgan == null)
+        {
+          tend.style.display = 'none';
+          return;
+        }
+      var o = tendOrgan;
+      var info = CultBaseConst.info(o.type);
+      anchor = CultBaseConst.footprint(o.type, o.x, o.y);
+      tendList = tendOptions(o);
+      tendRows = tendList.length;
+      var buf = new StringBuf();
+      buf.add('<div class="fm-tendbox"><div class="fm-who">' + tintOrgan(o.type, o.direction) + '<div><div class="fm-latin">' +
+        Loc.tr(info.name) + '</div><div class="fm-lv">' +
+        (o.broken ? T('Level {n} of {max}, broken', { n: o.level, max: info.maxLevel }) :
+        T('Level {n} of {max}', { n: o.level, max: info.maxLevel })) +
+        '</div><div class="fm-hp' + (o.health * 2 < o.maxHealth() ? ' low' : '') + '"><i style="width:' +
+        (100 * o.health / o.maxHealth()) + '%"></i></div><div class="fm-hpn">' +
+        T('{hp}/{max} health', { hp: o.health, max: o.maxHealth() }) + '</div></div></div><div class="fm-opts">');
+      for (i => row in tendList)
+        buf.add('<button type="button" class="fm-opt' + (row.cost == null ? ' off' : '') + '" data-opt="' + i +
+          '"><span class="fm-key">' + (i + 1) + '</span><span class="fm-lb">' + row.label + '</span>' +
+          (row.cost != null ? costHTML(row.cost, base) : '<span class="fm-why">' + row.reason + '</span>') + '</button>');
+      buf.add('<button type="button" class="fm-opt back" data-opt="back"><span class="fm-key">Esc</span>' + T('Back') +
+        '</button></div></div>');
+      if (put(tend, buf.toString()))
+        tendW = -1;
+      tend.style.display = '';
+    }
+
+// returns the tiles the chip or the tend menu hangs from, null when there are none
+  public function anchorCells(): Array<{ x: Int, y: Int }>
+    {
+      return anchor;
+    }
+
+// places the chip under the footprint's screen box, or the tend menu beside it; the box is null when it is off screen
+  public function place(b: FormaBox)
+    {
+      if (b == null)
+        {
+          chip.style.left = '-9999px';
+          tend.style.left = '-9999px';
+          return;
+        }
+      var vw = Viewport.w;
+      var vh = Viewport.h;
+      if (tendOrgan != null)
+        {
+          if (tendW < 0)
+            {
+              tendW = tend.offsetWidth;
+              tendH = tend.offsetHeight;
+            }
+          // beside the organ, flipped near the right edge
+          var x = b.maxX + 14;
+          if (x + tendW > vw - 20)
+            x = b.minX - 14 - tendW;
+          tend.style.left = x + 'px';
+          tend.style.top = Math.max(64, Math.min(b.minY, vh - tendH - 20)) + 'px';
+          return;
+        }
+      if (chipW < 0)
+        {
+          chipW = chip.offsetWidth;
+          chipH = chip.offsetHeight;
+        }
+      if (trayTop < 0)
+        trayTop = tray.getBoundingClientRect().top - 8;
+      // under the footprint, above it when it would hit the tray
+      var y = b.maxY + 8;
+      if (y + chipH > trayTop)
+        y = b.minY - chipH - 8;
+      chip.style.left = Math.max(12, Math.min((b.minX + b.maxX) / 2 - chipW / 2, vw - chipW - 12)) + 'px';
+      chip.style.top = Math.max(64, y) + 'px';
     }
 }

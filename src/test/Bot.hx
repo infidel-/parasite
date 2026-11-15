@@ -209,7 +209,16 @@ class Bot
 
       // a hud sub-mode (chat, command menu, pickup, targeting, base building) is left with Escape
       if (ui.hud.state != HUD_DEFAULT)
-        list.push(escape());
+        {
+          list.push(escape());
+          // forma is left with its own key, Escape opens the main menu over it
+          if (ui.hud.state == HUD_BASE_BUILDING)
+            {
+              var exit = press('key f exit forma', 'KeyF', 'f', false);
+              exit.id = 'baseExit';
+              list.push(exit);
+            }
+        }
 
       // the windows the navbar would show (the same gates as UI.onKey and NavbarHud)
       else
@@ -368,6 +377,7 @@ class Bot
         keyCode: (code == 'Escape' ? 27 : 0),
         altKey: false,
         ctrlKey: false,
+        metaKey: false,
         shiftKey: false,
         preventDefault: function() {},
       };

@@ -256,6 +256,16 @@ class UI
           return;
         }
 
+      // forma keys come first: organ picks, Enter, turret turn, F to leave
+      if (_state == UISTATE_DEFAULT &&
+          hud.state == HUD_BASE_BUILDING &&
+          hud.forma.onKey(e))
+        {
+          // the browser's own Enter must not click the row a tend menu just focused
+          e.preventDefault();
+          return;
+        }
+
       // handle quick menu double key press
       if (awaitingNextKey)
         {
@@ -728,6 +738,8 @@ class UI
       // move cursor in base building mode
       if (hud.state == HUD_BASE_BUILDING)
         {
+          // a tend menu closes when the cursor moves away
+          hud.forma.closeTend();
           if (game.location == LOCATION_AREA &&
               game.cults.length > 0 &&
               game.cults[0].base != null)

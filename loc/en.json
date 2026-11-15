@@ -15204,7 +15204,8 @@
    "s": "Not enough base resources.",
    "kind": "T",
    "loc": [
-    "src/cult/base/CultBase.hx"
+    "src/cult/base/CultBase.hx",
+    "src/ui/hud/FormaHud.hx"
    ],
    "vars": [],
    "where": "CultBase.buildSelected",
@@ -21480,7 +21481,8 @@
     "src/ui/Cult.hx",
     "src/ui/CultBazaar.hx",
     "src/ui/CultTrade.hx",
-    "src/ui/hud/ActionsHud.hx"
+    "src/ui/hud/ActionsHud.hx",
+    "src/ui/hud/FormaHud.hx"
    ],
    "vars": [],
    "where": "RecruitFollower.getRecruitActions",
@@ -34618,6 +34620,117 @@
    ],
    "vars": [],
    "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "Upgrade",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.tendOptions"
+  },
+  {
+   "s": "Upgrade to level {n}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "FormaHud.tendOptions"
+  },
+  {
+   "s": "Repair",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.tendOptions",
+   "field": "label"
+  },
+  {
+   "s": "Grow {organ}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "organ"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label"
+  },
+  {
+   "s": "Click to tend",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderChip"
+  },
+  {
+   "s": "Click to craft {name}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "FormaHud.renderChip",
+   "field": "html"
+  },
+  {
+   "s": "Click to build {name}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "name"
+   ],
+   "where": "FormaHud.renderChip",
+   "field": "html"
+  },
+  {
+   "s": "Level {n} of {max}, broken",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n",
+    "max"
+   ],
+   "where": "FormaHud.renderTend"
+  },
+  {
+   "s": "Level {n} of {max}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n",
+    "max"
+   ],
+   "where": "FormaHud.renderTend"
+  },
+  {
+   "s": "{hp}/{max} health",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "hp",
+    "max"
+   ],
+   "where": "FormaHud.renderTend"
   },
   {
    "s": "Goals",

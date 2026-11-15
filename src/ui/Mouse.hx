@@ -224,7 +224,7 @@ class Mouse
           game.cults.length == 0 ||
           game.cults[0].base == null)
         return;
-      game.cults[0].base.setCursor(pos.x, pos.y);
+      game.ui.hud.forma.onMapClick(pos.x, pos.y);
     }
 
 
@@ -368,10 +368,23 @@ class Mouse
           return;
         }
 
-      // forma mode, no path
+      // forma mode, no path; hovering a tile moves the cursor, unless the tend menu holds it
       if (game.ui.hud.state == HUD_BASE_BUILDING)
         {
           game.scene.area.clearPath();
+          // a forced update (entering forma) keeps the cursor where it is
+          if (force)
+            oldPos = pos;
+          else if (pos.x != oldPos.x ||
+              pos.y != oldPos.y)
+            {
+              oldPos = pos;
+              if (game.ui.hud.forma.tendRows == 0 &&
+                  game.cults.length > 0 &&
+                  game.cults[0].base != null &&
+                  game.cults[0].base.canUseCursorTile(pos.x, pos.y))
+                game.cults[0].base.setCursor(pos.x, pos.y);
+            }
           if (pos.x < 0 ||
               pos.y < 0 ||
               pos.x >= game.area.width ||
