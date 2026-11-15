@@ -18,6 +18,21 @@ typedef CultBaseIncome = {
   var bodies: Int;
 }
 
+// the Corpus Basilica requirements and how far the base meets them
+typedef CultBaseReadiness = {
+  // heart upgrades
+  var heart: Int;
+  // sum of the levels of every organ but the heart
+  var organLevels: Int;
+  var hasGrowth: Bool;
+  var hasStorage: Bool;
+  var hasCauldron: Bool;
+  // defense organs
+  var defenses: Int;
+  // defenses survived
+  var survived: Int;
+}
+
 class CultBase extends _SaveObject
 {
   static var _ignoredFields = [ 'game' ];
@@ -429,59 +444,6 @@ class CultBase extends _SaveObject
           }
     }
 
-// populates HUD actions while base-building mode is active
-  public function updateActionList()
-    {
-      game.ui.hud.addKeyAction(action('baseExit', T('Exit Forma'), function() {
-        game.ui.hud.state = HUD_DEFAULT;
-        game.scene.view3d.setTactical(false);
-        game.updateHUD();
-        game.scene.mouse.update(true);
-        return true;
-      }, 'f'));
-      var buildableTypes = CultBaseConst.buildableTypes.copy();
-      buildableTypes.sort(function(a, b) {
-        return Reflect.compare(CultBaseConst.name(a), CultBaseConst.name(b));
-      });
-      for (type in buildableTypes)
-        {
-          var organType = type;
-          var label = Loc.tr(CultBaseConst.name(type));
-          if (selectedType == type)
-            label = Const.col('white', label);
-          game.ui.hud.addAction(action('baseSelect.' + type, label,
-            function() {
-              selectedType = organType;
-              game.updateHUD();
-              return true;
-            }));
-        }
-      if (selectedType == SPINE_TURRET)
-        game.ui.hud.addAction(action('baseDirection', directionName(),
-          function() {
-            selectedDirection = (selectedDirection + 1) % 4;
-            game.updateHUD();
-            return true;
-          }));
-      game.ui.hud.addAction(action('baseBuild', T('Build {organ}', { organ: Loc.tr(CultBaseConst.name(selectedType)) }),
-        function() return buildSelected()));
-      var organ = getOrganAt(cursorX, cursorY);
-      if (organ != null)
-        {
-          game.ui.hud.addAction(action('baseUpgrade', T('Upgrade {organ}', { organ: Loc.tr(CultBaseConst.name(organ.type)) }),
-            function() return upgradeAtCursor()));
-          game.ui.hud.addAction(action('baseRepair', T('Repair {organ}', { organ: Loc.tr(CultBaseConst.name(organ.type)) }),
-            function() return repairAtCursor()));
-        }
-      if (hasWorkingOrgan(CAULDRON))
-        {
-          game.ui.hud.addAction(action('baseFirmus', T('Craft Firmus'),
-            function() return createCustos('firmus')));
-          game.ui.hud.addAction(action('baseMordax', T('Craft Mordax'),
-            function() return createCustos('mordax')));
-        }
-    }
-
 // moves the forma cursor by one bounded step
   public function moveCursor(dx: Int, dy: Int): Bool
     {
@@ -519,41 +481,6 @@ class CultBase extends _SaveObject
         return false;
       var tileset = game.scene.images.getTileset(area.getTilesetTypeID());
       return tileset != null && !tileset.isWallTile(area.getCellType(x, y));
-    }
-
-// returns HUD info block for base state
-  public function hudInfo(): String
-    {
-      var organ = getOrganAt(cursorX, cursorY);
-      var selected = T('{organ} cost {cost}', {
-        organ: Loc.tr(CultBaseConst.name(selectedType)),
-        cost: CultBaseConst.buildCost(selectedType).text(),
-      });
-      var ret = T('Base: F {flesh}, Bld {blood}, Bone {bone} / {cap}', {
-          flesh: resources.flesh,
-          blood: resources.blood,
-          bone: resources.bone,
-          cap: stockpileCap(),
-        }) +
-        '<br/>' + T('Bodies: {bodies}/{capacity}, Pressure: {pressure}', {
-          bodies: storedBodies,
-          capacity: bodyCapacity(),
-          pressure: attackPressure,
-        }) +
-        '<br/>' + T('Cursor: ({x},{y}) {selected}', {
-          x: cursorX,
-          y: cursorY,
-          selected: selected,
-        });
-      if (organ != null)
-        ret += '<br/>' + T('Here: {organ} L{level} HP {health}/{maxHealth}', {
-            organ: Loc.tr(CultBaseConst.name(organ.type)),
-            level: organ.level,
-            health: organ.health,
-            maxHealth: organ.maxHealth(),
-          }) +
-          (organ.broken ? ' ' + T('[broken]') : '');
-      return ret + '<br/>' + readinessText();
     }
 
 // returns base status text for cult window
@@ -638,40 +565,50 @@ class CultBase extends _SaveObject
       return '';
     }
 
-// returns Corpus Basilica readiness summary
-  public function readinessText(): String
+// returns Corpus Basilica readiness numbers
+  public function readiness(): CultBaseReadiness
     {
-      var organLevels = 0;
-      var hasGrowth = false;
-      var hasStorage = false;
-      var hasCauldron = false;
-      var defenses = 0;
+      var ret = {
+        heart: getHeartUpgradeCount(),
+        organLevels: 0,
+        hasGrowth: false,
+        hasStorage: false,
+        hasCauldron: false,
+        defenses: 0,
+        survived: defensesSurvived,
+      };
       for (organ in organs)
         {
           if (organ.type == COR_NEFANDUM)
             continue;
-          organLevels += organ.level;
+          ret.organLevels += organ.level;
           var info = CultBaseConst.info(organ.type);
           if (info.isGrowth)
-            hasGrowth = true;
+            ret.hasGrowth = true;
           if (organ.type == BODY_STORAGE)
-            hasStorage = true;
+            ret.hasStorage = true;
           if (organ.type == CAULDRON)
-            hasCauldron = true;
+            ret.hasCauldron = true;
           if (info.isDefense)
-            defenses++;
+            ret.defenses++;
         }
-      var heart = getHeartUpgradeCount();
+      return ret;
+    }
+
+// returns Corpus Basilica readiness summary
+  public function readinessText(): String
+    {
+      var r = readiness();
       return Const.smallgray(T('Corpus Basilica: Heart {heart}/3, organs {organs}/10<br/>' +
         'Growth {growth}, storage {storage}, cauldron {cauldron}<br/>' +
         'Defenses {defenses}/5, survived {survived}/2', {
-        heart: heart,
-        organs: organLevels,
-        growth: yes(hasGrowth),
-        storage: yes(hasStorage),
-        cauldron: yes(hasCauldron),
-        defenses: defenses,
-        survived: defensesSurvived,
+        heart: r.heart,
+        organs: r.organLevels,
+        growth: yes(r.hasGrowth),
+        storage: yes(r.hasStorage),
+        cauldron: yes(r.hasCauldron),
+        defenses: r.defenses,
+        survived: r.survived,
       }));
     }
 
@@ -795,7 +732,7 @@ class CultBase extends _SaveObject
     }
 
 // returns total body storage capacity
-  function bodyCapacity(): Int
+  public function bodyCapacity(): Int
     {
       var cap = 0;
       for (organ in organs)
@@ -868,41 +805,6 @@ class CultBase extends _SaveObject
         if (data.id == id)
           return data;
       return null;
-    }
-
-// adds one virtual HUD action
-  function action(id: String, name: String, f: Void -> Bool,
-    ?key: String): _PlayerAction
-    {
-      return {
-        id: id,
-        type: ACTION_AREA,
-        name: name,
-        energy: 0,
-        isVirtual: true,
-        key: key,
-        f: function() {
-          f();
-        }
-      };
-    }
-
-// returns selected turret direction label
-  function directionName(): String
-    {
-      switch (selectedDirection)
-        {
-          case 0:
-            return T('Direction: north');
-          case 1:
-            return T('Direction: east');
-          case 2:
-            return T('Direction: south');
-          case 3:
-            return T('Direction: west');
-          default:
-            return T('Direction: north');
-        }
     }
 
 // checks blocking objects at a footprint tile

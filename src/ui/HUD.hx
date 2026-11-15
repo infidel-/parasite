@@ -39,6 +39,8 @@ class HUD
   var navbar: NavbarHud;
   var console: ConsoleHud;
   var actions: ActionsHud;
+  // cult base build mode panels (ledger, organ tray, key legend, tooltip)
+  public var forma: FormaHud;
   // screen-edge off-screen AI indicators (driven per-frame by render.Actors)
   public var offscreen: OffscreenHud;
   // speech bubbles over speakers in the 3D view (driven per-frame by render.Actors)
@@ -142,6 +144,7 @@ class HUD
 
       navbar = new NavbarHud(game, this);
       actions = new ActionsHud(game, this);
+      forma = new FormaHud(game, this);
       offscreen = new OffscreenHud(game, this);
       bubbles = new ChatBubbles(game, this);
     }
@@ -402,6 +405,7 @@ public function onMouseLeave()
       // NOTE: before info because info uses its height
       actions.updateActions();
       infoHud.update();
+      forma.update();
       log.update();
       minimap.update();
       navbar.update();

@@ -866,7 +866,8 @@
    "s": "custos",
    "kind": "N",
    "loc": [
-    "src/ai/CustosAIData.hx"
+    "src/ai/CustosAIData.hx",
+    "src/ui/hud/FormaHud.hx"
    ],
    "vars": [],
    "where": "CustosAIData.init",
@@ -15320,144 +15321,6 @@
    "field": "log"
   },
   {
-   "s": "Exit Forma",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.updateActionList"
-  },
-  {
-   "s": "Build {organ}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "organ"
-   ],
-   "where": "CultBase.updateActionList"
-  },
-  {
-   "s": "Upgrade {organ}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "organ"
-   ],
-   "where": "CultBase.updateActionList"
-  },
-  {
-   "s": "Repair {organ}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx",
-    "src/objects/base/BaseOrganObject.hx"
-   ],
-   "vars": [
-    "organ"
-   ],
-   "where": "CultBase.updateActionList"
-  },
-  {
-   "s": "Craft Firmus",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.updateActionList"
-  },
-  {
-   "s": "Craft Mordax",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.updateActionList"
-  },
-  {
-   "s": "{organ} cost {cost}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "organ",
-    "cost"
-   ],
-   "where": "CultBase.hudInfo",
-   "field": "selected"
-  },
-  {
-   "s": "Base: F {flesh}, Bld {blood}, Bone {bone} / {cap}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "flesh",
-    "blood",
-    "bone",
-    "cap"
-   ],
-   "where": "CultBase.hudInfo",
-   "field": "ret"
-  },
-  {
-   "s": "Bodies: {bodies}/{capacity}, Pressure: {pressure}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "bodies",
-    "capacity",
-    "pressure"
-   ],
-   "where": "CultBase.hudInfo"
-  },
-  {
-   "s": "Cursor: ({x},{y}) {selected}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "x",
-    "y",
-    "selected"
-   ],
-   "where": "CultBase.hudInfo"
-  },
-  {
-   "s": "Here: {organ} L{level} HP {health}/{maxHealth}",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "organ",
-    "level",
-    "health",
-    "maxHealth"
-   ],
-   "where": "CultBase.hudInfo"
-  },
-  {
-   "s": "[broken]",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.hudInfo"
-  },
-  {
    "s": "Level 2 base at area {area}",
    "kind": "T",
    "loc": [
@@ -15603,42 +15466,6 @@
    ],
    "where": "CultBase.runRivalTurn",
    "field": "logsg"
-  },
-  {
-   "s": "Direction: north",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.directionName"
-  },
-  {
-   "s": "Direction: east",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.directionName"
-  },
-  {
-   "s": "Direction: south",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.directionName"
-  },
-  {
-   "s": "Direction: west",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.directionName"
   },
   {
    "s": "yes",
@@ -25901,7 +25728,8 @@
    "s": "Forma",
    "kind": "T",
    "loc": [
-    "src/game/PlayerArea.hx"
+    "src/game/PlayerArea.hx",
+    "src/ui/hud/FormaHud.hx"
    ],
    "vars": [],
    "where": "PlayerArea.updateActionList",
@@ -29542,6 +29370,18 @@
     "src/objects/base/BaseOrganObject.hx"
    ],
    "vars": [],
+   "where": "BaseOrganObject.updateActionList",
+   "field": "name"
+  },
+  {
+   "s": "Repair {organ}",
+   "kind": "T",
+   "loc": [
+    "src/objects/base/BaseOrganObject.hx"
+   ],
+   "vars": [
+    "organ"
+   ],
    "where": "BaseOrganObject.updateActionList",
    "field": "name"
   },
@@ -34351,6 +34191,433 @@
    ],
    "vars": [],
    "where": "ActionsHud.updateActions"
+  },
+  {
+   "s": "Defense",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.initTools",
+   "field": "title"
+  },
+  {
+   "s": "Growth",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.initTools",
+   "field": "title"
+  },
+  {
+   "s": "Upkeep",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.initTools",
+   "field": "title"
+  },
+  {
+   "s": "Custodes {n}/{cap}",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n",
+    "cap"
+   ],
+   "where": "FormaHud.initTools",
+   "field": "title"
+  },
+  {
+   "s": "Firmus",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.initTools"
+  },
+  {
+   "s": "A sturdy guard that holds its tile. Strength 8, constitution 12.",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.initTools"
+  },
+  {
+   "s": "Mordax",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.initTools"
+  },
+  {
+   "s": "A savage guard that holds its tile. Strength 10, constitution 7.",
+   "kind": "N",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.initTools"
+  },
+  {
+   "s": "short {n}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Flesh",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Blood",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Bone",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "each turn",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger",
+   "field": "add"
+  },
+  {
+   "s": "Bodies",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Custodes",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Pressure",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Defense in",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Corpus Basilica",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger"
+  },
+  {
+   "s": "Heart {n}/3",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li"
+  },
+  {
+   "s": "Organ levels {n}/10",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li"
+  },
+  {
+   "s": "A growth organ",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger",
+   "field": "li"
+  },
+  {
+   "s": "Defenses {n}/5",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li"
+  },
+  {
+   "s": "Body storage",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger",
+   "field": "li"
+  },
+  {
+   "s": "Survived {n}/2",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "n"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li"
+  },
+  {
+   "s": "A Caldarium",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderLedger",
+   "field": "li"
+  },
+  {
+   "s": "not available",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderTray"
+  },
+  {
+   "s": "choose",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "back",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "move away",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "move",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "organ",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "or click: build, craft or tend",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "turn turret",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "exit",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
+   "s": "2 by 2 tiles, grows to level {max}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "max"
+   ],
+   "where": "FormaHud.sizeText"
+  },
+  {
+   "s": "2 by 2 tiles",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.sizeText"
+  },
+  {
+   "s": "1 tile, grows to level {max}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "max"
+   ],
+   "where": "FormaHud.sizeText"
+  },
+  {
+   "s": "1 tile",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.sizeText"
+  },
+  {
+   "s": "north",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "east",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "south",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "west",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "facing {dir}, Q/E to turn",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "dir"
+   ],
+   "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "Needs a working Caldarium",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderDetail"
   },
   {
    "s": "Goals",

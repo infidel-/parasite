@@ -35,12 +35,9 @@ class ActionsHud
       listKeyActions = new List();
       if (hud.state == HUD_TARGETING)
         return;
+      // forma has its own panels
       if (hud.state == HUD_BASE_BUILDING)
-        {
-          if (game.cults[0].base != null)
-            game.cults[0].base.updateActionList();
-          return;
-        }
+        return;
       if (game.state == GAMESTATE_FINISH)
         {
           addKeyAction({
@@ -176,6 +173,9 @@ class ActionsHud
       listButtons = [];
       while (actions.firstChild != null)
         actions.removeChild(actions.lastChild);
+      actions.style.display = (hud.state == HUD_BASE_BUILDING ? 'none' : '');
+      if (hud.state == HUD_BASE_BUILDING)
+        return;
 
       // show targeting help instead of actions
       if (hud.state == HUD_TARGETING)

@@ -32,7 +32,6 @@ class InfoHud
   var compactBtn: DivElement;
   var teamMark: DivElement; // group mark glued to the panel top (state class drives colour + pulse)
   var teamTip: DivElement; // group info shown while the mark is hovered
-  var baseInfo: DivElement; // base-building takeover region
   var playerSection: DivElement;
   var hostSection: DivElement;
   var hostEyebrow: DivElement;
@@ -83,11 +82,6 @@ class InfoHud
       teamTip = document.createDivElement();
       teamTip.className = 'hud-team-tip';
       info.appendChild(teamTip);
-
-      // base-building takes over the whole panel
-      baseInfo = document.createDivElement();
-      baseInfo.style.display = 'none';
-      info.appendChild(baseInfo);
 
       // parasite section (purple-tinted bars)
       playerSection = document.createDivElement();
@@ -483,20 +477,10 @@ class InfoHud
 // update player info in place
   public function update()
     {
-      // base-building: hand the whole panel to base hud info
-      if (hud.state == HUD_BASE_BUILDING &&
-          game.cults[0].base != null)
-        {
-          setRegion(baseInfo, 'base', game.cults[0].base.hudInfo());
-          setShown(playerSection, false);
-          setShown(hostSection, false);
-          setShown(extraWrap, false);
-          setShown(compactBtn, false);
-          setShown(teamMark, false);
-          info.className = 'hud-panel hud-text';
-          return;
-        }
-      setShown(baseInfo, false);
+      // forma shows its own ledger in this spot
+      info.style.display = (hud.state == HUD_BASE_BUILDING ? 'none' : '');
+      if (hud.state == HUD_BASE_BUILDING)
+        return;
       setShown(playerSection, true);
       setShown(compactBtn, true);
 

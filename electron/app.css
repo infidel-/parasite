@@ -10071,3 +10071,455 @@ input[type="radio"]:focus {
     animation: none;
   }
 }
+
+/* ---- forma: cult base build mode (ui.hud.FormaHud) ---- */
+#hud-forma {
+  --plum: linear-gradient(180deg, rgba(22, 10, 25, 0.9), rgba(13, 7, 16, 0.9));
+  --plum-solid: #140a17;
+  --edge: rgba(253, 151, 255, 0.2);
+  --rule: rgba(253, 151, 255, 0.12);
+  --wash: rgba(253, 151, 255, 0.06);
+  --bone: #e9dfc8;
+  --flesh: #e2857a;
+  --blood: #b3172f;
+  --blood-text: #e0566a;
+  --cult: #fd97ff;
+  --dried: #a88bb0;
+  --alert: #f26a6a;
+  --tc: rgba(253, 151, 255, 0.38);
+  --bm: soft-light;
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  font: calc(17px / 1.45)/21.25px 'Virtucorp', sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--bone);
+}
+#hud-forma,
+#hud-forma * {
+  box-sizing: border-box;
+}
+/* the game sizes Virtucorp up by size-adjust, so a unitless line-height would track the shrunken box:
+   every line-height here is the preview's font px times its ratio */
+#hud-forma .fm-name,
+#hud-forma .fm-stats,
+#hud-forma .fm-basilica h2 {
+  line-height: 18.75px;
+}
+#hud-forma .fm-income,
+#hud-fm-detail .does {
+  line-height: 17.5px;
+}
+#hud-forma .fm-group h3,
+#hud-fm-keys,
+#hud-fm-detail .meta {
+  line-height: 16.25px;
+}
+#hud-forma .fm-stats b {
+  line-height: 22.5px;
+}
+#hud-forma .fm-val small,
+#hud-forma .fm-after {
+  line-height: 13px;
+}
+#hud-forma button {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  cursor: var(--hud-cursor);
+}
+#hud-forma .fm-panel {
+  position: absolute;
+  pointer-events: auto;
+  background: var(--plum);
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  backdrop-filter: blur(2px);
+}
+#hud-forma .fm-panel::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(253, 151, 255, 0.45), transparent);
+}
+
+/* sprites: a colour layer blended over the art, clipped to the art's own alpha */
+#hud-forma .fm-tint {
+  position: relative;
+  flex: none;
+  background: linear-gradient(var(--tc), var(--tc)) 0 0 / 100% 100%, var(--src) var(--pos) / var(--size) no-repeat;
+  background-blend-mode: var(--bm), normal;
+  -webkit-mask: var(--src) var(--pos) / var(--size) no-repeat;
+  mask: var(--src) var(--pos) / var(--size) no-repeat;
+}
+
+/* ledger */
+#hud-fm-ledger {
+  left: 26px;
+  bottom: 26px;
+  width: 372px;
+  padding: 14px 18px 16px;
+}
+#hud-fm-ledger h1 {
+  font: calc(22px / 0.9)/22px 'Cruiser2015', sans-serif;
+  letter-spacing: 0.14em;
+  margin: 0 0 14px;
+  color: var(--bone);
+}
+#hud-forma .fm-res {
+  display: grid;
+  grid-template-columns: 46px 194px 1fr;
+  align-items: center;
+  column-gap: 12px;
+  height: 40px;
+}
+#hud-forma .fm-name {
+  font-size: calc(15px / 1.45);
+  color: var(--dried);
+}
+#hud-forma .fm-val {
+  text-align: right;
+  font-size: calc(22px / 1.45);
+  line-height: 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+#hud-forma .fm-val small {
+  font-size: calc(13px / 1.45);
+  color: var(--dried);
+  margin-left: 2px;
+}
+#hud-forma .fm-after {
+  font-size: calc(13px / 1.45);
+  height: 13px;
+  margin-top: 2px;
+  color: var(--dried);
+}
+#hud-forma .fm-after.short {
+  color: var(--alert);
+}
+#hud-forma .fm-tube {
+  position: relative;
+  height: 14px;
+  border-radius: 7px;
+  background: rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 0 0 1px rgba(253, 151, 255, 0.14);
+}
+#hud-forma .fm-tube i {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  border-radius: 5px;
+  transition: width 0.35s ease, left 0.35s ease;
+}
+#hud-forma .fm-keep {
+  background: var(--c);
+}
+#hud-forma .fm-bite {
+  background: repeating-linear-gradient(-45deg, var(--c) 0 3px, transparent 3px 6px);
+  background-size: 8.5px 100%;
+  animation: fm-drift 3.2s linear infinite;
+  border-radius: 0 5px 5px 0;
+}
+#hud-forma .fm-over {
+  background: repeating-linear-gradient(-45deg, var(--alert) 0 3px, transparent 3px 6px);
+  background-size: 8.5px 100%;
+  box-shadow: 0 0 0 1px var(--alert);
+  border-radius: 0 5px 5px 0;
+}
+#hud-forma .fm-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(253, 151, 255, 0.16);
+}
+@keyframes fm-drift {
+  to {
+    background-position: 8.5px 0;
+  }
+}
+#hud-forma .fm-r-flesh {
+  --c: var(--flesh);
+}
+#hud-forma .fm-r-blood {
+  --c: var(--blood);
+}
+#hud-forma .fm-r-bone {
+  --c: var(--bone);
+}
+#hud-forma .fm-income {
+  margin: 4px 0 0 58px;
+  font-size: calc(14px / 1.45);
+  color: var(--dried);
+}
+#hud-forma .fm-income span {
+  margin-right: 10px;
+}
+#hud-forma .fm-stats {
+  display: flex;
+  gap: 18px;
+  margin: 14px 0 0;
+  font-size: calc(15px / 1.45);
+  color: var(--dried);
+}
+#hud-forma .fm-stats b {
+  font-weight: normal;
+  color: var(--bone);
+  font-size: calc(18px / 1.45);
+  margin-left: 4px;
+}
+#hud-forma .fm-stats .warn b {
+  color: var(--alert);
+}
+#hud-forma .fm-basilica {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--rule);
+}
+#hud-forma .fm-basilica h2 {
+  font-size: calc(15px / 1.45);
+  font-weight: normal;
+  margin: 0 0 6px;
+  color: var(--bone);
+}
+#hud-forma .fm-basilica ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: calc(14px / 1.45);
+  columns: 2;
+  column-gap: 16px;
+}
+#hud-forma .fm-basilica li {
+  color: var(--dried);
+  padding-left: 16px;
+  position: relative;
+  line-height: 21px;
+}
+#hud-forma .fm-basilica li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 7px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--dried);
+  border-radius: 50%;
+}
+#hud-forma .fm-basilica li.met {
+  color: var(--bone);
+}
+#hud-forma .fm-basilica li.met::before {
+  background: var(--bone);
+  border-color: var(--bone);
+}
+
+/* organ tray */
+#hud-fm-tray {
+  left: 416px;
+  bottom: 26px;
+  display: flex;
+  padding: 10px 12px 8px;
+  transition: opacity 0.15s;
+}
+#hud-fm-tray.inert {
+  pointer-events: none;
+}
+#hud-fm-tray.inert > * {
+  opacity: 0.3;
+}
+#hud-forma .fm-group {
+  display: flex;
+  flex-direction: column;
+  padding: 0 10px;
+}
+#hud-forma .fm-group + .fm-group {
+  border-left: 1px solid var(--rule);
+}
+#hud-forma .fm-group h3 {
+  font-size: calc(13px / 1.45);
+  font-weight: normal;
+  color: var(--dried);
+  margin: 0 0 2px 4px;
+}
+#hud-forma .fm-tiles {
+  display: flex;
+  gap: 2px;
+}
+#hud-forma .fm-tile {
+  position: relative;
+  width: 82px;
+  padding: 4px 2px 5px;
+  background: none;
+  border: 0;
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#hud-forma .fm-nm {
+  font-size: calc(13px / 1.45);
+  line-height: 13.65px;
+  text-align: center;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  color: rgba(233, 223, 200, 0.82);
+}
+#hud-forma .fm-key {
+  position: absolute;
+  left: 4px;
+  top: 3px;
+  font-size: calc(12px / 1.45);
+  min-width: 16px;
+  height: 16px;
+  line-height: 15px;
+  border-radius: 3px;
+  border: 1px solid rgba(253, 151, 255, 0.3);
+  color: var(--dried);
+  text-align: center;
+  padding: 0 2px;
+}
+#hud-forma .fm-tile:hover {
+  background: var(--wash);
+}
+#hud-forma .fm-tile[aria-pressed='true'] {
+  background: rgba(253, 151, 255, 0.08);
+  box-shadow: inset 0 0 0 1px var(--cult);
+}
+#hud-forma .fm-tile[aria-pressed='true'] .fm-nm {
+  color: var(--cult);
+}
+#hud-forma .fm-tile[aria-pressed='true'] .fm-key {
+  border-color: var(--cult);
+  color: var(--cult);
+}
+#hud-forma .fm-tile.poor .fm-tint {
+  opacity: 0.42;
+  filter: saturate(0.4);
+}
+#hud-forma .fm-tile.poor .fm-nm {
+  color: var(--dried);
+}
+#hud-forma .fm-tile:focus-visible {
+  outline: 2px dashed var(--cult);
+  outline-offset: 2px;
+}
+#hud-forma .fm-dir {
+  position: absolute;
+  right: 8px;
+  top: 40px;
+  width: 18px;
+  height: 18px;
+  color: var(--cult);
+}
+#hud-forma .fm-cost {
+  display: inline-flex;
+  gap: 7px;
+  font-size: calc(13px / 1.45);
+  line-height: 13px;
+}
+#hud-forma .fm-cost span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+#hud-forma .fm-cost svg {
+  width: 8px;
+  height: 9px;
+}
+#hud-forma .fm-cost .z {
+  opacity: 0.32;
+}
+#hud-forma .fm-cost .short {
+  color: var(--alert);
+  text-decoration: underline wavy var(--alert) 1px;
+  text-underline-offset: 3px;
+}
+#hud-forma .fm-c-flesh {
+  color: var(--flesh);
+}
+#hud-forma .fm-c-blood {
+  color: var(--blood-text);
+}
+#hud-forma .fm-c-bone {
+  color: var(--bone);
+}
+
+/* key legend under the tray */
+#hud-fm-keys {
+  position: absolute;
+  left: 430px;
+  bottom: 4px;
+  display: flex;
+  gap: 16px;
+  font-size: calc(13px / 1.45);
+  color: var(--dried);
+  white-space: nowrap;
+}
+#hud-forma kbd {
+  font: calc(12px / 1.45)/14px 'Virtucorp', sans-serif;
+  border: 1px solid rgba(253, 151, 255, 0.3);
+  border-radius: 3px;
+  padding: 0 4px;
+  color: var(--bone);
+  margin-right: 4px;
+}
+
+/* tooltip of the hovered or picked tool */
+#hud-fm-detail {
+  width: 330px;
+  padding: 11px 15px 12px;
+  pointer-events: none;
+}
+#hud-fm-detail::after {
+  content: '';
+  position: absolute;
+  left: var(--ax, 50%);
+  bottom: -7px;
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+  background: var(--plum-solid);
+  border: 1px solid var(--edge);
+  border-width: 0 1px 1px 0;
+  transform: rotate(45deg);
+}
+#hud-fm-detail .latin {
+  font: calc(15px / 0.9)/16.5px 'Cruiser2015', sans-serif;
+  letter-spacing: 0.1em;
+  color: var(--bone);
+}
+#hud-fm-detail .facing {
+  font: calc(13px / 1.45) 'Virtucorp', sans-serif;
+  letter-spacing: 0;
+  color: var(--dried);
+}
+#hud-fm-detail .does {
+  font-size: calc(14px / 1.45);
+  color: rgba(234, 235, 237, 0.8);
+  margin: 5px 0 8px;
+}
+#hud-fm-detail .meta {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  font-size: calc(13px / 1.45);
+  color: var(--dried);
+}
+@media (prefers-reduced-motion: reduce) {
+  #hud-forma .fm-bite {
+    animation: none;
+  }
+  #hud-forma .fm-tube i,
+  #hud-fm-tray {
+    transition: none;
+  }
+}
