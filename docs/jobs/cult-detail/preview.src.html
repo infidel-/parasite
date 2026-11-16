@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cult Base Detail</title>
+<style>
+:root {
+  --plum: rgba(22, 13, 23, .93);
+  --edge: #4a2b47;
+  --rule: #2c1a2b;
+  --bone: #e9dfc8;
+  --dim: #9c8c97;
+  --blood: #d23a4e;
+}
+html, body { margin: 0; background: #000; color: var(--bone); font: 12px/16px system-ui, sans-serif; }
+#stage { position: relative; width: 1906px; height: 799px; overflow: hidden; background: #000 0 0 / 1906px 799px no-repeat; }
+#gl { position: absolute; left: 0; top: 0; width: 1906px; height: 799px; }
+#organs img { position: absolute; transition: opacity .9s; pointer-events: none; }
+#ref { position: absolute; left: 0; top: 0; width: 1906px; height: 799px; display: none; }
+#panel { position: absolute; right: 14px; top: 14px; width: 246px; background: var(--plum); border: 1px solid var(--edge);
+  padding: 10px 12px 12px; box-sizing: border-box; }
+#panel h1 { margin: 0 0 8px; font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+#panel .row { display: grid; grid-template-columns: 82px 1fr 34px; align-items: center; gap: 6px; margin: 4px 0; }
+#panel .row span:last-child { text-align: right; color: var(--dim); font-variant-numeric: tabular-nums; }
+#panel input[type=range] { width: 100%; accent-color: var(--blood); }
+#panel .grow { display: grid; grid-template-columns: 28px 1fr; gap: 8px; align-items: center; margin-bottom: 4px; }
+#panel button { background: #2a1828; color: var(--bone); border: 1px solid var(--edge); height: 24px; cursor: pointer; font: inherit; }
+#panel button:focus-visible, #panel input:focus-visible { outline: 1px solid var(--bone); }
+#latest { color: var(--dim); min-height: 16px; margin: 2px 0 8px; }
+#panel fieldset { border: 0; border-top: 1px solid var(--rule); margin: 8px 0 0; padding: 8px 0 0; display: grid;
+  grid-template-columns: 1fr 1fr; gap: 3px 8px; }
+#panel label.t { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+#panel input[type=checkbox] { accent-color: var(--blood); margin: 0; }
+#panel .knobs { border-top: 1px solid var(--rule); margin-top: 8px; padding-top: 6px; }
+#panel .foot { display: flex; gap: 6px; margin-top: 8px; }
+#panel .foot button { flex: 1; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="gl" width="1906" height="799"></canvas>
+  <div id="organs"></div>
+  <img id="ref" alt="">
+  <div id="panel">
+    <h1>Detail pass</h1>
+    <div class="grow">
+      <button id="play" aria-label="Play growth">▶</button>
+      <input id="k" type="range" min="1" value="1" aria-label="Organs built">
+    </div>
+    <div id="latest"></div>
+    <fieldset>
+      <label class="t"><input type="checkbox" data-layer="rim" checked>Rims</label>
+      <label class="t"><input type="checkbox" data-layer="splotch" checked>Splotches</label>
+      <label class="t"><input type="checkbox" data-layer="branch" checked>Branches</label>
+      <label class="t"><input type="checkbox" data-layer="tube" checked>Vessels</label>
+      <label class="t"><input type="checkbox" id="pulse" checked>Pulse</label>
+      <label class="t"><input type="checkbox" id="showOrgans" checked>Organs</label>
+    </fieldset>
+    <div class="knobs" id="knobs"></div>
+    <div class="foot">
+      <button id="reseed">Reseed</button>
+      <button id="before" aria-pressed="false">Hold: before</button>
+    </div>
+  </div>
+</div>
+<script>
+const SNAP = {{SNAP}};
+const ASSETS = {{ASSETS}};
+</script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+
+const S = SNAP, A = ASSETS;
+const VW = S.view[0], VH = S.view[1], CELL = S.cell, OX = S.origin[0], OZ = S.origin[1], GW = S.w, GH = S.h;
+const WALL_H = 3.0; // SewerStyle.WALL_H
+
+// knobs: [key, label, min, max, step, value]
+const KNOBS = [
+  ['density', 'Density', 0.3, 4.0, 0.1, 2.5],
+  ['rimScale', 'Rim size', 1.2, 3.0, 0.05, 1.85],
+  ['thick', 'Thickness', 0.4, 1.8, 0.05, 1.25],
+  ['period', 'Beat (s)', 1.0, 6.0, 0.1, 4.0],
+  ['spacing', 'Pulse gap', 1.0, 8.0, 0.5, 4.0],
+  ['glow', 'Pulse glow', 0.0, 1.0, 0.02, 0.2],
+  ['swell', 'Pulse swell', 0.0, 0.25, 0.01, 0.04],
+  ['spec', 'Decal spec', 0.0, 4.0, 0.05, 1.5],
+  ['light', 'Light', 2.0, 24.0, 0.5, 12.0],
+  ['corGlow', 'Cor glow', 0.0, 2.0, 0.05, 0.35],
+];
+const K = {};
+const knobsEl = document.getElementById('knobs');
+for (const [key, label, min, max, step, val] of KNOBS) {
+  K[key] = val;
+  const row = document.createElement('div');
+  row.className = 'row';
+  row.innerHTML = `<span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${val}" aria-label="${label}"><span>${val}</span>`;
+  const inp = row.querySelector('input'), out = row.lastChild;
+  inp.oninput = () => {
+    K[key] = +inp.value;
+    out.textContent = inp.value;
+    if (['density', 'rimScale', 'thick'].includes(key))
+      rebuild();
+    else
+      syncUniforms();
+  };
+  knobsEl.appendChild(row);
+}
+
+// --- grid ---
+const ORGANS = S.organs.slice().sort((a, b) => a.id - b.id);
+const COR = ORGANS.find(o => o.type === 'COR_NEFANDUM');
+const ORDER = [COR].concat(ORGANS.filter(o => o !== COR));
+const owner = new Map(); // "c,r" -> organ
+for (const o of ORGANS)
+  for (let dy = 0; dy < o.h; dy++)
+    for (let dx = 0; dx < o.w; dx++)
+      owner.set((o.x + dx) + ',' + (o.y + dy), o);
+const inside = (c, r) => c >= 0 && r >= 0 && c < GW && r < GH;
+const walk = (c, r) => inside(c, r) && S.cells[r * GW + c] === 1;
+const isWall = (c, r) => !inside(c, r) || (!walk(c, r) && !owner.has(c + ',' + r));
+const isFloor = (c, r) => inside(c, r) && !isWall(c, r);
+const floorAt = (fc, fr) => isFloor(Math.round(fc), Math.round(fr));
+// fractional cell -> world (cell centres at integers)
+const W = (fc, fr, y = 0) => new THREE.Vector3(OX + fc * CELL, y, OZ + fr * CELL);
+const centre = o => [o.x + (o.w - 1) / 2, o.y + (o.h - 1) / 2];
+const NAMES = {
+  COR_NEFANDUM: 'Cor Nefandum', FLESH_BLOCK: 'Flesh block', RAT_NEST: 'Rat nest', CRUSHER: 'Crusher',
+  GARBAGE_HEAP: 'Garbage heap', BODY_STORAGE: 'Body storage', CAULDRON: 'Caldarium', RIBWALL: 'Murus',
+  RIBGATE: 'Porta', BLOOD_TRAP: 'Blood trap', SPINE_TURRET: 'Turris',
+};
+
+// --- seeded random ---
+const hash = (...n) => {
+  let h = 2166136261 >>> 0;
+  for (const v of n) {
+    h ^= (v * 2654435761) >>> 0;
+    h = Math.imul(h ^ (h >>> 15), 2246822519) >>> 0;
+  }
+  return h;
+};
+const rng = seed => () => {
+  seed = (seed + 0x6D2B79F5) >>> 0;
+  let t = seed;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+};
+let SEED = 7;
+
+// --- A* over floor cells; the two end organs' footprints are passable, other organs are not ---
+function astar(a, b) {
+  const pass = (c, r) => walk(c, r) || owner.get(c + ',' + r) === a || owner.get(c + ',' + r) === b;
+  const nearWall = (c, r) => isWall(c - 1, r) || isWall(c + 1, r) || isWall(c, r - 1) || isWall(c, r + 1);
+  const [bx, by] = centre(b);
+  const starts = [];
+  for (let dy = 0; dy < a.h; dy++)
+    for (let dx = 0; dx < a.w; dx++)
+      starts.push([a.x + dx, a.y + dy]);
+  const goal = (c, r) => owner.get(c + ',' + r) === b;
+  const key = (c, r) => r * GW + c;
+  const g = new Map(), prev = new Map(), open = [];
+  for (const [c, r] of starts) {
+    g.set(key(c, r), 0);
+    open.push([Math.hypot(c - bx, r - by), c, r]);
+  }
+  while (open.length) {
+    open.sort((p, q) => p[0] - q[0]);
+    const [, c, r] = open.shift();
+    if (goal(c, r)) {
+      const path = [[c, r]];
+      let k = key(c, r);
+      while (prev.has(k)) {
+        k = prev.get(k);
+        path.unshift([k % GW, Math.floor(k / GW)]);
+      }
+      return path;
+    }
+    for (let dy = -1; dy <= 1; dy++)
+      for (let dx = -1; dx <= 1; dx++) {
+        if (!dx && !dy)
+          continue;
+        const nc = c + dx, nr = r + dy;
+        if (!pass(nc, nr) ||
+            (dx && dy && (!pass(c + dx, r) || !pass(c, r + dy))))
+          continue;
+        const cost = g.get(key(c, r)) + (dx && dy ? 1.414 : 1) + (nearWall(nc, nr) ? 0.6 : 0);
+        if (cost < (g.get(key(nc, nr)) ?? Infinity)) {
+          g.set(key(nc, nr), cost);
+          prev.set(key(nc, nr), key(c, r));
+          open.push([cost + Math.hypot(nc - bx, nr - by), nc, nr]);
+        }
+      }
+  }
+  return null;
+}
+
+// --- topology: each organ joins the nearest earlier node; close pairs get one extra link ---
+function topology() {
+  const edges = [], S0 = new Map(), depth = new Map();
+  S0.set(COR.id, 0);
+  depth.set(COR.id, 0);
+  const done = [COR];
+  const gap = (a, b) => Math.max(
+    Math.max(a.x - (b.x + b.w - 1), b.x - (a.x + a.w - 1), 0),
+    Math.max(a.y - (b.y + b.h - 1), b.y - (a.y + a.h - 1), 0));
+  for (const o of ORDER.slice(1)) {
+    const [ox, oy] = centre(o);
+    let best = null, bd = Infinity;
+    for (const n of done) {
+      const [nx, ny] = centre(n);
+      const d = Math.hypot(nx - ox, ny - oy);
+      if (d < bd) {
+        bd = d;
+        best = n;
+      }
+    }
+    const e = makeEdge(best, o, S0.get(best.id), depth.get(best.id) + 1, o.id);
+    if (e) {
+      edges.push(e);
+      S0.set(o.id, e.s0 + e.len);
+      depth.set(o.id, e.depth);
+    }
+    else {
+      S0.set(o.id, S0.get(best.id));
+      depth.set(o.id, depth.get(best.id) + 1);
+    }
+    // one extra link to a close earlier organ that is not its parent
+    const near = done.filter(n => n !== best && n !== COR && gap(n, o) <= 3)
+      .sort((p, q) => gap(p, o) - gap(q, o))[0];
+    if (near) {
+      const lo = S0.get(near.id) <= S0.get(o.id) ? near : o;
+      const e2 = makeEdge(lo, lo === near ? o : near, S0.get(lo.id), Math.max(depth.get(near.id), depth.get(o.id)) + 1, o.id);
+      if (e2)
+        edges.push(e2);
+    }
+    done.push(o);
+  }
+  return edges;
+}
+
+function makeEdge(a, b, s0, depth, ownerID) {
+  const cells = astar(a, b);
+  if (!cells)
+    return null;
+  const r = rng(hash(SEED, a.id, b.id, 11));
+  // drop collinear cells, jitter the rest a little so the run reads grown, not routed
+  const pts = [centre(a)];
+  for (let i = 1; i < cells.length - 1; i++) {
+    const [pc, pr] = cells[i - 1], [c, rr] = cells[i], [nc, nr] = cells[i + 1];
+    if (c - pc === nc - c && rr - pr === nr - rr && i % 2)
+      continue;
+    pts.push([c + (r() - 0.5) * 0.45, rr + (r() - 0.5) * 0.45]);
+  }
+  pts.push(centre(b));
+  const curve = new THREE.CatmullRomCurve3(pts.map(([c, rr]) => W(c, rr)), false, 'centripetal', 0.5);
+  return { a, b, curve, len: curve.getLength(), s0, depth, owner: ownerID };
+}
+
+// --- three ---
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+renderer.setPixelRatio(S.dpr);
+renderer.setSize(VW, VH, false);
+renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+renderer.setClearColor(0x000000, 0);
+const camera = new THREE.PerspectiveCamera(S.fov, VW / VH, S.near, S.far);
+camera.matrixAutoUpdate = false;
+camera.matrixWorldAutoUpdate = false;
+camera.matrixWorld.fromArray(S.world);
+camera.matrixWorldInverse.copy(camera.matrixWorld).invert();
+camera.projectionMatrix.fromArray(S.proj);
+camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+const scene = new THREE.Scene();
+
+const loadTex = name => {
+  const t = new THREE.TextureLoader().load(A[name], () => {});
+  t.anisotropy = 8;
+  return t;
+};
+const floorTex = loadTex('floor.jpg');
+floorTex.generateMipmaps = false;
+floorTex.minFilter = THREE.LinearFilter;
+const DECAL = { rim: loadTex('decal-rim.png'), splotchA: loadTex('decal-splotch-a.png'),
+  splotchB: loadTex('decal-splotch-b.png'), branch: loadTex('decal-branch.png') };
+const buf = new THREE.Vector2();
+renderer.getDrawingBufferSize(buf);
+const [corC, corR] = centre(COR);
+const COMMON = {
+  uFloor: { value: floorTex },
+  uRes: { value: buf.clone() },
+  uLight: { value: K.light },
+  uCor: { value: W(corC, corR) },
+  uCorGlow: { value: K.corGlow },
+  uTime: { value: 0 },
+  uPeriod: { value: K.period },
+  uSpacing: { value: K.spacing * CELL },
+  uGlow: { value: K.glow },
+  uSwell: { value: K.swell },
+  uSpec: { value: K.spec },
+};
+const LIGHT_GLSL = `
+uniform sampler2D uFloor;
+uniform vec2 uRes;
+uniform float uLight;
+uniform vec3 uCor;
+uniform float uCorGlow;
+varying vec3 vW;
+vec3 toLin(vec3 c) { return pow(c, vec3(2.2)); }
+vec3 toSrgb(vec3 c) { return pow(max(c, 0.0), vec3(1.0 / 2.2)); }
+// the light the bare-floor shot shows here, plus the Cor's red pool (its lamp is gone from that shot)
+vec3 floorLight() {
+  vec3 l = toLin(texture2D(uFloor, gl_FragCoord.xy / uRes).rgb) * uLight;
+  float d = distance(vW.xz, uCor.xz);
+  return l + vec3(1.0, 0.10, 0.08) * uCorGlow * 0.5 / (1.0 + d * d / 30.0);
+}
+`;
+const BEAT_GLSL = `
+uniform float uTime;
+uniform float uPeriod;
+uniform float uSpacing;
+// PropGlow.propFleshBeatAt: lub-dub, two gaussian kicks per 2 PI
+float beatAt(float ph) {
+  float f = fract(ph * 0.15915);
+  float a = f - 0.08;
+  float b = f - 0.30;
+  return exp(-a * a * 60.0) + 0.55 * exp(-b * b * 60.0);
+}
+float beatS(float s) { return beatAt(uTime / uPeriod * 6.28318 - s / uSpacing * 6.28318); }
+`;
+
+function decalMat(tex, order) {
+  const m = new THREE.ShaderMaterial({
+    uniforms: Object.assign({ map: { value: tex }, uFade: { value: 1 } }, COMMON),
+    vertexShader: `varying vec2 vUv; varying vec3 vW;
+      void main() { vUv = uv; vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: LIGHT_GLSL + `uniform sampler2D map; uniform float uFade; uniform float uSpec; varying vec2 vUv;
+      void main() {
+        vec4 t = texture2D(map, vUv);
+        if (t.a < 0.01) discard;
+        vec3 L = floorLight();
+        // wet sheen: bump normal from the tile's own luminance (screen-space derivatives), blinn highlight times the local light
+        float h = dot(t.rgb, vec3(0.3, 0.59, 0.11)) * t.a * 0.12;
+        vec3 dpx = dFdx(vW), dpy = dFdy(vW), N = vec3(0.0, 1.0, 0.0);
+        vec3 r1 = cross(dpy, N), r2 = cross(N, dpx);
+        float det = dot(dpx, r1);
+        vec3 n = normalize(abs(det) * N - sign(det) * (dFdx(h) * r1 + dFdy(h) * r2));
+        vec3 hv = normalize(normalize(vec3(-0.25, 1.0, 0.45)) + normalize(cameraPosition - vW));
+        float s = pow(max(dot(n, hv), 0.0), 60.0) * uSpec * t.a;
+        vec3 col = toLin(t.rgb) * L + vec3(1.0, 0.8, 0.8) * s * dot(L, vec3(0.333));
+        gl_FragColor = vec4(toSrgb(col), t.a * uFade);
+      }`,
+    transparent: true,
+    depthWrite: false,
+  });
+  m.userData.order = order;
+  return m;
+}
+
+const tubeMat = () => new THREE.ShaderMaterial({
+  uniforms: Object.assign({ uS0: { value: 0 }, uLen: { value: 1 }, uR0: { value: 0.5 }, uR1: { value: 0.4 },
+    uGrow: { value: 1 }, uPulse: { value: 1 } }, COMMON),
+  vertexShader: BEAT_GLSL + `
+    uniform float uS0, uLen, uR0, uR1, uPulse, uSwell;
+    varying vec3 vW; varying vec3 vN; varying float vS; varying float vT;
+    void main() {
+      vT = uv.x;
+      vS = uS0 + uv.x * uLen;
+      vec3 c = position - normal;                   // TubeGeometry built at radius 1
+      float r = mix(uR0, uR1, uv.x) * (1.0 + 0.13 * sin(vS * 1.7) + 0.08 * sin(vS * 4.3 + 1.0));
+      r *= 1.0 + uSwell * beatS(vS) * uPulse;
+      c.y += r * 0.55;                              // half sunk into the floor
+      vec3 p = c + normal * r;
+      vN = normal;
+      vec4 w = modelMatrix * vec4(p, 1.0);
+      vW = w.xyz;
+      gl_Position = projectionMatrix * viewMatrix * w;
+    }`,
+  fragmentShader: LIGHT_GLSL + BEAT_GLSL + `
+    uniform float uGlow, uGrow, uPulse;
+    varying vec3 vN; varying float vS; varying float vT;
+    void main() {
+      if (vT > uGrow) discard;
+      vec3 n = normalize(vN);
+      float ndl = max(dot(n, normalize(vec3(-0.25, 1.0, 0.45))), 0.0);
+      float rib = 0.72 + 0.28 * smoothstep(0.05, 0.45, abs(fract(vS * 2.2) - 0.5));
+      vec3 alb = vec3(0.30, 0.025, 0.035) * rib;
+      vec3 col = alb * floorLight() * (0.45 + 0.9 * ndl);
+      col += vec3(0.08, 0.004, 0.01) * pow(1.0 - max(n.y, 0.0), 2.0) * floorLight();
+      // squared kicks, multiplied into the lit tube (not added), so a pulse is a faint brightening that never outshines the light
+      float b = beatS(vS);
+      col *= 1.0 + vec3(1.0, 0.3, 0.3) * b * b * uGlow * uPulse;
+      gl_FragColor = vec4(toSrgb(col), 1.0);
+    }`,
+});
+
+// occluders: the wall blocks, depth only, so decals and vessels pass under the masonry
+{
+  const g = [];
+  for (let r = -1; r <= GH; r++)
+    for (let c = -1; c <= GW; c++)
+      if (isWall(c, r)) {
+        const b = new THREE.BoxGeometry(CELL, WALL_H, CELL);
+        b.translate(OX + c * CELL, WALL_H / 2, OZ + r * CELL);
+        g.push(b);
+      }
+  const merged = mergeBoxes(g);
+  const m = new THREE.Mesh(merged, new THREE.MeshBasicMaterial({ colorWrite: false }));
+  m.renderOrder = -1;
+  scene.add(m);
+}
+function mergeBoxes(list) {
+  const pos = [], idx = [];
+  let base = 0;
+  for (const b of list) {
+    const p = b.attributes.position.array, ix = b.index.array;
+    for (let i = 0; i < p.length; i++)
+      pos.push(p[i]);
+    for (let i = 0; i < ix.length; i++)
+      idx.push(ix[i] + base);
+    base += p.length / 3;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  return g;
+}
+
+const PLANE = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+// the branch tile's thick root sits at (25, 235.5) of 512: move it to the origin, growth along +x
+const BRANCH = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2).translate(0.5 - 25 / 512, 0, -(0.5 - 235.5 / 512));
+
+// --- build every organ's detail ---
+let groups = []; // {owner, layer, mesh}
+const mats = { rim: decalMat(DECAL.rim, 2), splotchA: decalMat(DECAL.splotchA, 1), splotchB: decalMat(DECAL.splotchB, 1),
+  branch: decalMat(DECAL.branch, 3) };
+
+function addDecal(owner, layer, mat, geo, x, z, size, yaw, y) {
+  const m = new THREE.Mesh(geo, mat.clone());
+  m.material.uniforms = Object.assign({}, COMMON, { map: mat.uniforms.map, uFade: { value: 1 } });
+  m.position.set(x, y, z);
+  m.scale.set(size, 1, size);
+  m.rotation.y = yaw;
+  m.renderOrder = mat.userData.order;
+  scene.add(m);
+  groups.push({ owner, layer, mesh: m });
+}
+
+// a decal of radius rad (cells) at (fc, fr) only where its disc stays on floor
+const discOnFloor = (fc, fr, rad) => {
+  if (!floorAt(fc, fr))
+    return false;
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2;
+    if (!floorAt(fc + Math.cos(a) * rad, fr + Math.sin(a) * rad))
+      return false;
+  }
+  return true;
+};
+
+function rebuild() {
+  for (const g of groups) {
+    scene.remove(g.mesh);
+    if (g.layer === 'tube')
+      g.mesh.geometry.dispose();
+    g.mesh.material.dispose();
+  }
+  groups = [];
+  const edges = topology();
+  let y = 0.01;
+  const yStep = () => (y += 0.0004);
+  // vessels, and branches off them
+  for (const e of edges) {
+    const segs = Math.max(24, Math.round(e.len * 5));
+    const geo = new THREE.TubeGeometry(e.curve, segs, 1, 10, false);
+    const m = new THREE.Mesh(geo, tubeMat());
+    const r0 = Math.max(0.22, 0.62 - e.depth * 0.12) * K.thick;
+    Object.assign(m.material.uniforms, COMMON);
+    m.material.uniforms.uS0 = { value: e.s0 };
+    m.material.uniforms.uLen = { value: e.len };
+    m.material.uniforms.uR0 = { value: r0 };
+    m.material.uniforms.uR1 = { value: r0 * 0.72 };
+    m.renderOrder = 4;
+    scene.add(m);
+    groups.push({ owner: e.owner, layer: 'tube', mesh: m });
+    const r = rng(hash(SEED, e.a.id, e.b.id, 23));
+    const n = Math.round(e.len / (1.5 * CELL) * K.density);
+    for (let i = 0; i < n; i++) {
+      const t = 0.12 + r() * 0.76;
+      const p = e.curve.getPointAt(t), tg = e.curve.getTangentAt(t);
+      const side = r() < 0.5 ? -1 : 1;
+      const ang = Math.atan2(tg.z, tg.x) + side * (0.7 + r() * 0.75);
+      const dx = Math.cos(ang), dz = Math.sin(ang);
+      const fc = (p.x - OX) / CELL, fr = (p.z - OZ) / CELL;
+      if (!floorAt(fc, fr))
+        continue;
+      addDecal(e.owner, 'branch', mats.branch, BRANCH, p.x + dx * r0 * 0.6, p.z + dz * r0 * 0.6,
+        (0.9 + r() * 0.9) * CELL, Math.atan2(-dz, dx), yStep());
+    }
+  }
+  // per organ: rim, splotches, branches out of the rim
+  for (const o of ORDER) {
+    const r = rng(hash(SEED, o.id, 5));
+    const [oc, or] = centre(o);
+    const big = Math.max(o.w, o.h);
+    const rim = big * CELL * K.rimScale;
+    const wo = W(oc, or);
+    addDecal(o.id, 'rim', mats.rim, PLANE, wo.x, wo.z, rim, r() * Math.PI * 2, 0.03 + o.id * 0.0004);
+    const count = Math.round((o.w * o.h > 1 ? 3 : 1.5) * K.density + r() * 0.8);
+    for (let i = 0, tries = 0; i < count && tries < 40; tries++) {
+      const size = (0.7 + r() * 0.8) * CELL;
+      const ang = r() * Math.PI * 2, dist = big * 0.6 + r() * 2.4;
+      const fc = oc + Math.cos(ang) * dist, fr = or + Math.sin(ang) * dist;
+      if (!discOnFloor(fc, fr, size / CELL * 0.4))
+        continue;
+      const w = W(fc, fr);
+      addDecal(o.id, 'splotch', r() < 0.5 ? mats.splotchA : mats.splotchB, PLANE, w.x, w.z, size, r() * Math.PI * 2, yStep());
+      i++;
+    }
+    const nb = Math.round(2 * K.density);
+    for (let i = 0; i < nb; i++) {
+      const ang = r() * Math.PI * 2;
+      const dx = Math.cos(ang), dz = Math.sin(ang);
+      const start = rim * 0.3 / CELL;
+      const fc = oc + dx * start, fr = or + dz * start;
+      if (!floorAt(fc, fr))
+        continue;
+      const w = W(fc, fr);
+      addDecal(o.id, 'branch', mats.branch, BRANCH, w.x, w.z, (1.0 + r() * 0.8) * CELL, Math.atan2(-dz, dx), yStep());
+    }
+  }
+  syncUniforms();
+}
+
+// --- organs (screenshot cut-outs), back to front ---
+const organsEl = document.getElementById('organs');
+const organImg = new Map();
+for (const c of S.cuts.slice().sort((p, q) => {
+  const a = ORGANS.find(o => o.id === p.id), b = ORGANS.find(o => o.id === q.id);
+  return (a.y + a.h) - (b.y + b.h);
+})) {
+  const img = document.createElement('img');
+  img.src = A['organ-' + c.id + '.png'];
+  img.style.left = c.x + 'px';
+  img.style.top = c.y + 'px';
+  img.alt = '';
+  organsEl.appendChild(img);
+  organImg.set(c.id, img);
+}
+document.getElementById('stage').style.backgroundImage = `url(${A['floor.jpg']})`;
+document.getElementById('ref').src = A['reference-all.jpg'];
+
+// --- growth ---
+const kEl = document.getElementById('k');
+kEl.max = ORDER.length;
+let shown = 1;
+const appear = new Map(); // organ id -> ms it appeared (fade/grow in from there)
+const latest = document.getElementById('latest');
+function setK(k, animate) {
+  const now = performance.now();
+  ORDER.forEach((o, i) => {
+    if (i < k && !(i < shown && appear.has(o.id)))
+      appear.set(o.id, animate ? now : -1e9);
+    if (i >= k)
+      appear.delete(o.id);
+  });
+  shown = k;
+  kEl.value = k;
+  const o = ORDER[k - 1];
+  latest.textContent = `${k} / ${ORDER.length} · ${NAMES[o.type] || o.type}`;
+}
+kEl.oninput = () => setK(+kEl.value, false);
+let playing = null;
+const playBtn = document.getElementById('play');
+playBtn.onclick = () => {
+  if (playing) {
+    clearInterval(playing);
+    playing = null;
+    playBtn.textContent = '▶';
+    return;
+  }
+  if (shown >= ORDER.length)
+    setK(1, false);
+  playBtn.textContent = '❚❚';
+  playing = setInterval(() => {
+    if (shown >= ORDER.length) {
+      playBtn.click();
+      return;
+    }
+    setK(shown + 1, true);
+  }, 1700);
+};
+
+// --- toggles ---
+const layerOn = { rim: true, splotch: true, branch: true, tube: true };
+document.querySelectorAll('[data-layer]').forEach(cb => cb.onchange = () => layerOn[cb.dataset.layer] = cb.checked);
+const pulseEl = document.getElementById('pulse');
+const showOrgans = document.getElementById('showOrgans');
+document.getElementById('reseed').onclick = () => {
+  SEED = (SEED * 7919 + 13) % 100003;
+  rebuild();
+};
+const before = document.getElementById('before'), refEl = document.getElementById('ref');
+const hold = on => {
+  refEl.style.display = on ? 'block' : 'none';
+  before.setAttribute('aria-pressed', on);
+};
+before.onpointerdown = () => hold(true);
+before.onpointerup = before.onpointerleave = () => hold(false);
+
+function syncUniforms() {
+  COMMON.uLight.value = K.light;
+  COMMON.uCorGlow.value = K.corGlow;
+  COMMON.uPeriod.value = K.period;
+  COMMON.uSpacing.value = K.spacing * CELL;
+  COMMON.uGlow.value = K.glow;
+  COMMON.uSwell.value = K.swell;
+  COMMON.uSpec.value = K.spec;
+}
+
+// --- frame ---
+function frame(now) {
+  COMMON.uTime.value = now / 1000;
+  for (const g of groups) {
+    const t0 = appear.get(g.owner);
+    const f = t0 === undefined ? 0 : Math.min(1, (now - t0) / 1100);
+    const u = g.mesh.material.uniforms;
+    if (g.layer === 'tube') {
+      u.uGrow.value = f;
+      u.uPulse.value = pulseEl.checked ? 1 : 0;
+    }
+    else
+      u.uFade.value = g.layer === 'rim' ? f : Math.max(0, f * 1.6 - 0.6);
+    g.mesh.visible = f > 0 && layerOn[g.layer];
+  }
+  ORDER.forEach(o => {
+    const img = organImg.get(o.id);
+    if (img)
+      img.style.opacity = appear.has(o.id) && showOrgans.checked ? 1 : 0;
+  });
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+rebuild();
+setK(ORDER.length, false);
+requestAnimationFrame(frame);
+window.__preview = { setK, K, rebuild, ORDER };
+</script>
+</body>
+</html>
