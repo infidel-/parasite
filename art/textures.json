@@ -8876,6 +8876,18 @@
       "last_converted": "2026-11-14T01:13:21",
       "built_linear": 1.0,
       "built_srgb": 255.0
+    },
+    "cult/flesh-decals": {
+      "src": "cult/flesh-decals-cut.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "Using the reference image ONLY for its art style, colours and material (dark red glistening flesh, ribbed worm-like tendrils, puddled blood with ragged splashy edges, thin dark outline), draw a NEW 2x2 sheet of four separate flat organic growths, each an isolated cut-out seen from directly overhead, each centred in its own quarter of the image and well clear of the quarter's edges and of each other:\n1. TOP-LEFT: a flesh rim \u2014 a thick irregular ring-shaped mat of raw red meat and fat ridges with a ragged outer edge of small flesh lobes and drips; the centre of the ring is an empty hole (nothing drawn there). Roughly circular, completely flat.\n2. TOP-RIGHT: a fleshy splotch \u2014 an irregular puddle of dark clotting blood and smeared meat with a few small pale fat nodules and drips around it, completely flat, no raised tendrils.\n3. BOTTOM-LEFT: a fleshy splotch \u2014 a puddle of blood with five or six flattened ribbed worm tendrils lying flat and radiating outward from a lumpy centre, like the reference but pressed completely flat, much lower and thinner.\n4. BOTTOM-RIGHT: blood vessel branches \u2014 a cluster of thin dark red veins that start thick at the left edge of the quarter and fork again and again to the right, tapering into hair-thin capillaries that fade away to nothing. Flat, like veins under skin.\nAll four lie perfectly flat with no height, no cast shadows, top-down orthographic view. Nothing else in the image.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "PACK4 of cult base floor flesh for render.sewer.CultDetail (rim TL, splotch TR, worm splotch BL, vessel branches BR; the branch root at (25, 235.5) of its 512 quarter). edit_image off blood-trap-5, gpt-image-2.6-sunburst transparent. The -cut copy remaps alpha (a-24)/72 to drop the faint halo, as in docs/jobs/cult-detail; Unused/flesh-decals.png is the untouched gen.",
+      "last_converted": "2026-11-16T11:45:01",
+      "built_linear": 0.0513,
+      "built_srgb": 62.0
     }
   }
 }
