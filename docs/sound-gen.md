@@ -41,6 +41,11 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
 1. **Generate with `generate_sfx`** (`~/git/fal-sfx-mcp`): `model`, `prompt`, `name` (the sound's name inside its area, NO area prefix: `vent`, not `corp-vent`),
    `area`, `duration`, `loop`, plus optional `seed` and `variants` (1-4).
    - It writes `sounds-src/<area>/<name>-<model><N>.wav`, 16-bit 44.1k, and never overwrites a file.
+   - **The wav folder is `SOUNDS_SRC` from `env`** (the Yandex store; there is no `sounds-src/` in the
+     repo), set by the project-scope `fal-sfx` entry in `.mcp.json` (`FAL_SFX_OUTPUT_DIR`), which
+     overrides the user-scope one. A session that has not approved the project servers falls back to
+     `<git root>/sounds-src`, a stray folder `.gitignore` hides: the server banner names the folder.
+     The manifest still comes from the git root of the server's cwd, so start the session in the repo.
    - With `register` on (the default) it appends the take to `art/sounds.json` with its prompt,
      model, endpoint, seed, measured duration and cost.
    - For a bake-off pass `register: false` and `area: "<area>/_bakeoff"` — FLAT, **never a

@@ -34,12 +34,26 @@ style, and the guards below. Everything else is a doc, pulled in when the task s
 that was two sections that are now docs. One line here when it must fire unprompted, the numbers and
 the war story there. A rule nobody can act on without opening the doc anyway belongs in the doc.
 
+## Where the files live (no symlinks)
+
+**The repo holds no symlinks** (they trigger permission prompts in new sessions). The out-of-repo folders sit at the full paths in the tracked [`env`](env) file, which the Makefiles `include` and the tools read through `tools/env.py` / `tools/env.mjs`. The docs keep the short names:
+
+| name in the docs | env key | what |
+|---|---|---|
+| `parasite/` | `BUILD` | the electron dist, `/mnt/c/infidel/parasite-v42.1.0-win32-x64` (saves, `dev/` mods, `mod-sdk/`) |
+| `app/` | `BUILD` + `/resources/app` | where `make` stages the game |
+| `textures-src/`, `models-src/`, `sounds-src/`, `ai-src/` | `TEXTURES_SRC`, `MODELS_SRC`, `SOUNDS_SRC`, `AI_SRC` | the asset store on Yandex Disk |
+| `ObsidianReports/` | `OBSIDIAN_REPORTS` | where `make report` copies `reports/` |
+
+- **The Yandex paths hold a SPACE** (`/mnt/c/YandexDisk/PC LIGHTSTAR/...`): quote them in every shell command and Make recipe, never pass one through a Make function, never point `rm` at them. A short name is NOT a folder in the repo any more — `ls app/` finds nothing; `python3 tools/env.py` prints the real paths. The CLI tools (`propstat`, `pix`, `patch`, ...) still take `app/…`/`models-src/…` arguments and resolve them.
+- `fal-sfx` and `runware-trellis-2` write into `SOUNDS_SRC`/`MODELS_SRC` through the project-scope entries in [`.mcp.json`](.mcp.json); change a path in both files.
+
 ## Project rules
 
 - **Deferred work lives in [`TODO.md`](TODO.md)** — read it before starting work in an area it names; add an entry when a known issue is left for later, remove it when done.
 - **A RELEASE NEEDS A LOCALIZATION CHECK FIRST.** When the user asks for a release (any `steam-upload`, `steam-demo-upload` or itch push, staging or live): run `python3 tools/loc/extract.py --strict` (untranslated strings and missing nouns per shipped language), translate what it lists (`make loc lang=<code>`), and REPORT what was missing and what was updated before uploading. Never pass `allow-stale=1` unasked. Steps in [`docs/steam-release.md`](docs/steam-release.md).
 - NEVER detach HEAD! NEVER!
-- **NOTHING GENERATED OR DERIVED EVER GOES INTO GIT** — no texture or model drops, bakes, glbs, baked sounds or pedia renders, however small. They live in the asset store (`textures-src/`, `models-src/`, `sounds-src/`, `ai-src/`) and the dist (`app/`), all outside the repo. Only the manifests that say how each file is made (`art/*.json`) and the old hand-made sources already in `assets/` (fonts, interface) are tracked. A derived file is made in the store by its bake, and a one-off gets its command recorded beside its manifest entry.
+- **NOTHING GENERATED OR DERIVED EVER GOES INTO GIT** — no texture or model drops, bakes, glbs, baked sounds or pedia renders, however small. They live in the asset store (`textures-src/`, `models-src/`, `sounds-src/`, `ai-src/`) and the dist (`app/`), all outside the repo (paths above). Only the manifests that say how each file is made (`art/*.json`) and the old hand-made sources already in `assets/` (fonts, interface) are tracked. A derived file is made in the store by its bake, and a one-off gets its command recorded beside its manifest entry.
 - NEVER sweep stray .md files (review reports, notes, scratch docs) into commits unless directly asked; check `git status` for them before `git add -A`, or stage explicit paths.
 - ALWAYS run tests at the end of each task: cd src/ && make
 - When changing persisted game data structures, ALWAYS verify Saver/Loader savegame compatibility (both serialization and load behavior, including old saves when relevant). Note that you should ask whether it is needed when planning (there might not have been a release yet)
@@ -47,7 +61,7 @@ the war story there. A rule nobody can act on without opening the doc anyway bel
 - **Planning or reviewing a game change: run it past [`docs/relations.md`](docs/relations.md)** — name the rows it touches and give a block with its Neighbours (*must update*: correctness; *could update*: ideas), the **invariants offered** that would let it touch fewer neighbours, and its **web delta** (edges added/removed). Prefer the variant with the fewest new edges; a storm of related edits only when unavoidable, and say why. Ask before editing a neighbour. A new entry point, listener, copy or invariant updates its row in the same commit.
 - **When adding a NEW pedia article, tell the user it most likely needs an image** (`img:`, a 2560×1440 jpg in `app/img/pedia/`) — say whether an existing one fits or a new one has to be made.
 - **When adding, removing or changing a cult ordeal (`src/cult/ordeals/`, the lists in `src/cult/Ordeals.hx`), update [`reports/cult-ordeals.md`](reports/cult-ordeals.md)** — its row: name, required members, power/money cost.
-- **After updating anything in `reports/`, run `make report`** — copies them to `ObsidianReports/`, overwriting the older versions.
+- **After updating anything in `reports/`, run `make report`** — copies them to the Obsidian vault (`OBSIDIAN_REPORTS` in `env`), overwriting the older versions.
 - **Every commit of a GAME change also adds its line to [`changes.md`](changes.md), in the same commit** — under the current version (`src/VERSION`, newest version first), in `### Changes` or `### Fixes`, as `- <tag>: <description>`, the list kept sorted. Tags: ai, art, audio, boot, mods, game, console, cult, region, debug, perf, render, ui — add one if none fits. One line per player-visible change, not per commit: group related commits. Tooling, docs and release commits stay out. **Keep each line SHORT — what changed in a few words, never how** (no inventory of effects, parts or sounds). **SECRETS stay out:** content the player is meant to discover (the sewer summoning portal, the choir of discord) is never named — write `-redacted-` (`- art: -redacted- in the sewers cult mission is now 3D`).
 - When modifying AI logic, see if additional ai traces are needed
 - **When adding new game math (a roll, a formula, a modifier, a rule that charges or skips a stat change), ASK whether it should be exposed under `game.config.extendedInfo` and how** — `game.info(...)` / `game.infoChange(...)` print the gray `INFO` lines in the log only while that flag is on.

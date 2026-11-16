@@ -17,7 +17,7 @@ The dev box runs Windows 10. Bugs that only show on Windows 11 get tested on yug
 ## Pushing a build
 1. Build: `make main` for `main.js`/`preload.js`, `make -C src` for `parasite.js`.
 2. Close the game on yuggoth. Main-process files are read only at launch.
-3. **Diff before you overwrite.** Copy the installed file to the scratchpad (`scp yuggoth:<install>/resources/app/main.js <scratch>/`) and `diff` it against `app/`. Push only when the diff is your change and nothing else. The installed build has to match the tree the new files came from, assets included.
+3. **Diff before you overwrite.** Copy the installed file to the scratchpad (`scp yuggoth:<install>/resources/app/main.js <scratch>/`) and `diff` it against the dev build's `app/` (`BUILD/resources/app`, the path `python3 tools/env.py` prints). Push only when the diff is your change and nothing else. The installed build has to match the tree the new files came from, assets included.
 4. Back up once: `ssh yuggoth "bash -c 'mkdir -p ~/parasite-bak && cp -n <files> ~/parasite-bak/'"`. `-n` keeps the first, pristine copy.
-5. Push: `scp app/main.js app/preload.js app/parasite.js yuggoth:/mnt/c/Steam/steamapps/common/Parasite/resources/app/`. Then compare `md5sum` on both ends.
+5. Push: `cd /mnt/c/infidel/parasite-v42.1.0-win32-x64/resources/app && scp main.js preload.js parasite.js yuggoth:/mnt/c/Steam/steamapps/common/Parasite/resources/app/`. Then compare `md5sum` on both ends.
 6. Undo: Steam → Parasite → Properties → Installed Files → Verify integrity, or copy the files back from `~/parasite-bak`. A Steam update also overwrites anything you pushed.

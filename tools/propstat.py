@@ -9,6 +9,7 @@ So this reports all of them at once, before a prop is wired in.
   python3 tools/propstat.py models-src/wild/bush-bramble-src.png  the reference
   python3 tools/propstat.py ref.png --lift 70 -o lifted.png       correct a reference's VALUE
   python3 tools/propstat.py ref.png --fit 80 -o fitted.png        pull it off the frame edge
+  python3 tools/propstat.py --audit app/models                    every built glb's level (a dir is walked)
 
 What a .glb reports and why each number is there:
 
@@ -49,6 +50,7 @@ import io
 import json
 import struct
 import sys
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
@@ -392,7 +394,8 @@ args = resolve_args(sys.argv[1:])
 if not args:
     sys.exit(__doc__)
 if args[0] == '--audit':
-    audit(sorted(args[1:]))
+    # a directory arg (app/models) is walked for its glbs: the out-of-repo path holds a space, so no shell glob
+    audit(sorted(str(f) for a in args[1:] for f in (Path(a).rglob('*.glb') if Path(a).is_dir() else [a])))
     sys.exit(0)
 path = args[0]
 print(path.split('/')[-1])

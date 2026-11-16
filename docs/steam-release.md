@@ -10,11 +10,14 @@ logs and manifests in `C:\steamcmd\output\`.
 - Branches: `default` and `staging` (password protected, for testing a build before it goes live).
 
 ## Where the files come from
-- `resources/app` and `mod-sdk/parasite-mod-sdk-<VERSION>.zip`: straight from the dev dir (the `parasite`
-  symlink's target). The release build IS the `make` build; the target rebuilds and refuses on uncommitted `src`/`electron`.
+- `resources/app` and `mod-sdk/parasite-mod-sdk-<VERSION>.zip`: straight from the dev dir (`BUILD` in `env`,
+  `C:\infidel\parasite-v42.1.0-win32-x64`). The release build IS the `make` build; the target rebuilds and refuses on uncommitted `src`/`electron`.
 - `changes.md` at the install root: the repo's changelog, copied into the dev dir by every `make`.
 - `icons.txt`, `sounds.txt`, `dev/placeholder`, `mods/placeholder` and the Windows runtime: `_Build_/common`
-  and `_Build_/windows` under `C:\YandexDisk\PC LIGHTSTAR\Projects\Parasite\`.
+  and `_Build_/windows` in the release kit (`RELEASE_KIT` in `env`, `C:\YandexDisk\PC LIGHTSTAR\Projects\Parasite\_Build_`).
+- The vdfs' `ContentRoot` is `C:\`, so both folders go in as C:-relative paths (`@DEVDIR@`, `@KIT@`), filled from
+  `env` by `make steam-vdf vdf=app|demo [out=x.vdf]`, which writes the vdf and nothing else: the way to check one.
+  Neither folder may leave `C:`.
 - Dev-only files in `app/` are cut by `FileExclusion` (the old steamworks.js, the pickpocket example mod's sounds,
   `md-to-steam.js`). A new one gets a new exclusion.
 

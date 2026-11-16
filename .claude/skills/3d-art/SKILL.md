@@ -70,7 +70,7 @@ number, and it buys no cheapness — argue the triangle budget separately.
 
 ## A texture → `docs/3d-textures.md`
 
-`generate_image` straight into `textures-src/` with `filename_prefix=<final-label>` → `make adopt`
+`generate_image` straight into `textures-src/` (`output_dir` = the ABSOLUTE `TEXTURES_SRC` path from `env` + subdir, never a relative `textures-src/...`) with `filename_prefix=<final-label>` → `make adopt`
 → entry in `textures.json` (update `prompt`) → `make tex` → `make -C src` → `make reload`.
 Never `mv`/`cp` a drop by hand. Alpha comes from `background:"transparent"`; the flat-grey chroma
 route is the fallback and is still mandatory for TRELLIS references.

@@ -10,7 +10,6 @@ assets*
 .aider*
 ObsidianReports
 plans/
-.haxe-port
 .codex
 debug
 src/debug
@@ -25,16 +24,13 @@ parasite-ui-preview
 plan.md
 sshot.jpg
 
-# 3D street-view: textures-src is a symlink to the asset store; baked runtime
-# textures are written straight into the app dir by `make tex`. Neither is tracked.
+# the out-of-repo folders (the electron dist and its app dir, the asset store, the Obsidian reports) live at the
+# full paths in `env`, with no symlinks; these names are a guard against a stray copy or an old link ever landing
+# in the repo (a tool or MCP writing to a relative textures-src/... would make one)
 textures-src
 
-# 3D models: models-src is a symlink to the asset store; baked runtime glbs are
-# written into the app dir by `make models`. tools/node_modules is local bake tooling.
 models-src
 
-# sounds: sounds-src is a symlink to the asset store; baked runtime mp3s are written into the app
-# dir by `make sounds`. the manifest art/sounds.json IS tracked
 sounds-src
 tools/node_modules
 tools/__pycache__
