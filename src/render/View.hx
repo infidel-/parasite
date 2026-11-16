@@ -721,6 +721,8 @@ class View {
     SoundSources.sources = []; // the area kind registers its own while it builds
     SoundSources.beds = [];
     SoundSources.events = [];
+    // no cult grade unless this area's build finds a base (render.sewer.CultDetail.rebuild)
+    render.sewer.CultDetail.tintBorn.value.x = render.sewer.CultDetail.TINT_NEVER;
     a.build(scene);
     debug.onRebuild(); // fresh area: reset cycler indices + counts
     tacticalGrid = new TacticalGrid(scene, game.area);
@@ -840,7 +842,10 @@ void main() {
     var top = new RenderPass(actors.overlay(), camera);
     top.clear = false;
     composer.addPass(top);
-    composer.addPass(new OutputPass());
+    var out = new OutputPass();
+    // the cult habitat's pink grade rides the output blit (render.sewer.CultDetail.grade)
+    render.sewer.CultDetail.grade(out);
+    composer.addPass(out);
     // let renderer.info accumulate across all composer passes: its OutputPass would otherwise
     // reset the per-frame draw stats to its own single quad, so we reset() manually each frame
     renderer.info.autoReset = false;

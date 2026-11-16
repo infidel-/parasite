@@ -409,6 +409,8 @@ typedef RendererInfo = {
 @:native("THREE.ShaderMaterial") extern class ShaderMaterial {
   public function new(params:Dynamic);
   public var uniforms:Dynamic;
+  // the GLSL source, editable until the first compile
+  public var fragmentShader:String;
 }
 @:native("THREE.LineBasicMaterial") extern class LineBasicMaterial {
   public function new(params:Dynamic);
@@ -596,6 +598,8 @@ typedef Ray = {
 }
 @:native("THREE.OutputPass") extern class OutputPass {
   public function new();
+  public var uniforms:Dynamic; // the pass's own uniform set, shared by reference with `material`
+  public var material:ShaderMaterial; // a RawShaderMaterial: its source can be patched before the first frame
 }
 @:native("THREE.ShaderPass") extern class ShaderPass {
   public function new(shader:Dynamic);

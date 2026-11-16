@@ -71,6 +71,15 @@ class CultDetail
   static inline var SKIN_LEN = 3.6;    // world length of one vessel-skin tile (its 8 ribs), round the ring too
   static inline var SPLOTCH_ALPHA = 0.6; // splotch opacity: at full they read clearer than the rims they sit under
   static inline var SPLOTCH = 4;       // CultQuad.cell of the first splotch: 4 + k is cell k of the 4x4 splotch sheet
+  static inline var TINT_RAMP = 40.0;  // BASE_MS units the habitat takes to turn cult-pink after its first organ (6 s)
+  public static inline var TINT_NEVER = 1e9; // tintBorn with no base in the area: the grade never starts
+  // the cult grade (see grade): rgb multiplier, normalised to keep luma in the shader; w its strength
+  public static var tint = { value: new Vector4(1.0, 0.8, 0.92, 1.0) };
+  // shadow lift toward the cult's deep magenta, under the same strength. added BEFORE the sRGB curve:
+  // 0.02 lifted black to ~39/255, a magenta wash; 0.0025 is ~10
+  public static var tintLift = { value: new Vector3(0.0025, 0.0, 0.0015) };
+  // x: PropGlow-clock time the base began in this area (TINT_NEVER without one, reset per area build); y: ramp
+  public static var tintBorn = { value: new Vector2(TINT_NEVER, TINT_RAMP) };
   static inline var BORN_OLD = -1e6;   // birth of everything already there at the area's first build
   static inline var COR_KEY = 'cult_cor_nefandum'; // the Cor's prop row key in render.world.ObjModels
   // the branch tile's thick root sits at (25, 235.5) of its 512 quarter: moved to the quad's origin
@@ -128,6 +137,29 @@ class CultDetail
       })));
     }
 
+// the habitat's cult grade, patched into the composer's OutputPass after its tone map: no pass of
+// its own, a few ALU per pixel, and strength 0 wherever tintBorn is TINT_NEVER (every other area)
+  public static function grade(out:OutputPass):Void
+    {
+      out.uniforms.cultTime = PropGlow.uTime;
+      out.uniforms.cultTint = tint;
+      out.uniforms.cultLift = tintLift;
+      out.uniforms.cultBorn = tintBorn;
+      var fs = StringTools.replace(out.material.fragmentShader, 'uniform sampler2D tDiffuse;',
+        'uniform sampler2D tDiffuse;\n' +
+        'uniform float cultTime;\n' +
+        'uniform vec4 cultTint;\n' +
+        'uniform vec3 cultLift;\n' +
+        'uniform vec2 cultBorn;');
+      out.material.fragmentShader = StringTools.replace(fs, '// color space',
+        'float cultK = cultTint.w * clamp( ( cultTime - cultBorn.x ) / cultBorn.y, 0.0, 1.0 );\n' +
+        'vec3 cultW = vec3( 0.2126, 0.7152, 0.0722 );\n' +
+        'vec3 cultC = gl_FragColor.rgb * cultTint.rgb / dot( cultTint.rgb, cultW ) +\n' +
+        '  cultLift * ( 1.0 - dot( gl_FragColor.rgb, cultW ) );\n' +
+        'gl_FragColor.rgb = mix( gl_FragColor.rgb, cultC, cultK );\n' +
+        '// color space');
+    }
+
 // compile both programs in a warm scene: one quad and one short vessel through the same materials,
 // patched in the same order as a real build, so entering a base habitat compiles nothing
   public static function warm(scene:Scene):Void
@@ -182,7 +214,10 @@ class CultDetail
       var base = (game.cults.length > 0 ? game.cults[0].base : null);
       if (base == null ||
           base.areaID != game.area.id)
-        return;
+        {
+          tintBorn.value.x = TINT_NEVER;
+          return;
+        }
       cor = base.getHeart();
       organs = base.organs.copy();
       organs.sort(function(p, q) return p.id - q.id);
@@ -194,6 +229,10 @@ class CultDetail
       for (o in organs)
         if (!born.exists(o.id))
           born.set(o.id, first ? BORN_OLD : now);
+      // the grade starts with the first organ: at once for a base already standing, ramped for a new one
+      tintBorn.value.x = TINT_NEVER;
+      for (o in organs)
+        tintBorn.value.x = Math.min(tintBorn.value.x, born.get(o.id));
       owner = new Map();
       for (o in organs)
         for (c in cells(o))
