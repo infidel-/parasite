@@ -54,7 +54,7 @@ typedef CultQuad = {
 // it, same rng and hashes, so one base draws the same picture in both.
 // DERIVED, NEVER STORED: a function of each organ's (id, type, x, y) and the floor grid, seeded per
 // organ id, so building organ k adds only k's detail and nothing already drawn moves.
-// two merged meshes: +2 draw calls in a base habitat, nothing anywhere else
+// three merged meshes: +3 draw calls in a base habitat, nothing anywhere else
 class CultDetail
 {
   // the approved preview knobs
@@ -68,6 +68,8 @@ class CultDetail
   static inline var BUMP = 1.0;        // the sheet as its own bump map: the wet glints on the ridges
   static inline var GROW = 7.0;        // BASE_MS units a new organ's detail takes to grow in
   static inline var RADIAL = 10;       // vessel ring segments
+  static inline var SKIN_LEN = 3.6;    // world length of one vessel-skin tile (its 8 ribs), round the ring too
+  static inline var SPLOTCH = 4;       // CultQuad.cell of the first splotch: 4 + k is cell k of the 4x4 splotch sheet
   static inline var BORN_OLD = -1e6;   // birth of everything already there at the area's first build
   static inline var COR_KEY = 'cult_cor_nefandum'; // the Cor's prop row key in render.world.ObjModels
   // the branch tile's thick root sits at (25, 235.5) of its 512 quarter: moved to the quad's origin
@@ -78,6 +80,7 @@ class CultDetail
   var game:Game;
   var model:Sewer;
   var decalMat:Dynamic;               // patched MeshStandardMaterial (the hook externs are untyped)
+  var splotchMat:Dynamic;             // the same, over the splotch sheet: one program, its own map
   var tubeMat:Dynamic;
   var corPos = { value: new Vector3() }; // the Cor instance's translation: its beat phase hash
   var corSynced = false;              // corPos copied off the live Cor instance since the last rebuild
@@ -92,8 +95,23 @@ class CultDetail
       this.scene = scene;
       this.game = game;
       this.model = model;
-      var tex = Textures.loadTexture('textures/cult/flesh-decals.png', 'wall');
-      decalMat = VisionMask.patch(decal(new MeshStandardMaterial({
+      decalMat = decalMaterial('textures/cult/flesh-decals.png');
+      splotchMat = decalMaterial('textures/cult/flesh-splotches.png');
+      var skin = Textures.loadTexture('textures/cult/vessel-skin.png', 'wall');
+      tubeMat = VisionMask.patch(vessel(new MeshStandardMaterial({
+        map: skin,
+        bumpMap: skin,
+        bumpScale: BUMP,
+        roughness: 0.4,
+        metalness: 0.0,
+      }), corPos));
+    }
+
+// a floor decal material over one sheet: the sheet is its own bump map for the wet glints
+  static function decalMaterial(path:String):Dynamic
+    {
+      var tex = Textures.loadTexture(path, 'wall');
+      return VisionMask.patch(decal(new MeshStandardMaterial({
         map: tex,
         bumpMap: tex,
         bumpScale: BUMP,
@@ -106,10 +124,6 @@ class CultDetail
         polygonOffsetFactor: -2,
         polygonOffsetUnits: -2,
       })));
-      tubeMat = VisionMask.patch(vessel(new MeshStandardMaterial({
-        roughness: 0.4,
-        metalness: 0.0,
-      }), corPos));
     }
 
 // compile both programs in a warm scene: one quad and one short vessel through the same materials,
@@ -118,10 +132,20 @@ class CultDetail
     {
       var d = new CultDetail(scene, null, null);
       d.born = [ 0 => 0.0 ];
+      d.organs = [];
       var curve = new CatmullRomCurve3([ new Vector3(0, 0, 0), new Vector3(4, 0, 0) ], false, 'centripetal', 0.5);
       d.emit([
         {
           cell: 0,
+          x: 0.0,
+          z: 0.0,
+          size: 1.0,
+          yaw: 0.0,
+          start: 0.0,
+          dur: 1.0,
+        },
+        {
+          cell: SPLOTCH,
           x: 0.0,
           z: 0.0,
           size: 1.0,
@@ -239,7 +263,7 @@ class CultDetail
               var ws = CityConfig.cellToWorld(fc, fr);
               // the field order is the roll order: the tile pick, then the turn
               splotches.push(grown(o.id, false, {
-                cell: (r() < 0.5 ? 1 : 2),
+                cell: SPLOTCH + Std.int(r() * 16),
                 x: ws.x,
                 z: ws.z,
                 size: size,
@@ -301,8 +325,35 @@ class CultDetail
       return q;
     }
 
-// build the two merged meshes: every decal quad in one, every vessel in the other
+// build the three merged meshes: the splotches, the rims and branches, the vessels. the two decal
+// meshes tie on renderOrder and on z (both sit at the origin), so three falls back to construction
+// order: the splotch mesh is made first and draws under the rims, as the preview layers them
   function emit(quads:Array<CultQuad>, edges:Array<CultEdge>):Void
+    {
+      decals([ for (q in quads) if (q.cell >= SPLOTCH) q ], splotchMat);
+      decals([ for (q in quads) if (q.cell < SPLOTCH) q ], decalMat);
+      if (edges.length > 0)
+        {
+          var pos:Array<Float> = [];
+          var nor:Array<Float> = [];
+          var uv:Array<Float> = [];
+          var tb:Array<Float> = [];
+          var idx:Array<Int> = [];
+          for (e in edges)
+            tube(e, pos, nor, uv, tb, idx);
+          var g = new BufferGeometry();
+          g.setAttribute('position', new Float32BufferAttribute(pos, 3));
+          g.setAttribute('normal', new Float32BufferAttribute(nor, 3));
+          g.setAttribute('uv', new Float32BufferAttribute(uv, 2));
+          g.setAttribute('cultTube', new Float32BufferAttribute(tb, 4));
+          g.setIndex(idx);
+          add(new Mesh(g, tubeMat));
+        }
+    }
+
+// one merged quad mesh: rim and branch tiles are quarters of the decal sheet, a splotch is a
+// cell of the 4x4 splotch sheet
+  function decals(quads:Array<CultQuad>, mat:Dynamic):Void
     {
       if (quads.length > 0)
         {
@@ -315,8 +366,10 @@ class CultDetail
             {
               var ca = Math.cos(q.yaw);
               var sa = Math.sin(q.yaw);
-              var u0 = (q.cell % 2) * 0.5;
-              var v0 = (q.cell < 2 ? 0.5 : 0.0);
+              var k = q.cell - SPLOTCH;
+              var tw = (k >= 0 ? 0.25 : 0.5);
+              var u0 = (k >= 0 ? (k % 4) * 0.25 : (q.cell % 2) * 0.5);
+              var v0 = (k >= 0 ? 0.75 - Std.int(k / 4) * 0.25 : (q.cell < 2 ? 0.5 : 0.0));
               var ox = (q.cell == 3 ? ROOT_X : 0.0);
               var oz = (q.cell == 3 ? ROOT_Z : 0.0);
               var base = Std.int(pos.length / 3);
@@ -333,8 +386,8 @@ class CultDetail
                   nor.push(0);
                   nor.push(1);
                   nor.push(0);
-                  uv.push(u0 + (lx + 0.5) * 0.5);
-                  uv.push(v0 + (0.5 - lz) * 0.5);
+                  uv.push(u0 + (lx + 0.5) * tw);
+                  uv.push(v0 + (0.5 - lz) * tw);
                   fd.push(q.start);
                   fd.push(q.dur);
                 }
@@ -347,22 +400,7 @@ class CultDetail
           g.setAttribute('uv', new Float32BufferAttribute(uv, 2));
           g.setAttribute('cultFade', new Float32BufferAttribute(fd, 2));
           g.setIndex(idx);
-          add(new Mesh(g, decalMat));
-        }
-      if (edges.length > 0)
-        {
-          var pos:Array<Float> = [];
-          var nor:Array<Float> = [];
-          var tb:Array<Float> = [];
-          var idx:Array<Int> = [];
-          for (e in edges)
-            tube(e, pos, nor, tb, idx);
-          var g = new BufferGeometry();
-          g.setAttribute('position', new Float32BufferAttribute(pos, 3));
-          g.setAttribute('normal', new Float32BufferAttribute(nor, 3));
-          g.setAttribute('cultTube', new Float32BufferAttribute(tb, 4));
-          g.setIndex(idx);
-          add(new Mesh(g, tubeMat));
+          add(new Mesh(g, mat));
         }
     }
 
@@ -375,8 +413,11 @@ class CultDetail
 
 // one vessel's rings, TubeGeometry's layout and winding: radius tapered by depth and wobbled along s,
 // half sunk into the floor. the ring's side axis lies on the floor, so (side, up) is TubeGeometry's
-// (N, B) for a level path. per vertex: s along the tree, radius, 0..1 along this run, birth
-  function tube(e:CultEdge, pos:Array<Float>, nor:Array<Float>, tb:Array<Float>, idx:Array<Int>):Void
+// (N, B) for a level path. per vertex: s along the tree, radius, 0..1 along this run, birth. the skin
+// runs along s and round the ring by arc length, both over SKIN_LEN, so its texels stay square; the
+// ring's v jump sits on the face past 3/4 of the ring, the sunk underside
+  function tube(e:CultEdge, pos:Array<Float>, nor:Array<Float>, uv:Array<Float>, tb:Array<Float>,
+      idx:Array<Int>):Void
     {
       var segs = Std.int(Math.max(24, Math.round(e.len * 5)));
       var r0 = radius(e);
@@ -394,6 +435,7 @@ class CultDetail
           var sl = Math.sqrt(t.x * t.x + t.z * t.z);
           var sx = t.z / sl;
           var sz = -t.x / sl;
+          var dive = nestDive(p.x, p.z);
           for (j in 0...RADIAL + 1)
             {
               var v = j / RADIAL * Math.PI * 2;
@@ -403,11 +445,13 @@ class CultDetail
               var ny = ns;
               var nz = nc * sz;
               pos.push(p.x + nx * r);
-              pos.push(p.y + r * 0.55 + ny * r);
+              pos.push(p.y + r * (0.55 - 1.6 * dive) + ny * r);
               pos.push(p.z + nz * r);
               nor.push(nx);
               nor.push(ny);
               nor.push(nz);
+              uv.push(s / SKIN_LEN);
+              uv.push((j <= Std.int(RADIAL * 0.75) ? j : j - RADIAL) / RADIAL * Math.PI * 2 * r / SKIN_LEN);
               tb.push(s);
               tb.push(r);
               tb.push(u);
@@ -431,7 +475,26 @@ class CultDetail
     }
 
   static inline function radius(e:CultEdge):Float
-    return Math.max(0.22, 0.62 - e.depth * 0.12) * THICK;
+    return Math.max(0.15, 0.285 - e.depth * 0.035) * THICK;
+
+// 0..1, how far a vessel point has dived under the floor near a rat nest: the nest's hole shows the
+// floor through it, so a run dives from half a cell outside the footprint and is gone 0.3 inside it
+  function nestDive(x:Float, z:Float):Float
+    {
+      var fc = cellX(x);
+      var fr = cellZ(z);
+      var dive = 0.0;
+      for (o in organs)
+        if (o.type == _CultBaseOrganType.RAT_NEST)
+          {
+            var info = CultBaseConst.info(o.type);
+            var dx = Math.max(o.x - 0.5 - fc, fc - (o.x + info.w - 0.5));
+            var dz = Math.max(o.y - 0.5 - fr, fr - (o.y + info.h - 0.5));
+            var t = Math.min(Math.max((0.5 - Math.max(dx, dz)) / 0.8, 0), 1);
+            dive = Math.max(dive, t * t * (3 - 2 * t));
+          }
+      return dive;
+    }
 
 // the Cor first, then the rest in build (id) order
   function order():Array<CultBaseOrgan>
@@ -709,7 +772,7 @@ class CultDetail
       return mat;
     }
 
-// the vessel material: procedural ribs on a dark red albedo, the Cor's lub-dub running out along s
+// the vessel material: the vessel-skin tile, the Cor's lub-dub running out along s
 // (a small swell and a brightening multiplied into the lit colour), and the grow-in clipped along
 // the run. the phase is PropGlow's flesh phase at the Cor's core, the same hash on the same
 // instance translation, so a pulse leaves the Cor on its own kick
@@ -728,7 +791,6 @@ class CultDetail
             'uniform vec4 cultBeat;\n' +
             'uniform vec3 cultCor;\n' +
             'uniform float cultGrow;\n' +
-            'varying float vCultS;\n' +
             'varying float vCultT;\n' +
             'varying float vCultGrow;\n' +
             'varying float vCultBeat;\n' +
@@ -740,7 +802,6 @@ class CultDetail
               '  vCultBeat = propFleshBeatAt( cultTime * cultBeat.x + cph * 6.2832 -\n' +
               '    cultTube.x / cultBeat.y * 6.2832 );\n' +
               '  transformed += objectNormal * cultTube.y * cultBeat.z * vCultBeat;\n' +
-              '  vCultS = cultTube.x;\n' +
               '  vCultT = cultTube.z;\n' +
               '  vCultGrow = clamp( ( cultTime - cultTube.w ) / cultGrow, 0.0, 1.0 );\n' +
               '  }');
@@ -748,15 +809,10 @@ class CultDetail
           f = StringTools.replace(f, '#include <clipping_planes_fragment>',
             '#include <clipping_planes_fragment>\n' +
             '  if ( vCultT > vCultGrow ) discard;');
-          f = StringTools.replace(f, '#include <color_fragment>',
-            '#include <color_fragment>\n' +
-            '  diffuseColor.rgb = vec3( 0.30, 0.025, 0.035 ) *\n' +
-            '    ( 0.72 + 0.28 * smoothstep( 0.05, 0.45, abs( fract( vCultS * 2.2 ) - 0.5 ) ) );');
           f = StringTools.replace(f, '#include <opaque_fragment>',
             '  outgoingLight *= 1.0 + vec3( 1.0, 0.3, 0.3 ) * vCultBeat * vCultBeat * cultBeat.w;\n' +
             '#include <opaque_fragment>');
           shader.fragmentShader = 'uniform vec4 cultBeat;\n' +
-            'varying float vCultS;\n' +
             'varying float vCultT;\n' +
             'varying float vCultGrow;\n' +
             'varying float vCultBeat;\n' +
