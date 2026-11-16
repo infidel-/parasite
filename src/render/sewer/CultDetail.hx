@@ -71,8 +71,8 @@ class CultDetail
   static inline var SKIN_LEN = 3.6;    // world length of one vessel-skin tile (its 8 ribs), round the ring too
   static inline var SPLOTCH_ALPHA = 0.6; // splotch opacity: at full they read clearer than the rims they sit under
   static inline var SPLOTCH = 4;       // CultQuad.cell of the first splotch: 4 + k is cell k of the 4x4 splotch sheet
-  // the splotch cells in use: 13 is retired, too light against the floor
-  static var SPLOTCH_CELLS = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15 ];
+  // the splotch cells in use: 6, 13 and 14 are retired, too light against the floor
+  static var SPLOTCH_CELLS = [ 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 15 ];
   static inline var TINT_RAMP = 40.0;  // BASE_MS units the habitat takes to turn cult-pink after its first organ (6 s)
   public static inline var TINT_NEVER = 1e9; // tintBorn with no base in the area: the grade never starts
   // the cult grade (see grade): rgb multiplier, normalised to keep luma in the shader; w its strength
