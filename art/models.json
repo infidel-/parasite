@@ -4687,6 +4687,7 @@
       "last_sig": "n1/-1/512/0.01/-/-/bc0.55,0.55,0.55,1/rf1"
     },
     "cult/base-cor-nefandum": {
+      "sat": 0.6,
       "src": "cult/cult-base-cor-nefandum-3-meshy.glb",
       "tris": 20000,
       "tex": 1024,
@@ -4703,9 +4704,10 @@
       "emissiveStrength": 0.5,
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/cor-nefandum-3.png keyed onto black and gamma'd to subject p50 72 (scratchpad ref_black.py, the same prep as the other ten organs); asked polyCount 100000, came back 1,103,334 tris in 1 mesh, cut here to 20,000 (52 texels/tri at tex 1024). Replaced the first Meshy cut off cor-nefandum.png (still in models-src as cult-base-cor-nefandum-meshy.glb), whose drawing is plain smooth skin lobes: next to the other ten busy organs it read different. cor-nefandum-3 carries the veins, the cartilage webs round the eye and maw and the pale skin, and Meshy kept all of it. Before that: the hand-modelled cut (models-src/cult/base/cor-nefandum.py via base_build.py, 14,680 tris, models-src cult-base-cor-nefandum.glb) read as a cluster of eggs; TRELLIS 2 came back 36 components and crushed dark. roughness 0.3: a little wet highlight, crawled by the row's sheen. baseColor 0.7 like the other ten. Glows off models-src/cult/cult-base-cor-nefandum-3-meshy-emissive.png: tools/emissive.py on the BUILT glb, --box=-0.13,0.17,-0.14,0.21,0.2,0.9 --key warm --keylo 0.3 --modulate --tint ff0000 --res 1024 (188 tris, bleed 0), then the lit texels x1.71 (R p50 112 -> 192, the first cut's marker level: this drawing's eye is a dark red, not a lit one). A pure red MARKER for the row's PropLamps, which adds the pink-red HDR glow that blooms; emissiveStrength 0.5 is only the dim underlay. The rebuild with the map is byte-identical in positions and UVs, so the mask holds.",
       "last_converted": "2026-11-14T13:31:25Z",
-      "last_sig": "n1/20000/1024/0.05/-/cult/cult-base-cor-nefandum-3-meshy-emissive.png@0.5/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/20000/1024/0.05/-/cult/cult-base-cor-nefandum-3-meshy-emissive.png@0.5/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-flesh-block": {
+      "sat": 0.6,
       "src": "cult/cult-base-flesh-block-meshy.glb",
       "tris": 20000,
       "tex": 1024,
@@ -4720,9 +4722,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/flesh-block.png re-laid on black and lifted to subject p50 72, cut here to 20000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:13:18Z",
-      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-rat-nest": {
+      "sat": 0.6,
       "src": "cult/cult-base-rat-nest-meshy.glb",
       "tris": 20000,
       "tex": 1024,
@@ -4737,9 +4740,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/rat-nest.png re-laid on black and lifted to subject p50 72, cut here to 20000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:14:42Z",
-      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-crusher": {
+      "sat": 0.6,
       "src": "cult/cult-base-crusher-meshy.glb",
       "tris": 20000,
       "tex": 1024,
@@ -4754,10 +4758,11 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/crusher.png re-laid on black and lifted to subject p50 72, cut here to 20000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level. Meshy baked green specks (5.7% of the sheet, mostly in the maw) that the source never had: texSrc is its own sheet with hue 60..200 recoloured to dark flesh red at the same luminance.",
       "last_converted": "2026-11-13T21:39:18Z",
-      "last_sig": "n1/20000/1024/0.05/cult/cult-base-crusher-meshy-degreen.png/-/noMR/bc0.7,0.7,0.7,1/rf0.3",
+      "last_sig": "n1/20000/1024/0.05/cult/cult-base-crusher-meshy-degreen.png/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3",
       "texSrc": "cult/cult-base-crusher-meshy-degreen.png"
     },
     "cult/base-garbage-heap": {
+      "sat": 0.6,
       "src": "cult/cult-base-garbage-heap-meshy.glb",
       "tris": 20000,
       "tex": 1024,
@@ -4772,9 +4777,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/garbage-heap-hd.png re-laid on black and lifted to subject p50 72, cut here to 20000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:16:38Z",
-      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-body-storage": {
+      "sat": 0.6,
       "src": "cult/cult-base-body-storage-meshy.glb",
       "tris": 20000,
       "tex": 1024,
@@ -4789,9 +4795,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/body-storage.png re-laid on black and lifted to subject p50 72, cut here to 20000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:20:47Z",
-      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-cauldron": {
+      "sat": 0.6,
       "src": "cult/cult-base-cauldron-meshy.glb",
       "tris": 20000,
       "tex": 1024,
@@ -4806,9 +4813,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/cauldron.png re-laid on black and lifted to subject p50 72, cut here to 20000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:22:56Z",
-      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/20000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-rib-wall": {
+      "sat": 0.6,
       "src": "cult/cult-base-rib-wall-meshy.glb",
       "tris": 8000,
       "tex": 1024,
@@ -4823,9 +4831,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/rib-wall-1-hd.png re-laid on black and lifted to subject p50 72, cut here to 8000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:23:40Z",
-      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-rib-gate": {
+      "sat": 0.6,
       "src": "cult/cult-base-rib-gate-meshy.glb",
       "tris": 8000,
       "tex": 1024,
@@ -4840,9 +4849,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/rib-gate-2.png re-laid on black and lifted to subject p50 72, cut here to 8000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.55 holds the Cor's albedo level (its bone-heavy sheet measures lum 103 against the Cor's 79).",
       "last_converted": "2026-11-13T21:24:40Z",
-      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.55,0.55,0.55,1/rf0.3"
+      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.55,0.55,0.55,1/st0.6/rf0.3"
     },
     "cult/base-spine-turret": {
+      "sat": 0.6,
       "src": "cult/cult-base-spine-turret-meshy.glb",
       "tris": 8000,
       "tex": 1024,
@@ -4857,9 +4867,10 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/spine-turret.png re-laid on black and lifted to subject p50 72, cut here to 8000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:27:10Z",
-      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     },
     "cult/base-blood-trap": {
+      "sat": 0.6,
       "src": "cult/cult-base-blood-trap-meshy.glb",
       "tris": 8000,
       "tex": 1024,
@@ -4874,7 +4885,7 @@
       ],
       "note": "Meshy 6 (meshy_image_to_3d, $0.80) off Assets/Cult/Base/blood-trap.png re-laid on black and lifted to subject p50 72, cut here to 8000 like the Cor (the 1x1 organs at 8,000: a quarter of the screen area of a 2x2). roughness 0.3 for the wet highlight the row's sheen crawls; baseColor 0.7 holds the Cor's albedo level.",
       "last_converted": "2026-11-13T21:28:11Z",
-      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/rf0.3"
+      "last_sig": "n1/8000/1024/0.05/-/-/noMR/bc0.7,0.7,0.7,1/st0.6/rf0.3"
     }
   }
 }

@@ -69,6 +69,7 @@ class CultDetail
   static inline var GROW = 7.0;        // BASE_MS units a new organ's detail takes to grow in
   static inline var RADIAL = 10;       // vessel ring segments
   static inline var SKIN_LEN = 3.6;    // world length of one vessel-skin tile (its 8 ribs), round the ring too
+  static inline var SPLOTCH_ALPHA = 0.6; // splotch opacity: at full they read clearer than the rims they sit under
   static inline var SPLOTCH = 4;       // CultQuad.cell of the first splotch: 4 + k is cell k of the 4x4 splotch sheet
   static inline var BORN_OLD = -1e6;   // birth of everything already there at the area's first build
   static inline var COR_KEY = 'cult_cor_nefandum'; // the Cor's prop row key in render.world.ObjModels
@@ -95,8 +96,8 @@ class CultDetail
       this.scene = scene;
       this.game = game;
       this.model = model;
-      decalMat = decalMaterial('textures/cult/flesh-decals.png');
-      splotchMat = decalMaterial('textures/cult/flesh-splotches.png');
+      decalMat = decalMaterial('textures/cult/flesh-decals.png', 1.0);
+      splotchMat = decalMaterial('textures/cult/flesh-splotches.png', SPLOTCH_ALPHA);
       var skin = Textures.loadTexture('textures/cult/vessel-skin.png', 'wall');
       tubeMat = VisionMask.patch(vessel(new MeshStandardMaterial({
         map: skin,
@@ -107,8 +108,8 @@ class CultDetail
       }), corPos));
     }
 
-// a floor decal material over one sheet: the sheet is its own bump map for the wet glints
-  static function decalMaterial(path:String):Dynamic
+// a floor decal material over one sheet at an opacity: the sheet is its own bump map for the wet glints
+  static function decalMaterial(path:String, opacity:Float):Dynamic
     {
       var tex = Textures.loadTexture(path, 'wall');
       return VisionMask.patch(decal(new MeshStandardMaterial({
@@ -118,6 +119,7 @@ class CultDetail
         roughness: 0.35,
         metalness: 0.0,
         transparent: true,
+        opacity: opacity,
         depthWrite: false,
         side: THREE.FrontSide,
         polygonOffset: true,
@@ -261,6 +263,9 @@ class CultDetail
               if (!discOnFloor(fc, fr, size / CityConfig.CELL * 0.4))
                 continue;
               var ws = CityConfig.cellToWorld(fc, fr);
+              // the quad's whole circumradius, not the disc: the splotch art reaches into the corners
+              if (onGrate(ws.x, ws.z, size * 0.71))
+                continue;
               // the field order is the roll order: the tile pick, then the turn
               splotches.push(grown(o.id, false, {
                 cell: SPLOTCH + Std.int(r() * 16),
@@ -689,6 +694,17 @@ class CultDetail
 
   inline function floorAt(fc:Float, fr:Float):Bool
     return SewerModel.isFloor(model, Math.round(fc), Math.round(fr));
+
+// does a world disc touch one of the tunnel's drains? (none in a cave: its floor scatter lays none)
+  function onGrate(x:Float, z:Float, rad:Float):Bool
+    {
+      if (model.drains == null)
+        return false;
+      for (g in model.drains)
+        if ((g.x - x) * (g.x - x) + (g.z - z) * (g.z - z) < (g.r + rad) * (g.r + rad))
+          return true;
+      return false;
+    }
 
 // a decal of radius rad (cells) at (fc, fr) only where its whole disc stays on floor
   function discOnFloor(fc:Float, fr:Float, rad:Float):Bool

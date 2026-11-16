@@ -30,6 +30,9 @@ typedef Sewer = {
   // a mountain cave's rimstone pools (tiles.Sewers.TILE_FLOOR_POOL): floor in `floor`, walked by
   // nobody, each dressed with its basin by render.cave.CaveProps. the tunnels have none
   ?pools:Array<{ col:Int, row:Int }>,
+  // the drains render.sewer.SewerGround laid on the floor, as world discs: render.sewer.CultDetail
+  // keeps its splotches off them. a cave lays none
+  ?drains:Array<{ x:Float, z:Float, r:Float }>,
 };
 
 class SewerModel

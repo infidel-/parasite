@@ -8878,6 +8878,7 @@
       "built_srgb": 255.0
     },
     "cult/flesh-decals": {
+      "sat": 0.6,
       "src": "cult/flesh-decals-cut.png",
       "class": "sprite",
       "res": 1024,
@@ -8886,10 +8887,12 @@
       "prompt_exact": true,
       "note": "PACK4 of cult base floor flesh for render.sewer.CultDetail (rim TL, vessel branches BR; the branch root at (25, 235.5) of its 512 quarter; the TR and BL splotches are retired, the splotches live in cult/flesh-splotches). edit_image off blood-trap-5, gpt-image-2.6-sunburst transparent. The -cut copy remaps alpha (a-24)/72 to drop the faint halo, as in docs/jobs/cult-detail; Unused/flesh-decals.png is the untouched gen.",
       "last_converted": "2026-11-16T11:45:01",
-      "built_linear": 0.0513,
-      "built_srgb": 62.0
+      "built_linear": 0.0506,
+      "built_srgb": 63.4,
+      "last_sat": 0.6
     },
     "cult/flesh-splotches": {
+      "sat": 0.6,
       "src": "cult/flesh-splotches-cut.png",
       "class": "sprite",
       "res": 1024,
@@ -8898,10 +8901,12 @@
       "prompt_exact": true,
       "note": "PACK16 of cult base floor splotches for render.sewer.CultDetail (cell k = CultQuad.cell 4 + k, reading order). edit_image off Unused/flesh-decals.png, gpt-image-2.6-sunburst high transparent; the drop came back UNCUT (alpha min 28, 0% at 0) and one edit_image re-cut ('keep the splotches exactly, remove everything else') gave 72% at 0 (Unused/flesh-splotches-recut.png). Regridded with tools/pack16.py --valign center --margin 28 (scale 0.995, no upscale): flesh-splotches-cut.png. Unused/flesh-splotches.png is the uncut drop.",
       "last_converted": "2026-11-16T18:59:20",
-      "built_linear": 0.1054,
-      "built_srgb": 85.8
+      "built_linear": 0.1043,
+      "built_srgb": 87.3,
+      "last_sat": 0.6
     },
     "cult/vessel-skin": {
+      "sat": 0.6,
       "src": "cult/vessel-skin.png",
       "class": "tile",
       "needs_alpha": false,
@@ -8909,8 +8914,9 @@
       "prompt_exact": true,
       "note": "render.sewer.CultDetail vessel tubes: u along the tree (8 ribs = SKIN_LEN 3.6 world units), v round the ring by arc length, seam on the sunk underside. edit_image off Unused/flesh-decals.png, gpt-image-2.6-sunburst high. Wrap |diff| 4.8 H / 3.7 V against 1.5 interior; the rib pitch lands on 128 px so the H join falls between ribs.",
       "last_converted": "2026-11-16T18:57:26",
-      "built_linear": 0.0447,
-      "built_srgb": 58.5
+      "built_linear": 0.044,
+      "built_srgb": 60.5,
+      "last_sat": 0.6
     }
   }
 }

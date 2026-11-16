@@ -22,6 +22,7 @@ class SewerGround
 // all horizontal-surface dressing into the scene
   public static function build(scene:Scene, m:Sewer):Void
     {
+      m.drains = [];
       // ledge-top clutter: what would realistically sit on top of a tunnel wall, or fall onto it.
       // the pipe run is off (see SewerStyle). nothing crosses a cell edge up here — most of a tunnel
       // wall is one cell wide, so any spill goes over the drop
@@ -152,6 +153,10 @@ class SewerGround
             var cx = cell.col * CELL - half + CELL / 2 + ((h3 % 1000) / 1000.0 - 0.5) * (span - ex);
             var cz = cell.row * CELL - half + CELL / 2 + (((h3 >> 12) % 1000) / 1000.0 - 0.5) * (span - ez);
             top(bufs[ti], cx, cz, w, d, ang, o);
+            if (!o.solid &&
+                !t.organic &&
+                m.drains != null)
+              m.drains.push({ x: cx, z: cz, r: Math.max(w, d) * 0.71 });
           }
       for (i in 0...o.types.length)
         {
