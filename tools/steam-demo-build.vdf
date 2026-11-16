@@ -1,12 +1,13 @@
 // SteamPipe app build for the Parasite demo (app 1982220), filled in by `make steam-demo-upload`:
 // @DESC@ = src/VERSION, @PREVIEW@ = 1 for a dry run, @BRANCH@ = beta branch to set live (default
-// branch can only be set live on the Steamworks site), @DEVDIR@ = the dev build dir under Projects.
+// branch can only be set live on the Steamworks site), @DEVDIR@ = the dev build dir (env BUILD), relative
+// to the C:\ ContentRoot.
 // only the content depot: the demo's Electron runtime depot carries over from the previous build.
 "AppBuild"
 {
 	"AppID" "1982220"
 	"Desc" "@DESC@ demo"
-	"ContentRoot" "C:\\YandexDisk\\PC LIGHTSTAR\\Projects\\"
+	"ContentRoot" "C:\\"
 	"BuildOutput" "C:\\steamcmd\\output\\"
 	"Preview" "@PREVIEW@"
 	"SetLive" "@BRANCH@"

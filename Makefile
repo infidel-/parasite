@@ -123,13 +123,18 @@ steam-docs:
 # fill a Steam build script's placeholders (tools/steam-<vdf>-build.vdf) into out=, by default the steamcmd
 # scripts dir steam-upload / steam-demo-upload hand to steamcmd. it writes the vdf and nothing else, so it is
 # the safe way to check one (never `make -n` the upload targets: their $(MAKE) lines run under -n).
+# the vdf's ContentRoot is C:\, so BUILD and RELEASE_KIT go in as C:-relative paths with vdf-escaped
+# backslashes (win: /mnt/c/a/b -> a\\b; eight in the sed script, halved by it and by the sed below)
 # usage: make steam-vdf vdf=app|demo [out=x.vdf] [preview=1] [branch=staging]
 steam-vdf:
 	@test "$(vdf)" = app -o "$(vdf)" = demo || { echo "usage: make steam-vdf vdf=app|demo [out=x.vdf]"; exit 1; }
+	@for d in "$(BUILD)" "$(RELEASE_KIT)"; do case "$$d" in /mnt/c/*) ;; *) echo "steam-vdf: $$d is not on C:, the vdf's ContentRoot"; exit 1;; esac; done
+	win() { printf '%s' "$$1" | sed -e 's|^/mnt/c/||' -e 's|/|\\\\\\\\|g'; }; \
 	sed -e "s/@DESC@/$$(cat src/VERSION)/g" \
 	  -e "s/@PREVIEW@/$(or $(preview),0)/" \
 	  -e "s/@BRANCH@/$(branch)/" \
-	  -e "s/@DEVDIR@/$$(basename "$(BUILD)")/g" \
+	  -e "s|@DEVDIR@|$$(win "$(BUILD)")|g" \
+	  -e "s|@KIT@|$$(win "$(RELEASE_KIT)")|g" \
 	  tools/steam-$(vdf)-build.vdf > "$(or $(out),/mnt/c/steamcmd/scripts/app_build_$(if $(filter app,$(vdf)),1920320,1982220).vdf)"
 
 # upload the game to Steam with the Windows steamcmd in C:\steamcmd (login cached, name in .steam-user);

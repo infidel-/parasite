@@ -1,12 +1,13 @@
 // SteamPipe app build for Parasite (app 1920320), filled in by `make steam-upload`:
 // @DESC@ = src/VERSION, @PREVIEW@ = 1 for a dry run, @BRANCH@ = beta branch to set live (default
-// branch can only be set live on the Steamworks site), @DEVDIR@ = the dev build dir under Projects.
+// branch can only be set live on the Steamworks site), @DEVDIR@ = the dev build dir (env BUILD) and @KIT@ =
+// the release kit (env RELEASE_KIT), both relative to the C:\ ContentRoot.
 // the linux depot 1920323 is not built here: Windows steamcmd would drop its exec bits.
 "AppBuild"
 {
 	"AppID" "1920320"
 	"Desc" "@DESC@"
-	"ContentRoot" "C:\\YandexDisk\\PC LIGHTSTAR\\Projects\\"
+	"ContentRoot" "C:\\"
 	"BuildOutput" "C:\\steamcmd\\output\\"
 	"Preview" "@PREVIEW@"
 	"SetLive" "@BRANCH@"
@@ -33,22 +34,22 @@
 			}
 			"FileMapping"
 			{
-				"LocalPath" "Parasite\\_Build_\\common\\icons.txt"
+				"LocalPath" "@KIT@\\common\\icons.txt"
 				"DepotPath" "."
 			}
 			"FileMapping"
 			{
-				"LocalPath" "Parasite\\_Build_\\common\\sounds.txt"
+				"LocalPath" "@KIT@\\common\\sounds.txt"
 				"DepotPath" "."
 			}
 			"FileMapping"
 			{
-				"LocalPath" "Parasite\\_Build_\\common\\dev\\placeholder"
+				"LocalPath" "@KIT@\\common\\dev\\placeholder"
 				"DepotPath" "dev\\"
 			}
 			"FileMapping"
 			{
-				"LocalPath" "Parasite\\_Build_\\common\\mods\\placeholder"
+				"LocalPath" "@KIT@\\common\\mods\\placeholder"
 				"DepotPath" "mods\\"
 			}
 			// dev-only files living in the dev app dir
@@ -61,7 +62,7 @@
 		{
 			"FileMapping"
 			{
-				"LocalPath" "Parasite\\_Build_\\windows\\*"
+				"LocalPath" "@KIT@\\windows\\*"
 				"DepotPath" "."
 				"Recursive" "1"
 			}

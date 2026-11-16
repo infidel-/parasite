@@ -10,7 +10,7 @@
 # output dirs): change them there too
 HAXE_PORT=6000
 # the electron dist (unpacked zip, the dev install); `make` stages the app into BUILD/resources/app
-BUILD=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/parasite-v42.1.0-win32-x64
+BUILD=/mnt/c/infidel/parasite-v42.1.0-win32-x64
 # the asset store (Yandex Disk): raw generations and sources, never in git
 TEXTURES_SRC=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Assets/Textures-src
 MODELS_SRC=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Assets/Models-src
