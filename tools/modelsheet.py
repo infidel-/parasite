@@ -37,6 +37,7 @@ import argparse
 import sys
 
 from PIL import Image
+from env import resolve_args  # a leading app/, models-src/... resolves to its env dir
 
 
 def tiled(im, ru, rv, cell):
@@ -56,7 +57,7 @@ def main():
     ap.add_argument("--cell", type=int, default=512)
     ap.add_argument("--cols", type=int, default=2)
     ap.add_argument("--repeat", default="", help="per cell, comma-separated 'uxv' (e.g. 0.75x2)")
-    a = ap.parse_args()
+    a = ap.parse_args(resolve_args(sys.argv[1:]))
 
     reps = [tuple(float(v) for v in s.split("x")) for s in a.repeat.split(",")] if a.repeat else []
     if reps and len(reps) != len(a.src):

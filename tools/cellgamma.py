@@ -28,9 +28,11 @@ import sys
 
 import numpy as np
 from PIL import Image
+from env import resolve_args  # a leading app/, models-src/... resolves to its env dir
 
 
 def main():
+    sys.argv[1:] = resolve_args(sys.argv[1:])
     if len(sys.argv) < 4:
         sys.exit(__doc__.strip().splitlines()[-3].strip())
     src, dst = sys.argv[1], sys.argv[2]

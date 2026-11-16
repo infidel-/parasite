@@ -30,10 +30,12 @@ import sys
 import tempfile
 from datetime import datetime
 
+from env import path
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC_DIR = os.path.join(ROOT, "sounds-src")
+SRC_DIR = str(path("sounds-src"))
 # served from the electron app dir: shipped sounds flat, ours in one folder per area
-OUT_DIR = os.path.join(ROOT, "parasite", "resources", "app", "sound")
+OUT_DIR = str(path("app/sound"))
 INFO = os.path.join(ROOT, "art", "sounds.json")
 
 warnings = []

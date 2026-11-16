@@ -36,12 +36,13 @@ from datetime import datetime
 import numpy as np
 from PIL import Image
 
+from env import path
 from pix import measure  # one copy of the value statistic, shared with the measuring tool
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SRC_DIR = os.path.join(ROOT, "textures-src")
-# runtime textures are served from the electron app dir (staged into app/ by the build)
-OUT_DIR = os.path.join(ROOT, "parasite", "resources", "app", "textures")
+SRC_DIR = str(path("textures-src"))
+# runtime textures are served from the electron app dir (BUILD/resources/app in env)
+OUT_DIR = str(path("app/textures"))
 # the manifest is TRACKED and lives in the repo, while the sources it points at do not: it carries
 # every prompt, crop and lift, so a commit's measured constants (an aspect lock, a rail fraction)
 # stay explainable even though the art store is unversioned

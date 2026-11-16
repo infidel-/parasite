@@ -1,0 +1,26 @@
+# this project's out-of-repo folders and its haxe server port, read by the Makefiles (`include`), tools/env.py
+# and tools/env.mjs. full real paths, never a symlink (links trigger permission prompts in new sessions, and
+# ~/Projects is itself one).
+# FORMAT: KEY=value, no quotes, no space around '=', no trailing space. the Yandex paths hold a space: quote every
+# use in a recipe ("$(TEXTURES_SRC)"), never pass one through a Make function (wildcard, dir, notdir, foreach split
+# on spaces), and never `source` this file in a shell.
+# the docs' shorthand names map onto these: parasite/ = BUILD, app/ = BUILD/resources/app, textures-src/ =
+# TEXTURES_SRC, models-src/ = MODELS_SRC, sounds-src/ = SOUNDS_SRC, ai-src/ = AI_SRC, ObsidianReports/ =
+# OBSIDIAN_REPORTS. SOUNDS_SRC and MODELS_SRC are also written into .mcp.json (the fal-sfx and runware-trellis-2
+# output dirs): change them there too
+HAXE_PORT=6000
+# the electron dist (unpacked zip, the dev install); `make` stages the app into BUILD/resources/app
+BUILD=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/parasite-v42.1.0-win32-x64
+# the asset store (Yandex Disk): raw generations and sources, never in git
+TEXTURES_SRC=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Assets/Textures-src
+MODELS_SRC=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Assets/Models-src
+SOUNDS_SRC=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Sounds-src
+AI_SRC=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Assets/AI
+# the store's root: the original kra/png art tools/entities128.py packs
+ASSETS_SRC=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Assets
+# the Obsidian vault folder `make report` copies reports/ into
+OBSIDIAN_REPORTS=/mnt/c/YandexDisk/Obsidian/Parasite/reports
+# the itch browser demo `make -C src www-demo` stages into
+ITCH_DEMO=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/ItchDemo
+# the release kit: the Electron runtimes and root bits the Steam depots and itch zips take beside the game
+RELEASE_KIT=/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/_Build_

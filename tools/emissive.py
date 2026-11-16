@@ -52,6 +52,7 @@ import sys
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
+from env import resolve_args  # a leading app/, models-src/... resolves to its env dir
 
 CT = {5120: 'i1', 5121: 'u1', 5122: 'i2', 5123: 'u2', 5125: 'u4', 5126: 'f4'}
 NC = {'SCALAR': 1, 'VEC2': 2, 'VEC3': 3, 'VEC4': 4, 'MAT4': 16}
@@ -207,7 +208,7 @@ def main():
                          'set into is invisible; a speck on the far side of the model is not, and '
                          'that is still gated at 0')
     ap.add_argument('--preview', help='write a 3-view selection check here')
-    a = ap.parse_args()
+    a = ap.parse_args(resolve_args(sys.argv[1:]))
 
     g, bin_ = load(a.glb)
     prim = g['meshes'][0]['primitives'][0]

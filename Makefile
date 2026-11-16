@@ -1,6 +1,11 @@
 .DEFAULT_GOAL := game-debug
 
-.PHONY: game-debug testmod main test fixture report loc loc-probe loc-build mod-sdk steam-docs steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
+# the out-of-repo folders and the haxe port (see its header: quote every path use, the Yandex ones hold a space)
+include env
+# stop before any command if env lost a key: an empty path would turn "$(X)/" into "/"
+$(foreach k,HAXE_PORT BUILD OBSIDIAN_REPORTS RELEASE_KIT,$(if $($(k)),,$(error env: $(k) is empty)))
+
+.PHONY: game-debug testmod main test fixture report loc loc-probe loc-build mod-sdk steam-docs steam-vdf steam-upload steam-demo-upload itch-zips itch-push soviet soviet-preview sshot reload reload-load git-diff tex adopt model-deps models model-export ai gen sounds entities
 
 game-debug:
 	cd src && $(MAKE) electron
@@ -20,12 +25,12 @@ test:
 	cd src && haxe project_test.hxml
 	timeout 3600 node tools/test.mjs $(args)
 
-# pack a save slot as a test fixture: parasite/saveNN.json -> tests/saves/<name>-v<VERSION>.json.gz
+# pack a save slot as a test fixture: $(BUILD)/saveNN.json -> tests/saves/<name>-v<VERSION>.json.gz
 # (-n: no name or time in the gzip header, so one save packs to the same bytes). Then add its row
 # to tests/README.md. usage: make fixture name=<what-it-is> slot=<NN>
 fixture:
 	@test -n "$(name)" -a -n "$(slot)" || { echo "usage: make fixture name=<what-it-is> slot=<NN>"; exit 1; }
-	gzip -n -9 -c parasite/save$(slot).json > tests/saves/$(name)-v$$(cat src/VERSION).json.gz
+	gzip -n -9 -c "$(BUILD)/save$(slot).json" > tests/saves/$(name)-v$$(cat src/VERSION).json.gz
 	@echo "added tests/saves/$(name)-v$$(cat src/VERSION).json.gz: add its row to tests/README.md"
 
 # dev: screenshot the running game over CDP -> sshot.jpg (game must run on debug port 9300)
@@ -49,19 +54,19 @@ git-diff:
 	@git --no-pager diff HEAD
 	@git --no-pager status --short
 
-# 3D street-view texture pipeline: downscale/bake textures-src/ 1024px sources
-# straight into the app dir (app/textures/, per art/textures.json). textures-src is a
-# symlink to the asset store; the sources are NOT committed, the manifest IS.
+# 3D street-view texture pipeline: downscale/bake $(TEXTURES_SRC) 1024px sources
+# straight into the app dir (app/textures/, per art/textures.json). the sources live in the
+# asset store and are NOT committed, the manifest IS.
 tex:
 	python3 tools/textures.py
 
-# sound pipeline: sounds-src/<area>/*.wav (fal-sfx MCP takes) -> app/sound/<name><N>.mp3, mono,
+# sound pipeline: $(SOUNDS_SRC)/<area>/*.wav (fal-sfx MCP takes) -> app/sound/<name><N>.mp3, mono,
 # one static gain to the manifest's LUFS, loops seamed. never touches a sound it did not make.
-# sounds-src is a symlink; the wavs are NOT committed, art/sounds.json IS
+# the wavs live in the asset store and are NOT committed, art/sounds.json IS
 sounds:
 	python3 tools/sounds.py
 
-# the 128 px entities sheet: the original kra/png art under the asset store (and the generated sheets
+# the 128 px entities sheet: the original kra/png art under $(ASSETS_SRC) (and the generated sheets
 # in textures-src/img/entities128/) -> app/img/entities128.png
 entities:
 	python3 tools/entities128.py
@@ -78,8 +83,8 @@ ai:
 model-deps:
 	npm --prefix tools install
 
-# 3D model pipeline: decimate + shrink embedded textures of models-src/ .glb sources
-# straight into app/models/ (per art/models.json). models-src is a symlink; the sources are NOT
+# 3D model pipeline: decimate + shrink embedded textures of $(MODELS_SRC) .glb sources
+# straight into app/models/ (per art/models.json). the sources live in the asset store and are NOT
 # committed, the manifest IS.
 models:
 	node tools/models.mjs
@@ -95,16 +100,16 @@ testmod:
 chainsaw:
 	cd examples/chainsaw/ && $(MAKE)
 
-# build the soviet UI overhaul mod and stage it into parasite/dev/soviet/
+# build the soviet UI overhaul mod and stage it into $(BUILD)/dev/soviet/
 soviet:
 	cd examples/soviet/ && $(MAKE)
 
-# stage the standalone browser preview into parasite/soviet/
+# stage the standalone browser preview into $(BUILD)/soviet/
 soviet-preview:
-	mkdir -p parasite/soviet
-	cp examples/soviet/preview/index.html parasite/soviet/index.html
-	cp examples/soviet/preview/style.css  parasite/soviet/style.css
-	cp examples/soviet/preview/app.js     parasite/soviet/app.js
+	mkdir -p "$(BUILD)/soviet"
+	cp examples/soviet/preview/index.html "$(BUILD)/soviet/index.html"
+	cp examples/soviet/preview/style.css  "$(BUILD)/soviet/style.css"
+	cp examples/soviet/preview/app.js     "$(BUILD)/soviet/app.js"
 
 pickpocket:
 	cd examples/pickpocket/ && $(MAKE)
@@ -113,7 +118,19 @@ main:
 	cd electron && $(MAKE)
 
 steam-docs:
-	node electron/tools/md-to-steam.js parasite-mod-sdk/docs parasite/docs-steam
+	node electron/tools/md-to-steam.js parasite-mod-sdk/docs "$(BUILD)/docs-steam"
+
+# fill a Steam build script's placeholders (tools/steam-<vdf>-build.vdf) into out=, by default the steamcmd
+# scripts dir steam-upload / steam-demo-upload hand to steamcmd. it writes the vdf and nothing else, so it is
+# the safe way to check one (never `make -n` the upload targets: their $(MAKE) lines run under -n).
+# usage: make steam-vdf vdf=app|demo [out=x.vdf] [preview=1] [branch=staging]
+steam-vdf:
+	@test "$(vdf)" = app -o "$(vdf)" = demo || { echo "usage: make steam-vdf vdf=app|demo [out=x.vdf]"; exit 1; }
+	sed -e "s/@DESC@/$$(cat src/VERSION)/g" \
+	  -e "s/@PREVIEW@/$(or $(preview),0)/" \
+	  -e "s/@BRANCH@/$(branch)/" \
+	  -e "s/@DEVDIR@/$$(basename "$(BUILD)")/g" \
+	  tools/steam-$(vdf)-build.vdf > "$(or $(out),/mnt/c/steamcmd/scripts/app_build_$(if $(filter app,$(vdf)),1920320,1982220).vdf)"
 
 # upload the game to Steam with the Windows steamcmd in C:\steamcmd (login cached, name in .steam-user);
 # only changed chunks go up. needs `make mod-sdk` for this version first. the default branch is set
@@ -122,14 +139,10 @@ steam-docs:
 steam-upload:
 	git diff --quiet HEAD -- src electron || { echo 'uncommitted src/electron changes'; exit 1; }
 	$(if $(allow-stale),,python3 tools/loc/extract.py --strict || { echo 'untranslated strings in a shipped language (listed above); translate them (make loc) or pass allow-stale=1'; exit 1; })
-	test -f parasite/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip
+	test -f "$(BUILD)/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip"
 	$(MAKE) game-debug main
 	mkdir -p /mnt/c/steamcmd/scripts
-	sed -e "s/@DESC@/$$(cat src/VERSION)/g" \
-	  -e "s/@PREVIEW@/$(or $(preview),0)/" \
-	  -e "s/@BRANCH@/$(branch)/" \
-	  -e "s/@DEVDIR@/$$(basename "$$(readlink -f parasite)")/g" \
-	  tools/steam-app-build.vdf > /mnt/c/steamcmd/scripts/app_build_1920320.vdf
+	$(MAKE) steam-vdf vdf=app
 	/mnt/c/steamcmd/steamcmd.exe +login $$(cat .steam-user) \
 	  +run_app_build 'C:\steamcmd\scripts\app_build_1920320.vdf' +quit
 
@@ -142,26 +155,22 @@ steam-demo-upload:
 	$(MAKE) -C src electron-demo
 	$(MAKE) main
 	mkdir -p /mnt/c/steamcmd/scripts
-	sed -e "s/@DESC@/$$(cat src/VERSION)/g" \
-	  -e "s/@PREVIEW@/$(or $(preview),0)/" \
-	  -e "s/@BRANCH@/$(branch)/" \
-	  -e "s/@DEVDIR@/$$(basename "$$(readlink -f parasite)")/g" \
-	  tools/steam-demo-build.vdf > /mnt/c/steamcmd/scripts/app_build_1982220.vdf
+	$(MAKE) steam-vdf vdf=demo
 	/mnt/c/steamcmd/steamcmd.exe +login $$(cat .steam-user) \
 	  +run_app_build 'C:\steamcmd\scripts\app_build_1982220.vdf' +quit; \
 	  r=$$?; make game-debug; exit $$r
 
-# itch.io zips, the same files as the Steam depots: Electron runtime + root bits from _Build_, the game
-# straight from the dev dir -> _Build_/parasite-<VERSION>-win32.zip / -linux64.zip. zipped from WSL, so
-# the linux binaries keep their exec bits. upload them on itch by hand.
+# itch.io zips, the same files as the Steam depots: Electron runtime + root bits from $(RELEASE_KIT), the
+# game straight from the dev dir ($(BUILD)) -> $(RELEASE_KIT)/parasite-<VERSION>-win32.zip / -linux64.zip.
+# zipped from WSL, so the linux binaries keep their exec bits. upload them on itch by hand.
 itch-zips:
 	git diff --quiet HEAD -- src electron || { echo 'uncommitted src/electron changes'; exit 1; }
-	test -f parasite/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip
+	test -f "$(BUILD)/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip"
 	$(MAKE) game-debug main
 	set -e; \
 	v=$$(cat src/VERSION); \
-	dev="$$(readlink -f parasite)"; \
-	b="$$(dirname "$$dev")/Parasite/_Build_"; \
+	dev="$(BUILD)"; \
+	b="$(RELEASE_KIT)"; \
 	for os in win32 linux64; do \
 	  out="$$b/parasite-$$v-$$os.zip"; \
 	  rm -f "$$out"; \
@@ -183,7 +192,7 @@ itch-zips:
 itch-push:
 	set -e; \
 	v=$$(cat src/VERSION); \
-	b="$$(dirname "$$(readlink -f parasite)")/Parasite/_Build_"; \
+	b="$(RELEASE_KIT)"; \
 	for c in win32:windows linux64:linux; do \
 	  /mnt/c/butler/butler.exe push $(if $(dry),--dry-run) \
 	    "$$(wslpath -w "$$b/parasite-$$v-$${c%%:*}.zip")" starinfidel/parasite:$${c##*:} \
@@ -205,10 +214,10 @@ loc-build:
 	python3 tools/loc/translate.py build --lang $(or $(lang),fr)
 
 report:
-	cp -Rf reports/* ObsidianReports/
+	cp -Rf reports/* "$(OBSIDIAN_REPORTS)/"
 
 # regenerates the full engine externs (curated set wins on overlap), then zips
-# the SDK into parasite/mod-sdk/ for shipping with the game download
+# the SDK into $(BUILD)/mod-sdk/ for shipping with the game download
 mod-sdk:
 	cd src && haxe project_electron.hxml -xml ../bin/types.xml --no-output
 	haxe -cp parasite-mod-sdk/gen-externs --run GenExterns \
@@ -221,8 +230,8 @@ mod-sdk:
 	cp -r examples/testmod parasite-mod-sdk/examples/testmod
 	rm -f parasite-mod-sdk/examples/testmod/.workshop-id \
 	  parasite-mod-sdk/examples/testmod/entry.js.map
-	mkdir -p parasite/mod-sdk
-	rm -f parasite/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip
+	mkdir -p "$(BUILD)/mod-sdk"
+	rm -f "$(BUILD)/mod-sdk/parasite-mod-sdk-$$(cat src/VERSION).zip"
 	cd parasite-mod-sdk && zip -rq \
-	  ../parasite/mod-sdk/parasite-mod-sdk-$$(cat ../src/VERSION).zip \
+	  "$(BUILD)/mod-sdk/parasite-mod-sdk-$$(cat ../src/VERSION).zip" \
 	  externs externs-generated template examples docs README.md

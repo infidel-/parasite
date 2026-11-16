@@ -16,13 +16,13 @@ over LUMA_HI.
 render.military.MilitaryGeom.coil maps u 0..1 round the tube and v at LV world units.
 """
 import math
-import os
 import numpy as np
 from PIL import Image
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW = os.path.join(ROOT, "textures-src", "unused", "military", "razor-coil-raw.png")
-OUT = os.path.join(ROOT, "textures-src", "military", "razor-coil.png")
+from env import path
+
+RAW = str(path("textures-src/unused/military/razor-coil-raw.png"))
+OUT = str(path("textures-src/military/razor-coil.png"))
 
 DIAMETER = 1.12  # MilitaryGeom.WIRE_D
 CIRC = math.pi * DIAMETER

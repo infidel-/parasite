@@ -9,9 +9,12 @@ the source of record, so a single cell that has gone dead (here facility/electri
 usage: pastecell.py <sheet.png> <object.png> <cellIndex> [--grid 8] [--margin 10]
 """
 import argparse
+import sys
 
 import numpy as np
+
 from PIL import Image
+from env import resolve_args  # a leading app/, models-src/... resolves to its env dir
 
 # pack16's own: alpha at or under this is the wash gpt paints outside the subject, not the subject
 CUT = 24
@@ -24,7 +27,7 @@ def main():
     ap.add_argument("cell", type=int)
     ap.add_argument("--grid", type=int, default=8)
     ap.add_argument("--margin", type=int, default=10)
-    a = ap.parse_args()
+    a = ap.parse_args(resolve_args(sys.argv[1:]))
 
     # read it all in and drop the handle: textures-src is a mounted share, and saving over a path
     # PIL still has lazily open there fails with EINVAL rather than with anything readable

@@ -2,12 +2,11 @@
 import sharp from 'sharp';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
+import { ENV, APP } from './env.mjs';
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SRC = join(ROOT, 'ai-src');
-const OUT = join(ROOT, 'parasite/resources/app/img');
+const SRC = ENV.AI_SRC;
+const OUT = join(APP, 'img');
 const INFO = join(SRC, 'ai.json');
 
 // returns a stable timestamp for a source file.

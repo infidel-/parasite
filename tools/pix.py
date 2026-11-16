@@ -39,6 +39,7 @@ import numpy as np
 from PIL import Image
 
 from livery import to_hsv  # the same vectorised rgb->hsv the livery recolour uses
+from env import resolve_args  # a leading app/, models-src/... resolves to its env dir
 
 # render.particles.Sprites.SIZE = CityConfig.CELL * 0.75 — an atlas cell's world size at scale 1
 SPRITE_SIZE = 3.0
@@ -192,4 +193,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main(resolve_args(sys.argv[1:]))

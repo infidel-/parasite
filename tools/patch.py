@@ -16,6 +16,7 @@ import sys
 
 import numpy as np
 from PIL import Image, ImageFilter
+from env import resolve_args  # a leading app/, models-src/... resolves to its env dir
 
 
 def box(s: str):
@@ -67,6 +68,7 @@ def selftest():
 
 
 if __name__ == "__main__":
+    sys.argv[1:] = resolve_args(sys.argv[1:])
     cmd = sys.argv[1]
     if cmd == "mask":
         mask(int(sys.argv[2]), int(sys.argv[3]), box(sys.argv[4]), sys.argv[5])

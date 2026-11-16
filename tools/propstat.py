@@ -52,6 +52,7 @@ import sys
 
 import numpy as np
 from PIL import Image
+from env import resolve_args  # a leading app/, models-src/... resolves to its env dir
 
 
 # the sRGB transfer both ways, on 0..255 bytes. here because `baseColor` multiplies in LINEAR light
@@ -387,7 +388,7 @@ def fit(path, out, margin):
           % (s, margin, out))
 
 
-args = sys.argv[1:]
+args = resolve_args(sys.argv[1:])
 if not args:
     sys.exit(__doc__)
 if args[0] == '--audit':

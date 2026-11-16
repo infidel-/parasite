@@ -1,12 +1,17 @@
 #VERSION=`cat VERSION`
 VERSION := $(shell cat VERSION)
-PORT ?= $(strip $(shell cat ../.haxe-port 2>/dev/null))
+# the out-of-repo folders and the haxe port (see its header: every path use is quoted, the Yandex ones hold a space)
+include ../env
+# stop before any command if env lost a key: an empty path would turn "$(X)/" into "/"
+$(foreach k,HAXE_PORT BUILD ITCH_DEMO,$(if $($(k)),,$(error env: $(k) is empty)))
+PORT ?= $(HAXE_PORT)
+APP := $(BUILD)/resources/app
 
 all: clean electron
 
 check-port:
 	@if [ -z "$(PORT)" ]; then \
-		echo "Error: missing Haxe server port. Put a number in ../.haxe-port or pass PORT=<port>."; \
+		echo "Error: missing Haxe server port. Set HAXE_PORT in ../env or pass PORT=<port>."; \
 		exit 1; \
 	fi
 	@if ! printf '%s' "$(PORT)" | grep -Eq '^[0-9]+$$'; then \
@@ -22,9 +27,9 @@ electron: check-port
 	echo 'Haxe server port =' $(PORT)
 	haxe project_electron.hxml -debug \
       --connect $(PORT) && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../electron/three.global.js ../app/ && \
-    mkdir -p ../app/lang ../electron/lang && cp -r ../electron/lang/. ../app/lang/ && \
-    cp ../changes.md ../parasite/
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../electron/three.global.js "$(APP)/" && \
+    mkdir -p "$(APP)/lang" ../electron/lang && cp -r ../electron/lang/. "$(APP)/lang/" && \
+    cp ../changes.md "$(BUILD)/"
 	$(MAKE) loc-test
 	$(MAKE) test-quick
 	python3 ../tools/loc/extract.py --check
@@ -43,13 +48,13 @@ test-quick: check-port
 electron-demo: check-port
 	haxe project_electron.hxml -debug \
       -D demo && \
-    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../electron/three.global.js ../app/
+    cp ../bin/parasite.js* ../electron/app.html ../electron/app.css ../electron/fonts.css ../electron/preload.js ../electron/three.global.js "$(APP)/"
 
 www-demo: check-port
 	echo 'Haxe server port =' $(PORT)
 	haxe project_www.hxml -debug \
       -D demo \
       --connect $(PORT) && \
-    cp ../bin/parasite.js* ~/ItchDemo/
+    cp ../bin/parasite.js* "$(ITCH_DEMO)/"
 
 clean:

@@ -1,6 +1,6 @@
 // offline model bake: mirror of tools/textures.py for .glb props.
 // walks art/models.json, decimates each source to a target tri count (meshopt) and shrinks
-// its embedded texture, writes a self-contained optimized glb into parasite/resources/app/models/.
+// its embedded texture, writes a self-contained optimized glb into app/models/ (BUILD/resources/app in env).
 // models.json is both manifest and cache: a per-entry last_converted stamp drives the mtime-skip.
 import { NodeIO } from '@gltf-transform/core';
 import { ALL_EXTENSIONS, KHRMaterialsEmissiveStrength } from '@gltf-transform/extensions';
@@ -10,10 +10,11 @@ import sharp from 'sharp';
 import { readFileSync, writeFileSync, existsSync, statSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
+import { ENV, APP } from './env.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const SRC = join(ROOT, 'models-src');
-const OUT = join(ROOT, 'parasite/resources/app/models');
+const SRC = ENV.MODELS_SRC;
+const OUT = join(APP, 'models');
 // the manifest is TRACKED and lives in the repo, while the sources it points at do not: it carries
 // every entry's params and notes, so a commit stays explainable even though the art store is not
 // versioned (mirrors textures.py's art/textures.json)

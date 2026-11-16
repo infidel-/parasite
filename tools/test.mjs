@@ -32,6 +32,7 @@ import { availableParallelism } from 'node:os';
 import { createRequire, register } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
+import { ENV, APP } from './env.mjs';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 
@@ -254,12 +255,12 @@ const modInfos = () => {
   const f = run.split(':');
   const start = ((f[0] == 'loc' ? f[2] : f[1]) ?? '').split('+')[0];
   // the `mods` start: a new game with every mod installed
-  const ids = (start == 'mods' ? readdirSync(resolve(root, 'parasite', 'dev')).sort().map((id) => ({ id })) :
+  const ids = (start == 'mods' ? readdirSync(resolve(ENV.BUILD, 'dev')).sort().map((id) => ({ id })) :
     start.startsWith('save/') ?
       JSON.parse(gunzipSync(readFileSync(resolve(root, 'tests', 'saves', start.substr(5)))))._activeMods ?? [] : []);
   const out = [];
   for (const { id } of ids) {
-    const rootDir = resolve(root, 'parasite', 'dev', id);
+    const rootDir = resolve(ENV.BUILD, 'dev', id);
     if (!existsSync(resolve(rootDir, 'manifest.json')))
       continue;
     const m = JSON.parse(readFileSync(resolve(rootDir, 'manifest.json'), 'utf8'));
@@ -319,7 +320,7 @@ const host = {
       host.alerts.push(String(line));
     return true;
   } },
-  assets: { listSounds: () => listSounds(resolve(root, 'app', 'sound'), '') },
+  assets: { listSounds: () => listSounds(resolve(APP, 'sound'), '') },
   mods: { list: () => mods, rescan: () => mods, openFolder: () => {} },
   shell: { openExternal: () => {} },
   debug: { writeRegionRoads: () => {}, writeRegionBuildings: () => {}, writeImage: () => {} },

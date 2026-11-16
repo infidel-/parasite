@@ -31,8 +31,11 @@ import sys
 from collections import Counter
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from env import path  # noqa: E402  (tools/env.py: app/ is BUILD/resources/app)
+
 ROOT = Path(__file__).resolve().parent.parent.parent
-FONT_DIR = ROOT / "app" / "fonts"
+FONT_DIR = path("app/fonts")
 CONFIG = ROOT / "src" / "Config.hx"
 LANG_OUT = ROOT / "electron" / "lang"
 RARE = 3  # characters used fewer times than this do not disqualify a font

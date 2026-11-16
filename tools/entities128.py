@@ -39,11 +39,13 @@ import zipfile
 import numpy as np
 from PIL import Image, ImageFilter
 
+from env import ENV, path
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-ASSETS = os.path.realpath(os.path.join(ROOT, 'textures-src', '..'))
-GEN = os.path.join(ROOT, 'textures-src', 'img', 'entities128', '%s.png')
+ASSETS = ENV['ASSETS_SRC']
+GEN = str(path('textures-src/img/entities128')) + '/%s.png'
 REFS = os.path.join(ROOT, 'tools', 'entities128.json')
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'app', 'img', 'entities128.png')
+OUT = sys.argv[1] if len(sys.argv) > 1 else str(path('app/img/entities128.png'))
 CELL = 128
 COLS = 8
 # Const.HD128, in its order
