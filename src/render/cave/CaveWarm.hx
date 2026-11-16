@@ -17,6 +17,8 @@ class CaveWarm
       var model = CaveModel.demo();
       var sc = CaveScene.build(renderer, model, lampPool).scene;
       CaveGeom.build(sc, model);
+      // the cult base's two floor programs: a base can stand in a mountain cave too
+      render.sewer.CultDetail.warm(sc);
       var fx = new Group();
       sc.add(fx);
       new render.particles.MuzzleLights(fx);

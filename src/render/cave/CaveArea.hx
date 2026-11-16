@@ -27,6 +27,7 @@ class CaveArea implements Area3D
   var props:Array<render.world.ObjModels.PropBatch>; // object props: solid / ghost / outline batches
   var tactical = false;                  // tactical view up: the props draw their outline shells
   var sounds:CaveSounds;                 // the cave's beds, loops and one-shots
+  var cult:render.sewer.CultDetail;      // the cult base's floor flesh and vessels (empty without a base)
 
   public function new(game:Game, model:Sewer)
     {
@@ -62,6 +63,9 @@ class CaveArea implements Area3D
       // the dressing against the wall foot: decoration, built once, nothing per frame
       CaveProps.build(scene, model);
       props = render.world.ObjModels.build(scene, game, objYaw, null, objWall);
+      // the cult base's flesh and vessels, as in render.sewer.SewerArea
+      cult = new render.sewer.CultDetail(scene, game, model);
+      cult.rebuild();
       // the blocker predicate is the floor grid, not area.canSeeThrough (see SewerArea)
       VisionMask.attach(CaveStyle.MASK, model.w, model.h,
         function(col, row) return !SewerModel.isFloor(model, col, row));
@@ -105,6 +109,7 @@ class CaveArea implements Area3D
         return;
       render.world.ObjModels.dispose(sceneRef, props);
       props = render.world.ObjModels.build(sceneRef, game, objYaw, null, objWall);
+      cult.rebuild();
     }
 
 // every light is a pooled one, so the fake shadows come from LampLights.active()
@@ -122,6 +127,7 @@ class CaveArea implements Area3D
       render.world.ObjModels.cull(props, opts, tactical && opts.ui);
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
+      cult.syncCor(props);
       // the pools' ripples, the dressing's shimmer and the dust in the moonlight, above the gate for
       // the same reason
       CaveWater.tick(opts.dtMs);

@@ -29,6 +29,7 @@ class SewerArea implements Area3D
   var props:Array<render.world.ObjModels.PropBatch>; // object props: solid / ghost / outline batches
   var tactical = false;                  // tactical view up: the props draw their outline shells
   var sounds:SewerSounds;                // the sewers' beds, loops and one-shots; null in a habitat
+  var cult:CultDetail;                   // the cult base's floor flesh and vessels (empty without a base)
 
   public function new(game:Game, model:Sewer)
     {
@@ -76,6 +77,9 @@ class SewerArea implements Area3D
       // habitat its four grown objects. only tunnel areas ever hold either — WorldConst declares
       // `exit: 'sewer_exit'` on AREA_SEWERS alone and game.Habitat only ever builds into AREA_HABITAT
       props = render.world.ObjModels.build(scene, game, objYaw, null, objWall);
+      // the cult base's flesh and vessels over the floor, derived from its organs
+      cult = new CultDetail(scene, game, model);
+      cult.rebuild();
       // the vision mask's texture and world->uv transform. the tunnel materials patched themselves as
       // the builders above made them; this only has to exist before the first sample.
       // the blocker predicate is isFloor and NOT area.canSeeThrough, which is object-aware and would
@@ -144,6 +148,8 @@ class SewerArea implements Area3D
       var old = props;
       props = render.world.ObjModels.build(sceneRef, game, objYaw, null, objWall);
       render.world.ObjModels.handOver(sceneRef, old, props);
+      // an organ built or replaced: its detail grows in, nothing older moves
+      cult.rebuild();
     }
 
 // every LAMP down here is a pooled fixture — a manhole shaft or a wall bracket — so their fake
@@ -168,6 +174,7 @@ class SewerArea implements Area3D
       // through the pull-out, and a shared uniform freezing mid-shot is exactly when it would show
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
+      cult.syncCor(props);
       // and the trickles' flow, above the gate for the same reason
       SewerWater.tick(opts.dtMs);
       // the exit ladders take their patches here rather than in ObjModels, which the city shares:

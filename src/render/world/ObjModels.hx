@@ -1907,6 +1907,10 @@ class ObjModels
       };
     }
 
+// the cult heartbeat's rate in radians per BASE_MS: 4 s a beat (2 PI / (4000 / 150)). one constant for
+// the organs and render.sewer.CultDetail's vessels, so a pulse leaves the Cor on its own kick
+  public static inline var FLESH_RATE = 0.2356;
+
 // the cult organs' heartbeat (PropFlesh), one knob set for all of them: only the glow and the core move.
 // slow and faint on purpose, a resting beat under the skin rather than a light show
   static function flesh(glow:Float, coreY:Float, coreZ:Float):PropFlesh
@@ -1915,7 +1919,7 @@ class ObjModels
         color: 0xff1030,
         glow: glow,
         base: 0.004,
-        rate: 0.35, // ~2.7 s a beat, half the harness preview's pace
+        rate: FLESH_RATE,
         wave: 0.8,
         lumLo: 0.012,
         lumHi: 0.035,

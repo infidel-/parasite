@@ -22,6 +22,9 @@ class SewerWarm
       var model = SewerModel.demo();
       var sc = SewerScene.build(renderer, model, lampPool).scene;
       SewerGeom.build(sc, model);
+      // the cult base's two floor programs (render.sewer.CultDetail). the demo tunnel has no base, so
+      // its build would draw nothing and warm nothing
+      CultDetail.warm(sc);
       // and the muzzle-flash point-light pool, for the SAME reason the city warm scene parks one:
       // Actors adds it to every real scene, tunnels included, and NUM_POINT_LIGHTS is in every lit
       // material's program key. without it the whole shell warms at 0 point lights and recompiles at

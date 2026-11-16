@@ -60,7 +60,19 @@ class PropGlow
   // plain multipliers and writing .value here reaches every material at once. its own clock rather
   // than render.world.PropShader's on purpose: a module that silently freezes because a DIFFERENT
   // module stopped being ticked is the kind of coupling that is only ever found the hard way
-  static var uTime = { value: 0.0 };
+  // public so a material outside these patches can bind the SAME object and beat in step:
+  // render.sewer.CultDetail's vessels carry the Cor's pulse out across the floor
+  public static var uTime = { value: 0.0 };
+  // lub-dub: two gaussian kicks per 2 PI of phase, 1.0 and 0.55 tall, ~0 in between. shared with the
+  // cult vessels for the same reason as uTime
+  public static inline var BEAT_GLSL =
+    'float propFleshBeatAt( float ph )\n' +
+    '{\n' +
+    '  float f = fract( ph * 0.15915 );\n' +
+    '  float a = f - 0.08;\n' +
+    '  float b = f - 0.30;\n' +
+    '  return exp( - a * a * 60.0 ) + 0.55 * exp( - b * b * 60.0 );\n' +
+    '}\n';
 
 // advance the shared clock. call once per frame from the area kind's tick, BEFORE the patches below
   public static function tick(dtMs:Float):Void
@@ -367,14 +379,7 @@ class PropGlow
           'uniform vec4 propFleshKey;\n' +
           'uniform vec3 propFleshVein;\n' +
           'uniform vec3 propFleshCore;\n' +
-          // lub-dub: two gaussian kicks per 2 PI of phase, 1.0 and 0.55 tall, ~0 in between
-          'float propFleshBeatAt( float ph )\n' +
-          '{\n' +
-          '  float f = fract( ph * 0.15915 );\n' +
-          '  float a = f - 0.08;\n' +
-          '  float b = f - 0.30;\n' +
-          '  return exp( - a * a * 60.0 ) + 0.55 * exp( - b * b * 60.0 );\n' +
-          '}\n' : '') +
+          BEAT_GLSL : '') +
         'varying vec3 vGlowPos;\n' +
         'varying float vGlowPh;\n' + // ALREADY hashed to 0..1 by the vertex half — see the note there
         'varying float vGlowCam;\n' + // camera azimuth in the INSTANCE's own local frame

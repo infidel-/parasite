@@ -340,6 +340,15 @@ typedef RendererInfo = {
   public var needsUpdate:Bool;
 }
 
+// a smooth curve through points (render.sewer.CultDetail's vessels). 'centripetal' never loops or
+// overshoots on an uneven point spacing, which a jittered cell path always has
+@:native("THREE.CatmullRomCurve3") extern class CatmullRomCurve3 {
+  public function new(points:Array<Vector3>, ?closed:Bool, ?curveType:String, ?tension:Float);
+  public function getPointAt(u:Float, ?target:Vector3):Vector3;   // point at arc-length fraction u (0..1)
+  public function getTangentAt(u:Float, ?target:Vector3):Vector3; // unit tangent at arc-length fraction u
+  public function getLength():Float;                              // total arc length, world units
+}
+
 @:native("THREE.MeshStandardMaterial") extern class MeshStandardMaterial {
   public function new(params:Dynamic);
   public var map:Texture;
