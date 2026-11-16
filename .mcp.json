@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "fal-sfx": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/infidel/git/fal-sfx-mcp/build/index.js"
+      ],
+      "env": {
+        "FAL_SFX_OUTPUT_DIR": "/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Sounds-src"
+      }
+    },
+    "runware-trellis-2": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/infidel/git/runware-trellis-2-mcp/build/index.js"
+      ],
+      "env": {
+        "RUNWARE_TRELLIS_OUTPUT_DIR": "/mnt/c/YandexDisk/PC LIGHTSTAR/Projects/Parasite/Assets/Models-src"
+      }
+    }
+  }
+}
