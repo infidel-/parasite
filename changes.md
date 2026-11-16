@@ -1,46 +1,39 @@
 # Changes
 
-## 1.1.1
+## 1.2
 
 ### Changes
 - art: cult base buildings are now 3D
 - art: the cult base grows flesh and pulsing vessels across its habitat floor
-- console: `bot` lets a test bot play the game (debug build)
 - cult: a member's death fails any ordeal it is locked in, profane ones too
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map
 - mods: `ai:die-region` event when the host dies on the region map
-- ui: Forma has its own build screen
 - ui: [beta] German translation
+- ui: Forma has its own build screen
 
 ### Fixes
 - boot: a damaged language file starts the game in English instead of not at all
 - cult: a base defense whose attackers vanished without dying sends a fresh wave instead of never ending
 - cult: a cult destroyed during a base defense no longer freezes the base and the team attacking it
 - cult: a Kill or Persuade target no longer wanders off and returns elsewhere
+- cult: a load no longer lets a new cult mission take an id already in use
 - cult: a mission target keeps its marker after a load
 - cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
 - cult: a summoned cultist taken over by the parasite grows organs on its own body
 - cult: a team ambush set before the base grew no longer burns the base habitat
-- cult: an Elevate the faithful that fails on its target's death no longer names it "null"
 - cult: custodes no longer keep the player inside the base habitat
 - cult: the second metamorphosis performed outside a habitat is refused instead of used up
 - game: a despawned AI no longer stays the attack target
 - game: a former NPC host reported dead after getting away stays dead
 - game: a host grown into a habitat organ no longer comes back as its NPC
-- game: a host whose attributes drop no longer keeps energy above its new maximum
-- game: a load no longer lets a new ovum, mission NPC or cult mission take an id already in use
 - game: a parasite attached to a host that gets killed falls off instead of crashing the invade
 - game: a parasite with no host on a spaceship slot no longer crashes
-- game: a parasite with no host walking into a locked door no longer crashes
-- game: a resisting host boxed in by walls or followers no longer crashes the game
 - game: a save made on the region map keeps the host's organ growing
-- game: a save no longer stores habitat formation messages in the player's language
 - game: a save that fails to load returns to the main menu instead of a broken game
 - game: a second new game in one session starts its log at turn 0
 - game: an NPC host walking back into its own area no longer spawns a second copy of that NPC
 - game: an old save's never-visited city area is built at full size
-- game: an organ gives its strength, energy or health bonus only once it is grown
 - game: loading or restarting during a habitat ambush no longer burns the habitat
 - game: sex workers and blackops agents spawn with their own stats, not ones a load later changes
 - game: stepping off a host into a wall no longer crashes the next action
@@ -54,6 +47,20 @@
 - ui: save slot labels show the area in the current language
 - ui: the language switch no longer promises an autosave in chat or a mission area
 - ui: the pedia no longer says a beaten habitat ambush still burns the habitat
+
+## 1.1.1
+
+### Changes
+- console: `bot` lets a test bot play the game (debug build)
+
+### Fixes
+- cult: an Elevate the faithful that fails on its target's death no longer names it "null"
+- game: a host whose attributes drop no longer keeps energy above its new maximum
+- game: a load no longer lets a new ovum or mission NPC take an id already in use
+- game: a parasite with no host walking into a locked door no longer crashes
+- game: a resisting host boxed in by walls or followers no longer crashes the game
+- game: a save no longer stores habitat formation messages in the player's language
+- game: an organ gives its strength, energy or health bonus only once it is grown
 
 ## 1.1
 
