@@ -60,8 +60,7 @@ class RivalResearch extends Ordeal
   public override function onSuccess()
     {
       var rival = game.getRivalCultByID(rivalCultID);
-      rival.rivalRevealedLevel++;
-      if (rival.rivalRevealedLevel >= 3 &&
+      if (rival.rivalRevealedLevel >= 2 &&
           rival.rivalBaseAreaID < 0)
         {
           var area = findRivalBaseMarker();
@@ -69,24 +68,30 @@ class RivalResearch extends Ordeal
             return;
           rival.rivalBaseAreaID = area.id;
         }
+      rival.rivalRevealedLevel++;
       cult.log(T('{cult} reveals more about {rival}.', {
         cult: cult,
         rival: Loc.tr(rival.name),
       }));
     }
 
-// finds a city marker area for the rival base entrance
+// finds a city area for the rival base entrance: a quiet one first, then one with events, then any city area
   function findRivalBaseMarker(): AreaGame
     {
-      var area = pickRivalBaseMarker(true);
-      if (area != null)
-        return area;
-      return pickRivalBaseMarker(false);
+      var area = pickRivalBaseMarker(true, true);
+      if (area == null)
+        area = pickRivalBaseMarker(false, true);
+      if (area == null)
+        area = pickRivalBaseMarker(false, false);
+      return area;
     }
 
-// picks a random city marker area with optional event filtering
-  function pickRivalBaseMarker(noEvents: Bool): AreaGame
+// picks a random city area, with optional event and marker mission filtering; never another rival's base area
+  function pickRivalBaseMarker(noEvents: Bool, noMarker: Bool): AreaGame
     {
+      var taken = [];
+      for (other in game.getRivalCults())
+        taken.push(other.rivalBaseAreaID);
       var candidates = [];
       for (area in game.region)
         {
@@ -97,10 +102,13 @@ class RivalResearch extends Ordeal
               area.typeID != AREA_CITY_MEDIUM &&
               area.typeID != AREA_CITY_HIGH)
             continue;
+          if (taken.indexOf(area.id) >= 0)
+            continue;
           if (noEvents &&
               area.events.length > 0)
             continue;
-          if (game.cults[0].ordeals.getMarkerMission(area) != null)
+          if (noMarker &&
+              game.cults[0].ordeals.getMarkerMission(area) != null)
             continue;
           candidates.push(area);
         }

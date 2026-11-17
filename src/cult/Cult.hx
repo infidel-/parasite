@@ -254,18 +254,23 @@ class Cult extends _SaveObject
       if (base != null)
         base.activeDefenseMissionID = -1;
       state = CULT_STATE_DEAD;
-      if (!isPlayer)
-        {
-          game.cults.remove(this);
-          log(T('{cult} is destroyed, forgotten by time.', { cult: this }));
-        }
-      else log(T('{cult} is temporarily out of action.', { cult: this }));
+      if (isPlayer)
+        log(T('{cult} is temporarily out of action.', { cult: this }));
+      else
+        onWiped();
 
       // clear live ai in the current area without removing them mid-turn
       if (game.area != null)
         clearCultistsInArea(game.area, false);
       // clear cultists from player habitats
       clearCultistsInHabitats();
+    }
+
+// a non-player cult was destroyed: it leaves the game (RivalCult keeps a husk and schedules a replacement)
+  function onWiped()
+    {
+      game.cults.remove(this);
+      log(T('{cult} is destroyed, forgotten by time.', { cult: this }));
     }
 
 // run cult action from ui

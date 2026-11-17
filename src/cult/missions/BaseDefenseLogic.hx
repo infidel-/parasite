@@ -70,16 +70,19 @@ class BaseDefenseLogic
       ai.logicMoveTo(step.x, step.y);
     }
 
-// stores the bodies this defense left (made since it began) and clears the stored ones off the floor
-  public static function loadBodiesIntoStorage(game: Game)
+// stores the bodies with an object ID from firstBodyID up and clears the stored ones off the floor:
+// the default is the running defense's mark (the bodies made since it began), 0 is every body in the area
+  public static function loadBodiesIntoStorage(game: Game, ?firstBodyID: Int = -1)
     {
       var base = game.cults[0].base;
       if (base == null)
         return;
+      if (firstBodyID < 0)
+        firstBodyID = base.defenseFirstBodyID;
       var bodies = [];
       for (o in game.area.getObjects())
         if (o.type == 'body' &&
-            o.id >= base.defenseFirstBodyID)
+            o.id >= firstBodyID)
           bodies.push(o);
       var lost = base.addBodies(bodies.length);
       for (i in 0...(bodies.length - lost))

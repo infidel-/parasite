@@ -7,6 +7,7 @@ import ai.CustosAIData;
 import const.CultBaseConst;
 import const.CultBaseConst.CultBaseFocus;
 import cult.ProfaneOrdeal;
+import cult.RivalCult;
 import cult.ordeals.BaseDefense;
 import game.AreaGame;
 import game.Game;
@@ -56,7 +57,6 @@ class CultBase extends _SaveObject
   public var cursorY: Int;
   public var selectedType: _CultBaseOrganType;
   public var selectedDirection: Int;
-  public var rivalTurnCounter: Int;
 
   public function new(g: Game, areaID: Int, heartX: Int, heartY: Int)
     {
@@ -90,7 +90,6 @@ class CultBase extends _SaveObject
       cursorY = 0;
       selectedType = RAT_NEST;
       selectedDirection = 0;
-      rivalTurnCounter = 0;
     }
 
 // repair loaded references and defaults
@@ -135,10 +134,26 @@ class CultBase extends _SaveObject
       // increase pressure
       addPressure(1 + getHeartUpgradeCount());
 
-      // run rival turns
-      runRivalTurn();
+      // wiped rivals are replaced after a while
+      turnRivalReplacements();
       if (!income.isEmpty())
         game.logsg(T('Base income: {income}.', { income: income.text() }));
+    }
+
+// counts down the replacement of each wiped rival and creates one of the same tactic when it runs out
+  function turnRivalReplacements()
+    {
+      for (rival in game.getRivalCults())
+        {
+          if (rival.state != CULT_STATE_DEAD ||
+              rival.replaceTimer <= 0)
+            continue;
+          rival.replaceTimer--;
+          if (rival.replaceTimer > 0)
+            continue;
+          RivalCult.generate(game, rival.rivalTactic);
+          game.logsg(T('Another cult rises in the city.'));
+        }
     }
 
 // returns one turn of organ income and the stored bodies it draws, mutating nothing
@@ -895,29 +910,6 @@ class CultBase extends _SaveObject
       for (data in custodes)
         if (data.health < data.maxHealth)
           data.health++;
-    }
-
-// runs one simplified rival action every ten cult turns
-  function runRivalTurn()
-    {
-      var alive = game.getRivalCults(true);
-      if (alive.length == 0)
-        return;
-      rivalTurnCounter++;
-      if (rivalTurnCounter < 10)
-        return;
-      rivalTurnCounter = 0;
-      var rival = alive[Std.random(alive.length)];
-      if (rival.rivalTactic == RIVAL_COMBAT)
-        {
-          addPressure(10, rival.id);
-          game.logsg(T('{cult} drives heathens toward the base.', { cult: Loc.tr(rival.name) }));
-        }
-      else
-        {
-          addPressure(5, rival.id);
-          game.logsg(T('{cult} spreads indirect pressure.', { cult: Loc.tr(rival.name) }));
-        }
     }
 
 // spawns one custos AI from stored data

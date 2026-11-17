@@ -30,7 +30,7 @@ class RivalAttack extends Ordeal
       type = ORDEAL_COMMUNAL;
       actions = 0;
       rivalCultID = -1;
-      note = N('Destroy the rival sanctum.');
+      note = N('Destroy the rival sanctum and kill its defenders.');
     }
 
 // get custom name for display

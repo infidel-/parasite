@@ -13,8 +13,10 @@
 - cult: base defenses grow to level 3; turrets hit harder and can be turned, gates make foes bleed, Tardans slows
 - cult: base walls and gates block line of sight
 - cult: base walls and gates can run north-south as well as east-west
+- cult: a fallen rival cult is replaced by a new one after a while
 - cult: Cadaverum can drain a stored body into blood
 - cult: custodes have their own slam and bite, Firmus is tougher, and they heal while the player stays in the base
+- cult: each rival cult acts on its own and slowly recruits
 - cult: Nidus Murium can focus its rats on flesh, blood or bone
 - cult: Reap the Unwary costs money or two powers, and needs a working Cadaverum to finish
 - cult: the Metamorphosis ordeals are open again
@@ -33,6 +35,7 @@
 - cult: a load no longer lets a new cult mission take an id already in use
 - cult: a mission target keeps its marker after a load
 - cult: a base defense stores only its own corpses and clears them off the floor
+- cult: a rival base falls only once its defenders are dead too, and it pays out its remains
 - cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
 - cult: a summoned cultist taken over by the parasite grows organs on its own body
 - cult: a team ambush set before the base grew no longer burns the base habitat

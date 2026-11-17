@@ -4,6 +4,7 @@ package cult.missions;
 import ai.AI;
 import ai.AIData;
 import const.CultConst;
+import cult.base.CultBaseResources;
 import cult.base.RivalBaseOrgan;
 import cult.Mission;
 import game.Game;
@@ -40,7 +41,7 @@ class RivalBase extends Mission
       super.init();
       type = MISSION_COMBAT;
       name = N('Rival Base');
-      note = N('Destroy the rival sanctum.');
+      note = N('Destroy the rival sanctum and kill its defenders.');
       rivalCultID = -1;
       spawned = false;
       organs = [];
@@ -80,6 +81,22 @@ class RivalBase extends Mission
         }
 
       updateDefenderEnemies();
+
+      // the raid wins once the sanctum is down and every defender is dead
+      if (!isCompleted &&
+          spawned &&
+          sanctumDown() &&
+          rivalBaseDefenders().length == 0)
+        success();
+    }
+
+// returns whether every sanctum organ is destroyed
+  function sanctumDown(): Bool
+    {
+      for (organ in organs)
+        if (!organ.destroyed)
+          return false;
+      return true;
     }
 
 // returns rival cultists available to guard this base
@@ -424,8 +441,6 @@ class RivalBase extends Mission
       organ.health = 0;
       organ.destroyed = true;
       refreshOrganObjects(organ);
-      if (!isCompleted)
-        success();
       game.log(T('The rival sanctum collapses.'));
     }
 
@@ -450,10 +465,23 @@ class RivalBase extends Mission
           }
     }
 
-// marks rival destroyed
+// wipes the rival out and pays the raid: base resources and the raid's bodies into Cadaverum
   public override function onSuccess()
     {
-      var rival = game.getCultByID(rivalCultID);
-      rival.state = CULT_STATE_DEAD;
+      game.getRivalCultByID(rivalCultID).wipe();
+      var base = game.cults[0].base;
+      var loot = new CultBaseResources(CultConst.RIVAL_LOOT, CultConst.RIVAL_LOOT, CultConst.RIVAL_LOOT);
+      base.resources.add(loot, base.stockpileCap());
+      game.logsg(T('The raid brings {loot} to the base.', { loot: loot.text() }));
+
+      // every body in the mission area is the raid's
+      BaseDefenseLogic.loadBodiesIntoStorage(game, 0);
+    }
+
+// a failed raid may leave the rival a recruit stronger
+  public override function onFail()
+    {
+      if (Std.random(100) < CultConst.RIVAL_FAIL_RECRUIT_PCT)
+        game.getRivalCultByID(rivalCultID).recruitMember();
     }
 }

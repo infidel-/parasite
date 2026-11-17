@@ -87,6 +87,10 @@ class Scenarios
       start: BASE + '+cu_br_50',
       run: baseEconomy,
     },
+    'rival-lifecycle' => {
+      start: BASE,
+      run: rivalLifecycle,
+    },
     'npc-discovered' => {
       start: 's11',
       run: npcDiscovered,
@@ -1155,6 +1159,170 @@ class Scenarios
       if (next == null ||
           next.cultID < 0)
         errs.push('the pressure defense did not name a rival');
+      return errs;
+    }
+
+// a rival's life: generated from its tuning table (roster size, level limits, a staggered strategic turn),
+// its strategic turn presses on the base by its tactic and recruits one level 1 member up to the cap, and the
+// research dead end finds a base area
+  static function rivalLifecycle(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      var errs = [];
+      var before = game.getRivalCults(true).length;
+
+      // generation: the table's roster, the cult's level limits, power derived from the roster
+      var rival = cult.RivalCult.generate(game, RIVAL_COMBAT);
+      if (game.getRivalCults(true).length != before + 1)
+        errs.push('generate did not add the rival to the cults');
+      if (rival.members.length != const.CultConst.tunings.get(RIVAL_COMBAT).startMembers)
+        errs.push('a new rival has ' + rival.members.length + ' members');
+      if (rival.countMembers(2) > 5 ||
+          rival.countMembers(3) > 2)
+        errs.push('a new rival breaks the level limits: ' + rival.countMembers(2) + ' level 2, ' +
+          rival.countMembers(3) + ' level 3');
+      if (rival.power.combat <= 0)
+        errs.push('a new combat rival has no combat power');
+      if (rival.strategicTimer < 1 ||
+          rival.strategicTimer > const.CultConst.RIVAL_TURN_PERIOD)
+        errs.push('the first strategic turn is ' + rival.strategicTimer + ' turns off');
+
+      // its own strategic turn: nothing until the timer runs out, then pressure by tactic
+      base.attackPressure = 0;
+      rival.strategicTimer = 2;
+      rival.turn();
+      if (base.attackPressure != 0)
+        errs.push('the rival pressed on the base before its strategic turn');
+      rival.turn();
+      if (base.attackPressure != 10)
+        errs.push('a combat rival\'s strategic turn added ' + base.attackPressure + ' pressure, not 10');
+      if (rival.strategicTimer != const.CultConst.RIVAL_TURN_PERIOD)
+        errs.push('the strategic timer was not reset: ' + rival.strategicTimer);
+
+      // growth: recruits come one level 1 member at a time and stop at the cap
+      var start = rival.members.length;
+      for (i in 0...300)
+        {
+          base.attackPressure = 0;
+          rival.strategicTimer = 1;
+          rival.turn();
+        }
+      if (rival.members.length <= start)
+        errs.push('the rival never recruited in 300 strategic turns');
+      if (rival.members.length > rival.maxSize())
+        errs.push('the rival grew past its cap: ' + rival.members.length);
+      if (rival.countMembers(2) > 5 ||
+          rival.countMembers(3) > 2)
+        errs.push('recruits broke the level limits');
+      base.attackPressure = 0;
+
+      // research dead end: a base area is always found, never another rival's
+      var research = new cult.ordeals.RivalResearch(game, rival.id);
+      var area = @:privateAccess research.findRivalBaseMarker();
+      if (area == null)
+        errs.push('research found no base area');
+      else
+        {
+          for (other in game.getRivalCults())
+            if (other.rivalBaseAreaID == area.id)
+              errs.push('research picked the base area of ' + other.name);
+        }
+
+      // a player cult that is down (or has no base) takes no pressure and the rival still grows
+      var player = game.cults[0];
+      var members = rival.members.length;
+      player.state = CULT_STATE_INACTIVE;
+      rival.strategicTimer = 1;
+      rival.turn();
+      player.state = CULT_STATE_ACTIVE;
+      if (base.attackPressure != 0)
+        errs.push('a rival pressed on the base of a downed player cult');
+      var keep = player.base;
+      player.base = null;
+      rival.strategicTimer = 1;
+      rival.turn();
+      player.base = keep;
+      if (rival.members.length < members)
+        errs.push('the rival shrank on a strategic turn');
+
+      // a failed raid sometimes gives the rival one level 1 member, never past its cap
+      var spare = cult.RivalCult.generate(game, RIVAL_NON_COMBAT);
+      var raid = new cult.missions.RivalBase(game, spare.id, area.id);
+      var size = spare.members.length;
+      for (i in 0...100)
+        raid.onFail();
+      if (spare.members.length <= size)
+        errs.push('100 failed raids never gave the rival a recruit');
+      if (spare.members.length > spare.maxSize())
+        errs.push('failed raids grew the rival past its cap');
+
+      // a rival whose leader dies is wiped the same way: kept as a dead husk, a replacement pending
+      spare.onDeath(spare.members[0]);
+      if (spare.state != CULT_STATE_DEAD ||
+          game.cults.indexOf(spare) < 0 ||
+          spare.members.length != 0 ||
+          spare.replaceTimer < const.CultConst.RIVAL_REPLACE_TURNS)
+        errs.push('the rival whose leader died is ' + spare.state + ', replace timer ' + spare.replaceTimer);
+
+      // the raid on the combat rival: Cadaverum for the bodies, a sanctum down, a defender still alive
+      var spot = freeSpot(game, base, BODY_STORAGE);
+      var storage = new CultBaseOrgan(BODY_STORAGE, base.areaID, spot.x, spot.y, 0);
+      base.organs.push(storage);
+      @:privateAccess base.createOrganObject(storage);
+      var tile = freeTile(game, base);
+      new objects.BodyObject(game, game.area.id, tile.x, tile.y, 'civilian');
+      var bodies = 0;
+      for (o in game.area.getObjects())
+        if (o.type == 'body')
+          bodies++;
+      var stored = base.storedBodies;
+      var mission = new cult.missions.RivalBase(game, rival.id, area.id);
+      mission.areaID = game.area.id;
+      mission.spawned = true;
+      var sanctum = new cult.base.RivalBaseOrgan(RIVAL_SANCTUM, 'sanctum', game.area.id, tile.x, tile.y, 1, 1, 1,
+        { row: 0, col: 0 });
+      sanctum.destroyed = true;
+      mission.organs.push(sanctum);
+      var data = rival.members[1];
+      var defender = game.area.spawnAI(data.type, tile.x, tile.y, false);
+      defender.updateData(data, 'on rival base spawn');
+      defender.setCult(rival);
+      game.area.addAI(defender);
+      mission.turn();
+      if (mission.isCompleted ||
+          rival.state != CULT_STATE_ACTIVE)
+        errs.push('the raid won with its sanctum down and a defender alive');
+      game.area.removeAI(defender);
+      var resources = base.resources.clone();
+      mission.turn();
+      if (!mission.isCompleted)
+        errs.push('the raid did not win with its sanctum down and no defender left');
+      if (rival.state != CULT_STATE_DEAD ||
+          rival.members.length != 0)
+        errs.push('the wiped rival is ' + rival.state + ' with ' + rival.members.length + ' members');
+      if (rival.replaceTimer < const.CultConst.RIVAL_REPLACE_TURNS)
+        errs.push('no replacement scheduled: ' + rival.replaceTimer);
+      var cap = base.stockpileCap();
+      var loot = const.CultConst.RIVAL_LOOT;
+      if (base.resources.flesh != Std.int(Math.min(cap, resources.flesh + loot)) ||
+          base.resources.blood != Std.int(Math.min(cap, resources.blood + loot)) ||
+          base.resources.bone != Std.int(Math.min(cap, resources.bone + loot)))
+        errs.push('the raid paid ' + text(base.resources) + ' on ' + text(resources));
+      if (base.storedBodies != stored + bodies)
+        errs.push('Cadaverum holds ' + base.storedBodies + ' bodies, not ' + (stored + bodies));
+      for (o in game.area.getObjects())
+        if (o.type == 'body')
+          errs.push('a stored body is still on the floor');
+
+      // the replacement: one more live rival, made when the timer runs out
+      var alive = game.getRivalCults(true).length;
+      rival.replaceTimer = 1;
+      @:privateAccess base.turnRivalReplacements();
+      if (game.getRivalCults(true).length != alive + 1)
+        errs.push('the wiped rival was not replaced: ' + alive + ' live rivals, ' +
+          game.getRivalCults(true).length + ' after');
+      if (rival.replaceTimer != 0)
+        errs.push('the replacement timer was not spent');
       return errs;
     }
 

@@ -14852,7 +14852,7 @@
    "field": "log"
   },
   {
-   "s": "{cult} is destroyed, forgotten by time.",
+   "s": "{cult} is temporarily out of action.",
    "kind": "T",
    "loc": [
     "src/cult/Cult.hx"
@@ -14864,7 +14864,7 @@
    "field": "log"
   },
   {
-   "s": "{cult} is temporarily out of action.",
+   "s": "{cult} is destroyed, forgotten by time.",
    "kind": "T",
    "loc": [
     "src/cult/Cult.hx"
@@ -14872,7 +14872,7 @@
    "vars": [
     "cult"
    ],
-   "where": "Cult.destroy",
+   "where": "Cult.onWiped",
    "field": "log"
   },
   {
@@ -15233,6 +15233,42 @@
    "field": "text"
   },
   {
+   "s": "{cult} is destroyed.",
+   "kind": "T",
+   "loc": [
+    "src/cult/RivalCult.hx"
+   ],
+   "vars": [
+    "cult"
+   ],
+   "where": "RivalCult.onWiped",
+   "field": "log"
+  },
+  {
+   "s": "{cult} drives heathens toward the base.",
+   "kind": "T",
+   "loc": [
+    "src/cult/RivalCult.hx"
+   ],
+   "vars": [
+    "cult"
+   ],
+   "where": "RivalCult.turn",
+   "field": "logsg"
+  },
+  {
+   "s": "{cult} spreads indirect pressure.",
+   "kind": "T",
+   "loc": [
+    "src/cult/RivalCult.hx"
+   ],
+   "vars": [
+    "cult"
+   ],
+   "where": "RivalCult.turn",
+   "field": "logsg"
+  },
+  {
    "s": "Quiet Rite",
    "kind": "T",
    "loc": [
@@ -15292,6 +15328,16 @@
     "income"
    ],
    "where": "CultBase.turn",
+   "field": "logsg"
+  },
+  {
+   "s": "Another cult rises in the city.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.turnRivalReplacements",
    "field": "logsg"
   },
   {
@@ -15646,30 +15692,6 @@
    ],
    "where": "CultBase.readinessText",
    "field": "smallgray"
-  },
-  {
-   "s": "{cult} drives heathens toward the base.",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "cult"
-   ],
-   "where": "CultBase.runRivalTurn",
-   "field": "logsg"
-  },
-  {
-   "s": "{cult} spreads indirect pressure.",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [
-    "cult"
-   ],
-   "where": "CultBase.runRivalTurn",
-   "field": "logsg"
   },
   {
    "s": "yes",
@@ -21251,7 +21273,7 @@
    "field": "name"
   },
   {
-   "s": "Destroy the rival sanctum.",
+   "s": "Destroy the rival sanctum and kill its defenders.",
    "kind": "N",
    "loc": [
     "src/cult/missions/RivalBase.hx",
@@ -21280,6 +21302,18 @@
    "vars": [],
    "where": "RivalBase.damageOrgan",
    "field": "log"
+  },
+  {
+   "s": "The raid brings {loot} to the base.",
+   "kind": "T",
+   "loc": [
+    "src/cult/missions/RivalBase.hx"
+   ],
+   "vars": [
+    "loot"
+   ],
+   "where": "RivalBase.onSuccess",
+   "field": "logsg"
   },
   {
    "s": "Base Defense (Group)",
