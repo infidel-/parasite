@@ -22,12 +22,16 @@ typedef BadgeAnim = { sig:String, pop:render.anim.Effect };
 class Badges {
   static inline var TARGET_SCALE = 1.15;               // targeting frame/reticle ground-quad scale (~one cell)
   static inline var PADLOCK_SCALE = 0.4;               // locked-door padlock quad scale (of Sprites.SIZE)
-  static inline var BROKEN_SCALE = 0.6;                // broken X quad, of a one-cell organ's bar scale: clears the lifted bar
-  static inline var ORGAN_GLOW = 0.6;                  // organ bar/X self-light: full 1.0 read neon over the dark base
-  // broken base organ: a muted red X, round-capped, over the whole square
-  static inline var BROKEN_SVG = '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" ' +
-    'viewBox="0 0 128 128"><path d="M16 16 L112 112 M112 16 L16 112" stroke="#8c2a24" ' +
-    'stroke-opacity="0.6" stroke-width="10" stroke-linecap="round" fill="none"/></svg>';
+  static inline var BROKEN_SCALE = 0.6;                // broken mark quad, of a one-cell organ's bar scale: clears the lifted bar
+  static inline var ORGAN_GLOW = 0.6;                  // organ bar/mark self-light: full 1.0 read neon over the dark base
+  // the bone health bar kit (art/textures.json cult/organ-badges); boxes in sheet px
+  static inline var ORGAN_SHEET = 'textures/cult/organ-badges.png';
+  static inline var ORGAN_PX = 512;                    // composite canvas edge
+  static inline var BAR_STEPS = 10;                    // health buckets: at most BAR_STEPS + 1 bar textures cached
+  static var BAR_FRAME = [20, 138, 984, 124];          // empty bone frame, its slot hollow
+  static var BAR_FILL = [60, 454, 880, 48];            // flesh fill strip, uniform along x: cropped to health
+  static var BAR_SLOT = [72, 178];                     // where the fill's top-left sits on the frame
+  static var MARK = [330, 650, 356, 326];              // broken bone sigil
 
   var game:Game;
   var camera:PerspectiveCamera;                          // read live for the screen-space badge anchor
@@ -85,7 +89,7 @@ class Badges {
     }
 
 // object readouts nothing else in 3D carries: a padlock on a locked door, and a damaged base
-// organ's health bar (with a muted red X once it breaks). re-read every frame, like the AI badges
+// organ's bone health bar (with a broken sigil once it breaks). re-read every frame, like the AI badges
   public function drawObjBadges(o:AreaObject):Void
     {
       if (o.type == 'door')
@@ -127,8 +131,8 @@ class Badges {
     }
 
 // a damaged organ's health bar spanning its footprint, lifted screen-up above the sprite tops like
-// the AI badge row, and a small muted X at its centre once it breaks. drawn off the organ's first
-// part only; the bar texture is bucketed to 5% so at most 21 are ever cached
+// the AI badge row, and a broken bone sigil at its centre once it breaks. drawn off the organ's first
+// part only; the bar texture is bucketed to 10% so at most 11 are ever cached
   function drawOrganHealth(obj:objects.base.BaseOrganObject):Void
     {
       if (obj.basePartIndex != 0)
@@ -157,8 +161,9 @@ class Badges {
       var mid = WorldCtx.floorY(organ.x, organ.y) + Sprites.SIZE * 0.5;
       var scale = (maxX - minX + 1) * CityConfig.CELL * 0.8 / Sprites.SIZE;
       var ratio = (organ.maxHealth() > 0 ? organ.health / organ.maxHealth() : 0.0);
-      var bucket = Std.int(Math.max(0, Math.min(20, Math.round(ratio * 20))));
-      var bar = sprites.svgTex('svg:organbar:' + bucket, organBarSvg(bucket / 20), 128);
+      var bucket = Std.int(Math.max(0, Math.min(BAR_STEPS, Math.round(ratio * BAR_STEPS))));
+      var bar = sprites.imgTex('img:organbar:' + bucket, ORGAN_SHEET, ORGAN_PX,
+        (cx, img) -> drawOrganBar(cx, img, bucket / BAR_STEPS));
       var up = new Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
       var lift = Sprites.SIZE * RenderConfig.BADGE_LIFT;
       if (bar != null)
@@ -177,7 +182,9 @@ class Badges {
         });
       if (!organ.broken)
         return;
-      var cross = sprites.svgTex('svg:organbroken', BROKEN_SVG, 128);
+      var cross = sprites.imgTex('img:organbroken', ORGAN_SHEET, ORGAN_PX, (cx, img) -> cx.drawImage(img,
+        MARK[0], MARK[1], MARK[2], MARK[3],
+        (ORGAN_PX - MARK[2]) / 2, (ORGAN_PX - MARK[3]) / 2, MARK[2], MARK[3]));
       if (cross != null)
         sprites.paint({
           x: w.x,
@@ -194,13 +201,18 @@ class Badges {
         });
     }
 
-// a thin health strip inside a transparent square: dark backing, light border, green fill to ratio
-  static function organBarSvg(ratio:Float):String
+// the bone bar at half scale across the middle of the canvas: the fill cropped to ratio, the frame over it
+  static function drawOrganBar(cx:Dynamic, img:Dynamic, ratio:Float):Void
     {
-      return '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">' +
-        '<rect x="2" y="57" width="124" height="14" fill="#000" fill-opacity="0.6" ' +
-        'stroke="#a8a8a0" stroke-opacity="0.6" stroke-width="2"/>' +
-        '<rect x="4" y="59" width="' + Std.int(120 * ratio) + '" height="10" fill="#4a8f52" fill-opacity="0.85"/></svg>';
+      var k = 0.5;
+      var ox = (ORGAN_PX - BAR_FRAME[2] * k) / 2 - BAR_FRAME[0] * k;
+      var oy = (ORGAN_PX - BAR_FRAME[3] * k) / 2 - BAR_FRAME[1] * k;
+      var w = Std.int(BAR_FILL[2] * ratio);
+      if (w > 0)
+        cx.drawImage(img, BAR_FILL[0], BAR_FILL[1], w, BAR_FILL[3],
+          ox + BAR_SLOT[0] * k, oy + BAR_SLOT[1] * k, w * k, BAR_FILL[3] * k);
+      cx.drawImage(img, BAR_FRAME[0], BAR_FRAME[1], BAR_FRAME[2], BAR_FRAME[3],
+        ox + BAR_FRAME[0] * k, oy + BAR_FRAME[1] * k, BAR_FRAME[2] * k, BAR_FRAME[3] * k);
     }
 
 // one forma footprint cell, as a square svg: thin outline only, plus the refusal hatch

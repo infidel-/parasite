@@ -8921,6 +8921,17 @@
       "built_srgb": 78.3,
       "last_lift": 0.7
     },
+    "cult/organ-badges": {
+      "src": "cult/organ-badges-cut.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT: three separate, isolated game UI elements, stacked one above the other with wide empty gaps between them, none touching, each fully inside the frame with a wide empty margin.\n\nA health bar kit and a destroyed mark for the buildings of a flesh cult's living lair, in a bone-and-sinew style. Seen straight on, perfectly flat and frontal, no perspective.\n\n1. TOP: an EMPTY horizontal health bar FRAME, very long and thin (about 8 times wider than tall), spanning most of the image width. The frame is made of yellowed old bone and cartilage: two straight bone rails along the top and bottom, knobbly bone joint caps at the two ends, thin dark sinew bindings wrapped around it at a few points. The INSIDE of the frame is a completely EMPTY hollow slot, nothing inside it at all.\n\n2. MIDDLE: the bar's FILL strip alone, exactly the same length as the inside slot of the frame above it and a uniform height along its whole length: a flat straight strip of dark living crimson flesh with a few thin darker veins running lengthwise. Plain rectangular ends, uniform along its length so it can be cut at any point.\n\n3. BOTTOM CENTRE: a square DESTROYED mark, about one quarter of the image width: a cracked, broken bone ritual sigil, a round bone ring snapped in two with a jagged crack through its middle, splinters and a few drops of dried dark blood. Muted, old, dead colours.\n\nThin dark outline on every element. Matte, muted, aged colours: bone ivory, dried maroon, dark crimson.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "note": "Cult base organ health bar + broken mark for render.actors.Badges (boxes in sheet px there: frame 20,138 984x124 with its hollow slot x 73-950 y 178-226; fill 60,454 880x48, uniform along its length so the runtime crops it to health; mark 330,650 356x326). gpt-image-2.6-sunburst high, background transparent: the drop came back UNCUT (alpha min 203, a painted backdrop ~31,17,20) and an edit_image re-cut came back worse (alpha min 33, median 119 haze; Unused/organ-badges-recut.png). Keyed instead off Unused/organ-badges.png (the untouched drop): alpha = RGB distance from the backdrop median > 40, opened 3x3, grown 7x7 to take the dark outline, blurred 0.8 px -> Unused/organ-badges-keyed.png (86% alpha 0) = organ-badges-cut.png.",
+      "last_converted": "2026-11-17T23:53:01",
+      "built_linear": 0.0725,
+      "built_srgb": 63.6
+    },
     "cult/vessel-skin": {
       "sat": 0.6,
       "src": "cult/vessel-skin.png",

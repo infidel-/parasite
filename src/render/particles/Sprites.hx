@@ -678,6 +678,30 @@ class Sprites {
       return tex;
     }
 
+// compose a cached px-square CanvasTexture out of an image file: `draw(ctx, img)` paints it once the
+// image decodes; null until then (retry next frame, like svgTex). key uniquely ids the composite
+  public function imgTex(key:String, url:String, px:Int, draw:(Dynamic, Dynamic)->Void):CanvasTexture
+    {
+      if (texCache.exists(key)) return texCache.get(key);
+      var img:Dynamic = svgImgs.get(url);
+      if (img == null)
+        {
+          img = Browser.document.createElement('img');
+          img.src = url;
+          svgImgs.set(url, img);
+        }
+      if (!img.complete ||
+          img.naturalWidth <= 0)
+        return null;
+      var cv:Dynamic = Browser.document.createElement('canvas');
+      cv.width = px;
+      cv.height = px;
+      draw(cv.getContext('2d'), img);
+      var tex = mkTex(cv);
+      texCache.set(key, tex);
+      return tex;
+    }
+
 // solid-white silhouette of an atlas cell (sprite alpha kept, RGB forced white) → cached
 // CanvasTexture. tinted at paint time (emissive) into a flat colored silhouette for the AI
 // through-wall x-ray outline. null until the atlas image decodes (retry next frame, like tex())
