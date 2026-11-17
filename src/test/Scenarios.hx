@@ -477,6 +477,16 @@ class Scenarios
       game.updateHUD();
       if (bot.pressAction('repairBaseOrgan'))
         errs.push('a whole organ offers a repair');
+
+      // the heart mends for a quarter of its first upgrade, 10/8/8
+      base.damageOrgan(heart, 10);
+      before = base.resources.clone();
+      if (!standNextTo(game, heart) ||
+          !bot.pressAction('repairBaseOrgan'))
+        return errs.concat([ 'no Repair next to the wounded heart' ]);
+      if (heart.health != heart.maxHealth())
+        errs.push('the repaired heart has ' + heart.health + ' of ' + heart.maxHealth() + ' health');
+      errs = errs.concat(paid(base, before, new CultBaseResources(10, 8, 8), 'the heart repair'));
       return errs;
     }
 
@@ -585,6 +595,9 @@ class Scenarios
       base.damageOrgan(nest, nest.health);
       cultTurn(game, bot);
       errs = errs.concat(stock(base, 52, 58, 41, 'after a turn with the Nidus broken'));
+      // Corpus Basilica counts working organs: Quadrum, Fractor, Cumulus and Cadaverum, not the Nidus
+      if (base.readiness().organLevels != 4)
+        errs.push('readiness counts ' + base.readiness().organLevels + ' organ levels with a broken Nidus, not 4');
 
       // the stockpile clamps to its cap
       base.resources = new CultBaseResources(99, 99, 99);
@@ -602,6 +615,59 @@ class Scenarios
       errs = errs.concat(stock(base, 150, 10, 10, 'at the raised cap'));
       if (base.attackPressure != pressure + 2)
         errs.push('pressure rose by ' + (base.attackPressure - pressure) + ' in a turn after a heart upgrade, not 2');
+
+      // the Nidus focus: 3 of the focus and 1 of each other per level (the Nidus mended, no bodies)
+      nest.broken = false;
+      nest.health = nest.maxHealth();
+      base.storedBodies = 0;
+      base.resources = new CultBaseResources();
+      for (focus in CultBaseConst.focusTypes)
+        {
+          if (!base.setFocus(nest, focus) &&
+              focus != FLESH)
+            errs.push('the Nidus refused the focus ' + focus);
+          // plus Quadrum 5 flesh and Cumulus 2 flesh
+          cultTurn(game, bot);
+          errs = errs.concat(stock(base, 8 + (focus == FLESH ? 2 : 0), (focus == BLOOD ? 3 : 1), (focus == BONE ? 3 : 1),
+            'after a turn on focus ' + focus));
+          base.resources = new CultBaseResources();
+        }
+
+      // a body drained at Cadaverum is 4 blood at once, refused with none stored or a full blood stockpile
+      var storage: CultBaseOrgan = null;
+      for (organ in base.organs)
+        if (organ.type == BODY_STORAGE)
+          storage = organ;
+      base.storedBodies = 2;
+      if (!base.drainBody(storage) ||
+          base.storedBodies != 1 ||
+          base.resources.blood != 4)
+        errs.push('draining a body left ' + base.storedBodies + ' bodies and ' + base.resources.blood + ' blood, not 1 and 4');
+      base.storedBodies = 0;
+      if (base.validateDrain(storage) == '')
+        errs.push('a body drained with none stored');
+      base.storedBodies = 1;
+      base.resources.blood = base.stockpileCap();
+      if (base.validateDrain(storage) == '')
+        errs.push('a body drained into a full blood stockpile');
+
+      // Reap the Unwary: 100k money or two of the four powers, and no payment without a working Cadaverum
+      var c = game.cults[0];
+      var reap = new cult.ordeals.ReapTheUnwary(game);
+      var paying = (reap.powerTypes.length == 1 ? reap.powerTypes[0] == 'money' :
+        (reap.powerTypes.length == 2 && reap.powerTypes.indexOf('money') < 0));
+      if (!paying)
+        errs.push('Reap the Unwary costs ' + reap.powerTypes.join('+'));
+      // a new ordeal waits for the next cult turn to give its members their actions
+      reap.actions = 0;
+      c.resources.set('money', 1000000);
+      for (power in [ 'media', 'lawfare', 'corporate', 'political' ])
+        c.resources.set(power, 5);
+      if (Lambda.count(reap.getActions(), function(a) return a.id.indexOf('spend.') == 0) == 0)
+        errs.push('no payment offered with a working Cadaverum');
+      base.damageOrgan(storage, storage.health);
+      if (Lambda.count(reap.getActions(), function(a) return a.id.indexOf('spend.') == 0) > 0)
+        errs.push('a payment is offered with Cadaverum broken');
       return errs;
     }
 

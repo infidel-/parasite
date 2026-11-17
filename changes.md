@@ -9,6 +9,9 @@
 - cult: a level 2 cult holds 15 members, up to 5 at level 2 and 2 at level 3
 - cult: a member's death fails any ordeal it is locked in, profane ones too
 - cult: base walls and gates can run north-south as well as east-west
+- cult: Cadaverum can drain a stored body into blood
+- cult: Nidus Murium can focus its rats on flesh, blood or bone
+- cult: Reap the Unwary costs money or two powers, and needs a working Cadaverum to finish
 - cult: the Metamorphosis ordeals are open again
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map

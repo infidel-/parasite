@@ -2,6 +2,7 @@
 package cult.base;
 
 import const.CultBaseConst;
+import const.CultBaseConst.CultBaseFocus;
 
 class CultBaseOrgan extends _SaveObject
 {
@@ -14,6 +15,8 @@ class CultBaseOrgan extends _SaveObject
   public var direction: Int;
   public var health: Int;
   public var broken: Bool;
+  // resource a Nidus Murium focuses on
+  public var focus: CultBaseFocus;
   public static var _maxID: Int = 0;
 
   public function new(type: _CultBaseOrganType, areaID: Int,
@@ -41,6 +44,7 @@ class CultBaseOrgan extends _SaveObject
       direction = 0;
       health = 1;
       broken = false;
+      focus = FLESH;
     }
 
 // repair loaded health fields

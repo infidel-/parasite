@@ -88,11 +88,37 @@ class ReapTheUnwary extends Ordeal
       });
     }
 
-// picks two random cost variants
+// picks the cost: 100k money, or two random powers among media, lawfare, corporate and political
   function randomPowerTypes(): Array<String>
     {
-      var types = ['media', 'lawfare', 'corporate', 'political', 'money'];
+      if (Std.random(2) == 0)
+        return [ 'money' ];
+      var types = ['media', 'lawfare', 'corporate', 'political'];
       types.sort(function(a, b) return Std.random(3) - 1);
       return [ types[0], types[1] ];
+    }
+
+// returns true when a working Cadaverum can take the bodies
+  function canStore(): Bool
+    {
+      return cult.base != null &&
+        cult.base.hasWorkingOrgan(BODY_STORAGE);
+    }
+
+// no power can be spent while Cadaverum is gone or broken, so the ordeal cannot complete
+  public override function getActions(): Array<_PlayerAction>
+    {
+      var ret = super.getActions();
+      if (canStore())
+        return ret;
+      return ret.filter(function(a) return a.id.indexOf('spend.') != 0);
+    }
+
+// the note, with the reason the ordeal is stuck
+  public override function getNote(): String
+    {
+      if (canStore())
+        return super.getNote();
+      return super.getNote() + '<br/>' + Const.col('alert', T('A working Cadaverum is needed.'));
     }
 }

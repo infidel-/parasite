@@ -5,6 +5,7 @@ import l10n.Loc;
 import ai.AI;
 import ai.CustosAIData;
 import const.CultBaseConst;
+import const.CultBaseConst.CultBaseFocus;
 import cult.ordeals.BaseDefense;
 import game.AreaGame;
 import game.Game;
@@ -152,9 +153,9 @@ class CultBase extends _SaveObject
               case FLESH_BLOCK:
                 ret.income.flesh += 5 * organ.level;
               case RAT_NEST:
-                ret.income.flesh += 3 * organ.level;
-                ret.income.blood += organ.level;
-                ret.income.bone += organ.level;
+                ret.income.flesh += (organ.focus == FLESH ? 3 : 1) * organ.level;
+                ret.income.blood += (organ.focus == BLOOD ? 3 : 1) * organ.level;
+                ret.income.bone += (organ.focus == BONE ? 3 : 1) * organ.level;
               case CRUSHER:
                 if (bodies > 0)
                   {
@@ -569,6 +570,61 @@ class CultBase extends _SaveObject
       return '';
     }
 
+// returns why the organ cannot change its focus, or '' when it can
+  public function validateFocus(organ: CultBaseOrgan, focus: CultBaseFocus): String
+    {
+      if (organ.type != RAT_NEST)
+        return T('Only Nidus Murium has a focus.');
+      if (organ.focus == focus)
+        return T('The rats already focus on this.');
+      return '';
+    }
+
+// changes the resource a Nidus Murium focuses on
+  public function setFocus(organ: CultBaseOrgan, focus: CultBaseFocus): Bool
+    {
+      var reason = validateFocus(organ, focus);
+      if (reason != '')
+        {
+          game.actionFailed(reason);
+          return false;
+        }
+      organ.focus = focus;
+      game.log(T('The rats turn to {resource}.', { resource: Loc.tr(CultBaseConst.focusName(focus)) }));
+      game.updateHUD();
+      return true;
+    }
+
+// returns why a stored body cannot be drained at the organ, or '' when it can
+  public function validateDrain(organ: CultBaseOrgan): String
+    {
+      if (organ.type != BODY_STORAGE)
+        return T('Only Cadaverum drains bodies.');
+      if (!organ.isWorking())
+        return T('This organ is broken.');
+      if (storedBodies < 1)
+        return T('No stored bodies.');
+      if (resources.blood >= stockpileCap())
+        return T('The blood stockpile is full.');
+      return '';
+    }
+
+// drains one stored body into blood at once
+  public function drainBody(organ: CultBaseOrgan): Bool
+    {
+      var reason = validateDrain(organ);
+      if (reason != '')
+        {
+          game.actionFailed(reason);
+          return false;
+        }
+      storedBodies--;
+      resources.add(new CultBaseResources(0, CultBaseConst.BODY_DRAIN_BLOOD, 0), stockpileCap());
+      game.log(T('You drain a body: +{blood} blood.', { blood: CultBaseConst.BODY_DRAIN_BLOOD }));
+      game.updateHUD();
+      return true;
+    }
+
 // returns Corpus Basilica readiness numbers
   public function readiness(): CultBaseReadiness
     {
@@ -583,7 +639,8 @@ class CultBase extends _SaveObject
       };
       for (organ in organs)
         {
-          if (organ.type == COR_NEFANDUM)
+          if (organ.type == COR_NEFANDUM ||
+              !organ.isWorking())
             continue;
           ret.organLevels += organ.level;
           var info = CultBaseConst.info(organ.type);

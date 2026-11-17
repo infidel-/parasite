@@ -3096,7 +3096,7 @@
    "where": "CultBaseConst.info"
   },
   {
-   "s": "Rats bring +3 flesh, +1 blood and +1 bone a turn per level.",
+   "s": "Rats bring +3 of the focus resource and +1 of each other a turn per level.",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx"
@@ -3179,6 +3179,33 @@
    ],
    "vars": [],
    "where": "CultBaseConst.info"
+  },
+  {
+   "s": "blood",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.focusName"
+  },
+  {
+   "s": "bone",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.focusName"
+  },
+  {
+   "s": "flesh",
+   "kind": "N",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "vars": [],
+   "where": "CultBaseConst.focusName"
   },
   {
    "s": "Cultus Ferri",
@@ -15427,6 +15454,84 @@
    "where": "CultBase.validateBuild"
   },
   {
+   "s": "Only Nidus Murium has a focus.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateFocus"
+  },
+  {
+   "s": "The rats already focus on this.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateFocus"
+  },
+  {
+   "s": "The rats turn to {resource}.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [
+    "resource"
+   ],
+   "where": "CultBase.setFocus",
+   "field": "log"
+  },
+  {
+   "s": "Only Cadaverum drains bodies.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateDrain"
+  },
+  {
+   "s": "This organ is broken.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateDrain"
+  },
+  {
+   "s": "No stored bodies.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateDrain"
+  },
+  {
+   "s": "The blood stockpile is full.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateDrain"
+  },
+  {
+   "s": "You drain a body: +{blood} blood.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [
+    "blood"
+   ],
+   "where": "CultBase.drainBody",
+   "field": "log"
+  },
+  {
    "s": "Corpus Basilica: Heart {heart}/3, organs {organs}/10<br/>Growth {growth}, storage {storage}, cauldron {cauldron}<br/>Defenses {defenses}/5, survived {survived}/2",
    "kind": "T",
    "loc": [
@@ -21448,6 +21553,15 @@
    ],
    "where": "ReapTheUnwary.onSuccess",
    "field": "log"
+  },
+  {
+   "s": "A working Cadaverum is needed.",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/ReapTheUnwary.hx"
+   ],
+   "vars": [],
+   "where": "ReapTheUnwary.getNote"
   },
   {
    "s": "Seek the pure",
@@ -34677,6 +34791,30 @@
    ],
    "vars": [
     "organ"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label"
+  },
+  {
+   "s": "Focus on {resource}",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "resource"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label"
+  },
+  {
+   "s": "Drain a body: +{blood} blood",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [
+    "blood"
    ],
    "where": "FormaHud.tendOptions",
    "field": "label"

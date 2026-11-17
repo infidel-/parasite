@@ -4,6 +4,14 @@ package const;
 import _CultBaseOrganType;
 import cult.base.CultBaseResources;
 
+// resource a Nidus Murium focuses on
+enum abstract CultBaseFocus(String) to String from String
+{
+  var FLESH = 'FLESH';
+  var BLOOD = 'BLOOD';
+  var BONE = 'BONE';
+}
+
 typedef CultBaseOrganInfo = {
   var type: _CultBaseOrganType;
   var name: String;
@@ -57,6 +65,12 @@ class CultBaseConst
   // cost of one custos, shared by validation and creation
   public static var custosCost = new CultBaseResources(10, 8, 0);
 
+  // blood one stored body gives when drained at Cadaverum
+  public static inline var BODY_DRAIN_BLOOD = 4;
+
+  // resources a Nidus Murium can focus on
+  public static var focusTypes: Array<CultBaseFocus> = [ FLESH, BLOOD, BONE ];
+
   public static var buildableTypes: Array<_CultBaseOrganType> = [
     RIBWALL,
     RIBGATE,
@@ -98,7 +112,7 @@ class CultBaseConst
               N('Grows flesh: +5 a turn per level.'));
           case RAT_NEST:
             return text(meta(type, N('Nidus Murium'), 8, 2, 4, 2, 2, 3, false, true),
-              N('Rats bring +3 flesh, +1 blood and +1 bone a turn per level.'));
+              N('Rats bring +3 of the focus resource and +1 of each other a turn per level.'));
           case CRUSHER:
             return text(meta(type, N('Fractor'), 10, 4, 12, 2, 2, 3, false, true),
               N('Grinds one stored body a turn into +5 bone per level.'));
@@ -239,14 +253,29 @@ class CultBaseConst
       return cost;
     }
 
-// returns repair cost rounded up to 25 percent of base cost
+// returns repair cost rounded up to 25 percent of base cost (heart: of its first upgrade cost)
   public static function repairCost(type: _CultBaseOrganType): CultBaseResources
     {
-      var cost = buildCost(type);
+      // the heart costs nothing to build: it mends for a quarter of its first upgrade
+      var cost = (type == COR_NEFANDUM ? upgradeCost(type, 1) : buildCost(type));
       cost.flesh = quarter(cost.flesh);
       cost.blood = quarter(cost.blood);
       cost.bone = quarter(cost.bone);
       return cost;
+    }
+
+// returns display name of a Nidus Murium focus resource
+  public static function focusName(focus: CultBaseFocus): String
+    {
+      switch (focus)
+        {
+          case BLOOD:
+            return N('blood');
+          case BONE:
+            return N('bone');
+          case FLESH:
+            return N('flesh');
+        }
     }
 
 // returns footprint tiles for one placed organ

@@ -806,6 +806,27 @@ class FormaHud
               },
           });
         }
+      // a Nidus Murium turns its rats to another resource, free
+      if (organ.type == RAT_NEST)
+        for (focus in CultBaseConst.focusTypes)
+          if (focus != organ.focus)
+            ret.push({
+              label: T('Focus on {resource}', { resource: Loc.tr(CultBaseConst.focusName(focus)) }),
+              cost: new CultBaseResources(),
+              reason: '',
+              run: function () base.setFocus(organ, focus),
+            });
+      // a Cadaverum drains a stored body into blood
+      if (organ.type == BODY_STORAGE)
+        {
+          var reason = base.validateDrain(organ);
+          ret.push({
+            label: T('Drain a body: +{blood} blood', { blood: CultBaseConst.BODY_DRAIN_BLOOD }),
+            cost: (reason == '' ? new CultBaseResources() : null),
+            reason: reason,
+            run: function () base.drainBody(organ),
+          });
+        }
       return ret;
     }
 
