@@ -61,6 +61,14 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // TURN: team turn logic
   public function turn()
     {
+      // an ambush laid before the base grew (or the final team): the team turns on Cor Nefandum
+      // instead, and waits while another attack on it runs
+      if (state == TEAM_AMBUSH &&
+          game.cults[0].base != null)
+        {
+          spawnBaseDefenseOrdeal();
+          return;
+        }
       if (state == TEAM_SEARCH)
         turnSearch();
       else if (state == TEAM_AMBUSH)
@@ -90,10 +98,7 @@ class Team extends FSM<_TeamState, _TeamFlag>
       ambushedHabitatAreaID = -1;
       timer = 0;
 
-      var ordeal = new TeamBaseDefense(game);
-      game.cults[0].ordeals.list.push(ordeal);
-      base.activeDefenseMissionID = ordeal.missions[0].id;
-      base.activeDefenseTimer = ordeal.timer;
+      base.startDefense(new TeamBaseDefense(game));
       game.message({
         text: T('The team closes on Cor Nefandum. Defend the base before the timer expires.'),
         col: 'alert'
@@ -342,7 +347,9 @@ class Team extends FSM<_TeamState, _TeamFlag>
 // event: player entered habitat with an active team
   public function onEnterHabitat()
     {
-      if (state != TEAM_AMBUSH)
+      // a cult base is attacked instead of ambushing a habitat (Team.turn)
+      if (state != TEAM_AMBUSH ||
+          game.cults[0].base != null)
         return;
 
       // wrong habitat

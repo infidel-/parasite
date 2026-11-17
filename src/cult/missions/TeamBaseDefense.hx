@@ -70,8 +70,8 @@ class TeamBaseDefense extends Mission
     {
       if (type != ON_AI_DEATH)
         return;
+      // the mission ends on the next turn(): the dead attacker's body is made after this event
       targetIDs.remove(ai.id);
-      checkComplete();
     }
 
 // completes linked team base-defense ordeal

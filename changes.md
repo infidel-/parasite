@@ -8,6 +8,8 @@
 - art: a habitat turns a cult pink once its base starts
 - cult: a level 2 cult holds 15 members, up to 5 at level 2 and 2 at level 3
 - cult: a member's death fails any ordeal it is locked in, profane ones too
+- cult: base attackers head for Cor Nefandum and fight its defenders on sight
+- cult: base attacks come from the rival cults, armed by member level
 - cult: base walls and gates can run north-south as well as east-west
 - cult: Cadaverum can drain a stored body into blood
 - cult: Nidus Murium can focus its rats on flesh, blood or bone
@@ -27,10 +29,12 @@
 - cult: base organ actions are listed once, not once per tile of a large organ
 - cult: a load no longer lets a new cult mission take an id already in use
 - cult: a mission target keeps its marker after a load
+- cult: a base defense stores only its own corpses and clears them off the floor
 - cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
 - cult: a summoned cultist taken over by the parasite grows organs on its own body
 - cult: a team ambush set before the base grew no longer burns the base habitat
 - cult: custodes no longer keep the player inside the base habitat
+- cult: the Group's final team attacks the cult base instead of a habitat
 - cult: the second metamorphosis performed outside a habitat is refused instead of used up
 - game: a despawned AI no longer stays the attack target
 - game: a former NPC host reported dead after getting away stays dead

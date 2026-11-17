@@ -48,10 +48,7 @@ Files: `src/cult/base/CultBase.hx`, `src/cult/base/CultBaseOrgan.hx`, `src/const
 `src/ui/hud/FormaHud.hx`, `src/cult/ordeals/ReapTheUnwary.hx`, `src/cult/missions/BaseDefense.hx`,
 `src/cult/missions/BaseDefenseLogic.hx`, `src/game/Team.hx`, `src/game/Group.hx`, `src/ai/CustosLogic.hx`,
 `src/ai/FirmusCustosAI.hx`, `src/ai/MordaxCustosAI.hx`, `src/test/Scenarios.hx`.
-- **Placement** (`validateBuild`):
-  - standard organs need a 1-tile clearance border around the whole footprint: no wall, object, organ, body or exit;
-  - Ribwall and Porta may touch walls and other ribwall/Porta tiles (wire in `CultBaseConst.isRib()`), but not other
-    objects or non-rib organs.
+- **Placement:** DONE, then dropped by the user (2026-11-17): footprint-only, no clearance rule.
 - **Economy:**
   - Nidus Murium gets a saved `focus` (flesh/blood/bone, default flesh) and a tend row to change it: 3 of the focus
     and 1 of each other per level.

@@ -50,3 +50,33 @@ One entry per iteration: phase, files, what changed, `make` result. Newest last.
   enum abstract `CultBaseFocus` (`FLESH`/`BLOOD`/`BONE`, String values) declared in `CultBaseConst.hx`, defaulted to
   `FLESH` in `init()`; `focusTypes`, `focusName`, `validateFocus`, `setFocus` and the Scenarios checks use it. No INFO
   lines for (a). Build: `cd src && make` passes (58 runs, 0 failed).
+
+## P2 (b): attacks and old ambush paths
+- Files: `src/cult/base/CultBase.hx`, `src/cult/missions/BaseDefense.hx`, `src/cult/missions/BaseDefenseLogic.hx`,
+  `src/game/Team.hx`, `src/game/Group.hx`.
+- Pressure defense: `CultBase.addPressure` with no `cultID` now picks a live rival (`pickAttackingRival`, weight
+  `1 + power.combat`); the generic 2 thugs + 2 security stay only when none lives (-1).
+- New `CultBase.startDefense(ordeal)` registers the ordeal, mission id, timer and saved `defenseFirstBodyID`
+  (default 0 in `init()`); `addPressure` and `Team.spawnBaseDefenseOrdeal` use it. The console `cu def` still sets
+  the ids by hand, so a debug defense leaves `defenseFirstBodyID` at 0 (counts every body).
+- `BaseDefenseLogic.commandAttacker`: fights the closest visible custos / player-cult cultist / player host / earlier
+  attacker (`getEngageTarget`, never dead or preserved); else `getHeartRoute` (Dijkstra over the habitat, free tile 1,
+  working non-heart organ 6) walks toward Cor Nefandum, hits the first organ on the route when it is next to it, and
+  hits the heart once beside it. The old nearest-organ `getAttackTarget`/`getAdjacentAttackTarget` are gone.
+- Rival attackers: `BaseDefense.equipByLevel` by member job level: 1 knife if unarmed; 2 pistol (skill 40+10*level+0..9)
+  if no ranged weapon + 25% kevlar; 3 pistol + kevlar.
+- Bodies: `loadBodiesIntoStorage` counts only bodies made since the defense began (`o.id >= defenseFirstBodyID`) and
+  removes from the floor the ones stored; overflow bodies stay on the floor.
+- `BaseDefense.onEventAI` no longer completes at once: the dead attacker's `BodyObject` is made AFTER the death event,
+  so the last body was missed; the mission now ends on the next `turn()`. `TeamBaseDefense` (not in my files) still
+  completes inside the event, so its last attacker's body is still missed.
+- Ambush paths: `Team.turn` turns a team in `TEAM_AMBUSH` into a base defense whenever a base exists (waits while
+  another defense runs); `Group.onDirectorDeath` routes the final team there at once.
+- Build: `cd src && make` passes (58 runs, 0 failed). No scenario for (b) yet (group (d)).
+- New math: rival pick weight 1+combat power; route costs 1 / 6; loadout by level (above); pistol skill formula.
+- P2 (b) fixes (controller review): `Team.turn` with a base and `TEAM_AMBUSH` tries `spawnBaseDefenseOrdeal()` and
+  returns either way (no fall-through to `turnAmbush`); `Team.onEnterHabitat` returns early while a base exists (no
+  `TEAM_FIGHT` spawn in an ambushed habitat); the extra call in `Group.onDirectorDeath` is dropped (the final team
+  has `timer = 3`, `Team.turn` picks it up). `TeamBaseDefense.onEventAI` no longer completes inside the event (the
+  mission ends on the next `turn()`, last body counted). Console `cu def` uses `base.startDefense(ordeal)`.
+  Files added: `src/console/Cult.hx`, `src/cult/missions/TeamBaseDefense.hx`. Build: `cd src && make` passes (58 runs, 0 failed).

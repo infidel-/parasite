@@ -313,9 +313,7 @@ class Cult
         return;
 
       var ordeal = new BaseDefense(game, rival.id);
-      cult.ordeals.list.push(ordeal);
-      base.activeDefenseMissionID = ordeal.missions[0].id;
-      base.activeDefenseTimer = ordeal.timer;
+      base.startDefense(ordeal);
       game.updateHUD();
 
       log('Added base defense ordeal: ' + ordeal.coloredName());

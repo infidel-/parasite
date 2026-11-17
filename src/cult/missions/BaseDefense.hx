@@ -73,8 +73,8 @@ class BaseDefense extends Mission
     {
       if (type != ON_AI_DEATH)
         return;
+      // the mission ends on the next turn(): the dead attacker's body is made after this event
       targetIDs.remove(ai.id);
-      checkComplete();
     }
 
 // completes linked base-defense ordeal
@@ -135,12 +135,33 @@ class BaseDefense extends Mission
         {
           ai.updateData(data, 'on base defense spawn');
           ai.setCult(rival);
+          equipByLevel(ai, game.jobs.getJobInfo(data.job).level);
         }
       ai.isAggressive = true;
       ai.isRelentless = true;
       ai.setState(AI_STATE_ALERT);
       game.area.addAI(ai);
       return ai;
+    }
+
+// arms a rival attacker by its member level: 1 a knife when it has no weapon, 2 a pistol and a one in four
+// kevlar vest, 3 a pistol and a vest
+  function equipByLevel(ai: AI, level: Int)
+    {
+      if (level <= 1)
+        {
+          if (!ai.inventory.hasWeapon())
+            ai.inventory.addID('knife');
+          return;
+        }
+      if (ai.inventory.getCurrentRangedWeapon() == null)
+        {
+          ai.inventory.addID('pistol');
+          ai.skills.addID(SKILL_PISTOL, 40 + 10 * level + Std.random(10));
+        }
+      if (level >= 3 ||
+          Std.random(100) < 25)
+        ai.inventory.addID('kevlarArmor', true);
     }
 
 // returns available rival cultists for this attack

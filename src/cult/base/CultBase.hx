@@ -6,9 +6,11 @@ import ai.AI;
 import ai.CustosAIData;
 import const.CultBaseConst;
 import const.CultBaseConst.CultBaseFocus;
+import cult.ProfaneOrdeal;
 import cult.ordeals.BaseDefense;
 import game.AreaGame;
 import game.Game;
+import objects.AreaObject;
 import objects.base.*;
 
 // one turn of organ income and the stored bodies it draws
@@ -48,6 +50,8 @@ class CultBase extends _SaveObject
   public var activeDefenseMissionID: Int;
   public var activeDefenseTimer: Int;
   public var defensesSurvived: Int;
+  // first object ID made after the running defense began: the bodies at or above it are this defense's
+  public var defenseFirstBodyID: Int;
   public var cursorX: Int;
   public var cursorY: Int;
   public var selectedType: _CultBaseOrganType;
@@ -81,6 +85,7 @@ class CultBase extends _SaveObject
       activeDefenseMissionID = -1;
       activeDefenseTimer = 0;
       defensesSurvived = 0;
+      defenseFirstBodyID = 0;
       cursorX = 0;
       cursorY = 0;
       selectedType = RAT_NEST;
@@ -212,14 +217,42 @@ class CultBase extends _SaveObject
 
       // schedule defense mission and reset pressure
       attackPressure -= 30;
-      var ordeal = new BaseDefense(game, cultID);
-      game.cults[0].ordeals.list.push(ordeal);
-      activeDefenseMissionID = ordeal.missions[0].id;
-      activeDefenseTimer = ordeal.timer;
+      // pressure with no culprit comes from a live rival cult, the generic attackers only when none lives
+      if (cultID < 0)
+        cultID = pickAttackingRival();
+      startDefense(new BaseDefense(game, cultID));
       game.message({
         text: T('Heretics close on Cor Nefandum. Defend the base before the timer expires.'),
         col: 'alert'
       });
+    }
+
+// registers a new base defense ordeal as the running one and marks where this defense's bodies begin
+  public function startDefense(ordeal: ProfaneOrdeal)
+    {
+      game.cults[0].ordeals.list.push(ordeal);
+      activeDefenseMissionID = ordeal.missions[0].id;
+      activeDefenseTimer = ordeal.timer;
+      defenseFirstBodyID = AreaObject._maxID;
+    }
+
+// picks the live rival cult that raids the base, weighted toward combat power: -1 when none lives
+  function pickAttackingRival(): Int
+    {
+      var alive = game.getRivalCults(true);
+      var total = 0;
+      for (rival in alive)
+        total += 1 + rival.power.combat;
+      if (total == 0)
+        return -1;
+      var roll = Std.random(total);
+      for (rival in alive)
+        {
+          roll -= 1 + rival.power.combat;
+          if (roll < 0)
+            return rival.id;
+        }
+      return -1;
     }
 
 // places one new organ if resources and placement allow
