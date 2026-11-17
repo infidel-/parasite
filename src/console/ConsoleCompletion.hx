@@ -190,6 +190,7 @@ class ConsoleCompletion
             { lit: 'u1' },
             { lit: 'r', next: [ { slot: '[power]' } ] },
             { lit: 'po', next: [ { slot: '[power]', next: [ { slot: '[idx]' } ] } ] },
+            { lit: 'meta', next: [ { slot: '[phase]' } ] },
             { lit: 'occasio' },
           ];
           rootChildren.push({ lit: 'cult', next: cultSubs });

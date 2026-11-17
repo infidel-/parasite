@@ -818,7 +818,7 @@ class Cult extends _SaveObject
 // max cult size
   public function maxSize(): Int
     {
-      return 10;
+      return (level >= 2 ? 15 : 10);
     }
 
 // counts current cult members at specified job level
@@ -840,11 +840,11 @@ class Cult extends _SaveObject
       switch (level)
         {
           case 3:
-            return 1;
+            return (this.level >= 2 ? 2 : 1);
           case 2:
-            return 3;
+            return (this.level >= 2 ? 5 : 3);
           case 1:
-            return 10;
+            return (this.level >= 2 ? 15 : 10);
           default:
             return -1;
         }

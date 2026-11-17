@@ -45,6 +45,7 @@ class Cult
               log('cu/cult u1 - upgrade random level 1 follower to level 2');
               log('cu/cult r [power] - recruit follower (default combat)');
               log('cu/cult po [power] [idx] - add profane ordeal');
+              log('cu/cult meta [phase] - 1: mark Metamorphosis Phase I complete, 2: perform the Phase II ritual in the current habitat');
               log('cu/cult occasio - open a random occasio choice window (no cult needed)');
               return true;
             }
@@ -116,6 +117,13 @@ class Cult
           if (arr[1] == 'po')
             {
               addProfaneOrdeal(arr);
+              return true;
+            }
+
+          // cu/cult meta - metamorphosis shortcuts
+          if (arr[1] == 'meta')
+            {
+              metamorphosis(arr);
               return true;
             }
 
@@ -315,6 +323,44 @@ class Cult
         text: 'Heretics close on Cor Nefandum. Defend the base before the timer expires.',
         col: 'alert'
       });
+    }
+
+// marks metamorphosis phase I complete or runs the phase II ritual, the same path as its action
+  function metamorphosis(arr: Array<String>)
+    {
+      var cult = game.cults[0];
+      if (cult.state != CULT_STATE_ACTIVE)
+        {
+          log('Cult is not active.');
+          return;
+        }
+      if (arr.length < 3 ||
+          (arr[2] != '1' && arr[2] != '2'))
+        {
+          log('Usage: cu meta [1|2]');
+          return;
+        }
+      if (arr[2] == '1')
+        {
+          cult.metamorphosisPhaseIComplete = true;
+          log('Metamorphosis Phase I marked complete.');
+          return;
+        }
+      if (cult.base != null)
+        {
+          log('Cult already has a base.');
+          return;
+        }
+      var o = new MetamorphosisPhaseII(game);
+      cult.ordeals.list.push(o);
+      o.getActions()[0].f();
+      // refused outside a habitat: drop the ordeal so a repeat does not stack copies
+      if (cult.base == null)
+        {
+          cult.ordeals.list.remove(o);
+          cult.recalc();
+          log('The ritual must finish in a habitat.');
+        }
     }
 
 // add team base defense ordeal to cult

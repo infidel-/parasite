@@ -35,7 +35,7 @@ typedef CultBaseReadiness = {
 
 class CultBase extends _SaveObject
 {
-  static var _ignoredFields = [ 'game' ];
+  static var _ignoredFields = [ 'game', 'income', 'cursorX', 'cursorY', 'selectedType', 'selectedDirection' ];
   public var game: Game;
   public var areaID: Int;
   public var resources: CultBaseResources;
