@@ -1,6 +1,6 @@
 # Cult level 2: feature-complete (worker brief)
 
-**Status: worker phases done (P1, P2, P3, P5, P6, P9). P4/P7/P8 run in other sessions.** (The controller updates this line at each phase boundary.)
+**Status: worker phases done (P1, P2, P3, P5, P6, P9); P4 done in another session (b195a1b3). P7/P8 run in other sessions.** (The controller updates this line at each phase boundary.)
 
 **Controller:** session `cult-l2-controller` (`ListAgents`, `SendMessage`). You are the worker: read
 `docs/worker-loop.md` § Worker first. **You never use CDP** (no `mcp__chrome-devtools__*`, no `make reload`): you
