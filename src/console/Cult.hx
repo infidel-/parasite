@@ -45,7 +45,7 @@ class Cult
               log('cu/cult u1 - upgrade random level 1 follower to level 2');
               log('cu/cult r [power] - recruit follower (default combat)');
               log('cu/cult po [power] [idx] - add profane ordeal');
-              log('cu/cult meta [phase] - 1: mark Metamorphosis Phase I complete, 2: perform the Phase II ritual in the current habitat');
+              log('cu/cult meta [phase] - 1: mark Metamorphosis Phase I complete, 2: grow the base in the current habitat, skipping the Phase II ritual stages');
               log('cu/cult occasio - open a random occasio choice window (no cult needed)');
               return true;
             }
@@ -323,7 +323,7 @@ class Cult
       });
     }
 
-// marks metamorphosis phase I complete or runs the phase II ritual, the same path as its action
+// marks metamorphosis phase I complete, or gives the phase II ritual's result at once in the current habitat
   function metamorphosis(arr: Array<String>)
     {
       var cult = game.cults[0];
@@ -349,16 +349,16 @@ class Cult
           log('Cult already has a base.');
           return;
         }
+      if (game.location != LOCATION_AREA ||
+          !game.area.isHabitat)
+        {
+          log('The ritual must finish in a habitat.');
+          return;
+        }
+      // skips the ritual's stages and visions straight to its result
       var o = new MetamorphosisPhaseII(game);
       cult.ordeals.list.push(o);
-      o.getActions()[0].f();
-      // refused outside a habitat: drop the ordeal so a repeat does not stack copies
-      if (cult.base == null)
-        {
-          cult.ordeals.list.remove(o);
-          cult.recalc();
-          log('The ritual must finish in a habitat.');
-        }
+      o.success();
     }
 
 // add team base defense ordeal to cult

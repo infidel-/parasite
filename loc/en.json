@@ -3026,6 +3026,7 @@
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx",
+    "src/cult/ordeals/MetamorphosisPhaseII.hx",
     "src/objects/base/CorNefandum.hx"
    ],
    "vars": [],
@@ -21975,6 +21976,57 @@
    "field": "logsg"
   },
   {
+   "s": "Other Altars",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "title"
+  },
+  {
+   "s": "The flesh opens an eye that is not yours. Across the city, masked strangers kneel in a ring of cold light and sing to a god that is not the Heart. They do not see you yet. They will.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "text"
+  },
+  {
+   "s": "Corpus Basilica",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx",
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "title"
+  },
+  {
+   "s": "The walls of the lair rise into ribbed vaults and veined windows, a cathedral grown from meat and bone. A vast heart hangs where an altar should be, and the faithful stand beneath it in their thousands. This is what the flesh can become.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "text"
+  },
+  {
+   "s": "The floor splits. Something red and furious drags itself up out of the old growths, beating, burning from inside. Your followers fall to their knees. The Forbidden Heart is born, and it knows its name.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "text"
+  },
+  {
    "s": "Metamorphosis, Phase II",
    "kind": "N",
    "loc": [
@@ -21985,7 +22037,7 @@
    "field": "name"
   },
   {
-   "s": "Perform the ritual in the current habitat.",
+   "s": "Channel the ritual in the habitat where it began.",
    "kind": "N",
    "loc": [
     "src/cult/ordeals/MetamorphosisPhaseII.hx"
@@ -21995,17 +22047,32 @@
    "field": "note"
   },
   {
-   "s": "Perform metamorphosis ritual",
+   "s": "Channel the ritual in the habitat where it began. Stage {stage}/{stages}.",
    "kind": "T",
    "loc": [
     "src/cult/ordeals/MetamorphosisPhaseII.hx"
    ],
-   "vars": [],
+   "vars": [
+    "stage",
+    "stages"
+   ],
+   "where": "MetamorphosisPhaseII.getNote"
+  },
+  {
+   "s": "Channel the ritual ({stage}/{stages})",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [
+    "stage",
+    "stages"
+   ],
    "where": "MetamorphosisPhaseII.getActions",
    "field": "name"
   },
   {
-   "s": "The ritual must finish in a habitat.",
+   "s": "The ritual must be channelled in a habitat.",
    "kind": "T",
    "loc": [
     "src/cult/ordeals/MetamorphosisPhaseII.hx"
@@ -22013,6 +22080,60 @@
    "vars": [],
    "where": "MetamorphosisPhaseII.getActions",
    "field": "actionFailed"
+  },
+  {
+   "s": "The ritual must continue in the habitat where it began.",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.getActions",
+   "field": "actionFailed"
+  },
+  {
+   "s": "You channel the metamorphosis ritual ({stage}/{stages}).",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [
+    "stage",
+    "stages"
+   ],
+   "where": "MetamorphosisPhaseII.channel",
+   "field": "log"
+  },
+  {
+   "s": "{visio}: {title}",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [
+    "visio",
+    "title"
+   ],
+   "where": "MetamorphosisPhaseII.showVision",
+   "field": "title"
+  },
+  {
+   "s": "Visio",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.showVision"
+  },
+  {
+   "s": "Endure the vision",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseII.showVision"
   },
   {
    "s": "Cor Nefandum opens. Cultus Carnis enters its second form.",
@@ -34978,15 +35099,6 @@
   },
   {
    "s": "Defense in",
-   "kind": "T",
-   "loc": [
-    "src/ui/hud/FormaHud.hx"
-   ],
-   "vars": [],
-   "where": "FormaHud.renderLedger"
-  },
-  {
-   "s": "Corpus Basilica",
    "kind": "T",
    "loc": [
     "src/ui/hud/FormaHud.hx"

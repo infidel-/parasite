@@ -290,6 +290,12 @@ class View {
       actors.organFx(organ, kind);
     }
 
+// a Metamorphosis II ritual stage at a cell, on the actor layer's particles
+  public function ritualFx(x:Int, y:Int, stage:Int, onDone:Void -> Void):Void
+    {
+      actors.ritualFx(x, y, stage, onDone);
+    }
+
 // an area object was added or removed in the area on screen — see Area3D.refreshObjects
   public function refreshObjects():Void
     {

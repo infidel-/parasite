@@ -111,6 +111,10 @@ class Scenarios
       start: 's2+cu_start',
       run: phase2Outside,
     },
+    'phase2-ritual' => {
+      start: 's22+cu_start',
+      run: phase2Ritual,
+    },
     'ambush-base' => {
       start: BASE,
       run: ambushBase,
@@ -1745,19 +1749,86 @@ class Scenarios
       return [];
     }
 
-// the second metamorphosis performed outside a habitat is refused, and the ordeal stays
+// the second metamorphosis channelled outside a habitat is refused: the ordeal stays, unpinned and at
+// stage 0
   static function phase2Outside(game: Game, bot: Bot): Array<String>
     {
       var c = game.cults[0];
       var o = new cult.ordeals.MetamorphosisPhaseII(game);
       c.ordeals.list.push(o);
-      // the cult window's Perform button runs this
+      // the cult window's Channel button runs this
       o.getActions()[0].f();
       if (c.ordeals.list.indexOf(o) < 0)
         return [ 'the ritual was used up on the region map' ];
       if (c.base != null)
         return [ 'a base grew on the region map' ];
+      if (o.stage != 0 ||
+          o.areaID != -1)
+        return [ 'the refused ritual moved to stage ' + o.stage + ', pinned to ' + o.areaID ];
       return [];
+    }
+
+// the second metamorphosis in a habitat: three channelled stages, each with its vision, pinned to the
+// habitat across a save; the third grows the base and the two rivals, and the ordeal ends
+  static function phase2Ritual(game: Game, bot: Bot): Array<String>
+    {
+      if (game.location != LOCATION_AREA ||
+          !game.area.isHabitat)
+        return [ 's22 does not stand in a habitat' ];
+      var c = game.cults[0];
+      var cults = game.cults.length;
+      var o = new cult.ordeals.MetamorphosisPhaseII(game);
+      c.ordeals.list.push(o);
+      if (o.areaID != game.area.id)
+        return [ 'the ritual is not pinned to the habitat it began in' ];
+      for (stage in 1...cult.ordeals.MetamorphosisPhaseII.STAGES + 1)
+        {
+          // a ritual pinned elsewhere refuses this habitat
+          var pinned = o.areaID;
+          o.areaID = pinned + 100000;
+          o.getActions()[0].f();
+          o.areaID = pinned;
+          if (o.stage != stage - 1)
+            return [ 'stage ' + stage + ' was channelled outside the pinned habitat' ];
+          o.getActions()[0].f();
+          if (o.stage != stage)
+            return [ 'the ritual is at stage ' + o.stage + ' after channelling stage ' + stage ];
+          // no 3D view headless: the vision opens at once
+          if (game.ui.state != UISTATE_CHOICE)
+            return [ 'no vision after stage ' + stage + ' (ui ' + game.ui.state + ')' ];
+          @:privateAccess game.ui.components[_UIState.UISTATE_CHOICE].action(1);
+          if (stage == cult.ordeals.MetamorphosisPhaseII.STAGES)
+            break;
+          if (c.base != null)
+            return [ 'the base grew at stage ' + stage ];
+          // the stage reached and the pin survive a save
+          if (stage == 1)
+            {
+              Saver.save(game, SLOT);
+              game.load(SLOT);
+              c = game.cults[0];
+              o = null;
+              for (x in c.ordeals.list)
+                if (Std.isOfType(x, cult.ordeals.MetamorphosisPhaseII))
+                  o = cast x;
+              if (o == null)
+                return [ 'the ritual was lost in a save' ];
+              if (o.stage != 1 ||
+                  o.areaID != game.area.id)
+                return [ 'the ritual loaded at stage ' + o.stage + ', pinned to ' + o.areaID ];
+            }
+        }
+      var errs = [];
+      if (c.base == null ||
+          c.base.areaID != game.area.id)
+        errs.push('no base in the ritual habitat');
+      if (c.level != 2)
+        errs.push('the cult is level ' + c.level + ' after the ritual');
+      if (game.cults.length != cults + 2)
+        errs.push((game.cults.length - cults) + ' rivals after the ritual, not 2');
+      if (c.ordeals.list.indexOf(o) >= 0)
+        errs.push('the ritual ordeal outlived its last stage');
+      return errs;
     }
 
 // an ambush laid in the habitat before the base grew in it times out (Team.destroyHabitat): the base

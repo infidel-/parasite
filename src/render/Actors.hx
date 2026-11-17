@@ -931,6 +931,12 @@ class Actors {
       particles.add(new OrganFx3D(game, particles, organ, kind));
     }
 
+// play a Metamorphosis II ritual stage at a cell (render.particles.RitualFx3D)
+  public function ritualFx(x:Int, y:Int, stage:Int, onDone:Void -> Void):Void
+    {
+      particles.add(new RitualFx3D(game, particles, x, y, stage, onDone));
+    }
+
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
   public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float,

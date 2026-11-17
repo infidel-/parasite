@@ -24,6 +24,7 @@
 - cult: Reap the Unwary costs money or two powers, and needs a working Cadaverum to finish
 - cult: Rival Strike sends members against a rival cult's people in the city
 - cult: the Metamorphosis ordeals are open again
+- cult: the second metamorphosis is a three-stage ritual with a vision at each stage
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map
 - mods: `ai:die-region` event when the host dies on the region map

@@ -232,6 +232,18 @@ class GameScene
       view3d.organFx(organ, kind);
     }
 
+// play a Metamorphosis II ritual stage at a cell in the 3D view (render.particles.RitualFx3D), then
+// call onDone; with no 3D view running it calls onDone at once
+  public function ritualFx(x: Int, y: Int, stage: Int, onDone: Void -> Void)
+    {
+      if (!view3d.running)
+        {
+          onDone();
+          return;
+        }
+      view3d.ritualFx(x, y, stage, onDone);
+    }
+
 // is the current area a city (as opposed to the underground tunnels)?
   inline function isCityArea(): Bool
     {

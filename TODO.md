@@ -21,8 +21,9 @@ Known open work, deferred on purpose. Remove an entry when it is done.
 
 ## Cult
 
-- **The cult base has no pedia article.** `MetamorphosisPhaseII` adds `cultBase`, which does not exist in
-  `src/const/PediaConst.hx`. Forma (keys, organs, custodes, Corpus Basilica) would go there; it needs a
+- **The cult base has no pedia article.** `cultBase` does not exist in `src/const/PediaConst.hx`; add it
+  back to `MetamorphosisPhaseII.onSuccess` (`game.profile.addPediaArticle('cultBase')`) with the article
+  (removed in P7: it logged "New pedia article available: null"). Forma (keys, organs, custodes, Corpus Basilica) would go there; it needs a
   2560x1440 image.
 - **A custos can't be crafted on a Porta Costarum from Forma.** With a custos picked, Enter or a click on
   a gate opens the tend menu (an organ is there), though `validateCustos` allows the tile. A tend row

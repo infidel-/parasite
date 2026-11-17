@@ -240,3 +240,26 @@ Traps:
 Verdict: landed. Verified live at ANIM_SPEED 0.1-0.12 on the crusher (destroy, repair) and the heart
 (upgrade); 64 quick runs green; no new programs (pooled sprite/spark quads).
 
+
+## Metamorphosis II ritual stage animation
+
+`render.particles.RitualFx3D`, a `Particle3D` on the actor layer's list, started by
+`MetamorphosisPhaseII.channel` through `GameScene.ritualFx` → `View` → `Actors` at the player's cell.
+Its `onDeath` opens the stage's vision, and with no 3D view running `GameScene` calls that callback at
+once (headless tests). One stage is 14 BASE_MS (2.1 s): 16 + 8 × stage cult-pink sinew streaks spiral
+in from 1.5 + 0.5 × stage cells and climb over 7. A 4-glow column rises from 0.6 of that and beats
+(orange `0xff8a3a` on the third stage, cult pink before). A 36-ember additive ring spreads to 2.5 +
+0.5 × stage cells over the last 6. The third stage also throws an 18-drop `BloodDrop3D.burst` as the
+sinews meet, and Cor Nefandum appears under it.
+
+Traps:
+- The first cut (8 + 4 × stage sinews, width 0.06 cell, reach 1 cell per stage) read as a few stray
+  dashes at the screen edge. It needed denser, thicker sinews with a closer reach, and a fade-in so
+  they don't pop at full radius.
+- Sinews behind habitat walls are depth-occluded, so a spiral next to a wall looks lopsided. It is
+  still readable, so this was left alone.
+- To catch frames, set `RenderConfig.ANIM_SPEED` to 0.06 and take CDP screenshots about 6 s apart;
+  reset it to 1 afterwards.
+
+Verdict: landed. Verified live at ANIM_SPEED 0.06–0.15 in the base habitat (stages 2 and 3), and the
+stage-1 vision opened after the animation at full speed. No new programs (pooled spark quads).

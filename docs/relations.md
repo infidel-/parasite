@@ -144,8 +144,8 @@ ones that call it.
   `reports/cult-ordeals.md`.
 - Hooks: `onDeath` (fails the ordeal unless overridden), `check`, `turn`, `onSuccess`, `fail`,
   `getActions`, `onTimerTick`.
-- Out: timeline (GatherClues), goals, group, getRivalCult*. MetamorphosisPhaseII creates the base
-  and the first rivals (`RivalCult.generate`). `HereticalOrdeal` (a profane ordeal a non-combat rival
+- Out: timeline (GatherClues), goals, group, getRivalCult*. MetamorphosisPhaseII (a three-stage ritual
+  pinned to a habitat, a vision per stage) creates the base and the first rivals (`RivalCult.generate`). `HereticalOrdeal` (a profane ordeal a non-combat rival
   raises; answered by power, money or its strike mission; not counted in the profane limit, sets no
   `profaneTimeout`) and `RivalStrike` (communal, against a revealed rival) are the ordeals that
   reach into a rival's roster. Pedia: cultCommunalOrdeals, cultProfaneOrdeals.
@@ -164,8 +164,8 @@ ones that call it.
 **Cult base**: `cult/base/*`, `objects/base/*`, `ai/CustosLogic.hx`, BaseDefense missions
 - Owns resources, storedBodies, organs, custodes, attackPressure, defense id and timer (S). At
   `game.cults[0].base`. Losing Cor Nefandum ends the game.
-- Created only by `MetamorphosisPhaseII` (console `cu meta 2`), inside the current habitat. Pedia:
-  none (the `cultBase` article it adds does not exist).
+- Created only by `MetamorphosisPhaseII` at its third ritual stage, in the habitat the ritual is
+  pinned to (console `cu meta 2` skips the stages, in the current habitat). Pedia: none.
 - Attacks: `addPressure` (no `cultID`) picks a live rival weighted by `1 + combat power`, the generic
   thugs only when none lives; `startDefense` registers the ordeal, mission id, timer and
   `defenseFirstBodyID` (only bodies made since count). `BaseDefenseLogic` routes attackers to Cor Nefandum
@@ -370,8 +370,12 @@ stale until they expire.
 | base defense | ✓ the defense id is cleared with the ordeals; a team in TEAM_BASE_DEFENSE calls the attack off on its turn (`Team.turn`; G3, fixed) | n/a |
 | ordeals pointing at the rival (`RivalAttack`, `HereticalOrdeal`, `RivalStrike` in the PLAYER cult) | kept: a heresy's mission wins when entered, the others find no live rival | same |
 
-The `MetamorphosisPhaseII` perform action refuses outside a habitat and keeps the ordeal (G11,
-fixed: `Ordeal.success` removed it whatever `onSuccess` did).
+The `MetamorphosisPhaseII` channel action refuses outside a habitat, or in a habitat other than the
+one the ritual is pinned to (its `areaID`), and keeps the ordeal (G11, fixed: `Ordeal.success`
+removed it whatever `onSuccess` did). A stage counts when its animation ends
+(`GameScene.ritualFx`, at once with no 3D view), so a save mid-animation drops it. The ritual is no
+`Mission`: one would make its habitat a mission area, locked and pausing the cult and Group, while
+leaving the habitat has to suspend it instead. Scenarios: `phase2-outside`, `phase2-ritual`.
 
 ### Missions and ordeals
 
