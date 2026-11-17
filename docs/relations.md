@@ -180,6 +180,9 @@ ones that call it.
   `validateUpgrade`, `validateRepair`, `validateCustos`; the actions log that reason and the Forma HUD
   (`ui/hud/FormaHud.hx`, chip, tend menu, 3D ghost) shows it, never re-deriving a rule. Income lives in
   the pure `incomePerTurn()`, which `turn()` applies and the ledger previews.
+- 3D: an organ's prop key (`BaseOrganObject.getModelKey`) carries its direction and its broken state
+  (the `_broken` ruin rows, `ObjModels.withRuins`). `CultBase.refresh3D` rebuilds the props after a
+  break, repair, upgrade or turn, the only changes that change a key; `CultDetail` lays the ruin decals.
 - Scenarios: `base-build` (every organ, Porta over Murus, refusals), `base-tend` (upgrade, heart,
   repair, defense levels, turret turn, sight), `base-custos` (craft, cap, respawn, stats, heal),
   `base-economy` (income per organ, focus, drain, bodies, cap, pressure), `defense-rival`,

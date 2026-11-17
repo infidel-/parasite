@@ -43,7 +43,7 @@ class CaveWarm
               render.Models.get(m.path, function(_)
                 {
                   render.world.ObjModels.patchRow(m,
-                    render.Models.instanced(sc, m.path, place, m.h, SOLID).mesh,
+                    render.Models.instanced(sc, m.path, place, m.h, render.world.ObjModels.solidVariant(m)).mesh,
                     render.Models.instanced(sc, m.path, place, m.h, GHOST).mesh,
                     render.Models.instanced(sc, m.path, place, m.h, HULL(C.color, C.hullW)).mesh);
                   done();

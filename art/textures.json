@@ -8905,6 +8905,22 @@
       "built_srgb": 87.3,
       "last_sat": 0.6
     },
+    "cult/ruin-decals": {
+      "sat": 0.6,
+      "src": "cult/ruin-decals-cut.png",
+      "class": "sprite",
+      "res": 1024,
+      "needs_alpha": true,
+      "lift": 0.7,
+      "prompt": "SEPARATION IS THE MOST IMPORTANT REQUIREMENT: draw a 4x4 grid of sixteen separate, isolated cut-outs, each centred in its own cell and filling no more than 75% of the cell, with an empty gutter of at least 12% of the cell width on every side, so no two pieces touch and nothing crosses a cell boundary.\n\nUsing the reference image ONLY for its art style, line weight and material (flesh, clotting blood, pale fat, thin dark outline), draw sixteen NEW flat floor decals of RUIN: what a dead, broken organ of living flesh leaves on the floor when it collapses. Everything here is DEAD: dried and old, dark brown-maroon dried blood, greyish dead meat, yellowed bone, darker and duller than the reference, never fresh bright red. Each is seen from directly overhead and lies perfectly flat with no height. Every cell a clearly different shape. In reading order:\n1. a burst heart's spill: a wide pool of dark clotted old blood with torn flaps of grey ventricle wall and one collapsed milky eye lying in it.\n2. a straight line of snapped rib bones and bone splinters scattered along a smear of dried blood.\n3. two small heaps of broken curved rib arches, splintered, joined by torn strands of dried sinew.\n4. scattered vertebrae and broken bone needles in a small dark puddle.\n5. a dried, cracked blood puddle with a few limp grey severed fingers lying in it.\n6. a flattened slab of grey dead meat split open along its seams, yellow fat showing.\n7. a RING of gnawed bones and small dead rats around an EMPTY CENTRE: the middle of the ring is a hole with nothing drawn in it.\n8. crushed bone fragments mixed into a smeared grey-red meat paste.\n9. scattered rotting garbage: torn dark bags, rags and refuse in a brown seep.\n10. torn pale skin sacks and a few loose bones lying in a dark seep.\n11. a spilled pool of dark boiled broth with bone chunks and a scorched crust at its rim.\n12. a spray of small bone shards and dried blood droplets.\n13. a torn grey membrane, wrinkled, lying flat in a dried stain.\n14. a tangle of dead grey veins in a dry brown stain.\n15. a crust of dried, flaking dark flesh, cracked into plates.\n16. a broken ring of dried dark clots, open on one side.\nAll sixteen lie flat with no cast shadows, top-down orthographic view. Nothing else in the image.\n\nSTYLE \u2014 match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field \u2014 it should look hand-painted and flat, like a 2D game tile.",
+      "prompt_exact": true,
+      "note": "PACK16 of broken cult organ floor ruins for render.sewer.CultDetail (RUIN + k, reading order = CultDetail.RUIN_CELLS: cells 1-11 one per organ type COR_NEFANDUM..CAULDRON; 12-16 generic spares, unused). edit_image off cult/flesh-splotches-cut.png, gpt-image-2.6-sunburst high transparent (68% alpha 0). Alpha remapped (a-24)/72 to drop the halo (Unused/ruin-decals-alpha.png), then tools/pack16.py --valign center --margin 34 (scale 1.0, no upscale): ruin-decals-cut.png. Unused/ruin-decals.png is the untouched drop. Cell 7 (rat nest) has an empty centre over the nest's floor hole.",
+      "last_converted": "2026-11-17T22:53:10",
+      "last_sat": 0.6,
+      "built_linear": 0.0844,
+      "built_srgb": 78.3,
+      "last_lift": 0.7
+    },
     "cult/vessel-skin": {
       "sat": 0.6,
       "src": "cult/vessel-skin.png",

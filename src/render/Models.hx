@@ -21,6 +21,7 @@ typedef PropPlace = {
                 // times, so without this a stand of trees is one tree repeated
   ?pitch:Float, // turn about the prop's own x axis before its yaw, radians; absent = 0. it turns about
                 // the base's centre, so a prop laid on its back is lifted and recentred by the caller
+  ?squash:Float, // vertical-only multiplier on top of `scale`, about the base; absent = 1 (a slumped ruin)
 };
 
 // handle for a bulk-instanced prop: the mesh plus every placement's precomputed world matrix and
@@ -393,12 +394,13 @@ class Models {
               // (which is in the same local units) has to be scaled by it too or a jittered prop
               // drifts off its own footprint
               var ps = (pl.scale != null ? pl.scale : 1.0);
-              scl.set(s * ps, s * ps, s * ps);
+              var sq = (pl.squash != null ? pl.squash : 1.0);
+              scl.set(s * ps, s * ps * sq, s * ps);
               // world = T(x,y,z) · Ry(yaw) · S(s) · T(recenter) → compose with the recenter rotated in.
               // normalize() puts the base at 0, so `y` (absent on most placements) is a signed offset
               // off the floor: negative buries a prop that should read as grown out of it
               var pos = new Vector3(pl.x + (rx * cos + rz * sin) * ps,
-                ry * ps + (pl.y != null ? pl.y : 0.0),
+                ry * ps * sq + (pl.y != null ? pl.y : 0.0),
                 pl.z + (-rx * sin + rz * cos) * ps);
               q.setFromAxisAngle(up, pl.yaw);
               // a pitched prop: world = T · Ry(yaw) · Rx(pitch) · S · T(recenter), the recenter turned

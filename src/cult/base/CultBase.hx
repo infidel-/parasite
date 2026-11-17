@@ -323,6 +323,8 @@ class CultBase extends _SaveObject
       organ.broken = false;
       organ.health = organ.maxHealth();
       refreshOrganObject(organ);
+      // an upgrade mends a broken organ too
+      refresh3D();
       game.log(T('You strengthen {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
@@ -384,6 +386,7 @@ class CultBase extends _SaveObject
       organ.health = organ.maxHealth();
       organ.broken = false;
       refreshOrganObject(organ);
+      refresh3D();
       game.log(T('You mend {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
@@ -411,9 +414,7 @@ class CultBase extends _SaveObject
       organ.direction = (organ.direction + 1) % 4;
       refreshOrganObject(organ);
       // the 3D prop is keyed on the direction
-      if (game.scene != null &&
-          game.area == area())
-        game.scene.updateObjects3D();
+      refresh3D();
       game.log(T('You turn {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
@@ -443,6 +444,16 @@ class CultBase extends _SaveObject
         }
       organ.broken = true;
       refreshOrganObject(organ);
+      // the 3D prop is keyed on the broken state (its ruined row)
+      refresh3D();
+    }
+
+// rebuilds the 3D props when the base is the area on screen, after an organ's model key changed
+  function refresh3D()
+    {
+      if (game.scene != null &&
+          game.area == area())
+        game.scene.updateObjects3D();
     }
 
 // adds bodies to storage and returns overflow

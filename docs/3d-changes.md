@@ -174,3 +174,39 @@ Trap:
 
 **Verdict:** landed. Footprint and refusal now read on the floor itself; translucent fills on the
 self-lit mark quads don't work, so use outlines.
+
+## Broken cult organs: a procedural ruin
+
+**Changed:** a broken cult base organ was its intact prop with a red X badge. Now
+`BaseOrganObject.getModelKey` appends `_broken` to a broken organ's anchor key, and
+`ObjModels.withRuins` adds a twin row for every placing `cult_` row: the same glb, footprint, `off`,
+`turns` and `hole`, with `squash` 0.55 (a new `PropPlace.squash`, a Y-only scale about the base in
+`Models.instanced`) and `sink` = `sink × 0.55 + 0.04`. Every motion, glow, core and light column is
+null. `ruin: true` makes the solid batch a `DEAD` clone (`ObjModels.solidVariant`, used by build and
+the sewer, cave and facility warms), and `patchRuin` chains onto solid and ghost: albedo mixed 0.35
+toward its luminance, ×0.5, emissive zeroed. `CultBase.refresh3D` rebuilds the props on break, repair,
+upgrade and turn. `render.sewer.CultDetail` draws one ruin quad per broken organ from the
+`cult/ruin-decals` PACK16 (cell = `RUIN_CELLS.indexOf(type)`), over the rims, fading in over 2 BASE_MS
+from the break and dropped on repair.
+
+Numbers (habitat base, all 10 non-heart organs broken):
+- The topbar program count stayed at 135 through the break, so the warm covers it. The ruin mesh is
+  +1 call (10 quads).
+- The sheet came back at 0.0369 linear. At 1.25 footprints, hiding the ruin mesh changed only 8,025 px:
+  the prop covers most of a decal sized near its footprint, and the dark art vanishes on the habitat
+  floor. Lift 0.7 (0.0844, between the rim's 0.0506 and the splotches' 0.104) and 1.8 footprints (the
+  rim's 1.85) make it read as grey patches out from under the heaps.
+- Repair restores the tall red prop and drops its ruin decal. The turret prop follows its direction
+  on a turn.
+
+Traps:
+- The broken ribwall, ribgate and blood trap are walkable, so the player's ghost fades their props.
+  The ghost has to be ruined too, which is why the look is a patch on both batches rather than a
+  variant on the solid alone.
+- The SOLID batch shares the glb template's material, and every patch early-outs on its own mark. A
+  ruin row patching SOLID directly would have inherited the intact row's heartbeat, or put its own
+  look on the intact row. The DEAD clone carries no hooks.
+- pack16.py's first pass pasted at 1.149 (an upscale). `--margin 34` brought it to 1.0.
+
+**Verdict:** landed. One shader patch and one sheet give eleven ruins with no new models. A floor
+decal under a prop has to be sized like the flesh rim, not like the prop.

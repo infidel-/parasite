@@ -32,7 +32,8 @@ typedef CultEdge = {
 
 // one decal quad of the PACK4 sheet
 typedef CultQuad = {
-  // 0 rim, 1 splotch A, 2 splotch B, 3 branch (rooted at its origin, growing along +x)
+  // 0 rim, 1 splotch A, 2 splotch B, 3 branch (rooted at its origin, growing along +x); SPLOTCH + k
+  // cell k of the splotch sheet, RUIN + k cell k of the ruin sheet
   var cell:Int;
   // world centre (the root, for a branch)
   var x:Float;
@@ -73,6 +74,12 @@ class CultDetail
   static inline var SPLOTCH = 4;       // CultQuad.cell of the first splotch: 4 + k is cell k of the 4x4 splotch sheet
   // the splotch cells in use: 6, 13 and 14 are retired, too light against the floor
   static var SPLOTCH_CELLS = [ 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 15 ];
+  static inline var RUIN = 20;         // CultQuad.cell of the first ruin: 20 + k is cell k of the 4x4 ruin sheet
+  static inline var RUIN_SIZE = 1.8;   // a broken organ's ruin decal width in footprint widths
+  static inline var RUIN_GROW = 2.0;   // BASE_MS units a ruin takes to spread out from under its organ
+  // the ruin sheet's cells in reading order, one per organ type: what that organ leaves when it breaks
+  static var RUIN_CELLS:Array<_CultBaseOrganType> = [ COR_NEFANDUM, RIBWALL, RIBGATE, SPINE_TURRET,
+    BLOOD_TRAP, FLESH_BLOCK, RAT_NEST, CRUSHER, GARBAGE_HEAP, BODY_STORAGE, CAULDRON ];
   static inline var TINT_RAMP = 40.0;  // BASE_MS units the habitat takes to turn cult-pink after its first organ (6 s)
   public static inline var TINT_NEVER = 1e9; // tintBorn with no base in the area: the grade never starts
   // the cult grade (see grade): rgb multiplier, normalised to keep luma in the shader; w its strength
@@ -93,11 +100,13 @@ class CultDetail
   var model:Sewer;
   var decalMat:Dynamic;               // patched MeshStandardMaterial (the hook externs are untyped)
   var splotchMat:Dynamic;             // the same, over the splotch sheet: one program, its own map
+  var ruinMat:Dynamic;                // and over the ruin sheet, under the broken organs
   var tubeMat:Dynamic;
   var corPos = { value: new Vector3() }; // the Cor instance's translation: its beat phase hash
   var corSynced = false;              // corPos copied off the live Cor instance since the last rebuild
   var meshes:Array<Mesh> = [];
   var born:Map<Int, Float> = null;    // organ id -> birth on PropGlow's clock; null before the first build
+  var broke:Map<Int, Float> = [];     // broken organ id -> when it broke on that clock; dropped on repair
   var owner:Map<Int, CultBaseOrgan>;  // floor cell -> the organ standing on it
   var organs:Array<CultBaseOrgan>;
   var cor:CultBaseOrgan;
@@ -109,6 +118,7 @@ class CultDetail
       this.model = model;
       decalMat = decalMaterial('textures/cult/flesh-decals.png', 1.0);
       splotchMat = decalMaterial('textures/cult/flesh-splotches.png', SPLOTCH_ALPHA);
+      ruinMat = decalMaterial('textures/cult/ruin-decals.png', 1.0);
       var skin = Textures.loadTexture('textures/cult/vessel-skin.png', 'wall');
       tubeMat = VisionMask.patch(vessel(new MeshStandardMaterial({
         map: skin,
@@ -188,6 +198,15 @@ class CultDetail
           yaw: 0.0,
           start: 0.0,
           dur: 1.0,
+        },
+        {
+          cell: RUIN,
+          x: 0.0,
+          z: 0.0,
+          size: 1.0,
+          yaw: 0.0,
+          start: 0.0,
+          dur: 1.0,
         }
       ], [
         {
@@ -231,6 +250,12 @@ class CultDetail
       for (o in organs)
         if (!born.exists(o.id))
           born.set(o.id, first ? BORN_OLD : now);
+      // the same for breaking: a ruin already there at the first build is old, a new one spreads
+      for (o in organs)
+        if (!o.broken)
+          broke.remove(o.id);
+        else if (!broke.exists(o.id))
+          broke.set(o.id, first ? BORN_OLD : now);
       // the grade starts with the first organ: at once for a base already standing, ramped for a new one
       tintBorn.value.x = TINT_NEVER;
       for (o in organs)
@@ -244,6 +269,7 @@ class CultDetail
       var splotches:Array<CultQuad> = [];
       var rims:Array<CultQuad> = [];
       var branches:Array<CultQuad> = [];
+      var ruins:Array<CultQuad> = [];
       // branches off the vessels
       for (e in edges)
         {
@@ -317,6 +343,20 @@ class CultDetail
               }));
               i++;
             }
+          // a broken organ's ruin on its own seed, so breaking it moves nothing else
+          if (o.broken)
+            {
+              var rr = gen.Rng.mulberry32(hash([ SEED, o.id, 31 ]));
+              ruins.push({
+                cell: RUIN + RUIN_CELLS.indexOf(o.type),
+                x: wo.x,
+                z: wo.z,
+                size: big * CityConfig.CELL * RUIN_SIZE,
+                yaw: rr() * Math.PI * 2,
+                start: broke.get(o.id),
+                dur: RUIN_GROW,
+              });
+            }
           var nb = Math.round(2 * DENSITY);
           for (k in 0...nb)
             {
@@ -338,8 +378,9 @@ class CultDetail
               }));
             }
         }
-      // drawn in the preview's layer order: splotches, then rims over them, then the branches on top
-      emit(splotches.concat(rims).concat(branches), edges);
+      // drawn in the preview's layer order: splotches, then rims over them, then the branches on top;
+      // the ruins over all of it
+      emit(splotches.concat(rims).concat(branches).concat(ruins), edges);
     }
 
 // copy the Cor instance's translation into the vessels' phase hash, the first frame its batch is
@@ -376,8 +417,9 @@ class CultDetail
 // order: the splotch mesh is made first and draws under the rims, as the preview layers them
   function emit(quads:Array<CultQuad>, edges:Array<CultEdge>):Void
     {
-      decals([ for (q in quads) if (q.cell >= SPLOTCH) q ], splotchMat);
+      decals([ for (q in quads) if (q.cell >= SPLOTCH && q.cell < RUIN) q ], splotchMat);
       decals([ for (q in quads) if (q.cell < SPLOTCH) q ], decalMat);
+      decals([ for (q in quads) if (q.cell >= RUIN) q ], ruinMat);
       if (edges.length > 0)
         {
           var pos:Array<Float> = [];
@@ -397,8 +439,8 @@ class CultDetail
         }
     }
 
-// one merged quad mesh: rim and branch tiles are quarters of the decal sheet, a splotch is a
-// cell of the 4x4 splotch sheet
+// one merged quad mesh: rim and branch tiles are quarters of the decal sheet, a splotch or a ruin is
+// a cell of its 4x4 sheet
   function decals(quads:Array<CultQuad>, mat:Dynamic):Void
     {
       if (quads.length > 0)
@@ -412,7 +454,7 @@ class CultDetail
             {
               var ca = Math.cos(q.yaw);
               var sa = Math.sin(q.yaw);
-              var k = q.cell - SPLOTCH;
+              var k = q.cell - (q.cell >= RUIN ? RUIN : SPLOTCH);
               var tw = (k >= 0 ? 0.25 : 0.5);
               var u0 = (k >= 0 ? (k % 4) * 0.25 : (q.cell % 2) * 0.5);
               var v0 = (k >= 0 ? 0.75 - Std.int(k / 4) * 0.25 : (q.cell < 2 ? 0.5 : 0.0));

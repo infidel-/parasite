@@ -70,7 +70,7 @@ class SewerWarm
                   // program cache key, so a warm that ordered it differently would warm a key the
                   // game never asks for. a row with no `anim` is a no-op and keeps the plain program
                   render.world.ObjModels.patchRow(m,
-                    render.Models.instanced(sc, m.path, place, m.h, SOLID).mesh,
+                    render.Models.instanced(sc, m.path, place, m.h, render.world.ObjModels.solidVariant(m)).mesh,
                     render.Models.instanced(sc, m.path, place, m.h, GHOST).mesh,
                     render.Models.instanced(sc, m.path, place, m.h, HULL(C.color, C.hullW)).mesh);
                   done();

@@ -619,6 +619,11 @@ typedef ObjModel = {
   ?hole:Array<Float>, // [x, z, rx, rz]: an ellipse of FLOOR this prop removes (floorHoles), as fractions
                       // of `h` off its placement in its own frame, for a pit sunk through the floor
                       // (the cult rat nest). Absent for every other row
+  ?squash:Float,      // vertical scale on top of `h`, for a prop slumped into a heap (a broken cult
+                      // organ, RUIN_SQUASH). Absent = 1
+  ?ruin:Bool,         // drawn dead: no emissive, darkened and desaturated (patchRuin), its SOLID a
+                      // DEAD clone so the intact row's shared material stays untouched. Absent for
+                      // every row but the broken cult organs' (withRuins)
 };
 
 // area objects that render as a real 3D prop instead of their atlas sprite. the mapping lives here,
@@ -717,13 +722,20 @@ class ObjModels
   // is a red tide through the crevices on the beat and next to nothing between
   static inline var FLESH_GLOW = 0.04;
 
+  // a broken cult organ (withRuins): slumped to this fraction of its height, sunk a little more into
+  // its mat, its albedo pulled toward grey by RUIN_SAT (1 = untouched) and dimmed by RUIN_DARK
+  static inline var RUIN_SQUASH = 0.55;
+  static inline var RUIN_SINK = 0.04;
+  static inline var RUIN_SAT = 0.35;
+  static inline var RUIN_DARK = 0.5;
+
   // every object-backed prop there is. ONE table: build() places from it, render.View warms every
   // entry at boot, modelFor() is the lookup and render.particles.PropLights reads the `light` rows —
   // so a new prop is a row here plus its path in RenderConfig.MODELS, nothing to keep in sync by hand.
   // heights are world units against a 4-unit cell; the sprite each replaces was a 3.0 square.
   // the habitat organs' light colours are each prop's OWN glow hue, carried over from the emissive map
   // that used to do this job on the prop's surface alone (see RenderConfig.PROP_LIGHT)
-  public static final MODELS:Array<ObjModel> = [
+  public static final MODELS:Array<ObjModel> = withRuins([
     // the alien ship of the crash-landing scenario, on the hangar's study podium and later on its
     // wilderness pad. ALL FOUR OF ITS infoIDs ON ONE ROW, and that is load-bearing rather than
     // tidy: objects.EventObject keys on infoID and the scenario REWRITES that id as the mission
@@ -1858,7 +1870,7 @@ class ObjModels
       noCast: true,
       unmasked: true,
     },
-  ];
+  ]);
 
 // a cult base organ off its Meshy glb (objects.base.BaseOrganObject): FRONTAL like the Cor, standing
 // on its own mat, wearing the Cor's crawling wet highlight. a 2x2 organ (`big`) also takes the Cor's
@@ -1991,6 +2003,48 @@ class ObjModels
       return m;
     }
 
+// the table plus a RUINED twin of every placing cult organ row, keyed `<key>_broken`
+// (objects.base.BaseOrganObject.getModelKey): the same glb on the same footprint and turns, slumped,
+// dead and still. a procedural ruin, so a broken organ costs no art and repair is just the old key
+  static function withRuins(rows:Array<ObjModel>):Array<ObjModel>
+    {
+      var ruins = [ for (m in rows)
+        if (m.skip != true &&
+            StringTools.startsWith(m.keys[0], 'cult_'))
+          ({
+            keys: [ for (k in m.keys) k + '_broken' ],
+            path: m.path,
+            h: m.h,
+            // the same share of it still buried, and the slump a little deeper
+            sink: m.sink * RUIN_SQUASH + RUIN_SINK,
+            yaw: m.yaw,
+            light: null,
+            anim: null,
+            pulse: null,
+            curl: null,
+            core: null,
+            fly: null,
+            shine: null,
+            eyes: null,
+            lamps: null,
+            arc: null,
+            tether: null,
+            off: m.off,
+            noCast: m.noCast,
+            turns: m.turns,
+            hole: m.hole,
+            squash: RUIN_SQUASH,
+            ruin: true,
+          }:ObjModel) ];
+      return rows.concat(ruins);
+    }
+
+// the variant a row's SOLID batch draws with: a ruin needs a material of its own to patch
+  public static function solidVariant(m:ObjModel):ModelVariant
+    {
+      return (m.ruin == true ? DEAD : SOLID);
+    }
+
 // the prop an object draws as, or null for the ordinary sprite path. a linear scan of five rows,
 // which is cheaper than the map it would take to avoid it — render.Actors asks once per object per
 // frame and the answer is null for everything in a city
@@ -2079,6 +2133,7 @@ class ObjModels
             // podium in the shed and on bare dirt in the wilderness
             y: WorldCtx.floorYAt(w.x, w.z) + (lift != null ? lift(o.x, o.y) : 0.0) -
               m.sink * m.h,
+            squash: m.squash,
           });
           // pushed in the SAME iteration as its placement, so the two share an index — and that shared
           // index is the whole mechanism turning "the player stands on cell X" into an instance to fade
@@ -2107,7 +2162,7 @@ class ObjModels
           if (places.length == 0)
             continue;
           out.push({
-            solid: Models.instanced(scene, m.path, places, m.h, SOLID),
+            solid: Models.instanced(scene, m.path, places, m.h, solidVariant(m)),
             ghost: Models.instanced(scene, m.path, places, m.h, GHOST),
             hull: Models.instanced(scene, m.path, places, m.h, HULL(C.color, C.hullW)),
             model: m,
@@ -2188,6 +2243,57 @@ class ObjModels
       PropShader.patchMesh(hu, m);
       PropGlow.patchMesh(so, m);
       PropGlow.patchMesh(gh, m);
+      if (m.ruin == true)
+        {
+          patchRuin(so);
+          patchRuin(gh);
+        }
+    }
+
+// a ruined row's look, chained last: albedo toward grey and dimmed, emissive off (the GHOST clone
+// still carries the template's). `o` is Dynamic for the reason render.world.PropShader.patch gives:
+// the material externs declare no onBeforeCompile / customProgramCacheKey
+  static function patchRuin(o:Dynamic):Void
+    {
+      if (o == null ||
+          o.material == null ||
+          (o.material.onBeforeCompile != null &&
+           o.material.onBeforeCompile.propRuin == true))
+        return;
+      var mat:Dynamic = o.material;
+      // chained as render.world.PropGlow.patch chains: the wrapped hook's marks carried forward, and
+      // only an OWN previous key taken (the prototype's default throws unbound)
+      var prev:Dynamic = mat.onBeforeCompile;
+      var prevKey:Dynamic = untyped mat.hasOwnProperty('customProgramCacheKey') ?
+        mat.customProgramCacheKey : null;
+      var hook:Dynamic = function(shader:render.world.PropShader.ShaderPatch, renderer:Dynamic)
+        {
+          if (prev != null)
+            prev(shader, renderer);
+          shader.fragmentShader = StringTools.replace(StringTools.replace(shader.fragmentShader,
+            '#include <map_fragment>',
+            '#include <map_fragment>\n' +
+            '  diffuseColor.rgb = mix( vec3( dot( diffuseColor.rgb, vec3( 0.2126, 0.7152, 0.0722 ) ) ),\n' +
+            '    diffuseColor.rgb, ' + glsl(RUIN_SAT) + ' ) * ' + glsl(RUIN_DARK) + ';'),
+            '#include <emissivemap_fragment>',
+            '#include <emissivemap_fragment>\n' +
+            '  totalEmissiveRadiance = vec3( 0.0 );');
+        };
+      if (prev != null)
+        for (f in Reflect.fields(prev))
+          Reflect.setField(hook, f, Reflect.field(prev, f));
+      hook.propRuin = true;
+      mat.onBeforeCompile = hook;
+      mat.customProgramCacheKey = function()
+        return (prevKey != null ? Std.string(Reflect.callMethod(mat, prevKey, [])) : '') + 'propRuin';
+      mat.needsUpdate = true;
+    }
+
+// a float as a GLSL literal: always with a point
+  static function glsl(v:Float):String
+    {
+      var s = Std.string(v);
+      return (s.indexOf('.') < 0 ? s + '.0' : s);
     }
 
 // tear every batch out of the scene, so build() can run again after an object was added to or removed
