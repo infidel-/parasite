@@ -816,6 +816,17 @@ class FormaHud
               reason: '',
               run: function () base.setFocus(organ, focus),
             });
+      // a turret turns a quarter, free
+      if (organ.type == SPINE_TURRET)
+        {
+          var reason = base.validateTurn(organ);
+          ret.push({
+            label: T('Turn'),
+            cost: (reason == '' ? new CultBaseResources() : null),
+            reason: reason,
+            run: function () base.turnTurret(organ),
+          });
+        }
       // a Cadaverum drains a stored body into blood
       if (organ.type == BODY_STORAGE)
         {

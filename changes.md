@@ -10,6 +10,8 @@
 - cult: a member's death fails any ordeal it is locked in, profane ones too
 - cult: base attackers head for Cor Nefandum and fight its defenders on sight
 - cult: base attacks come from the rival cults, armed by member level
+- cult: base defenses grow to level 3; turrets hit harder and can be turned, gates make foes bleed, Tardans slows
+- cult: base walls and gates block line of sight
 - cult: base walls and gates can run north-south as well as east-west
 - cult: Cadaverum can drain a stored body into blood
 - cult: custodes have their own slam and bite, Firmus is tougher, and they heal while the player stays in the base
@@ -34,7 +36,7 @@
 - cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
 - cult: a summoned cultist taken over by the parasite grows organs on its own body
 - cult: a team ambush set before the base grew no longer burns the base habitat
-- cult: custodes no longer attack the player's host or preserved hosts
+- cult: custodes and spine turrets no longer attack the player's host or preserved hosts
 - cult: custodes no longer keep the player inside the base habitat
 - cult: the Group's final team attacks the cult base instead of a habitat
 - cult: the second metamorphosis performed outside a habitat is refused instead of used up

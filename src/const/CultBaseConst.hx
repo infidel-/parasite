@@ -93,20 +93,20 @@ class CultBaseConst
             return text(meta(type, N('Cor Nefandum'), 0, 0, 0, 2, 2, 4, false, false),
               N('The heart of the base.'));
           case RIBWALL:
-            return text(meta(type, N('Murus Costarum'), 0, 0, 3, 1, 1, 1, true, false),
-              N('A wall of ribs. Blocks the way and counts as a defense.'),
+            return text(meta(type, N('Murus Costarum'), 0, 0, 3, 1, 1, 3, true, false),
+              N('A wall of ribs. Blocks the way and the view. Counts as a defense.'),
               N('Murus'));
           case RIBGATE:
-            return text(meta(type, N('Porta Costarum'), 4, 4, 6, 1, 1, 1, true, false),
-              N('Grows over a ribwall. Your side walks through. Counts as a defense.'),
+            return text(meta(type, N('Porta Costarum'), 4, 4, 6, 1, 1, 3, true, false),
+              N('Grows over a ribwall. Your side walks through, foes are bitten and bleed. Counts as a defense.'),
               N('Porta'));
           case SPINE_TURRET:
-            return text(meta(type, N('Turris Spinarum'), 6, 2, 10, 1, 1, 1, true, false),
-              N('Faces one way. Counts as a defense.'),
+            return text(meta(type, N('Turris Spinarum'), 6, 2, 10, 1, 1, 3, true, false),
+              N('Faces one way and shoots down the line; at level 3 it hits two. Counts as a defense.'),
               N('Turris'));
           case BLOOD_TRAP:
-            return text(meta(type, N('Tardans'), 2, 6, 0, 1, 1, 1, true, false),
-              N('A pool of grasping hands. Counts as a defense.'));
+            return text(meta(type, N('Tardans'), 2, 6, 0, 1, 1, 3, true, false),
+              N('A pool of grasping hands that slow foes. Counts as a defense.'));
           case FLESH_BLOCK:
             return text(meta(type, N('Quadrum'), 20, 5, 10, 2, 2, 3, false, true),
               N('Grows flesh: +5 a turn per level.'));
@@ -197,13 +197,13 @@ class CultBaseConst
           case COR_NEFANDUM:
             return 60 + 20 * (level - 1);
           case RIBWALL:
-            return 18;
+            return 18 + 8 * (level - 1);
           case RIBGATE:
-            return 24;
+            return 24 + 8 * (level - 1);
           case SPINE_TURRET:
-            return 18;
+            return 18 + 6 * (level - 1);
           case BLOOD_TRAP:
-            return 10;
+            return 10 + 4 * (level - 1);
           case FLESH_BLOCK:
             return 28 + 8 * (level - 1);
           case RAT_NEST:
@@ -217,6 +217,38 @@ class CultBaseConst
           case CAULDRON:
             return 24 + 8 * (level - 1);
         }
+    }
+
+// returns the spine turret damage range at a level
+  public static function turretDamage(level: Int): { min: Int, max: Int }
+    {
+      return [
+        { min: 3, max: 8 },
+        { min: 4, max: 10 },
+        { min: 5, max: 12 },
+      ][level - 1];
+    }
+
+// returns how many AIs in line a spine turret hits at a level
+  public static function turretTargets(level: Int): Int
+    {
+      return (level >= 3 ? 2 : 1);
+    }
+
+// returns the Porta bite damage range at a level
+  public static function gateBite(level: Int): { min: Int, max: Int }
+    {
+      return [
+        { min: 2, max: 5 },
+        { min: 3, max: 7 },
+        { min: 4, max: 9 },
+      ][level - 1];
+    }
+
+// returns the Slime points a Tardans puts on a foe at a level
+  public static function trapSlime(level: Int): Int
+    {
+      return [ 10, 14, 18 ][level - 1];
     }
 
 // returns build cost for one organ type

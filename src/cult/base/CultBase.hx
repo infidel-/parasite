@@ -374,6 +374,36 @@ class CultBase extends _SaveObject
       return true;
     }
 
+// returns why a turret cannot turn, or '' when it can
+  public function validateTurn(organ: CultBaseOrgan): String
+    {
+      if (organ.type != SPINE_TURRET)
+        return T('Only Turris Spinarum turns.');
+      if (!organ.isWorking())
+        return T('This organ is broken.');
+      return '';
+    }
+
+// turns a turret a quarter clockwise, free
+  public function turnTurret(organ: CultBaseOrgan): Bool
+    {
+      var reason = validateTurn(organ);
+      if (reason != '')
+        {
+          game.actionFailed(reason);
+          return false;
+        }
+      organ.direction = (organ.direction + 1) % 4;
+      refreshOrganObject(organ);
+      // the 3D prop is keyed on the direction
+      if (game.scene != null &&
+          game.area == area())
+        game.scene.updateObjects3D();
+      game.log(T('You turn {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
+      game.updateHUD();
+      return true;
+    }
+
 // damages an organ and handles broken/heart death states
   public function damageOrgan(organ: CultBaseOrgan, damage: Int)
     {

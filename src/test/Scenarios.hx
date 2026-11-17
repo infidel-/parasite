@@ -499,7 +499,279 @@ class Scenarios
       if (heart.health != heart.maxHealth())
         errs.push('the repaired heart has ' + heart.health + ' of ' + heart.maxHealth() + ' health');
       errs = errs.concat(paid(base, before, new CultBaseResources(10, 8, 8), 'the heart repair'));
+      return errs.concat(baseDefenses(game, bot, base));
+    }
+
+// the defense organs grow to level 3 for their build cost, then double, with the level's health; a
+// working Murus or Porta blocks sight and a broken one does not; a Porta bites and makes bleed by
+// level, a Tardans slimes and wears down by level, a turret hits one foe in line (two at level 3)
+// for its level's damage, turns a quarter from the Forma menu for nothing and from its object for
+// one turn, and neither turns while broken
+  static function baseDefenses(game: Game, bot: Bot, base: CultBase): Array<String>
+    {
+      var errs = [];
+      var forma = game.ui.hud.forma;
+      base.resources = new CultBaseResources(100, 100, 100);
+      if (!bot.pressAction('forma'))
+        return [ 'no Forma for the defense organs' ];
+      var health: Map<String, Array<Int>> = [
+        'RIBWALL' => [ 18, 26, 34 ],
+        'RIBGATE' => [ 24, 32, 40 ],
+        'SPINE_TURRET' => [ 18, 24, 30 ],
+        'BLOOD_TRAP' => [ 10, 14, 18 ],
+      ];
+      var organs: Map<String, CultBaseOrgan> = [];
+      var turretDir = 0;
+      var types: Array<_CultBaseOrganType> = [ RIBWALL, RIBGATE, SPINE_TURRET, BLOOD_TRAP ];
+      for (type in types)
+        {
+          // a gate grows over a wall, a turret needs three clear tiles to shoot along
+          var spot = freeSpot(game, base, (type == RIBGATE ? RIBWALL : type));
+          if (type == SPINE_TURRET)
+            {
+              spot = null;
+              for (y in 0...game.area.height)
+                for (x in 0...game.area.width)
+                  if (spot == null &&
+                      base.validateBuild(type, x, y) == '')
+                    for (d in 0...4)
+                      if (spot == null &&
+                          clearLine(game, x, y, d))
+                        {
+                          spot = { x: x, y: y };
+                          turretDir = d;
+                        }
+            }
+          if (spot == null)
+            return errs.concat([ 'no room for ' + type ]);
+          base.selectedDirection = turretDir;
+          if (type == RIBGATE)
+            grow(game, RIBWALL, spot.x, spot.y);
+          grow(game, type, spot.x, spot.y);
+          var organ = base.getOrganAt(spot.x, spot.y);
+          if (organ == null ||
+              organ.type != type)
+            return errs.concat([ 'no ' + type + ' grew at ' + spot.x + ',' + spot.y ]);
+          organs[type] = organ;
+          var hp = health[type];
+          if (CultBaseConst.info(type).maxLevel != 3)
+            errs.push(type + ' tops at level ' + CultBaseConst.info(type).maxLevel + ', not 3');
+          var unit = CultBaseConst.buildCost(type);
+          for (i in 0...3)
+            {
+              if (organ.health != hp[i])
+                errs.push(type + ' level ' + organ.level + ' has ' + organ.health + ' health, not ' + hp[i]);
+              var before = base.resources.clone();
+              forma.onMapClick(organ.x, organ.y);
+              @:privateAccess forma.tendOptions(organ)[0].run();
+              @:privateAccess forma.closeTend();
+              var mult = (i == 0 ? 1 : (i == 1 ? 2 : 0));
+              errs = errs.concat(paid(base, before, new CultBaseResources(unit.flesh * mult,
+                unit.blood * mult, unit.bone * mult), type + ' upgrade ' + (i + 1)));
+            }
+          if (organ.level != 3)
+            errs.push(type + ' is level ' + organ.level + ' after its upgrades, not 3');
+        }
+
+      // sight: a working Murus and Porta block it, a broken one does not, a mended one blocks again
+      var seeing: Array<_CultBaseOrganType> = [ RIBWALL, RIBGATE ];
+      for (type in seeing)
+        {
+          var organ = organs[type];
+          if (game.area.canSeeThrough(organ.x, organ.y))
+            errs.push('a working ' + type + ' lets sight through');
+          base.damageOrgan(organ, organ.health);
+          if (!game.area.canSeeThrough(organ.x, organ.y))
+            errs.push('a broken ' + type + ' blocks sight');
+          base.resources = new CultBaseResources(100, 100, 100);
+          forma.onMapClick(organ.x, organ.y);
+          @:privateAccess forma.tendOptions(organ)[1].run();
+          @:privateAccess forma.closeTend();
+          if (game.area.canSeeThrough(organ.x, organ.y))
+            errs.push('a mended ' + type + ' lets sight through');
+        }
+
+      // the turret turns from the Forma menu for nothing, and not while broken
+      var turret = organs['SPINE_TURRET'];
+      var before = base.resources.clone();
+      var dir = turret.direction;
+      forma.onMapClick(turret.x, turret.y);
+      @:privateAccess forma.tendOptions(turret)[2].run();
+      @:privateAccess forma.closeTend();
+      if (turret.direction != (dir + 1) % 4)
+        errs.push('the Turn row left the turret at ' + turret.direction + ', not ' + ((dir + 1) % 4));
+      errs = errs.concat(paid(base, before, new CultBaseResources(), 'turning the turret'));
+      // back to the clear line: three more quarters
+      for (i in 0...3)
+        base.turnTurret(turret);
+      if (turret.direction != dir)
+        errs.push('four turns left the turret at ' + turret.direction + ', not ' + dir);
+      base.damageOrgan(turret, turret.health);
+      if (base.validateTurn(turret) == '')
+        errs.push('a broken turret turns');
+      base.resources = new CultBaseResources(100, 100, 100);
+      base.setCursor(turret.x, turret.y);
+      base.repairAtCursor();
+      bot.pressAction('baseExit');
+
+      // the object action costs one turn and turns the turret
+      if (!standNextTo(game, turret))
+        return errs.concat([ 'no tile beside the turret' ]);
+      var turns = game.turns;
+      var ap = game.playerArea.ap;
+      if (!bot.pressAction('turnTurret'))
+        return errs.concat([ 'no Turn turret beside the turret' ]);
+      if (turret.direction != (dir + 1) % 4)
+        errs.push('Turn turret left the turret at ' + turret.direction + ', not ' + ((dir + 1) % 4));
+      // one action point, which ends the turn when it was the last
+      if (game.turns != turns + 1 &&
+          game.playerArea.ap != ap - 1)
+        errs.push('Turn turret spent no action point and no turn');
+      for (i in 0...3)
+        base.turnTurret(turret);
+
+      // the shots: a level 3 turret hits two foes in line, a level 1 turret one
+      var obj: objects.base.SpineTurret = null;
+      for (o in game.area.getObjects())
+        if (o.type == 'base_organ' &&
+            Std.isOfType(o, objects.base.SpineTurret) &&
+            cast(o, objects.base.BaseOrganObject).organID == turret.id)
+          obj = cast o;
+      var dx = [ 0, 1, 0, -1 ][turret.direction];
+      var dy = [ -1, 0, 1, 0 ][turret.direction];
+      var thugs = [ for (k in 1...4) game.area.spawnAI('thug', turret.x + dx * k, turret.y + dy * k) ];
+      for (t in thugs)
+        {
+          t.maxHealth = 500;
+          t.health = 500;
+        }
+      for (level in [ 3, 1 ])
+        {
+          turret.level = level;
+          turret.health = turret.maxHealth();
+          var hp = [ for (t in thugs) t.health ];
+          obj.turn();
+          var hit = [ for (i in 0...3) hp[i] - thugs[i].health ];
+          var dmg = CultBaseConst.turretDamage(level);
+          var want = (level == 3 ? 2 : 1);
+          var hits = Lambda.count(hit, function(h) return h > 0);
+          if (hits != want ||
+              hit[2] != 0)
+            errs.push('a level ' + level + ' turret hit ' + hit.join('/') + ', not the first ' + want);
+          for (h in hit)
+            if (h > 0 &&
+                (h < dmg.min ||
+                 h > dmg.max))
+              errs.push('a level ' + level + ' turret did ' + h + ' damage, not ' + dmg.min + '-' + dmg.max);
+          for (i in 0...3)
+            thugs[i].health = 500;
+        }
+      // the player host and a preserved host stand in line and are never shot, the foe behind them is
+      var host = game.player.host;
+      var keep = { x: host.x, y: host.y, health: host.health };
+      var preserved = thugs[1];
+      turret.level = 1;
+      turret.health = turret.maxHealth();
+      for (t in thugs)
+        t.health = 500;
+      host.x = thugs[0].x;
+      host.y = thugs[0].y;
+      thugs[0].x = turret.x + dx * 4;
+      thugs[0].y = turret.y + dy * 4;
+      preserved.state = AI_STATE_PRESERVED;
+      var hostHP = host.health;
+      var preservedHP = preserved.health;
+      var behindHP = thugs[2].health;
+      obj.turn();
+      if (host.health != hostHP)
+        errs.push('the turret shot the player host');
+      if (preserved.health != preservedHP)
+        errs.push('the turret shot a preserved host');
+      if (thugs[2].health == behindHP)
+        errs.push('the turret did not shoot the foe behind the host');
+      host.x = keep.x;
+      host.y = keep.y;
+      host.health = keep.health;
+      thugs[0].x = turret.x + dx;
+      thugs[0].y = turret.y + dy;
+      preserved.state = AI_STATE_IDLE;
+      if (CultBaseConst.turretDamage(1).max != 8 ||
+          CultBaseConst.turretDamage(3).min != 5)
+        errs.push('the turret damage table is wrong');
+
+      // the Porta bite and the Tardans mud, by level
+      var gate: objects.base.BaseOrganObject = null;
+      var trap: objects.base.BaseOrganObject = null;
+      for (o in game.area.getObjects())
+        if (o.type == 'base_organ')
+          {
+            var b: objects.base.BaseOrganObject = cast o;
+            if (b.organID == organs['RIBGATE'].id)
+              gate = b;
+            else if (b.organID == organs['BLOOD_TRAP'].id)
+              trap = b;
+          }
+      var effs: Array<_AIEffectType> = [ EFFECT_BLEEDING, EFFECT_SLIME ];
+      for (level in [ 1, 2, 3 ])
+        {
+          var g = organs['RIBGATE'];
+          var t = organs['BLOOD_TRAP'];
+          g.level = level;
+          t.level = level;
+          g.health = g.maxHealth();
+          t.health = t.maxHealth();
+          var foe = thugs[0];
+          foe.health = 500;
+          var hp0 = foe.health;
+          for (e in effs)
+            if (foe.effects.has(e))
+              foe.effects.decrease(e, 9999, foe);
+          if (gate.frob(false, foe) != 0)
+            errs.push('a Porta let a foe through');
+          var bite = CultBaseConst.gateBite(level);
+          var lost = hp0 - foe.health;
+          if (lost < bite.min ||
+              lost > bite.max)
+            errs.push('a level ' + level + ' Porta bit for ' + lost + ', not ' + bite.min + '-' + bite.max);
+          if (!foe.effects.has(effs[0]))
+            errs.push('a level ' + level + ' Porta left the foe unhurt by bleeding');
+          if (g.health != g.maxHealth() - 1)
+            errs.push('a Porta bite cost the gate ' + (g.maxHealth() - g.health) + ' health, not 1');
+          trap.frob(false, foe);
+          var slime = foe.effects.get(effs[1]);
+          if (slime == null ||
+              slime.points != CultBaseConst.trapSlime(level))
+            errs.push('a level ' + level + ' Tardans left slime ' + (slime == null ? 'none' : '' + slime.points) +
+              ', not ' + CultBaseConst.trapSlime(level));
+          if (t.health != t.maxHealth() - 1)
+            errs.push('a Tardans trigger cost the pool ' + (t.maxHealth() - t.health) + ' health, not 1');
+        }
+      for (o in [ organs['RIBGATE'], organs['BLOOD_TRAP'], turret ])
+        {
+          o.level = 3;
+          o.health = o.maxHealth();
+        }
       return errs;
+    }
+
+// true when the three tiles from (x, y) one way (0 north, 1 east, 2 south, 3 west) are free floor
+// and let sight through
+  static function clearLine(game: Game, x: Int, y: Int, d: Int): Bool
+    {
+      for (k in 1...4)
+        {
+          var tx = x + [ 0, 1, 0, -1 ][d] * k;
+          var ty = y + [ -1, 0, 1, 0 ][d] * k;
+          if (tx < 0 ||
+              ty < 0 ||
+              tx >= game.area.width ||
+              ty >= game.area.height ||
+              !game.area.isWalkable(tx, ty) ||
+              !game.area.canSeeThrough(tx, ty) ||
+              game.area.hasAI(tx, ty))
+            return false;
+        }
+      return true;
     }
 
 // custodes are crafted from Forma only with a working Caldarium, two per level, for their cost, and

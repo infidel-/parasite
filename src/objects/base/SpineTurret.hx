@@ -1,6 +1,7 @@
 package objects.base;
 
 import ai.CommonLogic;
+import const.CultBaseConst;
 import game.Game;
 
 class SpineTurret extends BaseOrganObject
@@ -18,7 +19,7 @@ class SpineTurret extends BaseOrganObject
       name = N('Turris Spinarum');
     }
 
-// fires down the chosen cardinal line
+// fires down the chosen cardinal line, at the first foes in it by level
   public override function turn()
     {
       var organ = getOrgan();
@@ -40,6 +41,8 @@ class SpineTurret extends BaseOrganObject
           default:
             dy = -1;
         }
+      var dmg = CultBaseConst.turretDamage(organ.level);
+      var shots = CultBaseConst.turretTargets(organ.level);
       var tx = x + dx;
       var ty = y + dy;
       while (tx >= 0 &&
@@ -51,13 +54,15 @@ class SpineTurret extends BaseOrganObject
           var ai = game.area.getAI(tx, ty);
           if (ai != null &&
               !ai.isPlayerCultist() &&
-              !ai.isCustos)
+              !ai.isCustos &&
+              !ai.isPlayerHost() &&
+              ai.state != AI_STATE_PRESERVED)
             {
               var weapon: WeaponInfo = {
                 isRanged: true,
                 skill: SKILL_ATTACK,
-                minDamage: 1,
-                maxDamage: 4,
+                minDamage: dmg.min,
+                maxDamage: dmg.max,
                 textMiss: T('{attacker:The} tries to shoot a spine at {target:the}, but misses.'),
                 textMissYou: T('{attacker:The} tries to shoot a spine at you, but misses.'),
                 textHit: T('{attacker:The} shoots a spine at {target:the} for {damage} damage.'),
@@ -77,7 +82,9 @@ class SpineTurret extends BaseOrganObject
                   type: TARGET_AI,
                   ai: ai
                 });
-              return;
+              shots--;
+              if (shots <= 0)
+                return;
             }
           tx += dx;
           ty += dy;

@@ -1,7 +1,8 @@
 package objects.base;
 
 import ai.AI;
-import effects.Paralysis;
+import const.CultBaseConst;
+import effects.Slime;
 import game.Game;
 
 class BloodTrap extends BaseOrganObject
@@ -25,10 +26,15 @@ class BloodTrap extends BaseOrganObject
       var organ = getOrgan();
       if (organ != null &&
           organ.isWorking() &&
+          !isPlayer &&
           ai != null &&
           !ai.isPlayerCultist() &&
           !ai.isCustos)
-        ai.onEffect(new Paralysis(game, 2));
+        {
+          // the mud clings by level and wears the pool down
+          ai.onEffect(new Slime(game, CultBaseConst.trapSlime(organ.level)));
+          damage(1);
+        }
       return 1;
     }
 
@@ -36,11 +42,5 @@ class BloodTrap extends BaseOrganObject
   public override function isWalkable(): Bool
     {
       return true;
-    }
-
-// blood traps are triggered by movement, not attacks
-  public override function isAttackableByEnemy(): Bool
-    {
-      return false;
     }
 }

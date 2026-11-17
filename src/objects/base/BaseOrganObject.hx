@@ -145,6 +145,15 @@ class BaseOrganObject extends AreaObject
               obj: this
             });
         }
+      if (organ.type == SPINE_TURRET &&
+          base.validateTurn(organ) == '')
+        game.ui.hud.addAction({
+          id: 'turnTurret',
+          type: ACTION_OBJECT,
+          name: T('Turn turret'),
+          energy: 0,
+          obj: this
+        });
       if (organ.health < organ.maxHealth() || organ.broken)
         game.ui.hud.addAction({
           id: 'repairBaseOrgan',
@@ -186,6 +195,8 @@ class BaseOrganObject extends AreaObject
             return base.upgradeAtCursor();
           case 'repairBaseOrgan':
             return base.repairAtCursor();
+          case 'turnTurret':
+            return base.turnTurret(getOrgan());
           default:
             return false;
         }

@@ -3051,7 +3051,7 @@
    "where": "CultBaseConst.info"
   },
   {
-   "s": "A wall of ribs. Blocks the way and counts as a defense.",
+   "s": "A wall of ribs. Blocks the way and the view. Counts as a defense.",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx"
@@ -3079,7 +3079,7 @@
    "where": "CultBaseConst.info"
   },
   {
-   "s": "Grows over a ribwall. Your side walks through. Counts as a defense.",
+   "s": "Grows over a ribwall. Your side walks through, foes are bitten and bleed. Counts as a defense.",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx"
@@ -3107,7 +3107,7 @@
    "where": "CultBaseConst.info"
   },
   {
-   "s": "Faces one way. Counts as a defense.",
+   "s": "Faces one way and shoots down the line; at level 3 it hits two. Counts as a defense.",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx"
@@ -3135,7 +3135,7 @@
    "where": "CultBaseConst.info"
   },
   {
-   "s": "A pool of grasping hands. Counts as a defense.",
+   "s": "A pool of grasping hands that slow foes. Counts as a defense.",
    "kind": "N",
    "loc": [
     "src/const/CultBaseConst.hx"
@@ -15407,6 +15407,36 @@
    "field": "log"
   },
   {
+   "s": "Only Turris Spinarum turns.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateTurn"
+  },
+  {
+   "s": "This organ is broken.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [],
+   "where": "CultBase.validateTurn"
+  },
+  {
+   "s": "You turn {organ}.",
+   "kind": "T",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "vars": [
+    "organ"
+   ],
+   "where": "CultBase.turnTurret",
+   "field": "log"
+  },
+  {
    "s": "Cor Nefandum is wounded!",
    "kind": "T",
    "loc": [
@@ -15562,15 +15592,6 @@
   },
   {
    "s": "Only Cadaverum drains bodies.",
-   "kind": "T",
-   "loc": [
-    "src/cult/base/CultBase.hx"
-   ],
-   "vars": [],
-   "where": "CultBase.validateDrain"
-  },
-  {
-   "s": "This organ is broken.",
    "kind": "T",
    "loc": [
     "src/cult/base/CultBase.hx"
@@ -29542,6 +29563,16 @@
    "field": "name"
   },
   {
+   "s": "Turn turret",
+   "kind": "T",
+   "loc": [
+    "src/objects/base/BaseOrganObject.hx"
+   ],
+   "vars": [],
+   "where": "BaseOrganObject.updateActionList",
+   "field": "name"
+  },
+  {
    "s": "Repair {organ}",
    "kind": "T",
    "loc": [
@@ -34856,6 +34887,16 @@
    "vars": [
     "resource"
    ],
+   "where": "FormaHud.tendOptions",
+   "field": "label"
+  },
+  {
+   "s": "Turn",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
    "where": "FormaHud.tendOptions",
    "field": "label"
   },
