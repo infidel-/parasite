@@ -1587,9 +1587,25 @@ class Bot
       if (base.activeDefenseMissionID >= 0 &&
           game.cults[0].ordeals.getMissionByID(base.activeDefenseMissionID) == null)
         list.push('base defense mission ' + base.activeDefenseMissionID + ' does not exist');
+      checkBaseOrgans(base, list);
       if (game.location != LOCATION_AREA ||
           game.area.id != base.areaID)
         return;
+      // every organ tile has its object part, every organ object a live organ
+      var parts = new Map<String, Bool>();
+      for (o in game.area.getObjects())
+        if (o.type == 'base_organ')
+          {
+            var obj: objects.base.BaseOrganObject = cast o;
+            var organ = Lambda.find(base.organs, function(x) return x.id == obj.organID);
+            if (organ == null)
+              list.push('organ object ' + o.id + ' points at missing organ ' + obj.organID);
+            parts[obj.organID + ':' + o.x + ':' + o.y] = true;
+          }
+      for (organ in base.organs)
+        for (pt in organ.footprint())
+          if (!parts.exists(organ.id + ':' + pt.x + ':' + pt.y))
+            list.push('organ ' + organ.id + ' has no object at ' + pt.x + ',' + pt.y);
       for (ai in @:privateAccess game.area._ai)
         if (ai.isCustos &&
             !Lambda.exists(base.custodes, function(d) return d.id == ai.id))
@@ -1597,6 +1613,45 @@ class Bot
       for (d in base.custodes)
         if (game.area.getAIByID(d.id) == null)
           list.push('custos record ' + d.id + ' has no AI in the base area');
+    }
+
+// the base economy's ranges and the organ records: stock, bodies and pressure never negative, organ
+// health and level in range, broken exactly at 0 health, one heart, no footprints overlapping
+  function checkBaseOrgans(base: cult.base.CultBase, list: Array<String>)
+    {
+      var r = base.resources;
+      if (r.flesh < 0 ||
+          r.blood < 0 ||
+          r.bone < 0)
+        list.push('base resources negative: ' + r.flesh + '/' + r.blood + '/' + r.bone);
+      if (base.storedBodies < 0)
+        list.push('base stores ' + base.storedBodies + ' bodies');
+      if (base.attackPressure < 0)
+        list.push('base pressure ' + base.attackPressure);
+      var hearts = 0;
+      var tiles = new Map<String, Int>();
+      for (organ in base.organs)
+        {
+          if (organ.type == COR_NEFANDUM)
+            hearts++;
+          else if (organ.broken != (organ.health == 0))
+            list.push('organ ' + organ.id + ' broken ' + organ.broken + ' at health ' + organ.health);
+          if (organ.health < 0 ||
+              organ.health > organ.maxHealth())
+            list.push('organ ' + organ.id + ' health ' + organ.health + ' of ' + organ.maxHealth());
+          if (organ.level < 1 ||
+              organ.level > const.CultBaseConst.info(organ.type).maxLevel)
+            list.push('organ ' + organ.id + ' level ' + organ.level);
+          for (pt in organ.footprint())
+            {
+              var key = pt.x + ':' + pt.y;
+              if (tiles.exists(key))
+                list.push('organs ' + tiles[key] + ' and ' + organ.id + ' share tile ' + pt.x + ',' + pt.y);
+              tiles[key] = organ.id;
+            }
+        }
+      if (hearts != 1)
+        list.push('base has ' + hearts + ' hearts');
     }
 
 // the group's ranges: priority is clamped to 0..100, a team has members and a distance in 0..150
@@ -1745,8 +1800,12 @@ class Bot
           for (m in c.members)
             ahead('AIData', m.id);
           if (c.base != null)
-            for (d in c.base.custodes)
-              ahead('AIData', d.id);
+            {
+              for (d in c.base.custodes)
+                ahead('AIData', d.id);
+              for (organ in c.base.organs)
+                ahead('CultBaseOrgan', organ.id);
+            }
           for (o in c.ordeals.list)
             for (m in o.missions)
               {
@@ -1762,6 +1821,7 @@ class Bot
         'AreaObject' => objects.AreaObject._maxID,
         'NPC' => @:privateAccess scenario.NPC._maxID,
         'Mission' => cult.Mission._maxID,
+        'CultBaseOrgan' => cult.base.CultBaseOrgan._maxID,
       ];
       for (name in top.keys())
         if (top[name] >= counters[name])
