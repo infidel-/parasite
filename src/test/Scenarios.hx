@@ -441,11 +441,19 @@ class Scenarios
         }
       bot.pressAction('baseExit');
 
-      // the heart, from its own object
+      // the heart, from its own object, listed once from a tile two of its parts touch
       var heart = base.getHeart();
       var before = base.resources.clone();
-      if (!standNextTo(game, heart) ||
-          !bot.pressAction('upgradeHeart'))
+      var touch = (game.area.isWalkable(heart.x, heart.y - 1) ?
+        { x: heart.x, y: heart.y - 1 } :
+        { x: heart.x - 1, y: heart.y });
+      if (!game.playerArea.moveTo(touch.x, touch.y))
+        return errs.concat([ 'no free tile beside the heart' ]);
+      game.updateHUD();
+      var offered = Lambda.count(@:privateAccess bot.options(), function(o) return o.id == 'upgradeHeart');
+      if (offered != 1)
+        errs.push('Upgrade Cor Nefandum is listed ' + offered + ' times beside the heart');
+      if (!bot.pressAction('upgradeHeart'))
         return errs.concat([ 'no Upgrade Cor Nefandum next to the heart' ]);
       if (heart.level != 2 ||
           heart.health != 80)

@@ -131,7 +131,8 @@ class BaseOrganObject extends AreaObject
       if (base == null)
         return;
       var organ = getOrgan();
-      if (organ == null)
+      if (organ == null ||
+          !isFirstPartNearPlayer())
         return;
       if (organ.type == COR_NEFANDUM)
         {
@@ -152,6 +153,23 @@ class BaseOrganObject extends AreaObject
           energy: 0,
           obj: this
         });
+    }
+
+// true when no lower part of this organ is next to the player, so a multi-tile organ lists its actions once
+  function isFirstPartNearPlayer(): Bool
+    {
+      var px = game.playerArea.x;
+      var py = game.playerArea.y;
+      for (o in game.area.getObjects())
+        if (o.type == 'base_organ')
+          {
+            var obj: BaseOrganObject = cast o;
+            if (obj.organID == organID &&
+                obj.basePartIndex < basePartIndex &&
+                Std.int(Math.max(Math.abs(obj.x - px), Math.abs(obj.y - py))) <= 1)
+              return false;
+          }
+      return true;
     }
 
 // handles object actions
