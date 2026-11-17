@@ -71,6 +71,18 @@ class Scenarios
       start: BASE + '+cu_br_200',
       run: baseCustos,
     },
+    'defense-rival' => {
+      start: BASE + '+cu_br_100+cu_def',
+      run: defenseRival,
+    },
+    'defense-timeout' => {
+      start: BASE + '+cu_def',
+      run: defenseTimeout,
+    },
+    'ambush-base-turn' => {
+      start: BASE,
+      run: ambushBaseTurn,
+    },
     'base-economy' => {
       start: BASE + '+cu_br_50',
       run: baseEconomy,
@@ -533,6 +545,7 @@ class Scenarios
       craft('mordax', '', true);
       craft('firmus', 'past the cap', false);
       bot.pressAction('baseExit');
+      errs = errs.concat(custosStats(game, bot, base));
 
       // out to the region map and back in: the records spawn their custodes again
       var ids = [ for (d in base.custodes) d.id ];
@@ -546,6 +559,71 @@ class Scenarios
               !ai.isCustos)
             errs.push('custos ' + id + ' did not come back with the player');
         }
+      return errs;
+    }
+
+// the two custodes against design.md: life 26 (Firmus) and 16 (Mordax) at the base stats, a ±1 STR/CON roll
+// moving it by 2 at most, their own attacks (slam 1-4, bite 3-8), a cult turn healing a hurt one a point
+// while the player is in the base and none while a raid runs, and no custos picks the player's host
+  static function custosStats(game: Game, bot: Bot, base: CultBase): Array<String>
+    {
+      var errs = [];
+      var firmus = game.area.getAIByID(base.custodes[0].id);
+      var mordax = game.area.getAIByID(base.custodes[1].id);
+      if (firmus.type != 'firmus' ||
+          mordax.type != 'mordax')
+        return [ 'the custodes are ' + firmus.type + ' and ' + mordax.type ];
+      if (firmus.maxHealth < 24 ||
+          firmus.maxHealth > 28)
+        errs.push('a Firmus has ' + firmus.maxHealth + ' life, not 24-28');
+      if (mordax.maxHealth < 14 ||
+          mordax.maxHealth > 18)
+        errs.push('a Mordax has ' + mordax.maxHealth + ' life, not 14-18');
+      var slam = firmus.getCurrentWeaponItemInfo().weapon;
+      if (slam.minDamage != 1 ||
+          slam.maxDamage != 4)
+        errs.push('a Firmus hits for ' + slam.minDamage + '-' + slam.maxDamage + ', not 1-4');
+      var bite = mordax.getCurrentWeaponItemInfo().weapon;
+      if (bite.minDamage != 3 ||
+          bite.maxDamage != 8)
+        errs.push('a Mordax hits for ' + bite.minDamage + '-' + bite.maxDamage + ', not 3-8');
+
+      // heals a point a cult turn in the base, not while a raid runs
+      firmus.health = 1;
+      if (!cultTurn(game, bot))
+        return errs.concat([ 'no cult turn in 10 Waits' ]);
+      if (firmus.health != 2)
+        errs.push('a hurt Firmus has ' + firmus.health + ' health after a cult turn, not 2');
+      base.activeDefenseMissionID = 0;
+      cultTurn(game, bot);
+      base.activeDefenseMissionID = -1;
+      if (firmus.health != 2)
+        errs.push('a Firmus healed to ' + firmus.health + ' during a raid');
+
+      // the player's host is no intruder, any other AI in sight is
+      var host = game.player.host;
+      host.isCultist = false;
+      var beside = game.area.findEmptyLocationNear(mordax.x, mordax.y, 1);
+      game.playerArea.moveTo(beside.x, beside.y);
+      // a free tile the Mordax sees, farther from it than the host
+      var loc: _Point = null;
+      for (y in (mordax.y - 5)...(mordax.y + 6))
+        for (x in (mordax.x - 5)...(mordax.x + 6))
+          if (loc == null &&
+              game.area.isWalkable(x, y) &&
+              !game.area.hasAI(x, y) &&
+              mordax.seesPosition(x, y) &&
+              Const.distanceSquared(mordax.x, mordax.y, x, y) >
+              Const.distanceSquared(mordax.x, mordax.y, host.x, host.y))
+            loc = { x: x, y: y };
+      if (loc == null)
+        return errs.concat([ 'no tile the Mordax sees beyond the host' ]);
+      var thug = game.area.spawnAI('thug', loc.x, loc.y);
+      var target = @:privateAccess ai.CustosLogic.findTarget(mordax);
+      if (target == host)
+        errs.push('a custos picked the player host');
+      if (target != thug)
+        errs.push('a custos does not pick the thug in sight');
       return errs;
     }
 
@@ -668,6 +746,210 @@ class Scenarios
       base.damageOrgan(storage, storage.health);
       if (Lambda.count(reap.getActions(), function(a) return a.id.indexOf('spend.') == 0) > 0)
         errs.push('a payment is offered with Cadaverum broken');
+      return errs;
+    }
+
+// a rival's raid on the base: its attackers are armed by member level, walk to Cor Nefandum and break the
+// organs that wall it in, the bodies of the raid (and no older body) go to Cadaverum off the floor when the
+// last attacker is dead, and the defense counts as survived; the next pressure defense names a live rival
+  static function defenseRival(game: Game, bot: Bot): Array<String>
+    {
+      var c = game.cults[0];
+      var base = c.base;
+      var ordeal: cult.ordeals.BaseDefense = null;
+      for (o in c.ordeals.list)
+        if (Std.isOfType(o, cult.ordeals.BaseDefense))
+          ordeal = cast o;
+      if (base == null ||
+          ordeal == null)
+        return [ 'cu def started no base defense' ];
+      if (ordeal.cultID < 0)
+        return [ 'cu def named no rival cult' ];
+      var m: cult.missions.BaseDefense = cast ordeal.missions[0];
+      var errs = [];
+
+      // a Cadaverum for the bodies, and a body from before the raid
+      // (Forma is closed while a raid runs: the organ is placed by hand)
+      var spot = freeSpot(game, base, BODY_STORAGE);
+      var storage = new CultBaseOrgan(BODY_STORAGE, base.areaID, spot.x, spot.y, 0);
+      base.organs.push(storage);
+      @:privateAccess base.createOrganObject(storage);
+      if (base.bodyCapacity() != 8)
+        return [ 'no Cadaverum grew' ];
+      var tile = freeTile(game, base);
+      var decoy = new objects.BodyObject(game, game.area.id, tile.x, tile.y, 'civilian');
+      base.defenseFirstBodyID = objects.AreaObject._maxID;
+
+      // the wave comes in on the next turn, armed by its members' levels
+      if (!bot.pressAction('skipTurn'))
+        return errs.concat([ 'no Wait in the base habitat' ]);
+      if (m.targetIDs.length < 1)
+        return errs.concat([ 'no attackers spawned' ]);
+      var attackers = [ for (id in m.targetIDs) game.area.getAIByID(id) ];
+      for (a in attackers)
+        {
+          if (a == null)
+            {
+              errs.push('an attacker is not in the area');
+              continue;
+            }
+          var level = game.jobs.getJobInfo(a.job).level;
+          if (!a.inventory.hasWeapon())
+            errs.push('a level ' + level + ' attacker has no weapon');
+          if (level >= 2 &&
+              a.inventory.getCurrentRangedWeapon() == null)
+            errs.push('a level ' + level + ' attacker has no ranged weapon');
+          if (level >= 3 &&
+              a.inventory.clothing.id != 'kevlarArmor')
+            errs.push('a level 3 attacker has no kevlar');
+        }
+
+      // Cor Nefandum walled in by ribs: the route breaks one, then hits the heart
+      var heart = base.getHeart();
+      var walls = 0;
+      for (y in (heart.y - 1)...(heart.y + 3))
+        for (x in (heart.x - 1)...(heart.x + 3))
+          if (base.getOrganAt(x, y) == null &&
+              base.canUseCursorTile(x, y) &&
+              game.area.isWalkable(x, y))
+            {
+              // whoever stands there is moved off the wall's tile
+              var occupant = game.area.getAI(x, y);
+              if (occupant != null)
+                {
+                  var away = game.area.findEmptyLocationNear(x, y, 6);
+                  occupant.setPosition(away.x, away.y);
+                }
+              var wall = new CultBaseOrgan(RIBWALL, base.areaID, x, y, 0);
+              base.organs.push(wall);
+              @:privateAccess base.createOrganObject(wall);
+              walls++;
+            }
+      var a = attackers[0];
+      var hits: Array<_CultBaseOrganType> = [];
+      for (i in 0...40)
+        {
+          var step = @:privateAccess cult.missions.BaseDefenseLogic.getHeartRoute(game, base, heart, a);
+          if (step == null)
+            {
+              errs.push('no route to the heart');
+              break;
+            }
+          if (step.obj == null)
+            {
+              a.setPosition(step.x, step.y);
+              continue;
+            }
+          var organ = step.obj.getOrgan();
+          hits.push(organ.type);
+          if (organ == heart)
+            break;
+          base.damageOrgan(organ, organ.health);
+        }
+      if (hits.length == 0 ||
+          hits[hits.length - 1] != COR_NEFANDUM)
+        errs.push('the attacker never reached the heart: it hit ' + hits);
+      else if (walls > 0 &&
+          hits.length < 2)
+        errs.push('the attacker walked through ' + walls + ' ribwalls to the heart');
+
+      // the last attacker falls: its body is made after the death event, and the mission ends next turn
+      var stored = base.storedBodies;
+      var survived = base.defensesSurvived;
+      for (id in m.targetIDs.copy())
+        game.area.getAIByID(id).die();
+      if (!bot.pressAction('skipTurn'))
+        return errs.concat([ 'no Wait after the raid' ]);
+      if (base.activeDefenseMissionID >= 0)
+        errs.push('the defense is still running with no attacker left');
+      if (base.defensesSurvived != survived + 1)
+        errs.push('defenses survived is ' + base.defensesSurvived + ', not ' + (survived + 1));
+      if (base.storedBodies != stored + attackers.length)
+        errs.push('Cadaverum holds ' + base.storedBodies + ' bodies, not ' + (stored + attackers.length));
+      var left = [ for (o in game.area.getObjects()) if (o.type == 'body') o ];
+      if (left.length != 1 ||
+          left[0] != decoy)
+        errs.push(left.length + ' bodies lie on the floor after loading, not just the older one');
+
+      // pressure with no culprit raids with a live rival
+      base.attackPressure = 29;
+      base.addPressure(1);
+      if (base.activeDefenseMissionID < 0)
+        return errs.concat([ 'pressure 30 started no defense' ]);
+      var next: cult.ordeals.BaseDefense = null;
+      for (o in c.ordeals.list)
+        if (Std.isOfType(o, cult.ordeals.BaseDefense))
+          next = cast o;
+      if (next == null ||
+          next.cultID < 0)
+        errs.push('the pressure defense did not name a rival');
+      return errs;
+    }
+
+// the timer of a rival's raid runs out: Cor Nefandum is destroyed and the game is lost
+  static function defenseTimeout(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      if (base == null ||
+          base.activeDefenseMissionID < 0)
+        return [ 'cu def started no base defense' ];
+      // no attacker comes: the ordeal's own timer is the only clock
+      var errs = [];
+      var ordeal: cult.Ordeal = null;
+      for (o in game.cults[0].ordeals.list)
+        if (Std.isOfType(o, cult.ordeals.BaseDefense))
+          ordeal = o;
+      ordeal.missions = [];
+      for (i in 0...base.activeDefenseTimer + 3)
+        {
+          if (game.state == GAMESTATE_FINISH)
+            break;
+          if (!cultTurn(game, bot))
+            break;
+        }
+      if (game.state != GAMESTATE_FINISH)
+        errs.push('the game goes on after the defense timer ran out');
+      else if (base.getHeart().health > 0)
+        errs.push('Cor Nefandum is whole after the timer ran out');
+      // the ordeal failed and left the list with its mission: the invariants would look for it
+      base.activeDefenseMissionID = -1;
+      return errs;
+    }
+
+// a team in ambush when a base exists turns on the base, never on the habitat: with the base free it
+// starts a base defense, with another defense running it waits (no TEAM_FIGHT in the habitat either way)
+  static function ambushBaseTurn(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      if (base == null ||
+          game.location != LOCATION_AREA ||
+          game.area.id != base.areaID)
+        return [ 'the fixture does not stand in the base habitat' ];
+      var errs = [];
+      var team = new Team(game);
+      team.state = TEAM_AMBUSH;
+      team.ambushedHabitat = game.area.habitat;
+      team.ambushedHabitatAreaID = base.areaID;
+      team.timer = 1;
+      game.group.team = team;
+      // the player stands in the ambushed habitat
+      if (!bot.pressAction('skipTurn'))
+        return [ 'no Wait in the base habitat' ];
+      if (team.state != TEAM_BASE_DEFENSE ||
+          base.activeDefenseMissionID < 0)
+        return [ 'the team is ' + team.state + ' after its ambush met the base, not attacking it' ];
+
+      // a second team in ambush while that defense runs: it waits
+      var second = new Team(game);
+      second.state = TEAM_AMBUSH;
+      second.ambushedHabitat = game.area.habitat;
+      second.ambushedHabitatAreaID = base.areaID;
+      second.timer = 1;
+      game.group.team = second;
+      for (i in 0...3)
+        bot.pressAction('skipTurn');
+      if (second.state == TEAM_FIGHT)
+        errs.push('the second team fought in the habitat while the base was under attack');
       return errs;
     }
 

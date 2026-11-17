@@ -94,3 +94,21 @@ One entry per iteration: phase, files, what changed, `make` result. Newest last.
   English, no custos name) in `CommonLogic.logicAttack`; no custodes-specific line added (question to the controller).
 - Build: `cd src && make` passes (58 runs, 0 failed). No scenario yet (group (d): `base-custos` stats).
 - New math: life/energy numbers above; heal +1/turn live (as before for records).
+
+## P2 (d): scenarios
+- File: `src/test/Scenarios.hx` only. New: `defense-rival` (`BASE+cu_br_100+cu_def`), `defense-timeout` (`BASE+cu_def`),
+  `ambush-base-turn` (`BASE`); extended: `base-custos` (new `custosStats`). `base-build`, `base-economy`, `base-tend` were
+  extended in (a) (focus, drain, readiness, Reap, heart repair); the clearance checks went with the rule.
+- `defense-rival`: a Cadaverum placed by hand (Forma is closed during a raid) and an older body before the raid;
+  attackers armed by member level (weapon; level 2+ ranged; level 3 kevlar); Cor Nefandum ringed with Murus: the route
+  must hit a Murus before the heart (`getHeartRoute` via `@:privateAccess`); all attackers die, the mission ends on
+  the next turn: survived +1, Cadaverum +n bodies, only the older body left on the floor (proves the last body is
+  counted); pressure 30 then starts a defense naming a rival.
+- `defense-timeout`: the ordeal's missions emptied so no attacker comes, cult turns until the timer ends: game FINISH, heart 0.
+  The ordeal is gone with its mission, so the scenario resets `activeDefenseMissionID` before the invariants run.
+- `ambush-base-turn`: a team in `TEAM_AMBUSH` with the player in the ambushed base habitat becomes `TEAM_BASE_DEFENSE`;
+  a second one while that defense runs never reaches `TEAM_FIGHT`.
+- `base-custos` `custosStats`: Firmus life 24-28, Mordax 14-18, slam 1-4, bite 3-8, a hurt custos heals +1 per cult
+  turn in the base and nothing during a defense, and `findTarget` skips the host for a farther thug (checked by
+  mutation: without the `isPlayerHost` rule the scenario fails).
+- Build: `cd src && make` passes (61 runs, 0 failed).
