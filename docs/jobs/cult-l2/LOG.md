@@ -80,3 +80,17 @@ One entry per iteration: phase, files, what changed, `make` result. Newest last.
   has `timer = 3`, `Team.turn` picks it up). `TeamBaseDefense.onEventAI` no longer completes inside the event (the
   mission ends on the next `turn()`, last body counted). Console `cu def` uses `base.startDefense(ordeal)`.
   Files added: `src/console/Cult.hx`, `src/cult/missions/TeamBaseDefense.hx`. Build: `cd src && make` passes (58 runs, 0 failed).
+
+## P2 (c): custodes
+- Files: `src/ai/CustosLogic.hx`, `src/ai/FirmusCustosAI.hx`, `src/ai/MordaxCustosAI.hx`, `src/cult/base/CultBase.hx`.
+- Stats: both override `recalc()` (`maxHealth` = STR+CON then Firmus +6 → 26 at STR 8 / CON 12, Mordax -1 → 16 at STR 10 /
+  CON 7; ±1 STR/CON still moves it; `maxEnergy` fixed 240 / 190 per design.md).
+- Own attacks: `getCurrentWeaponItemInfo()` overridden (not the generic `animal` item): Firmus slam 1-4 (BLUNT),
+  Mordax bite 3-8 (BITE), built by new `CustosLogic.attackInfo` with their own hit texts.
+- Heal: `CultBase.healCustodes` heals nothing during a defense; with the player in the base habitat the LIVE custodes
+  heal +1 per cult turn (they overwrite their records on leaving), otherwise the records heal +1.
+- `CustosLogic.findTarget` never targets the player host or preserved hosts.
+- INFO: custodes attacks already print through the generic `__Math.damage` line (`Damage AI->AI: 3...8 (5) = 5.`, plain
+  English, no custos name) in `CommonLogic.logicAttack`; no custodes-specific line added (question to the controller).
+- Build: `cd src && make` passes (58 runs, 0 failed). No scenario yet (group (d): `base-custos` stats).
+- New math: life/energy numbers above; heal +1/turn live (as before for records).

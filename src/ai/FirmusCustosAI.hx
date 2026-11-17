@@ -26,6 +26,22 @@ class FirmusCustosAI extends BaseCustosAI
       createIcon();
     }
 
+// life 26 and energy 240 at the base stats (the strength and constitution roll moves the life)
+  public override function recalc()
+    {
+      super.recalc();
+      maxHealth += 6;
+      maxEnergy = 240;
+    }
+
+// the slam: 1-4 damage
+  public override function getCurrentWeaponItemInfo(): ItemInfo
+    {
+      return CustosLogic.attackInfo(game, 1, 4, BLUNT,
+        T('{attacker:The} slams {target:the} for {damage} damage.'),
+        T('{attacker:The} slams you for {damage} damage.'));
+    }
+
 // select firmus sprite
   public override function createIcon()
     {

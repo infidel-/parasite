@@ -12,6 +12,7 @@
 - cult: base attacks come from the rival cults, armed by member level
 - cult: base walls and gates can run north-south as well as east-west
 - cult: Cadaverum can drain a stored body into blood
+- cult: custodes have their own slam and bite, Firmus is tougher, and they heal while the player stays in the base
 - cult: Nidus Murium can focus its rats on flesh, blood or bone
 - cult: Reap the Unwary costs money or two powers, and needs a working Cadaverum to finish
 - cult: the Metamorphosis ordeals are open again
@@ -33,6 +34,7 @@
 - cult: a profane ordeal running out of time no longer makes the next ordeal skip its turn
 - cult: a summoned cultist taken over by the parasite grows organs on its own body
 - cult: a team ambush set before the base grew no longer burns the base habitat
+- cult: custodes no longer attack the player's host or preserved hosts
 - cult: custodes no longer keep the player inside the base habitat
 - cult: the Group's final team attacks the cult base instead of a habitat
 - cult: the second metamorphosis performed outside a habitat is refused instead of used up

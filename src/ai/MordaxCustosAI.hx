@@ -26,6 +26,22 @@ class MordaxCustosAI extends BaseCustosAI
       createIcon();
     }
 
+// life 16 and energy 190 at the base stats (the strength and constitution roll moves the life)
+  public override function recalc()
+    {
+      super.recalc();
+      maxHealth -= 1;
+      maxEnergy = 190;
+    }
+
+// the bite: 3-8 damage
+  public override function getCurrentWeaponItemInfo(): ItemInfo
+    {
+      return CustosLogic.attackInfo(game, 3, 8, BITE,
+        T('{attacker:The} bites {target:the} for {damage} damage.'),
+        T('{attacker:The} bites you for {damage} damage.'));
+    }
+
 // select mordax sprite
   public override function createIcon()
     {

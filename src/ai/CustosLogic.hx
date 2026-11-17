@@ -30,6 +30,40 @@ class CustosLogic
         }
     }
 
+// builds the melee attack of a custos: its own damage range and attack words, not the generic animal one
+  public static function attackInfo(game: Game, minDamage: Int, maxDamage: Int, effect: _AttackEffect,
+      textHit: String, textHitYou: String): ItemInfo
+    {
+      var info = new ItemInfo(game);
+      info.id = 'custosAttack';
+      info.name = 'custos attack';
+      info.unknown = 'custos attack';
+      info.weapon = {
+        isRanged: false,
+        skill: SKILL_ATTACK,
+        minDamage: minDamage,
+        maxDamage: maxDamage,
+        textMiss: T('{attacker:The} tries to attack {target:the}, but misses.'),
+        textMissYou: T('{attacker:The} tries to attack you, but misses.'),
+        textHit: textHit,
+        textHitYou: textHitYou,
+        type: WEAPON_MELEE,
+        attackEffect: effect,
+        canConceal: true,
+        sound: {
+          file: 'attack-bite',
+          radius: 5,
+          alertness: 3,
+        },
+        soundMiss: {
+          file: 'attack-melee-miss',
+          radius: 5,
+          alertness: 3,
+        },
+      };
+      return info;
+    }
+
 // run guardian logic
   public static function turn(ai: AI)
     {
@@ -87,6 +121,8 @@ class CustosLogic
           if (other == ai ||
               other.state == AI_STATE_DEAD ||
               other.isPlayerCultist() ||
+              other.isPlayerHost() ||
+              other.state == AI_STATE_PRESERVED ||
               other.isCustos)
             continue;
           if (!ai.seesPosition(other.x, other.y))

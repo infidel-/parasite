@@ -884,6 +884,33 @@
    "field": "realCapped"
   },
   {
+   "s": "{attacker:The} tries to attack {target:the}, but misses.",
+   "kind": "T",
+   "loc": [
+    "src/ai/CustosLogic.hx",
+    "src/items/Animal.hx"
+   ],
+   "vars": [
+    "attacker",
+    "target"
+   ],
+   "where": "CustosLogic.attackInfo",
+   "field": "textMiss"
+  },
+  {
+   "s": "{attacker:The} tries to attack you, but misses.",
+   "kind": "T",
+   "loc": [
+    "src/ai/CustosLogic.hx",
+    "src/items/Animal.hx"
+   ],
+   "vars": [
+    "attacker"
+   ],
+   "where": "CustosLogic.attackInfo",
+   "field": "textMissYou"
+  },
+  {
    "s": "dog",
    "kind": "N",
    "loc": [
@@ -925,6 +952,31 @@
    "where": "FirmusCustosAI.init"
   },
   {
+   "s": "{attacker:The} slams {target:the} for {damage} damage.",
+   "kind": "T",
+   "loc": [
+    "src/ai/FirmusCustosAI.hx"
+   ],
+   "vars": [
+    "attacker",
+    "target",
+    "damage"
+   ],
+   "where": "FirmusCustosAI.getCurrentWeaponItemInfo"
+  },
+  {
+   "s": "{attacker:The} slams you for {damage} damage.",
+   "kind": "T",
+   "loc": [
+    "src/ai/FirmusCustosAI.hx"
+   ],
+   "vars": [
+    "attacker",
+    "damage"
+   ],
+   "where": "FirmusCustosAI.getCurrentWeaponItemInfo"
+  },
+  {
    "s": "mordax",
    "kind": "N",
    "loc": [
@@ -932,6 +984,31 @@
    ],
    "vars": [],
    "where": "MordaxCustosAI.init"
+  },
+  {
+   "s": "{attacker:The} bites {target:the} for {damage} damage.",
+   "kind": "T",
+   "loc": [
+    "src/ai/MordaxCustosAI.hx"
+   ],
+   "vars": [
+    "attacker",
+    "target",
+    "damage"
+   ],
+   "where": "MordaxCustosAI.getCurrentWeaponItemInfo"
+  },
+  {
+   "s": "{attacker:The} bites you for {damage} damage.",
+   "kind": "T",
+   "loc": [
+    "src/ai/MordaxCustosAI.hx"
+   ],
+   "vars": [
+    "attacker",
+    "damage"
+   ],
+   "where": "MordaxCustosAI.getCurrentWeaponItemInfo"
   },
   {
    "s": "officer",
@@ -26908,31 +26985,6 @@
    ],
    "where": "Alcohol.imbibeAction",
    "field": "log"
-  },
-  {
-   "s": "{attacker:The} tries to attack {target:the}, but misses.",
-   "kind": "T",
-   "loc": [
-    "src/items/Animal.hx"
-   ],
-   "vars": [
-    "attacker",
-    "target"
-   ],
-   "where": "Animal.new",
-   "field": "textMiss"
-  },
-  {
-   "s": "{attacker:The} tries to attack you, but misses.",
-   "kind": "T",
-   "loc": [
-    "src/items/Animal.hx"
-   ],
-   "vars": [
-    "attacker"
-   ],
-   "where": "Animal.new",
-   "field": "textMissYou"
   },
   {
    "s": "{attacker:The} attacks {target:the} for {damage} damage.",

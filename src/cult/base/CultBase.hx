@@ -846,9 +846,22 @@ class CultBase extends _SaveObject
       return cap;
     }
 
-// heals stored custodes between attacks
+// heals custodes one point a cult turn, none during an attack: the live ones while the player is in
+// the base (they overwrite their records on leaving), the records otherwise
   function healCustodes()
     {
+      if (activeDefenseMissionID >= 0)
+        return;
+      if (game.location == LOCATION_AREA &&
+          game.area.id == areaID)
+        {
+          for (ai in game.area.getAllAI())
+            if (ai.isCustos &&
+                ai.state != AI_STATE_DEAD &&
+                ai.health < ai.maxHealth)
+              ai.health++;
+          return;
+        }
       for (data in custodes)
         if (data.health < data.maxHealth)
           data.health++;
