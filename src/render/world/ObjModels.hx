@@ -1292,8 +1292,10 @@ class ObjModels
     cultOrgan([ 'cult_garbage_heap' ], RenderConfig.MODELS.cultGarbageHeap, 4.8, true, FLESH_GLOW),
     bodyStorage(),
     cultOrgan([ 'cult_cauldron' ], RenderConfig.MODELS.cultCauldron, 5.1, true, FLESH_GLOW),
-    cultOrgan([ 'cult_ribwall' ], RenderConfig.MODELS.cultRibWall, 2.6, false, 0.0),
-    cultOrgan([ 'cult_ribgate' ], RenderConfig.MODELS.cultRibGate, 3.2, false, 0.0),
+    // one row per glb for both runs, the key carrying it (east-west, north-south:
+    // objects.base.BaseOrganObject). both glbs run east-west, facing the camera
+    ribs([ 'cult_ribwall_0', 'cult_ribwall_1' ], RenderConfig.MODELS.cultRibWall, 2.6),
+    ribs([ 'cult_ribgate_0', 'cult_ribgate_1' ], RenderConfig.MODELS.cultRibGate, 3.2),
     bloodTrap(),
     // ONE row for all four facings (one batch), the key carrying the direction (north, east,
     // south, west: objects.base.SpineTurret). the glb's barrel faces the camera, which is south
@@ -1978,6 +1980,14 @@ class ObjModels
       var m = cultOrgan([ for (d in 0...4) 'cult_spine_turret_' + d ],
         RenderConfig.MODELS.cultSpineTurret, 2.4, false, 0.0);
       m.turns = [ Math.PI, Math.PI / 2, 0.0, -Math.PI / 2 ];
+      return m;
+    }
+
+// a ribwall or ribgate: one cultOrgan row for both runs, the north-south key turned a quarter
+  static function ribs(keys:Array<String>, path:String, h:Float):ObjModel
+    {
+      var m = cultOrgan(keys, path, h, false, 0.0);
+      m.turns = [ 0.0, Math.PI / 2 ];
       return m;
     }
 

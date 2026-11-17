@@ -42,14 +42,16 @@ class BaseOrganObject extends AreaObject
 
 // the 3D view's key: the organ type on its anchor (part 0) cell, `_part` on the others, which
 // render.world.ObjModels keys to a row that hides their sprites. a type with no row keeps its sprite.
-// a spine turret's key carries its direction, which the row turns it by
+// a spine turret's, ribwall's or ribgate's key carries its direction, which the row turns it by
   public override function getModelKey(): String
     {
       var organ = getOrgan();
       if (organ == null)
         return type;
       return 'cult_' + Std.string(organ.type).toLowerCase() +
-        (organ.type == SPINE_TURRET ? '_' + organ.direction : '') +
+        (organ.type == SPINE_TURRET ||
+         organ.type == RIBWALL ||
+         organ.type == RIBGATE ? '_' + organ.direction : '') +
         (basePartIndex == 0 ? '' : '_part');
     }
 

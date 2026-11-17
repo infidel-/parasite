@@ -534,6 +534,10 @@ class FormaHud
               if (t.organ == SPINE_TURRET)
                 buf.add('<svg class="fm-dir" viewBox="0 0 18 18" style="transform:rotate(' + (base.selectedDirection * 90) +
                   'deg)"><path d="M9 2l6 9h-4v5H7v-5H3z" fill="currentColor"/></svg>');
+              // the wall's run, a two-headed arrow east-west or north-south
+              else if (t.organ == RIBWALL)
+                buf.add('<svg class="fm-dir" viewBox="0 0 18 18" style="transform:rotate(' + (base.selectedDirection % 2 * 90) +
+                  'deg)"><path d="M1 9l5-5v3h6V4l5 5-5 5v-3H6v3z" fill="currentColor"/></svg>');
               buf.add('<span class="fm-nm">' + Loc.tr(t.shortName) + '</span>' + costHTML(t.cost, base) + '</button>');
             }
           buf.add('</div></div>');
@@ -554,7 +558,7 @@ class FormaHud
         '<span><kbd>1</kbd>&ndash;<kbd>0</kbd>' + T('organ') + '</span>' +
         '<span><kbd>-</kbd><kbd>=</kbd>' + T('custos') + '</span>' +
         '<span><kbd>Enter</kbd>' + T('or click: build, craft or tend') + '</span>' +
-        '<span><kbd>Q</kbd><kbd>E</kbd>' + T('turn turret') + '</span>' +
+        '<span><kbd>Q</kbd><kbd>E</kbd>' + T('turn turret or wall') + '</span>' +
         '<span><kbd>F</kbd>' + T('exit') + '</span>');
     }
 
@@ -585,6 +589,10 @@ class FormaHud
           var dir = [ T('north'), T('east'), T('south'), T('west') ][base.selectedDirection];
           buf.add(' <span class="facing">' + T('facing {dir}, Q/E to turn', { dir: dir }) + '</span>');
         }
+      else if (tool.organ == RIBWALL)
+        buf.add(' <span class="facing">' + (base.selectedDirection % 2 == 0 ?
+          T('runs east to west, Q/E to turn') :
+          T('runs north to south, Q/E to turn')) + '</span>');
       buf.add('</div><div class="does">' + Loc.tr(tool.desc) + '</div><div class="meta">' + costHTML(tool.cost, base) + '<span>');
       if (tool.organ == null)
         buf.add(base.hasWorkingOrgan(CAULDRON) ?
@@ -632,7 +640,7 @@ class FormaHud
           closeTend();
           return true;
         }
-      // a turret turn, the quick menu is not available here
+      // a turret or wall turn (a wall takes the direction's parity), the quick menu is not available here
       if (code == 'KeyQ' ||
           code == 'KeyE')
         {

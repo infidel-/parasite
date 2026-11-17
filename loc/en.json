@@ -34508,7 +34508,7 @@
    "where": "FormaHud.renderKeys"
   },
   {
-   "s": "turn turret",
+   "s": "turn turret or wall",
    "kind": "T",
    "loc": [
     "src/ui/hud/FormaHud.hx"
@@ -34610,6 +34610,24 @@
    "vars": [
     "dir"
    ],
+   "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "runs east to west, Q/E to turn",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderDetail"
+  },
+  {
+   "s": "runs north to south, Q/E to turn",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
    "where": "FormaHud.renderDetail"
   },
   {

@@ -7,6 +7,7 @@
 - art: the cult base grows flesh and pulsing vessels across its habitat floor
 - art: a habitat turns a cult pink once its base starts
 - cult: a member's death fails any ordeal it is locked in, profane ones too
+- cult: base walls and gates can run north-south as well as east-west
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map
 - mods: `ai:die-region` event when the host dies on the region map

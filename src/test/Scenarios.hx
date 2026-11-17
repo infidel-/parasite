@@ -333,6 +333,8 @@ class Scenarios
             }
           var before = base.resources.clone();
           var n = base.organs.length;
+          // Q in Forma: a turret's west is a wall's north-south run
+          base.selectedDirection = (type == RIBWALL ? 3 : 0);
           grow(game, type, spot.x, spot.y);
           var organ = base.getOrganAt(spot.x, spot.y);
           if (organ == null ||
@@ -346,7 +348,11 @@ class Scenarios
             }
           errs = errs.concat(paid(base, before, CultBaseConst.buildCost(type), 'growing ' + type));
           if (type == RIBWALL)
-            wall = organ;
+            {
+              wall = organ;
+              if (wall.direction != 1)
+                errs.push('a Murus grown at direction 3 runs ' + wall.direction + ', not 1 (north-south)');
+            }
         }
       if (wall == null)
         return errs;
@@ -358,6 +364,8 @@ class Scenarios
       if (gate == null ||
           gate.type != RIBGATE)
         errs.push('no Porta grew over the Murus');
+      else if (gate.direction != wall.direction)
+        errs.push('the Porta runs ' + gate.direction + ', its Murus ran ' + wall.direction);
       if (base.organs.indexOf(wall) >= 0)
         errs.push('the Murus record outlived its Porta');
       for (o in game.area.getObjects())

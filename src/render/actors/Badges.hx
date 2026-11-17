@@ -220,6 +220,14 @@ class Badges {
         'transform="translate(64 64) scale(2.4)"/></svg>';
     }
 
+// the ribwall's run, a two-headed arrow east-west in the square's centre
+  static function formaRunSvg(col:String):String
+    {
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">' +
+        '<path d="M-22 0 L-8 -12 V-5 H8 V-12 L22 0 L8 12 V5 H-8 V12 Z" fill="' + col + '" fill-opacity="0.85" ' +
+        'transform="translate(64 64) scale(2.4)"/></svg>';
+    }
+
 // forma's map overlay: the footprint the pending action would cover, one ground quad per cell (bone
 // when it can go ahead, alert red hatched when refused, cult pink for an organ being tended), the
 // turret's facing arrow, then the cursor reticle on its own cell (the arrow over it, poking out past its ring). all self-lit and always on top so
@@ -261,21 +269,27 @@ class Badges {
                 shadow: false,
               });
             }
+          // the turret's facing, or the wall's run (a quarter turn per direction parity)
+          var wall = (base.selectedType == RIBWALL);
           if (!tend &&
               v.act == BUILD &&
-              base.selectedType == SPINE_TURRET)
+              (base.selectedType == SPINE_TURRET ||
+               wall))
             {
               var w = CityConfig.cellToWorld(base.cursorX, base.cursorY);
+              var col = (refused ? '#f26a6a' : '#e9dfc8');
               sprites.paint({
                 x: w.x,
                 y: WorldCtx.floorY(base.cursorX, base.cursorY) + 0.055,
                 z: w.z,
-                tex: sprites.svgTex('svg:forma:arrow:' + (refused ? 'no' : 'ok'), formaArrowSvg(refused ? '#f26a6a' : '#e9dfc8'), 128),
+                tex: (wall ?
+                  sprites.svgTex('svg:forma:run:' + (refused ? 'no' : 'ok'), formaRunSvg(col), 128) :
+                  sprites.svgTex('svg:forma:arrow:' + (refused ? 'no' : 'ok'), formaArrowSvg(col), 128)),
                 op: 1.0,
                 scale: CityConfig.CELL * 1.6 / Sprites.SIZE,
                 flat: true,
                 // clockwise from north, as the HUD's arrow turns
-                yaw: -base.selectedDirection * Math.PI / 2,
+                yaw: -(wall ? base.selectedDirection % 2 : base.selectedDirection) * Math.PI / 2,
                 order: Sprites.ORD_MARK + 0.1,
                 emissive: 0xffffff,
                 emissiveInt: 1.0,

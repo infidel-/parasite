@@ -238,10 +238,14 @@ class CultBase extends _SaveObject
           return false;
         }
       resources.spend(cost);
-      if (type == RIBGATE)
-        removeRibwallAt(cursorX, cursorY);
+      // a turret faces one of four ways, a wall runs one of two, a gate keeps its wall's
+      var direction = selectedDirection;
+      if (type == RIBWALL)
+        direction = selectedDirection % 2;
+      else if (type == RIBGATE)
+        direction = removeRibwallAt(cursorX, cursorY);
       var organ = new CultBaseOrgan(type, areaID, cursorX, cursorY,
-        selectedDirection);
+        direction);
       organs.push(organ);
       createOrganObject(organ);
       game.log(T('You shape {organ}.', { organ: Loc.tr(CultBaseConst.name(type)) }));
@@ -836,13 +840,13 @@ class CultBase extends _SaveObject
         tileset.isWalkable(tileID));
     }
 
-// removes ribwall record/object for gate replacement
-  function removeRibwallAt(x: Int, y: Int)
+// removes ribwall record/object for gate replacement and returns the wall's direction
+  function removeRibwallAt(x: Int, y: Int): Int
     {
       var organ = getOrganAt(x, y);
       if (organ == null ||
           organ.type != RIBWALL)
-        return;
+        return 0;
       organs.remove(organ);
       var area = area();
       var list = [];
@@ -855,6 +859,7 @@ class CultBase extends _SaveObject
           }
       for (o in list)
         area.removeObject(o);
+      return organ.direction;
     }
 
 // returns yes/no text
