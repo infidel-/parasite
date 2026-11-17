@@ -284,6 +284,12 @@ class View {
       firstFrame = cb;
     }
 
+// a cult base organ's destroy/repair/upgrade animation, on the actor layer's particles
+  public function organFx(organ:cult.base.CultBaseOrgan, kind:cult.base.OrganFxKind):Void
+    {
+      actors.organFx(organ, kind);
+    }
+
 // an area object was added or removed in the area on screen — see Area3D.refreshObjects
   public function refreshObjects():Void
     {

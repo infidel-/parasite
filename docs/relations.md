@@ -182,7 +182,10 @@ ones that call it.
   the pure `incomePerTurn()`, which `turn()` applies and the ledger previews.
 - 3D: an organ's prop key (`BaseOrganObject.getModelKey`) carries its direction and its broken state
   (the `_broken` ruin rows, `ObjModels.withRuins`). `CultBase.refresh3D` rebuilds the props after a
-  break, repair, upgrade or turn, the only changes that change a key; `CultDetail` lays the ruin decals.
+  break, repair, upgrade or turn, the only changes that change a key; `CultDetail` lays the ruin decals (and
+  fades one back out on repair). `CultBase.fx3D` plays the destroy/repair/mend/upgrade animation
+  (`OrganFxKind` → `GameScene.organFx` → `render.particles.OrganFx3D`); a DESTROY plays INSTEAD of
+  `refresh3D` and rebuilds the props itself when its slump lands (falls back to `refresh3D` off screen).
 - Scenarios: `base-build` (every organ, Porta over Murus, refusals), `base-tend` (upgrade, heart,
   repair, defense levels, turret turn, sight), `base-custos` (craft, cap, respawn, stats, heal),
   `base-economy` (income per organ, focus, drain, bodies, cap, pressure), `defense-rival`,

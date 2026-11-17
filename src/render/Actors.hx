@@ -925,6 +925,12 @@ class Actors {
       decals.throwMoney(x, y, range);
     }
 
+// play a cult base organ's destroy/repair/upgrade animation (render.particles.OrganFx3D)
+  public function organFx(organ:cult.base.CultBaseOrgan, kind:cult.base.OrganFxKind):Void
+    {
+      particles.add(new OrganFx3D(game, particles, organ, kind));
+    }
+
 // spawn a spark spray at a wall strike (x,y,z), embers flung back off the wall (backX,backZ) + up;
 // startDelay defers it until the tracer arrives
   public function sparkBurst(x:Float, y:Float, z:Float, backX:Float, backZ:Float, startDelay:Float,

@@ -107,6 +107,7 @@ class CultDetail
   var meshes:Array<Mesh> = [];
   var born:Map<Int, Float> = null;    // organ id -> birth on PropGlow's clock; null before the first build
   var broke:Map<Int, Float> = [];     // broken organ id -> when it broke on that clock; dropped on repair
+  var mended:Map<Int, Float> = [];    // repaired organ id -> when, while its ruin fades back out
   var owner:Map<Int, CultBaseOrgan>;  // floor cell -> the organ standing on it
   var organs:Array<CultBaseOrgan>;
   var cor:CultBaseOrgan;
@@ -251,11 +252,23 @@ class CultDetail
         if (!born.exists(o.id))
           born.set(o.id, first ? BORN_OLD : now);
       // the same for breaking: a ruin already there at the first build is old, a new one spreads
+      // and mending: a ruin fades back out over the time it took to spread
       for (o in organs)
         if (!o.broken)
-          broke.remove(o.id);
-        else if (!broke.exists(o.id))
-          broke.set(o.id, first ? BORN_OLD : now);
+          {
+            if (broke.exists(o.id))
+              mended.set(o.id, now);
+            broke.remove(o.id);
+            if (mended.exists(o.id) &&
+                now > mended.get(o.id) + RUIN_GROW)
+              mended.remove(o.id);
+          }
+        else
+          {
+            mended.remove(o.id);
+            if (!broke.exists(o.id))
+              broke.set(o.id, first ? BORN_OLD : now);
+          }
       // the grade starts with the first organ: at once for a base already standing, ramped for a new one
       tintBorn.value.x = TINT_NEVER;
       for (o in organs)
@@ -343,8 +356,10 @@ class CultDetail
               }));
               i++;
             }
-          // a broken organ's ruin on its own seed, so breaking it moves nothing else
-          if (o.broken)
+          // a broken organ's ruin on its own seed, so breaking it moves nothing else. a mended one's
+          // runs the grow backwards: started at its end with a negative duration, cultFade goes 1 -> 0
+          if (o.broken ||
+              mended.exists(o.id))
             {
               var rr = gen.Rng.mulberry32(hash([ SEED, o.id, 31 ]));
               ruins.push({
@@ -353,8 +368,8 @@ class CultDetail
                 z: wo.z,
                 size: big * CityConfig.CELL * RUIN_SIZE,
                 yaw: rr() * Math.PI * 2,
-                start: broke.get(o.id),
-                dur: RUIN_GROW,
+                start: (o.broken ? broke.get(o.id) : mended.get(o.id) + RUIN_GROW),
+                dur: (o.broken ? RUIN_GROW : -RUIN_GROW),
               });
             }
           var nb = Math.round(2 * DENSITY);

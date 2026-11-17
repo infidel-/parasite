@@ -325,6 +325,7 @@ class CultBase extends _SaveObject
       refreshOrganObject(organ);
       // an upgrade mends a broken organ too
       refresh3D();
+      fx3D(organ, UPGRADE);
       game.log(T('You strengthen {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
@@ -383,10 +384,12 @@ class CultBase extends _SaveObject
         }
       var cost = organ.repairCost();
       resources.spend(cost);
+      var wasBroken = organ.broken;
       organ.health = organ.maxHealth();
       organ.broken = false;
       refreshOrganObject(organ);
       refresh3D();
+      fx3D(organ, wasBroken ? REPAIR : MEND);
       game.log(T('You mend {organ}.', { organ: Loc.tr(CultBaseConst.name(organ.type)) }));
       game.updateHUD();
       return true;
@@ -444,8 +447,10 @@ class CultBase extends _SaveObject
         }
       organ.broken = true;
       refreshOrganObject(organ);
-      // the 3D prop is keyed on the broken state (its ruined row)
-      refresh3D();
+      // the 3D prop is keyed on the broken state (its ruined row): the destroy animation rebuilds the
+      // props once its slump lands, so the ruin swaps in at its own height
+      if (!fx3D(organ, DESTROY))
+        refresh3D();
     }
 
 // rebuilds the 3D props when the base is the area on screen, after an organ's model key changed
@@ -454,6 +459,17 @@ class CultBase extends _SaveObject
       if (game.scene != null &&
           game.area == area())
         game.scene.updateObjects3D();
+    }
+
+// plays an organ's destroy/repair/upgrade animation when the base is the area on screen; false when
+// it is not, so nothing played
+  function fx3D(organ: CultBaseOrgan, kind: OrganFxKind): Bool
+    {
+      if (game.scene == null ||
+          game.area != area())
+        return false;
+      game.scene.organFx(organ, kind);
+      return true;
     }
 
 // adds bodies to storage and returns overflow

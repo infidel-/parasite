@@ -724,7 +724,7 @@ class ObjModels
 
   // a broken cult organ (withRuins): slumped to this fraction of its height, sunk a little more into
   // its mat, its albedo pulled toward grey by RUIN_SAT (1 = untouched) and dimmed by RUIN_DARK
-  static inline var RUIN_SQUASH = 0.55;
+  public static inline var RUIN_SQUASH = 0.55;
   static inline var RUIN_SINK = 0.04;
   static inline var RUIN_SAT = 0.35;
   static inline var RUIN_DARK = 0.5;
@@ -2176,6 +2176,19 @@ class ObjModels
           });
         }
       built = out;
+      return out;
+    }
+
+// every batch drawing a placement on the cell, with that placement's index: what an organ's
+// destroy/repair/upgrade animation (render.particles.OrganFx3D) poses
+  public static function placedAt(col:Int, row:Int):Array<{ b:PropBatch, i:Int }>
+    {
+      var out = [];
+      for (b in built)
+        for (i in 0...b.cells.length)
+          if (b.cells[i].col == col &&
+              b.cells[i].row == row)
+            out.push({ b: b, i: i });
       return out;
     }
 

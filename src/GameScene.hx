@@ -223,6 +223,15 @@ class GameScene
       view3d.refreshObjects();
     }
 
+// play a cult base organ's destroy/repair/upgrade animation in the 3D view (render.particles.OrganFx3D);
+// a DESTROY rebuilds the props itself once its slump lands
+  public function organFx(organ: cult.base.CultBaseOrgan, kind: cult.base.OrganFxKind)
+    {
+      if (!view3d.running)
+        return;
+      view3d.organFx(organ, kind);
+    }
+
 // is the current area a city (as opposed to the underground tunnels)?
   inline function isCityArea(): Bool
     {

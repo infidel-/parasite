@@ -4,6 +4,7 @@
 
 ### Changes
 - art: broken cult base buildings slump into grey, dead ruins
+- art: cult base buildings animate when destroyed, repaired or upgraded
 - art: cult base buildings are now 3D
 - art: the cult base grows flesh and pulsing vessels across its habitat floor
 - art: a habitat turns a cult pink once its base starts

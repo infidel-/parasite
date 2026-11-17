@@ -210,3 +210,33 @@ Traps:
 
 **Verdict:** landed. One shader patch and one sheet give eleven ruins with no new models. A floor
 decal under a prop has to be sized like the flesh rim, not like the prop.
+
+## Cult organ destroy / repair / upgrade animations
+
+`render.particles.OrganFx3D`, a `Particle3D` on the actor layer's list (no new frame hook), started by
+`CultBase.fx3D` through `GameScene.organFx` → `View` → `Actors`. It POSES the organ's own prop
+instance: every batch on its anchor cell (`ObjModels.placedAt`), solid, ghost and hull, rewritten each
+frame from a captured base matrix and restored in `onDeath`; `Models.cull` repacks `matrices[i]` every
+frame, so a write there is all it takes. Beats in BASE_MS (150 ms): destroy 8 (shudder 3 with a
+0.03-cell jitter, slump 3 to `RUIN_SQUASH` spreading 8 %, settle 2, a 14-drop `BloodDrop3D.burst` and a
+dark red `glowQuad` as it gives way); repair 7 (ease-out-back 0.55 → 1, 8 flesh-pink sinew streaks
+spiralling in over 4, then a glow); mend = the sinews alone; upgrade 6 (one 15 % swell, crown glow, a
+20-ember ring growing 1.5 cells past the footprint). `CultDetail` fades a mended organ's ruin out by
+running its grow backwards: start at the end, negative duration, so `cultFade` goes 1 → 0 with no
+shader change.
+
+Traps:
+- The matrices bake the glb's RECENTRE offset in, so `M · S` scales about the wrong point. Scale in
+  world about the base: `T(b) · S · T(-b) · M`, b = placement centre x/z and `floor - sink * h`; S is
+  axis-aligned and commutes with the yaw.
+- A destroy must not rebuild at the break or the ruin (DEAD material) pops in before the slump. It
+  holds the intact model and calls `updateObjects3D` from `onDeath`; a rebuild that lands early (a
+  second break) skips `ruin` rows so it never squashes a ruin twice.
+- A flat lit ring sprite at floor + 0.03 / 0.12 was swallowed by the raised flesh floor and the
+  dark (fragments only); additive `Sparks.streak` dashes read at once. Use additive for floor FX here.
+- `ANIM_SPEED` 0.1 to catch frames also slows the model cross-fade (handOver), so a repair's first
+  frames look empty at that speed only.
+
+Verdict: landed. Verified live at ANIM_SPEED 0.1-0.12 on the crusher (destroy, repair) and the heart
+(upgrade); 64 quick runs green; no new programs (pooled sprite/spark quads).
+
