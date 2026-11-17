@@ -10,6 +10,10 @@ import game.Game;
 import game.Team;
 import cult.ordeals.profane.GenericProfaneOrdeal;
 import cult.ordeals.profane.ProfaneConst;
+import cult.base.CultBase;
+import cult.base.CultBaseOrgan;
+import cult.base.CultBaseResources;
+import const.CultBaseConst;
 
 typedef _Scenario = {
   var start: String; // the start a fuzz run would take (Headless.begin)
@@ -54,6 +58,22 @@ class Scenarios
     'base-leave-custos' => {
       start: BASE,
       run: baseLeaveCustos,
+    },
+    'base-build' => {
+      start: BASE + '+cu_br_200',
+      run: baseBuild,
+    },
+    'base-tend' => {
+      start: BASE + '+cu_br_300',
+      run: baseTend,
+    },
+    'base-custos' => {
+      start: BASE + '+cu_br_200',
+      run: baseCustos,
+    },
+    'base-economy' => {
+      start: BASE + '+cu_br_50',
+      run: baseEconomy,
     },
     'npc-discovered' => {
       start: 's11',
@@ -290,6 +310,380 @@ class Scenarios
       if (game.location != LOCATION_REGION)
         return [ 'the player could not leave the base habitat past its custos' ];
       return [];
+    }
+
+// every organ grows from Forma on a free spot for its build cost, a Porta grows over a Murus and
+// replaces it, and a blocked footprint or an empty stockpile refuses the build and spends nothing
+  static function baseBuild(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      if (!bot.pressAction('forma'))
+        return [ 'no Forma in the base habitat' ];
+      var errs = [];
+      var wall: CultBaseOrgan = null;
+      for (type in CultBaseConst.buildableTypes)
+        {
+          if (type == RIBGATE)
+            continue;
+          var spot = freeSpot(game, base, type);
+          if (spot == null)
+            {
+              errs.push('no room for ' + type);
+              continue;
+            }
+          var before = base.resources.clone();
+          var n = base.organs.length;
+          grow(game, type, spot.x, spot.y);
+          var organ = base.getOrganAt(spot.x, spot.y);
+          if (organ == null ||
+              organ.type != type ||
+              organ.x != spot.x ||
+              organ.y != spot.y ||
+              base.organs.length != n + 1)
+            {
+              errs.push(type + ' did not grow at ' + spot.x + ',' + spot.y);
+              continue;
+            }
+          errs = errs.concat(paid(base, before, CultBaseConst.buildCost(type), 'growing ' + type));
+          if (type == RIBWALL)
+            wall = organ;
+        }
+      if (wall == null)
+        return errs;
+
+      // the Porta tool on a Murus grows the gate in its place
+      var before = base.resources.clone();
+      grow(game, RIBGATE, wall.x, wall.y);
+      var gate = base.getOrganAt(wall.x, wall.y);
+      if (gate == null ||
+          gate.type != RIBGATE)
+        errs.push('no Porta grew over the Murus');
+      if (base.organs.indexOf(wall) >= 0)
+        errs.push('the Murus record outlived its Porta');
+      for (o in game.area.getObjects())
+        if (o.type == 'base_organ' &&
+            (cast o : objects.base.BaseOrganObject).organID == wall.id)
+          errs.push('the Murus object outlived its Porta');
+      errs = errs.concat(paid(base, before, CultBaseConst.buildCost(RIBGATE), 'growing the Porta'));
+
+      // a footprint over the heart is refused
+      var heart = base.getHeart();
+      var n = base.organs.length;
+      before = base.resources.clone();
+      if (base.getOrganAt(heart.x - 1, heart.y) != null ||
+          !base.canUseCursorTile(heart.x - 1, heart.y))
+        return errs.concat([ 'the fixture has no free tile left of the heart' ]);
+      grow(game, RAT_NEST, heart.x - 1, heart.y);
+      if (base.organs.length != n)
+        errs.push('a Nidus grew over the heart');
+      errs = errs.concat(paid(base, before, new CultBaseResources(), 'a blocked build'));
+
+      // an empty stockpile is refused
+      base.resources = new CultBaseResources();
+      var spot = freeSpot(game, base, FLESH_BLOCK);
+      grow(game, FLESH_BLOCK, spot.x, spot.y);
+      if (base.organs.length != n)
+        errs.push('a Quadrum grew for nothing');
+      if (!base.resources.isEmpty())
+        errs.push('a refused build left resources ' + text(base.resources));
+      return errs;
+    }
+
+// a Nidus upgraded from its tend menu pays its build cost, then double, and stops at its top level;
+// the heart upgraded from its object raises the stockpile cap; a broken organ repaired from its
+// object is whole again for a quarter of its build cost, and a whole organ offers no repair
+  static function baseTend(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      var forma = game.ui.hud.forma;
+      if (!bot.pressAction('forma'))
+        return [ 'no Forma in the base habitat' ];
+      var spot = freeSpot(game, base, RAT_NEST);
+      grow(game, RAT_NEST, spot.x, spot.y);
+      var nest = base.getOrganAt(spot.x, spot.y);
+      if (nest == null)
+        return [ 'no Nidus grew' ];
+      var errs = [];
+      var costs = [
+        new CultBaseResources(8, 2, 4),
+        new CultBaseResources(16, 4, 8),
+      ];
+      for (i in 0...3)
+        {
+          var before = base.resources.clone();
+          var level = nest.level;
+          // a click on the organ opens its tend menu; its first row upgrades
+          forma.onMapClick(nest.x, nest.y);
+          @:privateAccess forma.tendOptions(nest)[0].run();
+          @:privateAccess forma.closeTend();
+          if (i < 2)
+            {
+              if (nest.level != level + 1)
+                errs.push('the Nidus stayed at level ' + nest.level);
+              if (nest.health != nest.maxHealth())
+                errs.push('the upgraded Nidus has ' + nest.health + ' of ' + nest.maxHealth() + ' health');
+              errs = errs.concat(paid(base, before, costs[i], 'upgrade to level ' + (level + 1)));
+            }
+          else
+            {
+              if (nest.level != 3)
+                errs.push('the Nidus grew past its top level to ' + nest.level);
+              errs = errs.concat(paid(base, before, new CultBaseResources(), 'an upgrade past the top level'));
+            }
+        }
+      bot.pressAction('baseExit');
+
+      // the heart, from its own object
+      var heart = base.getHeart();
+      var before = base.resources.clone();
+      if (!standNextTo(game, heart) ||
+          !bot.pressAction('upgradeHeart'))
+        return errs.concat([ 'no Upgrade Cor Nefandum next to the heart' ]);
+      if (heart.level != 2 ||
+          heart.health != 80)
+        errs.push('the heart is level ' + heart.level + ' with ' + heart.health + ' health, not 2 with 80');
+      if (base.stockpileCap() != 150)
+        errs.push('the stockpile cap is ' + base.stockpileCap() + ' after a heart upgrade, not 150');
+      errs = errs.concat(paid(base, before, new CultBaseResources(40, 30, 30), 'the heart upgrade'));
+
+      // a broken Nidus, from its own object
+      base.damageOrgan(nest, nest.health);
+      if (!nest.broken)
+        errs.push('the Nidus at 0 health is not broken');
+      before = base.resources.clone();
+      if (!standNextTo(game, nest) ||
+          !bot.pressAction('repairBaseOrgan'))
+        return errs.concat([ 'no Repair next to the broken Nidus' ]);
+      if (nest.broken ||
+          nest.health != nest.maxHealth())
+        errs.push('the repaired Nidus is broken ' + nest.broken + ' at ' + nest.health + ' health');
+      errs = errs.concat(paid(base, before, new CultBaseResources(2, 1, 1), 'the repair'));
+      game.updateHUD();
+      if (bot.pressAction('repairBaseOrgan'))
+        errs.push('a whole organ offers a repair');
+      return errs;
+    }
+
+// custodes are crafted from Forma only with a working Caldarium, two per level, for their cost, and
+// walk out and back in with the same ids
+  static function baseCustos(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      var forma = game.ui.hud.forma;
+      if (!bot.pressAction('forma'))
+        return [ 'no Forma in the base habitat' ];
+      var errs = [];
+      var craft = function(id: String, label: String, ok: Bool)
+        {
+          var tile = freeTile(game, base);
+          var before = base.resources.clone();
+          var n = base.custodes.length;
+          forma.pick(id, false);
+          forma.onMapClick(tile.x, tile.y);
+          if (!ok)
+            {
+              if (base.custodes.length != n)
+                errs.push('a custos was crafted ' + label);
+              errs = errs.concat(paid(base, before, new CultBaseResources(), 'a custos ' + label));
+              return;
+            }
+          var ai = game.area.getAI(tile.x, tile.y);
+          if (base.custodes.length != n + 1 ||
+              ai == null ||
+              !ai.isCustos ||
+              base.custodes[n].id != ai.id)
+            {
+              errs.push('no ' + id + ' custos crafted at ' + tile.x + ',' + tile.y);
+              return;
+            }
+          errs = errs.concat(paid(base, before, new CultBaseResources(10, 8, 0), 'a custos'));
+        };
+      craft('firmus', 'without a Caldarium', false);
+      var spot = freeSpot(game, base, CAULDRON);
+      grow(game, CAULDRON, spot.x, spot.y);
+      if (base.custosCap() != 2)
+        return errs.concat([ 'a Caldarium holds ' + base.custosCap() + ' custodes, not 2' ]);
+      craft('firmus', '', true);
+      craft('mordax', '', true);
+      craft('firmus', 'past the cap', false);
+      bot.pressAction('baseExit');
+
+      // out to the region map and back in: the records spawn their custodes again
+      var ids = [ for (d in base.custodes) d.id ];
+      var area = game.area;
+      game.setLocation(LOCATION_REGION);
+      game.setLocation(LOCATION_AREA, area);
+      for (id in ids)
+        {
+          var ai = game.area.getAIByID(id);
+          if (ai == null ||
+              !ai.isCustos)
+            errs.push('custos ' + id + ' did not come back with the player');
+        }
+      return errs;
+    }
+
+// a cult turn pays each working organ its income: a body each to Fractor and Cumulus while any are
+// stored, Cumulus's fallback without, nothing from a broken organ; the stockpile clamps to its cap,
+// a heart upgrade raises the cap and the pressure per turn, and Cadaverum stores 8 bodies
+  static function baseEconomy(game: Game, bot: Bot): Array<String>
+    {
+      var base = game.cults[0].base;
+      if (!bot.pressAction('forma'))
+        return [ 'no Forma in the base habitat' ];
+      var nest: CultBaseOrgan = null;
+      var types: Array<_CultBaseOrganType> = [ RAT_NEST, FLESH_BLOCK, CRUSHER, GARBAGE_HEAP, BODY_STORAGE ];
+      for (type in types)
+        {
+          var spot = freeSpot(game, base, type);
+          grow(game, type, spot.x, spot.y);
+          if (type == RAT_NEST)
+            nest = base.getOrganAt(spot.x, spot.y);
+        }
+      bot.pressAction('baseExit');
+      if (base.organs.length != 6)
+        return [ 'the economy organs did not all grow: ' + base.organs.length + ' organs' ];
+      // 30/20/20 + 50 each, less 58/14/36 of organs
+      var errs = stock(base, 22, 56, 34, 'after growing');
+      var overflow = base.addBodies(20);
+      if (overflow != 12 ||
+          base.storedBodies != 8)
+        errs.push('20 bodies left ' + overflow + ' over and ' + base.storedBodies + ' stored, not 12 and 8');
+
+      // Nidus 3/1/1, Quadrum 5 flesh, Fractor a body to 5 bone, Cumulus a body to 5 flesh
+      var pressure = base.attackPressure;
+      if (!cultTurn(game, bot))
+        return errs.concat([ 'no cult turn in 10 Waits' ]);
+      errs = errs.concat(stock(base, 35, 57, 40, 'after the first turn'));
+      if (base.storedBodies != 6)
+        errs.push('the first turn left ' + base.storedBodies + ' bodies, not 6');
+      if (base.attackPressure != pressure + 1)
+        errs.push('pressure rose by ' + (base.attackPressure - pressure) + ' in a turn, not 1');
+
+      // no bodies: Fractor idles, Cumulus falls back to 2 flesh
+      base.storedBodies = 0;
+      cultTurn(game, bot);
+      errs = errs.concat(stock(base, 45, 58, 41, 'after a turn with no bodies'));
+
+      // a broken Nidus pays nothing
+      base.damageOrgan(nest, nest.health);
+      cultTurn(game, bot);
+      errs = errs.concat(stock(base, 52, 58, 41, 'after a turn with the Nidus broken'));
+
+      // the stockpile clamps to its cap
+      base.resources = new CultBaseResources(99, 99, 99);
+      cultTurn(game, bot);
+      errs = errs.concat(stock(base, 100, 99, 99, 'at the cap'));
+
+      // a heart upgrade: the cap rises to 150 and pressure by 2 a turn
+      var heart = base.getHeart();
+      if (!standNextTo(game, heart) ||
+          !bot.pressAction('upgradeHeart'))
+        return errs.concat([ 'no Upgrade Cor Nefandum next to the heart' ]);
+      base.resources = new CultBaseResources(149, 10, 10);
+      pressure = base.attackPressure;
+      cultTurn(game, bot);
+      errs = errs.concat(stock(base, 150, 10, 10, 'at the raised cap'));
+      if (base.attackPressure != pressure + 2)
+        errs.push('pressure rose by ' + (base.attackPressure - pressure) + ' in a turn after a heart upgrade, not 2');
+      return errs;
+    }
+
+// the first tile, row by row, the organ type may grow on; null when none
+  static function freeSpot(game: Game, base: CultBase, type: _CultBaseOrganType): _Point
+    {
+      for (y in 0...game.area.height)
+        for (x in 0...game.area.width)
+          if (base.canUseCursorTile(x, y) &&
+              base.validateBuild(type, x, y) == '')
+            return { x: x, y: y };
+      return null;
+    }
+
+// the first tile, row by row, a custos could be crafted on: no organ, walkable, empty
+  static function freeTile(game: Game, base: CultBase): _Point
+    {
+      for (y in 0...game.area.height)
+        for (x in 0...game.area.width)
+          if (base.canUseCursorTile(x, y) &&
+              base.getOrganAt(x, y) == null &&
+              game.area.isWalkable(x, y) &&
+              !game.area.hasAI(x, y))
+            return { x: x, y: y };
+      return null;
+    }
+
+// picks the organ tool in Forma and clicks the tile, as the player grows an organ
+  static function grow(game: Game, type: _CultBaseOrganType, x: Int, y: Int)
+    {
+      var forma = game.ui.hud.forma;
+      forma.pick(type, false);
+      forma.onMapClick(x, y);
+    }
+
+// moves the player onto a free tile next to the organ's footprint, where its object actions are offered
+  static function standNextTo(game: Game, organ: CultBaseOrgan): Bool
+    {
+      for (pt in organ.footprint())
+        for (dy in -1...2)
+          for (dx in -1...2)
+            {
+              var x = pt.x + dx;
+              var y = pt.y + dy;
+              if (game.area.isWalkable(x, y) &&
+                  !game.area.hasAI(x, y))
+                {
+                  game.playerArea.moveTo(x, y);
+                  game.updateHUD();
+                  return true;
+                }
+            }
+      return false;
+    }
+
+// presses Wait until the cult's turn counter wraps: one cult turn, false when none came in 10
+  static function cultTurn(game: Game, bot: Bot): Bool
+    {
+      var c = game.cults[0];
+      for (i in 0...10)
+        {
+          if (!bot.pressAction('skipTurn'))
+            return false;
+          if (@:privateAccess c.turnCounter == 0)
+            return true;
+        }
+      return false;
+    }
+
+// what the base spent since the snapshot, against the expected cost
+  static function paid(base: CultBase, before: CultBaseResources, cost: CultBaseResources,
+      what: String): Array<String>
+    {
+      var r = base.resources;
+      var spent = new CultBaseResources(before.flesh - r.flesh, before.blood - r.blood,
+        before.bone - r.bone);
+      if (spent.flesh != cost.flesh ||
+          spent.blood != cost.blood ||
+          spent.bone != cost.bone)
+        return [ what + ' cost ' + text(spent) + ', not ' + text(cost) ];
+      return [];
+    }
+
+// the base stockpile against the expected flesh, blood and bone
+  static function stock(base: CultBase, flesh: Int, blood: Int, bone: Int, when: String): Array<String>
+    {
+      var r = base.resources;
+      if (r.flesh != flesh ||
+          r.blood != blood ||
+          r.bone != bone)
+        return [ 'stockpile ' + text(r) + ' ' + when + ', not ' + flesh + '/' + blood + '/' + bone ];
+      return [];
+    }
+
+// flesh/blood/bone, for the failure lines
+  static function text(r: CultBaseResources): String
+    {
+      return r.flesh + '/' + r.blood + '/' + r.bone;
     }
 
 // a former NPC host that despawns is reported to have died in an accident (RegionManager), and it
