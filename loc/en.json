@@ -35091,6 +35091,15 @@
    "where": "FormaHud.renderKeys"
   },
   {
+   "s": "Esc",
+   "kind": "T",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "vars": [],
+   "where": "FormaHud.renderKeys"
+  },
+  {
    "s": "back",
    "kind": "T",
    "loc": [

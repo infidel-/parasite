@@ -124,7 +124,8 @@ ones that call it.
   (S). At `game.group`, `game.group.team`.
 - Priority comes from AreaManager law and backup calls, RegionManager host and body discovery,
   area alertness above 25, team member despawn, the GroupInterference and BuryTheFile ordeals.
-- Out: goals, area, cults[0] (`Team.spawnBaseDefenseOrdeal`), player (habitat shock).
+- Out: goals, area, cults[0] (`Team.spawnBaseDefenseOrdeal`: also from `Team.turn` for a team already in
+  `TEAM_AMBUSH` when a base exists), player (habitat shock).
 - Pedia: group, groupBasics, groupPriority, teamAmbush, teamBasics, teamDeactivation,
   impFalseMemories, groupNeutralize, msgWatching. Hidden: priority spillover from alertness; a team
   wipe makes the next team start at 1.5× distance.
@@ -132,7 +133,8 @@ ones that call it.
 **Cult core**: `cult/Cult.hx`, `cult/Effects.hx`, `cult/effects/*`
 - Owns members (AIData copies, leader is `members[0]`), power, resources, level, base,
   trainingMemberIDs (S). At `game.cults[0]` (the player's), `getCultByID`, `getRivalCults`.
-- Ticks every 10 player turns, paused in mission areas.
+- Ticks every 10 player turns, paused in mission areas. Size limits by level (`maxSize`,
+  `getLevelLimit`): level 1 cap 10 (L2 3, L3 1); level 2 cap 15 (L2 5, L3 2). Rivals use the same limits.
 - Death chain: `AreaGame.removeAI` or `AI.dieRegion` → `Cult.onRemoveAI` / `Cult.onDeath` →
   `Ordeals.onDeath`; the leader's death runs `Cult.destroy`.
 - Pedia: cult, cultBasics, cultPowerResources, cultCommands, cultBazaarNet. SDK: none.
@@ -143,31 +145,55 @@ ones that call it.
 - Hooks: `onDeath` (fails the ordeal unless overridden), `check`, `turn`, `onSuccess`, `fail`,
   `getActions`, `onTimerTick`.
 - Out: timeline (GatherClues), goals, group, getRivalCult*. MetamorphosisPhaseII creates the base
-  and the rivals. Pedia: cultCommunalOrdeals, cultProfaneOrdeals.
+  and the first rivals (`RivalCult.generate`). `HereticalOrdeal` (a profane ordeal a non-combat rival
+  raises; answered by power, money or its strike mission; not counted in the profane limit, sets no
+  `profaneTimeout`) and `RivalStrike` (communal, against a revealed rival) are the ordeals that
+  reach into a rival's roster. Pedia: cultCommunalOrdeals, cultProfaneOrdeals.
 
 **Missions**: `cult/Mission.hx`, `cult/missions/*`
 - Saved inside their ordeal. Hooks `turn`, `turnPreAI`, `turnAI` (can take over an AI before its
   own logic), `onSuccess`, `onFail`, `onEventAI` (ON_AI_DEATH, ON_AI_MAX_CONSENT only), `isTarget`
   (the mission mark).
+- `CombatTargetsWithGuards(rivalCultID)` spawns real roster members of a rival (`setCult(rival)`), so a
+  kill leaves the roster through `Cult.onDeath`; `RivalBase` wins only with the sanctum down and its
+  defenders dead (`RivalCult.wipe`); both defense missions end on the next `turn()`, so the last
+  attacker's body is counted.
 - `AreaGame.getAreaMission` finds the current area's mission; `AreaGame.canLeave` locks the area
   until it completes. Pedia: cultCombatMissions.
 
 **Cult base**: `cult/base/*`, `objects/base/*`, `ai/CustosLogic.hx`, BaseDefense missions
 - Owns resources, storedBodies, organs, custodes, attackPressure, defense id and timer (S). At
   `game.cults[0].base`. Losing Cor Nefandum ends the game.
-- Created only by `MetamorphosisPhaseII`, inside the current habitat. Pedia: none (the `cultBase`
-  article it adds does not exist).
+- Created only by `MetamorphosisPhaseII` (console `cu meta 2`), inside the current habitat. Pedia:
+  none (the `cultBase` article it adds does not exist).
+- Attacks: `addPressure` (no `cultID`) picks a live rival weighted by `1 + combat power`, the generic
+  thugs only when none lives; `startDefense` registers the ordeal, mission id, timer and
+  `defenseFirstBodyID` (only bodies made since count). `BaseDefenseLogic` routes attackers to Cor Nefandum
+  through the organs on the way. `Team.turn` turns a `TEAM_AMBUSH` into a base defense while a base
+  exists; the final team after the director's death does the same.
+- Defense organs (Murus, Porta, Turris, Tardans) have 3 levels; a working Murus or Porta blocks sight.
+  Custodes heal +1 per cult turn (live in the base, records elsewhere, none during a defense) and never
+  target the host. Rivals reach it through `CultBase.turnRivalReplacements` (a dead rival's replacement).
+- Saved fields added with no compat shim (the base was unreachable before): organ `focus`,
+  `defenseFirstBodyID`; Forma's cursor state and `income` are `_ignoredFields`.
 - Each base action has ONE refusal function returning its reason ('' = OK): `validateBuild`,
   `validateUpgrade`, `validateRepair`, `validateCustos`; the actions log that reason and the Forma HUD
   (`ui/hud/FormaHud.hx`, chip, tend menu, 3D ghost) shows it, never re-deriving a rule. Income lives in
   the pure `incomePerTurn()`, which `turn()` applies and the ledger previews.
 - Scenarios: `base-build` (every organ, Porta over Murus, refusals), `base-tend` (upgrade, heart,
-  repair), `base-custos` (craft, cap, respawn), `base-economy` (income per organ, bodies, cap, pressure).
+  repair, defense levels, turret turn, sight), `base-custos` (craft, cap, respawn, stats, heal),
+  `base-economy` (income per organ, focus, drain, bodies, cap, pressure), `defense-rival`,
+  `defense-timeout`, `ambush-base-turn`.
 
 **Rival cults**: `cult/RivalCult.hx`, `RivalAttack`/`RivalResearch` ordeals, `RivalBase` mission
-- Owns template, tactic, revealed level, base area id (S, inside `game.cults`).
-- `RivalCult.turn` is empty: rivals act only through the player's base (`CultBase.runRivalTurn`).
-  Pedia: none.
+- Owns template, tactic, revealed level, base area id, `strategicTimer`, `replaceTimer` (S, inside
+  `game.cults`). Built by `RivalCult.generate(game, tactic)` from the `CultConst.tunings` table.
+- `RivalCult.turn`: each rival has its own strategic turn every 10 cult turns: a chance to recruit one
+  level 1 member (`recruitMember`), then, when the player cult is active with a base, a combat rival
+  adds +10 pressure and a non-combat one raises a `HereticalOrdeal` (+5 pressure at once when none can
+  be raised). A wiped rival stays listed as dead (`onWiped`) and `CultBase.turnRivalReplacements`
+  generates one of its tactic 30-49 cult turns later. Pedia: none.
+- Scenarios: `rival-lifecycle`, `heretical-ordeal`, `rival-strike`.
 
 **Timeline**: `scenario/Timeline.hx`, `Event.hx`, `Location.hx`, `NPC.hx`, `Scenario*.hx`
 - Owns events, locations, names, variables (S; maps rebuilt on load). At `game.timeline`.
@@ -321,19 +347,22 @@ fixed: custodes kept the player in the base habitat). `Game.beginRebirth` skips 
 | `Cult.addLeader` (`Chat.recruit`, console) | ✗ | ✓ | ✓ | ✓ |
 | `Cult.addMember` (`Chat.recruit`) | ✓ | ✗ | ✓ | ✓ |
 | `Cult.addAIData` (`RecruitFollower.onSuccess`, never live) | ✓ | ✗ | n/a | ✓ |
-| `MetamorphosisPhaseII.addRivalMember` | ✗ | set on rival creation | temp AI | once |
+| `RivalCult.addRosterMember` (`generate`, `recruitMember`) | ✓ | set in `generate` | temp AI | once |
 
-A member leaves only by dying (`Cult.onDeath`). `trainingMemberIDs` and BlockCultist targets go
+A member leaves only by dying (`Cult.onDeath`); a rival's also by a won `RivalStrike`, whose targets are
+real roster members, so a kill is an ordinary death. `trainingMemberIDs` and BlockCultist targets go
 stale until they expire.
 
 | listener | `Cult.destroy` (leader died) | `RivalBase.onSuccess` (rival base taken) |
 |---|---|---|
+| entry | `Cult.onDeath` of `members[0]` | `RivalCult.wipe` → `destroy` (the same path) |
 | state → DEAD | ✓ | ✓ |
-| members, effects, ordeals wiped | ✓ (no fail/success hooks run) | ✗ SAFE: `getRivalCults(true)` filters on state |
-| removed from `game.cults` | rivals only | ✗ SAFE: `getCultByID` still finds it for its AIs |
-| flags cleared in `game.area` and habitats | ✓ | ✗ SAFE: members kept, lookups succeed |
+| members, effects, ordeals wiped | ✓ (no fail/success hooks run) | ✓ same |
+| removed from `game.cults` | the player cult never; a rival no: `RivalCult.onWiped` keeps the dead husk and sets `replaceTimer` | same |
+| flags cleared in `game.area` and habitats | ✓ | ✓ same |
 | `player.host` flag on the region map | ✗ SAFE: members only die on screen, so the host is in the cleared area or is the one dying | ✗ same |
 | base defense | ✓ the defense id is cleared with the ordeals; a team in TEAM_BASE_DEFENSE calls the attack off on its turn (`Team.turn`; G3, fixed) | n/a |
+| ordeals pointing at the rival (`RivalAttack`, `HereticalOrdeal`, `RivalStrike` in the PLAYER cult) | kept: a heresy's mission wins when entered, the others find no live rival | same |
 
 The `MetamorphosisPhaseII` perform action refuses outside a habitat and keeps the ordeal (G11,
 fixed: `Ordeal.success` removed it whatever `onSuccess` did).
@@ -402,6 +431,7 @@ body).
 | `Kill.target`, `Persuade.target` | AIData | ON_AI_DEATH | — (a mission target never despawns) |
 | Combat `targets`/`targetIDs` | AIData + ids | ON_AI_DEATH, `Combat.getMissingTargets` | — (guards don't despawn) |
 | BaseDefense `targetIDs`, `CultBase.activeDefenseMissionID` | ids | ON_AI_DEATH, the missions' `onSuccess` | — (fresh wave, cleared by `Cult.destroy`) |
+| `CombatTargetsWithGuards.rivalCultID` (a strike's targets) | rival id + member ids | `Cult.onDeath` (roster); the mission drops marked members that left | — (a wiped rival stays listed as dead) |
 | `RecruitFollower.target` | AIData, never live | — | — |
 | `Ordeal.members` | member ids | `Ordeal.onDeath` fails the ordeal | — |
 | `Targeting.target` | AI pointer | cleared by `AreaGame.removeAI`, `Game.setLocation`, `PlayerArea.onDetach` | — |
@@ -426,7 +456,7 @@ body).
 | a base defense id points at a live mission | `CultBase.addPressure`, `Team.spawnBaseDefenseOrdeal` skip while one runs | the defense missions' `onSuccess` | yes |
 | custodes records and the base area's custos AIs match | `CultBase.onEnterArea` respawns from the records | `CultBase.onRemoveAI`, `CultBase.onEnterArea` | yes |
 | base organ records and the base area's `base_organ` object parts match, footprints never overlap, one heart | Forma's `getOrganAt`, `refreshOrganObject`, organ damage through its object | `CultBase.createOrganObject`, `removeRibwallAt`, `syncOrganObjects` on load, `validateBuild` | yes |
-| base stock, stored bodies and pressure are never negative; organ health in 0..max and level in 1..max; a non-heart organ is broken exactly at 0 health | `canAfford`, `incomePerTurn`, `isWorking` | `CultBaseResources.spend` after `canAfford`, `damageOrgan`, `initPost` | yes |
+| base stock, stored bodies and pressure are never negative, stock is under the stockpile cap, bodies under the Cadaverum slots and custodes under the Cauldron slots (broken organs counted); organ health in 0..max and level in 1..max; a non-heart organ is broken exactly at 0 health | `canAfford`, `incomePerTurn`, `isWorking` | `CultBaseResources.spend` after `canAfford`, `damageOrgan`, `initPost` | yes |
 | a dead AI leaves the area at once; area AI ids are unique | area AI loops | `AI.die` sets DEAD and calls `removeAI` | yes |
 | an NPC is at most one AI in the area | timeline NPC state | `AreaGame.turnSpawnNPC` spawns only an unlinked NPC | yes |
 | in area mode the host is in the area's AI list | `Player.loadPost` re-link | `AreaGame.enter` | yes |
@@ -455,10 +485,8 @@ Remove a line when it ships.
 - Habitat destruction punishes only the player: the cult, the ovum or evolution don't react.
 - `CultBase.storedBodies` and ovum nurture aren't connected; no nurture points for cultist,
   custos or choir hosts.
-- Team-member deaths raise Group priority, but cultist deaths and rival wipes touch nothing; no
-  reward for destroying a rival.
-- Rivals act only through the player's base; without one they never act, draw Group attention or
-  compete for recruits.
+- Team-member deaths raise Group priority, but cultist deaths and rival wipes touch nothing.
+- Rivals never draw Group attention or compete with the player cult for recruits.
 - No ordeal grants evolution or ovum progress; Metamorphosis I/II would fit.
 - Group intel has two sources (brain probe, Dossier); the timeline has many. A cult intel ordeal or
   an "interrogate agent" chat option would mirror that.
@@ -483,3 +511,5 @@ One line per cross-system bug: the commit and the empty cell.
 | e902a0f0 | a host grown into a habitat organ came back as its NPC (G6) | AI death × H6 × `AI.notifyDeath` |
 | "Fix eight cross-system gaps found by relations mapping" | G2 G3 G4 G5 G7 G8 G10 G11, each with a scenario | the cells above marked "fixed" |
 | "Fix the plausible relations gaps" | P1 P2 P3 P4 P6 P8 P9 and the mission mark lost on load, each with a scenario; P5 P7 P12 recorded as design, P11 covered by "mission ids start at 1" | the P cells above |
+| 686af4c4 | a rival whose leader died in a fight was deleted with no replacement; a raid won by the sanctum falling alone, with its defenders alive, and its rival never wiped | cult destruction × `RivalBase.onSuccess` |
+| 9760e2ee | the last attacker's body of a defense was missed (its `BodyObject` is made after the death event) | missions × AI death × body storage |

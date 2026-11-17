@@ -64,6 +64,7 @@
 - ui: Ballistospores shows its paralysis time instead of a panic time
 - ui: German and French translation fixes
 - ui: news of what became of a former host is translated
+- ui: Forma's Esc key label is translated
 - ui: one missing system font no longer stops the other fallback fonts from scaling
 - ui: save slot labels show the area in the current language
 - ui: the language switch no longer promises an autosave in chat or a mission area

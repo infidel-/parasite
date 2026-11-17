@@ -31,8 +31,8 @@ Known open work, deferred on purpose. Remove an entry when it is done.
 - **A host with a stale cult flag would crash on leaving an area.** Guard only, no known trigger.
   `Cult.destroy()` clears `isCultist` only in `game.area` and the habitats, and `Cult.onRemoveAI`
   throws on a missing record (`src/cult/Cult.hx:216`). Seen only by flagging a host by hand: cult
-  members die only on screen, and a rival taken by `RivalBase.onSuccess` is never `destroy()`ed
-  (relations.md, cult destruction row). Fix if a trigger appears: guard in `onRemoveAI`.
+  members die only on screen (a rival taken by `RivalBase.onSuccess` now goes through `destroy()` too).
+  Fix if a trigger appears: guard in `onRemoveAI`.
 
 ## Found by the headless tests
 

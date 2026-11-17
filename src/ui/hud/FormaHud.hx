@@ -552,7 +552,7 @@ class FormaHud
     {
       if (tendRows > 0)
         put(keys, '<span><kbd>1</kbd>&ndash;<kbd>' + tendRows + '</kbd>' + T('choose') + '</span>' +
-          '<span><kbd>Esc</kbd>' + T('back') + '</span>' +
+          '<span><kbd>' + T('Esc') + '</kbd>' + T('back') + '</span>' +
           '<span><kbd>&larr;&uarr;&rarr;&darr;</kbd>' + T('move away') + '</span>');
       else put(keys, '<span><kbd>&larr;&uarr;&rarr;&darr;</kbd>' + T('move') + '</span>' +
         '<span><kbd>1</kbd>&ndash;<kbd>0</kbd>' + T('organ') + '</span>' +
@@ -956,7 +956,8 @@ class FormaHud
         buf.add('<button type="button" class="fm-opt' + (row.cost == null ? ' off' : '') + '" data-opt="' + i +
           '"><span class="fm-key">' + (i + 1) + '</span><span class="fm-lb">' + row.label + '</span>' +
           (row.cost != null ? costHTML(row.cost, base) : '<span class="fm-why">' + row.reason + '</span>') + '</button>');
-      buf.add('<button type="button" class="fm-opt back" data-opt="back"><span class="fm-key">Esc</span>' + T('Back') +
+      buf.add('<button type="button" class="fm-opt back" data-opt="back"><span class="fm-key">' + T('Esc') +
+        '</span>' + T('Back') +
         '</button></div></div>');
       if (put(tend, buf.toString()))
         tendW = -1;

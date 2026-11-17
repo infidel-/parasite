@@ -315,6 +315,11 @@ class Scenarios
           game.location != LOCATION_AREA ||
           game.area.id != base.areaID)
         return [ 'the fixture does not stand in the base habitat' ];
+      // a Cauldron to hold it, placed by hand
+      var spot = freeSpot(game, base, CAULDRON);
+      var cauldron = new CultBaseOrgan(CAULDRON, base.areaID, spot.x, spot.y, 0);
+      base.organs.push(cauldron);
+      @:privateAccess base.createOrganObject(cauldron);
       // a custos made as CultBase.createCustos makes one, minus its organ and resource costs
       var loc = game.area.findEmptyLocationNear(game.playerArea.x, game.playerArea.y, 3);
       var custos = game.createAI('firmus', loc.x, loc.y);
@@ -1051,6 +1056,10 @@ class Scenarios
         return [ 'cu def named no rival cult' ];
       var m: cult.missions.BaseDefense = cast ordeal.missions[0];
       var errs = [];
+      // the console's resource cheat ignores the stockpile cap
+      base.resources.flesh = Std.int(Math.min(base.resources.flesh, base.stockpileCap()));
+      base.resources.blood = Std.int(Math.min(base.resources.blood, base.stockpileCap()));
+      base.resources.bone = Std.int(Math.min(base.resources.bone, base.stockpileCap()));
 
       // a Cadaverum for the bodies, and a body from before the raid
       // (Forma is closed while a raid runs: the organ is placed by hand)

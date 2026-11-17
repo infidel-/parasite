@@ -1615,8 +1615,9 @@ class Bot
           list.push('custos record ' + d.id + ' has no AI in the base area');
     }
 
-// the base economy's ranges and the organ records: stock, bodies and pressure never negative, organ
-// health and level in range, broken exactly at 0 health, one heart, no footprints overlapping
+// the base economy's ranges and the organ records: stock, bodies and pressure never negative and under
+// their caps, organ health and level in range, broken exactly at 0 health, one heart, no footprints
+// overlapping
   function checkBaseOrgans(base: cult.base.CultBase, list: Array<String>)
     {
       var r = base.resources;
@@ -1626,6 +1627,24 @@ class Bot
         list.push('base resources negative: ' + r.flesh + '/' + r.blood + '/' + r.bone);
       if (base.storedBodies < 0)
         list.push('base stores ' + base.storedBodies + ' bodies');
+      // the caps: stock over the heart's stockpile cap, bodies over the Cadaverum slots, custodes over the
+      // Cauldron slots. a broken organ keeps what it holds, so the slots count broken ones too (the
+      // 8 and 2 per level mirror CultBase.bodyCapacity and custosCap, which count working organs only)
+      var bodySlots = 0;
+      var custosSlots = 0;
+      for (organ in base.organs)
+        if (organ.type == BODY_STORAGE)
+          bodySlots += 8 * organ.level;
+        else if (organ.type == CAULDRON)
+          custosSlots += 2 * organ.level;
+      if (r.flesh > base.stockpileCap() ||
+          r.blood > base.stockpileCap() ||
+          r.bone > base.stockpileCap())
+        list.push('base stock ' + r.flesh + '/' + r.blood + '/' + r.bone + ' over the cap ' + base.stockpileCap());
+      if (base.storedBodies > bodySlots)
+        list.push('base stores ' + base.storedBodies + ' bodies in ' + bodySlots + ' slots');
+      if (base.custodes.length > custosSlots)
+        list.push('base has ' + base.custodes.length + ' custodes for ' + custosSlots + ' slots');
       if (base.attackPressure < 0)
         list.push('base pressure ' + base.attackPressure);
       var hearts = 0;
