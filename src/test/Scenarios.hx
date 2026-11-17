@@ -91,6 +91,14 @@ class Scenarios
       start: BASE,
       run: rivalLifecycle,
     },
+    'heretical-ordeal' => {
+      start: BASE + '+cu_members',
+      run: hereticalOrdeal,
+    },
+    'rival-strike' => {
+      start: BASE + '+cu_members',
+      run: rivalStrike,
+    },
     'npc-discovered' => {
       start: 's11',
       run: npcDiscovered,
@@ -1323,6 +1331,203 @@ class Scenarios
           game.getRivalCults(true).length + ' after');
       if (rival.replaceTimer != 0)
         errs.push('the replacement timer was not spent');
+      return errs;
+    }
+
+// a non-combat rival raises a heresy: its timer, its three ways out, its failure
+  static function hereticalOrdeal(game: Game, bot: Bot): Array<String>
+    {
+      var errs = [];
+      var player = game.cults[0];
+      var base = player.base;
+      var rival = cult.RivalCult.generate(game, RIVAL_NON_COMBAT);
+      if (player.getFreeMembers(1).length < 4)
+        return [ 'the cult has only ' + player.getFreeMembers(1).length + ' free members' ];
+
+      // a rival with nobody but its leader has no one to strike: no heresy
+      var lone = cult.RivalCult.generate(game, RIVAL_NON_COMBAT);
+      var roster = lone.members;
+      lone.members = [ roster[0] ];
+      if (cult.ordeals.HereticalOrdeal.raise(game, lone))
+        errs.push('a rival with only its leader raised a heresy');
+      lone.members = roster;
+
+      // raised: two members locked, a timer, a price in its power or money, a strike mission on its roster
+      if (!cult.ordeals.HereticalOrdeal.raise(game, rival))
+        return errs.concat([ 'the rival could not raise a heresy' ]);
+      var o: cult.ordeals.HereticalOrdeal = cast player.ordeals.list[player.ordeals.list.length - 1];
+      if (o.members.length != 2)
+        errs.push('the heresy locks ' + o.members.length + ' members');
+      if (o.timer < 8 ||
+          o.timer > 12)
+        errs.push('the heresy timer is ' + o.timer);
+      if (o.power.get(o.flavour) <= 0 ||
+          o.power.money <= 0)
+        errs.push('the heresy price is ' + o.power.get(o.flavour) + ' ' + o.flavour + ' and ' + o.power.money);
+      var m: cult.missions.CombatTargetsWithGuards = cast o.missions[0];
+      if (m.rivalCultID != rival.id ||
+          m.targetIDs.length < 1 ||
+          m.targetIDs.length > cult.missions.CombatTargetsWithGuards.RIVAL_TARGETS ||
+          m.targetIDs.indexOf(rival.members[0].id) >= 0)
+        errs.push('the heresy strike marks ' + m.targetIDs + ' of ' + [ for (x in rival.members) x.id ]);
+      for (id in m.targetIDs)
+        if (rival.getMemberByID(id) == null)
+          errs.push('the heresy strike marks ' + id + ', not on the roster');
+      if (cult.ordeals.HereticalOrdeal.raise(game, rival))
+        errs.push('a rival raised a second heresy while one runs');
+
+      // its strategic turn raises one while none runs and takes no pressure then
+      player.ordeals.list.remove(o);
+      base.attackPressure = 0;
+      rival.strategicTimer = 1;
+      rival.turn();
+      if (base.attackPressure != 0)
+        errs.push('a non-combat strategic turn added ' + base.attackPressure + ' pressure with a heresy raised');
+      var raised = [ for (x in player.ordeals.list) if (Std.isOfType(x, cult.ordeals.HereticalOrdeal)) x ];
+      if (raised.length != 1)
+        errs.push('the strategic turn raised ' + raised.length + ' heresies');
+      else
+        player.ordeals.list.remove(raised[0]);
+
+      // with the heresy blocked (two free members short) the pressure comes at once
+      var held = player.getFreeMembers(1);
+      var lock = new cult.ordeals.RivalStrike(game, rival.id);
+      lock.members = held.copy();
+      player.ordeals.list.push(lock);
+      base.attackPressure = 0;
+      rival.strategicTimer = 1;
+      rival.turn();
+      if (base.attackPressure != const.CultConst.tunings.get(RIVAL_NON_COMBAT).pressure)
+        errs.push('a rival that could not raise a heresy added ' + base.attackPressure + ' pressure');
+      player.ordeals.list.remove(lock);
+
+      // three ways out: its money, its power, its strike mission
+      for (way in [ 'money', 'power', 'mission' ])
+        {
+          if (!cult.ordeals.HereticalOrdeal.raise(game, rival))
+            {
+              errs.push('no heresy to answer with ' + way);
+              continue;
+            }
+          var h: cult.ordeals.HereticalOrdeal = cast player.ordeals.list[player.ordeals.list.length - 1];
+          switch (way)
+            {
+              case 'money':
+                player.resources.money = h.power.money;
+                spendAction(h, 'spend.money');
+              case 'power':
+                player.resources.set(h.flavour, h.power.get(h.flavour));
+                spendAction(h, 'spend.' + h.flavour);
+              default:
+                h.missions[0].success();
+            }
+          if (player.ordeals.list.indexOf(h) >= 0)
+            errs.push('the heresy was not answered by its ' + way);
+        }
+
+      // it runs out: pressure on the base, the ordeal gone, a bad effect on the cult
+      cult.ordeals.HereticalOrdeal.raise(game, rival);
+      var f: cult.ordeals.HereticalOrdeal = cast player.ordeals.list[player.ordeals.list.length - 1];
+      f.timer = 2;
+      base.attackPressure = 0;
+      var effects = player.effects.list.length;
+      player.ordeals.turn();
+      if (player.ordeals.list.indexOf(f) < 0)
+        errs.push('the heresy ended with a turn to spare');
+      player.ordeals.turn();
+      if (player.ordeals.list.indexOf(f) >= 0)
+        errs.push('the heresy outlived its timer');
+      if (base.attackPressure < cult.ordeals.HereticalOrdeal.PRESSURE)
+        errs.push('the failed heresy added ' + base.attackPressure + ' pressure');
+      if (player.effects.list.length <= effects)
+        errs.push('the failed heresy left no bad effect');
+      return errs;
+    }
+
+// runs the ordeal's action of this id
+  static function spendAction(o: cult.Ordeal, id: String)
+    {
+      for (a in o.getActions())
+        if (a.id == id)
+          a.f();
+    }
+
+// a strike on a revealed rival: offered once, marks its members, kills leave the roster, pressure falls
+  static function rivalStrike(game: Game, bot: Bot): Array<String>
+    {
+      var errs = [];
+      var player = game.cults[0];
+      var base = player.base;
+      var rival = cult.RivalCult.generate(game, RIVAL_COMBAT);
+      var offered = function(): Bool
+        {
+          for (a in player.ordeals.getInitiateOrdealActions())
+            if (a.id == 'rivalStrike' &&
+                a.obj.rivalCultID == rival.id)
+              return true;
+          return false;
+        };
+      if (offered())
+        errs.push('a strike on a rival nobody has researched is offered');
+      rival.rivalRevealedLevel = 1;
+      if (!offered())
+        errs.push('a strike on a revealed rival is not offered');
+      for (a in player.ordeals.getInitiateOrdealActions())
+        if (a.id == 'rivalStrike' &&
+            a.obj.rivalCultID == rival.id)
+          player.ordeals.action(a);
+      var strike: cult.ordeals.RivalStrike = null;
+      for (o in player.ordeals.list)
+        if (Std.isOfType(o, cult.ordeals.RivalStrike))
+          strike = cast o;
+      if (strike == null)
+        return errs.concat([ 'the strike action raised no ordeal' ]);
+      if (strike.members.length != 2)
+        errs.push('the strike locks ' + strike.members.length + ' members');
+      if (offered())
+        errs.push('a second strike on the same rival is offered');
+
+      // the mission puts the marked members in the area as members of their cult
+      var m: cult.missions.CombatTargetsWithGuards = cast strike.missions[0];
+      m.areaID = game.area.id;
+      var marked = m.targetIDs.copy();
+      if (marked.length < 1 ||
+          marked.length > cult.missions.CombatTargetsWithGuards.RIVAL_TARGETS ||
+          marked.indexOf(rival.members[0].id) >= 0)
+        errs.push('the strike marks ' + marked);
+      m.turn();
+      for (id in marked)
+        {
+          var ai = game.area.getAIByID(id);
+          if (ai == null ||
+              ai.cultID != rival.id)
+            errs.push('marked member ' + id + ' is not in the area as a member of the rival');
+        }
+
+      // kills leave the roster, the last one wins the mission and the ordeal, the base breathes
+      var size = rival.members.length;
+      base.attackPressure = 20;
+      for (id in marked)
+        game.area.getAIByID(id).die();
+      if (rival.members.length != size - marked.length)
+        errs.push('the rival has ' + rival.members.length + ' members, not ' + (size - marked.length));
+      if (rival.state != CULT_STATE_ACTIVE)
+        errs.push('the strike wiped the rival out');
+      if (!m.isCompleted ||
+          player.ordeals.list.indexOf(strike) >= 0)
+        errs.push('the strike did not end with its targets dead');
+      if (base.attackPressure != 20 - cult.ordeals.RivalStrike.PRESSURE_RELIEF)
+        errs.push('pressure is ' + base.attackPressure + ' after the strike, not ' + (20 - cult.ordeals.RivalStrike.PRESSURE_RELIEF));
+
+      // a failed strike changes nothing, but one time in a few the rival recruits, never past its cap
+      var before = rival.members.length;
+      var again = new cult.ordeals.RivalStrike(game, rival.id);
+      for (i in 0...100)
+        @:privateAccess again.onFail();
+      if (rival.members.length <= before)
+        errs.push('100 failed strikes never gave the rival a recruit');
+      if (rival.members.length > rival.maxSize())
+        errs.push('failed strikes grew the rival past its cap');
       return errs;
     }
 

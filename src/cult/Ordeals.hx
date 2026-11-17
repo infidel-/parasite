@@ -55,8 +55,9 @@ class Ordeals extends _SaveObject
         ordeal: ordeal.coloredName(),
       }));
 
-      // increment profane timeout if this was a profane ordeal
-      if (ordeal.type == ORDEAL_PROFANE)
+      // increment profane timeout if this was a profane ordeal (a rival's heresy is not the cult's own tribulation)
+      if (ordeal.type == ORDEAL_PROFANE &&
+          !Std.isOfType(ordeal, HereticalOrdeal))
         profaneTimeout = 10 + Const.roll(1, 4);
 
       list.remove(ordeal);
@@ -74,8 +75,9 @@ class Ordeals extends _SaveObject
         ordeal: ordeal.coloredName(),
       }));
 
-      // increment profane timeout if this was a profane ordeal
-      if (ordeal.type == ORDEAL_PROFANE)
+      // increment profane timeout if this was a profane ordeal (a rival's heresy is not the cult's own tribulation)
+      if (ordeal.type == ORDEAL_PROFANE &&
+          !Std.isOfType(ordeal, HereticalOrdeal))
         profaneTimeout = 10 + Const.roll(1, 4);
 
       list.remove(ordeal);
@@ -176,7 +178,8 @@ class Ordeals extends _SaveObject
       var profaneCount = 0;
       for (ordeal in list)
         {
-          if (ordeal.type == ORDEAL_PROFANE)
+          if (ordeal.type == ORDEAL_PROFANE &&
+              !Std.isOfType(ordeal, HereticalOrdeal))
             profaneCount++;
         }
 
@@ -238,6 +241,7 @@ class Ordeals extends _SaveObject
       MetamorphosisPhaseII.initiateAction(cult, actions);
       ReapTheUnwary.initiateAction(cult, actions);
       RivalResearch.initiateAction(cult, actions);
+      RivalStrike.initiateAction(cult, actions);
       RivalAttack.initiateAction(cult, actions);
       LowerAlertness.initiateAction(game, cult, actions);
       BuryTheFile.initiateAction(game, cult, actions);
@@ -282,6 +286,8 @@ class Ordeals extends _SaveObject
             ordeal = new ReapTheUnwary(game);
           case 'rivalResearch':
             ordeal = new RivalResearch(game, action.obj.rivalCultID);
+          case 'rivalStrike':
+            ordeal = new RivalStrike(game, action.obj.rivalCultID);
           case 'rivalAttack':
             ordeal = new RivalAttack(game, action.obj.rivalCultID);
           default:

@@ -21129,6 +21129,36 @@
    "field": "name"
   },
   {
+   "s": "cultist",
+   "kind": "N",
+   "loc": [
+    "src/cult/missions/CombatTargetsWithGuards.hx"
+   ],
+   "vars": [],
+   "where": "CombatTargetsWithGuards.rivalInfo",
+   "field": "job"
+  },
+  {
+   "s": "Rival Strike",
+   "kind": "N",
+   "loc": [
+    "src/cult/missions/CombatTargetsWithGuards.hx"
+   ],
+   "vars": [],
+   "where": "CombatTargetsWithGuards.initRival",
+   "field": "name"
+  },
+  {
+   "s": "Kill the marked cultists of the rival.",
+   "kind": "N",
+   "loc": [
+    "src/cult/missions/CombatTargetsWithGuards.hx"
+   ],
+   "vars": [],
+   "where": "CombatTargetsWithGuards.initRival",
+   "field": "note"
+  },
+  {
    "s": "Break Clone Program",
    "kind": "N",
    "loc": [
@@ -21517,6 +21547,361 @@
    "field": "text"
   },
   {
+   "s": "Whispering Campaign",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "Anonymous feeds trade photographs of your initiates leaving the same doors. A rival cult hands out the captions.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The feeds go quiet. Some accounts never post again.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The story spreads. Strangers watch the doors your people use.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "Hollow Broadcast",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "A late-night broadcast preaches a gospel that is not yours, in a voice that sounds like your own.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The transmitter falls silent and the hollow gospel fades from the airwaves.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The hollow gospel takes root. Your followers hesitate at your name.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "Writ of Heresy",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "A rival cult files petitions against your front companies, one filing for each of your names.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The petitions are withdrawn and the clerk who filed them forgets the case.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The court freezes your accounts and your people spend their days in corridors.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "Sworn Affidavit",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "Sworn statements place your initiates at scenes they never visited. The rival lawyers keep the originals.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The affidavits are discredited. The rival lawyers are reassigned to cases elsewhere.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The statements stand. Doors that opened for you close.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "Hostile Acquisition",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "A rival cult buys the debts of your suppliers and calls them in on the same morning.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The debts are bought back and your suppliers owe you more than before.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The suppliers fold. Shipments for the base are lost in the shuffle.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "Quiet Sabotage",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "Orders go missing, invoices come back wrong, and a rival cult has a hand in every clerical error.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The saboteurs are found among the clerks, and the errors stop.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The errors pile up and the money you are owed goes missing.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "Hearing in Closed Session",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "A council committee meets behind closed doors to discuss your cult. A rival cult wrote the agenda.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The committee adjourns without a vote. Its chairman takes a long holiday.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The committee finds against you. Police officers begin asking about the base.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "Whip Count",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "name"
+  },
+  {
+   "s": "A rival cult counts the votes it owns and the votes it can buy. All of them are meant for you.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "note"
+  },
+  {
+   "s": "The votes drift away. The rival cult is out of favours.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "success"
+  },
+  {
+   "s": "The vote goes through and every official in the city knows your name.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail"
+  },
+  {
+   "s": "{cult} has raised a heresy against us: {ordeal}.",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "vars": [
+    "cult",
+    "ordeal"
+   ],
+   "where": "HereticalOrdeal.raise",
+   "field": "text"
+  },
+  {
+   "s": "Ordeal Failed",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx",
+    "src/cult/ordeals/profane/GenericProfaneOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.onFail",
+   "field": "title"
+  },
+  {
+   "s": "Ordeal Succeeded",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx",
+    "src/cult/ordeals/profane/GenericProfaneOrdeal.hx"
+   ],
+   "vars": [],
+   "where": "HereticalOrdeal.onSuccess",
+   "field": "title"
+  },
+  {
    "s": "2x: {power} PWR or {money}",
    "kind": "T",
    "loc": [
@@ -21799,6 +22184,38 @@
     "cult"
    ],
    "where": "RivalResearch.initiateAction",
+   "field": "name"
+  },
+  {
+   "s": "Strike Rival Cult",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/RivalStrike.hx"
+   ],
+   "vars": [],
+   "where": "RivalStrike.init",
+   "field": "name"
+  },
+  {
+   "s": "Kill marked members of the rival in the city.",
+   "kind": "N",
+   "loc": [
+    "src/cult/ordeals/RivalStrike.hx"
+   ],
+   "vars": [],
+   "where": "RivalStrike.init",
+   "field": "note"
+  },
+  {
+   "s": "Strike {cult}",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/RivalStrike.hx"
+   ],
+   "vars": [
+    "cult"
+   ],
+   "where": "RivalStrike.initiateAction",
    "field": "name"
   },
   {
@@ -22400,26 +22817,6 @@
    "vars": [],
    "where": "CorpoCult.getInfo",
    "field": "job"
-  },
-  {
-   "s": "Ordeal Failed",
-   "kind": "T",
-   "loc": [
-    "src/cult/ordeals/profane/GenericProfaneOrdeal.hx"
-   ],
-   "vars": [],
-   "where": "GenericProfaneOrdeal.onFail",
-   "field": "title"
-  },
-  {
-   "s": "Ordeal Succeeded",
-   "kind": "T",
-   "loc": [
-    "src/cult/ordeals/profane/GenericProfaneOrdeal.hx"
-   ],
-   "vars": [],
-   "where": "GenericProfaneOrdeal.onSuccess",
-   "field": "title"
   },
   {
    "s": "Vessel Program",

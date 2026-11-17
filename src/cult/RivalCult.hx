@@ -4,6 +4,7 @@ package cult;
 import l10n.Loc;
 import const.CultConst;
 import const.Jobs;
+import cult.ordeals.HereticalOrdeal;
 import game.Game;
 
 class RivalCult extends Cult
@@ -156,10 +157,16 @@ class RivalCult extends Cult
       if (Std.random(100) < tuning.recruitPct)
         recruitMember();
 
-      // pressure on the player's base: none while the player cult is down or has no base
+      // none of this while the player cult is down or has no base
       var player = game.cults[0];
       if (player.state != CULT_STATE_ACTIVE ||
           player.base == null)
+        return;
+
+      // a non-combat rival raises a heresy, its pressure comes if that runs out. when none can be raised it
+      // spreads the pressure at once
+      if (rivalTactic == RIVAL_NON_COMBAT &&
+          HereticalOrdeal.raise(game, this))
         return;
       player.base.addPressure(tuning.pressure, id);
       if (rivalTactic == RIVAL_COMBAT)

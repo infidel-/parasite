@@ -19,6 +19,7 @@ Started by the player from the cult window. Random member picks prefer the given
 | Metamorphosis, Phase II | 1 member, level 3 (after Phase I, cult level 1 with no base, player in a habitat) | none; the player performs the ritual in the habitat, which creates Cor Nefandum and two rival cults |
 | Reap the Unwary | 2 members, exactly level 1 (needs Cor Nefandum with a working body storage organ) | 2 random types among media/lawfare/corporate/political/money: 2 power each for non-money types<br>Money: 100000 if money type is picked |
 | Research Rival Cult | 2 random members, level 1 (one per active rival not yet fully revealed; 3 successes reveal its base) | 1 random type among media/lawfare/corporate/political/money: 2 power<br>Money: 40000 if money type is picked |
+| Strike Rival Cult | 2 random members, level 1 (one per rival revealed at least once that has members besides its leader, one strike per rival at a time) | none; completes through the strike mission (up to 3 of the rival's members, never its leader, marked in a city area). Success: they leave the roster, pressure -5. Failure: 15% chance the rival recruits a level 1 member |
 | Attack Rival Base | 0 (one per fully revealed rival with a known base) | none; completes through the rival base mission |
 
 ## Profane Ordeals
@@ -63,6 +64,19 @@ Power tier: 25 power and 100000 money if the cult has 2+ level 3 members, else 1
 | The Whistleblower&#39;s Silence | 0 required (2 random level 1 members assigned) | political power: base 5/10/25 (±10%) based on cult level distribution<br>Money: base 20000/50000/100000 (±10%, rounded down to 1000) |
 | Veto in Viscera | 0 required (2 random level 1 members assigned) | political power: base 5/10/25 (±10%) based on cult level distribution<br>Money: base 20000/50000/100000 (±10%, rounded down to 1000) |
 | The Inspector&#39;s Final Report | 0 required (2 random level 1 members assigned) | political power: base 5/10/25 (±10%) based on cult level distribution<br>Money: base 20000/50000/100000 (±10%, rounded down to 1000) |
+
+## Heretical Ordeals
+
+Raised by a non-combat rival's strategic turn (every 10 cult turns) when the cult has 2 free level 1 members and none of that rival's heresies runs; otherwise the strategic turn adds 5 pressure at once. Profane-style: 2 random level 1 members assigned, an 8–12 turn timer, no annul. Flavoured by the rival's strongest side among media/lawfare/corporate/political. Answered by ANY ONE of: paying its power, paying its money, or winning its strike mission (up to 3 of the rival's members, never its leader). Failure: +5 pressure on the base and a random bad effect for 5 turns (10 at 5% chance).
+
+Price tier: 15 power and 60000 money if the cult has a level 3 member, else 10 and 40000 if it has a level 2 member, else 5 and 20000.
+
+| Ordeal Name | Required Members | Power Requirements |
+| --- | --- | --- |
+| Whispering Campaign, Hollow Broadcast (media) | 0 required (2 random level 1 members assigned) | media power 5/10/15 or money 20000/40000/60000, or the strike mission |
+| Writ of Heresy, Sworn Affidavit (lawfare) | 0 required (2 random level 1 members assigned) | lawfare power 5/10/15 or money 20000/40000/60000, or the strike mission |
+| Hostile Acquisition, Quiet Sabotage (corporate) | 0 required (2 random level 1 members assigned) | corporate power 5/10/15 or money 20000/40000/60000, or the strike mission |
+| Hearing in Closed Session, Whip Count (political) | 0 required (2 random level 1 members assigned) | political power 5/10/15 or money 20000/40000/60000, or the strike mission |
 
 ## Base Defense Ordeals
 

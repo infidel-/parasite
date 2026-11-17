@@ -18,7 +18,9 @@
 - cult: custodes have their own slam and bite, Firmus is tougher, and they heal while the player stays in the base
 - cult: each rival cult acts on its own and slowly recruits
 - cult: Nidus Murium can focus its rats on flesh, blood or bone
+- cult: non-combat rival cults raise heresies against the player's cult
 - cult: Reap the Unwary costs money or two powers, and needs a working Cadaverum to finish
+- cult: Rival Strike sends members against a rival cult's people in the city
 - cult: the Metamorphosis ordeals are open again
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map
