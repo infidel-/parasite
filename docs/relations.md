@@ -161,6 +161,8 @@ ones that call it.
   `validateUpgrade`, `validateRepair`, `validateCustos`; the actions log that reason and the Forma HUD
   (`ui/hud/FormaHud.hx`, chip, tend menu, 3D ghost) shows it, never re-deriving a rule. Income lives in
   the pure `incomePerTurn()`, which `turn()` applies and the ledger previews.
+- Scenarios: `base-build` (every organ, Porta over Murus, refusals), `base-tend` (upgrade, heart,
+  repair), `base-custos` (craft, cap, respawn), `base-economy` (income per organ, bodies, cap, pressure).
 
 **Rival cults**: `cult/RivalCult.hx`, `RivalAttack`/`RivalResearch` ordeals, `RivalBase` mission
 - Owns template, tactic, revealed level, base area id (S, inside `game.cults`).
@@ -408,7 +410,7 @@ body).
 | `Player.host`/`hostID` | pointer + id | invade, `onDetach`, host death | — |
 | `AreaEvent.ai` | pointer + id | pruned when the event fires | despawn (still fires) |
 | `AI.enemies` | ids | purged by `removeAI` | — |
-| id counters `AIData`/`Mission`/`RegionObject`/`NPC`/`Cult._maxID` | statics (¬S) | reset by `Game.restartPre`, raised on load | — |
+| id counters `AIData`/`Mission`/`RegionObject`/`NPC`/`Cult`/`CultBaseOrgan._maxID` | statics (¬S) | reset by `Game.restartPre`, raised on load | — |
 
 ## Invariants
 
@@ -423,6 +425,8 @@ body).
 | an ACTIVE cult has ≥ 1 member, the leader first | `Cult.onDeath` reads `members[0]` | `Cult.addLeader`, `Cult.destroy` | yes |
 | a base defense id points at a live mission | `CultBase.addPressure`, `Team.spawnBaseDefenseOrdeal` skip while one runs | the defense missions' `onSuccess` | yes |
 | custodes records and the base area's custos AIs match | `CultBase.onEnterArea` respawns from the records | `CultBase.onRemoveAI`, `CultBase.onEnterArea` | yes |
+| base organ records and the base area's `base_organ` object parts match, footprints never overlap, one heart | Forma's `getOrganAt`, `refreshOrganObject`, organ damage through its object | `CultBase.createOrganObject`, `removeRibwallAt`, `syncOrganObjects` on load, `validateBuild` | yes |
+| base stock, stored bodies and pressure are never negative; organ health in 0..max and level in 1..max; a non-heart organ is broken exactly at 0 health | `canAfford`, `incomePerTurn`, `isWorking` | `CultBaseResources.spend` after `canAfford`, `damageOrgan`, `initPost` | yes |
 | a dead AI leaves the area at once; area AI ids are unique | area AI loops | `AI.die` sets DEAD and calls `removeAI` | yes |
 | an NPC is at most one AI in the area | timeline NPC state | `AreaGame.turnSpawnNPC` spawns only an unlinked NPC | yes |
 | in area mode the host is in the area's AI list | `Player.loadPost` re-link | `AreaGame.enter` | yes |
