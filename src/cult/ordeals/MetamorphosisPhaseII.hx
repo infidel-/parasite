@@ -153,7 +153,7 @@ class MetamorphosisPhaseII extends Ordeal
         }),
         text: Loc.tr(v.text),
         img: v.img,
-        choices: [ '' ],
+        choices: [],
         buttons: [ T('Endure the vision') ],
         src: null,
         textClass: 'choice-occasio',

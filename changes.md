@@ -30,6 +30,7 @@
 - mods: `ai:die-region` event when the host dies on the region map
 - ui: [beta] German translation
 - ui: Forma has its own build screen
+- ui: occasio hints fade out smoothly
 
 ### Fixes
 - boot: a damaged language file starts the game in English instead of not at all

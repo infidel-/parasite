@@ -88,10 +88,9 @@ class Choice extends UIWindow
       hideChoiceNotes();
     }
 
-// reset the note row to its empty placeholder
+// fade the note row out; its text stays until the next hint, so it fades instead of vanishing
   function hideChoiceNotes()
     {
-      note.innerHTML = '&nbsp;';
       note.classList.remove('on');
     }
 
@@ -134,6 +133,15 @@ class Choice extends UIWindow
       if (params.textClass != null &&
           StringTools.trim(params.textClass) != '')
         text.className += ' ' + params.textClass;
+
+      // the hint row only when some choice has a hint
+      note.innerHTML = '&nbsp;';
+      var hints = false;
+      if (params.choices != null)
+        for (c in params.choices)
+          if (c != '')
+            hints = true;
+      note.style.display = (hints ? '' : 'none');
 
       defaultText = (params.text != null) ? params.text : '';
       text.innerHTML = defaultText;
