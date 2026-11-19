@@ -7,6 +7,7 @@ import l10n.Loc;
 import cult.Cult;
 import cult.Ordeal;
 import cult.RivalCult;
+import const.CultBaseConst;
 import cult.base.CultBase;
 import game.Game;
 import ui.Choice._ChoiceParams;
@@ -17,6 +18,7 @@ class MetamorphosisPhaseII extends Ordeal
 {
   static var _ignoredFields = [ 'cult', 'channelling' ];
   public static inline var STAGES = 3;
+  static inline var HEART_SEARCH = 6;   // cells round the player searched for room for the heart
   // one vision per stage: a rival cult, the Corpus Basilica, the Heart's birth
   static var visions = [
     {
@@ -175,8 +177,8 @@ class MetamorphosisPhaseII extends Ordeal
   public override function onSuccess()
     {
       cult.level = 2;
-      cult.base = new CultBase(game, game.area.id,
-        game.playerArea.x, game.playerArea.y);
+      var spot = heartSpot();
+      cult.base = new CultBase(game, game.area.id, spot.x, spot.y);
       RivalCult.generate(game, RIVAL_COMBAT);
       RivalCult.generate(game, RIVAL_NON_COMBAT);
       // the heart tears up once the last vision is endured (at once from `cu meta 2`, which skips the
@@ -192,6 +194,44 @@ class MetamorphosisPhaseII extends Ordeal
       if (stage >= STAGES)
         showVision(visions[STAGES - 1], birth);
       else birth();
+    }
+
+// the heart's anchor nearest the player whose whole footprint is walkable and holds no object or AI,
+// the build rules (CultBase.validateBuild) minus the tileset lookup: isWalkable already counts a solid
+// growth like biomineral. the player's own cell counts as free, the heart grows under it
+  function heartSpot(): { x: Int, y: Int }
+    {
+      var area = game.area;
+      var px = game.playerArea.x;
+      var py = game.playerArea.y;
+      for (r in 0...HEART_SEARCH + 1)
+        for (dy in -r...r + 1)
+          for (dx in -r...r + 1)
+            {
+              // the ring at this distance only
+              if (Std.int(Math.max(Math.abs(dx), Math.abs(dy))) != r)
+                continue;
+              var free = true;
+              for (pt in CultBaseConst.footprint(COR_NEFANDUM, px + dx, py + dy))
+                if (!(pt.x == px && pt.y == py) &&
+                    (!area.isWalkable(pt.x, pt.y) ||
+                     area.hasObjectAt(pt.x, pt.y) ||
+                     area.hasAI(pt.x, pt.y)))
+                  {
+                    free = false;
+                    break;
+                  }
+              if (free)
+                return {
+                  x: px + dx,
+                  y: py + dy,
+                };
+            }
+      // ponytail: a habitat packed solid round the player keeps the old spot, overlap and all
+      return {
+        x: px,
+        y: py,
+      };
     }
 
 // adds initiate action when Phase I is complete and player is in habitat

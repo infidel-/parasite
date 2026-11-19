@@ -378,7 +378,9 @@ one the ritual is pinned to (its `areaID`), and keeps the ordeal (G11, fixed: `O
 removed it whatever `onSuccess` did). A stage counts when its animation ends
 (`GameScene.ritualFx`, at once with no 3D view), so a save mid-animation drops it. The third stage
 succeeds at once; its vision opens from `onSuccess`, and enduring it plays the heart's birth, after
-which the base message shows (`cu meta 2` skips straight to the birth). The ritual is no
+which the base message shows (`cu meta 2` skips straight to the birth). The heart takes the nearest
+2x2 to the player with no object, AI or wall (`heartSpot`, the player's own cell allowed), not the
+player's cell blindly. The ritual is no
 `Mission`: one would make its habitat a mission area, locked and pausing the cult and Group, while
 leaving the habitat has to suspend it instead. Scenarios: `phase2-outside`, `phase2-ritual`.
 

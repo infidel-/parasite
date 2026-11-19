@@ -1777,6 +1777,8 @@ class Scenarios
         return [ 's22 does not stand in a habitat' ];
       var c = game.cults[0];
       var cults = game.cults.length;
+      // a growth where the heart's footprint would start at the player: it must find room elsewhere
+      new objects.Biomineral(game, game.area.id, game.playerArea.x + 1, game.playerArea.y, 0);
       var o = new cult.ordeals.MetamorphosisPhaseII(game);
       c.ordeals.list.push(o);
       if (o.areaID != game.area.id)
@@ -1822,6 +1824,14 @@ class Scenarios
       if (c.base == null ||
           c.base.areaID != game.area.id)
         errs.push('no base in the ritual habitat');
+      else
+        {
+          var heart = c.base.organs[0];
+          for (pt in heart.footprint())
+            for (ob in game.area.getObjectsAt(pt.x, pt.y))
+              if (ob.type != 'base_organ')
+                errs.push('the heart grew over ' + ob.type + ' at ' + pt.x + ',' + pt.y);
+        }
       if (c.level != 2)
         errs.push('the cult is level ' + c.level + ' after the ritual');
       if (game.cults.length != cults + 2)

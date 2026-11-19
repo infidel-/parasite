@@ -38,6 +38,7 @@
 - cult: a base defense whose attackers vanished without dying sends a fresh wave instead of never ending
 - cult: a cult destroyed during a base defense no longer freezes the base and the team attacking it
 - cult: a Kill or Persuade target no longer wanders off and returns elsewhere
+- cult: Cor Nefandum no longer grows over the habitat's growths
 - cult: base organ actions are listed once, not once per tile of a large organ
 - cult: a load no longer lets a new cult mission take an id already in use
 - cult: a mission target keeps its marker after a load
