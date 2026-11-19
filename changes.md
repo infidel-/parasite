@@ -17,6 +17,7 @@
 - cult: base walls and gates can run north-south as well as east-west
 - cult: a fallen rival cult is replaced by a new one after a while
 - cult: Cadaverum can drain a stored body into blood
+- cult: Cor Nefandum rises out of the floor when the base is born
 - cult: custodes have their own slam and bite, Firmus is tougher, and they heal while the player stays in the base
 - cult: each rival cult acts on its own and slowly recruits
 - cult: Nidus Murium can focus its rats on flesh, blood or bone

@@ -285,9 +285,9 @@ class View {
     }
 
 // a cult base organ's destroy/repair/upgrade animation, on the actor layer's particles
-  public function organFx(organ:cult.base.CultBaseOrgan, kind:cult.base.OrganFxKind):Void
+  public function organFx(organ:cult.base.CultBaseOrgan, kind:cult.base.OrganFxKind, onDone:Void -> Void):Void
     {
-      actors.organFx(organ, kind);
+      actors.organFx(organ, kind, onDone);
     }
 
 // a Metamorphosis II ritual stage at a cell, on the actor layer's particles
@@ -1074,11 +1074,12 @@ void main() {
         });
     }
 
-// shake the camera for an event that shakes the whole place — see render.CameraRig.quake
-  public function playQuake():Void
+// shake the camera for an event that shakes the whole place, `mul` of the full strength — see
+// render.CameraRig.quake
+  public function playQuake(?mul:Float = 1.0):Void
     {
       if (running)
-        rig.quake();
+        rig.quake(mul);
     }
 
 // grip-struggle shake (parasite + host wrestle) — see render.choreo.Reactions

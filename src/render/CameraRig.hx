@@ -37,6 +37,7 @@ class CameraRig {
   var lastState:_PlayerState;                              // prev-frame player state (auto pull-out)
   var recoil = new Vector3();                              // transient player-shot camera kick, decays to 0
   var quakeT = 0.0;                                        // camera quake left, 1..0 (RenderConfig.QUAKE); 0 = still
+  var quakeMul = 1.0;                                      // the running quake's strength, of RenderConfig.QUAKE.amp
   var quakeOff = new Vector3();                            // the quake jitter added last frame, taken back before the follow
   var lampCorners:Map<Int,Int> = null;                    // grid vertex -> lamp dir; follow target bends past a post too
   var tactical = false;
@@ -227,11 +228,12 @@ class CameraRig {
       recoil.set(dx / len * a, a * 0.4, dz / len * a);
     }
 
-// shake the camera for an event that shakes the whole place (the summoning portal breaking);
-// fades out over RenderConfig.QUAKE.mul x BASE_MS in update()
-  public function quake():Void
+// shake the camera for an event that shakes the whole place (the summoning portal breaking), `mul` of
+// the full RenderConfig.QUAKE amplitude; fades out over RenderConfig.QUAKE.mul x BASE_MS in update()
+  public function quake(mul:Float):Void
     {
       quakeT = 1.0;
+      quakeMul = mul;
     }
 
 // advance the follow target + zoom one frame; drive the camera only when followCamera
@@ -294,7 +296,7 @@ class CameraRig {
         return;
       var Q = RenderConfig.QUAKE;
       quakeT = Math.max(0, quakeT - step / Q.mul);
-      var a = Q.amp * quakeT * quakeT;
+      var a = Q.amp * quakeMul * quakeT * quakeT;
       var w = (1 - quakeT) * Q.mul * RenderConfig.BASE_MS / 1000 * Q.hz * 2 * Math.PI;
       quakeOff.set(a * Math.sin(w) * Math.cos(w * 0.37),
         a * 0.6 * Math.sin(w * 1.31 + 1.7),

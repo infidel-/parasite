@@ -250,7 +250,8 @@ once (headless tests). One stage is 14 BASE_MS (2.1 s): 16 + 8 × stage cult-pin
 in from 1.5 + 0.5 × stage cells and climb over 7. A 4-glow column rises from 0.6 of that and beats
 (orange `0xff8a3a` on the third stage, cult pink before). A 36-ember additive ring spreads to 2.5 +
 0.5 × stage cells over the last 6. The third stage also throws an 18-drop `BloodDrop3D.burst` as the
-sinews meet, and Cor Nefandum appears under it.
+sinews meet. Each stage quakes the camera as the sinews meet, at 0.2 × stage of the full
+`RenderConfig.QUAKE` (`CameraRig.quake(mul)`, new strength argument).
 
 Traps:
 - The first cut (8 + 4 × stage sinews, width 0.06 cell, reach 1 cell per stage) read as a few stray
@@ -263,3 +264,23 @@ Traps:
 
 Verdict: landed. Verified live at ANIM_SPEED 0.06–0.15 in the base habitat (stages 2 and 3), and the
 stage-1 vision opened after the animation at full speed. No new programs (pooled spark quads).
+
+## Cor Nefandum birth animation
+
+`OrganFxKind.BIRTH` in `render.particles.OrganFx3D`, played by `CultBase.birth` once the last
+Metamorphosis II vision is endured. Over 9 BASE_MS the heart's prop is scaled up from nothing with an
+ease-out-back on height (overshoots, then settles) while its width swells from 0.3. REPAIR's sinews
+and glow come with it, and a full-strength camera quake starts it. `OrganFx3D` now takes an `onDone`
+(`GameScene.organFx` calls it at once with no 3D view), and the base's message waits for it.
+
+Traps:
+- The heart was INVISIBLE after the ritual. This was not the biomineral growths: its object is made
+  inside the `CultBase` constructor, before `cult.base` points at the base, so
+  `BaseOrganObject.getModelKey` found no organ and returned `base_organ`. That has no prop, so
+  `AreaGame.addObject` skipped the 3D rebuild. Re-entering the area would have fixed it, so it looked
+  random. `birth` forces the rebuild.
+- The rise must start after the vision closes: played behind the modal window, it is over before
+  anyone sees it.
+
+Verdict: landed. Verified live at ANIM_SPEED 0.12: the heart is absent behind vision 3, rises after
+it with sinews and glow, and the message holds until it stands. No new programs.

@@ -8,4 +8,5 @@ enum OrganFxKind
   REPAIR;  // a broken organ rises from its ruin's height while flesh-pink sinew knits into it
   MEND;    // a damaged one only takes the sinew
   UPGRADE; // one heartbeat swell, a glow at its crown and a ring across the floor
+  BIRTH;   // Cor Nefandum tears up out of the floor as the base is born, the place quaking
 }

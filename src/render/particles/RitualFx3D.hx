@@ -8,7 +8,8 @@ import render.world.WorldCtx;
 // one stage of the Metamorphosis II ritual (cult.ordeals.MetamorphosisPhaseII) round the cell it is
 // channelled on: cult-pink sinews spiral in from the habitat, a column of glow rises where they meet
 // and a ring of embers spreads across the floor. each stage is wider and brighter, the third bleeds
-// as the Heart tears up. the stage's vision opens when it ends (onDone)
+// as the Heart tears up. the place quakes as the sinews meet. the stage's vision opens when it ends
+// (onDone)
 class RitualFx3D extends Particle3D {
   // durations and beats, all in BASE_MS units
   static inline var RITUAL_T = 14.0;    // the whole stage
@@ -21,6 +22,7 @@ class RitualFx3D extends Particle3D {
   static inline var RING_Y = 0.15;      // the ring's lift off the floor, over the habitat's growths
   static inline var RING_EMBERS = 36;   // embers drawing it, each a tangent dash
   static inline var BLOOD_DROPS = 18;   // the burst the Heart bleeds on the last stage
+  static inline var QUAKE = 0.2;        // the camera quake as the sinews meet, of the full one, per stage
   // colours
   static inline var CULT_COL = 0xe0609a;
   static inline var SINEW_COL = 0xd04a78;
@@ -36,7 +38,7 @@ class RitualFx3D extends Particle3D {
   var cz:Float;
   var floor:Float;
   var t:Float = 0.0;
-  var bled:Bool = false;
+  var knit:Bool = false;                // the sinews have met: quaked, and bled on the last stage
 
   public function new(game:Game, particles:Particles3D, col:Int, row:Int, stage:Int, onDone:Void -> Void)
     {
@@ -56,13 +58,16 @@ class RitualFx3D extends Particle3D {
   override public function tick(dtMs:Float):Bool
     {
       t += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
-      if (stage == 3 &&
-          !bled &&
+      if (!knit &&
           t >= KNIT_T)
         {
-          bled = true;
-          var ic = Const.bloodIcon('red');
-          BloodDrop3D.burst(particles, game, col, row, 0, 0, ic.row, ic.col, BLOOD_DROPS);
+          knit = true;
+          game.scene.view3d.playQuake(QUAKE * stage);
+          if (stage == 3)
+            {
+              var ic = Const.bloodIcon('red');
+              BloodDrop3D.burst(particles, game, col, row, 0, 0, ic.row, ic.col, BLOOD_DROPS);
+            }
         }
       return t < RITUAL_T;
     }

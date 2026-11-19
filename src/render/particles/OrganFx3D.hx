@@ -9,7 +9,7 @@ import render.RenderConfig;
 import render.world.ObjModels;
 import render.world.WorldCtx;
 
-// a cult base organ's destroy/repair/upgrade animation. it poses the organ's own prop instance (every
+// a cult base organ's destroy/repair/upgrade/birth animation. it poses the organ's own prop instance (every
 // batch standing on its anchor cell, solid, ghost and hull alike) each frame by scaling it about its
 // base, and paints its sparks round it. a DESTROY holds the intact model until the slump lands and
 // only then rebuilds the props, so the ruin swaps in at its own height (ObjModels.RUIN_SQUASH)
@@ -21,6 +21,7 @@ class OrganFx3D extends Particle3D {
   static inline var REPAIR_T = 7.0;     // the rise back to full height
   static inline var KNIT_T = 4.0;       // the sinews reach the organ by
   static inline var UPGRADE_T = 6.0;    // the heartbeat swell
+  static inline var BIRTH_T = 9.0;      // the heart's rise out of the floor
   // shapes, as fractions of the prop or of a cell
   static inline var SHUDDER_AMP = 0.03; // shudder jitter, of a cell
   static inline var SPREAD = 0.08;      // how much wider a slumping organ spreads
@@ -30,6 +31,7 @@ class OrganFx3D extends Particle3D {
   static inline var RING_EMBERS = 20;   // embers drawing it, each a tangent dash
   static inline var SINEWS = 8;         // streaks knitting into a mended organ
   static inline var BLOOD_DROPS = 14;   // the burst a destroyed organ bleeds
+  static inline var BIRTH_WIDTH = 0.3;  // a newborn heart's width as it breaks the floor, of its own
   // colours
   static inline var BLOOD_COL = 0x8c1c1c;
   static inline var SINEW_COL = 0xd04a78;
@@ -50,10 +52,13 @@ class OrganFx3D extends Particle3D {
   var dur:Float;
   var bled:Bool = false;
   var held:Array<{ p:Models.InstancedProp, i:Int, base:Matrix4 }> = [];
+  var onDone:Void -> Void;              // runs when it ends, or null
 
-  public function new(game:Game, particles:Particles3D, organ:CultBaseOrgan, kind:OrganFxKind)
+  public function new(game:Game, particles:Particles3D, organ:CultBaseOrgan, kind:OrganFxKind,
+      onDone:Void -> Void)
     {
       super();
+      this.onDone = onDone;
       this.game = game;
       this.particles = particles;
       this.kind = kind;
@@ -78,7 +83,10 @@ class OrganFx3D extends Particle3D {
           case DESTROY: DESTROY_T;
           case REPAIR | MEND: REPAIR_T;
           case UPGRADE: UPGRADE_T;
+          case BIRTH: BIRTH_T;
         };
+      if (kind == BIRTH)
+        game.scene.view3d.playQuake();
     }
 
   override public function tick(dtMs:Float):Bool
@@ -131,6 +139,12 @@ class OrganFx3D extends Particle3D {
           // one heartbeat
           case UPGRADE:
             sx = sy = 1 + SWELL * Math.sin(Math.PI * t / UPGRADE_T);
+          // tear up from nothing past full height and back (an ease-out-back), swelling out from a stalk
+          case BIRTH:
+            var u = t / BIRTH_T - 1;
+            var c = 1.70158;
+            sy = 1 + (c + 1) * u * u * u + c * u * u;
+            sx = 1 - (1 - BIRTH_WIDTH) * u * u;
         }
       pose(sx, sy, jx, jz);
       return true;
@@ -199,7 +213,7 @@ class OrganFx3D extends Particle3D {
               paint.sparks.glowQuad(cx, floor + h * 0.4, cz, big * cell * 1.3, BLOOD_COL,
                 0.6 * Math.sin(Math.PI * u));
           // flesh-pink sinews spiralling in, then one soft glow where they met
-          case REPAIR | MEND:
+          case REPAIR | MEND | BIRTH:
             var p = Math.min(1.0, t / KNIT_T);
             if (p < 1)
               for (i in 0...SINEWS)
@@ -239,5 +253,7 @@ class OrganFx3D extends Particle3D {
       if (kind == DESTROY &&
           game.area.id == areaID)
         game.scene.updateObjects3D();
+      if (onDone != null)
+        onDone();
     }
 }

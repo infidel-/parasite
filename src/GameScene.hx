@@ -223,13 +223,17 @@ class GameScene
       view3d.refreshObjects();
     }
 
-// play a cult base organ's destroy/repair/upgrade animation in the 3D view (render.particles.OrganFx3D);
-// a DESTROY rebuilds the props itself once its slump lands
-  public function organFx(organ: cult.base.CultBaseOrgan, kind: cult.base.OrganFxKind)
+// play a cult base organ's destroy/repair/upgrade/birth animation in the 3D view (render.particles.OrganFx3D);
+// a DESTROY rebuilds the props itself once its slump lands. onDone runs when it ends, at once headless
+  public function organFx(organ: cult.base.CultBaseOrgan, kind: cult.base.OrganFxKind, ?onDone: Void -> Void)
     {
       if (!view3d.running)
-        return;
-      view3d.organFx(organ, kind);
+        {
+          if (onDone != null)
+            onDone();
+          return;
+        }
+      view3d.organFx(organ, kind, onDone);
     }
 
 // play a Metamorphosis II ritual stage at a cell in the 3D view (render.particles.RitualFx3D), then

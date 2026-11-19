@@ -453,6 +453,14 @@ class CultBase extends _SaveObject
         refresh3D();
     }
 
+// shows Cor Nefandum tearing up as the base is born, then runs onDone. its object was made before
+// cult.base pointed at this base, so its 3D prop is only keyed now
+  public function birth(onDone: Void -> Void)
+    {
+      refresh3D();
+      game.scene.organFx(organs[0], BIRTH, onDone);
+    }
+
 // rebuilds the 3D props when the base is the area on screen, after an organ's model key changed
   function refresh3D()
     {

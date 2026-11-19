@@ -124,8 +124,8 @@ class MetamorphosisPhaseII extends Ordeal
     }
 
 // channels the next stage round the player; it counts when its animation ends, so a save during it
-// drops the stage and keeps nothing half-done. the vision opens first, then the last stage grows the
-// base, whose message queues behind it
+// drops the stage and keeps nothing half-done. the stage's vision opens then, except the last stage
+// grows the base first, which opens its own
   function channel()
     {
       areaID = game.area.id;
@@ -137,14 +137,15 @@ class MetamorphosisPhaseII extends Ordeal
       game.scene.ritualFx(game.playerArea.x, game.playerArea.y, stage + 1, function() {
         channelling = false;
         stage++;
-        showVision(visions[stage - 1]);
-        if (stage >= STAGES)
-          success();
+        if (stage < STAGES)
+          showVision(visions[stage - 1], null);
+        else success();
       });
     }
 
-// opens a stage's vision: an occasio-style window with one button
-  function showVision(v: { title: String, text: String, img: String })
+// opens a stage's vision: an occasio-style window with one button; onClose, when given, runs as it is
+// endured
+  function showVision(v: { title: String, text: String, img: String }, onClose: Void -> Void)
     {
       var params: _ChoiceParams = {
         title: T('{visio}: {title}', {
@@ -158,7 +159,10 @@ class MetamorphosisPhaseII extends Ordeal
         src: null,
         textClass: 'choice-occasio',
         // Dynamic: ui.Choice's callback type; a vision has nothing to pass back
-        f: function(src: Dynamic, choiceID: Int) {}
+        f: function(src: Dynamic, choiceID: Int) {
+          if (onClose != null)
+            onClose();
+        }
       };
       game.ui.event({
         type: UIEVENT_STATE,
@@ -175,10 +179,19 @@ class MetamorphosisPhaseII extends Ordeal
         game.playerArea.x, game.playerArea.y);
       RivalCult.generate(game, RIVAL_COMBAT);
       RivalCult.generate(game, RIVAL_NON_COMBAT);
-      game.message({
-        text: T('Cor Nefandum opens. Cultus Carnis enters its second form.'),
-        col: 'cult'
-      });
+      // the heart tears up once the last vision is endured (at once from `cu meta 2`, which skips the
+      // stages), and the base's message waits for it to stand
+      var birth = function() {
+        cult.base.birth(function() {
+          game.message({
+            text: T('Cor Nefandum opens. Cultus Carnis enters its second form.'),
+            col: 'cult'
+          });
+        });
+      };
+      if (stage >= STAGES)
+        showVision(visions[STAGES - 1], birth);
+      else birth();
     }
 
 // adds initiate action when Phase I is complete and player is in habitat

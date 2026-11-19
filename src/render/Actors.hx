@@ -926,9 +926,9 @@ class Actors {
     }
 
 // play a cult base organ's destroy/repair/upgrade animation (render.particles.OrganFx3D)
-  public function organFx(organ:cult.base.CultBaseOrgan, kind:cult.base.OrganFxKind):Void
+  public function organFx(organ:cult.base.CultBaseOrgan, kind:cult.base.OrganFxKind, onDone:Void -> Void):Void
     {
-      particles.add(new OrganFx3D(game, particles, organ, kind));
+      particles.add(new OrganFx3D(game, particles, organ, kind, onDone));
     }
 
 // play a Metamorphosis II ritual stage at a cell (render.particles.RitualFx3D)

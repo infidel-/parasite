@@ -186,6 +186,9 @@ ones that call it.
   fades one back out on repair). `CultBase.fx3D` plays the destroy/repair/mend/upgrade animation
   (`OrganFxKind` → `GameScene.organFx` → `render.particles.OrganFx3D`); a DESTROY plays INSTEAD of
   `refresh3D` and rebuilds the props itself when its slump lands (falls back to `refresh3D` off screen).
+  `CultBase.birth` (from `MetamorphosisPhaseII.onSuccess`) runs `refresh3D` + a BIRTH fx with an
+  `onDone`: the heart's object is made inside the `CultBase` constructor, before `cult.base` is set, so
+  its key resolves to no prop and `AreaGame.addObject` skips the rebuild until `birth` forces one.
 - Scenarios: `base-build` (every organ, Porta over Murus, refusals), `base-tend` (upgrade, heart,
   repair, defense levels, turret turn, sight), `base-custos` (craft, cap, respawn, stats, heal),
   `base-economy` (income per organ, focus, drain, bodies, cap, pressure), `defense-rival`,
@@ -373,7 +376,9 @@ stale until they expire.
 The `MetamorphosisPhaseII` channel action refuses outside a habitat, or in a habitat other than the
 one the ritual is pinned to (its `areaID`), and keeps the ordeal (G11, fixed: `Ordeal.success`
 removed it whatever `onSuccess` did). A stage counts when its animation ends
-(`GameScene.ritualFx`, at once with no 3D view), so a save mid-animation drops it. The ritual is no
+(`GameScene.ritualFx`, at once with no 3D view), so a save mid-animation drops it. The third stage
+succeeds at once; its vision opens from `onSuccess`, and enduring it plays the heart's birth, after
+which the base message shows (`cu meta 2` skips straight to the birth). The ritual is no
 `Mission`: one would make its habitat a mission area, locked and pausing the cult and Group, while
 leaving the habitat has to suspend it instead. Scenarios: `phase2-outside`, `phase2-ritual`.
 
