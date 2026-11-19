@@ -36,9 +36,13 @@ class Choice extends UIWindow
       // hero: filtered image + scrim + overlaid title
       hero = Browser.document.createDivElement();
       hero.className = 'choice-hero';
+      // the hue shimmer runs on a wrapper: a filter list holding url(#imgCult) only animates in steps
+      var imageWrap = Browser.document.createDivElement();
+      imageWrap.className = 'choice-img-wrap';
       image = Browser.document.createImageElement();
       image.className = 'choice-img';
-      hero.appendChild(image);
+      imageWrap.appendChild(image);
+      hero.appendChild(imageWrap);
       var grad = Browser.document.createDivElement();
       grad.className = 'choice-hero-grad';
       hero.appendChild(grad);

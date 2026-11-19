@@ -3468,13 +3468,21 @@ hr {
   overflow: hidden;
 }
 
+/* the shimmer animates hue-rotate alone here: with url(#imgCult) in the same filter list the browser
+   cannot interpolate and jumps between the two ends */
+.choice-img-wrap {
+  position: absolute;
+  inset: 0;
+  animation: choice-hue 16s ease-in-out infinite;
+  will-change: filter;
+}
+
 .choice-img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
   filter: url(#imgCult);
-  animation: choice-hue 16s ease-in-out infinite;
-  will-change: filter;
 }
 
 /* darken toward the body so the title reads */
@@ -3599,10 +3607,10 @@ hr {
 /* subtle pink shimmer (stays in the pink range, not a full rainbow) */
 @keyframes choice-hue {
   0%, 100% {
-    filter: url(#imgCult) hue-rotate(-16deg);
+    filter: hue-rotate(-16deg);
   }
   50% {
-    filter: url(#imgCult) hue-rotate(16deg);
+    filter: hue-rotate(16deg);
   }
 }
 
