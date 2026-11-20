@@ -3591,6 +3591,54 @@
         "sewer/ritual1.mp3",
         "sewer/ritual2.mp3"
       ]
+    },
+    "library/hall": {
+      "area": "library",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "library/hall-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "Quiet room tone of a large old university library reading hall at night: a deep soft hush in a high wooden room, a faint warm hum of old lamps, the slow tick of a distant wall clock, very occasional soft rustle of a page far away. Steady and even, no events standing out, no voices, no footsteps, no music, close-miked realistic field recording.",
+          "duration": 19.969161,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-11-20T00:00",
+          "bakeoff": "bake-off 2026-11-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-20T22:39:40",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "library/hall1.mp3"
+      ]
+    },
+    "library/archive": {
+      "area": "library",
+      "loop": true,
+      "lufs": -36,
+      "variants": [
+        {
+          "file": "library/archive-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "Room tone of a sealed restricted archive vault under an old library at night: dead still cold stone room, a very low droning hum, faint creak of old wooden shelves settling, an uneasy almost subsonic pressure, dust-dry silence. Steady and even, no events standing out, no voices, no footsteps, no music, close-miked realistic field recording.",
+          "duration": 19.969161,
+          "seed": null,
+          "cost": 0.036,
+          "native_loop": false,
+          "generated": "2026-11-20T00:00",
+          "bakeoff": "bake-off 2026-11-20: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-20T22:39:41",
+      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_outputs": [
+        "library/archive1.mp3"
+      ]
     }
   }
 }

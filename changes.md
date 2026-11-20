@@ -9,6 +9,7 @@
 - art: the university library is 3D, with its own furniture, librarian and region mark
 - art: the cult base grows flesh and pulsing vessels across its habitat floor
 - art: a habitat turns a cult pink once its base starts
+- audio: the university library has its own room sounds
 - cult: -redacted- in the university library
 - cult: a level 2 cult holds 15 members, up to 5 at level 2 and 2 at level 3
 - cult: a member's death fails any ordeal it is locked in, profane ones too
