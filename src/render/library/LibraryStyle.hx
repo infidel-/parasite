@@ -58,6 +58,7 @@ class LibraryStyle
   public static inline var CASE_D = 1.2;
   public static inline var STACK_D = 2.4;
   public static inline var CATALOGUE_D = 3.4;
+  public static inline var CATALOGUE_W = 3.6;
   // how far a furniture batch's pieces are drawn round the camera
   public static inline var PIECE_CULL_R = 9.0;
 

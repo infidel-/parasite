@@ -4892,7 +4892,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the university library's wall BOOKCASE, one cell (Const.TILE_LIB_BOOKCASE): 3.98 x 1.2 x 5.0, six shelves of books behind five proud boards placed where library/shelf-spines draws them (row statistics on the built label: boards at rows 230..254 and 492..518 of each repeat). Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
-      "last_converted": "2026-11-20T00:49:16Z",
+      "last_converted": "2026-11-20T18:45:17Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "library/stack": {
@@ -4900,7 +4900,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the library's free-standing STACK rank cell (Const.TILE_LIB_STACK), books and boards on both faces: 3.98 x 2.4 x 5.0. Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
-      "last_converted": "2026-11-20T00:49:16Z",
+      "last_converted": "2026-11-20T18:45:17Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "library/table": {
@@ -4908,15 +4908,15 @@
       "tris": -1,
       "tex": 512,
       "note": "the library's 4x2-cell READING TABLE (the generator's whole block, placed at its centre): 15.4 x 7.4 x 1.6, six legs. Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
-      "last_converted": "2026-11-20T00:49:16Z",
+      "last_converted": "2026-11-20T18:45:18Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "library/chair": {
       "src": "library/library-chair.glb",
       "tris": -1,
       "tex": 512,
-      "note": "the library's wooden reading CHAIR, one cell (Const.TILE_LIB_CHAIR), facing -y. Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
-      "last_converted": "2026-11-20T00:49:16Z",
+      "note": "the library's wooden reading CHAIR, one cell (Const.TILE_LIB_CHAIR), facing -y: a dark frame (shelf-side at modelsheet --gain 0.62) and an oxblood carpet seat cushion, so it reads off the parquet. 276 tris. Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
+      "last_converted": "2026-11-20T18:45:18Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "library/counter": {
@@ -4924,7 +4924,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the library's 4-cell circulation COUNTER (Const.TILE_LIB_COUNTER run): 15.9 x 2.6 x 2.1. Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
-      "last_converted": "2026-11-20T00:49:16Z",
+      "last_converted": "2026-11-20T18:45:18Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "library/lectern": {
@@ -4932,7 +4932,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the library archive's LECTERN (Const.TILE_LIB_LECTERN), the Necronomicon's stand: sloped board rising to +y. Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
-      "last_converted": "2026-11-20T00:49:16Z",
+      "last_converted": "2026-11-20T18:45:18Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "library/catalogue": {
@@ -4940,7 +4940,7 @@
       "tris": -1,
       "tex": 512,
       "note": "the library's CARD CATALOGUE cell (Const.TILE_LIB_CATALOGUE): 3.6 x 3.4 x 2.7, drawer grid on the front. Hand-modelled, fitted art (no baseColor, no lift). buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0. models-src/library/library_build.py.",
-      "last_converted": "2026-11-20T00:49:16Z",
+      "last_converted": "2026-11-20T18:45:18Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     }
   }

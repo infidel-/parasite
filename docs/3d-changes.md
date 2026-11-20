@@ -311,3 +311,28 @@ Traps:
   ceiling pendants, and the vision mask darkens everything past a rank on top of that.
 
 Verdict: landed. Walked the lobby, a hall, the stacks and the archive live; burn and book spawn checked.
+
+## University library, first feedback pass: footprint shadows, aisle lamps, seamless floors, cushions
+
+Reported in game on the first library: catalogue islands with no gap between their rows, a dark patch
+in front of every wall bookcase, long unbroken bookcase runs, pendants hanging over the stack ranks,
+a visible repeat on the parquet, chairs that merged with it, and halls that were all tables. Fixed:
+- **The dark patch was the contact field, not a shadow.** A wall bookcase laid `FacilityDetail.ground`
+  over its whole cell (3.6 square) while the case stands 1.2 deep in the wall's margin, so the floor field
+  darkened 2.8 units of open floor in front of it. Now one `ground` per RUN over the cases' own footprint
+  (`CASE_D` off the slab face, so the halo still finds its wall). Catalogues likewise take their own
+  3.6 x 3.4 footprint, and an island's two rows stand at the FRONT of their cells: a 1.2 passage between.
+- **Pendants in the aisles**: a lattice point on a `TILE_LIB_STACK` cell steps into the aisle beside it,
+  and a pendant with a rank either side loses its across-the-aisle jitter (`LibraryArea.lamps`).
+- **The packed floors did not tile** (the PACK4 wrap bullet in 3d-textures.md, ignored): parquet wrap
+  7.6/5.9 and flagstone 6.2/5.1 against interior ~3. A herringbone has no exact period to crop to (the
+  quadrant's autocorrelation found none across), so: roll the quadrant half a tile, so the old wrap lies
+  across the middle and the new one runs through untouched interior, then a sunburst `mask` edit of a
+  160 px cross through the middle. **Composite the band back and the joints ghost** (the edit moved
+  flagstone joints just outside the band); the WHOLE edit is the tile: 4.0/3.8 and 3.1/3.1, no visible
+  repeat at 2x2. Solo srcs now; lifts refitted to the old built means (67.1, 78.9).
+- **The chair** wears the small sheet's new cells: shelf-side at `--gain 0.62` (`tools/modelsheet.py`)
+  for the frame and the corridor carpet for a seat cushion sunk 0.02 into the seat (276 tris, check clean).
+
+Verdict: landed. Checked live on a fresh 44x32 floor: the island's passage, no patch in front of the
+cases, runs of three with holes, cushions reading red on the parquet, lamp pools down the stack aisles.

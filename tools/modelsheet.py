@@ -32,6 +32,9 @@ swatch 2.67x — and it cannot simply wrap, because walking u past a packed cell
 into the NEIGHBOURING image (docs/3d-textures.md). So the repeat is baked into the CELL: the
 source is tiled and cropped to `u x v` repeats before it is scaled in. Values under 1 are a
 crop, which is exactly what 0.75 across a flank means. Pass one `uxv` per cell, in order.
+
+--gain scales a cell's sRGB values, one factor per cell: a darker variant of a fitted wood without a
+second label (models-src/library's chair, 0.62 of shelf-side so it stops merging with the parquet).
 """
 import argparse
 import sys
@@ -57,11 +60,16 @@ def main():
     ap.add_argument("--cell", type=int, default=512)
     ap.add_argument("--cols", type=int, default=2)
     ap.add_argument("--repeat", default="", help="per cell, comma-separated 'uxv' (e.g. 0.75x2)")
+    ap.add_argument("--gain", default="", help="per cell, comma-separated sRGB factor (e.g. 1,1,0.62,1)")
     a = ap.parse_args(resolve_args(sys.argv[1:]))
 
     reps = [tuple(float(v) for v in s.split("x")) for s in a.repeat.split(",")] if a.repeat else []
     if reps and len(reps) != len(a.src):
         print(f"--repeat has {len(reps)} entries for {len(a.src)} cells")
+        return 1
+    gains = [float(v) for v in a.gain.split(",")] if a.gain else [1.0] * len(a.src)
+    if len(gains) != len(a.src):
+        print(f"--gain has {len(gains)} entries for {len(a.src)} cells")
         return 1
 
     rows = (len(a.src) + a.cols - 1) // a.cols
@@ -71,9 +79,13 @@ def main():
         if im.width != im.height:
             print(f"  note: {p} is {im.width}x{im.height}, not square — stretched to the cell")
         ru, rv = reps[i] if reps else (1.0, 1.0)
-        sheet.paste(tiled(im, ru, rv, a.cell),
-                    ((i % a.cols) * a.cell, (i // a.cols) * a.cell))
-        print(f"  cell {i}: {p}  repeat {ru}x{rv}")
+        cell = tiled(im, ru, rv, a.cell)
+        if gains[i] != 1.0:
+            r, g, b, al = cell.split()
+            r, g, b = (c.point(lambda v: min(255, round(v * gains[i]))) for c in (r, g, b))
+            cell = Image.merge("RGBA", (r, g, b, al))
+        sheet.paste(cell, ((i % a.cols) * a.cell, (i // a.cols) * a.cell))
+        print(f"  cell {i}: {p}  repeat {ru}x{rv}  gain {gains[i]}")
     # RGBA only when a cell is cut (military/flag's fringe), so an opaque sheet stays the RGB it was
     cut = sheet.getchannel("A").getextrema()[0] < 255
     (sheet if cut else sheet.convert("RGB")).save(a.out)

@@ -701,7 +701,8 @@ the generator's call and persists in the cells; a cave generated before the pool
 `make gen args="--type library"`. The reading floor of the city's one university library
 (`AREA_LIBRARY`, placed by `RegionGame.ensureLibrary` on a never-generated medium city area away from
 the corp towers, on new regions AND on load). The lab's pattern: final ids only (`Const` row 30,
-`TILE_LIB_*`), one plate in a void, no `Subdivide`, generated at exactly 60x44.
+`TILE_LIB_*`), one plate in a void, no `Subdivide`, generated at exactly 44x32 (60x44 had halls of
+24x17 that read as a sea of tables, reported).
 
 ```
 area                       void (TILE_LIB_VOID), every void cell 8-adjacent to floor walled
@@ -724,9 +725,13 @@ area                       void (TILE_LIB_VOID), every void cell 8-adjacent to f
   `AreaGame.enter` lands an arrival on the nearest empty cell when the exit object's own is not walkable.
 - **The aisle is the invariant, as in the corp archive**: a stack rank only takes a cell whose eight
   neighbours are its room's bare floor (or rank), so a ring of floor runs round every wall and door and
-  nothing needs a reachability repair. Ranks are columns at pitch 2, cut into 3-7 runs by 1-2 cell gaps.
+  nothing needs a reachability repair. Ranks are columns at pitch 2, cut into 2-4 runs by 1-2 cell gaps
+  (long ranks and long wall runs were reported).
 - **Halls**: bookcases (walkable, the WALL_HUGGERS rule) on the N/W/E walls clear of doorways, never the
-  south wall; table blocks (chair, 4x2 table, chair, aisle) centred inside the ring.
+  south wall, in runs of 3 with a one-cell hole; a bay of table blocks (chair, 4x2 table, chair, aisle)
+  against one side wall inside the ring, all the table columns that fit but one, and stack ranks over the
+  rest of the hall (`ranksIn`, pitch 2 from the far edge in). The lobby has ONE back-to-back catalogue
+  island, centred.
 - **`GenCheck.librarySane`**: one lectern with the librarian's post walkable in front, a counter with
   the guard's post behind it, and a flood from the stairs with the stacks shut reaches no archive cell.
 

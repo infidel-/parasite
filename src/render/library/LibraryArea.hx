@@ -149,7 +149,11 @@ class LibraryArea implements Area3D
       // bucketed into the chunk there and culled with it
       for (p in places)
         furniture.push(batch(scene, p.path, p.places, p.h));
-      posts = lamps(model);
+      posts = lamps(model, function(col, row)
+        {
+          return (col < 0 || row < 0 || col >= model.w || row >= model.h ? -1 :
+            area.getCellType(col, row));
+        });
       SoundSources.beds = BEDS.copy();
       SoundSources.events = [];
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
@@ -172,6 +176,13 @@ class LibraryArea implements Area3D
         { path: M.libraryCatalogue, h: LibraryStyle.CATALOGUE_H, places: [] },
       ];
       var wall = function(col, row) return tile(col, row) == Const.TILE_LIB_WALL;
+      // which wall a bookcase backs onto: north, else west, else east (0/1/2), -1 for no bookcase
+      var backing = function(col, row)
+        {
+          if (tile(col, row) != Const.TILE_LIB_BOOKCASE)
+            return -1;
+          return (wall(col, row - 1) ? 0 : (wall(col - 1, row) ? 1 : 2));
+        };
       for (row in 0...m.h)
         for (col in 0...m.w)
           {
@@ -181,13 +192,44 @@ class LibraryArea implements Area3D
               {
                 // backed onto the wall to its north, else west, else east, in that wall's margin
                 var back = (CELL / 2 + MARGIN) - LibraryStyle.CASE_D / 2;
-                if (wall(col, row - 1))
+                var b = backing(col, row);
+                if (b == 0)
                   put(out[0].places, c.x, c.z - back, 0);
-                else if (wall(col - 1, row))
+                else if (b == 1)
                   put(out[0].places, c.x - back, c.z, Math.PI / 2);
                 else
                   put(out[0].places, c.x + back, c.z, -Math.PI / 2);
-                ground(m, col, row, LibraryStyle.CASE_H);
+                // the run's contact shadow from its first cell, over the cases' own footprint
+                var dx = (b == 0 ? 1 : 0);
+                var dy = 1 - dx;
+                if (backing(col - dx, row - dy) != b)
+                  {
+                    var len = 1;
+                    while (backing(col + dx * len, row + dy * len) == b)
+                      len++;
+                    var face = (b == 0 ? c.z : c.x) + (b == 2 ? 1 : -1) * (CELL / 2 + MARGIN);
+                    var lo = (b == 2 ? face - LibraryStyle.CASE_D : face);
+                    var x0 = c.x - CELL / 2;
+                    var z0 = c.z - CELL / 2;
+                    FacilityDetail.ground(m, {
+                      col: col,
+                      row: row,
+                      len: len,
+                      alongX: (b == 0),
+                      rect: (b == 0 ? {
+                        x0: x0,
+                        x1: x0 + len * CELL,
+                        z0: lo,
+                        z1: lo + LibraryStyle.CASE_D,
+                      } : {
+                        x0: lo,
+                        x1: lo + LibraryStyle.CASE_D,
+                        z0: z0,
+                        z1: z0 + len * CELL,
+                      }),
+                      h: LibraryStyle.CASE_H,
+                    });
+                  }
               }
             else if (t == Const.TILE_LIB_STACK)
               {
@@ -238,17 +280,35 @@ class LibraryArea implements Area3D
               }
             else if (t == Const.TILE_LIB_CATALOGUE)
               {
-                // against a side wall, or one of a back-to-back island's two rows
+                // against a side wall, or one of a back-to-back island's two rows, each pushed to
+                // the front of its cell so the island has a passage down its middle
                 var back = (CELL - LibraryStyle.CATALOGUE_D) / 2;
+                var hw = LibraryStyle.CATALOGUE_W / 2;
+                var hd = LibraryStyle.CATALOGUE_D / 2;
+                var x = c.x;
+                var z = c.z;
                 if (wall(col - 1, row))
-                  put(out[6].places, c.x - back - MARGIN, c.z, Math.PI / 2);
+                  x -= back + MARGIN;
                 else if (wall(col + 1, row))
-                  put(out[6].places, c.x + back + MARGIN, c.z, -Math.PI / 2);
-                else if (tile(col, row + 1) == Const.TILE_LIB_CATALOGUE)
-                  put(out[6].places, c.x, c.z + back, Math.PI);
+                  x += back + MARGIN;
                 else
-                  put(out[6].places, c.x, c.z - back, 0);
-                block(m, col, row, 1, 1, LibraryStyle.CATALOGUE_H);
+                  z += (tile(col, row + 1) == Const.TILE_LIB_CATALOGUE ? -back : back);
+                var side = (x != c.x);
+                put(out[6].places, x, z, (side ? (x < c.x ? Math.PI / 2 : -Math.PI / 2) :
+                  (z < c.z ? Math.PI : 0)));
+                FacilityDetail.ground(m, {
+                  col: col,
+                  row: row,
+                  len: 1,
+                  alongX: true,
+                  rect: {
+                    x0: x - (side ? hd : hw),
+                    x1: x + (side ? hd : hw),
+                    z0: z - (side ? hw : hd),
+                    z1: z + (side ? hw : hd),
+                  },
+                  h: LibraryStyle.CATALOGUE_H,
+                });
               }
           }
       return out;
@@ -282,12 +342,6 @@ class LibraryArea implements Area3D
       });
     }
 
-// a bookcase's contact shadow: one cell, against its wall (the halo goes on the wall it backs onto)
-  static function ground(m:Facility, col:Int, row:Int, h:Float):Void
-    {
-      block(m, col, row, 1, 1, h);
-    }
-
 // one batch, its pieces casting under the pendants and shaded by the vision sweep
   static function batch(scene:Scene, path:String, places:Array<PropPlace>, h:Float):InstancedProp
     {
@@ -302,10 +356,13 @@ class LibraryArea implements Area3D
       return prop;
     }
 
-// the pendants: a lattice over every room, sparser and dimmer in the archive, and along the corridor
-  static function lamps(m:Facility):Array<LampPost>
+// the pendants: a lattice over every room, sparser and dimmer in the archive, and along the corridor.
+// A lattice point on a stack rank moves into the aisle beside it, and a pendant in an aisle hangs on
+// its centre line, so the ranks never stand under a lamp
+  static function lamps(m:Facility, tile:Int->Int->Int):Array<LampPost>
     {
       var out:Array<LampPost> = [];
+      var stack = function(col, row) return tile(col, row) == Const.TILE_LIB_STACK;
       for (r in m.rooms)
         {
           var archive = (LibraryStyle.roleSurf(r.role) == Surf.LIB_ARCHIVE);
@@ -313,25 +370,33 @@ class LibraryArea implements Area3D
           var ny = Std.int(Math.max(1, Math.round(r.h / LibraryStyle.LAMP_SPACING)));
           for (i in 0...nx)
             for (j in 0...ny)
-              out.push(post(r.x1 + Std.int((i + 0.5) * r.w / nx), r.y1 + Std.int((j + 0.5) * r.h / ny),
-                (archive ? LibraryStyle.LAMP_ARCHIVE : LibraryStyle.LAMP_COLOR),
-                (archive ? LibraryStyle.LAMP_ARCHIVE_MUL : LibraryStyle.LAMP_MUL)));
+              {
+                var col = r.x1 + Std.int((i + 0.5) * r.w / nx);
+                var row = r.y1 + Std.int((j + 0.5) * r.h / ny);
+                if (stack(col, row))
+                  col += (col + 1 <= r.x2 && !stack(col + 1, row) ? 1 : -1);
+                out.push(post(col, row,
+                  (archive ? LibraryStyle.LAMP_ARCHIVE : LibraryStyle.LAMP_COLOR),
+                  (archive ? LibraryStyle.LAMP_ARCHIVE_MUL : LibraryStyle.LAMP_MUL),
+                  stack(col - 1, row) || stack(col + 1, row)));
+              }
         }
       for (row in 0...m.h)
         for (col in 0...m.w)
           if (m.surf[row][col] == Surf.CARPET &&
               col % LibraryStyle.LAMP_SPACING == 0 &&
               (m.surf[row - 1][col] != Surf.CARPET))
-            out.push(post(col, row, LibraryStyle.LAMP_COLOR, LibraryStyle.LAMP_MUL));
+            out.push(post(col, row, LibraryStyle.LAMP_COLOR, LibraryStyle.LAMP_MUL, false));
       return out;
     }
 
-// one pendant, jittered off its cell centre and in strength by the cell hash
-  static function post(col:Int, row:Int, color:Int, mul:Float):LampPost
+// one pendant, jittered off its cell centre and in strength by the cell hash; in an aisle (`aisle`)
+// only along it
+  static function post(col:Int, row:Int, color:Int, mul:Float, aisle:Bool):LampPost
     {
       var h = FacilityModel.mix((col * 49979687) ^ (row * 86028121));
       var c = CityConfig.cellToWorld(col, row);
-      var x = c.x + (((h >>> 13) % 21) - 10) * LibraryStyle.LAMP_JITTER / 10;
+      var x = c.x + (aisle ? 0.0 : (((h >>> 13) % 21) - 10) * LibraryStyle.LAMP_JITTER / 10);
       var z = c.z + (((h >>> 18) % 21) - 10) * LibraryStyle.LAMP_JITTER / 10;
       return {
         x: x,

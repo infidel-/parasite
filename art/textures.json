@@ -8946,23 +8946,17 @@
       "last_sat": 0.6
     },
     "library/floor-parquet": {
-      "src": "library/library-surfaces-a.png",
+      "src": "library/floor-parquet.png",
       "class": "tile",
       "needs_alpha": false,
       "prompt": "[quadrant of library/library-surfaces-a.png, PACK4, gpt-image-2.6-sunburst high] TOP-LEFT: herringbone oak parquet floor from above, honey-brown blocks, about eight rows across. [append textures.json style]",
       "prompt_exact": false,
-      "note": "render.library shell floor of the halls and the stacks (LibraryStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ.",
-      "crop": [
-        2,
-        2,
-        506,
-        506
-      ],
-      "last_converted": "2026-11-20T05:29:37",
-      "built_linear": 0.0654,
-      "built_srgb": 67.5,
-      "lift": 0.859,
-      "last_lift": 0.859
+      "note": "render.library shell floor of the halls and the stacks (LibraryStyle.shell), world-tiled at FacilityStyle.FLOOR_TILE_SZ. solo src, made off the pack quadrant: crop [2, 2, 506, 506] of library/library-surfaces-a.png, resized to 512, np.roll by 256 on both axes (the old wrap to the middle, the new wrap through untouched interior), upscaled to 1024, then edit_image (gpt-image-2.6-sunburst high, mask transparent over a cross 160 px wide through the middle) asked to redraw the herringbone seamlessly inside the cross; the WHOLE edit is the tile (a band composite ghosted the joints where the edit had moved them just outside the band). Wrap 4.0/3.8 vs interior 2.8 against the quadrant's 7.6/5.9.",
+      "last_converted": "2026-11-20T23:41:26",
+      "built_linear": 0.0652,
+      "built_srgb": 67.1,
+      "lift": 0.835,
+      "last_lift": 0.835
     },
     "library/wall-panel": {
       "src": "library/library-surfaces-a.png",
@@ -8984,21 +8978,17 @@
       "last_lift": 0.669
     },
     "library/floor-stone": {
-      "src": "library/library-surfaces-a.png",
+      "src": "library/floor-stone.png",
       "class": "tile",
       "needs_alpha": false,
       "prompt": "[quadrant of library/library-surfaces-a.png, PACK4, gpt-image-2.6-sunburst high] BOTTOM-LEFT: grey-beige limestone flagstones from above, staggered courses, thin dark joints. [append textures.json style]",
       "prompt_exact": false,
-      "note": "render.library shell floor of the lobby and the archive.",
-      "crop": [
-        2,
-        516,
-        506,
-        506
-      ],
-      "last_converted": "2026-11-20T05:29:37",
-      "built_linear": 0.085,
-      "built_srgb": 79.5
+      "note": "render.library shell floor of the lobby and the archive. solo src, made off the pack quadrant: crop [2, 516, 506, 506] of library/library-surfaces-a.png, resized to 512, np.roll by 256 on both axes (the old wrap to the middle, the new wrap through untouched interior), upscaled to 1024, then edit_image (gpt-image-2.6-sunburst high, mask transparent over a cross 160 px wide through the middle) asked to redraw the flagstones seamlessly inside the cross; the WHOLE edit is the tile (a band composite ghosted the joints where the edit had moved them just outside the band). Wrap 3.1/3.1 vs interior 2.2 against the quadrant's 6.2/5.1.",
+      "last_converted": "2026-11-20T23:41:26",
+      "built_linear": 0.0831,
+      "built_srgb": 78.9,
+      "lift": 0.983,
+      "last_lift": 0.983
     },
     "library/floor-carpet": {
       "src": "library/library-surfaces-a.png",

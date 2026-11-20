@@ -17,8 +17,8 @@ import gen.GenTree;
 class LibraryGen
 {
   // the floor is generated at exactly this size: game.AreaGame.setType leaves it alone
-  public static inline var WIDTH = 60;
-  public static inline var HEIGHT = 44;
+  public static inline var WIDTH = 44;
+  public static inline var HEIGHT = 32;
 
   // the area level and the room roles, verbatim in _Room.role; a room node's kind is 'room-' + role
   public static inline var PLATE = 'plate';
@@ -31,10 +31,10 @@ class LibraryGen
   // the first floor cell from the grid edge: the void ring, then the wall ring
   static inline var M = 2;
   // the lobby's width, and the archive's
-  static inline var LOBBY_W_MIN = 10;
-  static inline var LOBBY_W_MAX = 12;
-  static inline var ARCHIVE_W_MIN = 9;
-  static inline var ARCHIVE_W_MAX = 11;
+  static inline var LOBBY_W_MIN = 9;
+  static inline var LOBBY_W_MAX = 10;
+  static inline var ARCHIVE_W_MIN = 8;
+  static inline var ARCHIVE_W_MAX = 10;
 
 // generate a whole floor into a context: void everywhere, then the plate and the walk
   public static function build(ctx: GenCtx): _LibraryState
@@ -81,7 +81,7 @@ class LibraryGen
 
       // south of the corridor: the lobby, a reading hall either side of it
       var lw = roll(a, LOBBY_W_MIN, LOBBY_W_MAX);
-      var lx1 = Std.int((w - lw) / 2) + a.random(7) - 3;
+      var lx1 = Std.int((w - lw) / 2) + a.random(5) - 2;
       var lx2 = lx1 + lw - 1;
       var hallW = mk(1, ROLE_HALL, x1, sy1, lx1 - 2, y2);
       var lobby = mk(2, ROLE_LOBBY, lx1, sy1, lx2, y2);
