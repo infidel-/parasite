@@ -63,6 +63,9 @@ class World extends _SaveObject
       RegionGame._maxID++;
       RegionObject._maxID++;
       AIData._maxID++;
+      // saves from before the library existed: type one city area as it (needs the id counters above)
+      for (r in _list)
+        r.ensureLibrary();
     }
 
 // generate a new world

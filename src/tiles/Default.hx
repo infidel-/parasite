@@ -104,6 +104,10 @@ class Default extends Tileset
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 29 - the city's alley-mouth fences (Const.TILE_CITY_FENCE_*): chain-link and boards
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // row 30 - the library (Const.TILE_LIB_*): void and wall, the five floors and the doorway, the
+    // sealed stairs well, then a bookcase (walkable, in its wall's margin), a stack rank, a table, a
+    // chair (walkable), the counter, the lectern and a card catalogue
+    0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
@@ -159,6 +163,8 @@ class Default extends Tileset
     1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 29 - the city's fences: the chain-link passes sight, the boards do not
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    // row 30 - the library: void, wall and a stack rank block sight, nothing else does
+    0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1,
   ];
 
 // create default tileset

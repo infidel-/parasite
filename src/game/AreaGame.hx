@@ -405,6 +405,9 @@ class AreaGame extends _SaveObject
             {
               var o = tmp[Std.random(tmp.length)];
               loc = { x: o.x, y: o.y };
+              // the library's stairs stand over their sealed well: arrive beside them
+              if (!isWalkable(o.x, o.y))
+                loc = findEmptyLocationNear(o.x, o.y, 3);
             }
         }
 
@@ -579,6 +582,15 @@ class AreaGame extends _SaveObject
       if (info.id == AREA_CORP)
         {
           corpSpawnPoints();
+          return;
+        }
+      // the library's one guard post: behind the circulation counter
+      if (info.id == AREA_LIBRARY)
+        {
+          clueSpawnPoints = [];
+          guardSpawnPoints = [];
+          var post = gen.library.LibraryGen.counterPost(_cells);
+          importantGuardSpawnPoints = (post == null ? [] : [ post ]);
           return;
         }
       if (info.id != AREA_FACILITY &&
@@ -1481,6 +1493,7 @@ class AreaGame extends _SaveObject
       // exact size: two corridors' worth of rolled shrinkage would leave no room for the rooms
       if (typeID == AREA_HABITAT ||
           typeID == AREA_UNDERGROUND_LAB ||
+          typeID == AREA_LIBRARY ||
           isCity())
         {
           width = info.width;
@@ -2979,7 +2992,7 @@ class Test {
           // and so are the corp floor (render.corp.CorpArea) and the underground lab
           // (render.lab.LabArea). missing here, the corp took the 2D canvas rect: commonAI 10,
           // diluted by the screen's pixel count
-          case 'corp', 'undergroundLab': render.RenderConfig.CAMERA_FACILITY;
+          case 'corp', 'undergroundLab', 'library': render.RenderConfig.CAMERA_FACILITY;
           default: null;
         };
       if (cam == null)

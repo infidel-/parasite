@@ -12,4 +12,5 @@ enum abstract _AreaType(String) to String from String
   var AREA_UNDERGROUND_LAB = 'AREA_UNDERGROUND_LAB';
   var AREA_HABITAT = 'AREA_HABITAT';
   var AREA_CORP = 'AREA_CORP';
+  var AREA_LIBRARY = 'AREA_LIBRARY';
 }

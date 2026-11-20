@@ -580,7 +580,7 @@ class Ground extends Core
         return 0.01;
       return switch (type) {
         case AREA_CITY_LOW: 0.24;
-        case AREA_CITY_MEDIUM: 0.58;
+        case AREA_CITY_MEDIUM, AREA_LIBRARY: 0.58;
         case AREA_CITY_HIGH, AREA_CORP: 1.0;
         default: 0.01;
       };
@@ -590,7 +590,7 @@ class Ground extends Core
   function isCityAreaType(type: _AreaType): Bool
     {
       return switch (type) {
-        case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH, AREA_CORP: true;
+        case AREA_CITY_LOW, AREA_CITY_MEDIUM, AREA_CITY_HIGH, AREA_CORP, AREA_LIBRARY: true;
         default: false;
       };
     }

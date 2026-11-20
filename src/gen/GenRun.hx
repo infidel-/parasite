@@ -86,6 +86,8 @@ class GenRun
             checkLabArea(seed, check, verbose);
           else if (type == 'cave')
             checkCaveArea(seed, check, verbose);
+          else if (type == 'library')
+            checkLibraryArea(seed, check, verbose);
           else
             {
               log('[gen] unknown --type: ' + type);
@@ -796,6 +798,71 @@ class GenRun
           for (r in state.rooms)
             log('   ' + r.role + ' ' + r.x1 + ',' + r.y1 + '..' + r.x2 + ',' + r.y2);
           printLab(ctx);
+        }
+    }
+
+// generate a whole library floor and assert what the game reads back out of it
+  static function checkLibraryArea(seed: Int, check: GenCheck, verbose: Bool)
+    {
+      var w = (forceW > 0 ? forceW : gen.library.LibraryGen.WIDTH);
+      var h = (forceH > 0 ? forceH : gen.library.LibraryGen.HEIGHT);
+      var ctx = new GenCtx(w, h, seed);
+      var state = gen.library.LibraryGen.build(ctx);
+
+      check.tilesKnown(ctx);
+      check.roomsSane(ctx, state.rooms);
+      check.doorsSane(ctx, state.rooms, state.doors);
+      check.spawnsSane(ctx);
+      check.ok(ctx.countSpawns('stairs') == 1,
+        'library has ' + ctx.countSpawns('stairs') + ' stairs, want 1');
+      // the floor is entered by its STAIRS, whose own cell is sealed: the flood starts beside them
+      var s = state.stairs;
+      var from = [
+        {
+          x: s.x + 1,
+          y: s.y,
+        },
+        {
+          x: s.x,
+          y: s.y - 1,
+        },
+      ];
+      var cut = check.reachable(ctx, state.rooms, from);
+      check.ok(cut.length == 0, cut.length + ' library room(s) cannot be walked into, first is ' +
+        (cut.length > 0 ? cut[0].role + ' ' + cut[0].x1 + ',' + cut[0].y1 : ''));
+      var walk = tiles.Default.TILE_WALKABLE;
+      for (y in 0...h)
+        for (x in 0...w)
+          if (walk[ctx.cells[x][y]] == 1)
+            check.ok(check.lastSeen[x][y], 'library floor at ' + x + ',' + y +
+              ' that nothing can walk to');
+      check.librarySane(ctx, state, from);
+
+      for (r in state.rooms)
+        {
+          var used = 0;
+          for (x in r.x1...r.x2 + 1)
+            for (y in r.y1...r.y2 + 1)
+              if (ctx.cells[x][y] >= Const.TILE_LIB_BOOKCASE)
+                used++;
+          add('roomCells/' + r.role, r.w * r.h);
+          add('roomUsed/' + r.role, used);
+        }
+      if (verbose)
+        {
+          log('[gen] seed ' + seed + ' ' + w + 'x' + h);
+          for (r in state.rooms)
+            log('   ' + r.role + ' ' + r.x1 + ',' + r.y1 + '..' + r.x2 + ',' + r.y2);
+          for (y in 0...h)
+            {
+              var line = '';
+              for (x in 0...w)
+                {
+                  var t = ctx.cells[x][y] - Const.OFFSET_ROW30;
+                  line += (x == s.x && y == s.y ? 'S' : ' #:..,_D~bHt+c!k'.charAt(t));
+                }
+              log(line);
+            }
         }
     }
 

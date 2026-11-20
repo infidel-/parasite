@@ -66,6 +66,7 @@ class Const
   public static var FRAME_CORPHQ_VARIANTS = [FRAME_CORPHQ, 13, 14, 15];
   public static var FRAME_FACILITY_MARK = 16; // 16-19, by tile id from TILE_FACILITY1
   public static var FRAME_BASE_MARK = 20; // 20-23
+  public static var FRAME_LIBRARY_MARK = 24; // region.Library
 
   // object row frames
   public static var ROW_OBJECT = 2;
@@ -1572,6 +1573,31 @@ class Const
   public static var TILE_CITY_FENCE_CHAIN = OFFSET_ROW29 + 0;
   // the board fence of the residential streets and the slums. Unwalkable and opaque
   public static var TILE_CITY_FENCE_WOOD = OFFSET_ROW29 + 1;
+  // === row 30 - the university LIBRARY's reading floor (gen.library.LibraryGen): the void round
+  // the floor, its walls, the five floors (each the record of its room's kind), a doorway cell, the
+  // stairs' sealed well, then the furniture, a cell per piece. No 2D art: always drawn in 3D
+  // (render.library)
+  public static var OFFSET_ROW30 = 480;
+  public static var TILE_LIB_VOID = OFFSET_ROW30 + 0;
+  public static var TILE_LIB_WALL = OFFSET_ROW30 + 1;
+  public static var TILE_LIB_FLOOR_CORRIDOR = OFFSET_ROW30 + 2;
+  public static var TILE_LIB_FLOOR_HALL = OFFSET_ROW30 + 3;
+  public static var TILE_LIB_FLOOR_LOBBY = OFFSET_ROW30 + 4;
+  public static var TILE_LIB_FLOOR_STACKS = OFFSET_ROW30 + 5;
+  public static var TILE_LIB_FLOOR_ARCHIVE = OFFSET_ROW30 + 6;
+  public static var TILE_LIB_DOOR = OFFSET_ROW30 + 7;
+  // the four cells the stairs model's flights stand over (gen.corp.CorpTemp.stairsCells)
+  public static var TILE_LIB_WELL = OFFSET_ROW30 + 8;
+  // a bookcase against masonry: walkable, it stands in its wall's margin (the corp WALL_HUGGERS rule)
+  public static var TILE_LIB_BOOKCASE = OFFSET_ROW30 + 9;
+  // a cell of a free-standing stack rank: full height, blocks sight
+  public static var TILE_LIB_STACK = OFFSET_ROW30 + 10;
+  public static var TILE_LIB_TABLE = OFFSET_ROW30 + 11;
+  public static var TILE_LIB_CHAIR = OFFSET_ROW30 + 12;
+  public static var TILE_LIB_COUNTER = OFFSET_ROW30 + 13;
+  // the archive's lectern, the Necronomicon's cell
+  public static var TILE_LIB_LECTERN = OFFSET_ROW30 + 14;
+  public static var TILE_LIB_CATALOGUE = OFFSET_ROW30 + 15;
 
   // === row 13 - corpo
   public static var OFFSET_ROW13 = 208;

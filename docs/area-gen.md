@@ -696,6 +696,42 @@ the generator's call and persists in the cells; a cave generated before the pool
 
 3000 seeds OK, 1.51 tries a level; with the pools, 2000 seeds OK and every cave gets both.
 
+### The university library, a new area type
+
+`make gen args="--type library"`. The reading floor of the city's one university library
+(`AREA_LIBRARY`, placed by `RegionGame.ensureLibrary` on a never-generated medium city area away from
+the corp towers, on new regions AND on load). The lab's pattern: final ids only (`Const` row 30,
+`TILE_LIB_*`), one plate in a void, no `Subdivide`, generated at exactly 60x44.
+
+```
+area                       void (TILE_LIB_VOID), every void cell 8-adjacent to floor walled
+└ plate                    LibraryGen.plan: a 2-high corridor across the floor at mid height
+  ├ corridor               leaf; dressed render-side
+  └ room-hall x2 | room-lobby | room-stacks | room-archive
+                           south of the corridor: hall, lobby (stairs well on its south wall),
+                           hall; north of it: the stacks, and the archive in a corner, the whole
+                           band high, whose ONE doorway opens onto the stacks
+```
+
+| file | what it is |
+|---|---|
+| `game/LibraryAreaGenerator.hx` | the live adapter, `CorpAreaGenerator`'s copy |
+| `gen/library/LibraryGen.hx` | `build`, the plan, doorways, stairs, and the posts the game reads back (`lectern`, `librarianPost`, `counterPost`) |
+| `gen/library/LibraryRooms.hx` | each room's furniture |
+
+- **The stairs are the corp's**: `objects.Stairs` on the corridor-side cell of the four-cell well
+  (`CorpTemp.stairsCells`, `TILE_LIB_WELL`), against the lobby's south wall. The well is sealed, so
+  `AreaGame.enter` lands an arrival on the nearest empty cell when the exit object's own is not walkable.
+- **The aisle is the invariant, as in the corp archive**: a stack rank only takes a cell whose eight
+  neighbours are its room's bare floor (or rank), so a ring of floor runs round every wall and door and
+  nothing needs a reachability repair. Ranks are columns at pitch 2, cut into 3-7 runs by 1-2 cell gaps.
+- **Halls**: bookcases (walkable, the WALL_HUGGERS rule) on the N/W/E walls clear of doorways, never the
+  south wall; table blocks (chair, 4x2 table, chair, aisle) centred inside the ring.
+- **`GenCheck.librarySane`**: one lectern with the librarian's post walkable in front, a counter with
+  the guard's post behind it, and a flood from the stairs with the stacks shut reaches no archive cell.
+
+3000 seeds OK.
+
 ### The one permitted `gen/` → `game/` edge
 
 `gen/facility/` imports `game.AreaGenerator`'s pure static grid helpers — `drawBlock`, `drawChunk`,

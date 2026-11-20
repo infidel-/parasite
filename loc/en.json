@@ -14795,6 +14795,17 @@
    "field": "name"
   },
   {
+   "s": "University library",
+   "kind": "N",
+   "loc": [
+    "src/const/WorldConst.hx",
+    "src/region/Library.hx"
+   ],
+   "vars": [],
+   "where": "WorldConst.areas",
+   "field": "name"
+  },
+  {
    "s": "{cult} gains a leader: {leader}.",
    "kind": "T",
    "loc": [

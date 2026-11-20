@@ -302,6 +302,7 @@ class RegionGame extends _SaveObject
         }
 
       ensureHighCityArea();
+      ensureLibrary();
 
       // name all areas once all area types are finalized
       assignAreaNames();
@@ -792,17 +793,34 @@ class RegionGame extends _SaveObject
       promoteAdjacentLowDensityToMedium(area);
     }
 
+// the city's one university library: a medium city area (high when none is left) that was never
+// generated, away from the corp towers, with its region marker. run when the region is made AND on
+// load, so a save from before the library existed gets one
+  public function ensureLibrary()
+    {
+      for (a in _list)
+        if (a.typeID == AREA_LIBRARY)
+          return;
+      var a = getCorpArea([ AREA_CITY_MEDIUM, AREA_CITY_HIGH ]);
+      if (a == null)
+        return;
+      addObject(new region.Library(game, a.x, a.y));
+      a.setType(AREA_LIBRARY);
+    }
+
 // get high-density city area for corp office conversion (medium when no high one is left), never
-// next to another corp office: their region icons overlap
-  function getCorpArea(): AreaGame
+// next to another corp office or the library: their region icons overlap. `types` overrides the
+// density order; an area that was already generated is never taken
+  function getCorpArea(?types: Array<_AreaType>): AreaGame
     {
       ensureHighCityArea();
-      for (t in [ AREA_CITY_HIGH, AREA_CITY_MEDIUM ])
+      for (t in (types != null ? types : [ AREA_CITY_HIGH, AREA_CITY_MEDIUM ]))
         {
           var list = [];
           var quiet = [];
           for (a in _list)
             if (a.typeID == t &&
+                !a.isGenerated &&
                 !nextToCorp(a))
               {
                 list.push(a);
@@ -825,7 +843,8 @@ class RegionGame extends _SaveObject
           {
             var a = getXY(area.x + dx, area.y + dy);
             if (a != null &&
-                a.typeID == AREA_CORP)
+                (a.typeID == AREA_CORP ||
+                a.typeID == AREA_LIBRARY))
               return true;
           }
       return false;
@@ -1012,7 +1031,8 @@ class RegionGame extends _SaveObject
             var a = getXY(area.x + dx, area.y + dy);
             if (a != null &&
                 (a.info.type == 'city' ||
-                 a.typeID == AREA_CORP))
+                 a.typeID == AREA_CORP ||
+                 a.typeID == AREA_LIBRARY))
               return false;
           }
       return true;

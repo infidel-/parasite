@@ -21,6 +21,7 @@ class AreaGenerator
   public var sewers: SewerAreaGenerator;
   public var undergroundLab: UndergroundLabAreaGenerator;
   public var cave: CaveAreaGenerator;
+  public var library: LibraryAreaGenerator;
 
   public static inline var DIR_UP = 8;
   public static inline var DIR_LEFT = 4;
@@ -57,6 +58,7 @@ class AreaGenerator
       sewers = new SewerAreaGenerator(game, this);
       undergroundLab = new UndergroundLabAreaGenerator(game);
       cave = new CaveAreaGenerator(game);
+      library = new LibraryAreaGenerator(game);
     }
 
 // generate area
@@ -88,6 +90,8 @@ class AreaGenerator
         sewers.generate(area, info);
       else if (info.type == 'undergroundLab')
         undergroundLab.generate(area, info);
+      else if (info.type == 'library')
+        library.generate(area);
       else trace('AreaGenerator.generate(): unknown area type: ' + info.type);
 
       if (info.type == 'city')

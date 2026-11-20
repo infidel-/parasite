@@ -1281,6 +1281,51 @@ class GenCheck
         containers <= 2, 'lab store has ' + containers + ' containers, want 1-2');
     }
 
+// a library floor holds what the game reads back out of it: one lectern with the librarian's post
+// walkable in front of it, one counter with the guard's post walkable behind it, and an archive that
+// can be reached only THROUGH the stacks (the flood from the stairs with the stacks shut reaches
+// none of its floor)
+  public function librarySane(ctx: GenCtx, state: gen.library.LibraryGen._LibraryState,
+      from: Array<{ x: Int, y: Int }>)
+    {
+      var walk = tiles.Default.TILE_WALKABLE;
+      ok(count(ctx, Const.TILE_LIB_LECTERN) == 1,
+        'library has ' + count(ctx, Const.TILE_LIB_LECTERN) + ' lecterns, want 1');
+      ok(count(ctx, Const.TILE_LIB_COUNTER) > 0, 'library has no counter');
+      for (p in [ gen.library.LibraryGen.librarianPost(ctx.cells),
+          gen.library.LibraryGen.counterPost(ctx.cells) ])
+        ok(p != null &&
+          walk[ctx.cells[p.x][p.y]] == 1, 'library post ' + (p == null ? 'missing' :
+          'at ' + p.x + ',' + p.y + ' is not walkable'));
+
+      // shut the stacks and flood again: no archive cell may be reached
+      var shut = [for (x in 0...ctx.width) [for (y in 0...ctx.height)
+        ctx.cells[x][y] == Const.TILE_LIB_FLOOR_STACKS]];
+      var seen = [for (x in 0...ctx.width) [for (y in 0...ctx.height) false]];
+      var stack = [for (p in from) p];
+      while (stack.length > 0)
+        {
+          var p = stack.pop();
+          if (seen[p.x][p.y] ||
+              shut[p.x][p.y] ||
+              walk[ctx.cells[p.x][p.y]] == 0)
+            continue;
+          seen[p.x][p.y] = true;
+          for (i in 0...4)
+            stack.push({
+              x: p.x + Const.dir4x[i],
+              y: p.y + Const.dir4y[i],
+            });
+        }
+      var leak = 0;
+      for (x in 0...ctx.width)
+        for (y in 0...ctx.height)
+          if (seen[x][y] &&
+              ctx.cells[x][y] == Const.TILE_LIB_FLOOR_ARCHIVE)
+            leak++;
+      ok(leak == 0, 'library archive reached past the stacks at ' + leak + ' cells');
+    }
+
 // how many cells of the grid hold this tile
   static function count(ctx: GenCtx, tile: Int): Int
     {

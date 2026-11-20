@@ -87,7 +87,7 @@ class Buildings extends RoadPlan
     {
       return switch (areaType) {
         case AREA_CITY_LOW: LOW;
-        case AREA_CITY_MEDIUM: MEDIUM;
+        case AREA_CITY_MEDIUM, AREA_LIBRARY: MEDIUM;
         case AREA_CITY_HIGH, AREA_CORP: DOWNTOWN;
         default: OTHER;
       };

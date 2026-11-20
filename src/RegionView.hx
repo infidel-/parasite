@@ -40,6 +40,7 @@ class RegionView
   static var DISC_CORP = '#6f98c0'; // blue
   static var DISC_BASE = '#8fa075'; // green
   static var DISC_HABITAT = '#a88ac4'; // purple
+  static var DISC_LIBRARY = '#b88a6a'; // muted terracotta
   static var DISC_RADIUS = 0.557; // share of the tile (past its edge: a neighbour's disc can overlap)
   var lastPX: Int; // player tile and camera px at the last draw (-1: snap next draw)
   var lastPY: Int;
@@ -751,6 +752,8 @@ class RegionView
         return null;
       if (Const.FRAME_CORPHQ_VARIANTS.indexOf(icon.col) >= 0)
         return DISC_CORP;
+      if (icon.col == Const.FRAME_LIBRARY_MARK)
+        return DISC_LIBRARY;
       if (icon.col == Const.FRAME_HABITAT ||
           icon.col == Const.FRAME_HABITAT_AMBUSHED)
         return DISC_HABITAT;

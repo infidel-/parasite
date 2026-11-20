@@ -22,7 +22,7 @@ class CivilianAI extends HumanAI
             chance = 75;
           case AREA_CITY_HIGH:
             chance = 85;
-          case AREA_FACILITY:
+          case AREA_FACILITY, AREA_LIBRARY:
             chance = 90;
           default:
         }

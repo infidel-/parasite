@@ -318,6 +318,38 @@ class WorldConst
         ],
         objects: [] // moved to facility generator
       },
+
+      // *** the university library's reading floor (gen.library), left by its stairs
+      AREA_LIBRARY => {
+        id: AREA_LIBRARY,
+        // the beds are render.library.LibraryArea's own
+        ambient: AMBIENT_NONE,
+        type: 'library',
+        name: N('University library'),
+        pediaArticle: 'areaCity', // no article of its own yet
+        exit: 'stairs',
+        alertnessMod: 1.0,
+        width: gen.library.LibraryGen.WIDTH,
+        height: gen.library.LibraryGen.HEIGHT,
+        canEnter: true,
+        isInhabited: true,
+        commonAI: 8,
+        uncommonAI: 3,
+        buildingChance: 0,
+        lawType: 'security',
+        lawResponseTime: 6,
+        lawResponseAmount: 2,
+        lawResponseMax: 4,
+        lawResponseEnabled: true,
+        isHighRisk: false,
+        isSmall: true,
+        blocksRegionRoad1: true,
+        ai: [
+          'civilian' => 85,
+          'security' => 15
+        ],
+        objects: []
+      },
     ];
 
 

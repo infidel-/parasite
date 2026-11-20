@@ -268,6 +268,7 @@ class RoadPlan extends Raster
         case AREA_UNDERGROUND_LAB: 'u';
         case AREA_HABITAT: 'a';
         case AREA_CORP: 'c';
+        case AREA_LIBRARY: 'y';
       };
     }
 

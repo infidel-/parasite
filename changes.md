@@ -29,6 +29,7 @@
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map
 - mods: `ai:die-region` event when the host dies on the region map
+- region: the city has a university library
 - ui: [beta] German translation
 - ui: Forma has its own build screen
 - ui: occasio hints fade out and its image shimmers smoothly instead of in steps
