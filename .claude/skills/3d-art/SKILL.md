@@ -29,7 +29,7 @@ Worked examples of the emitted route: `FacilityTables.hx`, `FacilityEntry.hx`.
 
 ## A prop → `docs/3d-models.md`
 
-1. `generate_image` (`gpt-image-latest`, `gpt-image-2.6-flare`, `quality: "high"`) — ONE modern object, centred, whole, clear of the frame edges,
+1. `generate_image` (`gpt-image-latest`, `gpt-image-2.6-sunburst`, `quality: "high"`) — ONE modern object, centred, whole, clear of the frame edges,
    **isometric from above one corner**, on flat pure **black** `#000000`, canonical **`style_prop`**
    string appended verbatim — a reference image is an OBJECT, so it takes the prop string and never
    `style`, which is the surface one and carries the "muted desaturated palette" clause that shipped
