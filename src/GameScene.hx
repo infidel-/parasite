@@ -304,6 +304,8 @@ class GameScene
                 view3d.showCorp(game.area);
               else if (game.area.info.type == 'undergroundLab')
                 view3d.showLab(game.area);
+              else if (game.area.info.type == 'library')
+                view3d.showLibrary(game.area);
               else if (!isCityArea())
                 view3d.showSewer(game.area);
               else if (game.area.cityGenSeed >= 0)

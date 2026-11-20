@@ -284,3 +284,30 @@ Traps:
 
 Verdict: landed. Verified live at ANIM_SPEED 0.12: the heart is absent behind vision 3, rises after
 it with sinews and glow, and the message holds until it stands. No new programs.
+
+## University library: a shell kind with seven hand-modelled furniture glbs
+
+`render.library` (`LibraryStyle`, `LibraryArea`), the new `AREA_LIBRARY` reading floor (`gen.library`).
+The lab's shape: `FacilityGeom` off a `ShellTex` naming library art, no deck, no parapet, no moon, its own
+warm rig (the light pools match every kind's, so no program is compiled for the rig itself). New
+`Surf` slots `LIB_HALL/LOBBY/STACKS/ARCHIVE` 32-35, `SURF_SLOTS` 32 → 36; the corridor reuses
+`Surf.CARPET` with the library's carpet. Art: two PACK4 sunburst sheets (surfaces: parquet, wainscot,
+flagstone, carpet; furniture faces: spines, oak, walnut top, card drawers). Furniture is seven Blender
+glbs (`models-src/library/library_build.py`, 108-228 tris, `check` 0/0/1, `texel_off` 0), one instanced
+batch each, placed off the furniture tiles; contact shadows through `FacilityDetail.ground`.
+
+Measured live (3050, gameplay camera): 18-30 dc and 19-47k tris across lobby, hall, stacks and archive;
+library warm 93 programs, 2.7 s.
+
+Traps:
+- **The stairs well is a FIT, not a missing floor.** With the well as `Surf.NONE` the corp stairs glb
+  stood turned beside a black hole: `CorpArea.objYaw` finds the end wall through two `FIT_HOLE` cells, so
+  the well must be `fitOf → FIT_HOLE` over the lobby's floor surf, and the kind needs the same yaw branch.
+- **The packed art came back at 38-44 sRGB** (walnut, spines, wainscot) and every piece read black under
+  pendants. `lift` gammas 0.67-0.86 put the wood and spines at ~72, the wall at 69, the carpet at 57; the
+  model sheets are re-packed off the lifted labels.
+- **A pickup on the lectern stood inside it.** `objLift` returns `LibraryStyle.BOOK_Y` on the lectern cell.
+- The ambient fill had to go to 7.5 / hemi 2.4: the 5.0-tall stack ranks shade the 1-cell aisles from the
+  ceiling pendants, and the vision mask darkens everything past a rank on top of that.
+
+Verdict: landed. Walked the lobby, a hall, the stacks and the archive live; burn and book spawn checked.

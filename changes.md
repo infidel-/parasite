@@ -6,6 +6,7 @@
 - art: broken cult base buildings slump into grey, dead ruins
 - art: cult base buildings animate when destroyed, repaired or upgraded
 - art: cult base buildings are now 3D
+- art: the university library is 3D, with its own furniture, librarian and region mark
 - art: the cult base grows flesh and pulsing vessels across its habitat floor
 - art: a habitat turns a cult pink once its base starts
 - cult: -redacted- in the university library

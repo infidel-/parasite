@@ -71,6 +71,8 @@ class SoundSources
     'military/drip' => -10.0,
     'military/flush' => -10.0,
     'military/squelch' => -12.0,
+    'library/hall' => -6.0,
+    'library/archive' => -6.0,
     'lab/corridor' => -6.0,
     'lab/lobby' => -6.0,
     'lab/vat' => -6.0,

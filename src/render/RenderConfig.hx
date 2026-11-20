@@ -1017,6 +1017,14 @@ class RenderConfig {
     // drawer course's aspect and the spine sheet's bay -- so neither number was chosen; see
     // art/models.json
     corpArchCase: 'models/corp/arch-cabinet.glb',   // four-drawer lateral file, 2.70 x 3.60, 156 tris
+    // the university library's hand-modelled furniture (render.library.LibraryArea)
+    libraryBookcase: 'models/library/bookcase.glb',
+    libraryStack: 'models/library/stack.glb',
+    libraryTable: 'models/library/table.glb',
+    libraryChair: 'models/library/chair.glb',
+    libraryCounter: 'models/library/counter.glb',
+    libraryLectern: 'models/library/lectern.glb',
+    libraryCatalogue: 'models/library/catalogue.glb',
     corpArchShelf: 'models/corp/arch-shelf.glb',    // six shelves of box files, 3.20 x 4.80, 168
     // AND THE FOUR DESK-CLUTTER CELLS THAT ARE PROPS (render.corp.CorpClutter). corp/desk-clutter
     // is a PACK64 of flat cut-outs and that is the right route for a sheet of paper or a folder;

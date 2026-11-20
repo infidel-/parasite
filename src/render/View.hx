@@ -480,7 +480,7 @@ class View {
 // corp tower renders through the tunnel view and warms as one
   static inline function warmKey(kind:String):String
     return (kind == 'facility' || kind == 'corp' || kind == 'militaryBase' ||
-      kind == 'undergroundLab' || kind == 'cave' ? kind : 'sewer');
+      kind == 'undergroundLab' || kind == 'cave' || kind == 'library' ? kind : 'sewer');
 
 // would `warmKind` actually have work to do for this area kind? asked by GameScene.draw3D BEFORE it
 // commits to putting the warmup screen back up — a kind already warmed is a call-through and a
@@ -549,6 +549,7 @@ class View {
             ]));
           case 'corp': render.corp.CorpWarm.build(renderer, camera, game.config.vidLampLights);
           case 'undergroundLab': render.lab.LabWarm.build(renderer, camera, game.config.vidLampLights);
+          case 'library': render.library.LibraryArea.warm(renderer, camera, game.config.vidLampLights);
           // a mountain habitat: GameScene passes 'cave' as the kind, not the habitat's info.type
           case 'cave': render.cave.CaveWarm.build(renderer, camera, game.config.vidLampLights);
           default: render.sewer.SewerWarm.build(renderer, camera, game.config.vidLampLights);
@@ -659,6 +660,15 @@ class View {
         }));
       ring.name = 'ui player ring';
       return ring;
+    }
+
+// show the 3D university library for an area, built from its saved grid
+  public function showLibrary(area:game.AreaGame):Void
+    {
+      var key = gridKey(area.id, 6);
+      if ((running || warming) && shownKey == key)
+        return;
+      buildFrom(new render.library.LibraryArea(game, render.library.LibraryStyle.fromArea(area)), key);
     }
 
 // show the 3D underground lab for an area, built from its saved grid like every grid kind above

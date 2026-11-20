@@ -55,18 +55,18 @@ CELLS = [(4, 0), (4, 1), (2, 4), (2, 7), (4, 6), (4, 7), (16, 2), (3, 2), (3, 3)
         [(0, 1), (0, 2), (0, 3), (0, 9), (1, 4), (1, 6), (1, 7), (1, 8), (1, 9), (4, 2), (4, 4)] + \
         [(3, 0), (3, 1)] + \
         [(5, 1), (5, 2), (5, 3), (5, 5), (5, 6), (5, 7), (6, 1), (7, 1), (7, 2)] + \
-        [(1, c) for c in range(13, 24)]
+        [(1, c) for c in range(13, 24)] + [(1, 24)]
 # the refs the variant marks borrow (see the docstring)
 ALIAS = dict([((1, c), '1,8') for c in range(13, 16)] +
              [((1, 16 + k), 'tileset:1,%d' % (4 + k)) for k in range(4)] +
-             [((1, c), 'tileset:1,8') for c in range(20, 24)])
+             [((1, c), 'tileset:1,8') for c in range(20, 24)] + [((1, 24), '1,8')])
 # the first seven stand on their foot, and so do the organ silhouettes: bottom-aligned in their box
 UPRIGHT = set(range(7)) | set(range(47, 56))
 # the generated cells, which keep their own colours: the money, every splat, the alert marks, the
 # location icons and the host mask (matching those to the old cells' value washed the gen's muted hues
 # to pastel and white). The path dot and the high-crime pistol are matched: at the gen's own value both
 # vanish into the dark map. The organ silhouettes are shadow masks, black by construction
-GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36} | set(range(38, 44)) | set(range(47, 67))
+GENERATED = {7, 8} | set(range(14, 34)) | {34, 35, 36} | set(range(38, 44)) | set(range(47, 68))
 # generated cells lifted to a mean linear luminance (match's gain alone, saturation kept): the four base
 # marks came back at 0.025, a quarter of the lab marks' 0.10-0.12, and read as dark blots on the map; the
 # corp HQs with the woman in front at 0.05-0.06, so all three bust sets sit at the lab marks' 0.09
@@ -378,13 +378,15 @@ def main():
     twelve = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(3) for x in range(4)]
     icons = twelve[:6]
     busts = {}
-    for name in ('corp', 'lab', 'base'):
+    for name in ('corp', 'lab', 'base', 'library'):
         sheet = Image.open(GEN % ('region-' + name)).convert('RGBA')
         w, h = sheet.width // 2, sheet.height // 2
         busts[name] = [sheet.crop((x * w, y * h, x * w + w, y * h + h)) for y in range(2) for x in range(2)]
     icons[4] = busts['corp'][0]
     busts['lab'] = [fair(c) for c in busts['lab']]
-    variants = busts['corp'][1:] + busts['lab'] + busts['base']
+    # and the university library's one mark (region.Library), the first of region-library.png's four:
+    # an edit off region-corp.png, the librarian before the library
+    variants = busts['corp'][1:] + busts['lab'] + busts['base'] + busts['library'][:1]
     dots = six[3:5]
     gas = [kra('Effects/panic-gas.kra'), kra('Effects/paralysis-gas.kra')]
     organs = [Image.open(GEN % ('organ-' + n)).convert('RGBA') for n in

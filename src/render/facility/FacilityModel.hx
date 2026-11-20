@@ -55,6 +55,11 @@ enum abstract Surf(Int) from Int to Int
   var LAB_STORAGE = 29;
   var LAB_RESEARCH = 30;
   var LAB_PAD = 31;
+  // the university library's room floors (render.library.LibraryStyle); its corridor is CARPET
+  var LIB_HALL = 32;
+  var LIB_LOBBY = 33;
+  var LIB_STACKS = 34;
+  var LIB_ARCHIVE = 35;
 }
 
 

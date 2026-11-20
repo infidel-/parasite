@@ -30,6 +30,9 @@ class LibrarianAI extends HumanAI
     {
       super.init();
       type = 'librarian';
+      // the one sprite is an old man (Assets/AI/Library/librarian_male.svg)
+      isMale = true;
+      name.real = name.realCapped = const.NameConst.getHumanName(isMale);
       name.unknown = N('librarian');
       name.unknownCapped = N('Librarian');
       soundsID = 'civilian';

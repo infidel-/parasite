@@ -745,6 +745,7 @@ class Const
     { row: 1, col: 21 },
     { row: 1, col: 22 },
     { row: 1, col: 23 },
+    { row: 1, col: 24 },
   ];
 
 // which entities128 cell redraws this frame, or -1. a linear scan, asked once per cache miss like decoHD
