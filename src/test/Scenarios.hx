@@ -1813,6 +1813,9 @@ class Scenarios
         return errs.concat([ e ]);
       if (!leaveByStairs(game))
         return errs.concat([ 'the library kept the player in with the book' ]);
+      // a save names areas through the region's list: an area dropped from it cannot be loaded back
+      if (game.region.get(lib.id) == null)
+        errs.push('leaving by the stairs took the library off the region map');
       if (!c.metamorphosisPhaseIComplete)
         errs.push('leaving with the book did not complete Phase I');
       if (c.ordeals.list.indexOf(ordeal) >= 0)

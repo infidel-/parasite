@@ -70,11 +70,11 @@ class Stairs extends AreaObject
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
 
-      if (missionID < 0 &&
-          !library)
-        game.goals.complete(GOAL_ENTER_SEWERS);
-      else
+      // a mission site goes with the mission; the library stays on the map
+      if (missionID >= 0)
         game.region.removeArea(leavingAreaID);
+      else if (!library)
+        game.goals.complete(GOAL_ENTER_SEWERS);
 
       return true;
     }
