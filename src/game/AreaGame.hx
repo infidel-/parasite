@@ -628,6 +628,8 @@ class AreaGame extends _SaveObject
         {
           if (o.type == 'door')
             {
+              // the CLOSED frame: an open door must give the same posts, or they change across a load
+              var col = cast(o, objects.Door).closedCol;
               for (i in 0...Const.dirdiagx.length)
                 {
                   var x = o.x + Const.dirdiagx[i];
@@ -636,18 +638,18 @@ class AreaGame extends _SaveObject
                     continue;
                   var addImp = false, addNormal = false;
                   // outside hangar door
-                  if (o.imageCol == Const.FRAME_DOOR_METAL &&
+                  if (col == Const.FRAME_DOOR_METAL &&
                       _cells[x][y] != Const.TILE_FLOOR_CONCRETE)
                     addImp = true;
                   // outside of the building doors
-                  else if (o.imageCol == Const.FRAME_DOOR_DOUBLE &&
+                  else if (col == Const.FRAME_DOOR_DOUBLE &&
                       _cells[x][y] != Const.TILE_FLOOR_LINO)
                     addImp = true;
-                  else if (o.imageCol == Const.FRAME_DOOR_GLASS &&
+                  else if (col == Const.FRAME_DOOR_GLASS &&
                       _cells[x][y] != Const.TILE_FLOOR_LINO)
                     addImp = true;
                   // outside of the inner doors
-                  else if (o.imageCol == Const.FRAME_DOOR_CABINET &&
+                  else if (col == Const.FRAME_DOOR_CABINET &&
                       _cells[x][y] == Const.TILE_FLOOR_LINO)
                     addNormal = true;
                   var pt = { x: x, y: y };

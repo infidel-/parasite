@@ -38,6 +38,7 @@
 - ui: occasio hints fade out and its image shimmers smoothly instead of in steps
 
 ### Fixes
+- ai: guards at facility and base doors keep their posts after a load when a door was left open
 - boot: a damaged language file starts the game in English instead of not at all
 - cult: a base defense whose attackers vanished without dying sends a fresh wave instead of never ending
 - cult: a cult destroyed during a base defense no longer freezes the base and the team attacking it
