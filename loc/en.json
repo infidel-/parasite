@@ -977,6 +977,36 @@
    "where": "FirmusCustosAI.getCurrentWeaponItemInfo"
   },
   {
+   "s": "librarian",
+   "kind": "N",
+   "loc": [
+    "src/ai/LibrarianAI.hx"
+   ],
+   "vars": [],
+   "where": "LibrarianAI.init",
+   "field": "unknown"
+  },
+  {
+   "s": "Librarian",
+   "kind": "N",
+   "loc": [
+    "src/ai/LibrarianAI.hx"
+   ],
+   "vars": [],
+   "where": "LibrarianAI.init",
+   "field": "unknownCapped"
+  },
+  {
+   "s": "The elder sign the librarian carries sears your mind.",
+   "kind": "T",
+   "loc": [
+    "src/ai/LibrarianAI.hx"
+   ],
+   "vars": [],
+   "where": "LibrarianAI.turn",
+   "field": "log"
+  },
+  {
    "s": "mordax",
    "kind": "N",
    "loc": [
@@ -8625,6 +8655,42 @@
   },
   {
    "s": "black ice engineer",
+   "kind": "N",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "vars": [],
+   "where": "Jobs.initJobTable"
+  },
+  {
+   "s": "head librarian",
+   "kind": "N",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "vars": [],
+   "where": "Jobs.initJobTable"
+  },
+  {
+   "s": "archive keeper",
+   "kind": "N",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "vars": [],
+   "where": "Jobs.initJobTable"
+  },
+  {
+   "s": "special collections curator",
+   "kind": "N",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "vars": [],
+   "where": "Jobs.initJobTable"
+  },
+  {
+   "s": "university archivist",
    "kind": "N",
    "loc": [
     "src/const/Jobs.hx"
@@ -21258,14 +21324,14 @@
    "kind": "N",
    "loc": [
     "src/cult/missions/Necronomicon.hx",
-    "src/objects/Necronomicon.hx"
+    "src/items/Necronomicon.hx"
    ],
    "vars": [],
    "where": "Necronomicon.init",
    "field": "name"
   },
   {
-   "s": "Recover the forbidden book and leave with it.",
+   "s": "Take the forbidden book from the university library and leave with it.",
    "kind": "N",
    "loc": [
     "src/cult/missions/Necronomicon.hx"
@@ -21273,16 +21339,6 @@
    "vars": [],
    "where": "Necronomicon.init",
    "field": "note"
-  },
-  {
-   "s": "The Necronomicon is somewhere nearby.",
-   "kind": "T",
-   "loc": [
-    "src/cult/missions/Necronomicon.hx"
-   ],
-   "vars": [],
-   "where": "Necronomicon.turn",
-   "field": "logsg"
   },
   {
    "s": "Persuade Target",
@@ -21977,13 +22033,23 @@
    "field": "note"
   },
   {
+   "s": "Your followers take the Necronomicon away to study it.",
+   "kind": "T",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseI.hx"
+   ],
+   "vars": [],
+   "where": "MetamorphosisPhaseI.complete",
+   "field": "log"
+  },
+  {
    "s": "Metamorphosis Phase II is now possible.",
    "kind": "T",
    "loc": [
     "src/cult/ordeals/MetamorphosisPhaseI.hx"
    ],
    "vars": [],
-   "where": "MetamorphosisPhaseI.onSuccess",
+   "where": "MetamorphosisPhaseI.complete",
    "field": "logsg"
   },
   {
@@ -28316,6 +28382,26 @@
    "field": "log"
   },
   {
+   "s": "elder sign",
+   "kind": "N",
+   "loc": [
+    "src/items/ElderSign.hx"
+   ],
+   "vars": [],
+   "where": "ElderSign.new",
+   "field": "name"
+  },
+  {
+   "s": "strange amulet",
+   "kind": "N",
+   "loc": [
+    "src/items/ElderSign.hx"
+   ],
+   "vars": [],
+   "where": "ElderSign.new",
+   "field": "unknown"
+  },
+  {
    "s": "{attacker:The} tries to punch {target:the}, but misses.",
    "kind": "T",
    "loc": [
@@ -28718,6 +28804,26 @@
    "vars": [],
    "where": "Narcotics.snortAction",
    "field": "onHostDeath"
+  },
+  {
+   "s": "ancient book",
+   "kind": "N",
+   "loc": [
+    "src/items/Necronomicon.hx"
+   ],
+   "vars": [],
+   "where": "Necronomicon.new",
+   "field": "unknown"
+  },
+  {
+   "s": "A shrill bell rings through the stacks as the book leaves the lectern.",
+   "kind": "T",
+   "loc": [
+    "src/items/Necronomicon.hx"
+   ],
+   "vars": [],
+   "where": "Necronomicon.onPickup",
+   "field": "log"
   },
   {
    "s": "nutrients",
@@ -29856,26 +29962,6 @@
    "field": "name"
   },
   {
-   "s": "Take Necronomicon",
-   "kind": "T",
-   "loc": [
-    "src/objects/Necronomicon.hx"
-   ],
-   "vars": [],
-   "where": "Necronomicon.updateActionList",
-   "field": "name"
-  },
-  {
-   "s": "You secure the Necronomicon into your possession. You can now proceed with the next phase.",
-   "kind": "T",
-   "loc": [
-    "src/objects/Necronomicon.hx"
-   ],
-   "vars": [],
-   "where": "Necronomicon.onAction",
-   "field": "log"
-  },
-  {
    "s": "paper",
    "kind": "N",
    "loc": [
@@ -30034,6 +30120,16 @@
    "vars": [],
    "where": "Stairs.init",
    "field": "name"
+  },
+  {
+   "s": "You take the stairs down and leave the library.",
+   "kind": "T",
+   "loc": [
+    "src/objects/Stairs.hx"
+   ],
+   "vars": [],
+   "where": "Stairs.onAction",
+   "field": "log"
   },
   {
    "s": "vent",

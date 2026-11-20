@@ -139,6 +139,16 @@ class Mission extends _SaveObject
   public function onEventAI(type: _MissionEvent, ai: AI)
     {}
 
+// may the player leave this mission's area before the mission completes? (AreaGame.canLeave)
+  public function canLeave(): Bool
+    {
+      return false;
+    }
+
+// hook: the player is leaving `area` (Cult.onLeaveArea, from AreaGame.leave)
+  public function onLeaveArea(area: game.AreaGame)
+    {}
+
 // is this AI one of the mission's targets (the mission mark, AreaGame.isMissionTarget)?
   public function isTarget(ai: AI): Bool
     {

@@ -35,8 +35,43 @@ class MetamorphosisPhaseI extends Ordeal
 // unlocks Phase II
   public override function onSuccess()
     {
+      complete(cult);
+    }
+
+// Phase I is done: the book goes to the cult and Phase II opens
+  static function complete(cult: Cult)
+    {
+      var game = cult.game;
       cult.metamorphosisPhaseIComplete = true;
+      if (isHeld(game))
+        {
+          game.player.host.inventory.remove('necronomicon');
+          game.log(T('Your followers take the Necronomicon away to study it.'));
+        }
       game.logsg(T('Metamorphosis Phase II is now possible.'));
+    }
+
+// does the player's host carry the Necronomicon?
+  public static function isHeld(game: Game): Bool
+    {
+      return game.player.state == PLR_STATE_HOST &&
+        game.player.host.inventory.has('necronomicon');
+    }
+
+// the book held at the moment Phase I would open completes it at once, no ordeal needed. Skipped
+// while the ordeal runs: its mission completes on leaving the library instead
+  public static function checkHeld(cult: Cult)
+    {
+      if (!cult.isPlayer ||
+          cult.level != 1 ||
+          cult.metamorphosisPhaseIComplete ||
+          cult.countMembers(3) != 1 ||
+          !isHeld(cult.game))
+        return;
+      for (o in cult.ordeals.list)
+        if (Std.isOfType(o, MetamorphosisPhaseI))
+          return;
+      complete(cult);
     }
 
 // adds initiate action when level 3 follower exists

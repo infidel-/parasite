@@ -8,6 +8,7 @@ import ai.AI;
 import ai.AIData;
 import cult.effects.*;
 import cult.base.CultBase;
+import cult.ordeals.MetamorphosisPhaseI;
 import Type;
 import l10n.Loc;
 
@@ -613,6 +614,8 @@ class Cult extends _SaveObject
     {
       if (state != CULT_STATE_ACTIVE)
         return;
+      // the Necronomicon held when Phase I would open completes it at once
+      MetamorphosisPhaseI.checkHeld(this);
       // pause passage of time when in mission area
       if (game.player.inMissionArea())
         return;
@@ -1070,9 +1073,15 @@ class Cult extends _SaveObject
         base.onEnterArea();
     }
 
-// called when player leaves the area
-  public function onLeaveArea()
+// called when player leaves the area: its missions hear of it first (a mission completed by leaving
+// with something), then the held Necronomicon is checked
+  public function onLeaveArea(area: AreaGame)
     {
+      for (ordeal in ordeals.list.copy())
+        for (m in ordeal.missions.copy())
+          if (!m.isCompleted)
+            m.onLeaveArea(area);
+      MetamorphosisPhaseI.checkHeld(this);
       recalc();
       if (base != null)
         base.onLeaveArea();

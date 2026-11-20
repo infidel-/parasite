@@ -1025,6 +1025,8 @@ class Game extends _SaveObject
         ai = new SecurityAI(this, x, y);
       else if (type == 'scientist' || type == 'sci')
         ai = new ScientistAI(this, x, y);
+      else if (type == 'librarian')
+        ai = new LibrarianAI(this, x, y);
       else if (type == 'smiler')
         ai = new SmilerAI(this, x, y);
       else if (type == 'soldier')

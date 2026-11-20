@@ -115,6 +115,14 @@ class Scenarios
       start: 's22+cu_start',
       run: phase2Ritual,
     },
+    'phase1-library' => {
+      start: 's2+cu_start+cu_members',
+      run: phase1Library,
+    },
+    'phase1-held' => {
+      start: 's2+cu_start+cu_members',
+      run: phase1Held,
+    },
     'ambush-base' => {
       start: BASE,
       run: ambushBase,
@@ -1751,6 +1759,163 @@ class Scenarios
 
 // the second metamorphosis channelled outside a habitat is refused: the ordeal stays, unpinned and at
 // stage 0
+// the first metamorphosis: offered to a cult with one level 3 follower, its mission points at the
+// library; the librarian's sign burns through the host and keeps the parasite off; the library will
+// not let the player out without the book, and leaving with it completes Phase I and takes the book
+  static function phase1Library(game: Game, bot: Bot): Array<String>
+    {
+      var errs = [];
+      var c = game.cults[0];
+      oneMaster(game, true);
+      var offer = null;
+      for (a in c.ordeals.getInitiateOrdealActions())
+        if (a.id == 'metamorphosisPhaseI')
+          offer = a;
+      if (offer == null)
+        return [ 'Phase I is not offered to a cult with one level 3 follower' ];
+      c.ordeals.action(offer);
+      var ordeal = null;
+      for (o in c.ordeals.list)
+        if (Std.isOfType(o, cult.ordeals.MetamorphosisPhaseI))
+          ordeal = o;
+      if (ordeal == null)
+        return [ 'starting Phase I raised no ordeal' ];
+      var lib = game.region.get(ordeal.missions[0].areaID);
+      if (lib == null ||
+          lib.typeID != AREA_LIBRARY)
+        return [ 'the Phase I mission does not point at the library' ];
+      game.setLocation(LOCATION_REGION);
+      game.setLocation(LOCATION_AREA, lib);
+
+      // the keeper and its sign
+      var keeper: ai.AI = null;
+      for (ai in game.area.getAllAI())
+        if (ai.type == 'librarian')
+          keeper = ai;
+      if (keeper == null)
+        return [ 'nobody keeps the library archive' ];
+      if (keeper.canAttach())
+        errs.push('the parasite can attach to the librarian while it carries the sign');
+      var host = game.player.host;
+      var before = host.health;
+      if (!standBeside(game, keeper.x, keeper.y))
+        return errs.concat([ 'no free cell beside the librarian' ]);
+      bot.pressAction('skipTurn');
+      if (game.player.host == host &&
+          host.health >= before)
+        errs.push('the elder sign did not burn through the host (' + before + ' -> ' + host.health +
+          ')');
+
+      if (leaveByStairs(game))
+        return errs.concat([ 'the library let the player out of the mission without the book' ]);
+      var e = takeBook(game, bot);
+      if (e != null)
+        return errs.concat([ e ]);
+      if (!leaveByStairs(game))
+        return errs.concat([ 'the library kept the player in with the book' ]);
+      if (!c.metamorphosisPhaseIComplete)
+        errs.push('leaving with the book did not complete Phase I');
+      if (c.ordeals.list.indexOf(ordeal) >= 0)
+        errs.push('the Phase I ordeal outlived its success');
+      if (cult.ordeals.MetamorphosisPhaseI.isHeld(game))
+        errs.push('the book stayed in the host after Phase I');
+      return errs;
+    }
+
+// the secret: a level 1 cult with no level 3 follower takes the book out of the library, nothing
+// happens; the turn a follower reaches level 3, holding the book completes Phase I with no ordeal
+  static function phase1Held(game: Game, bot: Bot): Array<String>
+    {
+      var c = game.cults[0];
+      oneMaster(game, false);
+      var lib = game.region.getRandom({
+        noThrow: true,
+        type: AREA_LIBRARY
+      });
+      if (lib == null)
+        return [ 'the save got no library on load' ];
+      game.setLocation(LOCATION_REGION);
+      game.setLocation(LOCATION_AREA, lib);
+      var e = takeBook(game, bot);
+      if (e != null)
+        return [ e ];
+      if (!leaveByStairs(game))
+        return [ 'the library kept the player in with the book, no mission running' ];
+      if (c.metamorphosisPhaseIComplete)
+        return [ 'the book completed Phase I with no level 3 follower' ];
+      if (!cult.ordeals.MetamorphosisPhaseI.isHeld(game))
+        return [ 'the book was lost on leaving the library' ];
+      oneMaster(game, true);
+      bot.pressAction('skipTurn');
+      var errs = [];
+      if (!c.metamorphosisPhaseIComplete)
+        errs.push('holding the book did not complete Phase I when it opened');
+      if (cult.ordeals.MetamorphosisPhaseI.isHeld(game))
+        errs.push('the book stayed in the host after Phase I');
+      for (a in c.ordeals.getInitiateOrdealActions())
+        if (a.id == 'metamorphosisPhaseI')
+          errs.push('Phase I is still offered after the book completed it');
+      return errs;
+    }
+
+// every member below level 3, and with `master` the second one a level 3 follower
+  static function oneMaster(game: Game, master: Bool)
+    {
+      var c = game.cults[0];
+      for (i in 0...c.members.length)
+        c.members[i].job = (master && i == 1 ? 'institute director' : 'lab technician');
+    }
+
+// stand on a free walkable cell next to (x,y)
+  static function standBeside(game: Game, x: Int, y: Int): Bool
+    {
+      for (dy in -1...2)
+        for (dx in -1...2)
+          if (game.area.isWalkable(x + dx, y + dy) &&
+              !game.area.hasAI(x + dx, y + dy))
+            {
+              game.playerArea.moveTo(x + dx, y + dy);
+              game.updateHUD();
+              return true;
+            }
+      return false;
+    }
+
+// empty the host's pockets, stand beside the lectern and take the book; null or what went wrong
+  static function takeBook(game: Game, bot: Bot): String
+    {
+      var host = game.player.host;
+      for (item in [for (i in host.inventory) i])
+        if (item.info.type != 'clothing')
+          host.inventory.removeItem(item);
+      var l = gen.library.LibraryGen.lectern(game.area.getCells());
+      if (!standBeside(game, l.x, l.y))
+        return 'no free cell beside the lectern';
+      if (!bot.pressAction('get'))
+        return 'no Get beside the lectern';
+      if (!cult.ordeals.MetamorphosisPhaseI.isHeld(game))
+        return 'the host did not take the book';
+      return null;
+    }
+
+// leave by the library's stairs, as the player does; true when it worked
+  static function leaveByStairs(game: Game): Bool
+    {
+      for (o in game.area.getObjects())
+        if (o.type == 'stairs')
+          {
+            o.action({
+              id: 'leaveArea',
+              type: ACTION_OBJECT,
+              name: 'Leave area',
+              energy: 0,
+              obj: o,
+            });
+            break;
+          }
+      return game.location == LOCATION_REGION;
+    }
+
   static function phase2Outside(game: Game, bot: Bot): Array<String>
     {
       var c = game.cults[0];

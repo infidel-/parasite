@@ -34,6 +34,11 @@ class ItemInfo
     {
     }
 
+// hook: the player's host has just picked this item up
+  public function onPickup(item: _Item): Void
+    {
+    }
+
 // hook: updates inventory action list for this item
   public function updateActionList(item: _Item): Void
     {

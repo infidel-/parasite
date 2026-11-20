@@ -472,6 +472,9 @@ class AreaGame extends _SaveObject
           turnSpawnMoreAI(); // spawn AI related to area alertness
           spawnGuards(); // spawn guards and such
         }
+      // the library's librarian and the book on its lectern
+      if (typeID == AREA_LIBRARY)
+        LibraryAreaGenerator.enter(game, this);
 
       // update AI and objects visibility to player
       updateVisibility();
@@ -883,7 +886,7 @@ class AreaGame extends _SaveObject
       game.managerArea.onLeaveArea();
 
       // notify cult about leaving area
-      game.cults[0].onLeaveArea();
+      game.cults[0].onLeaveArea(this);
     }
 
 // remove temporary decorations (blood splats + thrown money + bullet holes) from tile data on area exit
@@ -3282,8 +3285,9 @@ class Test {
 // check if the player can leave this area
   public function canLeave(): Bool
     {
-      // block leaving mission areas
-      if (isMissionArea())
+      // block leaving mission areas, unless the mission allows it
+      if (isMissionArea() &&
+          !getAreaMission().canLeave())
         {
           game.actionFailed(T('You cannot leave until you complete the mission.'));
           return false;

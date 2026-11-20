@@ -108,14 +108,17 @@ ones that call it.
   mission (`ON_AI_MAX_CONSENT`). Pedia: hostConversation.
 
 **Items**: `items/*`, `game/Inventory.hx`
-- Saved per AI and player. Hooks `ItemInfo.onLearn`/`action`; mod ITEM_LEARN.
-- Out: player, timeline (Readable, Computer), goals, group (Dossier intel). Pedia: hostInventory.
+- Saved per AI and player. Hooks `ItemInfo.onLearn`/`action`/`onPickup` (from `Pickup.onAction` and
+  `BodyObject.getAction`); mod ITEM_LEARN. A `special` item (the elder sign) cannot be taken from a
+  body and is not dropped when it despawns.
+- Out: player, timeline (Readable, Computer), goals, group (Dossier intel), the library's guards
+  (`Necronomicon.onPickup` alerts the librarian and security). Pedia: hostInventory.
   SDK: `registerItem`.
 
 **Area objects**: `objects/*`, `objects/base/*`, `objects/mission/*`
 - Saved in `AreaGame` (entity ¬S). Many dynamic hooks on `AreaObject` (`frob`, `turn`,
   `onDecay`, `onAction`, `onDamage`, `isWalkable`).
-- Out: player, area, region, cults (Necronomicon, CorNefandum, CloneVat), setLocation.
+- Out: player, area, region, cults (CorNefandum, CloneVat), setLocation.
   `BodyObject` feeds `RegionManager.onBodyDiscovered`.
 
 **Group, team, director**: `game/Group.hx`, `Team.hx`, `GroupDirector.hx`, `ai/TeamMemberAI.hx`,
@@ -159,7 +162,14 @@ ones that call it.
   defenders dead (`RivalCult.wipe`); both defense missions end on the next `turn()`, so the last
   attacker's body is counted.
 - `AreaGame.getAreaMission` finds the current area's mission; `AreaGame.canLeave` locks the area
-  until it completes. Pedia: cultCombatMissions.
+  until it completes, unless `Mission.canLeave` lets the player out (the Necronomicon mission, while
+  the host carries the book). `Mission.onLeaveArea(area)` hears every leave first, from
+  `Cult.onLeaveArea` (the Necronomicon mission succeeds there). Pedia: cultCombatMissions.
+- Metamorphosis Phase I: the book lies on the library archive's lectern whatever the ordeal does
+  (`LibraryAreaGenerator.enter` re-lays a missing copy while Phase I is open and the book is neither held
+  nor on the floor), so the ordeal and the held-book path share one spawn. `MetamorphosisPhaseI.checkHeld`
+  (every `Cult.turnInternal`, and `Cult.onLeaveArea`) completes Phase I when it would open with the book
+  held and no Phase I ordeal running. Scenarios: `phase1-library`, `phase1-held`.
 
 **Cult base**: `cult/base/*`, `objects/base/*`, `ai/CustosLogic.hx`, BaseDefense missions
 - Owns resources, storedBodies, organs, custodes, attackPressure, defense id and timer (S). At
@@ -225,9 +235,14 @@ ones that call it.
 - Dynamic hooks: `onStateChange`, `onAttack`, `onInvade`, `onBrainProbe`, `onRemove`, `onDeath`,
   `onNotice`, `canAttach`, `attachPre`, `updateActionList`, `action`. SDK: `registerAI`, AI_SPAWN,
   AI_DIE_PRE, AI_DIE.
+- `LibrarianAI.turn`: while alive with its elder sign, burns the parasite within 3 cells in sight
+  through `PlayerArea.onDamage` (bare, or through the host); the one AI that damages the player
+  without an attack. Spawned per entry at its archive post (`LibraryAreaGenerator.enter`).
 
 **World, region, area**: `game/World.hx`, `RegionGame.hx`, `AreaGame.hx`, `region/RegionObject.hx`
 - Saved (area cells compacted). `AreaGame.enter`/`leave` are the area choke points (below).
+- `RegionGame.ensureLibrary` types one never-generated city area `AREA_LIBRARY` with its
+  `region.Library` mark, on a new region and on every load (`World.loadPost`).
 - Pedia: areas, areaCity, areaHighCrime, areaCorp, areaMilitary, areaLab, areaUninhabited.
 
 **Area generation**: `src/gen/*`, `game/*AreaGenerator.hx`. Reads world and region; see
@@ -303,6 +318,7 @@ Leave: X1 `Game.setLocation(LOCATION_REGION)` → `AreaGame.leave`; X2 `Game.res
 | listener | N1 | N2 | N3 |
 |---|---|---|---|
 | `Team.onEnterHabitat`, `Goals.onEnter`, `cults[0].onEnterArea` → `CultBase.onEnterArea` (custodes respawn) | ✓ | ✓ | ✗ SAFE: director and custodes are saved in the area AI list |
+| `LibraryAreaGenerator.enter` (librarian, the book) | ✓ | n/a | ✗ SAFE: both are saved in the area (AI list, static pickup) |
 | host re-added to `_ai` | ✓ with `_ai.add`; SAFE: `removeAI` never unlinks the player's host from its NPC (G5, fixed: a second AI spawned for the same NPC) | n/a | via `Player.loadPost` |
 | mod AREA_ENTER, autosave | ✓ | ✗ by design: nothing is entered; a mod needs new-game and load events of its own (Neighbour ideas, P7) | ✗ same |
 
@@ -311,7 +327,7 @@ Leave: X1 `Game.setLocation(LOCATION_REGION)` → `AreaGame.leave`; X2 `Game.res
 | body discovery → `RegionManager.onBodyDiscovered` (not in habitats) | ✓ | ✗ SAFE: a teardown runs no gameplay (below) |
 | `removeAI` on everything not PRESERVED (= D4) | ✓ | ✓ without the `AI.onRemove` hooks |
 | `Team.onLeaveArea` (escape, `destroyHabitat`, ambush → search) | ✓ | ✗ SAFE: teardown (P8, fixed: a load during a habitat ambush burned the habitat of the game it discarded, and at the last habitat could finish the run and delete the autosave) |
-| `AreaManager.onLeaveArea`, `cults[0].onLeaveArea` | ✓ | ✗ SAFE: teardown |
+| `AreaManager.onLeaveArea`, `cults[0].onLeaveArea(area)` (missions' `onLeaveArea`, the held book) | ✓ | ✗ SAFE: teardown |
 | mod AREA_LEAVE, autosave, `RegionGame.updateAlertness` | ✓ | ✗ |
 
 X2 is a teardown: `Game.restartPre` clears `game.isInited` before it leaves, and `AreaGame.leave`
@@ -326,7 +342,7 @@ accident.
 Only `cults[0]` gets enter/leave: SAFE, because rivals have no base, ordeals or missions.
 
 Leave checks, run by every exit object and `PlayerArea.leaveAreaAction`: `AreaGame.canLeave`
-(mission lock, `Goals.leaveAreaPre`), `Cult.leavePre` (each follower 10% death). The habitat exit
+(mission lock unless `Mission.canLeave`, `Goals.leaveAreaPre`), `Cult.leavePre` (each follower 10% death). The habitat exit
 also refuses with outsiders present; preserved AIs, the host and custodes are not outsiders (G4,
 fixed: custodes kept the player in the base habitat). `Game.beginRebirth` skips every check.
 
@@ -341,8 +357,8 @@ fixed: custodes kept the player in the base habitat). `Game.beginRebirth` skips 
 
 ### Host attach, invade, detach
 
-- Attach `PlayerArea.attachToHostAction` checks armour, `AI.canAttach` (false for custodes and the
-  choir), `AI.attachPre`. Invade `PlayerArea.invadeHostAction` → `AI.onInvadeWrapped`. No cult or
+- Attach `PlayerArea.attachToHostAction` checks armour, `AI.canAttach` (false for custodes, the
+  choir and a librarian carrying its elder sign), `AI.attachPre`. Invade `PlayerArea.invadeHostAction` → `AI.onInvadeWrapped`. No cult or
   mission listener: the cult checks the host by id instead.
 - Detach while the host lives (`leaveHostAction`, tear-away, control loss, blackout) always runs
   `AI.onDetach` then `PlayerArea.onDetach`: symmetric. No detach exists on the region map.

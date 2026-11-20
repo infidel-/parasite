@@ -137,8 +137,9 @@ class BodyObject extends AreaObject
         return list;
       for (item in inventory)
         {
-          // atm can't take clothing/armor
-          if (item.info.type == 'clothing')
+          // atm can't take clothing/armor, and a special item (the elder sign) never
+          if (item.info.type == 'clothing' ||
+              item.info.type == 'special')
             continue;
           if (game.player.host.inventory.length() >=
               game.player.host.maxItems)
@@ -180,6 +181,7 @@ class BodyObject extends AreaObject
             game.player.log(T('You pick {item:the} up.', { item: item }));
             game.player.host.inventory.add(item);
             inventory.remove(id);
+            item.info.onPickup(item);
             break;
           }
     }
@@ -222,7 +224,8 @@ class BodyObject extends AreaObject
     {
       var items = [];
       for (item in inventory)
-        items.push(item);
+        if (item.info.type != 'special')
+          items.push(item);
 
       for (item in items)
         {

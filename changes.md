@@ -8,6 +8,7 @@
 - art: cult base buildings are now 3D
 - art: the cult base grows flesh and pulsing vessels across its habitat floor
 - art: a habitat turns a cult pink once its base starts
+- cult: -redacted- in the university library
 - cult: a level 2 cult holds 15 members, up to 5 at level 2 and 2 at level 3
 - cult: a member's death fails any ordeal it is locked in, profane ones too
 - cult: base attackers head for Cor Nefandum and fight its defenders on sight
@@ -25,6 +26,7 @@
 - cult: Reap the Unwary costs money or two powers, and needs a working Cadaverum to finish
 - cult: Rival Strike sends members against a rival cult's people in the city
 - cult: the Metamorphosis ordeals are open again
+- cult: the first metamorphosis sends a follower for the Necronomicon in the university library, past a librarian's elder sign
 - cult: the second metamorphosis is a three-stage ritual with a vision at each stage
 - game: a parasite reborn after its final habitat shock leaves its host behind
 - game: the host's status effects keep running on the region map

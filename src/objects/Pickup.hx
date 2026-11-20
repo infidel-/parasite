@@ -82,6 +82,7 @@ class Pickup extends AreaObject
           game.player.log(T('You pick {item:the} up.', { item: Loc.colored('inventory-item', item) }));
           game.player.host.inventory.add(item);
           game.area.removeObject(this);
+          item.info.onPickup(item);
 
           return true;
         }

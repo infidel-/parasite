@@ -715,6 +715,20 @@ class Jobs
 
         {
           group: GROUP_CIVILIAN,
+          type: 'librarian',
+          names: [
+            N('head librarian'),
+            N('archive keeper'),
+            N('special collections curator'),
+            N('university archivist')
+          ],
+          level: 2,
+          minIncome: 4200,
+          maxIncome: 5200,
+          isRare: true,
+        },
+        {
+          group: GROUP_CIVILIAN,
           type: 'scientist',
           names: [
             N('lab technician'),

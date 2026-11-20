@@ -50,7 +50,9 @@ class ItemsConst
     SleepingPills,
     Contraceptives,
     ShipPart,
-    Keycard
+    Keycard,
+    Necronomicon,
+    ElderSign
   ];
 
   public static var infos: StringMap<ItemInfo>;

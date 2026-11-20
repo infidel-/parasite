@@ -60,14 +60,18 @@ class Stairs extends AreaObject
 
       var leavingAreaID = game.area.id;
       game.scene.sounds.play('object-stairs');
+      var library = (game.area.typeID == AREA_LIBRARY);
       if (missionID >= 0)
         game.log(T("You leave the mission site."));
+      else if (library)
+        game.log(T("You take the stairs down and leave the library."));
       else
         game.log(T("You leave the corporate building entering the sewers."));
       game.turns++; // manually increase number of turns
       game.setLocation(LOCATION_REGION);
 
-      if (missionID < 0)
+      if (missionID < 0 &&
+          !library)
         game.goals.complete(GOAL_ENTER_SEWERS);
       else
         game.region.removeArea(leavingAreaID);

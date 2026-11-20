@@ -35,4 +35,38 @@ class LibraryAreaGenerator
       area.genSeed = ctx.seed;
       GenSpawner.drain(game, area, ctx);
     }
+
+// on every entry: the librarian at its post in the archive when none lives on the floor, and the
+// Necronomicon on the lectern while Phase I is open and the book is neither held nor already lying
+// on this floor. The ordeal's mission and the secret path share this one spawn
+  public static function enter(game: Game, area: AreaGame)
+    {
+      var cells = area.getCells();
+      var post = LibraryGen.librarianPost(cells);
+      if (post == null)
+        return;
+      var keeper = false;
+      for (ai in area.getAllAI())
+        if (ai.type == 'librarian' &&
+            ai.state != AI_STATE_DEAD)
+          keeper = true;
+      if (!keeper)
+        {
+          var ai = area.spawnAI('librarian', post.x, post.y);
+          ai.isGuard = true;
+          ai.guardTargetX = post.x;
+          ai.guardTargetY = post.y;
+        }
+
+      if (game.cults[0].metamorphosisPhaseIComplete ||
+          cult.ordeals.MetamorphosisPhaseI.isHeld(game))
+        return;
+      for (o in area.getObjects())
+        if (Std.isOfType(o, objects.Pickup) &&
+            (cast o: objects.Pickup).item.id == 'necronomicon')
+          return;
+      var l = LibraryGen.lectern(cells);
+      area.addItem(l.x, l.y, const.ItemsConst.spawnItem(game, 'necronomicon'), Const.FRAME_BOOK,
+        true);
+    }
 }
