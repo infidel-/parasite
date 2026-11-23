@@ -209,8 +209,10 @@ class LibraryArea implements Area3D
                       len++;
                     var face = (b == 0 ? c.z : c.x) + (b == 2 ? 1 : -1) * (CELL / 2 + MARGIN);
                     var lo = (b == 2 ? face - LibraryStyle.CASE_D : face);
-                    var x0 = c.x - CELL / 2;
-                    var z0 = c.z - CELL / 2;
+                    // the run's two end cases stop short of their cells' edges
+                    var gap = (CELL - LibraryStyle.CASE_W) / 2;
+                    var x0 = c.x - CELL / 2 + gap;
+                    var z0 = c.z - CELL / 2 + gap;
                     FacilityDetail.ground(m, {
                       col: col,
                       row: row,
@@ -218,14 +220,14 @@ class LibraryArea implements Area3D
                       alongX: (b == 0),
                       rect: (b == 0 ? {
                         x0: x0,
-                        x1: x0 + len * CELL,
+                        x1: x0 + len * CELL - 2 * gap,
                         z0: lo,
                         z1: lo + LibraryStyle.CASE_D,
                       } : {
                         x0: lo,
                         x1: lo + LibraryStyle.CASE_D,
                         z0: z0,
-                        z1: z0 + len * CELL,
+                        z1: z0 + len * CELL - 2 * gap,
                       }),
                       h: LibraryStyle.CASE_H,
                     });
@@ -264,9 +266,27 @@ class LibraryArea implements Area3D
                 block(m, col, row, 4, 2, LibraryStyle.TABLE_H);
               }
             else if (t == Const.TILE_LIB_CHAIR)
-              // facing the table it is drawn up to
-              put(out[3].places, c.x, c.z,
-                (tile(col, row + 1) == Const.TILE_LIB_TABLE ? 0 : Math.PI));
+              {
+                // facing the table it is drawn up to, a little off square by the cell hash, on a pool
+                var h = FacilityModel.mix((col * 73856093) ^ (row * 19349663));
+                put(out[3].places, c.x, c.z,
+                  (tile(col, row + 1) == Const.TILE_LIB_TABLE ? 0 : Math.PI) +
+                  (((h >>> 1) % 2001) / 1000 - 1) * LibraryStyle.CHAIR_YAW);
+                var hw = LibraryStyle.CHAIR_W / 2;
+                FacilityDetail.ground(m, {
+                  col: col,
+                  row: row,
+                  len: 1,
+                  alongX: true,
+                  rect: {
+                    x0: c.x - hw,
+                    x1: c.x + hw,
+                    z0: c.z - hw,
+                    z1: c.z + hw,
+                  },
+                  h: LibraryStyle.CHAIR_H,
+                });
+              }
             else if (t == Const.TILE_LIB_COUNTER &&
                 tile(col - 1, row) != Const.TILE_LIB_COUNTER)
               {

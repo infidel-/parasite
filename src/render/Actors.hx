@@ -11,6 +11,7 @@ import render.decals.Decals;
 import game.Game;
 import entities.Entity;
 import ai.AI;
+import ai.LibrarianAI;
 
 // the optional resting-pose / object overrides Actors.drawActor() takes — an AI or the free parasite
 // passes none. same pattern as PaintOpts: named fields instead of a tail of bare positional literals
@@ -108,6 +109,7 @@ class Actors {
   var _pb = new Vector3();                               // segment projSeg hit-tests an object by
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
+  var signT = 0.0;                                       // the elder sign glow's breath clock, in BASE_MS
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
   var _heldBodies:haxe.ds.ObjectMap<Entity, Bool> = new haxe.ds.ObjectMap(); // corpse bodies kept invisible until their death ghost lands
   // corpse -> the count of ground decals in its cell when it first landed = its appearance slot.
@@ -210,6 +212,7 @@ class Actors {
       sprites.begin();
       beams.begin();
       sparks.begin();
+      signT += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
       _corpseCells.clear();                               // rebuilt below by the object loop, before decals.paint reads it
       muzzleLights.update(dtMs);
       // gather visible barrels once up front (before the actor loops) so drawActor can flicker their
@@ -338,6 +341,9 @@ class Actors {
               !game.player.vars.losEnabled ||
               game.playerArea.sees(ai.x, ai.y);
             drawActor(ai.entity, vis, dtMs, (hov != null && hov.ai == ai ? HOVER_AI : null));
+            if (vis &&
+                Std.isOfType(ai, LibrarianAI))
+              elderSign(ai);
             if (vis &&
                 uiOn)
               {
@@ -550,6 +556,29 @@ class Actors {
       bubbles.show('ai:' + ai.id, e.textID, e.text, e.textFontFamily, kind,
         (_ov.x * 0.5 + 0.5) * Viewport.w,
         (-_ov.y * 0.5 + 0.5) * Viewport.h);
+    }
+
+// the librarian's elder sign: a glow breathing on its chest while it lives with the sign on it, frontal
+// and leaned with the sprite it sits on (the FX-frontal rule), a hair proud of it toward the camera
+  function elderSign(ai:AI):Void
+    {
+      var a = actors.get(ai.entity);
+      if (a == null ||
+          ai.state == AI_STATE_DEAD ||
+          !ai.inventory.has('elderSign'))
+        return;
+      var up = Sprites.SIZE * render.library.LibraryStyle.SIGN_UP;
+      var proud = render.library.LibraryStyle.SIGN_PROUD;
+      var c = Math.cos(Sprites.TILT);
+      var s = Math.sin(Sprites.TILT);
+      var breath = 0.5 + 0.5 * Math.sin(signT * 2 * Math.PI / render.library.LibraryStyle.SIGN_PERIOD);
+      sparks.glowQuad(a.x,
+        WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5 + up * c + proud * s,
+        a.z - up * s + proud * c,
+        render.library.LibraryStyle.SIGN_W * (0.85 + 0.3 * breath),
+        render.library.LibraryStyle.SIGN_COLOR,
+        a.op * render.library.LibraryStyle.SIGN_OP * (0.6 + 0.4 * breath),
+        Sprites.ORD_ACTOR + 1);
     }
 
 // queue a floating damage number over a struck entity the player can see. it holds until the hit

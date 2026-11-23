@@ -3,7 +3,9 @@ package render.library;
 import game.AreaGame;
 import gen.library.LibraryGen;
 import render.facility.FacilityModel;
+import render.facility.FacilityGeom;
 import render.facility.FacilityModel.Facility;
+import render.facility.FacilityModel.Look;
 import render.facility.FacilityModel.Surf;
 import render.facility.FacilityModel.Wall;
 import render.facility.FacilityStyle;
@@ -56,9 +58,23 @@ class LibraryStyle
   public static inline var BOOK_Y = 2.2;
   // a bookcase's depth off its wall, the stack's both faces, and the catalogue's, for the contact field
   public static inline var CASE_D = 1.2;
+  // a wall bookcase's width: narrower than its cell, so every case along a wall stands apart
+  public static inline var CASE_W = 3.4;
   public static inline var STACK_D = 2.4;
   public static inline var CATALOGUE_D = 3.4;
   public static inline var CATALOGUE_W = 3.6;
+  // the chair's footprint, for its floor pool, and how far off square it is turned at most
+  public static inline var CHAIR_W = 1.7;
+  public static inline var CHAIR_YAW = 0.1745; // 10 degrees
+  // the librarian's elder sign glow (render.Actors.elderSign): its colour and peak opacity, its size, how
+  // far above the sprite's centre it sits (a fraction of Sprites.SIZE, up the leaned plane) and how far
+  // proud of it, and its breath in BASE_MS
+  public static inline var SIGN_COLOR = 0xffe6a0;
+  public static inline var SIGN_OP = 0.55;
+  public static inline var SIGN_W = 0.9;
+  public static inline var SIGN_UP = 0.08;
+  public static inline var SIGN_PROUD = 0.06;
+  public static inline var SIGN_PERIOD = 6.0;
   // how far a furniture batch's pieces are drawn round the camera
   public static inline var PIECE_CULL_R = 9.0;
 
@@ -116,6 +132,7 @@ class LibraryStyle
   public static function fromArea(area:AreaGame):Facility
     {
       var m = FacilityModel.fromArea(area, null, shell());
+      doorways(m, area);
       for (r in m.rooms)
         {
           var s = roleSurf(r.role);
@@ -126,6 +143,30 @@ class LibraryStyle
                 m.surf[row][col] = s;
         }
       return m;
+    }
+
+// every door cell a DOORWAY with no leaves: the floor splits at the wall line (FacilityGeom.floorStrips),
+// so the corridor's carpet stops at the wall instead of running a margin into the room, and the opening
+// takes a lintel and its jambs. No objects.Door stands in one, so nothing else marks them
+  static function doorways(m:Facility, area:AreaGame):Void
+    {
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          if (area.getCellType(col, row) == Const.TILE_LIB_DOOR)
+            m.door[row][col] = true;
+      for (row in 0...m.h)
+        for (col in 0...m.w)
+          if (m.door[row][col])
+            m.doors.push({
+              col: col,
+              row: row,
+              alongX: (FacilityGeom.carries(m, col - 1, row) &&
+                FacilityGeom.carries(m, col + 1, row)),
+              inDir: 1,
+              look: Look.CABINET,
+              front: false,
+              structure: m.owner[row][col],
+            });
     }
 
 // the floor a room of this role is laid in
