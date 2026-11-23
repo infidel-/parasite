@@ -961,6 +961,32 @@ class ObjModels
       arc: null,
       tether: null,
     },
+    // and the Necronomicon lying open on the library archive's lectern, its ink glowing (the glb's
+    // emissive) and a faint sickly light off it. Built pitched to the lectern's board, so it stands at
+    // render.library.LibraryStyle.BOOK_Y off the floor (LibraryArea.objLift)
+    {
+      keys: [ 'pickup_necronomicon' ],
+      path: RenderConfig.MODELS.libraryNecronomicon,
+      h: render.library.LibraryStyle.NECRONOMICON_H,
+      sink: 0.0,
+      yaw: FRONTAL,
+      light: {
+        color: 0x9cff70,
+        mul: 0.3,
+        y: 0.5,
+        skipSelf: true,
+      },
+      anim: null,
+      pulse: null,
+      curl: null,
+      core: null,
+      fly: null,
+      shine: null,
+      eyes: null,
+      lamps: null,
+      arc: null,
+      tether: null,
+    },
     {
       keys: [ 'sewer_exit', 'habitat_exit' ],
       path: RenderConfig.MODELS.sewerExit,

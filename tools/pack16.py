@@ -32,7 +32,7 @@ of the first drop): the sprite pool's material is `transparent` with no alphaTes
 wash draws as a faint dark square around every decoration.
 
 Usage: python3 tools/pack16.py <sheet.png> [-o out.png] [--cols 4] [--rows 4] [--cell 256]
-                               [--tol 0] [--valign bottom|center]
+                               [--tol 0] [--valign bottom|center] [--fill [--cellh H] [--alpha]]
 The raw drop is left alone; the gridded sheet is written to -o (default: <sheet>-grid.png).
 """
 import argparse
@@ -134,6 +134,8 @@ def main():
     ap.add_argument("--cols", type=int, default=4)
     ap.add_argument("--rows", type=int, default=4)
     ap.add_argument("--cell", type=int, default=256)
+    ap.add_argument("--cellh", type=int, default=0,
+                    help="cell HEIGHT for a --fill sheet of tall panels (posters), 0 = square")
     ap.add_argument("--margin", type=int, default=8, help="empty px on every side of a cell")
     ap.add_argument("--tol", type=int, default=0,
                     help="opaque px a seam line may still carry (8x8 only — see bands())")
@@ -144,6 +146,10 @@ def main():
     ap.add_argument("--fill", action="store_true",
                     help="stretch each group to fill its whole cell and print its aspect, for a "
                          "family whose quad is sized from the art (see --fill in main())")
+    ap.add_argument("--alpha", action="store_true",
+                    help="--fill keeps each group's alpha instead of flattening it over its median, "
+                         "for a panel that is not a rectangle (a round clock, a shield) drawn "
+                         "through an alphaTest material")
     a = ap.parse_args()
     out = a.out or os.path.splitext(a.src)[0] + "-grid.png"
 
@@ -175,9 +181,14 @@ def main():
     # texel spent on art and the aspect carried in code -- which is also what keeps the uv a plain
     # grid division. Same pass tools/posterpack.py runs for the 2x2 sheets
     if a.fill:
-        sheet = Image.new("RGB", (a.cols * a.cell, a.rows * a.cell))
+        ch = a.cellh or a.cell
+        sheet = Image.new("RGBA" if a.alpha else "RGB", (a.cols * a.cell, a.rows * ch))
         for i, b in enumerate(boxes):
-            g = np.asarray(im.crop(b).resize((a.cell, a.cell), Image.LANCZOS)).astype(float)
+            if a.alpha:
+                sheet.paste(im.crop(b).resize((a.cell, ch), Image.LANCZOS),
+                            ((i % a.cols) * a.cell, (i // a.cols) * ch))
+                continue
+            g = np.asarray(im.crop(b).resize((a.cell, ch), Image.LANCZOS)).astype(float)
             # AND THE CELL IS FLATTENED OVER ITS OWN MEDIAN, not saved with its alpha: the sheet
             # goes on a wall through a plain opaque material, so a transparent pixel draws as the
             # BLACK under it. Only a panel the model drew a degree or two off square has any --
@@ -187,7 +198,7 @@ def main():
             med = np.median(g[:, :, :3][al[:, :, 0] > 0.9], axis=0)
             rgb = g[:, :, :3] * al + med * (1.0 - al)
             sheet.paste(Image.fromarray(rgb.astype(np.uint8), "RGB"),
-                        ((i % a.cols) * a.cell, (i // a.cols) * a.cell))
+                        ((i % a.cols) * a.cell, (i // a.cols) * ch))
         sheet.save(out)
         print("  aspects " + ", ".join("%.4f" % ((b[2] - b[0]) / (b[3] - b[1])) for b in boxes))
         print(f"  wrote  {out}  {sheet.width}x{sheet.height}  (filled)")

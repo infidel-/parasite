@@ -21,6 +21,15 @@ class LibraryStyle
   public static inline var FLOOR_PARQUET = 'textures/library/floor-parquet.png';
   public static inline var FLOOR_STONE = 'textures/library/floor-stone.png';
   public static inline var FLOOR_CARPET = 'textures/library/floor-carpet.png';
+  // the decor's sheets: sixteen shelf rows of books, two PACK16s of what lies on a table, the wall art
+  // PACK16 and the eight posters (art/textures.json library/*)
+  public static inline var SHELF_BOOKS = 'textures/library/shelf-books.png';
+  public static inline var DESK_BOOKS = 'textures/library/desk-books.png';
+  public static inline var DESK_PAPERS = 'textures/library/desk-papers.png';
+  public static inline var WALL_ART = 'textures/library/wall-art.png';
+  public static inline var POSTERS = 'textures/library/posters.png';
+  // the alpha cut of every cut-out sheet's opaque alphaTest material
+  public static inline var DECAL_CUT = 0.5;
   public static inline var WALL = 'textures/library/wall-panel.png';
   // the wall head and the outer faces: dark oak, so a wall seen from above reads as joinery
   public static inline var HEAD = 'textures/library/shelf-side.png';
@@ -54,25 +63,45 @@ class LibraryStyle
   public static inline var COUNTER_H = 2.1;
   public static inline var LECTERN_H = 2.5606;
   public static inline var CATALOGUE_H = 2.7;
-  // where a pickup on the lectern lies: the board's middle (library_build.py LECT_H)
-  public static inline var BOOK_Y = 2.2;
+  // where the Necronomicon's glb stands off the floor, and its height: built lying on the lectern's
+  // sloped board, 0.5882 tall with its lowest point 2.0219 up (models-src/library/decor_build.py), it is
+  // drawn at 1.2x so it reads, which scales it about its base's centre and lifts its underside 0.047
+  // off the board there (the slope's 0.237 times the 0.2) - so it stands that much lower
+  public static inline var BOOK_Y = 1.975;
+  public static inline var NECRONOMICON_H = 0.7058;
+  // the decor glbs' heights as DRAWN: a size up from decor_build.py's (lamp 1.14, basket 0.85, books
+  // 0.48), which at the table's own scale read as specks from the game camera
+  public static inline var LAMP_H = 1.8;
+  public static inline var BASKET_H = 1.2;
+  public static inline var BOOKS_H = 0.72;
   // a bookcase's depth off its wall, the stack's both faces, and the catalogue's, for the contact field
   public static inline var CASE_D = 1.2;
   // a wall bookcase's width: narrower than its cell, so every case along a wall stands apart
   public static inline var CASE_W = 3.4;
   public static inline var STACK_D = 2.4;
+  public static inline var STACK_W = 3.98;
+  // a bookcase's front face off its recentred glb (its boards stand 0.03 proud, so normalize moves it
+  // 0.015 back) and a stack rank's two, half its depth
+  public static inline var CASE_FRONT = 0.585;
+  // the shelf openings between the boards, floor up, as pairs (library_build.py BOARDS: a board's top,
+  // the next one's underside; the plinth under the first, the carcass's head over the last), how far
+  // in from each side the books stand, and how far proud of the wood
+  public static var SHELVES = [ 0.12, 0.84, 0.919, 1.646, 1.732, 2.506, 2.585, 3.313, 3.399, 4.173,
+    4.252, 4.93 ];
+  public static inline var SHELF_INSET = 0.1;
+  public static inline var BOOKS_PROUD = 0.004;
   public static inline var CATALOGUE_D = 3.4;
   public static inline var CATALOGUE_W = 3.6;
   // the chair's footprint, for its floor pool, and how far off square it is turned at most
   public static inline var CHAIR_W = 1.7;
   public static inline var CHAIR_YAW = 0.1745; // 10 degrees
-  // the librarian's elder sign glow (render.Actors.elderSign): its colour and peak opacity, its size, how
-  // far above the sprite's centre it sits (a fraction of Sprites.SIZE, up the leaned plane) and how far
-  // proud of it, and its breath in BASE_MS
+  // the librarian's elder sign glow (render.Actors.elderSign): its colour and peak opacity, its size,
+  // how far off the sprite's centre it sits (a fraction of Sprites.SIZE up the leaned plane: below
+  // it, on the bust's chest) and how far proud of it, and its breath in BASE_MS
   public static inline var SIGN_COLOR = 0xffe6a0;
   public static inline var SIGN_OP = 0.55;
-  public static inline var SIGN_W = 0.9;
-  public static inline var SIGN_UP = 0.08;
+  public static inline var SIGN_W = 0.6;
+  public static inline var SIGN_UP = -0.37;
   public static inline var SIGN_PROUD = 0.06;
   public static inline var SIGN_PERIOD = 6.0;
   // how far a furniture batch's pieces are drawn round the camera
@@ -167,6 +196,13 @@ class LibraryStyle
               front: false,
               structure: m.owner[row][col],
             });
+    }
+
+// is this a bare library floor tile, nothing standing on it (a doorway is not one)
+  public static inline function isFloor(t:Int):Bool
+    {
+      return t >= Const.TILE_LIB_FLOOR_CORRIDOR &&
+        t <= Const.TILE_LIB_FLOOR_ARCHIVE;
     }
 
 // the floor a room of this role is laid in

@@ -1025,6 +1025,11 @@ class RenderConfig {
     libraryCounter: 'models/library/counter.glb',
     libraryLectern: 'models/library/lectern.glb',
     libraryCatalogue: 'models/library/catalogue.glb',
+    // and its decor (render.library.LibraryDecor) and the forbidden book on the lectern (ObjModels)
+    libraryLamp: 'models/library/lamp.glb',
+    libraryBasket: 'models/library/basket.glb',
+    libraryBooks: 'models/library/books.glb',
+    libraryNecronomicon: 'models/library/necronomicon.glb',
     corpArchShelf: 'models/corp/arch-shelf.glb',    // six shelves of box files, 3.20 x 4.80, 168
     // AND THE FOUR DESK-CLUTTER CELLS THAT ARE PROPS (render.corp.CorpClutter). corp/desk-clutter
     // is a PACK64 of flat cut-outs and that is the right route for a sheet of paper or a folder;

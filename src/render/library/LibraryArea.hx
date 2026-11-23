@@ -26,7 +26,9 @@ import render.world.WorldCtx;
 // the stairs (gen.library). A SHELL KIND like the lab: render.facility's emitters off LibraryStyle's
 // ShellTex, no deck and no parapet (a lid would hide the floor), no moon (it is indoors at night) —
 // only its own warm pendants. The furniture is seven hand-modelled glbs, one instanced batch each,
-// placed off the furniture tiles (models-src/library/library_build.py)
+// placed off the furniture tiles (models-src/library/library_build.py); the books on its shelves are
+// render.library.LibraryBooks' quads, and its decor slots (lamps, book stacks, baskets, what lies on
+// the tables, the pictures and posters) are LibraryDecor's and LibraryWall's, off the cell hash
 class LibraryArea implements Area3D
 {
   static inline var CELL = CityConfig.CELL;
@@ -136,11 +138,14 @@ class LibraryArea implements Area3D
       FacilityGeom.build(scene, model);
       FacilityDetail.corners(scene, model);
       var area = game.area;
-      var places = plan(model, function(col, row)
+      var tile = function(col, row)
         {
           return (col < 0 || row < 0 || col >= model.w || row >= model.h ? -1 :
             area.getCellType(col, row));
-        });
+        };
+      var places = plan(model, tile);
+      // the decor slots before the repaint: the floor props lay their contact shadows as they go
+      var decor = LibraryDecor.plan(scene, model, tile, places[0].places, places[1].places);
       FacilityDetail.halos(scene, model);
       ContactMask.repaint();
       props = render.world.ObjModels.build(scene, game, objYaw, objLift, objWall);
@@ -149,11 +154,14 @@ class LibraryArea implements Area3D
       // bucketed into the chunk there and culled with it
       for (p in places)
         furniture.push(batch(scene, p.path, p.places, p.h));
-      posts = lamps(model, function(col, row)
-        {
-          return (col < 0 || row < 0 || col >= model.w || row >= model.h ? -1 :
-            area.getCellType(col, row));
-        });
+      var M = RenderConfig.MODELS;
+      furniture.push(batch(scene, M.libraryLamp, decor.lamps, LibraryStyle.LAMP_H));
+      furniture.push(batch(scene, M.libraryBooks, decor.books, LibraryStyle.BOOKS_H));
+      furniture.push(batch(scene, M.libraryBasket, decor.baskets, LibraryStyle.BASKET_H));
+      // the books on the shelves, and the pictures and posters on the walls and the rank ends
+      LibraryBooks.build(scene, places[0].places, places[1].places);
+      LibraryWall.build(scene, model, tile);
+      posts = lamps(model, tile);
       SoundSources.beds = BEDS.copy();
       SoundSources.events = [];
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
@@ -509,6 +517,10 @@ class LibraryArea implements Area3D
       render.world.ObjModels.cull(props, opts, tactical && opts.ui);
       render.world.PropShader.tick(opts.dtMs);
       render.world.PropGlow.tick(opts.dtMs);
+      // the object props' glbs arrive over a loader callback, so there is no build-time moment to
+      // patch them; the chain is shared with the warm scene (ObjModels.patchRow's note)
+      for (b in props)
+        render.world.ObjModels.patchRow(b.model, b.solid.mesh, b.ghost.mesh, b.hull.mesh);
     }
 
   public function setTactical(v:Bool):Void
@@ -579,7 +591,19 @@ class LibraryArea implements Area3D
         { path: M.libraryCounter, h: LibraryStyle.COUNTER_H },
         { path: M.libraryLectern, h: LibraryStyle.LECTERN_H },
         { path: M.libraryCatalogue, h: LibraryStyle.CATALOGUE_H },
+        { path: M.libraryLamp, h: LibraryStyle.LAMP_H },
+        { path: M.libraryBooks, h: LibraryStyle.BOOKS_H },
+        { path: M.libraryBasket, h: LibraryStyle.BASKET_H },
       ];
+      LibraryBooks.warm(sc);
+      LibraryWall.warm(sc);
+      LibraryDecor.warm(sc);
+      // and the floor's object props in their three variants, patched in the build's order: the
+      // stairs and the Necronomicon
+      var C = RenderConfig.OBJMARK;
+      var objs = [for (m in render.world.ObjModels.MODELS)
+        if (m.keys.indexOf('stairs') >= 0 ||
+            m.keys.indexOf('pickup_necronomicon') >= 0) m];
       for (r in rows)
         batch(sc, r.path, [{
           x: 0.0,
@@ -592,10 +616,26 @@ class LibraryArea implements Area3D
       ContactMask.detach();
       return new js.lib.Promise(function(res, _)
         {
-          var left = rows.length;
+          var left = rows.length + objs.length;
           for (r in rows)
             Models.get(r.path, function(_)
               {
+                left--;
+                if (left == 0)
+                  res(null);
+              });
+          for (m in objs)
+            Models.get(m.path, function(_)
+              {
+                var place = [{
+                  x: 0.0,
+                  z: 0.0,
+                  yaw: 0.0,
+                }];
+                render.world.ObjModels.patchRow(m,
+                  Models.instanced(sc, m.path, place, m.h, render.world.ObjModels.solidVariant(m)).mesh,
+                  Models.instanced(sc, m.path, place, m.h, GHOST).mesh,
+                  Models.instanced(sc, m.path, place, m.h, HULL(C.color, C.hullW)).mesh);
                 left--;
                 if (left == 0)
                   res(null);

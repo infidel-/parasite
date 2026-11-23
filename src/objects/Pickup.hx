@@ -40,6 +40,9 @@ class Pickup extends AreaObject
       if (item != null &&
           item.id == 'shipPart')
         return 'pickup_shipPart';
+      if (item != null &&
+          item.id == 'necronomicon')
+        return 'pickup_necronomicon';
       return type;
     }
 

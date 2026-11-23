@@ -336,3 +336,42 @@ a visible repeat on the parquet, chairs that merged with it, and halls that were
 
 Verdict: landed. Checked live on a fresh 44x32 floor: the island's passage, no patch in front of the
 cases, runs of three with holes, cushions reading red on the parquet, lamp pools down the stack aisles.
+
+## University library, second feedback pass: shelf books, decor slots, wall art, lamps, the Necronomicon
+
+Reported: catalogue lids with board gaps, a blurry counter top, an uneven stone floor, carpet running
+into the rooms, close-packed bookcases, one book texture on every shelf, no elder sign glow, a 2D book
+on the lectern, and no decoration. Changed:
+- **Shell**: door cells are flagged doorways (`LibraryStyle.doorways`, a `DoorCell` with no leaves), so
+  `floorStrips` splits the floor at the wall line and the opening takes a lintel. The stone is a solo
+  4 x 4 regular flag drop cropped 1 px in (its edge joints came back 4 px against ~6): wrap 3.1, lift 1.13.
+- **Furniture**: wall bookcases 3.4 wide in their 4.0 cell, so every case stands apart; the counter and
+  table tile the shelves sheet's wood every 5.0 units (`buildlib.grid_cut` + `tile_uv`) instead of one
+  crop of a 16-unit sheet (32 texels a unit); the catalogue lid wears the carcass wood; chairs get a
+  floor pool and +/-10 degrees of hashed yaw.
+- **Books** (`LibraryBooks`): one quad per opening between the boards, 6 per case face, off 16 bands of
+  `library/shelf-books` (two sunburst drops of 8 bands between dark dividers, cut and stacked 1024 x 2048)
+  at a hashed window and mirror. The glbs' fronts are bare wood now.
+- **Decor** (`LibraryDecor`, `LibraryWall`): render-only slots off the cell hash, nothing saved. Table
+  and counter tops claim lamps and book stacks first (`ClutterSlot`), then 4-7 cut-outs off two PACK16s;
+  rare book stacks on case heads; baskets and book piles in the WALL MARGIN of bare cells (a bookcase
+  hole, a lobby wall), walkable like a bookcase; pictures off a filled PACK16 and posters (4 x 2, legible
+  slogans) on north/east/west walls with bare floor in front, and posters on free rank ends.
+- **Glbs** (`decor_build.py`): banker's lamp 80 tris (shade glows off `emissiveSrc`), basket 124, book
+  stack 36, all drawn a size up (lamp 1.8 against its built 1.14: at table scale they read as specks).
+  The Necronomicon (36 tris, ObjModels `pickup_necronomicon`) is built lying on the lectern's board, ink
+  relit green as its emissive, a 0.3 green PropLight; drawn at 1.2x it stands 0.047 lower.
+- **Elder sign**: `Actors.elderSign`, a frontal `glowQuad` on the librarian's chest, breathing.
+
+Measured: hall 23 -> 31-33 dc, 18.2k -> 23.9k tris; warm 93 -> 102 programs, in play 103 (the same
+one-program gap as before). Nine sunburst gens, ~$0.50.
+
+Traps:
+- **Two drops came back half cut**: desk-books at alpha min 62 (cut at alpha > 225, opened 3x3) and
+  wall-art with a glow band crossing a seam (alpha > 230, opened 5x5). `pack16.py --fill` flattens each
+  cell over its median, which squares a round clock: `--alpha` keeps the cut, `--cellh` packs tall cells.
+- **LibraryArea never patched its object props** (`ObjModels.patchRow`): the stairs drew unmasked.
+  Patched in `tick` like the facility, and warmed in its three variants.
+- The glow first sat on the face: the bust fills the sprite's lower half, so `SIGN_UP` is -0.37.
+
+Verdict: landed. Checked live in a hall, the lobby and the archive, the book placed on the lectern by hand.
