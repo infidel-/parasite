@@ -33135,6 +33135,15 @@
    "field": "innerHTML"
   },
   {
+   "s": "Every review is read, good or bad. <a>Write yours on Steam.</a>",
+   "kind": "T",
+   "loc": [
+    "src/ui/Finish.hx"
+   ],
+   "vars": [],
+   "where": "Finish.new"
+  },
+  {
    "s": "CLOSE",
    "kind": "T",
    "loc": [
@@ -33144,6 +33153,15 @@
    "vars": [],
    "where": "Finish.new",
    "field": "innerHTML"
+  },
+  {
+   "s": "What would make it better? <a>Tell us in the discussions.</a>",
+   "kind": "T",
+   "loc": [
+    "src/ui/Finish.hx"
+   ],
+   "vars": [],
+   "where": "Finish.feedbackLine"
   },
   {
    "s": "GAME OVER",

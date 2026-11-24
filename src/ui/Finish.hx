@@ -17,6 +17,10 @@ class Finish extends UIWindow
   var titleEl: DivElement;
   var text: DivElement;
   var closeBtn: DivElement; // the CLOSE button (keyboard shortcut clicks it)
+#if (electron && !demo)
+  static inline var REVIEW_URL = 'steam://openurl/https://store.steampowered.com/app/1920320/#app_reviews_hash';
+  static inline var DISCUSS_URL = 'steam://openurl/https://steamcommunity.com/app/1920320/discussions/';
+#end
 
   // filter-name -> svg filter id used to grade the finish image
   static var filters: Map<String, String> = [
@@ -63,6 +67,18 @@ class Finish extends UIWindow
       hint.innerHTML = T('Close the window to restart the game.');
       body.appendChild(hint);
 
+#if (electron && !demo)
+      // quiet steam asks: the same pair on every win and death, steam owners only
+      if (HostBridge.steamActive())
+        {
+          var ask = Browser.document.createDivElement();
+          ask.className = 'finish-ask';
+          ask.appendChild(steamLine(g, T('Every review is read, good or bad. <a>Write yours on Steam.</a>'), REVIEW_URL));
+          ask.appendChild(feedbackLine(g));
+          body.appendChild(ask);
+        }
+#end
+
       closeBtn = Browser.document.createDivElement();
       closeBtn.className = 'finish-close';
       closeBtn.innerHTML = T('CLOSE');
@@ -73,6 +89,26 @@ class Finish extends UIWindow
       }
       body.appendChild(closeBtn);
     }
+
+#if (electron && !demo)
+// one quiet line: a template whose inline <a> opens url in the steam client
+  public static function steamLine(g: Game, html: String, url: String): DivElement
+    {
+      var el = Browser.document.createDivElement();
+      el.innerHTML = html;
+      el.querySelector('a').onclick = function (e) {
+        g.scene.sounds.play('click-menu');
+        HostBridge.shellOpenExternal(url);
+      }
+      return el;
+    }
+
+// the feedback line linking the steam discussions (end screen + main menu)
+  public static function feedbackLine(g: Game): DivElement
+    {
+      return steamLine(g, T('What would make it better? <a>Tell us in the discussions.</a>'), DISCUSS_URL);
+    }
+#end
 
 // set parameters
   public override function setParams(obj: Dynamic)

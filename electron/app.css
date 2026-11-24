@@ -3718,6 +3718,30 @@ hr {
   color: var(--text-color-gray);
 }
 
+.finish-ask {
+  margin-top: 6px;
+  font-size: calc(var(--text-font-size) * 0.82);
+  line-height: 1.5;
+  color: var(--text-color-gray);
+}
+
+.finish-ask > div + div {
+  margin-top: 4px;
+}
+
+.finish-ask a,
+.mainmenu-feedback a {
+  white-space: nowrap;
+  color: var(--text);
+  border-bottom: 1px solid rgba(206, 190, 184, 0.24);
+  cursor: var(--ui-cursor);
+}
+
+.finish-ask a:hover,
+.mainmenu-feedback a:hover {
+  border-bottom-color: var(--text);
+}
+
 .finish-close {
   display: inline-block;
   margin-top: 18px;
@@ -6608,6 +6632,14 @@ select {
   color: var(--blue-gray);
   margin-top: 9px;
   padding-left: .32em;
+}
+
+/* quiet steam feedback line under the items */
+.mainmenu-feedback {
+  margin: 22px auto 0;
+  width: fit-content;
+  font-size: calc(var(--text-font-size) * 0.75);
+  color: var(--text-color-gray);
 }
 
 /* items (#window-mainmenu-contents = the nav strip) */

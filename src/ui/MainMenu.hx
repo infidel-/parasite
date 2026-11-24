@@ -130,6 +130,15 @@ class MainMenu extends UIWindow
         confirmQuit();
       });
 #end
+#if (electron && !demo)
+      // quiet feedback line under the items, steam owners only
+      if (HostBridge.steamActive())
+        {
+          var feedback = Finish.feedbackLine(game);
+          feedback.className = 'mainmenu-feedback';
+          window.appendChild(feedback);
+        }
+#end
 
       // corner-X close (only shown in-game; see update()/loadGame())
       close = addWinClose();

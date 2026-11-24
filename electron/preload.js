@@ -53,6 +53,9 @@ contextBridge.exposeInMainWorld('host', {
   shell: {
     openExternal: (url) => ipcRenderer.sendSync('host:shell:openExternal', url),
   },
+  steam: {
+    active: () => ipcRenderer.sendSync('host:steam:active'),
+  },
 
   quit:          ()   => ipcRenderer.invoke('host:quit'),
   reload:        ()   => ipcRenderer.invoke('host:reload'),

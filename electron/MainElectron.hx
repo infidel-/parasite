@@ -978,6 +978,11 @@ class MainElectron
           }
       });
 
+      // steam active: init at boot succeeded (client running + account owns the app)
+      IpcMain.on('host:steam:active', function(e) {
+        untyped e.returnValue = (steamClient != null);
+      });
+
       // sound asset listing
       IpcMain.on('host:assets:listSounds', function(e) {
         untyped e.returnValue = listSoundFiles(soundDir(), '');

@@ -37,6 +37,7 @@
 - ui: [beta] German translation
 - ui: Forma has its own build screen
 - ui: occasio hints fade out and its image shimmers smoothly instead of in steps
+- ui: the end screen and main menu link the Steam reviews and discussions
 
 ### Fixes
 - ai: guards at facility and base doors keep their posts after a load when a door was left open

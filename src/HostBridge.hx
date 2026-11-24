@@ -57,6 +57,9 @@ class HostBridge
 // open url in external browser / steam client (whitelisted schemes)
   public static function shellOpenExternal(url: String): Bool return h().shell.openExternal(url);
 
+// true when steam started at boot (client running + game owned); false on itch / .steam-disabled
+  public static function steamActive(): Bool return h().steam.active();
+
 // window control
   public static function quit(): Void h().quit();
 // reload the renderer (the page's own location.reload() is blocked with every other navigation)

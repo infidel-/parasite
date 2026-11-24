@@ -323,6 +323,7 @@ const host = {
   assets: { listSounds: () => listSounds(resolve(APP, 'sound'), '') },
   mods: { list: () => mods, rescan: () => mods, openFolder: () => {} },
   shell: { openExternal: () => {} },
+  steam: { active: () => false },
   debug: { writeRegionRoads: () => {}, writeRegionBuildings: () => {}, writeImage: () => {} },
   quit: () => {},
   reload: () => {},
