@@ -20,6 +20,8 @@ class Finish extends UIWindow
 #if (electron && !demo)
   static inline var REVIEW_URL = 'steam://openurl/https://store.steampowered.com/recommended/recommendgame/1920320';
   static inline var DISCUSS_URL = 'steam://openurl/https://steamcommunity.com/app/1920320/discussions/';
+  static inline var ASK_DELAY = 20 * 60; // seconds since app start before the steam asks show
+  var ask: DivElement; // review + feedback block, null when steam is not active
 #end
 
   // filter-name -> svg filter id used to grade the finish image
@@ -68,10 +70,10 @@ class Finish extends UIWindow
       body.appendChild(hint);
 
 #if (electron && !demo)
-      // quiet steam asks: the same pair on every win and death, steam owners only
+      // quiet steam asks: the same pair on every win and death, steam owners only (shown per setParams)
       if (HostBridge.steamActive())
         {
-          var ask = Browser.document.createDivElement();
+          ask = Browser.document.createDivElement();
           ask.className = 'finish-ask';
           ask.appendChild(steamLine(g, T('Every review is read, good or bad. <a>Review it.</a>'), REVIEW_URL));
           ask.appendChild(feedbackLine(g));
@@ -134,6 +136,11 @@ class Finish extends UIWindow
         hero.style.display = 'none';
 
       text.innerHTML = (p.text != null) ? p.text : '';
+#if (electron && !demo)
+      // hidden for the first minutes of a session, so a first-launch death isn't asked; same on wins
+      if (ask != null)
+        ask.style.display = (haxe.Timer.stamp() >= ASK_DELAY ? '' : 'none');
+#end
     }
 
 // the close button, so a keyboard shortcut clicks/animates it
