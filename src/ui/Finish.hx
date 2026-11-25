@@ -18,7 +18,7 @@ class Finish extends UIWindow
   var text: DivElement;
   var closeBtn: DivElement; // the CLOSE button (keyboard shortcut clicks it)
 #if (electron && !demo)
-  static inline var REVIEW_URL = 'steam://openurl/https://store.steampowered.com/app/1920320/#app_reviews_hash';
+  static inline var REVIEW_URL = 'steam://openurl/https://store.steampowered.com/recommended/recommendgame/1920320';
   static inline var DISCUSS_URL = 'steam://openurl/https://steamcommunity.com/app/1920320/discussions/';
 #end
 
