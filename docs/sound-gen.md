@@ -405,6 +405,28 @@ The `SewerSounds` clone for the habitat in a mountain tile (`AreaGame.isCave`). 
   zone; mouth 40.4 at the mouth; hum 63.1 on the crystals; seep 63.1 at a pool. Then tuned by ear
   in sound mode: hum -13, mouth -10, seep -27.
 
+### University library: `render/library/LibrarySounds.hx`, driven from `LibraryArea.tick`
+
+Beds one-hot on the room role (`generatorInfo.getRoomAt`; a doorway and the corridor take the hall
+bed), crossfaded over 4 BASE_MS. Sources are tile scans plus `LibraryWall`'s clock cells.
+
+| key | sources | type | range (path cells) |
+|---|---|---|---|
+| `library/hall` / `archive` / `lobby` / `stacks` | beds by room role, gain -6 | bed | — |
+| `library/clock` | the wall clocks `LibraryWall` hung (art cell 11) | loop | 3 |
+| `library/tome` | the lectern, gated on a Necronomicon pickup lying on the floor | loop | 3 |
+| `library/creak` | stack tiles | event, gap 45 s | 5 |
+| `library/thud` | stack and bookcase tiles | event, gap 90 s | 6 |
+| `library/radiator` | bookcase tiles | event, gap 70 s | 5 |
+| `library/pages` | reading tables | event, gap 60 s | 4 |
+| `library/bell` | `Necronomicon.onPickup`, non-positional | one-shot | — |
+| `library/sign` | `LibrarianAI` burn, at the parasite | one-shot | — |
+
+- **"Quieter" beds meant sparser, not lower**: the first lobby and stacks takes were re-rolled as
+  "near-silent ... soft, sparse" and the picks came back raw at -62.4 (lobby) and -51.5 (stacks)
+  LUFS, baked up to -36. Previewed at -36 beside the shipped hall bed so the level was the game's.
+- **The tome is a HIGH drone** (asked for: "creepy high drone"); the low subsonic first round lost.
+
 ## Levels (measured with ebur128, 2026-10-08)
 
 | file | LUFS | role |
@@ -474,3 +496,4 @@ The baked corp loops land at **-26.4** (cooler **-27.2**: the limiter trims its 
 | 2026-11-01 | choir | chant (loop, follows each living choir), alert, hurt, die, scream (the silent scream ability, `ability-silent-scream` before: referenced since the choir landed, never made) | all elevenlabs: chant, hurt (borderline, 4 peaks), scream clean · alert the "no distortion" re-roll (41.5 peaks) · die both takes as variants (23 and 236 peaks) · every cassette one-shot CLIPPED (546-2,671); shrieks clip elevenlabs even with "no distortion", picked by ear anyway | $0.20 |
 | 2026-11-01 | sewer | ritual (loop: the summoning cultists' chant) | elevenlabs + sonilo (2 variants; sonilo fades 12 dB at its tail, the bake's seam covers it) · cassette CLIPPED (488) | $0.086 |
 | 2026-11-20 | library | hall, archive (beds; `SoundSources` gain -6 each) | both: sonilo · elevenlabs, cassette in `unused/library` | $0.17 |
+| 2026-11-26 | library | lobby, stacks (beds) · clock, tome (loops) · creak, thud, radiator, pages (events) · bell, sign (one-shots) | clock, radiator: elevenlabs · creak, thud, pages, bell, sign: sonilo · lobby, stacks re-rolled quieter, elevenlabs won · tome re-rolled as a high drone, sonilo won · bell elevenlabs CLIPPED, left off the page · losers in `unused/library` | $0.73 |
