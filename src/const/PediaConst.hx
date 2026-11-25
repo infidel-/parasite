@@ -318,6 +318,16 @@ Hover over an NPC or an object - show a tooltip with what you know about it<br>"
           text: T("The laboratories and research facilities are primarily populated with sophisticated lab equipment and highly skilled scientists, all working diligently on advanced projects. Security personnel maintain a vigilant presence, patrolling the premises to ensure the safety and integrity of the sensitive research being conducted. These facilities are designed to foster innovation while adhering to stringent safety and security protocols."),
         },
         {
+          id: 'areaLibrary',
+          name: T('University Library'),
+          img: 'pedia/area_library',
+          text: T("<p>The upper reading floor of the city's old university library is reached by the stairs from the ground floor, and the stairs are the only way back down. The circulation counter stands by the stair landing, and a corridor leads on to the reading halls and the stacks.</p>
+
+<p>Students fill the reading halls, bent over long tables between walls of bookcases. They are quiet and easily alarmed, and a call to campus security brings guards up the stairs. Tables and chairs fill the halls and nobody can stand on them, so the aisles between them are the only way through.</p>
+
+<p>The stacks are a maze of tall free-standing shelving that blocks the line of sight and makes it easy to lose a pursuer. Somewhere past them lies the restricted archive, which can only be entered from the stacks.</p>"),
+        },
+        {
           id: 'areaUninhabited',
           name: T('Uninhabited Area'),
           img: 'pedia/area_uninhabited',

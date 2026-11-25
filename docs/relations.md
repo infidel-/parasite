@@ -244,7 +244,7 @@ ones that call it.
 - Saved (area cells compacted). `AreaGame.enter`/`leave` are the area choke points (below).
 - `RegionGame.ensureLibrary` types one never-generated city area `AREA_LIBRARY` with its
   `region.Library` mark, on a new region and on every load (`World.loadPost`).
-- Pedia: areas, areaCity, areaHighCrime, areaCorp, areaMilitary, areaLab, areaUninhabited.
+- Pedia: areas, areaCity, areaHighCrime, areaCorp, areaMilitary, areaLab, areaLibrary, areaUninhabited.
 
 **Area generation**: `src/gen/*`, `game/*AreaGenerator.hx`. Reads world and region; see
 [`area-gen.md`](area-gen.md).

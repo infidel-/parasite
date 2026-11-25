@@ -326,7 +326,7 @@ class WorldConst
         ambient: AMBIENT_NONE,
         type: 'library',
         name: N('University library'),
-        pediaArticle: 'areaCity', // no article of its own yet
+        pediaArticle: 'areaLibrary',
         exit: 'stairs',
         alertnessMod: 1.0,
         width: gen.library.LibraryGen.WIDTH,
