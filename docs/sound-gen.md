@@ -52,6 +52,12 @@ inline. When a lesson invalidates an old bullet, replace it rather than appendin
      sub-folder per sound** (asked for: one folder to listen through). The file names already say
      the sound and the model. Keep the losers out of the manifest, or `make sounds` ships them as
      variants.
+   - **The user listens on a PICK PAGE:** `python3 tools/pick.py SPEC.json` (`{"title", "tests": [{"name",
+     "note", "files": [{"src": "x.mp3", "label": "sonilo"}]}]}`). One PICK box per take and a text box per
+     sound (several winners, a re-roll note); every change copies all the choices to the clipboard to paste
+     back. Level the previews first (a static gain to -26 LUFS each, `ffmpeg -af volume=...dB`), so the
+     raw -5 to -57 LUFS spread doesn't pick for the user. Asked for, 2026-11-26: a plain `<audio>` table
+     was rejected.
 2. **Adopt the winner.** Move it to `sounds-src/<area>/<name>-<model>1.wav`, add its entry to
    `art/sounds.json` (or re-run it with `register` on). **Move the losers to
    `sounds-src/unused/<area>/`, never delete them** (asked for: a runner-up is often right somewhere
