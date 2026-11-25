@@ -166,8 +166,8 @@ ones that call it.
   the host carries the book). `Mission.onLeaveArea(area)` hears every leave first, from
   `Cult.onLeaveArea` (the Necronomicon mission succeeds there). Pedia: cultCombatMissions.
 - Metamorphosis Phase I: the book lies on the library archive's lectern whatever the ordeal does
-  (`LibraryAreaGenerator.enter` re-lays a missing copy while Phase I is open and the book is neither held
-  nor on the floor), so the ordeal and the held-book path share one spawn. `MetamorphosisPhaseI.checkHeld`
+  (`LibraryAreaGenerator.enter` re-lays a missing copy until Phase I is complete, ordeal or not, while
+  the book is neither held nor on the floor), so the ordeal and the held-book path share one spawn. `MetamorphosisPhaseI.checkHeld`
   (every `Cult.turnInternal`, and `Cult.onLeaveArea`) completes Phase I when it would open with the book
   held and no Phase I ordeal running. Scenarios: `phase1-library`, `phase1-held`.
 
@@ -237,7 +237,8 @@ ones that call it.
   AI_DIE_PRE, AI_DIE.
 - `LibrarianAI.turn`: while alive with its elder sign, burns the parasite within 3 cells in sight
   through `PlayerArea.onDamage` (bare, or through the host); the one AI that damages the player
-  without an attack. Spawned per entry at its archive post (`LibraryAreaGenerator.enter`).
+  without an attack, played as `View.playSignBurn` (a jolt and a pale-gold flash on the target, the
+  sign flaring). Spawned per entry at its archive post (`LibraryAreaGenerator.enter`).
 
 **World, region, area**: `game/World.hx`, `RegionGame.hx`, `AreaGame.hx`, `region/RegionObject.hx`
 - Saved (area cells compacted). `AreaGame.enter`/`leave` are the area choke points (below).

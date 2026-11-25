@@ -3,6 +3,7 @@ package render.library;
 import three.Three;
 import citygen.CityConfig;
 import render.Models.PropPlace;
+import render.RenderConfig;
 import render.Textures;
 import render.facility.ClutterSlot;
 import render.facility.ClutterSlot.ClutterSlotTools;
@@ -18,7 +19,7 @@ import render.world.VisionMask;
 // where LibraryDecor stood its glbs, one list per batch, and how many flat cut-outs it laid
 typedef LibraryDecorSet = {
   lamps:Array<PropPlace>,   // the banker's lamps on the tables and the counter
-  books:Array<PropPlace>,   // the book stacks, on tops, bookcases and the floor
+  books:Array<Array<PropPlace>>, // every book of every stack, one list per cover (RenderConfig.MODELS.libraryBooks)
   baskets:Array<PropPlace>, // the wastepaper baskets
   decals:Int,               // books, journals, magazines and papers lying flat
 };
@@ -29,11 +30,14 @@ typedef LibraryDecorSet = {
 //   * a READING TABLE'S top: up to two banker's lamps on its spine, sometimes a stack of books, then
 //     four to seven flat cut-outs (library/desk-books, library/desk-papers) round them;
 //   * the COUNTER'S top: a lamp at one end, often a stack of books, a few papers;
+//   * a CARD CATALOGUE'S top: often a stack of books, a paper or two, now and then a lamp;
 //   * a BOOKCASE'S or a stack rank's head, rarely: a stack of books lying up there;
 //   * the WALL MARGIN of a bare cell backed onto the north, west or east wall (a hole in a bookcase
 //     run, a lobby or stacks wall), clear of the doorways: a wastepaper basket or a pile of books,
 //     standing where a bookcase would (the corp WALL_HUGGERS rule, so the cell stays walkable).
 //
+// A STACK is one to three single books (two or three on the floor), each its own cover, a little
+// turned off the one below and laid exactly on its thickness, so no two books cut into each other.
 // Everything on one top claims its box first (render.facility.ClutterSlot), the glbs before the
 // cut-outs, so nothing lands on anything else
 class LibraryDecor
@@ -59,11 +63,21 @@ class LibraryDecor
   static inline var TABLE_BOOKS_PCT = 40;
   static inline var COUNTER_BOOKS_PCT = 70;
   static inline var CASE_BOOKS_PCT = 12;
+  // a catalogue's top: a book stack this often, a lamp this often, and up to this many papers
+  static inline var CAT_BOOKS_PCT = 45;
+  static inline var CAT_LAMP_PCT = 12;
+  static inline var CAT_PAPERS = 2;
   // the glbs' footprints at their drawn size (decor_build.py's, by LibraryStyle's height over its own)
-  static inline var LAMP_W = 1.42;
-  static inline var LAMP_D = 0.76;
-  static inline var BOOKS_W = 1.5;
-  static inline var BOOKS_D = 1.2;
+  static inline var LAMP_W = 1.14;
+  static inline var LAMP_D = 0.61;
+  // a stack's claim round its books' own turns, each book's turn off the stack's, its scale's spread
+  // and the air between two books
+  static inline var STACK_W = LibraryStyle.BOOK_W + 0.4;
+  static inline var STACK_D = LibraryStyle.BOOK_D + 0.4;
+  static inline var BOOK_TURN = 0.25;
+  static inline var BOOK_SCALE = 0.9;
+  static inline var BOOK_SCALE_VAR = 0.15;
+  static inline var BOOK_GAP = 0.002;
   static inline var BASKET_W = 0.9;
   // a cut-out's size, the spread over it, how far over its top it lies, and the tries each gets
   static inline var DECAL_SZ = 2.2;
@@ -78,23 +92,23 @@ class LibraryDecor
   static inline var DESK_CELLS = 15;
   static inline var COUNTER_PAPER_PCT = 70;
   // the floor props: a bare wall-margin cell takes one this often by room role (corridor, hall, lobby,
-  // stacks, archive), and it is a basket (else a pile of books) this often; the pile stands a size up
+  // stacks, archive), and it is a basket (else a pile of books) this often
   static var FLOOR_PCT = [ 0, 40, 45, 30, 50 ];
   static var BASKET_PCT = [ 0, 60, 85, 50, 30 ];
-  static inline var PILE_SCALE = 1.25;
   // how far off the masonry a floor prop stands, and how far it may slide along its wall
   static inline var WALL_GAP = 0.08;
   static inline var SLIDE = 0.8;
 
 // every slot on the floor. The cut-outs go into the scene as two meshes here; the glbs come back for
 // the caller's batches, and the floor props' contact shadows are laid as they go, so call this before
-// the contact field is repainted. `cases` and `stacks` are the furniture plan's own placements
+// the contact field is repainted. `cases`, `stacks` and `catalogues` are the furniture plan's own
+// placements
   public static function plan(scene:Scene, m:Facility, tile:(Int, Int)->Int,
-      cases:Array<PropPlace>, stacks:Array<PropPlace>):LibraryDecorSet
+      cases:Array<PropPlace>, stacks:Array<PropPlace>, catalogues:Array<PropPlace>):LibraryDecorSet
     {
       var out:LibraryDecorSet = {
         lamps: [],
-        books: [],
+        books: [for (_ in RenderConfig.MODELS.libraryBooks) []],
         baskets: [],
         decals: 0,
       };
@@ -140,6 +154,23 @@ class LibraryDecor
             else if (LibraryStyle.isFloor(t))
               floorProp(out, m, tile, col, row, h);
           }
+      // a catalogue's top: its own claims, the lamp first, then the books, then the papers
+      for (p in catalogues)
+        {
+          var h = FacilityModel.mix(Std.int(p.x * 197) ^ (Std.int(p.z * 641) << 9) ^ 0x5c1);
+          // the top's half extents in the world: a side-wall catalogue stands turned a quarter
+          var turned = (Math.abs(Math.sin(p.yaw)) > 0.5);
+          var hw = (turned ? LibraryStyle.CATALOGUE_D : LibraryStyle.CATALOGUE_W) / 2;
+          var hd = (turned ? LibraryStyle.CATALOGUE_W : LibraryStyle.CATALOGUE_D) / 2;
+          var slots:Array<ClutterSlot> = [];
+          if ((h >>> 3) % 100 < CAT_LAMP_PCT)
+            lamp(out, slots, p.x + ((h >>> 10) % 2 == 0 ? -1 : 1) * (hw - LAMP_W / 2 - EDGE), p.z,
+              LibraryStyle.CATALOGUE_H, h);
+          if ((h >>> 12) % 100 < CAT_BOOKS_PCT)
+            topBooks(out, slots, p.x, p.z, hw, hd, LibraryStyle.CATALOGUE_H, h);
+          out.decals += scatter(desk, papers, slots, p.x, p.z, hw, hd, LibraryStyle.CATALOGUE_H,
+            (h >>> 16) % (CAT_PAPERS + 1), 0, h);
+        }
       // a stack of books lying on a bookcase's or a rank's head, now and then
       for (list in [ cases, stacks ])
         for (p in list)
@@ -148,13 +179,9 @@ class LibraryDecor
             if ((h >>> 3) % 100 >= CASE_BOOKS_PCT)
               continue;
             var w = (list == cases ? LibraryStyle.CASE_W : LibraryStyle.STACK_W);
-            var a = (((h >>> 8) % 1001) / 1000 - 0.5) * (w - 2 * BOOKS_W * 0.6);
-            out.books.push({
-              x: p.x + a * Math.cos(p.yaw),
-              z: p.z - a * Math.sin(p.yaw),
-              yaw: p.yaw + (((h >>> 18) % 1001) / 1000 - 0.5) * 0.8,
-              y: LibraryStyle.CASE_H,
-            });
+            var a = (((h >>> 8) % 1001) / 1000 - 0.5) * (w - STACK_D);
+            stack(out, p.x + a * Math.cos(p.yaw), p.z - a * Math.sin(p.yaw), LibraryStyle.CASE_H,
+              p.yaw + Math.PI / 2 + (((h >>> 18) % 1001) / 1000 - 0.5) * 0.6, 1 + (h >>> 22) % 3, h);
           }
       add(scene, desk, LibraryStyle.DESK_BOOKS);
       add(scene, papers, LibraryStyle.DESK_PAPERS);
@@ -194,20 +221,36 @@ class LibraryDecor
         {
           var r = FacilityModel.mix(h + k * 104729);
           var yaw = ((r >>> 4) % 628) / 100;
-          var b = ClutterSlotTools.turned(0, 0, BOOKS_W, BOOKS_D, yaw);
+          var b = ClutterSlotTools.turned(0, 0, STACK_W, STACK_D, yaw);
           var bx = x + (((r >>> 12) % 1001) / 1000 - 0.5) * 2 * (hw - EDGE - b.hw);
           var bz = z + (((r >>> 22) % 1001) / 1000 - 0.5) * 2 * (hd - EDGE - b.hd);
           if (ClutterSlotTools.hits(slots, bx, bz, b.hw, b.hd))
             continue;
-          slots.push(ClutterSlotTools.turned(bx, bz, BOOKS_W, BOOKS_D, yaw));
-          out.books.push({
-            x: bx,
-            z: bz,
-            yaw: yaw,
-            y: y,
-          });
+          slots.push(ClutterSlotTools.turned(bx, bz, STACK_W, STACK_D, yaw));
+          stack(out, bx, bz, y, yaw, 1 + (r >>> 2) % 3, r);
           return;
         }
+    }
+
+// a stack of `n` books standing on `y` at (x, z), turned `yaw`, each its own cover, turn and scale,
+// laid on the one below's own thickness. Returns its height
+  static function stack(out:LibraryDecorSet, x:Float, z:Float, y:Float, yaw:Float, n:Int, h:Int):Float
+    {
+      var top = y;
+      for (i in 0...n)
+        {
+          var r = FacilityModel.mix(h + 0x2545f491 + i * 6151);
+          var s = BOOK_SCALE + ((r >>> 4) % 101) / 100 * BOOK_SCALE_VAR;
+          out.books[(r >>> 12) % out.books.length].push({
+            x: x,
+            z: z,
+            yaw: yaw + (((r >>> 16) % 1001) / 1000 - 0.5) * 2 * BOOK_TURN,
+            y: top,
+            scale: s,
+          });
+          top += LibraryStyle.BOOK_T * s + BOOK_GAP;
+        }
+      return top - y;
     }
 
 // `want` cut-outs over a top, each off desk-books on `bookPct` in a hundred (else desk-papers), at a
@@ -259,25 +302,23 @@ class LibraryDecor
           if (tile(col + dx, row + dy) == Const.TILE_LIB_DOOR)
             return;
       var basket = ((h >>> 10) % 100 < BASKET_PCT[role]);
-      var size = (basket ? BASKET_W : BOOKS_W * PILE_SCALE);
+      var size = (basket ? BASKET_W : STACK_D);
       var s = FacilityGeom.slab(m, col + DC[dir], row + DR[dir]);
       var c = CityConfig.cellToWorld(col, row);
       var slide = (((h >>> 14) % 1001) / 1000 - 0.5) * 2 * SLIDE;
       var off = size / 2 + WALL_GAP;
       var x = (dir == 0 ? c.x + slide : (dir == 2 ? s.x1 + off : s.x0 - off));
       var z = (dir == 0 ? s.z1 + off : c.z + slide);
-      var p:PropPlace = {
-        x: x,
-        z: z,
-        yaw: ((h >>> 20) % 628) / 100,
-      };
+      var yaw = ((h >>> 20) % 628) / 100;
+      var tall = LibraryStyle.BASKET_H;
       if (basket)
-        out.baskets.push(p);
+        out.baskets.push({
+          x: x,
+          z: z,
+          yaw: yaw,
+        });
       else
-        {
-          p.scale = PILE_SCALE;
-          out.books.push(p);
-        }
+        tall = stack(out, x, z, 0.0, yaw, 2 + (h >>> 26) % 2, h);
       var r = size / 2;
       FacilityDetail.ground(m, {
         col: col,
@@ -290,7 +331,7 @@ class LibraryDecor
           z0: z - r,
           z1: z + r,
         },
-        h: (basket ? LibraryStyle.BASKET_H : LibraryStyle.BOOKS_H * PILE_SCALE),
+        h: tall,
       });
     }
 

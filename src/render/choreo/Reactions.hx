@@ -31,6 +31,14 @@ class Reactions {
       c.actors.playFx(e, new render.anim.BreakShake());
     }
 
+// the elder sign's burn: its target jolts and flashes the sign's pale gold, and the sign on the
+// librarian's chest flares
+  public static function signBurn(c:Choreo, e:Entity):Void
+    {
+      c.actors.playFx(e, new render.anim.BreakShake(RenderConfig.SIGN_BURN));
+      c.actors.signFlare();
+    }
+
 // snapshot a dying actor into a fade-out ghost (before its entity is nulled)
   public static function deathFade(c:Choreo, e:Entity):Void
     {

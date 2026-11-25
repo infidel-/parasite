@@ -252,6 +252,14 @@ class RenderConfig {
     color: 0xff2a2a,     // flash color: purer than --text-color-alert, as it multiplies the sprite's own colors
     glow: 2.0,           // flash peak self-glow intensity
   };
+  // the elder sign's burn on its target (render.anim.BreakShake's shape, ai.LibrarianAI): a short
+  // jolt and one faint pale-gold flash, the sign's own colour (render.library.LibraryStyle.SIGN_COLOR)
+  public static final SIGN_BURN = {
+    ms: BASE_MS * 1.0,   // flash + shake duration
+    shakeAmp: 0.06,      // jitter amplitude, as a fraction of a CELL
+    color: 0xffe6a0,     // flash color
+    glow: 0.8,           // flash peak self-glow intensity
+  };
   // attack-FX sprite visuals: a glowing procedural rasterized-SVG shape — melee swings spawned at
   // the strike apex (keyed by the weapon's _AttackEffect) and impact marks stamped on a struck
   // target. per kind: color (emissive tint), scale (of Sprites.SIZE), sweep (roll swept over the
@@ -1028,7 +1036,9 @@ class RenderConfig {
     // and its decor (render.library.LibraryDecor) and the forbidden book on the lectern (ObjModels)
     libraryLamp: 'models/library/lamp.glb',
     libraryBasket: 'models/library/basket.glb',
-    libraryBooks: 'models/library/books.glb',
+    // one closed hardback in six covers, one geometry: LibraryDecor stacks them, a batch per cover
+    libraryBooks: [ 'models/library/book-a.glb', 'models/library/book-b.glb', 'models/library/book-c.glb',
+      'models/library/book-d.glb', 'models/library/book-e.glb', 'models/library/book-f.glb' ],
     libraryNecronomicon: 'models/library/necronomicon.glb',
     corpArchShelf: 'models/corp/arch-shelf.glb',    // six shelves of box files, 3.20 x 4.80, 168
     // AND THE FOUR DESK-CLUTTER CELLS THAT ARE PROPS (render.corp.CorpClutter). corp/desk-clutter

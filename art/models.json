@@ -4950,23 +4950,66 @@
       "emissiveSrc": "library/library-lamp-emissive.png",
       "emissiveStrength": 1.5,
       "note": "the library's banker's desk LAMP (render.library.LibraryDecor, on reading tables and the counter): brass base and stem, a green glass shade lying along x, 0.9 x 0.48 x 1.14, 80 tris. The shade glows off its own cell (models-src/library/_decoremi.py lamp, the props sheet's TR quadrant at 0.8). Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
-      "last_converted": "2026-11-23T19:20:14Z",
+      "last_converted": "2026-11-25T19:06:22Z",
       "last_sig": "n1/-1/512/0.01/-/library/library-lamp-emissive.png@1.5"
     },
     "library/basket": {
       "src": "library/library-basket.glb",
       "tris": -1,
       "tex": 512,
-      "note": "the library's wicker wastepaper BASKET (render.library.LibraryDecor, in the wall margin of a bookcase hole or a lobby wall cell): a 16-sided lathe open at the top, 0.64 x 0.85, 124 tris. Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 2 (the two disc caps, at their own density by design).",
-      "last_converted": "2026-11-23T19:19:26Z",
-      "last_sig": "n1/-1/512/0.01/-/-"
+      "note": "the library's wicker wastepaper BASKET (render.library.LibraryDecor, in the wall margin of a bookcase hole or a lobby wall cell): a 16-sided lathe open at the top, 0.64 x 0.85, 124 tris. Hand-modelled; the props sheet's wicker read as bright orange (sampled 130/72/19, chroma 111), so sat 0.5 and lift 1.2, models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 2 (the two disc caps, at their own density by design).",
+      "last_converted": "2026-11-25T19:06:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-/lf1.2/st0.5",
+      "sat": 0.5,
+      "lift": 1.2
     },
-    "library/books": {
-      "src": "library/library-books.glb",
+    "library/book-a": {
+      "src": "library/library-book-a.glb",
       "tris": -1,
       "tex": 512,
-      "note": "a short STACK of three cloth hardbacks (render.library.LibraryDecor: on tables, the counter, bookcase tops and the floor), each turned off the one below and sunk 0.01 into it, covers off the props sheet's oxblood / green / navy cloths, page edges the tan one, 1.0 x 0.8 x 0.48, 36 tris. Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
-      "last_converted": "2026-11-23T19:19:26Z",
+      "note": "ONE closed hardback lying flat, oxblood cover (render.library.LibraryDecor stacks these six 1-3 high, each its own batch: one geometry, six covers). Two boards over a rounded spine (a half round, 6 segments), the page block set 0.035 in at head, tail and fore-edge and a hair into both boards: 0.95 x 1.3 x 0.17, 80 tris. Wears models-src/library/books-sheet-src.png (sunburst: TL page edges, then the six 256 x 512 covers). Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
+      "prompt": "[gpt-image-2.6-sunburst high] A texture sheet for a 3D book model, a strict 2 x 2 grid of four square quadrants, each quadrant 512 x 512 pixels, filled EDGE TO EDGE with flat texture (no borders between quadrants, no gaps, no labels, no objects, no perspective - every surface seen perfectly flat and straight-on).\n\nTOP-LEFT quadrant: the PAGE EDGES of a closed book's page block - fine, tightly packed, perfectly straight HORIZONTAL lines of cream and off-white paper leaves, very slightly uneven, running edge to edge across the whole quadrant. Clean university library book paper, pale cream, not torn, not aged brown.\n\nThe other three quadrants are each split down the middle by a vertical line into TWO book covers side by side (each cover 256 wide x 512 tall), six covers in all. Each cover is a whole flat BOOK COVER filling its half edge to edge: book-cloth or leather texture with a faint blind-stamped rectangular border a little in from its edges and two thin gilt bands across the top and the bottom. No titles, no text, no pictures.\nTOP-RIGHT quadrant: left half deep OXBLOOD RED cloth, right half BOTTLE GREEN cloth.\nBOTTOM-LEFT quadrant: left half NAVY BLUE cloth, right half TAN BUCKRAM cloth.\nBOTTOM-RIGHT quadrant: left half BLACK cloth, right half BROWN LEATHER.\nThe cover colours must READ as those colours - clearly saturated at a medium-dark value, not greyed out.\n\nSTYLE — match style-flat.png: a flat-shaded stylized texture for a top-down moody-night roguelike. Matte flat colors, very dark and muted desaturated palette, low contrast, even flat ambient lighting, subtle fine film grain, simple clean shapes, minimal detail. ABSOLUTELY NO photorealism, no realistic or volumetric lighting, no glossy/specular reflections, no lens or camera effects, no soft photographic shadows or depth of field — it should look hand-painted and flat, like a 2D game tile.",
+      "last_converted": "2026-11-25T19:06:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "library/book-b": {
+      "src": "library/library-book-b.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "ONE closed hardback lying flat, bottle green cover (render.library.LibraryDecor stacks these six 1-3 high, each its own batch: one geometry, six covers). Two boards over a rounded spine (a half round, 6 segments), the page block set 0.035 in at head, tail and fore-edge and a hair into both boards: 0.95 x 1.3 x 0.17, 80 tris. Wears models-src/library/books-sheet-src.png (sunburst: TL page edges, then the six 256 x 512 covers). Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
+      "last_converted": "2026-11-25T19:06:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "library/book-c": {
+      "src": "library/library-book-c.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "ONE closed hardback lying flat, navy cover (render.library.LibraryDecor stacks these six 1-3 high, each its own batch: one geometry, six covers). Two boards over a rounded spine (a half round, 6 segments), the page block set 0.035 in at head, tail and fore-edge and a hair into both boards: 0.95 x 1.3 x 0.17, 80 tris. Wears models-src/library/books-sheet-src.png (sunburst: TL page edges, then the six 256 x 512 covers). Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
+      "last_converted": "2026-11-25T19:06:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "library/book-d": {
+      "src": "library/library-book-d.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "ONE closed hardback lying flat, tan buckram cover (render.library.LibraryDecor stacks these six 1-3 high, each its own batch: one geometry, six covers). Two boards over a rounded spine (a half round, 6 segments), the page block set 0.035 in at head, tail and fore-edge and a hair into both boards: 0.95 x 1.3 x 0.17, 80 tris. Wears models-src/library/books-sheet-src.png (sunburst: TL page edges, then the six 256 x 512 covers). Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
+      "last_converted": "2026-11-25T19:06:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "library/book-e": {
+      "src": "library/library-book-e.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "ONE closed hardback lying flat, black cover (render.library.LibraryDecor stacks these six 1-3 high, each its own batch: one geometry, six covers). Two boards over a rounded spine (a half round, 6 segments), the page block set 0.035 in at head, tail and fore-edge and a hair into both boards: 0.95 x 1.3 x 0.17, 80 tris. Wears models-src/library/books-sheet-src.png (sunburst: TL page edges, then the six 256 x 512 covers). Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
+      "last_converted": "2026-11-25T19:06:22Z",
+      "last_sig": "n1/-1/512/0.01/-/-"
+    },
+    "library/book-f": {
+      "src": "library/library-book-f.glb",
+      "tris": -1,
+      "tex": 512,
+      "note": "ONE closed hardback lying flat, brown leather cover (render.library.LibraryDecor stacks these six 1-3 high, each its own batch: one geometry, six covers). Two boards over a rounded spine (a half round, 6 segments), the page block set 0.035 in at head, tail and fore-edge and a hair into both boards: 0.95 x 1.3 x 0.17, 80 tris. Wears models-src/library/books-sheet-src.png (sunburst: TL page edges, then the six 256 x 512 covers). Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
+      "last_converted": "2026-11-25T19:06:22Z",
       "last_sig": "n1/-1/512/0.01/-/-"
     },
     "library/necronomicon": {
@@ -4976,7 +5019,7 @@
       "emissiveSrc": "library/library-necronomicon-emissive.png",
       "emissiveStrength": 0.8,
       "note": "the NECRONOMICON lying open on the archive lectern (render.world.ObjModels 'pickup_necronomicon'): a leather cover and two page blocks wearing the open spread, built where it lies on the lectern's board (library_build.py LECT_H, BOARD_T, BOARD_TILT) so the glb is already pitched to it; z_min 2.0219; drawn at 1.2x (LibraryStyle.NECRONOMICON_H) it is lowered 0.047 to keep its underside on the board (LibraryStyle.BOOK_Y 1.975). baseColor 0.75 flat: under a pendant the vellum plus its own glow washed out to white. Its ink glows sickly green (models-src/library/_decoremi.py necronomicon). 1024 and not 512: the quest object, read up close. Hand-modelled, fitted art (no baseColor, no lift), models-src/library/decor_build.py. buildlib.check: holes 0, coplanar 0, islands 1, texel_off 0.",
-      "last_converted": "2026-11-23T19:20:14Z",
+      "last_converted": "2026-11-25T19:06:22Z",
       "last_sig": "n1/-1/1024/0.01/-/library/library-necronomicon-emissive.png@0.8/bc0.75,0.75,0.75,1",
       "baseColor": [
         0.75,

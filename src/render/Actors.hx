@@ -110,6 +110,7 @@ class Actors {
 
   var lastState:_PlayerState;                            // prev-frame player state (attach transition)
   var signT = 0.0;                                       // the elder sign glow's breath clock, in BASE_MS
+  var signPulse = 0.0;                                   // the sign's flare on a burn, 1 falling to 0 over one BASE_MS
   var _deathGhost:DeathFade3D = null;                    // most recent death ghost; the corpse body binds its fade-in to its landing
   var _heldBodies:haxe.ds.ObjectMap<Entity, Bool> = new haxe.ds.ObjectMap(); // corpse bodies kept invisible until their death ghost lands
   // corpse -> the count of ground decals in its cell when it first landed = its appearance slot.
@@ -213,6 +214,7 @@ class Actors {
       beams.begin();
       sparks.begin();
       signT += dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS;
+      signPulse = Math.max(0.0, signPulse - dtMs * RenderConfig.ANIM_SPEED / RenderConfig.BASE_MS);
       _corpseCells.clear();                               // rebuilt below by the object loop, before decals.paint reads it
       muzzleLights.update(dtMs);
       // gather visible barrels once up front (before the actor loops) so drawActor can flicker their
@@ -575,10 +577,16 @@ class Actors {
       sparks.glowQuad(a.x,
         WorldCtx.floorY(a.col, a.row) + Sprites.SIZE * 0.5 + up * c + proud * s,
         a.z - up * s + proud * c,
-        render.library.LibraryStyle.SIGN_W * (0.85 + 0.3 * breath),
+        render.library.LibraryStyle.SIGN_W * (0.85 + 0.3 * breath) * (1 + 0.6 * signPulse),
         render.library.LibraryStyle.SIGN_COLOR,
-        a.op * render.library.LibraryStyle.SIGN_OP * (0.6 + 0.4 * breath),
+        Math.min(1.0, a.op * render.library.LibraryStyle.SIGN_OP * (0.6 + 0.4 * breath) * (1 + signPulse)),
         Sprites.ORD_ACTOR + 1);
+    }
+
+// the sign flares as it burns: elderSign swells and brightens it, falling back over one BASE_MS
+  public function signFlare():Void
+    {
+      signPulse = 1.0;
     }
 
 // queue a floating damage number over a struck entity the player can see. it holds until the hit

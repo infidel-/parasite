@@ -145,7 +145,8 @@ class LibraryArea implements Area3D
         };
       var places = plan(model, tile);
       // the decor slots before the repaint: the floor props lay their contact shadows as they go
-      var decor = LibraryDecor.plan(scene, model, tile, places[0].places, places[1].places);
+      var decor = LibraryDecor.plan(scene, model, tile, places[0].places, places[1].places,
+        places[6].places);
       FacilityDetail.halos(scene, model);
       ContactMask.repaint();
       props = render.world.ObjModels.build(scene, game, objYaw, objLift, objWall);
@@ -156,7 +157,8 @@ class LibraryArea implements Area3D
         furniture.push(batch(scene, p.path, p.places, p.h));
       var M = RenderConfig.MODELS;
       furniture.push(batch(scene, M.libraryLamp, decor.lamps, LibraryStyle.LAMP_H));
-      furniture.push(batch(scene, M.libraryBooks, decor.books, LibraryStyle.BOOKS_H));
+      for (i in 0...M.libraryBooks.length)
+        furniture.push(batch(scene, M.libraryBooks[i], decor.books[i], LibraryStyle.BOOK_T));
       furniture.push(batch(scene, M.libraryBasket, decor.baskets, LibraryStyle.BASKET_H));
       // the books on the shelves, and the pictures and posters on the walls and the rank ends
       LibraryBooks.build(scene, places[0].places, places[1].places);
@@ -592,9 +594,13 @@ class LibraryArea implements Area3D
         { path: M.libraryLectern, h: LibraryStyle.LECTERN_H },
         { path: M.libraryCatalogue, h: LibraryStyle.CATALOGUE_H },
         { path: M.libraryLamp, h: LibraryStyle.LAMP_H },
-        { path: M.libraryBooks, h: LibraryStyle.BOOKS_H },
         { path: M.libraryBasket, h: LibraryStyle.BASKET_H },
       ];
+      for (p in M.libraryBooks)
+        rows.push({
+          path: p,
+          h: LibraryStyle.BOOK_T,
+        });
       LibraryBooks.warm(sc);
       LibraryWall.warm(sc);
       LibraryDecor.warm(sc);

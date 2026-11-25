@@ -71,9 +71,12 @@ class LibraryStyle
   public static inline var NECRONOMICON_H = 0.7058;
   // the decor glbs' heights as DRAWN: a size up from decor_build.py's (lamp 1.14, basket 0.85, books
   // 0.48), which at the table's own scale read as specks from the game camera
-  public static inline var LAMP_H = 1.8;
+  public static inline var LAMP_H = 1.44;
   public static inline var BASKET_H = 1.2;
-  public static inline var BOOKS_H = 0.72;
+  // one closed book lying flat (decor_build.py's, drawn at its built size): thick, across, along
+  public static inline var BOOK_T = 0.17;
+  public static inline var BOOK_W = 0.95;
+  public static inline var BOOK_D = 1.3;
   // a bookcase's depth off its wall, the stack's both faces, and the catalogue's, for the contact field
   public static inline var CASE_D = 1.2;
   // a wall bookcase's width: narrower than its cell, so every case along a wall stands apart

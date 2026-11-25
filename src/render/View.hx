@@ -1106,6 +1106,13 @@ void main() {
         render.choreo.Reactions.resistShake(choreo, e);
     }
 
+// the elder sign burns `e` (the host, or the bare parasite) — see render.choreo.Reactions
+  public function playSignBurn(e:Entity):Void
+    {
+      if (running)
+        render.choreo.Reactions.signBurn(choreo, e);
+    }
+
 // breaking hit (host flashes red + shakes as it nears collapse) — see render.choreo.Reactions
   public function playBreakingFlash(e:Entity):Void
     {

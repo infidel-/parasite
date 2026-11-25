@@ -42,30 +42,34 @@ class LibraryWall
   // of what hangs, a poster this often (else a picture)
   static inline var POSTER_PCT = 35;
   // a free rank end takes a poster this often, this tall, centred this high
-  static inline var RANK_PCT = 55;
+  static inline var RANK_PCT = 20;
   static inline var POSTER_H = 2.8;
   static inline var POSTER_Y = 3.0;
   static inline var RANK_POSTER_H = 2.6;
   static inline var RANK_POSTER_Y = 2.55;
+  // the rare portrait of H. P. Lovecraft (art cell 14): a picture slot in a hall, the stacks or the
+  // archive is his this often, and a floor hangs him once at most
+  static inline var LOVECRAFT = 14;
+  static inline var LOVECRAFT_PCT = 4;
 
   // the art sheet's cells' width:height, measured off the drop (tools/pack16.py --fill), each one's
   // longest edge on the wall, and its centre's height
   static var ART_ASPECT = [0.6830, 0.7402, 0.7455, 0.8050, 1.3129, 1.3718, 1.4503, 1.0000, 0.7317,
-    0.7220, 1.3235, 0.9793, 1.3086, 0.8309, 1.5984, 1.3036];
-  static var ART_MAX = [2.4, 2.4, 2.5, 2.2, 2.7, 2.6, 2.6, 2.0, 2.0, 2.0, 2.8, 1.3, 1.8, 1.6, 1.2, 2.2];
-  static var ART_Y = [3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 2.9, 4.0, 3.0, 3.4, 2.5, 3.1];
+    0.7220, 1.3235, 0.9793, 1.3086, 0.8309, 0.8148, 1.3036];
+  static var ART_MAX = [2.4, 2.4, 2.5, 2.2, 2.7, 2.6, 2.6, 2.0, 2.0, 2.0, 2.8, 1.3, 1.8, 1.6, 2.3, 2.2];
+  static var ART_Y = [3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 2.9, 4.0, 3.0, 3.4, 3.2, 3.1];
   // and the posters' (tools/pack16.py --cols 4 --rows 2 --cellh 512 --fill)
   static var POSTER_ASPECT = [0.4556, 0.4647, 0.4692, 0.4624, 0.4601, 0.4703, 0.4726, 0.4726];
 
   // per room role (corridor, hall, lobby, stacks, archive): the pictures and the posters each deals.
   // art: 0-3 portraits (dean, professor, founder, scholar), 4 the main building, 5 the sea, 6 a map,
   // 7 a star chart, 8 a skull, 9 a root, 10 the notice board, 11 the clock, 12 a diploma, 13 the crest,
-  // 14 a brass plaque, 15 a graduation photograph. posters: 0 SILENCE, 1 OBEDIENCE, 2 THE ARCHIVE,
+  // 14 H. P. Lovecraft (never dealt: LOVECRAFT_PCT), 15 a graduation photograph. posters: 0 SILENCE, 1 OBEDIENCE, 2 THE ARCHIVE,
   // 3 ASCEND, 4 RETURN, 5 READS YOU, 6 FACULTY ONLY, 7 DISCIPLINE
   static var ART = [
     [ 10, 11, 15, 12, 4, 5 ],
     [ 0, 1, 2, 3, 4, 5, 6, 9, 15 ],
-    [ 10, 11, 12, 13, 14, 15, 0, 4 ],
+    [ 10, 11, 12, 13, 15, 0, 4 ],
     [ 6, 7, 4, 5, 8 ],
     [ 2, 6, 7, 8, 9, 3 ],
   ];
@@ -84,6 +88,7 @@ class LibraryWall
       var posters = MeshBufTools.make();
       var n = [0, 0];
       var seen = new Map<Int, Bool>();
+      var lovecraft = false;
       for (dir in [ 0, 2, 3 ])
         {
           // a run follows the WALL: along x for a wall in z, along z for one in x
@@ -136,6 +141,13 @@ class LibraryWall
                       }
                     var l = ART[role];
                     var a = l[(r >>> 9) % l.length];
+                    if (!lovecraft &&
+                        (role == 1 || role >= 3) &&
+                        (r >>> 16) % 100 < LOVECRAFT_PCT)
+                      {
+                        a = LOVECRAFT;
+                        lovecraft = true;
+                      }
                     var asp = ART_ASPECT[a];
                     var w = (asp >= 1 ? ART_MAX[a] : ART_MAX[a] * asp);
                     hang(art, m, c, rw, dir, ART_Y[a], w, w / asp, cellOf(a, 4, 4));

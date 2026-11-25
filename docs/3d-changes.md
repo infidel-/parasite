@@ -375,3 +375,32 @@ Traps:
 - The glow first sat on the face: the bust fills the sprite's lower half, so `SIGN_UP` is -0.37.
 
 Verdict: landed. Checked live in a hall, the lobby and the archive, the book placed on the lectern by hand.
+
+## University library, third feedback pass: one book in six covers, catalogue tops, paper posters, Lovecraft, sign burn
+
+Reported: the book stacks were three boxes sunk into each other with cloth page edges; the lamp too big;
+the baskets a bright orange; no decor on the catalogues; propaganda on black grounds; too many rank-end
+posters; walkable chairs. Changed:
+- **Books**: `decor_build.py book()` builds ONE closed hardback, 0.95 x 1.3 x 0.17, 80 tris: a C-section
+  cover (two boards over a half-round spine, 6 segments) extruded along the spine, and a page block set
+  0.035 in at head, tail and fore-edge, a hair into both boards and the spine's hollow (check: coplanar 0).
+  Built six times, one cover each, off `books-sheet-src.png` (sunburst PACK4: TL page edges, six 256 x 512
+  covers with blind borders and gilt bands). The spine wears the cover's left strip by `flat_uv` (height
+  round, length along) so the gilt bands wrap it. `LibraryDecor.stack` lays 1-3 books (2-3 on the floor),
+  each its own cover glb, turn (+/-0.25) and scale (0.9-1.05), on the one below's thickness + 0.002, so no
+  two cut into each other. Six batches, one per cover.
+- **Catalogue tops**: a stack on 45%, a lamp on 12%, 0-2 papers, claimed on the turned 3.6 x 3.4 top.
+- **Posters** re-rolled on PALE CREAM PAPER, the menace kept in the content. Cut as each cell's bounding
+  rectangle off the lane grey: a colour key and an outside flood both holed the charcoal inks touching the
+  paper's edge. Built 143.6, lift 1.6 -> 114.9 (the wall art sits at 67.6). Rank-end posters 55% -> 20%.
+- **Lovecraft**: wall-art cell 14 (the brass plaque) edited to his portrait and pasted WHOLE into the
+  sheet; `tools/patch.py merge` kept the plaque's engraved bands through his face (the diff fell under its
+  threshold there). Never dealt from the role lists: 4% of hall/stacks/archive picture slots, once a floor.
+- Lamp `LAMP_H` 1.8 -> 1.44; basket `sat` 0.5 + `lift` 1.2 (sampled 130/72/19 chroma 111 -> 97/65/52, 44).
+- **Sign burn** (`View.playSignBurn`): `BreakShake` takes a config, `RenderConfig.SIGN_BURN` is a 1 x BASE_MS
+  jolt at 0.06 CELL with a 0.8 pale-gold flash; the chest glow (`Actors.elderSign`) swells x1.6 and
+  brightens x2, falling back over one BASE_MS.
+
+Measured: lobby 42 dc, 24-27k tris (hall 39 dc); warm still 102 programs (103 in play).
+
+Verdict: landed. Checked live in the hall and the lobby; the burn fired by hand on the host.

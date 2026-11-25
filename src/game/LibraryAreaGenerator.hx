@@ -37,8 +37,8 @@ class LibraryAreaGenerator
     }
 
 // on every entry: the librarian at its post in the archive when none lives on the floor, and the
-// Necronomicon on the lectern while Phase I is open and the book is neither held nor already lying
-// on this floor. The ordeal's mission and the secret path share this one spawn
+// Necronomicon on the lectern until Phase I is complete, ordeal or not, while the book is neither
+// held nor already lying on this floor. The ordeal's mission and the secret path share this one spawn
   public static function enter(game: Game, area: AreaGame)
     {
       var cells = area.getCells();

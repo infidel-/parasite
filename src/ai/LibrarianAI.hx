@@ -72,6 +72,8 @@ class LibrarianAI extends HumanAI
         return;
       traceAI('LibrarianAI', 'elder sign burns the parasite at ' + pa.x + ',' + pa.y);
       game.log(T('The elder sign the librarian carries sears your mind.'), COLOR_ALERT);
+      game.scene.view3d.playSignBurn(game.player.state == PLR_STATE_HOST ?
+        game.player.host.entity : pa.entity);
       pa.onDamage(SIGN_DAMAGE);
     }
 }

@@ -106,8 +106,8 @@ class Default extends Tileset
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     // row 30 - the library (Const.TILE_LIB_*): void and wall, the five floors and the doorway, the
     // sealed stairs well, then a bookcase (walkable, in its wall's margin), a stack rank, a table, a
-    // chair (walkable), the counter, the lectern and a card catalogue
-    0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 1, 0, 0, 0,
+    // chair, the counter, the lectern and a card catalogue
+    0, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0,
   ];
   public static var TILE_SEETHROUGH = [
     // row 0
