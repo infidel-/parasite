@@ -15,6 +15,7 @@ import render.world.VisionMask;
 typedef LibraryWallSet = {
   art:Int,     // framed pictures, the notice board, the clock and the plaques
   posters:Int, // the propaganda posters, on walls and on the stack ranks' ends
+  clocks:Array<{ col:Int, row:Int }>, // the floor cells under the wall clocks, for LibrarySounds
 };
 
 // the library's WALLS: framed pictures and plaques off library/wall-art (a PACK16, each cell filled to
@@ -51,6 +52,8 @@ class LibraryWall
   // archive is his this often, and a floor hangs him once at most
   static inline var LOVECRAFT = 14;
   static inline var LOVECRAFT_PCT = 4;
+  // the wall clock's art cell, whose cells LibrarySounds ticks from
+  static inline var CLOCK = 11;
 
   // the art sheet's cells' width:height, measured off the drop (tools/pack16.py --fill), each one's
   // longest edge on the wall, and its centre's height
@@ -89,6 +92,7 @@ class LibraryWall
       var n = [0, 0];
       var seen = new Map<Int, Bool>();
       var lovecraft = false;
+      var clocks = [];
       for (dir in [ 0, 2, 3 ])
         {
           // a run follows the WALL: along x for a wall in z, along z for one in x
@@ -148,6 +152,11 @@ class LibraryWall
                         a = LOVECRAFT;
                         lovecraft = true;
                       }
+                    if (a == CLOCK)
+                      clocks.push({
+                        col: c,
+                        row: rw,
+                      });
                     var asp = ART_ASPECT[a];
                     var w = (asp >= 1 ? ART_MAX[a] : ART_MAX[a] * asp);
                     hang(art, m, c, rw, dir, ART_Y[a], w, w / asp, cellOf(a, 4, 4));
@@ -179,6 +188,7 @@ class LibraryWall
       return {
         art: n[0],
         posters: n[1],
+        clocks: clocks,
       };
     }
 

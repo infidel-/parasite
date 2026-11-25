@@ -28,6 +28,7 @@ class Necronomicon extends ItemInfo
         return;
       game.log(T('A shrill bell rings through the stacks as the book leaves the lectern.'),
         COLOR_ALERT);
+      game.scene.sounds.play('library/bell');
       for (ai in game.area.getAllAI())
         if (ai.state != AI_STATE_DEAD &&
             ai != game.player.host &&

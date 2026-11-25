@@ -8,7 +8,6 @@ import render.Area3DTickOpts;
 import render.Models;
 import render.RenderConfig;
 import render.SceneSetup;
-import render.SoundSources;
 import render.Warmup;
 import render.particles.LampLights;
 import render.particles.LampPost;
@@ -34,8 +33,6 @@ class LibraryArea implements Area3D
   static inline var CELL = CityConfig.CELL;
   // the room-side margin of a wall cell a piece backed onto masonry stands in (the slab is WALL_T)
   static inline var MARGIN = (CityConfig.CELL - FacilityStyle.WALL_T) / 2;
-  // the beds: everywhere but the archive, and the archive
-  static var BEDS = [ 'library/hall', 'library/archive' ];
 
   var game:Game;
   var model:Facility;
@@ -45,7 +42,7 @@ class LibraryArea implements Area3D
   var posts:Array<LampPost> = [];
   var props:Array<render.world.ObjModels.PropBatch>;
   var furniture:Array<InstancedProp> = [];
-  var bed:Array<Float> = [ 0.0, 0.0 ];
+  var sounds:LibrarySounds;
   var built:Scene;
   var tactical = false;
 
@@ -162,10 +159,9 @@ class LibraryArea implements Area3D
       furniture.push(batch(scene, M.libraryBasket, decor.baskets, LibraryStyle.BASKET_H));
       // the books on the shelves, and the pictures and posters on the walls and the rank ends
       LibraryBooks.build(scene, places[0].places, places[1].places);
-      LibraryWall.build(scene, model, tile);
+      var wall = LibraryWall.build(scene, model, tile);
       posts = lamps(model, tile);
-      SoundSources.beds = BEDS.copy();
-      SoundSources.events = [];
+      sounds = new LibrarySounds(game, wall.clocks);
       VisionMask.attach(FacilityStyle.MASK, model.w, model.h,
         function(col, row) return !FacilityModel.isIndoor(model, col, row),
         function(col, row) return FacilityGeom.carries(model, col, row));
@@ -504,15 +500,7 @@ class LibraryArea implements Area3D
       VisionMask.update(game, opts.player.x, opts.player.z);
       lampLights.update(posts, opts.lightCol, opts.lightRow, opts.dtMs);
       propLights.update(game, opts.lightCol, opts.lightRow, opts.dtMs);
-      // the beds crossfaded over four BASE_MS by the room the player stands in
-      var room = game.area.generatorInfo.getRoomAt(opts.playerCol, opts.playerRow);
-      var on = (room != null && room.role == gen.library.LibraryGen.ROLE_ARCHIVE ? 1 : 0);
-      var kb = Math.min(1, opts.dtMs / (RenderConfig.BASE_MS * 4));
-      for (i in 0...BEDS.length)
-        {
-          bed[i] += ((i == on ? 1.0 : 0.0) - bed[i]) * kb;
-          game.scene.sounds.updateLoop(BEDS[i], bed[i], game.config.ambientVolume);
-        }
+      sounds.tick(opts.playerCol, opts.playerRow, opts.dtMs);
       for (f in furniture)
         Models.cull(f, opts.camera, LibraryStyle.PIECE_CULL_R);
       chunks.cull(opts.camera, opts.player, RenderConfig.MOON_SHADOW.halfExtent);

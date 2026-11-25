@@ -74,6 +74,11 @@ class LibrarianAI extends HumanAI
       game.log(T('The elder sign the librarian carries sears your mind.'), COLOR_ALERT);
       game.scene.view3d.playSignBurn(game.player.state == PLR_STATE_HOST ?
         game.player.host.entity : pa.entity);
+      game.scene.sounds.play('library/sign', {
+        x: pa.x,
+        y: pa.y,
+        always: true,
+      });
       pa.onDamage(SIGN_DAMAGE);
     }
 }

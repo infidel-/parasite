@@ -3639,6 +3639,167 @@
       "last_outputs": [
         "library/archive1.mp3"
       ]
+    },
+    "library/clock": {
+      "area": "library",
+      "loop": true,
+      "variants": [
+        {
+          "file": "library/clock-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "An old pendulum wall clock ticking steadily on a wall: a slow dry wooden mechanical tick-tock, one tick each second, perfectly steady and even, no chime, no other sounds. Old university library interior at night, close-miked, realistic field recording.",
+          "duration": 12.0,
+          "seed": null,
+          "cost": 0.024,
+          "native_loop": true,
+          "generated": "2026-11-26T00:00",
+          "bakeoff": "bake-off 2026-11-26: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-26T01:07:25",
+      "last_sig": "-26/128k/True/500/hp40x2",
+      "last_outputs": [
+        "library/clock1.mp3"
+      ]
+    },
+    "library/creak": {
+      "area": "library",
+      "loop": false,
+      "variants": [
+        {
+          "file": "library/creak-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "A single slow creak of a tall old wooden bookshelf settling under the weight of its books, in a large hushed room. Old university library interior at night, close-miked, realistic field recording, no voices, no music.",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-11-26T00:00",
+          "bakeoff": "bake-off 2026-11-26: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-26T01:07:26",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "library/creak1.mp3"
+      ]
+    },
+    "library/thud": {
+      "area": "library",
+      "loop": false,
+      "variants": [
+        {
+          "file": "library/thud-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "A heavy hardback book sliding off a high shelf and falling flat onto a wooden floor with one dull thud, in a large hushed room. Old university library interior at night, close-miked, realistic field recording, no voices, no music.",
+          "duration": 2.043356,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-11-26T00:00",
+          "bakeoff": "bake-off 2026-11-26: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-26T01:07:26",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "library/thud1.mp3"
+      ]
+    },
+    "library/radiator": {
+      "area": "library",
+      "loop": false,
+      "variants": [
+        {
+          "file": "library/radiator-elevenlabs1.wav",
+          "model": "elevenlabs",
+          "endpoint": "fal-ai/elevenlabs/sound-effects/v2",
+          "prompt": "A few metallic knocks and ticks from an old cast-iron radiator as the heating pipes expand, in a large hushed room. Old university library interior at night, close-miked, realistic field recording, no voices, no music.",
+          "duration": 3.0,
+          "seed": null,
+          "cost": 0.006,
+          "native_loop": false,
+          "generated": "2026-11-26T00:00",
+          "bakeoff": "bake-off 2026-11-26: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-26T01:07:26",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "library/radiator1.mp3"
+      ]
+    },
+    "library/pages": {
+      "area": "library",
+      "loop": false,
+      "variants": [
+        {
+          "file": "library/pages-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "A draught of air riffling through the pages of an open book left on a table, the paper fluttering briefly and settling, in a large hushed room. Old university library interior at night, close-miked, realistic field recording, no voices, no music.",
+          "duration": 2.043356,
+          "seed": null,
+          "cost": 0.0037,
+          "native_loop": false,
+          "generated": "2026-11-26T00:00",
+          "bakeoff": "bake-off 2026-11-26: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-26T01:07:27",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "library/pages1.mp3"
+      ]
+    },
+    "library/bell": {
+      "area": "library",
+      "loop": false,
+      "variants": [
+        {
+          "file": "library/bell-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "An old electric alarm bell on a wall rings shrilly for two seconds, a sharp metallic clanging ring echoing through a large hushed hall, then stops. Clean recording with no distortion. Old university library interior at night, close-miked, realistic field recording, no voices, no music.",
+          "duration": 2.972154,
+          "seed": null,
+          "cost": 0.0053,
+          "native_loop": false,
+          "generated": "2026-11-26T00:00",
+          "bakeoff": "bake-off 2026-11-26: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-26T01:07:27",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "library/bell1.mp3"
+      ]
+    },
+    "library/sign": {
+      "area": "library",
+      "loop": false,
+      "variants": [
+        {
+          "file": "library/sign-sonilo1.wav",
+          "model": "sonilo",
+          "endpoint": "sonilo/v1.1/text-to-sound-effects",
+          "prompt": "A short supernatural searing hiss, like a hot brand pressed against skin, with a faint bright shimmering metallic ring over it, eerie, then gone. Clean recording with no distortion, no voices, no music.",
+          "duration": 1.486077,
+          "seed": null,
+          "cost": 0.0027,
+          "native_loop": false,
+          "generated": "2026-11-26T00:00",
+          "bakeoff": "bake-off 2026-11-26: elevenlabs/sonilo/cassette, losers in sounds-src/unused/library"
+        }
+      ],
+      "last_converted": "2026-11-26T01:07:27",
+      "last_sig": "-26/128k/False/500/hp40x2",
+      "last_outputs": [
+        "library/sign1.mp3"
+      ]
     }
   }
 }

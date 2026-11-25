@@ -112,7 +112,7 @@ ones that call it.
   `BodyObject.getAction`); mod ITEM_LEARN. A `special` item (the elder sign) cannot be taken from a
   body and is not dropped when it despawns.
 - Out: player, timeline (Readable, Computer), goals, group (Dossier intel), the library's guards
-  (`Necronomicon.onPickup` alerts the librarian and security). Pedia: hostInventory.
+  (`Necronomicon.onPickup` rings `library/bell` and alerts the librarian and security). Pedia: hostInventory.
   SDK: `registerItem`.
 
 **Area objects**: `objects/*`, `objects/base/*`, `objects/mission/*`
@@ -238,7 +238,7 @@ ones that call it.
 - `LibrarianAI.turn`: while alive with its elder sign, burns the parasite within 3 cells in sight
   through `PlayerArea.onDamage` (bare, or through the host); the one AI that damages the player
   without an attack, played as `View.playSignBurn` (a jolt and a pale-gold flash on the target, the
-  sign flaring). Spawned per entry at its archive post (`LibraryAreaGenerator.enter`).
+  sign flaring) with the `library/sign` hiss. Spawned per entry at its archive post (`LibraryAreaGenerator.enter`).
 
 **World, region, area**: `game/World.hx`, `RegionGame.hx`, `AreaGame.hx`, `region/RegionObject.hx`
 - Saved (area cells compacted). `AreaGame.enter`/`leave` are the area choke points (below).
