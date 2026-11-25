@@ -33135,7 +33135,7 @@
    "field": "innerHTML"
   },
   {
-   "s": "Every review is read, good or bad. <a>Write yours on Steam.</a>",
+   "s": "Every review is read, good or bad. <a>Review it.</a>",
    "kind": "T",
    "loc": [
     "src/ui/Finish.hx"
@@ -33155,7 +33155,7 @@
    "field": "innerHTML"
   },
   {
-   "s": "What would make it better? <a>Tell us in the discussions.</a>",
+   "s": "What would make Parasite better? <a>Tell me.</a>",
    "kind": "T",
    "loc": [
     "src/ui/Finish.hx"

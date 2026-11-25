@@ -3719,7 +3719,11 @@ hr {
 }
 
 .finish-ask {
-  margin-top: 6px;
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(164, 95, 224, 0.16);
+  border-radius: 9px;
+  background: rgba(164, 95, 224, 0.06);
   font-size: calc(var(--text-font-size) * 0.82);
   line-height: 1.5;
   color: var(--text-color-gray);
@@ -3732,13 +3736,14 @@ hr {
 .finish-ask a,
 .mainmenu-feedback a {
   white-space: nowrap;
-  color: var(--text);
-  border-bottom: 1px solid rgba(206, 190, 184, 0.24);
+  color: var(--accent-light);
+  border-bottom: 1px solid rgba(201, 168, 239, 0.3);
   cursor: var(--ui-cursor);
 }
 
 .finish-ask a:hover,
 .mainmenu-feedback a:hover {
+  color: var(--text);
   border-bottom-color: var(--text);
 }
 

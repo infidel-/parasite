@@ -73,7 +73,7 @@ class Finish extends UIWindow
         {
           var ask = Browser.document.createDivElement();
           ask.className = 'finish-ask';
-          ask.appendChild(steamLine(g, T('Every review is read, good or bad. <a>Write yours on Steam.</a>'), REVIEW_URL));
+          ask.appendChild(steamLine(g, T('Every review is read, good or bad. <a>Review it.</a>'), REVIEW_URL));
           ask.appendChild(feedbackLine(g));
           body.appendChild(ask);
         }
@@ -106,7 +106,7 @@ class Finish extends UIWindow
 // the feedback line linking the steam discussions (end screen + main menu)
   public static function feedbackLine(g: Game): DivElement
     {
-      return steamLine(g, T('What would make it better? <a>Tell us in the discussions.</a>'), DISCUSS_URL);
+      return steamLine(g, T('What would make Parasite better? <a>Tell me.</a>'), DISCUSS_URL);
     }
 #end
 
