@@ -28856,6 +28856,40 @@
    "field": "log"
   },
   {
+   "s": "Read {item}",
+   "kind": "T",
+   "loc": [
+    "src/items/Necronomicon.hx",
+    "src/items/Readable.hx"
+   ],
+   "vars": [
+    "item"
+   ],
+   "where": "Necronomicon.getInventoryActions",
+   "field": "name"
+  },
+  {
+   "s": "Read",
+   "kind": "T",
+   "loc": [
+    "src/items/Necronomicon.hx",
+    "src/items/Readable.hx"
+   ],
+   "vars": [],
+   "where": "Necronomicon.getInventoryActions",
+   "field": "nameClean"
+  },
+  {
+   "s": "Klaatu, verata, n... It is unreadable.",
+   "kind": "T",
+   "loc": [
+    "src/items/Necronomicon.hx"
+   ],
+   "vars": [],
+   "where": "Necronomicon.action",
+   "field": "log"
+  },
+  {
    "s": "nutrients",
    "kind": "N",
    "loc": [
@@ -29060,28 +29094,6 @@
    ],
    "where": "RawSmash.injectAction",
    "field": "log"
-  },
-  {
-   "s": "Read {item}",
-   "kind": "T",
-   "loc": [
-    "src/items/Readable.hx"
-   ],
-   "vars": [
-    "item"
-   ],
-   "where": "Readable.getInventoryActions",
-   "field": "name"
-  },
-  {
-   "s": "Read",
-   "kind": "T",
-   "loc": [
-    "src/items/Readable.hx"
-   ],
-   "vars": [],
-   "where": "Readable.getInventoryActions",
-   "field": "nameClean"
   },
   {
    "s": "You cannot make sense of this yet.",

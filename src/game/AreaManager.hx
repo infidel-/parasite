@@ -499,6 +499,11 @@ class AreaManager extends _SaveObject
           ai.state = AI_STATE_ALERT;
           ai.isNPCTrouble = (e.details == '' + REASON_NPC_FIGHT);
           untyped ai.isBackup = true;
+          if (e.params.targetX != null)
+            {
+              ai.lastSeenX = e.params.targetX;
+              ai.lastSeenY = e.params.targetY;
+            }
         }
     }
 
@@ -632,10 +637,15 @@ class AreaManager extends _SaveObject
 class _AreaManagerEventParamsArriveBackup extends _SaveObject
 {
   public var type: String;
+  // the cell the backup heads for on arrival (its last-seen hint), null: they wait where they spawn
+  public var targetX: Null<Int>;
+  public var targetY: Null<Int>;
 
-  public function new(type: String)
+  public function new(type: String, ?targetX: Int, ?targetY: Int)
     {
       this.type = type;
+      this.targetX = targetX;
+      this.targetY = targetY;
     }
 
   public function init()

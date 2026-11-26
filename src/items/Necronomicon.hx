@@ -5,7 +5,9 @@ package items;
 
 import game.Game;
 import game._Item;
+import l10n.Loc;
 import ItemInfo;
+import _PlayerAction;
 
 class Necronomicon extends ItemInfo
 {
@@ -22,7 +24,8 @@ class Necronomicon extends ItemInfo
     }
 
 // taking it raises the floor: the librarian and every guard on it turn on the thief, and the bell
-// calls campus security up the stairs (AreaManager's backup arrival, which despawns them once calm)
+// calls campus security up the stairs to the lectern (AreaManager's backup arrival, heading for the
+// cell it was taken from; they despawn once calm)
   public override function onPickup(item: _Item)
     {
       if (game.area.typeID != AREA_LIBRARY)
@@ -39,6 +42,32 @@ class Necronomicon extends ItemInfo
       for (o in game.area.getObjects())
         if (Std.isOfType(o, objects.Stairs))
           game.managerArea.add(AREAEVENT_ARRIVE_BACKUP, o.x, o.y, 3,
-            new game.AreaManager._AreaManagerEventParamsArriveBackup('security'));
+            new game.AreaManager._AreaManagerEventParamsArriveBackup('security',
+              game.playerArea.x, game.playerArea.y));
+    }
+
+// a read action, which spells out nothing
+  override public function getInventoryActions(item: _Item): Array<_PlayerAction>
+    {
+      var actions = super.getInventoryActions(item);
+      actions.push({
+        id: 'read.' + item.id,
+        type: ACTION_INVENTORY,
+        name: T('Read {item}', { item: Loc.colored('inventory-item', item) }),
+        nameClean: T('Read'),
+        energy: 10,
+        isAgreeable: true,
+        item: item
+      });
+      return actions;
+    }
+
+// handles the read action: the host stumbles over the first words and gives up (a turn spent)
+  override public function action(actionID: String, action: _PlayerAction): Null<Bool>
+    {
+      if (actionID != 'read')
+        return super.action(actionID, action);
+      game.log(T('Klaatu, verata, n... It is unreadable.'));
+      return true;
     }
 }

@@ -428,3 +428,7 @@ the books' paper read too bright, and the lectern was one even wood. Changed:
   military shelving's carton shading), exported with `bl.export(colors=True)`.
 
 Verdict: landed. Checked live at the lectern: light over the book, ink bright and dim in two frames.
+Follow-up: the open book's fore-edges wore the page lines 17 degrees off the edge. It is pitched onto the
+board BEFORE the unwrap, and `buildlib.frame` gives a standing face world-up on v, so on a tilted strip
+the art turns with the tilt. Its leather and page-edge rects now carry the `edge` flag (rect[7]: longest
+edge on u); the fore-edge UVs came back axis-aligned (u along the 1.08 length, v across the 0.12).
