@@ -12699,6 +12699,26 @@
    "field": "text"
   },
   {
+   "s": "University Library",
+   "kind": "T",
+   "loc": [
+    "src/const/PediaConst.hx"
+   ],
+   "vars": [],
+   "where": "PediaConst.builtinContents",
+   "field": "name"
+  },
+  {
+   "s": "<p>The upper reading floor of the city's old university library is reached by the stairs from the ground floor, and the stairs are the only way back down. The circulation counter stands by the stair landing, and a corridor leads on to the reading halls and the stacks.</p>\n\n<p>Students fill the reading halls, bent over long tables between walls of bookcases. They are quiet and easily alarmed, and a call to campus security brings guards up the stairs. Tables and chairs fill the halls and nobody can stand on them, so the aisles between them are the only way through.</p>\n\n<p>The stacks are a maze of tall free-standing shelving that blocks the line of sight and makes it easy to lose a pursuer. Somewhere past them lies the restricted archive, which can only be entered from the stacks.</p>",
+   "kind": "T",
+   "loc": [
+    "src/const/PediaConst.hx"
+   ],
+   "vars": [],
+   "where": "PediaConst.builtinContents",
+   "field": "text"
+  },
+  {
    "s": "Uninhabited Area",
    "kind": "T",
    "loc": [

@@ -72710,11 +72710,3592 @@
      "t": null
     }
    ]
+  },
+  "368e8081b781aac1": {
+   "s": "Turn",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label",
+   "kind": "T",
+   "t": "Tour",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Tour"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "« Turn » in the tend options is ambiguous. « Tour » is kept, reading it as a game turn (pass or wait one turn). If the option means rotating a body or object, it should be « Tourner »."
+  },
+  "97d938949cb73f06": {
+   "s": "Drain a body: +{blood} blood",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label",
+   "vars": [
+    "blood"
+   ],
+   "kind": "T",
+   "t": "Drainer un corps : +{blood} sang",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Drainer un corps : +{blood} sang"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "b26de9be5a02b15c": {
+   "s": "Click to tend",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderChip",
+   "kind": "T",
+   "t": "Cliquez pour entretenir",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Cliquez pour entretenir"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "3c210085a9be3243": {
+   "s": "Click to craft {name}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderChip",
+   "field": "html",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "Cliquez pour fabriquer {name:def}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Cliquez pour fabriquer {name:def}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "af855665888dfd7a": {
+   "s": "Click to build {name}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderChip",
+   "field": "html",
+   "vars": [
+    "name"
+   ],
+   "kind": "T",
+   "t": "Cliquez pour construire {name:def}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Cliquez pour construire {name:def}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "da265c4caf24eda2": {
+   "s": "Level {n} of {max}, broken",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderTend",
+   "vars": [
+    "n",
+    "max"
+   ],
+   "kind": "T",
+   "t": "Niveau {n} sur {max}, hors d’usage",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Niveau {n} sur {max}, hors d’usage"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "« broken » applies to a noun that is not in the string, so its gender is unknown. I used « hors d’usage » because it needs no agreement."
+  },
+  "0c5886c3038164cc": {
+   "s": "Level {n} of {max}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderTend",
+   "vars": [
+    "n",
+    "max"
+   ],
+   "kind": "T",
+   "t": "Niveau {n} sur {max}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Niveau {n} sur {max}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "4792f60ba2c63e9f": {
+   "s": "{hp}/{max} health",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderTend",
+   "vars": [
+    "hp",
+    "max"
+   ],
+   "kind": "T",
+   "t": "{hp}/{max} de santé",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{hp}/{max} de santé"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "84c6cac55d9e06de": {
+   "s": "The vote goes through and every official in the city knows your name.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "Le vote passe et tous les responsables de la ville connaissent votre nom.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le vote passe et tous les responsables de la ville connaissent votre nom."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1871d06bbf4c0500": {
+   "s": "{cult} has raised a heresy against us: {ordeal}.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.raise",
+   "field": "text",
+   "vars": [
+    "cult",
+    "ordeal"
+   ],
+   "kind": "T",
+   "t": "{cult:Def} a soulevé une hérésie contre nous : {ordeal}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{cult:Def} a soulevé une hérésie contre nous : {ordeal}."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a7d3155040fe2578": {
+   "s": "Your followers take the Necronomicon away to study it.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseI.hx"
+   ],
+   "where": "MetamorphosisPhaseI.complete",
+   "field": "log",
+   "kind": "T",
+   "t": "Vos fidèles emportent le Necronomicon pour l’étudier.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Vos fidèles emportent le Necronomicon pour l’étudier."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "203e0d5008d6c456": {
+   "s": "Other Altars",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "title",
+   "kind": "N",
+   "t": "Autres autels",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Autres autels"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "bbaff8584bdfc311": {
+   "s": "The flesh opens an eye that is not yours. Across the city, masked strangers kneel in a ring of cold light and sing to a god that is not the Heart. They do not see you yet. They will.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "text",
+   "kind": "N",
+   "t": "La chair ouvre un œil qui n’est pas le vôtre. À travers la ville, des inconnus masqués s’agenouillent dans un cercle de lumière froide et chantent pour un dieu qui n’est pas le Cœur. Ils ne vous voient pas encore. Ils vous verront.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "La chair ouvre un œil qui n’est pas le vôtre. À travers la ville, des inconnus masqués s’agenouillent dans un cercle de lumière froide et chantent pour un dieu qui n’est pas le Cœur. Ils ne vous voient pas encore. Ils vous verront."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7d63caeeee5f92d1": {
+   "s": "Corpus Basilica",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx",
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "title",
+   "kind": "N",
+   "t": "Corpus Basilica",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Corpus Basilica"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "af5f04f5e5c5073d": {
+   "s": "The walls of the lair rise into ribbed vaults and veined windows, a cathedral grown from meat and bone. A vast heart hangs where an altar should be, and the faithful stand beneath it in their thousands. This is what the flesh can become.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "text",
+   "kind": "N",
+   "t": "Les murs de l’antre s’élèvent en voûtes nervurées et en vitraux veinés, une cathédrale née de la viande et de l’os. Un cœur immense pend là où devrait être l’autel, et les fidèles se tiennent sous lui par milliers. Voilà ce que la chair peut devenir.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les murs de l’antre s’élèvent en voûtes nervurées et en vitraux veinés, une cathédrale poussée dans la viande et l’os. Un cœur immense pend là où devrait être l’autel, et les fidèles se tiennent sous lui par milliers. Voilà ce que la chair peut devenir."
+    },
+    {
+     "pass": 2,
+     "t": "Les murs de l’antre s’élèvent en voûtes nervurées et en vitraux veinés, une cathédrale née de la viande et de l’os. Un cœur immense pend là où devrait être l’autel, et les fidèles se tiennent sous lui par milliers. Voilà ce que la chair peut devenir."
+    }
+   ],
+   "doubt": "« poussée dans la viande » read as \"grown inside meat\"; changed to « née de » to keep the sense of \"grown from\""
+  },
+  "32e688e640784bcd": {
+   "s": "The floor splits. Something red and furious drags itself up out of the old growths, beating, burning from inside. Your followers fall to their knees. The Forbidden Heart is born, and it knows its name.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.visions",
+   "field": "text",
+   "kind": "N",
+   "t": "Le sol se fend. Quelque chose de rouge et de furieux se hisse hors des vieilles excroissances, battant, brûlant de l’intérieur. Vos fidèles tombent à genoux. Le Cœur interdit est né, et il connaît son nom.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le sol se fend. Quelque chose de rouge et de furieux se hisse hors des vieilles excroissances, battant, brûlant de l’intérieur. Vos fidèles tombent à genoux. Le Cœur interdit est né, et il connaît son nom."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "dd0cdf4484177caf": {
+   "s": "Channel the ritual in the habitat where it began.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.init",
+   "field": "note",
+   "kind": "N",
+   "t": "Canalisez le rituel dans l’habitat où il a commencé.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Canalisez le rituel dans l’habitat où il a commencé."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "fb26cff1897c0fd7": {
+   "s": "Channel the ritual in the habitat where it began. Stage {stage}/{stages}.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.getNote",
+   "vars": [
+    "stage",
+    "stages"
+   ],
+   "kind": "T",
+   "t": "Canalisez le rituel dans l’habitat où il a commencé. Étape {stage}/{stages}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Canalisez le rituel dans l’habitat où il a commencé. Étape {stage}/{stages}."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "bdef870f08c02edc": {
+   "s": "Channel the ritual ({stage}/{stages})",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.getActions",
+   "field": "name",
+   "vars": [
+    "stage",
+    "stages"
+   ],
+   "kind": "T",
+   "t": "Canaliser le rituel ({stage}/{stages})",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Canaliser le rituel ({stage}/{stages})"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "281eafe2c935a2ab": {
+   "s": "The ritual must be channelled in a habitat.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.getActions",
+   "field": "actionFailed",
+   "kind": "T",
+   "t": "Le rituel doit être canalisé dans un habitat.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le rituel doit être canalisé dans un habitat."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "8d1ae7b5483ba9d0": {
+   "s": "The ritual must continue in the habitat where it began.",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.getActions",
+   "field": "actionFailed",
+   "kind": "T",
+   "t": "Le rituel doit se poursuivre dans l’habitat où il a commencé.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le rituel doit se poursuivre dans l’habitat où il a commencé."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a60a460b2c52f239": {
+   "s": "You channel the metamorphosis ritual ({stage}/{stages}).",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.channel",
+   "field": "log",
+   "vars": [
+    "stage",
+    "stages"
+   ],
+   "kind": "T",
+   "t": "Vous canalisez le rituel de métamorphose ({stage}/{stages}).",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Vous canalisez le rituel de métamorphose ({stage}/{stages})."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "dc7224a9d5941f44": {
+   "s": "{visio}: {title}",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.showVision",
+   "field": "title",
+   "vars": [
+    "visio",
+    "title"
+   ],
+   "kind": "T",
+   "t": "{visio} : {title}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{visio} : {title}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5a6796367ab20eaf": {
+   "s": "Visio",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.showVision",
+   "kind": "T",
+   "t": "Visio",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Visio"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7558e10e6f39e834": {
+   "s": "Endure the vision",
+   "loc": [
+    "src/cult/ordeals/MetamorphosisPhaseII.hx"
+   ],
+   "where": "MetamorphosisPhaseII.showVision",
+   "kind": "T",
+   "t": "Endurer la vision",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Endurer la vision"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1df255879fe34f6d": {
+   "s": "A working Cadaverum is needed.",
+   "loc": [
+    "src/cult/ordeals/ReapTheUnwary.hx"
+   ],
+   "where": "ReapTheUnwary.getNote",
+   "kind": "T",
+   "t": "Il faut un Cadaverum fonctionnel.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Il faut un Cadaverum fonctionnel."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ea45d97a9a65af4e": {
+   "s": "Strike Rival Cult",
+   "loc": [
+    "src/cult/ordeals/RivalStrike.hx"
+   ],
+   "where": "RivalStrike.init",
+   "field": "name",
+   "kind": "N",
+   "t": "Frapper le culte rival",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Frapper le culte rival"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "6005fa9f9846b67b": {
+   "s": "Kill marked members of the rival in the city.",
+   "loc": [
+    "src/cult/ordeals/RivalStrike.hx"
+   ],
+   "where": "RivalStrike.init",
+   "field": "note",
+   "kind": "N",
+   "t": "Tuez les membres marqués du culte rival dans la ville.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Tuez les membres marqués du culte rival dans la ville."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "59afbf4508f69c00": {
+   "s": "Strike {cult}",
+   "loc": [
+    "src/cult/ordeals/RivalStrike.hx"
+   ],
+   "where": "RivalStrike.initiateAction",
+   "field": "name",
+   "vars": [
+    "cult"
+   ],
+   "kind": "T",
+   "t": "Frapper {cult:def}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Frapper {cult:def}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "12de62243fd90a48": {
+   "s": "elder sign",
+   "loc": [
+    "src/items/ElderSign.hx"
+   ],
+   "where": "ElderSign.new",
+   "field": "name",
+   "kind": "N",
+   "t": "signe des Anciens",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "signe des Anciens"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "969b7e1391405a62": {
+   "s": "strange amulet",
+   "loc": [
+    "src/items/ElderSign.hx"
+   ],
+   "where": "ElderSign.new",
+   "field": "unknown",
+   "kind": "N",
+   "t": "amulette étrange",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "amulette étrange"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "032354b73cf59c45": {
+   "s": "ancient book",
+   "loc": [
+    "src/items/Necronomicon.hx"
+   ],
+   "where": "Necronomicon.new",
+   "field": "unknown",
+   "kind": "N",
+   "t": "livre ancien",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "livre ancien"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2913862b367ef20c": {
+   "s": "A shrill bell rings through the stacks as the book leaves the lectern.",
+   "loc": [
+    "src/items/Necronomicon.hx"
+   ],
+   "where": "Necronomicon.onPickup",
+   "field": "log",
+   "kind": "T",
+   "t": "Une sonnerie stridente retentit entre les rayonnages quand le livre quitte le lutrin.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Une sonnerie stridente retentit entre les rayonnages quand le livre quitte le lutrin."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "78410a057a484417": {
+   "s": "You take the stairs down and leave the library.",
+   "loc": [
+    "src/objects/Stairs.hx"
+   ],
+   "where": "Stairs.onAction",
+   "field": "log",
+   "kind": "T",
+   "t": "Vous descendez l’escalier et quittez la bibliothèque.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Vous descendez l’escalier et quittez la bibliothèque."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "4620a83ddf71633b": {
+   "s": "Turn turret",
+   "loc": [
+    "src/objects/base/BaseOrganObject.hx"
+   ],
+   "where": "BaseOrganObject.updateActionList",
+   "field": "name",
+   "kind": "T",
+   "t": "Tourner la tourelle",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Tourner la tourelle"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "12045151fd17e1fe": {
+   "s": "Every review is read, good or bad. <a>Review it.</a>",
+   "loc": [
+    "src/ui/Finish.hx"
+   ],
+   "where": "Finish.new",
+   "kind": "T",
+   "t": "Chaque avis est lu, positif ou négatif. <a>Donnez le vôtre.</a>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Chaque avis est lu, positif ou négatif. <a>Donnez le vôtre.</a>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "d439cc67e57327b5": {
+   "s": "What would make Parasite better? <a>Tell me.</a>",
+   "loc": [
+    "src/ui/Finish.hx"
+   ],
+   "where": "Finish.feedbackLine",
+   "kind": "T",
+   "t": "Qu’est-ce qui rendrait Parasite meilleur ? <a>Dites-le-moi.</a>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Qu’est-ce qui rendrait Parasite meilleur ? <a>Dites-le-moi.</a>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "3c284a10d01077d2": {
+   "s": "Defense",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "field": "title",
+   "kind": "N",
+   "t": "Défense",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Défense"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "f3b21e049fad2c82": {
+   "s": "Growth",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "field": "title",
+   "kind": "N",
+   "t": "Croissance",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Croissance"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "120946df734acc64": {
+   "s": "Upkeep",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "field": "title",
+   "kind": "N",
+   "t": "Entretien",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Entretien"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a7dbe61faa20d5bc": {
+   "s": "Custodes {n}/{cap}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "field": "title",
+   "vars": [
+    "n",
+    "cap"
+   ],
+   "kind": "N",
+   "t": "Custodes {n}/{cap}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Custodes {n}/{cap}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "fdb03ad1950311ff": {
+   "s": "Firmus",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "kind": "N",
+   "t": "Firmus",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Firmus"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1c912c27bda868f0": {
+   "s": "A sturdy guard that holds its tile. Strength 8, constitution 12.",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "kind": "N",
+   "t": "Un garde robuste qui tient sa case. Force 8, Constitution 12.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un garde robuste qui tient sa case. Force 8, constitution 12."
+    },
+    {
+     "pass": 2,
+     "t": "Un garde robuste qui tient sa case. Force 8, Constitution 12."
+    }
+   ]
+  },
+  "b9b4eb51e7595a49": {
+   "s": "Mordax",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "kind": "N",
+   "t": "Mordax",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Mordax"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "3bcb392b0316bb2f": {
+   "s": "A savage guard that holds its tile. Strength 10, constitution 7.",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.initTools",
+   "kind": "N",
+   "t": "Un garde féroce qui tient sa case. Force 10, Constitution 7.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un garde féroce qui tient sa case. Force 10, constitution 7."
+    },
+    {
+     "pass": 2,
+     "t": "Un garde féroce qui tient sa case. Force 10, Constitution 7."
+    }
+   ]
+  },
+  "424e327a921df8f4": {
+   "s": "short {n}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "vars": [
+    "n"
+   ],
+   "kind": "T",
+   "t": "manque {n}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "manque {n}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2befaafbde7d5ce1": {
+   "s": "Flesh",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "kind": "T",
+   "t": "Chair",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Chair"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "24652e28b94087f3": {
+   "s": "Blood",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "kind": "T",
+   "t": "Sang",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Sang"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "bcf605d6bb6a9db9": {
+   "s": "Bone",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "kind": "T",
+   "t": "Os",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Os"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "8af049f228e30e4b": {
+   "s": "each turn",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "add",
+   "kind": "T",
+   "t": "par tour",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "par tour"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "b091d64170afaf93": {
+   "s": "Bodies",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "kind": "T",
+   "t": "Corps",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Corps"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "79e2f237bb8b7138": {
+   "s": "Custodes",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "kind": "T",
+   "t": "Custodes",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Custodes"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "d1222178efa7946a": {
+   "s": "Pressure",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "kind": "T",
+   "t": "Pression",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Pression"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2251766d83d02075": {
+   "s": "Defense in",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "kind": "T",
+   "t": "Défense dans",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Défense dans"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "\"Defense in\" assumed to be followed by a turn count (« Défense dans 3 tours »); recheck if it is followed by something else"
+  },
+  "739c7cc937e24454": {
+   "s": "Heart {n}/3",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li",
+   "vars": [
+    "n"
+   ],
+   "kind": "T",
+   "t": "Cœur {n}/3",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Cœur {n}/3"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "eba6e7822a0cba6e": {
+   "s": "Organ levels {n}/10",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li",
+   "vars": [
+    "n"
+   ],
+   "kind": "T",
+   "t": "Niveaux d’organes {n}/10",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Niveaux d’organes {n}/10"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "44944d22e9bafa0f": {
+   "s": "A growth organ",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li",
+   "kind": "T",
+   "t": "Un organe de croissance",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un organe de croissance"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "f05152a0c63f9c38": {
+   "s": "Defenses {n}/5",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li",
+   "vars": [
+    "n"
+   ],
+   "kind": "T",
+   "t": "Défenses {n}/5",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Défenses {n}/5"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "beaff9b6f7cf94f1": {
+   "s": "Body storage",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li",
+   "kind": "T",
+   "t": "Stockage des corps",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Stockage des corps"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "14109fcad52b5c76": {
+   "s": "Survived {n}/2",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li",
+   "vars": [
+    "n"
+   ],
+   "kind": "T",
+   "t": "Survécu {n}/2",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Survécu {n}/2"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "\"Survived {n}/2\": kept « Survécu », but a bare participle reads oddly as a label. If it counts survived assaults, « Assauts survécus {n}/2 » would be clearer. Context needed."
+  },
+  "3865a9d039ce179e": {
+   "s": "A Caldarium",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderLedger",
+   "field": "li",
+   "kind": "T",
+   "t": "Un Caldarium",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un Caldarium"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5f2391220833847e": {
+   "s": "not available",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderTray",
+   "kind": "T",
+   "t": "indisponible",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "indisponible"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "9477fdc83bfd8feb": {
+   "s": "choose",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "choisir",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "choisir"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1f7a4f9e2f70d0b8": {
+   "s": "Esc",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "Échap",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Échap"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "Key label \"Esc\" rendered as « Échap », the label on French keyboards."
+  },
+  "61bb8d29b5be7db3": {
+   "s": "back",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "retour",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "retour"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "f192df129f501892": {
+   "s": "move away",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "s’éloigner",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "s’éloigner"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "379d6ce99a8a95a7": {
+   "s": "move",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "déplacer",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "déplacer"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1c5ce0dbf9bf9c28": {
+   "s": "organ",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "organe",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "organe"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ce2edabefef64126": {
+   "s": "or click: build, craft or tend",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "ou clic : construire, fabriquer ou entretenir",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "ou clic : construire, fabriquer ou entretenir"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1775f29b255b4d28": {
+   "s": "turn turret or wall",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "tourner une tourelle ou un mur",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "tourner une tourelle ou un mur"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "de3ac21778e51de1": {
+   "s": "exit",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderKeys",
+   "kind": "T",
+   "t": "quitter",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "quitter"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a8411f3cd0b2e105": {
+   "s": "2 by 2 tiles, grows to level {max}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.sizeText",
+   "vars": [
+    "max"
+   ],
+   "kind": "T",
+   "t": "2 × 2 cases, croît jusqu’au niveau {max}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "2 × 2 cases, croît jusqu’au niveau {max}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1e27889c1d45fe5e": {
+   "s": "2 by 2 tiles",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.sizeText",
+   "kind": "T",
+   "t": "2 × 2 cases",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "2 × 2 cases"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "17004694554b5eac": {
+   "s": "1 tile, grows to level {max}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.sizeText",
+   "vars": [
+    "max"
+   ],
+   "kind": "T",
+   "t": "1 case, croît jusqu’au niveau {max}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "1 case, croît jusqu’au niveau {max}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "615f8603c1118783": {
+   "s": "1 tile",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.sizeText",
+   "kind": "T",
+   "t": "1 case",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "1 case"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "3099447db4c86031": {
+   "s": "north",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "kind": "T",
+   "t": "nord",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "nord"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "25038d9da4649a8f": {
+   "s": "east",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "kind": "T",
+   "t": "est",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "est"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7e3fb5d99b37e07f": {
+   "s": "south",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "kind": "T",
+   "t": "sud",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "sud"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "d63eba28afc02584": {
+   "s": "west",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "kind": "T",
+   "t": "ouest",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "ouest"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5916ae4c039d613b": {
+   "s": "facing {dir}, Q/E to turn",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "vars": [
+    "dir"
+   ],
+   "kind": "T",
+   "t": "orientation : {dir}, Q/E pour tourner",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "orientation : {dir}, Q/E pour tourner"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "« vers le {dir} » would break with « est » (« vers l’est »), so used « orientation : {dir} »."
+  },
+  "1216f65ce1a9706b": {
+   "s": "runs east to west, Q/E to turn",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "kind": "T",
+   "t": "s’étend d’est en ouest, Q/E pour tourner",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "s’étend d’est en ouest, Q/E pour tourner"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ef632e4417eef79f": {
+   "s": "runs north to south, Q/E to turn",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "kind": "T",
+   "t": "s’étend du nord au sud, Q/E pour tourner",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "s’étend du nord au sud, Q/E pour tourner"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "82f6290e9db14919": {
+   "s": "Needs a working Caldarium",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.renderDetail",
+   "kind": "T",
+   "t": "Nécessite un Caldarium fonctionnel",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Nécessite un Caldarium fonctionnel"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a6f47e00e036c558": {
+   "s": "Upgrade",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.tendOptions",
+   "kind": "T",
+   "t": "Améliorer",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Améliorer"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "76c2260ddd39db6e": {
+   "s": "Upgrade to level {n}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.tendOptions",
+   "vars": [
+    "n"
+   ],
+   "kind": "T",
+   "t": "Améliorer au niveau {n}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Améliorer au niveau {n}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5f60b1c2e60520c1": {
+   "s": "Repair",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label",
+   "kind": "T",
+   "t": "Réparer",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Réparer"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "9330c97c5edfa9d7": {
+   "s": "Grow {organ}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label",
+   "vars": [
+    "organ"
+   ],
+   "kind": "T",
+   "t": "Faire croître {organ:indef}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Faire croître {organ:indef}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "\"Grow {organ}\" in tendOptions: if it levels up the existing organ rather than growing a new one, use {organ:def} instead of {organ:indef}"
+  },
+  "2cc579578707c85f": {
+   "s": "Focus on {resource}",
+   "loc": [
+    "src/ui/hud/FormaHud.hx"
+   ],
+   "where": "FormaHud.tendOptions",
+   "field": "label",
+   "vars": [
+    "resource"
+   ],
+   "kind": "T",
+   "t": "Priorité : {resource}",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Priorité : {resource}"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "{resource} is a plain value (Chair/Sang/Os), so used « Priorité : {resource} » to avoid needing an article."
+  },
+  "72baf2b18a27ed34": {
+   "s": "{attacker:The} slams {target:the} for {damage} damage.",
+   "loc": [
+    "src/ai/FirmusCustosAI.hx"
+   ],
+   "where": "FirmusCustosAI.getCurrentWeaponItemInfo",
+   "vars": [
+    "attacker",
+    "target",
+    "damage"
+   ],
+   "kind": "T",
+   "t": "{attacker:Def} percute {target:def} et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{attacker:Def} percute {target:def} et inflige {damage} points de dégâts."
+    },
+    {
+     "pass": 2,
+     "t": "{attacker:Def} percute {target:def} et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}."
+    }
+   ]
+  },
+  "d9b8aaf5f0e91bfe": {
+   "s": "{attacker:The} slams you for {damage} damage.",
+   "loc": [
+    "src/ai/FirmusCustosAI.hx"
+   ],
+   "where": "FirmusCustosAI.getCurrentWeaponItemInfo",
+   "vars": [
+    "attacker",
+    "damage"
+   ],
+   "kind": "T",
+   "t": "{attacker:Def} vous percute et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{attacker:Def} vous percute et inflige {damage} points de dégâts."
+    },
+    {
+     "pass": 2,
+     "t": "{attacker:Def} vous percute et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}."
+    }
+   ]
+  },
+  "93c768d0152f72bc": {
+   "s": "librarian",
+   "loc": [
+    "src/ai/LibrarianAI.hx"
+   ],
+   "where": "LibrarianAI.init",
+   "field": "unknown",
+   "kind": "N",
+   "t": "bibliothécaire",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "bibliothécaire"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "cba71e2bf7209bc1": {
+   "s": "Librarian",
+   "loc": [
+    "src/ai/LibrarianAI.hx"
+   ],
+   "where": "LibrarianAI.init",
+   "field": "unknownCapped",
+   "kind": "N",
+   "t": "Bibliothécaire",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Bibliothécaire"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "024c2bc9ce2edf2d": {
+   "s": "The elder sign the librarian carries sears your mind.",
+   "loc": [
+    "src/ai/LibrarianAI.hx"
+   ],
+   "where": "LibrarianAI.turn",
+   "field": "log",
+   "kind": "T",
+   "t": "Le signe des Anciens que porte le bibliothécaire vous brûle l’esprit.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le signe des Anciens que porte le bibliothécaire vous brûle l’esprit."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "88a0ceb7106f7f03": {
+   "s": "{attacker:The} bites {target:the} for {damage} damage.",
+   "loc": [
+    "src/ai/MordaxCustosAI.hx"
+   ],
+   "where": "MordaxCustosAI.getCurrentWeaponItemInfo",
+   "vars": [
+    "attacker",
+    "target",
+    "damage"
+   ],
+   "kind": "T",
+   "t": "{attacker:Def} mord {target:def} et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{attacker:Def} mord {target:def} et inflige {damage} points de dégâts."
+    },
+    {
+     "pass": 2,
+     "t": "{attacker:Def} mord {target:def} et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}."
+    }
+   ]
+  },
+  "6045f0cf85fd4a88": {
+   "s": "{attacker:The} bites you for {damage} damage.",
+   "loc": [
+    "src/ai/MordaxCustosAI.hx"
+   ],
+   "where": "MordaxCustosAI.getCurrentWeaponItemInfo",
+   "vars": [
+    "attacker",
+    "damage"
+   ],
+   "kind": "T",
+   "t": "{attacker:Def} vous mord et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{attacker:Def} vous mord et inflige {damage} points de dégâts."
+    },
+    {
+     "pass": 2,
+     "t": "{attacker:Def} vous mord et inflige {damage, plural, one{# point de dégâts} other{# points de dégâts}}."
+    }
+   ]
+  },
+  "63253f89bd24c83e": {
+   "s": "The heart of the base.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Le cœur de la base.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le cœur de la base."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "3a231f5e68e22d44": {
+   "s": "A wall of ribs. Blocks the way and the view. Counts as a defense.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Un mur de côtes. Bloque le passage et la vue. Compte comme une défense.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un mur de côtes. Bloque le passage et la vue. Compte comme une défense."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5573f9b8f0962c42": {
+   "s": "Murus",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Murus",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Murus"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "813a5fc19204ed7a": {
+   "s": "Grows over a ribwall. Your side walks through, foes are bitten and bleed. Counts as a defense.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Pousse sur un mur de côtes. Vos alliés le traversent, les ennemis sont mordus et saignent. Compte comme une défense.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Pousse sur un mur de côtes. Vos alliés le traversent, les ennemis sont mordus et saignent. Compte comme une défense."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "933d4f277e28d5b9": {
+   "s": "Porta",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Porta",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Porta"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "df5a6be714bfe560": {
+   "s": "Faces one way and shoots down the line; at level 3 it hits two. Counts as a defense.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Orienté dans une direction, tire en ligne droite ; au niveau 3, touche deux cibles. Compte comme une défense.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Orienté dans une direction, tire en ligne droite ; au niveau 3, touche deux cibles. Compte comme une défense."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "It's unclear what \"at level 3 it hits two\" counts: two targets or two lines. « touche deux cibles » has been kept."
+  },
+  "9c1be454db7967d0": {
+   "s": "Turris",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Turris",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Turris"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "185333e4de71fcb3": {
+   "s": "A pool of grasping hands that slow foes. Counts as a defense.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Un bassin de mains agrippantes qui ralentissent les ennemis. Compte comme une défense.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un bassin de mains agrippantes qui ralentissent les ennemis. Compte comme une défense."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "76dfe0a3460c9536": {
+   "s": "Grows flesh: +5 a turn per level.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Produit de la chair : +5 par tour et par niveau.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Produit de la chair : +5 par tour et par niveau."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "156402d84f6f99af": {
+   "s": "Rats bring +3 of the focus resource and +1 of each other a turn per level.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Les rats rapportent +3 de la ressource prioritaire et +1 de chacune des autres par tour et par niveau.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les rats rapportent +3 de la ressource prioritaire et +1 de chacune des autres par tour et par niveau."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e041ecf04fc9c26a": {
+   "s": "Grinds one stored body a turn into +5 bone per level.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Broie un corps stocké par tour pour +5 os par niveau.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Broie un corps stocké par tour pour +5 os par niveau."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "4b4cc04e8bf67a22": {
+   "s": "Rots one stored body a turn into +5 flesh per level, or +2 with none.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Fait pourrir un corps stocké par tour pour +5 chair par niveau, ou +2 sans corps stocké.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Fait pourrir un corps stocké par tour pour +5 chair par niveau, ou +2 sans corps stocké."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "c7783d250f50103b": {
+   "s": "Stores 8 bodies per level.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Stocke 8 corps par niveau.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Stocke 8 corps par niveau."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "f0396c53116bef7c": {
+   "s": "Lets you craft custodes: 2 per level.",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.info",
+   "kind": "N",
+   "t": "Permet de façonner des custodes : 2 par niveau.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Permet de façonner des custodes : 2 par niveau."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "c2c4a896be2b3ab1": {
+   "s": "blood",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.focusName",
+   "kind": "N",
+   "t": "sang",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "sang"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ffdf4ccbf050a0f3": {
+   "s": "bone",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.focusName",
+   "kind": "N",
+   "t": "os",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "os"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "3496ae539fd99f7f": {
+   "s": "flesh",
+   "loc": [
+    "src/const/CultBaseConst.hx"
+   ],
+   "where": "CultBaseConst.focusName",
+   "kind": "N",
+   "t": "chair",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "chair"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "314bd37ea66816e3": {
+   "s": "head librarian",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "where": "Jobs.initJobTable",
+   "kind": "N",
+   "t": "bibliothécaire en chef",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "bibliothécaire en chef"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "5eb6dd709f613ef4": {
+   "s": "archive keeper",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "where": "Jobs.initJobTable",
+   "kind": "N",
+   "t": "gardien des archives",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "gardien des archives"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "96b6ab751fbe666a": {
+   "s": "special collections curator",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "where": "Jobs.initJobTable",
+   "kind": "N",
+   "t": "conservateur des collections spéciales",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "conservateur des collections spéciales"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "bbacc81afe72966d": {
+   "s": "university archivist",
+   "loc": [
+    "src/const/Jobs.hx"
+   ],
+   "where": "Jobs.initJobTable",
+   "kind": "N",
+   "t": "archiviste universitaire",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "archiviste universitaire"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2249f9b5d46484b0": {
+   "s": "University Library",
+   "loc": [
+    "src/const/PediaConst.hx"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "name",
+   "kind": "T",
+   "t": "Bibliothèque universitaire",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Bibliothèque universitaire"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "b5d0974c27fb3246": {
+   "s": "<p>The upper reading floor of the city's old university library is reached by the stairs from the ground floor, and the stairs are the only way back down. The circulation counter stands by the stair landing, and a corridor leads on to the reading halls and the stacks.</p>\n\n<p>Students fill the reading halls, bent over long tables between walls of bookcases. They are quiet and easily alarmed, and a call to campus security brings guards up the stairs. Tables and chairs fill the halls and nobody can stand on them, so the aisles between them are the only way through.</p>\n\n<p>The stacks are a maze of tall free-standing shelving that blocks the line of sight and makes it easy to lose a pursuer. Somewhere past them lies the restricted archive, which can only be entered from the stacks.</p>",
+   "loc": [
+    "src/const/PediaConst.hx"
+   ],
+   "where": "PediaConst.builtinContents",
+   "field": "text",
+   "kind": "T",
+   "t": "<p>On accède à l’étage de lecture supérieur de la vieille bibliothèque universitaire de la ville par l’escalier du rez-de-chaussée, et cet escalier est le seul moyen de redescendre. Le comptoir de prêt se dresse près du palier, et un couloir mène aux salles de lecture et aux rayonnages.</p>\n\n<p>Des étudiants remplissent les salles de lecture, penchés sur de longues tables entre des murs de bibliothèques. Ils sont silencieux et prompts à s’alarmer, et un appel à la sécurité du campus fait monter des gardes par l’escalier. Tables et chaises encombrent les salles et personne ne peut se tenir dessus : les allées entre elles sont donc le seul passage.</p>\n\n<p>Les rayonnages forment un labyrinthe de hautes étagères isolées qui bloquent la ligne de vue et permettent de semer facilement un poursuivant. Quelque part au-delà se trouvent les archives réservées, accessibles uniquement depuis les rayonnages.</p>",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "<p>On accède à l’étage de lecture supérieur de la vieille bibliothèque universitaire de la ville par l’escalier du rez-de-chaussée, et cet escalier est le seul moyen de redescendre. Le comptoir de prêt se dresse près du palier, et un couloir mène aux salles de lecture et aux rayonnages.</p>\n\n<p>Des étudiants remplissent les salles de lecture, penchés sur de longues tables entre des murs de bibliothèques. Ils sont silencieux et prompts à s’alarmer, et un appel à la sécurité du campus fait monter des gardes par l’escalier. Tables et chaises encombrent les salles et personne ne peut se tenir dessus : les allées entre elles sont donc le seul passage.</p>\n\n<p>Les rayonnages forment un labyrinthe de hautes étagères isolées qui bloquent la ligne de vue et permettent de semer facilement un poursuivant. Quelque part au-delà se trouvent les archives réservées, accessibles uniquement depuis les rayonnages.</p>"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "dc5eb733730ef7d1": {
+   "s": "University library",
+   "loc": [
+    "src/const/WorldConst.hx",
+    "src/region/Library.hx"
+   ],
+   "where": "WorldConst.areas",
+   "field": "name",
+   "kind": "N",
+   "t": "Bibliothèque universitaire",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Bibliothèque universitaire"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "ca7742a0b1a5d608": {
+   "s": "{cult} is destroyed.",
+   "loc": [
+    "src/cult/RivalCult.hx"
+   ],
+   "where": "RivalCult.onWiped",
+   "field": "log",
+   "vars": [
+    "cult"
+   ],
+   "kind": "T",
+   "t": "{cult:Def} est {cult, select, f{détruite} other{détruit}}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "{cult:Def} est {cult, select, f{détruite} other{détruit}}."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "I used {cult:Def} with a gender select, in case a rival cult's name is feminine."
+  },
+  "5d6ba66b34ea10b0": {
+   "s": "Another cult rises in the city.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.turnRivalReplacements",
+   "field": "logsg",
+   "kind": "T",
+   "t": "Un autre culte s’élève dans la ville.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un autre culte s’élève dans la ville."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "d827458ff69d7efb": {
+   "s": "Only Turris Spinarum turns.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.validateTurn",
+   "kind": "T",
+   "t": "Seul l’organe Turris Spinarum peut pivoter.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Seul l’organe Turris Spinarum peut pivoter."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "6d0d36c320d8eff3": {
+   "s": "This organ is broken.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.validateTurn",
+   "kind": "T",
+   "t": "Cet organe est brisé.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Cet organe est brisé."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "4856143d5a3aceb9": {
+   "s": "You turn {organ}.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.turnTurret",
+   "field": "log",
+   "vars": [
+    "organ"
+   ],
+   "kind": "T",
+   "t": "Vous faites pivoter {organ:def}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Vous faites pivoter {organ:def}."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "I gave {organ} the form {organ:def}, assuming the value is a noun (organ name)."
+  },
+  "1c78f03421500b35": {
+   "s": "Only Nidus Murium has a focus.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.validateFocus",
+   "kind": "T",
+   "t": "Seul l’organe Nidus Murium a une priorité.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Seul l’organe Nidus Murium a une priorité."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "40416e4f86029058": {
+   "s": "The rats already focus on this.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.validateFocus",
+   "kind": "T",
+   "t": "Les rats ont déjà cette priorité.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les rats ont déjà cette priorité."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "d7903170445e93ce": {
+   "s": "The rats turn to {resource}.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.setFocus",
+   "field": "log",
+   "vars": [
+    "resource"
+   ],
+   "kind": "T",
+   "t": "Les rats se tournent vers la ressource : {resource}.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les rats se tournent vers la ressource : {resource}."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ],
+   "doubt": "`{resource}` is a focusName (sang / os / chair). It's kept article-free through « la ressource : {resource} ». If these names carry gender for the noun forms, « vers {resource:def} » would read better."
+  },
+  "5ea44ced17c24516": {
+   "s": "Only Cadaverum drains bodies.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.validateDrain",
+   "kind": "T",
+   "t": "Seul l’organe Cadaverum draine les corps.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Seul l’organe Cadaverum draine les corps."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7698dbf4e02de118": {
+   "s": "No stored bodies.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.validateDrain",
+   "kind": "T",
+   "t": "Aucun corps stocké.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Aucun corps stocké."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "deef862c0c893d75": {
+   "s": "The blood stockpile is full.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.validateDrain",
+   "kind": "T",
+   "t": "La réserve de sang est pleine.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "La réserve de sang est pleine."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "95ce31c437a7e75d": {
+   "s": "You drain a body: +{blood} blood.",
+   "loc": [
+    "src/cult/base/CultBase.hx"
+   ],
+   "where": "CultBase.drainBody",
+   "field": "log",
+   "vars": [
+    "blood"
+   ],
+   "kind": "T",
+   "t": "Vous drainez un corps : +{blood} sang.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Vous drainez un corps : +{blood} sang."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "84c3c913095062dd": {
+   "s": "cultist",
+   "loc": [
+    "src/cult/missions/CombatTargetsWithGuards.hx"
+   ],
+   "where": "CombatTargetsWithGuards.rivalInfo",
+   "field": "job",
+   "kind": "N",
+   "t": "cultiste",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "cultiste"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "162a55a322e7c8a0": {
+   "s": "Rival Strike",
+   "loc": [
+    "src/cult/missions/CombatTargetsWithGuards.hx"
+   ],
+   "where": "CombatTargetsWithGuards.initRival",
+   "field": "name",
+   "kind": "N",
+   "t": "Frappe contre le rival",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Frappe contre le rival"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "78e230952d388d28": {
+   "s": "Kill the marked cultists of the rival.",
+   "loc": [
+    "src/cult/missions/CombatTargetsWithGuards.hx"
+   ],
+   "where": "CombatTargetsWithGuards.initRival",
+   "field": "note",
+   "kind": "N",
+   "t": "Tuez les cultistes rivaux désignés.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Tuez les cultistes rivaux désignés."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "055a2fdf2fbbd05c": {
+   "s": "Take the forbidden book from the university library and leave with it.",
+   "loc": [
+    "src/cult/missions/Necronomicon.hx"
+   ],
+   "where": "Necronomicon.init",
+   "field": "note",
+   "kind": "N",
+   "t": "Dérobez le livre interdit à la bibliothèque universitaire et repartez avec.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Dérobez le livre interdit à la bibliothèque universitaire et repartez avec."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "f036a76607752998": {
+   "s": "Destroy the rival sanctum and kill its defenders.",
+   "loc": [
+    "src/cult/missions/RivalBase.hx",
+    "src/cult/ordeals/RivalAttack.hx"
+   ],
+   "where": "RivalBase.init",
+   "field": "note",
+   "kind": "N",
+   "t": "Détruisez le sanctuaire rival et tuez ses défenseurs.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Détruisez le sanctuaire rival et tuez ses défenseurs."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "24e21fb75c1dbe9d": {
+   "s": "The raid brings {loot} to the base.",
+   "loc": [
+    "src/cult/missions/RivalBase.hx"
+   ],
+   "where": "RivalBase.onSuccess",
+   "field": "logsg",
+   "vars": [
+    "loot"
+   ],
+   "kind": "T",
+   "t": "Le raid rapporte {loot} à la base.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le raid rapporte {loot} à la base."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a319843ecc82b56f": {
+   "s": "Whispering Campaign",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Campagne de rumeurs",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Campagne de rumeurs"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "79824f6eb37f599e": {
+   "s": "Anonymous feeds trade photographs of your initiates leaving the same doors. A rival cult hands out the captions.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Des fils anonymes s’échangent des photos de vos initiés franchissant les mêmes portes. Un culte rival fournit les légendes.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Des fils anonymes s’échangent des photos de vos initiés franchissant les mêmes portes. Un culte rival fournit les légendes."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "e0373e85554ac1fb": {
+   "s": "The feeds go quiet. Some accounts never post again.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "Les fils se taisent. Certains comptes ne publient plus jamais.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les fils se taisent. Certains comptes ne publient plus jamais."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1840f449be1d935c": {
+   "s": "The story spreads. Strangers watch the doors your people use.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "L’histoire se répand. Des inconnus surveillent les portes qu’empruntent les vôtres.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "L’histoire se répand. Des inconnus surveillent les portes qu’empruntent les vôtres."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "8d04904f6cd0f5bb": {
+   "s": "Hollow Broadcast",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Émission creuse",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Émission creuse"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "6a8da00416bd24a2": {
+   "s": "A late-night broadcast preaches a gospel that is not yours, in a voice that sounds like your own.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Une émission nocturne prêche un évangile qui n’est pas le vôtre, d’une voix qui ressemble à la vôtre.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Une émission nocturne prêche un évangile qui n’est pas le vôtre, d’une voix qui ressemble à la vôtre."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "9929b4e3e3397a32": {
+   "s": "The transmitter falls silent and the hollow gospel fades from the airwaves.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "L’émetteur se tait et l’évangile creux s’efface des ondes.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "L’émetteur se tait et l’évangile creux s’efface des ondes."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "c49fb73d3c5156c1": {
+   "s": "The hollow gospel takes root. Your followers hesitate at your name.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "L’évangile creux prend racine. Vos fidèles hésitent en entendant votre nom.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "L’évangile creux prend racine. Vos fidèles hésitent à prononcer votre nom."
+    },
+    {
+     "pass": 2,
+     "t": "L’évangile creux prend racine. Vos fidèles hésitent en entendant votre nom."
+    }
+   ],
+   "doubt": "\"hesitate at your name\" means they hesitate when your name comes up. The old « hésitent à prononcer » narrowed that to saying it."
+  },
+  "d6a39eac507e8f64": {
+   "s": "Writ of Heresy",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Assignation pour hérésie",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Assignation pour hérésie"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1059384bb60196ec": {
+   "s": "A rival cult files petitions against your front companies, one filing for each of your names.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Un culte rival dépose des requêtes contre vos sociétés-écrans, une pour chacun de vos noms.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un culte rival dépose des requêtes contre vos sociétés-écrans, une pour chacun de vos noms."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "39da8a028b84d876": {
+   "s": "The petitions are withdrawn and the clerk who filed them forgets the case.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "Les requêtes sont retirées et le greffier qui les a enregistrées oublie l’affaire.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les requêtes sont retirées et le greffier qui les a enregistrées oublie l’affaire."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "dd53574717c650fc": {
+   "s": "The court freezes your accounts and your people spend their days in corridors.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "Le tribunal gèle vos comptes et les vôtres passent leurs journées dans les couloirs.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Le tribunal gèle vos comptes et les vôtres passent leurs journées dans les couloirs."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "617408fc5570918b": {
+   "s": "Sworn Affidavit",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Déclaration sous serment",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Déclaration sous serment"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "8a291a72b63abda7": {
+   "s": "Sworn statements place your initiates at scenes they never visited. The rival lawyers keep the originals.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Des déclarations sous serment placent vos initiés sur des lieux où ils ne sont jamais allés. Les avocats rivaux gardent les originaux.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Des déclarations sous serment placent vos initiés sur des lieux où ils ne sont jamais allés. Les avocats rivaux gardent les originaux."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7ba464f65f47b060": {
+   "s": "The affidavits are discredited. The rival lawyers are reassigned to cases elsewhere.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "Les déclarations sont discréditées. Les avocats rivaux sont réaffectés à d’autres affaires.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les déclarations sont discréditées. Les avocats rivaux sont réaffectés à d’autres affaires."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "af742dfb6c0740f3": {
+   "s": "The statements stand. Doors that opened for you close.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "Les déclarations tiennent. Les portes qui s’ouvraient pour vous se ferment.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les déclarations tiennent. Les portes qui s’ouvraient pour vous se ferment."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "507be9dc4ab55cce": {
+   "s": "Hostile Acquisition",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Acquisition hostile",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Acquisition hostile"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "fd39739269c374a8": {
+   "s": "A rival cult buys the debts of your suppliers and calls them in on the same morning.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Un culte rival rachète les dettes de vos fournisseurs et en exige le remboursement le même matin.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un culte rival rachète les dettes de vos fournisseurs et les exige toutes le même matin."
+    },
+    {
+     "pass": 2,
+     "t": "Un culte rival rachète les dettes de vos fournisseurs et en exige le remboursement le même matin."
+    }
+   ]
+  },
+  "8c1c5ad537c9df71": {
+   "s": "The debts are bought back and your suppliers owe you more than before.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "Les dettes sont rachetées et vos fournisseurs vous doivent plus qu’avant.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les dettes sont rachetées et vos fournisseurs vous doivent plus qu’avant."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2731f47eaa8cca9c": {
+   "s": "The suppliers fold. Shipments for the base are lost in the shuffle.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "Les fournisseurs font faillite. Les livraisons destinées à la base se perdent dans la confusion.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les fournisseurs font faillite. Les livraisons destinées à la base se perdent dans la confusion."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "df5fa1a3c6cbf286": {
+   "s": "Quiet Sabotage",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Sabotage discret",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Sabotage discret"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "86af60f087939bf8": {
+   "s": "Orders go missing, invoices come back wrong, and a rival cult has a hand in every clerical error.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Des commandes disparaissent, des factures reviennent erronées, et un culte rival trempe dans chaque erreur administrative.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Des commandes disparaissent, des factures reviennent erronées, et un culte rival trempe dans chaque erreur administrative."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "2dba12c56f977917": {
+   "s": "The saboteurs are found among the clerks, and the errors stop.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "Les saboteurs sont démasqués parmi les employés de bureau, et les erreurs cessent.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les saboteurs sont démasqués parmi les employés de bureau, et les erreurs cessent."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "9ad133168923b9bc": {
+   "s": "The errors pile up and the money you are owed goes missing.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "Les erreurs s’accumulent et l’argent qu’on vous doit disparaît.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les erreurs s’accumulent et l’argent qu’on vous doit disparaît."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "c65578171dc7d9d7": {
+   "s": "Hearing in Closed Session",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Audition à huis clos",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Audition à huis clos"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "fab94c446fae97a1": {
+   "s": "A council committee meets behind closed doors to discuss your cult. A rival cult wrote the agenda.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Une commission du conseil municipal se réunit à huis clos pour discuter de votre culte. Un culte rival en a rédigé l’ordre du jour.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Une commission du conseil municipal se réunit à huis clos pour discuter de votre culte. Un culte rival en a rédigé l’ordre du jour."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "7181c71f014a1a00": {
+   "s": "The committee adjourns without a vote. Its chairman takes a long holiday.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "La commission ajourne sans vote. Son président part en longues vacances.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "La commission ajourne sans vote. Son président part en longues vacances."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "a4416dcdcb053c5b": {
+   "s": "The committee finds against you. Police officers begin asking about the base.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "fail",
+   "kind": "N",
+   "t": "La commission se prononce contre vous. Des policiers commencent à poser des questions sur la base.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "La commission se prononce contre vous. Des policiers commencent à poser des questions sur la base."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "098c5557ab887c89": {
+   "s": "Whip Count",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "name",
+   "kind": "N",
+   "t": "Décompte des voix",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Décompte des voix"
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "1540a90c638b2846": {
+   "s": "A rival cult counts the votes it owns and the votes it can buy. All of them are meant for you.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "note",
+   "kind": "N",
+   "t": "Un culte rival compte les voix qu’il possède et celles qu’il peut acheter. Toutes vous sont destinées.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Un culte rival compte les voix qu’il possède et celles qu’il peut acheter. Toutes vous sont destinées."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
+  },
+  "639ef59ff3ca16b4": {
+   "s": "The votes drift away. The rival cult is out of favours.",
+   "loc": [
+    "src/cult/ordeals/HereticalOrdeal.hx"
+   ],
+   "where": "HereticalOrdeal.infos",
+   "field": "success",
+   "kind": "N",
+   "t": "Les voix se dispersent. Le culte rival n’a plus de faveurs à réclamer.",
+   "status": "done",
+   "passes": [
+    {
+     "pass": 1,
+     "t": "Les voix se dispersent. Le culte rival n’a plus de faveurs à réclamer."
+    },
+    {
+     "pass": 2,
+     "t": null
+    }
+   ]
   }
  },
  "totals": {
-  "calls": 161,
-  "input": 1745914,
-  "output": 550598
+  "calls": 168,
+  "input": 1821039,
+  "output": 570460
  }
 }

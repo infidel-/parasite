@@ -78,10 +78,19 @@
   "g": "f",
   "s": "analyse"
  },
+ "ancient book": {
+  "g": "m",
+  "s": "livre ancien"
+ },
  "apprentice barber": {
   "g": "m",
   "s": "apprenti barbier",
   "fs": "apprentie barbière"
+ },
+ "archive keeper": {
+  "g": "m",
+  "s": "gardien des archives",
+  "fs": "gardienne des archives"
  },
  "article": {
   "g": "m",
@@ -274,9 +283,17 @@
   "s": "caïd du quartier",
   "fs": "caïde du quartier"
  },
+ "blood": {
+  "g": "m",
+  "s": "sang"
+ },
  "body": {
   "g": "m",
   "s": "corps"
+ },
+ "bone": {
+  "g": "m",
+  "s": "os"
  },
  "book": {
   "g": "m",
@@ -1093,6 +1110,11 @@
   "s": "chef du culte",
   "fs": "cheffe du culte"
  },
+ "cultist": {
+  "g": "m",
+  "s": "cultiste",
+  "fs": "cultiste"
+ },
  "culture ambassador": {
   "g": "m",
   "s": "ambassadeur de la culture",
@@ -1306,6 +1328,10 @@
  "dumpster": {
   "g": "f",
   "s": "benne à ordures"
+ },
+ "elder sign": {
+  "g": "m",
+  "s": "signe des Anciens"
  },
  "electrician": {
   "g": "m",
@@ -1584,6 +1610,10 @@
   "s": "chef de flotte",
   "fs": "cheffe de flotte"
  },
+ "flesh": {
+  "g": "f",
+  "s": "chair"
+ },
  "flight hostess": {
   "g": "f",
   "s": "hôtesse de l’air",
@@ -1801,6 +1831,11 @@
   "g": "m",
   "s": "chef cuisinier",
   "fs": "cheffe cuisinière"
+ },
+ "head librarian": {
+  "g": "m",
+  "s": "bibliothécaire en chef",
+  "fs": "bibliothécaire en chef"
  },
  "head of security": {
   "g": "m",
@@ -2149,6 +2184,11 @@
   "g": "m",
   "s": "agent de liaison",
   "fs": "agente de liaison"
+ },
+ "librarian": {
+  "g": "m",
+  "s": "bibliothécaire",
+  "fs": "bibliothécaire"
  },
  "lieutenant": {
   "g": "m",
@@ -3441,6 +3481,11 @@
   "s": "agent spécial",
   "fs": "agente spéciale"
  },
+ "special collections curator": {
+  "g": "m",
+  "s": "conservateur des collections spéciales",
+  "fs": "conservatrice des collections spéciales"
+ },
  "special operations overseer": {
   "g": "m",
   "s": "superviseur des opérations spéciales",
@@ -3503,6 +3548,10 @@
   "g": "m",
   "s": "employé de magasin",
   "fs": "employée de magasin"
+ },
+ "strange amulet": {
+  "g": "f",
+  "s": "amulette étrange"
  },
  "strange device": {
   "g": "m",
@@ -3825,6 +3874,11 @@
   "g": "m",
   "s": "chef d’unité",
   "fs": "cheffe d’unité"
+ },
+ "university archivist": {
+  "g": "m",
+  "s": "archiviste universitaire",
+  "fs": "archiviste universitaire"
  },
  "unknown location": {
   "g": "m",

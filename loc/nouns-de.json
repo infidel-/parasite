@@ -99,9 +99,21 @@
   "g": "f",
   "s": "Analyse"
  },
+ "ancient book": {
+  "g": "m",
+  "s": "Foliant",
+  "acc": "Folianten",
+  "dat": "Folianten",
+  "gen": "Folianten"
+ },
  "apprentice barber": {
   "g": "m",
   "s": "Friseurlehrling"
+ },
+ "archive keeper": {
+  "g": "m",
+  "s": "Archivverwalter",
+  "fs": "Archivverwalterin"
  },
  "article": {
   "g": "m",
@@ -318,9 +330,18 @@
   "s": "Kiezkönig",
   "fs": "Kiezkönigin"
  },
+ "blood": {
+  "g": "n",
+  "s": "Blut",
+  "gen": "Blutes"
+ },
  "body": {
   "g": "f",
   "s": "Leiche"
+ },
+ "bone": {
+  "g": "m",
+  "s": "Knochen"
  },
  "book": {
   "g": "n",
@@ -1222,6 +1243,14 @@
   "g": "n",
   "s": "Kultoberhaupt"
  },
+ "cultist": {
+  "g": "m",
+  "s": "Kultist",
+  "fs": "Kultistin",
+  "acc": "Kultisten",
+  "dat": "Kultisten",
+  "gen": "Kultisten"
+ },
  "culture ambassador": {
   "g": "m",
   "s": "Kulturbotschafter",
@@ -1475,6 +1504,10 @@
  "dumpster": {
   "g": "m",
   "s": "Müllcontainer"
+ },
+ "elder sign": {
+  "g": "n",
+  "s": "Ältestenzeichen"
  },
  "electrician": {
   "g": "m",
@@ -1810,6 +1843,11 @@
   "s": "Flottenkapitän",
   "fs": "Flottenkapitänin"
  },
+ "flesh": {
+  "g": "n",
+  "s": "Fleisch",
+  "gen": "Fleisches"
+ },
  "flight hostess": {
   "g": "f",
   "s": "Stewardess"
@@ -2052,6 +2090,11 @@
   "g": "m",
   "s": "Chefkoch",
   "fs": "Chefköchin"
+ },
+ "head librarian": {
+  "g": "m",
+  "s": "Oberbibliothekar",
+  "fs": "Oberbibliothekarin"
  },
  "head of security": {
   "g": "m",
@@ -2437,6 +2480,11 @@
   "acc": "Verbindungsagenten",
   "dat": "Verbindungsagenten",
   "gen": "Verbindungsagenten"
+ },
+ "librarian": {
+  "g": "m",
+  "s": "Bibliothekar",
+  "fs": "Bibliothekarin"
  },
  "lieutenant": {
   "g": "m",
@@ -3985,6 +4033,12 @@
   "dat": "Spezialagenten",
   "gen": "Spezialagenten"
  },
+ "special collections curator": {
+  "g": "m",
+  "s": "Kurator für Sondersammlungen",
+  "fs": "Kuratorin für Sondersammlungen",
+  "gen": "Kurators für Sondersammlungen"
+ },
  "special operations overseer": {
   "g": "m",
   "s": "Sondereinsatzleiter",
@@ -4046,6 +4100,10 @@
   "g": "m",
   "s": "Verkäufer",
   "fs": "Verkäuferin"
+ },
+ "strange amulet": {
+  "g": "n",
+  "s": "Amulett"
  },
  "strange device": {
   "g": "m",
@@ -4457,6 +4515,11 @@
   "g": "m",
   "s": "Einheitsführer",
   "fs": "Einheitsführerin"
+ },
+ "university archivist": {
+  "g": "m",
+  "s": "Universitätsarchivar",
+  "fs": "Universitätsarchivarin"
  },
  "unknown location": {
   "g": "m",
