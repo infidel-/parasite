@@ -404,3 +404,27 @@ posters; walkable chairs. Changed:
 Measured: lobby 42 dc, 24-27k tris (hall 39 dc); warm still 102 programs (103 in play).
 
 Verdict: landed. Checked live in the hall and the lobby; the burn fired by hand on the host.
+
+## University library, fourth feedback pass: lifted prop light, pulsing Necronomicon, muted paper, shaded lectern
+
+Reported: the Necronomicon glowed on the lowest part of its stand, its glow should pulse, the posters and
+the books' paper read too bright, and the lectern was one even wood. Changed:
+- **The prop light ignored the second floor.** `PropLights` hung every prop light at `floorY + h * y` and
+  never added the area kind's `lift`, which `ObjModels.build` already applied to the mesh: the book stands
+  1.975 up on the lectern, so its light sat at 0.35, at the base plate. `ObjModels.lift` keeps the kind's
+  lift (null where none was passed) and `PropLights` adds it; light measured at y 2.33 after. The shader
+  side of `skipSelf` was already right (it reads the instance matrix, lift included), so the book was
+  also being lit by a light it thought was elsewhere.
+- **Pulse**: `PropLight.pulse`/`pulseRate` and `ObjModels.lightBeat` (squared sine on `PropGlow.uTime`):
+  `PropLights` scales the light by it and `ObjModels.cull` the batch material's `emissiveIntensity`
+  (the glb's own strength kept in `userData.ei0`), so the ink and its light throb together. The `lamps`
+  column was not used: its beat carries a per-instance shader phase the CPU-side light cannot match.
+  Book: pulse 0.75, rate 0.4 rad/BASE_MS (~2.4 s), mul 0.3 -> 0.45 for the lower mean.
+- **Posters**: `cells` grid 1 cap 0.12 (a whole-sheet LINEAR scale, which holds the print's contrast where
+  a steeper gamma crushes it) + `sat` 0.6: p50 152 -> 99, chroma 61 -> 23.
+- **Book paper**: `gradeRect` on the page cell alone (1024 map, rect 0..512 x 0..512), scale 0.3 sat 0.6;
+  the source page cell is luma 194 against covers 33-67, covers untouched.
+- **Lectern**: COLOR_0 ramp from `LECT_FOOT` 0.45 at the floor to full at 2.0 (`library_build.py`, the
+  military shelving's carton shading), exported with `bl.export(colors=True)`.
+
+Verdict: landed. Checked live at the lectern: light over the book, ink bright and dim in two frames.

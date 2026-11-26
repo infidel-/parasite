@@ -74,7 +74,7 @@ class SoundSources
     'library/hall' => -6.0,
     'library/archive' => -6.0,
     'library/lobby' => -6.0,
-    'library/stacks' => -6.0,
+    'library/stacks' => -10.0,
     'library/clock' => -10.0,
     'library/tome' => -10.0,
     'library/creak' => -10.0,

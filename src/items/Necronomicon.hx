@@ -21,7 +21,8 @@ class Necronomicon extends ItemInfo
       names = [ N('Necronomicon') ];
     }
 
-// taking it raises the floor: the librarian and every guard on it turn on the thief
+// taking it raises the floor: the librarian and every guard on it turn on the thief, and the bell
+// calls campus security up the stairs (AreaManager's backup arrival, which despawns them once calm)
   public override function onPickup(item: _Item)
     {
       if (game.area.typeID != AREA_LIBRARY)
@@ -35,5 +36,9 @@ class Necronomicon extends ItemInfo
             (ai.type == 'librarian' ||
              ai.type == 'security'))
           ai.setState(AI_STATE_ALERT, REASON_WITNESS);
+      for (o in game.area.getObjects())
+        if (Std.isOfType(o, objects.Stairs))
+          game.managerArea.add(AREAEVENT_ARRIVE_BACKUP, o.x, o.y, 3,
+            new game.AreaManager._AreaManagerEventParamsArriveBackup('security'));
     }
 }

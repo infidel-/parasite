@@ -26331,6 +26331,16 @@
    "field": "log"
   },
   {
+   "s": "Some strange power compels you to hold on to the book.",
+   "kind": "T",
+   "loc": [
+    "src/game/Inventory.hx"
+   ],
+   "vars": [],
+   "where": "Inventory.dropAction",
+   "field": "itemFailed"
+  },
+  {
    "s": "You drop {item:the}.",
    "kind": "T",
    "loc": [

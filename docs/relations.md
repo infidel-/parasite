@@ -110,9 +110,11 @@ ones that call it.
 **Items**: `items/*`, `game/Inventory.hx`
 - Saved per AI and player. Hooks `ItemInfo.onLearn`/`action`/`onPickup` (from `Pickup.onAction` and
   `BodyObject.getAction`); mod ITEM_LEARN. A `special` item (the elder sign) cannot be taken from a
-  body and is not dropped when it despawns.
+  body and is not dropped when it despawns. The Necronomicon cannot be dropped (`Inventory.dropAction`
+  refuses it; only the drop action, not a body or a mission taking it).
 - Out: player, timeline (Readable, Computer), goals, group (Dossier intel), the library's guards
-  (`Necronomicon.onPickup` rings `library/bell` and alerts the librarian and security). Pedia: hostInventory.
+  (`Necronomicon.onPickup` rings `library/bell`, alerts the librarian and security, and queues an
+  AreaManager `AREAEVENT_ARRIVE_BACKUP` of two security guards at the stairs in 3 turns). Pedia: hostInventory.
   SDK: `registerItem`.
 
 **Area objects**: `objects/*`, `objects/base/*`, `objects/mission/*`

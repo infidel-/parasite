@@ -73,6 +73,9 @@ typedef PropLight = {
   ?skipSelf:Bool, // the prop's OWN surface takes none of it (render.world.PropGlow drops the point light
                   // standing where render.particles.PropLights hangs this one): a portal's skin is not
                   // lit by its own mouth. absent for an organ, whose crown it lights on purpose
+  ?pulse:Float,     // the light AND the prop's own emissive throb together (ObjModels.lightBeat): depth
+                    // as a fraction, the level runs (1 - pulse)..1. absent for a steady light
+  ?pulseRate:Float, // its speed in radians per BASE_MS, on render.world.PropGlow's clock
 };
 
 // the idle motion folded into a prop's own shaders, or null for one that stands still. every
@@ -655,6 +658,9 @@ class ObjModels
   // never calls build, see render.CityArea) that object would have had no sprite and no prop:
   // invisible. Set true by build() and explicitly false by the kinds that do not call it
   public static var active = false;
+  // the area kind's second floor (build's `lift`), kept so render.particles.PropLights hangs a
+  // prop's light over the prop and not over the floor under it. null where no kind passed one
+  public static var lift:Int->Int->Float = null;
   // the area kind on screen has NO vision mask (the city): only `unmasked` rows build there, and every
   // other row's object keeps its sprite, since a masked row's shared material may carry another kind's
   // patch. set by build() off the area it is building
@@ -972,9 +978,11 @@ class ObjModels
       yaw: FRONTAL,
       light: {
         color: 0x9cff70,
-        mul: 0.3,
+        mul: 0.45,
         y: 0.5,
         skipSelf: true,
+        pulse: 0.75,
+        pulseRate: 0.4,
       },
       anim: null,
       pulse: null,
@@ -2114,6 +2122,7 @@ class ObjModels
       ?lift:Int->Int->Float, ?wall:Int->Int->Float):Array<PropBatch>
     {
       active = true;
+      ObjModels.lift = lift;
       unmaskedOnly = (game.area.info.type == 'city');
       // ONE BUCKET PER ROW, and not per model PATH as this used to key them. A path said the same
       // thing for as long as no two rows named one — and the moment two did, each of them instanced
@@ -2368,6 +2377,17 @@ class ObjModels
       return null;
     }
 
+// the beat of a pulsing prop light (PropLight.pulse), on render.world.PropGlow's clock: PropLights
+// scales the light by it and cull() the prop's emissive, so the glow and its light throb together.
+// squared, so it reads as a throb rather than a slow swing
+  public static function lightBeat(l:PropLight):Float
+    {
+      if (l.pulse == null)
+        return 1.0;
+      var s = 0.5 + 0.5 * Math.sin(PropGlow.uTime.value * l.pulseRate);
+      return 1 - l.pulse + l.pulse * s * s;
+    }
+
 // is the hover pick on the object standing at this cell? its outline shell shows then as it does in
 // the tactical view, and goes with the HUD like the tooltip does. render.military.MilitaryGeom's
 // armory shells ask it too
@@ -2416,6 +2436,18 @@ class ObjModels
           // them together, so they land on the same frame
           if (b.solid.mesh == null)
             continue;
+          // a pulsing light's prop throbs its own emissive on the same beat
+          if (b.model.light != null &&
+              b.model.light.pulse != null)
+            for (p in [ b.solid, b.ghost ])
+              {
+                var mat:MeshStandardMaterial = p.mesh.material;
+                // the glb's own strength, kept on the material the first time: userData is three's
+                // untyped bag
+                if (mat.userData.ei0 == null)
+                  mat.userData.ei0 = mat.emissiveIntensity;
+                mat.emissiveIntensity = mat.userData.ei0 * lightBeat(b.model.light);
+              }
           var idx = -1;
           for (i in 0...b.cells.length)
             if (b.cells[i].col == col &&

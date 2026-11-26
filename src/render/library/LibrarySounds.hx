@@ -10,12 +10,12 @@ import render.SoundSources;
 // the sounds of the library's reading floor (sound/library/*.mp3, see docs/sound-gen.md): a bed per
 // room, crossfaded by the room the player stands in; the wall clocks ticking and the Necronomicon's
 // drone while it lies on the lectern, faded by path distance in render.AreaSounds; and the building's
-// own noises now and then: a shelf settling, a book sliding off one, a radiator knocking, a draught in
-// the pages of an open book on a table
+// own noises now and then: the stacks' room tone, a shelf settling, a book sliding off one, a
+// radiator knocking, a draught in the pages of an open book on a table
 class LibrarySounds
 {
-  // the beds, in bedAt's order: the halls and the corridor, the archive, the stair lobby, the stacks
-  static var BEDS = [ 'library/hall', 'library/archive', 'library/lobby', 'library/stacks' ];
+  // the beds, in bedAt's order: the halls, the corridor and the stacks, the archive, the stair lobby
+  static var BEDS = [ 'library/hall', 'library/archive', 'library/lobby' ];
 
   var game:Game;
   // the area this was built for, never game.area: a restart swaps that for the new game's start
@@ -55,6 +55,9 @@ class LibrarySounds
         { key: 'library/thud', range: 6, gap: 90, cells: stacks.concat(cases) },
         { key: 'library/radiator', range: 5, gap: 70, cells: cases },
         { key: 'library/pages', range: 4, gap: 60, cells: tables },
+        // the stacks' own clacking room tone, now and then over the halls' muted bed, so it does not
+        // loop audibly
+        { key: 'library/stacks', range: 6, gap: 60, cells: stacks },
       ]);
       bed = [for (_ in BEDS) 0.0];
       SoundSources.beds = BEDS.copy();
@@ -72,7 +75,7 @@ class LibrarySounds
     }
 
 // which bed plays at the player's cell, by the room rects the generator saved: a doorway and the
-// corridor are in none and take the halls' bed
+// corridor are in none and take the halls' bed, as the stacks do
   function bedAt(pc:Int, pr:Int):Int
     {
       var room = area.generatorInfo.getRoomAt(pc, pr);
@@ -82,7 +85,6 @@ class LibrarySounds
         {
           case LibraryGen.ROLE_ARCHIVE: 1;
           case LibraryGen.ROLE_LOBBY: 2;
-          case LibraryGen.ROLE_STACKS: 3;
           default: 0;
         }
     }

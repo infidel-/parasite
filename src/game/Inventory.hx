@@ -163,7 +163,7 @@ class Inventory extends _SaveObject
         {
           // drop item
           case 'drop':
-            dropAction(action.item);
+            ret = dropAction(action.item);
           // learn about item
           case 'learn':
             learnAction(action.item);
@@ -223,13 +223,20 @@ class Inventory extends _SaveObject
     }
 
 
-// ACTION: drop item
-  function dropAction(item: _Item)
+// ACTION: drop item, false when it will not leave the host's hands
+  function dropAction(item: _Item): Bool
     {
+      // the Necronomicon holds on to whoever carries it
+      if (item.id == 'necronomicon')
+        {
+          item.info.itemFailed(T('Some strange power compels you to hold on to the book.'));
+          return false;
+        }
       game.area.addItem(game.playerArea.x, game.playerArea.y, item);
       _list.remove(item);
       game.player.log(T('You drop {item:the}.', { item: Loc.colored('inventory-item', item) }));
       game.scene.sounds.play('item-drop');
+      return true;
     }
 
 // ACTION: put on clothing the host carries, in place of what it wore. one item out of the list and

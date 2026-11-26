@@ -3827,7 +3827,7 @@
     },
     "library/stacks": {
       "area": "library",
-      "loop": true,
+      "loop": false,
       "lufs": -36,
       "variants": [
         {
@@ -3843,8 +3843,8 @@
           "bakeoff": "bake-off 2026-11-26, re-rolled once (beds: quieter; tome: a high drone), losers in sounds-src/unused/library"
         }
       ],
-      "last_converted": "2026-11-26T01:14:07",
-      "last_sig": "-36/128k/True/500/hp40x2",
+      "last_converted": "2026-11-26T21:02:37",
+      "last_sig": "-36/128k/False/500/hp40x2",
       "last_outputs": [
         "library/stacks1.mp3"
       ]

@@ -407,24 +407,28 @@ The `SewerSounds` clone for the habitat in a mountain tile (`AreaGame.isCave`). 
 
 ### University library: `render/library/LibrarySounds.hx`, driven from `LibraryArea.tick`
 
-Beds one-hot on the room role (`generatorInfo.getRoomAt`; a doorway and the corridor take the hall
-bed), crossfaded over 4 BASE_MS. Sources are tile scans plus `LibraryWall`'s clock cells.
+Beds one-hot on the room role (`generatorInfo.getRoomAt`; a doorway, the corridor and the stacks take
+the hall bed), crossfaded over 4 BASE_MS. Sources are tile scans plus `LibraryWall`'s clock cells.
 
 | key | sources | type | range (path cells) |
 |---|---|---|---|
-| `library/hall` / `archive` / `lobby` / `stacks` | beds by room role, gain -6 | bed | — |
+| `library/hall` / `archive` / `lobby` | beds by room role, gain -6 | bed | — |
 | `library/clock` | the wall clocks `LibraryWall` hung (art cell 11) | loop | 3 |
 | `library/tome` | the lectern, gated on a Necronomicon pickup lying on the floor | loop | 3 |
 | `library/creak` | stack tiles | event, gap 45 s | 5 |
 | `library/thud` | stack and bookcase tiles | event, gap 90 s | 6 |
 | `library/radiator` | bookcase tiles | event, gap 70 s | 5 |
 | `library/pages` | reading tables | event, gap 60 s | 4 |
+| `library/stacks` | stack tiles, gain -10, baked at bed level (-36) | event, gap 60 s | 6 |
 | `library/bell` | `Necronomicon.onPickup`, non-positional | one-shot | — |
 | `library/sign` | `LibrarianAI` burn, at the parasite | one-shot | — |
 
 - **"Quieter" beds meant sparser, not lower**: the first lobby and stacks takes were re-rolled as
   "near-silent ... soft, sparse" and the picks came back raw at -62.4 (lobby) and -51.5 (stacks)
   LUFS, baked up to -36. Previewed at -36 beside the shipped hall bed so the level was the game's.
+- **The stacks take is an EVENT, not a bed**: as a 20 s loop its clacks repeated audibly ("there should
+  be a second tone without clacks so that it does not sound too repetitive"), so the stacks rooms
+  play the muted hall bed and the clacking take comes and goes over it.
 - **The tome is a HIGH drone** (asked for: "creepy high drone"); the low subsonic first round lost.
 
 ## Levels (measured with ebur128, 2026-10-08)

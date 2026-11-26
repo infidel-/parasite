@@ -153,10 +153,13 @@ class PropLights {
           var w = CityConfig.cellToWorld(o.x, o.y);
           var wx = (c != null ? c.x : w.x);
           var wz = (c != null ? c.z : w.z);
-          var y = m.h * (m.light.y != null ? m.light.y : P.yMul);
+          // over the area kind's second floor too: the Necronomicon lies on a lectern, not the floor
+          var y = m.h * (m.light.y != null ? m.light.y : P.yMul) +
+            (ObjModels.lift != null ? ObjModels.lift(o.x, o.y) : 0.0);
           lights[i].position.set(wx, render.world.WorldCtx.floorY(o.x, o.y) + y, wz);
           lights[i].color.setHex(m.light.color);
-          untyped lights[i].intensity = P.intensity * m.light.mul * intens[i];
+          untyped lights[i].intensity = P.intensity * m.light.mul * intens[i] *
+            ObjModels.lightBeat(m.light);
           if (m.light.shadows != true)
             continue;
           var lp = posts[i];
