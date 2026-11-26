@@ -24,8 +24,8 @@ class Necronomicon extends ItemInfo
     }
 
 // taking it raises the floor: the librarian and every guard on it turn on the thief, and the bell
-// calls campus security up the stairs to the lectern (AreaManager's backup arrival, heading for the
-// cell it was taken from; they despawn once calm)
+// calls campus security in through the stacks next door to the lectern (AreaManager's backup
+// arrival, heading for the cell it was taken from; they despawn once calm)
   public override function onPickup(item: _Item)
     {
       if (game.area.typeID != AREA_LIBRARY)
@@ -39,11 +39,18 @@ class Necronomicon extends ItemInfo
             (ai.type == 'librarian' ||
              ai.type == 'security'))
           ai.setState(AI_STATE_ALERT, REASON_WITNESS);
-      for (o in game.area.getObjects())
-        if (Std.isOfType(o, objects.Stairs))
-          game.managerArea.add(AREAEVENT_ARRIVE_BACKUP, o.x, o.y, 3,
-            new game.AreaManager._AreaManagerEventParamsArriveBackup('security',
-              game.playerArea.x, game.playerArea.y));
+      // they come in through the stacks next door: five cells past the archive's one doorway, so the
+      // arrival's radius-5 search cannot land them in the archive itself
+      var info = game.area.generatorInfo;
+      for (d in info.doors)
+        if (info.getRoom(d.roomID1).role == gen.library.LibraryGen.ROLE_ARCHIVE)
+          {
+            var archive = info.getRoom(d.roomID1);
+            game.managerArea.add(AREAEVENT_ARRIVE_BACKUP,
+              d.x + (archive.x1 > d.x ? -5 : 5), d.y, 3,
+              new game.AreaManager._AreaManagerEventParamsArriveBackup('security',
+                game.playerArea.x, game.playerArea.y));
+          }
     }
 
 // a read action, which spells out nothing

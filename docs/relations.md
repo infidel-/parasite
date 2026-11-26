@@ -115,7 +115,8 @@ ones that call it.
   line (a turn spent, nothing learnt).
 - Out: player, timeline (Readable, Computer), goals, group (Dossier intel), the library's guards
   (`Necronomicon.onPickup` rings `library/bell`, alerts the librarian and security, and queues an
-  AreaManager `AREAEVENT_ARRIVE_BACKUP` of two security guards at the stairs in 3 turns, heading for the
+  AreaManager `AREAEVENT_ARRIVE_BACKUP` of two security guards in 3 turns, in the stacks five cells past
+  the archive's doorway (out of the arrival search's radius-5 reach of the archive), heading for the
   cell the book was taken from: `_AreaManagerEventParamsArriveBackup.targetX/Y` seeds their last-seen
   cell, null leaves a call-in backup waiting where it spawns as before). Pedia: hostInventory.
   SDK: `registerItem`.
