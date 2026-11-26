@@ -74,7 +74,7 @@ class Necronomicon extends ItemInfo
     {
       if (actionID != 'read')
         return super.action(actionID, action);
-      game.log(T('Klaatu, verata, n... It is unreadable.'));
+      game.narrative(T('Klaatu, verata, n... It is unreadable.'), COLOR_TIMELINE);
       return true;
     }
 }
